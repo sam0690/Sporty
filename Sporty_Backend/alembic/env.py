@@ -12,13 +12,15 @@ from alembic import context
 # Load environment variables from .env
 load_dotenv()
 
-# Import your Base and all models
+# Import YOUR Base and all models
 from app.database import Base
 
 # Import ALL model modules so Alembic can detect them
 from app.auth import models as auth_models  # noqa: F401
 from app.league import models as league_models  # noqa: F401
+from app.match import models as match_models  # noqa: F401
 from app.player import models as player_models  # noqa: F401
+from app.player import models_nba as player_models_nba  # noqa: F401
 from app.scoring import models as scoring_models  # noqa: F401
 
 # Alembic Config object

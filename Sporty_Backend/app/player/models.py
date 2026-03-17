@@ -189,6 +189,12 @@ class PlayerGameweekStat(Base):
         back_populates="base_stat", uselist=False,
         cascade="all, delete-orphan", passive_deletes=True,
     )
+    nba_stat: Mapped["NBAStat | None"] = relationship(
+        back_populates="base_stat",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         # One stat row per player per transfer window — no duplicates

@@ -293,6 +293,22 @@ class TeamWeeklyScoreResponse(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Leaderboard (Phase 7)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class LeaderboardEntry(BaseModel):
+    """GET /leagues/{id}/leaderboard?transfer_window_id=... — one row per team.
+
+    Returns a minimal shape for fast UI rendering and Redis caching.
+    """
+
+    team_name: str
+    points: Decimal
+    rank: int | None = None
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # League status update
 # ═══════════════════════════════════════════════════════════════════════════════
 

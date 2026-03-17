@@ -23,6 +23,7 @@ from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
 from app.league.models import Sport
 from app.match.models import Match
+from app.services.scoring.scoring_trigger import enqueue_scoring_for_finished_match
 
 
 async def sync_football_matches(
@@ -102,6 +103,7 @@ async def sync_football_matches(
 
             if existing:
                 # Update existing
+                previous_status = existing.status
                 existing.status = status
                 existing.match_date = match_date
                 existing.home_score = goals.get("home")
@@ -110,6 +112,13 @@ async def sync_football_matches(
                 print(
                     f"  ♻️  Updated: {home_team} vs {away_team} ({status}, {match_date.date()})"
                 )
+
+                if previous_status != "finished" and status == "finished":
+                    enqueue_scoring_for_finished_match(
+                        db,
+                        match_date=existing.match_date,
+                        sport_id=football.id,
+                    )
             else:
                 # Create new
                 match = Match(
@@ -200,6 +209,7 @@ async def sync_basketball_games(db: Session, season: int = 2024):
 
             if existing:
                 # Update existing
+                previous_status = existing.status
                 existing.status = status
                 existing.match_date = match_date
                 existing.home_score = scores_obj.get("home", {}).get("points")
@@ -208,6 +218,13 @@ async def sync_basketball_games(db: Session, season: int = 2024):
                 print(
                     f"  ♻️  Updated: {home_team} vs {away_team} ({status}, {match_date.date()})"
                 )
+
+                if previous_status != "finished" and status == "finished":
+                    enqueue_scoring_for_finished_match(
+                        db,
+                        match_date=existing.match_date,
+                        sport_id=basketball.id,
+                    )
             else:
                 # Create new
                 match = Match(
@@ -297,12 +314,20 @@ async def sync_cricket_matches(db: Session):
 
             if existing:
                 # Update existing
+                previous_status = existing.status
                 existing.status = our_status
                 existing.match_date = match_date
                 total_updated += 1
                 print(
                     f"  ♻️  Updated: {home_team} vs {away_team} ({our_status}, {match_date.date()})"
                 )
+
+                if previous_status != "finished" and our_status == "finished":
+                    enqueue_scoring_for_finished_match(
+                        db,
+                        match_date=existing.match_date,
+                        sport_id=cricket.id,
+                    )
             else:
                 # Create new
                 new_match = Match(

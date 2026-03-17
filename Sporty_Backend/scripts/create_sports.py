@@ -23,7 +23,18 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-from app.league.models import Sport
+# Import all models FIRST to ensure SQLAlchemy registers them before services load
+# This prevents "failed to locate a name" errors in relationships
+from app.auth.models import User, RefreshToken  # noqa: F401
+from app.league.models import (  # noqa: F401
+    Sport, Season, TransferWindow, League, LeagueSport, LineupSlot,
+    LeagueMembership, FantasyTeam, TeamPlayer, Transfer, 
+    TeamGameweekLineup, TeamWeeklyScore
+)
+from app.match.models import Match  # noqa: F401
+from app.player.models import Player, PlayerGameweekStat, FootballStat, CricketStat  # noqa: F401
+from app.player.models_nba import NBAStat  # noqa: F401
+from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:

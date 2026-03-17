@@ -13,19 +13,23 @@ Transaction convention:
   - All reads:     call service → return directly (no commit)
 """
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
+from app.core.redis import cache_get, cache_set
 from app.database import get_db
 from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
-from app.league.models import League
+from app.league.models import FantasyTeam, League, TeamWeeklyScore
 from app.league.schemas import (
     DraftPickCreate,
     DraftPickResponse,
     JoinLeagueRequest,
+    LeaderboardEntry,
     LeagueCreate,
     LeagueResponse,
     LeagueSportAdd,
@@ -40,6 +44,62 @@ from app.league.schemas import (
 )
 
 router = APIRouter(prefix="/leagues", tags=["Leagues"])
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/{id}/leaderboard?transfer_window_id=... (Phase 7)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/{league_id}/leaderboard",
+    response_model=list[LeaderboardEntry],
+    summary="Get league leaderboard for a transfer window",
+)
+def get_league_leaderboard(
+    transfer_window_id: UUID,
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    """Return teams sorted by rank with team name, points, and rank.
+
+    Cached in Redis for 60 seconds under:
+      leaderboard:{league_id}:{transfer_window_id}
+    """
+
+    cache_key = f"leaderboard:{league.id}:{transfer_window_id}"
+    cached = cache_get(cache_key)
+    if cached and isinstance(cached, dict) and "items" in cached:
+        return cached["items"]
+
+    rows = (
+        db.query(
+            FantasyTeam.name,
+            TeamWeeklyScore.points,
+            TeamWeeklyScore.rank_in_league,
+        )
+        .join(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
+        .filter(FantasyTeam.league_id == league.id)
+        .filter(TeamWeeklyScore.transfer_window_id == transfer_window_id)
+        .order_by(
+            TeamWeeklyScore.rank_in_league.asc().nullslast(),
+            TeamWeeklyScore.points.desc(),
+            FantasyTeam.name.asc(),
+        )
+        .all()
+    )
+
+    items = [
+        {
+            "team_name": team_name,
+            "points": str(points),
+            "rank": rank_in_league,
+        }
+        for team_name, points, rank_in_league in rows
+    ]
+
+    cache_set(cache_key, {"items": items}, ttl_seconds=60)
+    return items
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

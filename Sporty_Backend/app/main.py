@@ -81,6 +81,19 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Import all models FIRST to ensure SQLAlchemy registers them before routers load
+# This prevents "failed to locate a name" errors in relationships
+from app.auth.models import User, RefreshToken  # noqa: F401
+from app.league.models import (  # noqa: F401
+    Sport, Season, TransferWindow, League, LeagueSport, LineupSlot,
+    LeagueMembership, FantasyTeam, TeamPlayer, Transfer, 
+    TeamGameweekLineup, TeamWeeklyScore
+)
+from app.match.models import Match  # noqa: F401
+from app.player.models import Player, PlayerGameweekStat, FootballStat, CricketStat  # noqa: F401
+from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+
+# Import routers AFTER models are registered
 from app.auth.router import router as auth_router
 from app.league.router import router as league_router
 from app.player.router import router as player_router
