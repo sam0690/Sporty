@@ -1,0 +1,58 @@
+<svg width="1280" height="880" viewBox="0 0 1280 880" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="sky" x1="640" y1="20" x2="640" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8CCCE8"/>
+      <stop offset="1" stop-color="#5A8293"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="640" y1="520" x2="640" y2="860" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3E5532"/>
+      <stop offset="1" stop-color="#22331F"/>
+    </linearGradient>
+    <linearGradient id="stadiumBody" x1="640" y1="410" x2="640" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7DAD8"/>
+      <stop offset="1" stop-color="#8C9190"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(640 410) rotate(90) scale(470 740)">
+      <stop offset="0.68" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1280" height="880" fill="url(#sky)"/>
+  <rect y="540" width="1280" height="340" fill="url(#ground)"/>
+
+  <ellipse cx="640" cy="620" rx="510" ry="140" fill="#55605B"/>
+  <ellipse cx="640" cy="620" rx="460" ry="112" fill="#6B7370"/>
+
+  <ellipse cx="640" cy="500" rx="330" ry="72" fill="#A9B0AE"/>
+  <rect x="310" y="500" width="660" height="155" rx="56" fill="url(#stadiumBody)"/>
+  <ellipse cx="640" cy="655" rx="330" ry="58" fill="#7F8684"/>
+
+  <ellipse cx="640" cy="490" rx="290" ry="52" fill="#E7EBE9"/>
+  <ellipse cx="640" cy="490" rx="258" ry="37" fill="#CBD2CF"/>
+
+  <g opacity="0.45" stroke="#6E7573" stroke-width="9">
+    <path d="M390 516L890 516"/>
+    <path d="M368 544L912 544"/>
+    <path d="M360 570L920 570"/>
+  </g>
+
+  <g fill="#2F3B3E" opacity="0.34">
+    <rect x="385" y="548" width="45" height="13" rx="5"/>
+    <rect x="445" y="575" width="52" height="14" rx="5"/>
+    <rect x="817" y="553" width="57" height="14" rx="5"/>
+    <rect x="752" y="584" width="42" height="12" rx="5"/>
+  </g>
+
+  <g fill="#5F6664">
+    <rect x="270" y="350" width="10" height="150" rx="4"/>
+    <rect x="1002" y="336" width="10" height="164" rx="4"/>
+  </g>
+
+  <g fill="#6A7270" opacity="0.85">
+    <rect x="240" y="340" width="72" height="24" rx="3"/>
+    <rect x="972" y="326" width="72" height="24" rx="3"/>
+  </g>
+
+  <rect width="1280" height="880" fill="url(#vignette)"/>
+</svg>

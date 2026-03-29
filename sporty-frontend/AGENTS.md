@@ -77,10 +77,29 @@ What to Avoid
 Do not create duplicate components
 Do not mix business logic inside UI components
 Do not hardcode values that should be dynamic
+
 Output Expectations for AI
 Clean, readable, production-ready code
 Proper TypeScript types
 Reusable and scalable structure
+
+## Global Styling with Tailwind
+
+- All colors, fonts, spacing, and design tokens must be defined in a single global `tailwind.config.ts`.  
+- Do NOT hardcode styles inside components. Every style should use Tailwind classes referencing this config.  
+
+### Example Expectations:
+
+- **Colors** → `primary`, `secondary`, `accent`, `background`, `text`  
+- **Fonts** → `heading`, `body`, `mono`  
+- **Spacing / Sizes** → `padding`, `margin`, `borderRadius`, `boxShadow`  
+
+### Usage in Components:
+
+```tsx
+<div className="bg-primary text-text font-heading p-4 rounded-lg">
+  Example Component
+</div>
 
 
 
