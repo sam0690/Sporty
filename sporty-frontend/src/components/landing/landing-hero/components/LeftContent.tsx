@@ -12,7 +12,7 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center gap-2 rounded-full bg-surface-200 px-3 py-1 text-[11px] font-semibold tracking-[0.08em] text-primary">
+      <span className="inline-flex items-center gap-2 rounded-full bg-secondary-100 px-3 py-1 text-[11px] font-semibold tracking-[0.08em] text-primary">
         <span
           className="inline-block h-2 w-2 rounded-full border border-primary"
           aria-hidden="true"
@@ -31,7 +31,7 @@ export function LeftContent({ content }: LeftContentProps) {
         ))}
       </h1>
 
-      <p className="mt-7 max-w-xl text-lg leading-8 text-surface-600">
+      <p className="mt-7 max-w-xl text-lg leading-8 text-text-secondary">
         {content.description}
       </p>
 
@@ -48,7 +48,7 @@ export function LeftContent({ content }: LeftContentProps) {
                   "h-12 min-w-39 rounded-xl px-7 text-base font-semibold",
                   isPrimary
                     ? "shadow-card hover:bg-primary-800"
-                    : "bg-surface text-primary hover:bg-surface-100",
+                    : "border border-border-light bg-surface text-text-primary hover:bg-secondary-50",
                 )}
               >
                 {!isPrimary ? (
@@ -73,12 +73,12 @@ export function LeftContent({ content }: LeftContentProps) {
         })}
       </div>
 
-      <div className="mt-8 flex items-center gap-4 text-sm text-surface-500">
+      <div className="mt-8 flex items-center gap-4 text-sm text-text-secondary">
         <div className="flex -space-x-2" aria-hidden="true">
           {content.stat.avatars.map((avatar) => (
             <span
               key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-surface bg-surface-200 text-[10px] font-semibold text-primary"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-border-light bg-secondary-100 text-[10px] font-semibold text-primary"
             >
               {avatar}
             </span>

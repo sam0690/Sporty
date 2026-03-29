@@ -22,7 +22,7 @@ export function FooterCta({ content }: FooterCtaProps) {
         {content.title}
       </h2>
 
-      <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-surface-600">
+      <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-text-secondary">
         {content.subtitle}
       </p>
 
@@ -38,7 +38,7 @@ export function FooterCta({ content }: FooterCtaProps) {
           type="email"
           required
           placeholder={content.inputPlaceholder}
-          className="h-12 w-full rounded-lg border border-surface-300 bg-surface px-4 text-sm text-primary placeholder:text-surface-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="h-12 w-full rounded-lg border border-border bg-surface px-4 text-sm text-text-primary placeholder:text-text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         />
         <Button
           type="submit"
@@ -48,7 +48,7 @@ export function FooterCta({ content }: FooterCtaProps) {
         </Button>
       </form>
 
-      <p className="mt-4 text-xs text-surface-500">{content.helperText}</p>
+      <p className="mt-4 text-xs text-text-secondary">{content.helperText}</p>
     </div>
   );
 }

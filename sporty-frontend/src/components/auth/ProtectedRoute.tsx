@@ -4,8 +4,6 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { ROUTES } from "@/libs/route.config";
-import { getLocalStorage } from "@/libs/storage.local";
-import { LocalStorageKeys } from "@/libs/storage.kyes";
 
 type ProtectedRouteProps = {
   children: ReactNode;
@@ -17,17 +15,22 @@ export function ProtectedRoute({
   redirectTo = ROUTES.LOGIN.path,
 }: ProtectedRouteProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const hasPersistedToken =
-    typeof window !== "undefined" &&
-    Boolean(getLocalStorage(LocalStorageKeys.TOKEN));
-  const isAllowed = isAuthenticated || hasPersistedToken;
+  const { user, isLoading } = useAuth();
+  const isAllowed = Boolean(user);
 
   useEffect(() => {
-    if (!isAllowed) {
+    if (!isLoading && !isAllowed) {
       router.replace(redirectTo);
     }
-  }, [isAllowed, redirectTo, router]);
+  }, [isAllowed, isLoading, redirectTo, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   if (!isAllowed) {
     return null;

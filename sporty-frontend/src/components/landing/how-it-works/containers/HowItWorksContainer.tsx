@@ -4,7 +4,7 @@ import { HOW_IT_WORKS_CONTENT } from "@/components/landing/how-it-works/constant
 
 export function HowItWorksContainer() {
   return (
-    <section className="bg-surface-100" aria-labelledby="how-it-works-title">
+    <section className="bg-surface" aria-labelledby="how-it-works-title">
       <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <HowItWorksHeader
           heading={HOW_IT_WORKS_CONTENT.heading}

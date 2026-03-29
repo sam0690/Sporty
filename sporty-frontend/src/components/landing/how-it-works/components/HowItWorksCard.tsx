@@ -68,19 +68,19 @@ function StepIcon({ icon }: { icon: HowItWorksIcon }) {
 
 export function HowItWorksCard({ step }: HowItWorksCardProps) {
   return (
-    <article className="rounded-2xl border border-surface-200 bg-surface px-6 py-7">
-      <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-surface-100 text-primary">
+    <article className="rounded-2xl border border-border-light bg-surface px-6 py-7">
+      <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-secondary-100 text-primary">
         <StepIcon icon={step.icon} />
       </div>
 
       <h3 className="mt-6 text-3xl font-semibold tracking-tight text-primary">
         {step.title}
       </h3>
-      <p className="mt-3 text-[22px] leading-8 text-surface-600">
+      <p className="mt-3 text-[22px] leading-8 text-text-secondary">
         {step.description}
       </p>
 
-      <ul className="mt-6 space-y-2.5 text-base text-surface-500">
+      <ul className="mt-6 space-y-2.5 text-base text-text-secondary">
         {step.bullets.map((bullet) => (
           <li key={bullet} className="flex items-start gap-2.5">
             <svg

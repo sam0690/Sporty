@@ -15,7 +15,7 @@ export function HowItWorksHeader({
       >
         {heading}
       </h2>
-      <p className="mx-auto mt-5 max-w-2xl text-xl leading-8 text-surface-600">
+      <p className="mx-auto mt-5 max-w-2xl text-xl leading-8 text-text-secondary">
         {subheading}
       </p>
     </div>
