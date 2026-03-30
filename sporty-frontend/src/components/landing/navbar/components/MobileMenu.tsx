@@ -12,7 +12,7 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
     <div className="md:hidden">
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-surface-200 text-surface-700 transition-colors hover:bg-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border-light text-text-secondary transition-colors hover:bg-secondary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-expanded={open}
         aria-controls="mobile-nav-menu"
         aria-label={open ? "Close navigation menu" : "Open navigation menu"}
@@ -56,7 +56,7 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
         )}
       >
         <div className="overflow-hidden">
-          <div className="mt-3 space-y-3 rounded-lg border border-surface-200 bg-surface px-3 py-3 shadow-dropdown">
+          <div className="mt-3 space-y-3 rounded-lg border border-border-light bg-surface px-3 py-3 shadow-dropdown">
             {children}
           </div>
         </div>

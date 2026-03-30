@@ -47,7 +47,7 @@ export function NavLinks({
               mobile && "w-full",
               active
                 ? "bg-primary-50 text-primary"
-                : "text-surface-600 hover:bg-surface-100 hover:text-primary",
+                : "text-text-secondary hover:bg-secondary-50 hover:text-primary",
             )}
           >
             {item.icon ? <span>{item.icon}</span> : null}

@@ -24,7 +24,7 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
           variant="ghost"
           size="md"
           className={cn(
-            "text-surface-700 hover:text-primary",
+            "text-text-secondary hover:text-primary",
             mobile && "w-full justify-center",
           )}
         >
