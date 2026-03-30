@@ -67,6 +67,7 @@ def get_league_leaderboard(
       leaderboard:{league_id}:{transfer_window_id}
     """
 
+    # Algorithm: read-through Redis cache by league+window key; on miss query ranked team_weekly_scores ordered by rank/points and cache for 60s.
     cache_key = f"leaderboard:{league.id}:{transfer_window_id}"
     cached = cache_get(cache_key)
     if cached and isinstance(cached, dict) and "items" in cached:
