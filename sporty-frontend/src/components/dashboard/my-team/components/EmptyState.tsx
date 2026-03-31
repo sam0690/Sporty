@@ -1,30 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import type { Sport } from "@/components/dashboard/my-team/components/PlayerCard";
+import { Users } from "lucide-react";
 
-type EmptyStateProps = {
-  sport?: Sport;
-};
+type EmptyStateProps = Record<string, never>;
 
-const sportIcons: Record<Sport, string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
-};
-
-export function EmptyState({ sport }: EmptyStateProps) {
+export function EmptyState(_: EmptyStateProps) {
   return (
-    <section className="rounded-lg border border-border bg-surface-100 py-12 text-center shadow-card">
-      <div className="mx-auto mb-3 text-4xl" aria-hidden="true">
-        {sport ? sportIcons[sport] : "🏟️"}
+    <section className="rounded-2xl border border-gray-100 bg-white py-16 text-center">
+      <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 text-gray-400">
+        <Users className="h-5 w-5" />
       </div>
-      <p className="text-text-secondary">You haven't added any players yet</p>
+      <p className="text-lg font-medium text-gray-500">No players yet</p>
+      <p className="mt-2 text-sm text-gray-400">Join a league and add players to your team</p>
       <Link
-        href="/dashboard"
-        className="mt-4 inline-flex rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600"
+        href="/transfers"
+        className="mt-6 inline-flex items-center rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
       >
-        Join a League
+        Browse Transfers
       </Link>
     </section>
   );

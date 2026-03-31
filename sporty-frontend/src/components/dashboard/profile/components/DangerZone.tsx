@@ -29,35 +29,35 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
   };
 
   return (
-    <section className="mt-6 border-t border-border pt-6">
-      <div className="rounded-lg border border-red-200 bg-red-50/30 p-6">
-        <h2 className="text-lg font-semibold text-red-600">Delete Account</h2>
-        <p className="mt-2 text-sm text-text-secondary">
+    <section className="card-fade-in rounded-2xl border border-red-100 bg-red-50/30 p-6">
+      <div>
+        <h2 className="text-md font-medium text-red-600">Delete Account</h2>
+        <p className="mt-2 text-sm text-gray-600">
           Once you delete your account, there is no going back. All your data will be permanently removed.
         </p>
 
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="mt-4 rounded-lg bg-red-600 px-6 py-2 text-white transition-colors hover:bg-red-700"
+          className="mt-4 rounded-lg border border-red-300 px-5 py-2 text-red-600 transition-colors hover:bg-red-50"
         >
           Delete Account
         </button>
       </div>
 
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-surface-100 p-6">
-            <h3 className="text-lg font-semibold text-red-600">Confirm Account Deletion</h3>
-            <p className="mt-2 text-sm text-text-secondary">
-              This action cannot be undone. Type DELETE to confirm.
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6">
+            <h3 className="text-lg font-medium text-gray-900">Delete Account?</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              This action cannot be undone. Type "DELETE" to confirm.
             </p>
 
             <input
               value={confirmText}
               onChange={(event) => setConfirmText(event.target.value)}
               placeholder="Type DELETE"
-              className="mt-4 w-full rounded-lg border border-border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="mt-4 w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-500/30"
             />
 
             <div className="mt-5 flex justify-end gap-3">
@@ -67,7 +67,7 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
                   setOpen(false);
                   setConfirmText("");
                 }}
-                className="rounded-lg border border-primary-500 px-4 py-2 text-primary-500 transition-colors hover:bg-primary-50"
+                className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
               >
                 Cancel
               </button>

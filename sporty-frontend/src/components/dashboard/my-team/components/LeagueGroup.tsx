@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { PlayerCard, type Sport } from "@/components/dashboard/my-team/components/PlayerCard";
 
 type LeaguePlayer = {
@@ -17,26 +18,45 @@ type LeagueGroupProps = {
   sport: Sport;
 };
 
-const sportBadgeStyles: Record<Sport, string> = {
-  football: "bg-accent-football/10 text-accent-football",
-  basketball: "bg-accent-basketball/10 text-accent-basketball",
-  cricket: "bg-accent-cricket/10 text-accent-cricket",
+const sportIcons: Record<Sport, string> = {
+  football: "⚽",
+  basketball: "🏀",
+  cricket: "🏏",
+};
+
+const sportImages: Record<Sport, string> = {
+  football: "/images/leagues/football-card.svg",
+  basketball: "/images/leagues/basketball-card.svg",
+  cricket: "/images/leagues/cricket-card.svg",
 };
 
 export function LeagueGroup({ leagueName, players, sport }: LeagueGroupProps) {
   return (
-    <section>
-      <header className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-lg font-semibold text-text-primary">{leagueName}</h2>
-          <span className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${sportBadgeStyles[sport]}`}>
-            {sport}
-          </span>
-        </div>
-        <span className="text-sm text-text-secondary">{players.length} players</span>
-      </header>
+    <section className="space-y-5">
+      <div className="relative h-16 overflow-hidden rounded-xl border border-gray-100 bg-white">
+        <Image
+          src={sportImages[sport]}
+          alt=""
+          fill
+          className="object-cover opacity-20"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" />
 
-      <div className="grid grid-cols-1 gap-3">
+        <header className="relative z-10 flex h-full items-center justify-between gap-3 px-4">
+          <div className="flex items-center gap-2">
+            <span className="text-base" aria-hidden="true">{sportIcons[sport]}</span>
+            <h2 className="text-lg font-medium text-gray-800">{leagueName}</h2>
+          </div>
+          <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">
+            {players.length} players
+          </span>
+        </header>
+      </div>
+
+      <div className="mb-5 mt-1 border-b border-gray-100" />
+
+      <div className="space-y-3">
         {players.map((player) => (
           <PlayerCard
             key={player.id}

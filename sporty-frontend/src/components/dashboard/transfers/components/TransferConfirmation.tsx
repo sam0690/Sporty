@@ -8,6 +8,8 @@ type SelectedPlayer = {
   sport: Sport;
   position: string;
   price: number;
+  avgPoints?: number;
+  form?: number;
 };
 
 type TransferConfirmationProps = {
@@ -29,30 +31,30 @@ export function TransferConfirmation({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-surface-100 p-6 shadow-card">
-        <h3 className="text-xl font-semibold text-text-primary">Confirm Transfer</h3>
-        <p className="mt-3 text-text-secondary">
+      <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-6 shadow-md">
+        <h3 className="text-xl font-medium text-gray-900">Confirm Transfer</h3>
+        <p className="mt-3 text-gray-500">
           Add {player.name} to your team?
         </p>
 
-        <div className="mt-4 space-y-2 rounded-lg border border-border bg-white p-3 text-sm">
-          <p className="font-semibold text-text-primary">{player.name}</p>
-          <p className="text-text-secondary">Position: {player.position}</p>
-          <p className="text-primary-600">Price: ${player.price}M</p>
+        <div className="mt-4 space-y-2 rounded-xl border border-gray-100 bg-gray-50 p-3 text-sm">
+          <p className="font-medium text-gray-900">{player.name}</p>
+          <p className="text-gray-500">Position: {player.position}</p>
+          <p className="text-gray-900">Price: ${player.price}M</p>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-primary-500 px-4 py-2 text-primary-500 transition-colors hover:bg-primary-50"
+            className="rounded-full border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600"
+            className="rounded-full border border-[#1e6785] bg-[#247BA0] px-4 py-2 text-white transition-colors hover:bg-[#1e6785]"
           >
             Confirm
           </button>

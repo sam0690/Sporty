@@ -2,23 +2,15 @@ import type { NavItem } from "@/components/landing/navbar/types";
 
 export const NAV_ITEMS: NavItem[] = [
   {
-    label: "Home",
-    href: "/",
+    label: "Features",
+    href: "/#features",
   },
   {
-    label: "Live Scores",
-    href: "/live-scores",
+    label: "How it Works",
+    href: "/#how-it-works",
   },
   {
-    label: "Leagues",
-    href: "/leagues",
-  },
-  {
-    label: "Fantasy",
-    href: "/fantasy",
-  },
-  {
-    label: "About",
-    href: "/about",
+    label: "Pricing",
+    href: "/#pricing",
   },
 ];

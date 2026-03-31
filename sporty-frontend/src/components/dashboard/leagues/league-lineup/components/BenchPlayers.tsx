@@ -14,12 +14,14 @@ export function BenchPlayers({
   disabled = false,
 }: BenchPlayersProps) {
   return (
-    <section className="space-y-3 rounded-lg bg-surface-100 p-4 shadow-card">
-      <h2 className="text-lg font-semibold text-text-primary">Bench ({benchPlayers.length})</h2>
+    <section className="space-y-3 rounded-2xl border border-gray-100 bg-white p-5 [animation:fade-soft_0.2s_ease]">
+      <h2 className="text-md font-medium text-gray-800">Bench ({benchPlayers.length})</h2>
 
-      <div className="space-y-3">
+      <div className="space-y-2">
         {benchPlayers.length === 0 ? (
-          <p className="text-sm text-text-secondary">No bench players available</p>
+          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center text-sm text-gray-400">
+            No bench players available
+          </div>
         ) : (
           benchPlayers.map((player) => (
             <PlayerSlot
@@ -27,6 +29,7 @@ export function BenchPlayers({
               player={player}
               isActive={false}
               onToggle={onTogglePlayer}
+              variant="bench"
               disabled={disabled}
             />
           ))

@@ -3,6 +3,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
+import { PlayerStatsCard } from "@/components/dashboard/leagues/league-roster/components/PlayerStatsCard";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 
 type PitchSlotConfig = {
@@ -26,9 +27,9 @@ const sportIcons = {
 };
 
 const ringStyles = {
-  football: "ring-2 ring-primary-500",
-  basketball: "ring-2 ring-orange-500",
-  cricket: "ring-2 ring-amber-700",
+  football: "ring-2 ring-blue-400/50",
+  basketball: "ring-2 ring-orange-400/50",
+  cricket: "ring-2 ring-amber-600/50",
 };
 
 export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: PitchSlotProps) {
@@ -48,7 +49,7 @@ export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: Pi
   const style = player
     ? {
         transform: CSS.Translate.toString(draggable.transform),
-        opacity: draggable.isDragging ? 0.45 : 1,
+        opacity: draggable.isDragging ? 0.5 : 1,
       }
     : undefined;
 
@@ -56,7 +57,7 @@ export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: Pi
     <DropZone
       id={dropId}
       disabled={isDropDisabled}
-      className="w-28 sm:w-32"
+      className="group relative"
       activeClassName="scale-105"
     >
       <div
@@ -65,29 +66,46 @@ export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: Pi
         {...(player ? draggable.listeners : undefined)}
         {...(player ? draggable.attributes : undefined)}
         title={player ? `${player.name} | ${player.position} | Total: ${player.totalPoints} | Avg: ${player.avgPoints.toFixed(1)}` : slot.label}
-        className={`rounded-xl border bg-white/95 p-2 text-center shadow-card transition ${
-          player ? "cursor-grab border-white/80" : "border-dashed border-white/60 bg-white/10"
-        }`}
+        className={`relative flex h-10 w-10 items-center justify-center rounded-full text-center transition-all duration-150 sm:h-14 sm:w-14 ${
+          player
+            ? `cursor-grab bg-white shadow-md hover:scale-105 hover:shadow-lg ${ringStyles[player.sport]}`
+            : "border border-dashed border-white/40 bg-white/20 backdrop-blur-sm"
+        } ${draggable.isDragging ? "rotate-1 shadow-lg" : ""} ${!isDropDisabled ? "" : "opacity-70"}`}
       >
-        <p className="text-[10px] font-medium uppercase tracking-wide text-text-secondary">{slot.shortLabel}</p>
         {player ? (
           <>
-            <div className={`mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm ${ringStyles[player.sport]}`}>
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm sm:h-10 sm:w-10">
               {sportIcons[player.sport]}
             </div>
-            <p className="mt-1 truncate text-xs font-semibold text-text-primary">{player.name}</p>
+            <div className="pointer-events-none absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 text-center">
+              <p className="w-20 truncate text-xs font-medium text-white/90">{player.name}</p>
+              <p className="text-[10px] text-white/70">{player.totalPoints} pts</p>
+            </div>
+
             <button
               type="button"
-              onClick={() => onRemove(slot.id)}
-              className="mt-1 rounded-md bg-surface-100 px-2 py-0.5 text-[10px] text-text-secondary hover:bg-surface-200"
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove(slot.id);
+              }}
+              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] text-gray-500 shadow hover:text-red-500"
+              aria-label={`Bench ${player.name}`}
             >
-              Bench
+              x
             </button>
+
+            <PlayerStatsCard player={player} />
           </>
         ) : (
-          <div className="mt-1 text-lg text-white/80">+</div>
+          <div className="text-xs text-white/80">{slot.shortLabel}</div>
         )}
       </div>
+
+      {player ? null : (
+        <p className="pointer-events-none absolute top-[calc(100%+4px)] left-1/2 w-20 -translate-x-1/2 text-center text-[10px] text-white/70">
+          {slot.label}
+        </p>
+      )}
     </DropZone>
   );
 }

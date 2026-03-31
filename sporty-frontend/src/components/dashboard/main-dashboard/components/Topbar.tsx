@@ -1,26 +1,35 @@
 import Image from "next/image";
 
+import { useRouter } from "next/navigation";
+
 type TopbarProps = {
   userName: string;
+  userId: string;
   avatar?: string;
 };
 
-export function Topbar({ userName, avatar }: TopbarProps) {
+export function Topbar({ userName, userId, avatar }: TopbarProps) {
+  const router = useRouter();
   const initial = userName.slice(0, 1).toUpperCase();
 
   return (
-    <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border-light bg-surface-100 p-4 shadow-card">
+    <header className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5">
       <div>
-        <p className="text-sm text-text-secondary">Welcome back, {userName}</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+        <p className="text-sm text-gray-500">Welcome back, {userName}</p>
+        <h1 className="text-2xl font-light tracking-tight text-gray-900">
           Overview
         </h1>
       </div>
 
-      <div className="flex items-center gap-3 rounded-lg border border-border-light bg-surface px-3 py-2">
+      <button
+        type="button"
+        onClick={() => router.push(`/user/${userId}`)}
+        className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-left hover:bg-gray-100"
+        aria-label="Open public profile"
+      >
         <div className="text-right">
-          <p className="text-sm font-medium text-text-primary">{userName}</p>
-          <p className="text-xs text-text-secondary">Team Manager</p>
+          <p className="text-sm font-medium text-gray-800">{userName}</p>
+          <p className="text-xs text-gray-500">Team Manager</p>
         </div>
         {avatar ? (
           <Image
@@ -32,11 +41,11 @@ export function Topbar({ userName, avatar }: TopbarProps) {
             className="h-9 w-9 rounded-full object-cover"
           />
         ) : (
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700">
             {initial}
           </span>
         )}
-      </div>
+      </button>
     </header>
   );
 }

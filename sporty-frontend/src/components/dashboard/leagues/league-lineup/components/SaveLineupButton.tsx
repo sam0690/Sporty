@@ -16,22 +16,32 @@ export function SaveLineupButton({
   const isDisabled = !isDirty || disabled || isLoading;
 
   return (
-    <div className="sticky bottom-0 border-t border-border bg-white/80 p-4 backdrop-blur">
-      <button
-        type="button"
-        onClick={onSave}
-        disabled={isDisabled}
-        className="rounded-lg bg-primary-500 px-6 py-2 text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isLoading ? (
-          <span className="inline-flex items-center gap-2">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            Saving...
-          </span>
-        ) : (
-          "Save Lineup"
-        )}
-      </button>
+    <div className="sticky bottom-0 border-t border-gray-100 bg-white/90 py-4 backdrop-blur-sm">
+      <div className="flex items-center justify-end gap-2">
+        {isDirty && !isDisabled ? (
+          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
+        ) : null}
+
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={isDisabled}
+          className={`rounded-full px-8 py-2.5 font-medium text-white transition-colors ${
+            isDisabled
+              ? "cursor-not-allowed bg-gray-300"
+              : `bg-primary-600 hover:bg-primary-700 ${isDirty ? "animate-pulse" : ""}`
+          }`}
+        >
+          {isLoading ? (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              Saving...
+            </span>
+          ) : (
+            "Save Lineup"
+          )}
+        </button>
+      </div>
     </div>
   );
 }

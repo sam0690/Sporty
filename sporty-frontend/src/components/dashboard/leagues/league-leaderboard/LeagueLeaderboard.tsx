@@ -3,14 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { EmptyState } from "@/components/dashboard/leagues/league-leaderboard/components/EmptyState";
 import { LeaderboardFilters } from "@/components/dashboard/leagues/league-leaderboard/components/LeaderboardFilters";
 import { LeaderboardHeader, type Sport } from "@/components/dashboard/leagues/league-leaderboard/components/LeaderboardHeader";
-import { LeaderboardSkeleton } from "@/components/dashboard/leagues/league-leaderboard/components/LeaderboardSkeleton";
 import { StandingsTable, type Standing, type WeeklyStanding } from "@/components/dashboard/leagues/league-leaderboard/components/StandingsTable";
 import { StatsHighlight, type StatsHighlights } from "@/components/dashboard/leagues/league-leaderboard/components/StatsHighlight";
 import { UserRankCard } from "@/components/dashboard/leagues/league-leaderboard/components/UserRankCard";
 import { WeekSelector, type SelectedWeek } from "@/components/dashboard/leagues/league-leaderboard/components/WeekSelector";
+import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
 
 type LeaderboardData = {
   leagueId: string;
@@ -149,6 +150,7 @@ export function LeagueLeaderboard() {
   const { user } = useAuth();
 
   const leagueId = params?.id ?? "1";
+  const isCommissioner = leagueId === "1";
   const leaderboard = mockLeaderboards[leagueId] ?? mockLeaderboards["1"];
 
   const [isLoading, setIsLoading] = useState(true);
@@ -197,7 +199,17 @@ export function LeagueLeaderboard() {
   }, [filteredStandings, selectedWeek]);
 
   if (isLoading) {
-    return <LeaderboardSkeleton />;
+    return (
+      <section className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        <div className="h-10 w-64 animate-pulse rounded-lg bg-gray-100" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
+        </div>
+        <TableSkeleton />
+      </section>
+    );
   }
 
   if (leaderboard.standings.length === 0) {
@@ -205,8 +217,10 @@ export function LeagueLeaderboard() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-text-primary">
-      <p className="text-sm text-text-secondary">Manager: {user?.name ?? "Sporty User"}</p>
+    <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
+      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
+
+      <NavigationTabs activeTab="leaderboard" leagueId={leagueId} isCommissioner={isCommissioner} />
 
       <LeaderboardHeader
         leagueName={leaderboard.leagueName}

@@ -3,38 +3,38 @@ import type { HowItWorksContent } from "@/components/landing/how-it-works/types"
 export const HOW_IT_WORKS_CONTENT: HowItWorksContent = {
   heading: "How it Works",
   subheading:
-    "Experience a professional-grade interface designed for speed and clarity. Managing multiple sports has never been this intuitive.",
+    "Create your account, join a league, and compete for the top spot every matchday.",
   steps: [
     {
-      title: "Pick Your Sport",
+      title: "Create Your Account",
       description:
-        "Choose between Football, Basketball, or Cricket leagues instantly with our unified selection tool.",
+        "Sign up in minutes and set your manager profile to start playing.",
       bullets: [
-        "Premier League & Champions League",
-        "NBA & International Basketball",
-        "IPL, Test & ODI Series",
+        "Fast onboarding",
+        "Secure authentication",
+        "Personalized dashboard",
       ],
       icon: "sport",
     },
     {
-      title: "Build Your Squad",
+      title: "Join or Create Leagues",
       description:
-        "Use advanced data analytics to draft your winning team across all platforms with real-time stats.",
+        "Play public competitions or invite friends to your private league.",
       bullets: [
-        "Advanced Player Metrics",
-        "Injury Reports & Lineups",
-        "Budget Management Tools",
+        "Football, basketball, cricket",
+        "Private invite codes",
+        "Commissioner controls",
       ],
       icon: "squad",
     },
     {
-      title: "Win Together",
+      title: "Compete and Win",
       description:
-        "Compete in global contests, join private leagues, and track your rankings in real-time.",
+        "Set lineups, make transfers, and climb weekly leaderboards.",
       bullets: [
-        "Live Point Tracking",
-        "Instant Prize Payouts",
-        "Social Community Hub",
+        "Live points",
+        "Head-to-head matchups",
+        "League rankings",
       ],
       icon: "trophy",
     },

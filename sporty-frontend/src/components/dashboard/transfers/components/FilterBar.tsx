@@ -11,6 +11,13 @@ type FilterBarProps = {
 
 const sports: Sport[] = ["All", "football", "basketball", "cricket"];
 
+const sportLabels: Record<Sport, string> = {
+  All: "All",
+  football: "⚽ Football",
+  basketball: "🏀 Basketball",
+  cricket: "🏏 Cricket",
+};
+
 const positionMap: Record<Exclude<Sport, "All">, string[]> = {
   football: ["All", "Forward", "Midfielder", "Defender", "Goalkeeper"],
   basketball: ["All", "Guard", "Forward", "Center"],
@@ -29,40 +36,53 @@ export function FilterBar({
       : positionMap[selectedSport];
 
   return (
-    <section className="flex flex-wrap items-center gap-2">
-      {sports.map((sport) => {
-        const isActive = selectedSport === sport;
+    <section className="space-y-2">
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
+        {sports.map((sport) => {
+          const isActive = selectedSport === sport;
 
-        return (
-          <button
-            key={sport}
-            type="button"
-            onClick={() => {
-              onSportChange(sport);
-              onPositionChange("All");
-            }}
-            className={`rounded-lg px-3 py-2 text-sm capitalize transition-colors ${
-              isActive
-                ? "bg-primary-500 text-white"
-                : "bg-surface-100 text-text-secondary hover:bg-surface-200"
-            }`}
-          >
-            {sport}
-          </button>
-        );
-      })}
+          return (
+            <button
+              key={sport}
+              type="button"
+              onClick={() => {
+                onSportChange(sport);
+                onPositionChange("All");
+              }}
+              className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all ${
+                isActive
+                  ? "border-primary-500 bg-primary-500 text-white"
+                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+              }`}
+            >
+              {sportLabels[sport]}
+            </button>
+          );
+        })}
+      </div>
 
-      <select
-        value={selectedPosition}
-        onChange={(event) => onPositionChange(event.target.value)}
-        className="rounded-lg border border-border bg-surface-100 px-3 py-2 text-sm text-text-primary"
-      >
-        {positionOptions.map((position) => (
-          <option key={position} value={position}>
-            {position}
-          </option>
-        ))}
-      </select>
+      {positionOptions.length > 0 ? (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible">
+          {positionOptions.map((position) => {
+            const isActive = selectedPosition === position;
+
+            return (
+              <button
+                key={position}
+                type="button"
+                onClick={() => onPositionChange(position)}
+                className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all ${
+                  isActive
+                    ? "border-primary-500 bg-primary-500 text-white"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                {position}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
     </section>
   );
 }

@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { ErrorAlert } from "@/components/dashboard/join-league/components/ErrorAlert";
 import { JoinForm } from "@/components/dashboard/join-league/components/JoinForm";
-import { LoadingState } from "@/components/dashboard/join-league/components/LoadingState";
 import { PublicLeaguesList, type PublicLeague } from "@/components/dashboard/join-league/components/PublicLeaguesList";
 import { SuccessModal, type JoinedLeague } from "@/components/dashboard/join-league/components/SuccessModal";
+import { CardSkeleton } from "@/components/ui/skeletons";
 
 const validCodes: Record<string, JoinedLeague> = {
   "ABCD-1234-EFGH": { id: 1, name: "Premier League Champions", sport: "football", teamName: "Goal Rush" },
@@ -98,32 +98,34 @@ export function JoinLeague() {
   };
 
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 text-text-primary">
-      <header className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight">Join a League</h1>
-        <p className="mt-2 text-text-secondary">Enter an invite code to join an existing league</p>
+    <section className="max-w-4xl mx-auto px-6 py-12 space-y-8 text-gray-900 [font-family:system-ui,-apple-system]">
+      <header className="mb-10 text-center">
+        <h1 className="text-3xl font-light tracking-tight text-gray-900">Join a League</h1>
+        <p className="mt-2 text-gray-500">Enter an invite code to join an existing league</p>
       </header>
 
-      <div className="mx-auto max-w-md rounded-lg bg-surface-100 p-8 shadow-card">
-        {error ? <ErrorAlert message={error} onDismiss={() => setError(null)} /> : null}
-        {isLoading ? (
-          <LoadingState message="Validating invite code and joining league..." />
-        ) : (
-          <JoinForm onSubmit={handleSubmit} isLoading={isLoading} error={null} />
-        )}
-      </div>
+      {error ? <ErrorAlert message={error} onDismiss={() => setError(null)} /> : null}
 
-      <div className="flex items-center gap-3">
-        <div className="h-px flex-1 bg-border" />
-        <span className="text-xs uppercase tracking-widest text-text-secondary">OR</span>
-        <div className="h-px flex-1 bg-border" />
+      {isLoading ? (
+        <div className="mx-auto max-w-md space-y-3 rounded-2xl border border-gray-100 bg-white p-8">
+          <CardSkeleton />
+          <div className="h-10 animate-pulse rounded-full bg-gray-100" />
+        </div>
+      ) : (
+        <JoinForm onSubmit={handleSubmit} isLoading={isLoading} error={null} />
+      )}
+
+      <div className="mx-auto flex max-w-2xl items-center gap-4">
+        <div className="h-px flex-1 bg-gray-200" />
+        <span className="text-xs uppercase tracking-widest text-gray-400">or</span>
+        <div className="h-px flex-1 bg-gray-200" />
       </div>
 
       <PublicLeaguesList leagues={publicLeagues} onJoin={handleJoinPublicLeague} />
 
       <div className="text-center text-sm">
-        <Link href="/create-league" className="text-primary-600 hover:underline">
-          Want to start your own competition? Create New League
+        <Link href="/create-league" className="text-gray-500 transition-colors hover:text-primary-600">
+          Don't have a league? Create one →
         </Link>
       </div>
 

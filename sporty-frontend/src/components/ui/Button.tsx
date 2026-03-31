@@ -8,13 +8,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<NonNullable<ButtonProps["variant"]>, string> = {
     primary:
-        "bg-primary text-primary-foreground hover:bg-primary-700 focus-visible:ring-primary",
+        "bg-primary-600 !text-white hover:bg-primary-700 focus-visible:ring-primary",
     secondary:
         "bg-secondary text-secondary-foreground hover:bg-secondary-hover focus-visible:ring-secondary",
     outline:
-        "border border-surface-300 bg-transparent hover:bg-surface-50 focus-visible:ring-primary",
+        "border border-gray-300 bg-transparent text-gray-700 hover:bg-surface-50 focus-visible:ring-primary",
     ghost:
-        "bg-transparent hover:bg-surface-100 focus-visible:ring-primary",
+        "bg-transparent text-gray-700 hover:bg-surface-100 focus-visible:ring-primary",
     danger:
         "bg-accent-red text-white hover:bg-red-600 focus-visible:ring-accent-red",
 };

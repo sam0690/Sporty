@@ -195,19 +195,19 @@ export function CreateLeague() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-4 py-8 text-text-primary sm:px-6 lg:px-8">
-      <p className="text-sm text-text-secondary">Manager: {user?.name ?? "Sporty User"}</p>
+    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system]">
+      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
 
-      <div className="rounded-lg bg-surface-100 p-6 shadow-card md:p-8">
-        <CreateLeagueHeader step={step} totalSteps={totalSteps} leagueName={leagueData.leagueName} />
+      <CreateLeagueHeader step={step} totalSteps={totalSteps} leagueName={leagueData.leagueName} />
 
-        {error ? (
-          <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
-            {error}
-          </div>
-        ) : null}
+      {error ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+          {error}
+        </div>
+      ) : null}
 
-        <div className="mt-6">
+      <div className="rounded-2xl border border-gray-100 bg-white p-8 [animation:fade-soft_0.2s_ease]">
+        <div className="mt-2">
           {step === 1 ? (
             <LeagueBasicInfo
               leagueName={leagueData.leagueName}
@@ -253,17 +253,17 @@ export function CreateLeague() {
               <button
                 type="button"
                 onClick={handlePreviousStep}
-                className="rounded-lg border border-border px-4 py-3 font-semibold text-text-primary hover:bg-surface-200"
+                className="w-full rounded-full border border-gray-300 bg-white px-8 py-2.5 font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
               >
                 Back
               </button>
             ) : (
-              <span />
+              <span className="hidden sm:block" />
             )}
             <button
               type="button"
               onClick={handleNextStep}
-              className="rounded-lg bg-primary-500 px-6 py-3 font-semibold text-white hover:bg-primary-600"
+              className="w-full rounded-full bg-[#247BA0] px-8 py-2.5 font-semibold !text-white shadow-sm hover:bg-[#1d6280] sm:w-auto"
             >
               Next
             </button>

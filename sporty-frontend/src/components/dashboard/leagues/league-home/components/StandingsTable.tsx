@@ -48,20 +48,19 @@ function rankLabel(rank: number): string {
 
 export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-lg border border-border bg-surface-100 shadow-card">
-      <h2 className="border-b border-border px-4 py-3 text-lg font-semibold text-text-primary">
+    <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white [animation:fade-soft_0.2s_ease]">
+      <h2 className="p-5 pb-0 text-md font-medium text-gray-800">
         Standings
       </h2>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-surface-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="p-3 text-left text-sm font-medium text-text-secondary">Rank</th>
-              <th className="p-3 text-left text-sm font-medium text-text-secondary">Team Name</th>
-              <th className="p-3 text-left text-sm font-medium text-text-secondary">Points</th>
-              <th className="p-3 text-left text-sm font-medium text-text-secondary">Wins</th>
-              <th className="p-3 text-left text-sm font-medium text-text-secondary">Losses</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rank</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Team</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Points</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">W-L</th>
             </tr>
           </thead>
           <tbody>
@@ -71,15 +70,14 @@ export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
               return (
                 <tr
                   key={team.teamId}
-                  className={`border-b border-border hover:bg-surface-100 ${isUser ? "bg-primary-50" : ""}`}
+                  className={`border-b border-gray-100 text-sm transition-colors hover:bg-gray-50 ${isUser ? "bg-gray-50/50" : ""}`}
                 >
-                  <td className={`p-3 font-semibold ${rankClass(team.rank)} ${isUser ? "border-l-4 border-primary-500" : ""}`}>
+                  <td className={`px-5 py-3 font-medium ${rankClass(team.rank)}`}>
                     {rankLabel(team.rank)}
                   </td>
-                  <td className="p-3 text-text-primary">{team.teamName}</td>
-                  <td className="p-3 text-text-primary">{team.points}</td>
-                  <td className="p-3 text-text-primary">{team.wins}</td>
-                  <td className="p-3 text-text-primary">{team.losses}</td>
+                  <td className="px-5 py-3 text-gray-900">{team.teamName}</td>
+                  <td className="px-5 py-3 text-gray-900">{team.points}</td>
+                  <td className="px-5 py-3 text-gray-600">{team.wins}-{team.losses}</td>
                 </tr>
               );
             })}

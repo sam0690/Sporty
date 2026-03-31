@@ -10,6 +10,10 @@ type NavLinksProps = {
 };
 
 function isItemActive(itemHref: string, currentPath: string): boolean {
+  if (itemHref.includes("#")) {
+    return false;
+  }
+
   if (itemHref === "/") {
     return currentPath === "/";
   }
@@ -43,11 +47,11 @@ export function NavLinks({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+              "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary hover:text-gray-900",
               mobile && "w-full",
               active
-                ? "bg-primary-50 text-primary"
-                : "text-text-secondary hover:bg-secondary-50 hover:text-primary",
+                ? "bg-gray-100 text-gray-900"
+                : "hover:bg-gray-50",
             )}
           >
             {item.icon ? <span>{item.icon}</span> : null}

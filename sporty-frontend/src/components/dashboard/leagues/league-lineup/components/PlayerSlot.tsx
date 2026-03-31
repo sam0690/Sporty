@@ -1,5 +1,7 @@
 "use client";
 
+import { GripVertical, Plus, X } from "lucide-react";
+
 type Sport = "football" | "basketball" | "cricket";
 
 type Player = {
@@ -14,6 +16,7 @@ type PlayerSlotProps = {
   player: Player;
   onToggle: (playerId: number) => void;
   isActive: boolean;
+  variant?: "lineup" | "bench";
   disabled?: boolean;
 };
 
@@ -29,7 +32,7 @@ const sportIcons: Record<Sport, string> = {
   cricket: "🏏",
 };
 
-export function PlayerSlot({ player, onToggle, isActive, disabled = false }: PlayerSlotProps) {
+export function PlayerSlot({ player, onToggle, isActive, variant = "lineup", disabled = false }: PlayerSlotProps) {
   return (
     <article
       role="button"
@@ -49,43 +52,47 @@ export function PlayerSlot({ player, onToggle, isActive, disabled = false }: Pla
           onToggle(player.id);
         }
       }}
-      className={`flex cursor-pointer items-center justify-between rounded-lg border border-border p-4 transition-all hover:shadow-card-hover ${
+      className={`group flex items-center justify-between rounded-xl border p-3 transition-all duration-150 [animation:fade-soft_0.2s_ease] ${
         isActive
-          ? "border-l-4 border-l-primary-500 bg-primary-50/30"
-          : "bg-surface-100 opacity-80"
-      } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+          ? "border-gray-100 bg-white"
+          : "border-gray-100 bg-white"
+      } ${
+        variant === "bench" ? "cursor-grab active:cursor-grabbing hover:bg-gray-50" : "cursor-pointer"
+      } ${disabled ? "cursor-not-allowed opacity-60" : "active:rotate-1 active:opacity-50 active:shadow-lg"}`}
       aria-disabled={disabled}
     >
-      <div>
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          <p className="font-semibold text-text-primary">{player.name}</p>
-          <span className={`rounded px-2 py-1 text-xs capitalize ${sportBadgeStyles[player.sport]}`}>
-            {sportIcons[player.sport]} {player.sport}
-          </span>
+          <p className="truncate font-medium text-gray-900">{player.name}</p>
         </div>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="rounded bg-gray-100 px-2 py-1 text-xs text-text-secondary">
-            {player.position}
+        <div className="mt-1 flex items-center gap-2 text-sm text-gray-500">
+          <span className={`rounded px-2 py-0.5 text-xs capitalize ${sportBadgeStyles[player.sport]}`}>
+            {sportIcons[player.sport]}
           </span>
+          <span>{player.position}</span>
         </div>
-        <p className="mt-2 text-sm font-medium text-primary-600">
+        <p className="mt-1 text-sm text-gray-600">
           Projected: {player.projected.toFixed(1)}
         </p>
       </div>
 
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={(event) => {
-          event.stopPropagation();
-          if (!disabled) {
-            onToggle(player.id);
-          }
-        }}
-        className="rounded-lg bg-primary-500 px-3 py-2 text-sm text-white transition-colors hover:bg-primary-600 disabled:opacity-60"
-      >
-        {isActive ? "Bench" : "Start"}
-      </button>
+      <div className="ml-3 flex items-center gap-2">
+        {variant === "bench" ? <GripVertical className="h-4 w-4 text-gray-400" /> : null}
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={(event) => {
+            event.stopPropagation();
+            if (!disabled) {
+              onToggle(player.id);
+            }
+          }}
+          className="rounded-full p-1 text-gray-400 transition-colors hover:text-red-500 disabled:opacity-60"
+          aria-label={isActive ? "Remove from lineup" : "Add to lineup"}
+        >
+          {isActive ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+        </button>
+      </div>
     </article>
   );
 }

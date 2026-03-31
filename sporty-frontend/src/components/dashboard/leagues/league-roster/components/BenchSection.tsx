@@ -30,14 +30,14 @@ export function BenchSection({
   pitchIsFull,
 }: BenchSectionProps) {
   return (
-    <section className="space-y-3">
+    <section className="mt-8 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-text-primary">Bench ({benchPlayers.length})</h3>
-        <span className="text-xs text-text-secondary">Start players to fill pitch spots</span>
+        <h3 className="text-lg font-medium text-gray-900">Bench ({benchPlayers.length})</h3>
+        <span className="text-xs text-gray-500">Start players to fill pitch spots</span>
       </div>
 
       {benchPlayers.length === 0 ? (
-        <div className="rounded-lg border border-border bg-surface-100 p-4 text-sm text-text-secondary">
+        <div className="rounded-xl border border-gray-100 bg-white p-4 text-sm text-gray-500">
           No bench players available for the current filters.
         </div>
       ) : (
@@ -58,25 +58,22 @@ export function BenchSection({
                   : "";
 
               return (
-                <article key={player.id} className="w-64 rounded-lg border border-border bg-surface-100 p-3 shadow-card md:w-auto">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="font-semibold text-text-primary">{player.name}</p>
-                      <p className="text-xs text-text-secondary">{player.position}</p>
+                <article key={player.id} className="w-64 rounded-xl border border-gray-100 bg-white p-3 md:w-auto">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-gray-900">{player.name}</p>
+                      <p className="text-xs text-gray-500">{sportIcons[player.sport]} {player.position}</p>
                     </div>
-                    <span className="text-base" aria-label={player.sport}>
-                      {sportIcons[player.sport]}
-                    </span>
+                    <p className="text-xs font-medium text-gray-700">{player.totalPoints} pts</p>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between">
-                    <p className="text-sm font-medium text-primary-600">{player.totalPoints} pts</p>
+                  <div className="mt-3 flex items-center justify-end">
                     <button
                       type="button"
                       title={disabled ? disabledReason : "Move player to pitch"}
                       disabled={disabled}
                       onClick={() => onMoveToPitch(player.id)}
-                      className="rounded-md bg-primary-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
+                      className="rounded-full bg-primary-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600"
                     >
                       Start
                     </button>

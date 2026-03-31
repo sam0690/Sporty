@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Multi sport collage">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#295f8f"/>
+      <stop offset="50%" stop-color="#3b8f52"/>
+      <stop offset="100%" stop-color="#8f5a2f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#bg)"/>
+  <circle cx="250" cy="300" r="110" fill="#ffffff" opacity="0.2"/>
+  <circle cx="600" cy="300" r="110" fill="#ffffff" opacity="0.2"/>
+  <circle cx="950" cy="300" r="110" fill="#ffffff" opacity="0.2"/>
+  <text x="250" y="325" font-size="88" text-anchor="middle">⚽</text>
+  <text x="600" y="325" font-size="88" text-anchor="middle">🏀</text>
+  <text x="950" y="325" font-size="88" text-anchor="middle">🏏</text>
+</svg>

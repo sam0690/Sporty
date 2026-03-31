@@ -21,14 +21,14 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
         className={mobile ? "w-full" : undefined}
       >
         <Button
-          variant="ghost"
+          variant="outline"
           size="md"
           className={cn(
-            "text-text-secondary hover:text-primary",
+            "border border-gray-300 !bg-white !text-gray-700 hover:border-gray-400 hover:!bg-gray-50",
             mobile && "w-full justify-center",
           )}
         >
-          Sign in
+          Login
         </Button>
       </Link>
       <Link
@@ -38,9 +38,12 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
       >
         <Button
           size="md"
-          className={mobile ? "w-full justify-center" : undefined}
+          className={cn(
+            "!bg-[#247BA0] !text-white hover:!bg-[#1d6280]",
+            mobile && "w-full justify-center",
+          )}
         >
-          Get Started
+          Sign Up
         </Button>
       </Link>
     </div>

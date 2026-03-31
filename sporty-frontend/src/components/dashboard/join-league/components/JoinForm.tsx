@@ -18,26 +18,26 @@ export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
   };
 
   return (
-    <form onSubmit={submit} className="space-y-4">
+    <form onSubmit={submit} className="mx-auto max-w-md space-y-4 rounded-2xl border border-gray-100 bg-white p-8 [animation:fade-soft_0.2s_ease]">
       <div>
-        <label htmlFor="invite-code" className="mb-1 block text-sm font-medium text-text-primary">
+        <label htmlFor="invite-code" className="mb-1 block text-sm text-gray-600">
           Invite Code
         </label>
         <input
           id="invite-code"
           value={inviteCode}
           onChange={(event) => setInviteCode(event.target.value.toUpperCase())}
-          placeholder="XXXX-XXXX-XXXX"
+          placeholder="ABCD-1234-EFGH"
           required
-          className="w-full rounded-lg border border-border px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center font-mono text-lg tracking-wider text-gray-900 outline-none transition focus:border-primary-400"
         />
-        <p className="mt-2 text-xs text-text-secondary">
-          Enter the 12-character invite code shared by the league commissioner. Example: ABCD-1234-EFGH
+        <p className="mt-2 text-center text-xs text-gray-400">
+          Format: XXXX-XXXX-XXXX
         </p>
       </div>
 
       <div>
-        <label htmlFor="league-name" className="mb-1 block text-sm font-medium text-text-primary">
+        <label htmlFor="league-name" className="mb-1 block text-sm text-gray-600">
           League Name (optional)
         </label>
         <input
@@ -45,18 +45,18 @@ export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
           value={leagueName}
           onChange={(event) => setLeagueName(event.target.value)}
           placeholder="Search by league name"
-          className="w-full rounded-lg border border-border px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
         />
       </div>
 
       {error ? (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       ) : null}
 
       <button
         type="submit"
         disabled={isLoading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-70"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#247BA0] px-8 py-3 font-semibold !text-white shadow-sm transition-colors hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:!text-gray-600 disabled:opacity-100"
       >
         {isLoading ? (
           <>

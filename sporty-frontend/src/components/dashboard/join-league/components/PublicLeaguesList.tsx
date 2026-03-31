@@ -14,27 +14,27 @@ type PublicLeaguesListProps = {
 };
 
 const sportBadgeStyles: Record<PublicLeague["sport"], string> = {
-  football: "bg-accent-football/10 text-accent-football",
-  basketball: "bg-accent-basketball/10 text-accent-basketball",
-  cricket: "bg-accent-cricket/10 text-accent-cricket",
-  multisport: "bg-gradient-to-r from-accent-football/15 via-accent-basketball/15 to-accent-cricket/15 text-primary-700",
+  football: "⚽",
+  basketball: "🏀",
+  cricket: "🏏",
+  multisport: "⚽🏀🏏",
 };
 
 export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-lg font-semibold text-text-primary">Browse Public Leagues</h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <section className="mx-auto max-w-2xl space-y-3">
+      <h2 className="mb-4 text-md font-medium text-gray-800">Public Leagues</h2>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {leagues.map((league) => (
-          <article key={league.id} className="rounded-lg border border-border bg-surface-100 p-4 shadow-card">
+          <article key={league.id} className="rounded-xl border border-gray-100 bg-white p-4 [animation:fade-soft_0.2s_ease]">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold text-text-primary">{league.name}</h3>
-              <span className={`rounded-full px-2 py-1 text-xs font-medium capitalize ${sportBadgeStyles[league.sport]}`}>
-                {league.sport}
+              <h3 className="font-medium text-gray-900">{league.name}</h3>
+              <span className="text-base" aria-label={league.sport} title={league.sport}>
+                {sportBadgeStyles[league.sport]}
               </span>
             </div>
-            <p className="mt-2 text-sm text-text-secondary">Members: {league.memberCount}</p>
-            <p className="text-xs text-text-secondary">
+            <p className="mt-2 text-sm text-gray-500">Members: {league.memberCount}</p>
+            <p className="text-xs text-gray-500">
               {league.requiresInviteCode ? "Requires invite code" : "Open for direct join"}
             </p>
 
@@ -42,7 +42,7 @@ export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
               type="button"
               disabled={league.requiresInviteCode}
               onClick={() => onJoin(league)}
-              className="mt-3 rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-600 disabled:cursor-not-allowed disabled:bg-gray-300"
+              className="mt-3 rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-primary-500 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
             >
               Join
             </button>

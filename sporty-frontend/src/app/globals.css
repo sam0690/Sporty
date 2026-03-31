@@ -31,8 +31,40 @@ body {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .animate-fade-in-scale {
   animation: fadeInScale 0.4s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+@keyframes fade-soft {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-soft {
+  animation: fade-soft 0.4s ease-out forwards;
+}
+
+.card-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }
 
 @keyframes float {
@@ -45,8 +77,31 @@ body {
   }
 }
 
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delay-1 {
+  animation: float 7s ease-in-out infinite 1s;
+}
+
+.animate-float-delay-2 {
+  animation: float 8s ease-in-out infinite 2s;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.6s ease-out forwards;
 }
 
 @keyframes shimmer {
@@ -161,4 +216,74 @@ body {
   background-color: rgba(255, 252, 255, 0.24);
   font-size: 0.75rem;
   font-weight: 700;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+::selection {
+  background: #247BA0;
+  color: white;
+}
+
+button {
+  transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: scale(0.98);
+}
+
+article {
+  transition: box-shadow 0.2s ease;
+}
+
+article:hover {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+tr {
+  transition: background-color 0.2s ease;
+}
+
+tr:hover {
+  background-color: #f9fafb;
+}
+
+a {
+  transition: all 0.2s ease;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Landing safety: never allow white text on white CTA surfaces */
+.landing-shell button.bg-white,
+.landing-shell button.\!bg-white,
+.landing-shell a.bg-white,
+.landing-shell a.\!bg-white {
+  color: #374151 !important;
+}
+
+.landing-shell button.bg-primary-600,
+.landing-shell button.\!bg-\[\#247BA0\],
+.landing-shell a.bg-primary-600,
+.landing-shell a.\!bg-\[\#247BA0\] {
+  color: #ffffff !important;
 }
