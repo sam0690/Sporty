@@ -8,6 +8,8 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/compo
 import { AuthHeroImage } from "@/components/auth/shared/AuthHeroImage";
 import { AuthPageShell } from "@/components/auth/shared/AuthPageShell";
 import { PasswordStrengthIndicator } from "@/components/auth/shared/PasswordStrengthIndicator";
+import { Divider } from "@/components/auth/login/components/Divider";
+import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/libs/toastifier";
 
@@ -38,7 +40,7 @@ export function SignUpForm() {
         const nextErrors: SignUpErrors = {};
 
         if (!name.trim()) {
-            nextErrors.name = "Name is required.";
+            nextErrors.name = "Username is required.";
         }
 
         if (!email.trim()) {
@@ -90,7 +92,17 @@ export function SignUpForm() {
                 />
             }
         >
-            <Card className="animate-fade-in mx-auto w-full max-w-md rounded-2xl border border-gray-100 bg-white shadow-2xl">
+            <div className="mx-auto w-full max-w-md">
+                <div className="mb-4">
+                    <Link
+                        href="/"
+                        className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
+                    >
+                        ← Back to Home
+                    </Link>
+                </div>
+
+                <Card className="animate-fade-in w-full rounded-2xl border border-gray-100 bg-white shadow-2xl">
                 <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
                     <div className="flex items-center gap-2 text-primary-800">
                         <span className="text-lg" aria-hidden="true">⚽🏀🏏</span>
@@ -104,7 +116,7 @@ export function SignUpForm() {
                     <form onSubmit={onSubmit} className="space-y-4">
                         <div>
                             <label htmlFor="name" className="mb-1 block text-sm font-medium text-text-primary">
-                                Full Name
+                                Username
                             </label>
                             <div className="relative">
                                 <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -113,8 +125,8 @@ export function SignUpForm() {
                                     type="text"
                                     value={name}
                                     onChange={(event) => setName(event.target.value)}
-                                    placeholder="Your name"
-                                    autoComplete="name"
+                                    placeholder="Choose a username"
+                                    autoComplete="username"
                                     error={errors.name}
                                     className="h-12 rounded-xl border border-gray-300 bg-white px-4 pl-10 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
                                 />
@@ -211,6 +223,9 @@ export function SignUpForm() {
                         </Button>
                     </form>
 
+                    <Divider />
+                    <SocialLogin />
+
                     <p className="border-t border-gray-200 pt-4 text-center text-sm text-text-secondary">
                         Already have an account?{" "}
                         <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700 hover:underline">
@@ -219,6 +234,7 @@ export function SignUpForm() {
                     </p>
                 </CardContent>
             </Card>
+            </div>
         </AuthPageShell>
     );
 }

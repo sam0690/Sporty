@@ -15,11 +15,12 @@ export function DashboardMainContainer() {
   const { user } = useAuth();
 
   const userName = user?.name ?? "Sporty Manager";
+  const userId = user?.id ?? "1";
 
   return (
     <div className="mx-auto w-full max-w-7xl px-2 py-1 sm:px-3">
       <main>
-        <Topbar userName={userName} avatar={user?.avatar} />
+        <Topbar userName={userName} userId={userId} avatar={user?.avatar} />
         <OverviewCards stats={OVERVIEW_STATS} />
 
         <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[1.35fr_1fr]">

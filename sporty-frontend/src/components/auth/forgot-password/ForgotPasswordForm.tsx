@@ -102,12 +102,6 @@ export function ForgotPasswordForm() {
                         </p>
                     )}
 
-                    <div className="flex justify-center">
-                        <Link href="/login" className="rounded-xl border-2 border-primary-600 bg-white px-4 py-2 text-sm font-semibold text-primary-600 transition-colors hover:bg-primary-50">
-                            Back to Login
-                        </Link>
-                    </div>
-
                     <p className="border-t border-gray-200 pt-4 text-center text-sm text-text-secondary">
                         <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700 hover:underline">
                             Back to Login

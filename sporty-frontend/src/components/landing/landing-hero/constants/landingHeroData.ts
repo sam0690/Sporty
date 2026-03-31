@@ -4,19 +4,19 @@ import type {
 } from "@/components/landing/landing-hero/types";
 
 export const LANDING_HERO_CONTENT: LandingHeroContent = {
-  badge: "NEW SEASON 2024 IS LIVE",
-  title: "All Your\nLeagues, One\nUnified Arena.",
+  badge: "NEW SEASON IS LIVE",
+  title: "Build Your Ultimate\nFantasy Team",
   description:
-    "The professional choice for multi-sport enthusiasts. Manage Football, Basketball, and Cricket rosters effortlessly with advanced real-time data integration.",
+    "Draft, manage, and compete across sports with a clean experience designed for weekly wins.",
   ctas: [
     {
-      label: "Build Your Team",
+      label: "Get Started",
       href: "/signUp",
       variant: "primary",
     },
     {
-      label: "View Demo",
-      href: "/demo",
+      label: "Learn More",
+      href: "/#how-it-works",
       variant: "outline",
     },
   ],
@@ -27,8 +27,8 @@ export const LANDING_HERO_CONTENT: LandingHeroContent = {
 };
 
 export const LANDING_HERO_VISUAL: LandingHeroVisual = {
-  imageAlt: "Sport stadium overview",
-  imageSrc: "/images/landing/hero-stadium.svg",
-  nextMatchLabel: "Next Match: Premier League Finals",
+  imageAlt: "Atmospheric wide-angle sports stadium",
+  imageSrc: "/images/landing/hero-stadium.jpg",
+  nextMatchLabel: "Matchday arrives in 02:16:22",
   progressPercent: 68,
 };

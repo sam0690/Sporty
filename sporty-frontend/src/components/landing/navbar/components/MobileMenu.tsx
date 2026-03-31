@@ -12,7 +12,7 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
     <div className="md:hidden">
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border-light text-text-secondary transition-colors hover:bg-secondary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-expanded={open}
         aria-controls="mobile-nav-menu"
         aria-label={open ? "Close navigation menu" : "Open navigation menu"}
@@ -51,12 +51,18 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
       <div
         id="mobile-nav-menu"
         className={cn(
-          "grid overflow-hidden transition-all duration-200",
-          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+          "fixed inset-0 z-40 transition-opacity duration-200",
+          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}
       >
-        <div className="overflow-hidden">
-          <div className="mt-3 space-y-3 rounded-lg border border-border-light bg-surface px-3 py-3 shadow-dropdown">
+        <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onClick={onToggle} />
+        <div
+          className={cn(
+            "absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white p-5 shadow-xl transition-transform duration-300",
+            open ? "translate-x-0" : "translate-x-full",
+          )}
+        >
+          <div className="space-y-4">
             {children}
           </div>
         </div>

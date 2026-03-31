@@ -1,9 +1,13 @@
+import { useRouter } from "next/navigation";
+
 type TopbarProps = {
   userName: string;
+  userId: string;
   avatar?: string;
 };
 
-export function Topbar({ userName, avatar }: TopbarProps) {
+export function Topbar({ userName, userId, avatar }: TopbarProps) {
+  const router = useRouter();
   const initial = userName.slice(0, 1).toUpperCase();
 
   return (
@@ -13,7 +17,12 @@ export function Topbar({ userName, avatar }: TopbarProps) {
         <h1 className="text-2xl font-light tracking-tight text-gray-900">Overview</h1>
       </div>
 
-      <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2">
+      <button
+        type="button"
+        onClick={() => router.push(`/user/${userId}`)}
+        className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-left hover:bg-gray-100"
+        aria-label="Open public profile"
+      >
         <div className="text-right">
           <p className="text-sm font-medium text-gray-800">{userName}</p>
           <p className="text-xs text-gray-500">Team Manager</p>
@@ -29,7 +38,7 @@ export function Topbar({ userName, avatar }: TopbarProps) {
             {initial}
           </span>
         )}
-      </div>
+      </button>
     </header>
   );
 }

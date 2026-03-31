@@ -272,3 +272,18 @@ a {
 a:hover {
   text-decoration: underline;
 }
+
+/* Landing safety: never allow white text on white CTA surfaces */
+.landing-shell button.bg-white,
+.landing-shell button.\!bg-white,
+.landing-shell a.bg-white,
+.landing-shell a.\!bg-white {
+  color: #374151 !important;
+}
+
+.landing-shell button.bg-primary-600,
+.landing-shell button.\!bg-\[\#247BA0\],
+.landing-shell a.bg-primary-600,
+.landing-shell a.\!bg-\[\#247BA0\] {
+  color: #ffffff !important;
+}

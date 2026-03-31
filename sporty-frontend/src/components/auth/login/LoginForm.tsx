@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/components/ui";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/libs/toastifier";
@@ -10,7 +11,7 @@ import { Divider } from "./components/Divider";
 import { SocialLogin } from "./components/SocialLogin";
 
 type LoginErrors = {
-    email?: string;
+    username?: string;
     password?: string;
 };
 
@@ -18,7 +19,7 @@ export function LoginForm() {
     const router = useRouter();
     const { login, actionLoading } = useAuth();
 
-    const [email, setEmail] = useState("");
+    const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState<LoginErrors>({});
@@ -28,8 +29,8 @@ export function LoginForm() {
     const validate = (): boolean => {
         const nextErrors: LoginErrors = {};
 
-        if (!email.trim()) {
-            nextErrors.email = "Email is required.";
+        if (!username.trim()) {
+            nextErrors.username = "Username is required.";
         }
 
         if (!password.trim()) {
@@ -49,7 +50,7 @@ export function LoginForm() {
             return;
         }
 
-        const result = await login(email, password);
+        const result = await login(username, password);
         if (!result.success) {
             toastifier.error(result.error ?? "Unable to sign in.");
             return;
@@ -60,6 +61,15 @@ export function LoginForm() {
 
     return (
         <div className="relative mx-auto w-full max-w-md">
+            <div className="mb-4">
+                <Link
+                    href="/"
+                    className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
+                >
+                    ← Back to Home
+                </Link>
+            </div>
+
             <div className="pointer-events-none absolute -left-10 -top-10 h-24 w-24 rounded-full bg-primary-200/40 blur-2xl" />
             <div className="pointer-events-none absolute -bottom-12 -right-10 h-28 w-28 rounded-full bg-accent-basketball/25 blur-2xl" />
 
@@ -76,8 +86,8 @@ export function LoginForm() {
                 <CardContent className="space-y-5 p-8 pt-0 sm:p-10 sm:pt-0">
                     <form onSubmit={onSubmit} className="space-y-4">
                         <div>
-                            <label htmlFor="email" className="mb-1 block text-sm font-medium text-text-primary">
-                                Email
+                            <label htmlFor="username" className="mb-1 block text-sm font-medium text-text-primary">
+                                Username
                             </label>
                             <div className="relative">
                                 <span
@@ -87,13 +97,13 @@ export function LoginForm() {
                                     @
                                 </span>
                                 <Input
-                                    id="email"
-                                    type="email"
-                                    value={email}
-                                    onChange={(event) => setEmail(event.target.value)}
-                                    placeholder="name@example.com"
-                                    autoComplete="email"
-                                    error={errors.email}
+                                    id="username"
+                                    type="text"
+                                    value={username}
+                                    onChange={(event) => setUsername(event.target.value)}
+                                    placeholder="Enter your username"
+                                    autoComplete="username"
+                                    error={errors.username}
                                     className="h-12 rounded-xl border border-gray-300 bg-white px-4 pl-10 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
                                 />
                             </div>
@@ -119,15 +129,15 @@ export function LoginForm() {
                                     autoComplete="current-password"
                                     className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 pl-10 pr-14 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-primary-600"
+                                    aria-label={showPassword ? "Hide password" : "Show password"}
+                                >
+                                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                </button>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword((prev) => !prev)}
-                                className="absolute right-4 top-[2.35rem] -translate-y-1/2 text-sm font-medium text-text-secondary transition-colors hover:text-primary-600"
-                                aria-label={showPassword ? "Hide password" : "Show password"}
-                            >
-                                {showPassword ? "Hide" : "Show"}
-                            </button>
                             {errors.password && <span className="mt-1 block text-xs text-accent-red">{errors.password}</span>}
                         </div>
 
