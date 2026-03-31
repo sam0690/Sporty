@@ -2,24 +2,33 @@
 
 import { useRouter } from "next/navigation";
 
-type TabKey = "lineup" | "roster" | "transfers" | "leaderboard";
+type TabKey = "overview" | "lineup" | "roster" | "leaderboard" | "members" | "invite" | "settings";
 
 type NavigationTabsProps = {
   activeTab: TabKey;
   leagueId: string;
+  isCommissioner?: boolean;
 };
 
 const tabs: { key: TabKey; label: string }[] = [
+  { key: "overview", label: "Overview" },
   { key: "lineup", label: "Lineup" },
   { key: "roster", label: "Roster" },
-  { key: "transfers", label: "Transfers" },
   { key: "leaderboard", label: "Leaderboard" },
+  { key: "members", label: "Members" },
+  { key: "invite", label: "Invite" },
+  { key: "settings", label: "Settings" },
 ];
 
-export function NavigationTabs({ activeTab, leagueId }: NavigationTabsProps) {
+export function NavigationTabs({ activeTab, leagueId, isCommissioner = false }: NavigationTabsProps) {
   const router = useRouter();
 
   const goToTab = (tab: TabKey) => {
+    if (tab === "overview") {
+      router.push(`/league/${leagueId}`);
+      return;
+    }
+
     if (tab === "lineup") {
       router.push(`/league/${leagueId}/lineup`);
       return;
@@ -30,17 +39,31 @@ export function NavigationTabs({ activeTab, leagueId }: NavigationTabsProps) {
       return;
     }
 
-    if (tab === "transfers") {
-      router.push("/transfers");
+    if (tab === "leaderboard") {
+      router.push(`/league/${leagueId}/leaderboard`);
       return;
     }
 
-    router.push(`/league/${leagueId}/leaderboard`);
+    if (tab === "members") {
+      router.push(`/league/${leagueId}/members`);
+      return;
+    }
+
+    if (tab === "invite") {
+      router.push(`/league/${leagueId}/invite`);
+      return;
+    }
+
+    router.push(`/league/${leagueId}/settings`);
   };
 
   return (
-    <nav className="flex flex-wrap gap-6 border-b border-border" aria-label="League Navigation Tabs">
-      {tabs.map((tab) => {
+    <nav
+      className="mb-6 overflow-x-auto rounded-2xl border border-gray-100 bg-white p-2"
+      aria-label="League Navigation Tabs"
+    >
+      <div className="flex min-w-max gap-2">
+      {tabs.filter((tab) => tab.key !== "settings" || isCommissioner).map((tab) => {
         const isActive = tab.key === activeTab;
 
         return (
@@ -48,16 +71,17 @@ export function NavigationTabs({ activeTab, leagueId }: NavigationTabsProps) {
             key={tab.key}
             type="button"
             onClick={() => goToTab(tab.key)}
-            className={`pb-3 text-sm font-medium transition-colors ${
+            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
               isActive
-                ? "border-b-2 border-primary-500 text-primary-600"
-                : "text-text-secondary hover:text-text-primary"
+                ? "border-primary-200 bg-primary-50 text-primary-900 shadow-sm"
+                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
             }`}
           >
             {tab.label}
           </button>
         );
       })}
+      </div>
     </nav>
   );
 }

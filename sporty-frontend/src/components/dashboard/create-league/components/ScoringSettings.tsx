@@ -17,26 +17,35 @@ export function ScoringSettings({ scoringRules, onScoringChange, sport }: Scorin
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-medium text-text-primary">Scoring Rules</h3>
-          <p className="text-xs text-text-secondary">
+          <h3 className="text-sm font-medium text-gray-900">Scoring Rules</h3>
+          <p className="text-xs text-gray-500">
             Default rules are loaded for {sport || "your"} league.
           </p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-text-primary">
-          <input
-            type="checkbox"
-            checked={allowCustom}
-            onChange={(event) => setAllowCustom(event.target.checked)}
-            className="h-4 w-4 rounded border-border text-primary-500 focus:ring-primary-500"
-          />
-          Allow custom values
+        <label className="flex items-center gap-3 text-sm text-gray-600">
+          <span>Use custom scoring</span>
+          <button
+            type="button"
+            onClick={() => setAllowCustom((prev) => !prev)}
+            className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
+              allowCustom ? "bg-primary-600" : "bg-gray-300"
+            }`}
+            aria-pressed={allowCustom}
+            aria-label="Toggle custom scoring"
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                allowCustom ? "translate-x-5" : "translate-x-1"
+              }`}
+            />
+          </button>
         </label>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-2 gap-4">
         {entries.map(([label, value]) => (
-          <div key={label} className="rounded-lg border border-border p-4">
-            <label className="mb-2 block text-sm font-medium text-text-primary">{label}</label>
+          <div key={label} className="space-y-2">
+            <label className="block text-sm text-gray-600">{label}</label>
             <input
               type="number"
               min={0}
@@ -50,7 +59,7 @@ export function ScoringSettings({ scoringRules, onScoringChange, sport }: Scorin
                   [label]: Number.isNaN(nextValue) ? 0 : nextValue,
                 });
               }}
-              className="w-full rounded-lg border border-border px-3 py-2 text-text-primary outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-surface-200"
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-gray-900 outline-none transition focus:border-primary-400 disabled:bg-gray-100"
             />
           </div>
         ))}

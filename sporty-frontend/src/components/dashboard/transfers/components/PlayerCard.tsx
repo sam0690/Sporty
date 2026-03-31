@@ -11,12 +11,13 @@ type PlayerCardProps = {
   avgPoints: number;
   form?: number;
   onAdd: (id: number) => void;
+  animationDelay?: number;
 };
 
-const sportBadgeStyles: Record<Exclude<Sport, "All">, string> = {
-  football: "bg-accent-football/10 text-accent-football",
-  basketball: "bg-accent-basketball/10 text-accent-basketball",
-  cricket: "bg-accent-cricket/10 text-accent-cricket",
+const sportIcons: Record<Exclude<Sport, "All">, string> = {
+  football: "⚽",
+  basketball: "🏀",
+  cricket: "🏏",
 };
 
 export function PlayerCard({
@@ -28,41 +29,33 @@ export function PlayerCard({
   avgPoints,
   form,
   onAdd,
+  animationDelay = 0,
 }: PlayerCardProps) {
-  const badgeClass =
-    sport === "All"
-      ? "bg-surface-200 text-text-secondary"
-      : sportBadgeStyles[sport];
+  const sportLabel = sport === "All" ? "🏟️" : `${sportIcons[sport]} ${position}`;
 
   return (
-    <article className="flex flex-wrap items-center justify-between gap-4 rounded-lg border border-border bg-surface-100 p-4 transition-all hover:border-primary-200 hover:shadow-card-hover">
+    <article
+      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4 transition-all duration-200 hover:border-gray-200 hover:shadow-sm"
+      style={{ animationDelay: `${animationDelay}ms` }}
+    >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-semibold text-text-primary">{name}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-          <span className={`rounded-full px-2 py-1 font-medium capitalize ${badgeClass}`}>
-            {sport}
-          </span>
-          <span className="rounded-full bg-gray-100 px-2 py-1 text-text-secondary">
-            {position}
-          </span>
-          {form ? (
-            <span className="text-text-secondary">Form {form}/10</span>
-          ) : null}
-        </div>
-        <p className="mt-2 text-sm text-text-secondary">Avg points: {avgPoints.toFixed(1)}</p>
+        <p className="truncate text-base font-medium text-gray-900">👤 {name}</p>
+        <p className="mt-1 text-sm text-gray-500">{sportLabel}</p>
       </div>
 
-      <div className="text-right">
-        <p className="text-lg font-bold text-primary-600">
-          <span aria-hidden="true">$</span>
-          {price}M
-        </p>
+      <div className="text-right sm:min-w-[110px]">
+        <p className="text-sm font-semibold text-gray-900">💰 ${price}M</p>
+        <p className="text-xs text-gray-400">Proj: {avgPoints.toFixed(1)}</p>
+        {form ? <p className="text-xs text-gray-400">Form: {form}/10</p> : null}
+      </div>
+
+      <div>
         <button
           type="button"
           onClick={() => onAdd(id)}
-          className="mt-2 rounded-lg bg-primary-500 px-3 py-2 text-sm text-white transition-colors hover:bg-primary-600"
+          className="rounded-full border border-gray-300 px-3.5 py-1.5 text-sm text-gray-600 transition-colors hover:border-primary-500 hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Transfer In
+          + Add
         </button>
       </div>
     </article>

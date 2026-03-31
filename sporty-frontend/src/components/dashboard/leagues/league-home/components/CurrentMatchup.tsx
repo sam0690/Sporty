@@ -16,23 +16,31 @@ export function CurrentMatchup({
   const youWinning = yourScore >= opponentScore;
 
   return (
-    <section className="rounded-lg bg-surface-100 p-6 shadow-card">
-      <h2 className="mb-4 text-lg font-semibold text-text-primary">This Week's Matchup</h2>
+    <section className="rounded-2xl border border-gray-100 bg-white p-5 [animation:fade-soft_0.2s_ease]">
+      <h2 className="mb-4 text-sm font-medium text-gray-500">This Week's Matchup</h2>
 
       <div className="grid grid-cols-2 gap-4 text-center">
         <div>
-          <p className="text-sm text-text-secondary">{yourTeamName}</p>
-          <p className={`mt-2 text-3xl font-bold ${youWinning ? "text-primary-600" : "text-text-primary"}`}>
+          <p className="text-sm font-medium text-gray-900">{yourTeamName}</p>
+          <p className="mt-2 text-2xl font-light text-gray-900">
             {yourScore}
           </p>
         </div>
         <div>
-          <p className="text-sm text-text-secondary">{opponentTeamName}</p>
-          <p className={`mt-2 text-3xl font-bold ${youWinning ? "text-text-primary" : "text-primary-600"}`}>
+          <p className="text-sm font-medium text-gray-900">{opponentTeamName}</p>
+          <p className="mt-2 text-2xl font-light text-gray-900">
             {opponentScore}
           </p>
         </div>
       </div>
+
+      {youWinning ? (
+        <div className="mt-4 flex justify-center">
+          <span className="rounded-full border border-gray-100 bg-gray-50 px-3 py-1 text-xs text-gray-600">
+            🏆 Leading
+          </span>
+        </div>
+      ) : null}
     </section>
   );
 }

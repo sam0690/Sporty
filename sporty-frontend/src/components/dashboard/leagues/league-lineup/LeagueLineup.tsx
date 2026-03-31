@@ -7,11 +7,12 @@ import { toastifier } from "@/libs/toastifier";
 import { BenchPlayers } from "@/components/dashboard/leagues/league-lineup/components/BenchPlayers";
 import { EmptyState } from "@/components/dashboard/leagues/league-lineup/components/EmptyState";
 import { LineupHeader } from "@/components/dashboard/leagues/league-lineup/components/LineupHeader";
-import { LineupSkeleton } from "@/components/dashboard/leagues/league-lineup/components/LineupSkeleton";
+import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { PositionLimits } from "@/components/dashboard/leagues/league-lineup/components/PositionLimits";
 import { SaveLineupButton } from "@/components/dashboard/leagues/league-lineup/components/SaveLineupButton";
 import { StartingLineup } from "@/components/dashboard/leagues/league-lineup/components/StartingLineup";
-import { PlayerSlot, type Player, type Sport } from "@/components/dashboard/leagues/league-lineup/components/PlayerSlot";
+import { type Player, type Sport } from "@/components/dashboard/leagues/league-lineup/components/PlayerSlot";
+import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 
 type PositionLimit = {
   max: number;
@@ -78,16 +79,16 @@ function getRosterBySport(sport: LeagueSport): {
         { id: 3, name: "Kevin De Bruyne", sport: "football", position: "Midfielder", projected: 9.2, isActive: true },
         { id: 4, name: "Rodri", sport: "football", position: "Midfielder", projected: 7.5, isActive: false },
         { id: 5, name: "Virgil van Dijk", sport: "football", position: "Defender", projected: 6.8, isActive: false },
-        { id: 6, name: "Stephen Curry", sport: "basketball", position: "PG", projected: 18.5, isActive: true },
-        { id: 7, name: "LeBron James", sport: "basketball", position: "SF", projected: 16.8, isActive: true },
-        { id: 8, name: "Nikola Jokic", sport: "basketball", position: "C", projected: 19.5, isActive: true },
-        { id: 9, name: "Luka Doncic", sport: "basketball", position: "PG", projected: 17.8, isActive: false },
-        { id: 10, name: "Kevin Durant", sport: "basketball", position: "PF", projected: 17.2, isActive: false },
+        { id: 6, name: "Stephen Curry", sport: "basketball", position: "PointGuard", projected: 18.5, isActive: true },
+        { id: 7, name: "LeBron James", sport: "basketball", position: "SmallForward", projected: 16.8, isActive: true },
+        { id: 8, name: "Nikola Jokic", sport: "basketball", position: "Center", projected: 19.5, isActive: true },
+        { id: 9, name: "Luka Doncic", sport: "basketball", position: "PointGuard", projected: 17.8, isActive: false },
+        { id: 10, name: "Kevin Durant", sport: "basketball", position: "PowerForward", projected: 17.2, isActive: false },
         { id: 11, name: "Virat Kohli", sport: "cricket", position: "Batsman", projected: 14.2, isActive: true },
         { id: 12, name: "Jasprit Bumrah", sport: "cricket", position: "Bowler", projected: 10.2, isActive: true },
         { id: 13, name: "Ravindra Jadeja", sport: "cricket", position: "AllRounder", projected: 12.2, isActive: true },
         { id: 14, name: "Rohit Sharma", sport: "cricket", position: "Batsman", projected: 13.5, isActive: false },
-        { id: 15, name: "MS Dhoni", sport: "cricket", position: "WK", projected: 8.5, isActive: false },
+        { id: 15, name: "MS Dhoni", sport: "cricket", position: "WicketKeeper", projected: 8.5, isActive: false },
       ],
     };
   }
@@ -162,6 +163,7 @@ export function LeagueLineup() {
   const { user } = useAuth();
 
   const leagueId = params?.id ?? "1";
+  const isCommissioner = leagueId === "1";
   const selectedLeague = useMemo(() => {
     return mockLeaguesById[leagueId as keyof typeof mockLeaguesById] ?? mockLeaguesById["1"];
   }, [leagueId]);
@@ -331,7 +333,23 @@ export function LeagueLineup() {
   };
 
   if (isLoading) {
-    return <LineupSkeleton />;
+    return (
+      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        <div className="h-10 w-56 animate-pulse rounded-lg bg-gray-100" />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-3 lg:col-span-2">
+            {Array.from({ length: 5 }, (_, index) => (
+              <PlayerCardSkeleton key={`lineup-skeleton-${index}`} />
+            ))}
+          </div>
+          <div className="space-y-3 lg:col-span-1">
+            {Array.from({ length: 3 }, (_, index) => (
+              <PlayerCardSkeleton key={`bench-skeleton-${index}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   }
 
   if (players.length === 0) {
@@ -339,8 +357,10 @@ export function LeagueLineup() {
   }
 
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-text-primary">
-      <p className="text-sm text-text-secondary">Manager: {user?.name ?? "Sporty User"}</p>
+    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
+      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
+
+      <NavigationTabs activeTab="lineup" leagueId={leagueId} isCommissioner={isCommissioner} />
 
       <LineupHeader
         leagueName={selectedLeague.leagueName}
@@ -350,7 +370,7 @@ export function LeagueLineup() {
       />
 
       {deadlinePassed ? (
-        <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-700">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
           Lineup Locked. Deadline has passed for this week.
         </div>
       ) : null}
@@ -362,76 +382,63 @@ export function LeagueLineup() {
       />
 
       {isMultiSport ? (
-        <div className="rounded-lg border border-border bg-surface-100 p-4 text-sm">
-          <p className="font-medium text-text-primary">
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 text-sm">
+          <p className="font-medium text-gray-900">
             Active Players: {activePlayers.length}/9 {isMultiSportReady ? "✅ Ready" : "⚠️ Need more"}
           </p>
-          <p className="mt-2 text-text-secondary">
-            ⚽ Football: {activeBySport.football}/3 {activeBySport.football === 3 ? "✅" : "⚠️"} |
-            {' '}🏀 Basketball: {activeBySport.basketball}/3 {activeBySport.basketball === 3 ? "✅" : "⚠️"} |
-            {' '}🏏 Cricket: {activeBySport.cricket}/3 {activeBySport.cricket === 3 ? "✅" : "⚠️"}
-          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                activeBySport.football === 3
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700"
+              }`}
+            >
+              ⚽ {activeBySport.football}/3
+            </span>
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                activeBySport.basketball === 3
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700"
+              }`}
+            >
+              🏀 {activeBySport.basketball}/3
+            </span>
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                activeBySport.cricket === 3
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-amber-200 bg-amber-50 text-amber-700"
+              }`}
+            >
+              🏏 {activeBySport.cricket}/3
+            </span>
+          </div>
         </div>
       ) : null}
 
-      {isMultiSport ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="space-y-3 rounded-lg bg-surface-100 p-4 shadow-card">
-            <h2 className="text-lg font-semibold text-text-primary">Starting Lineup ({activePlayers.length}/9)</h2>
-            <div className="space-y-3">
-              {activePlayers.length === 0 ? (
-                <p className="text-sm text-text-secondary">No active players selected</p>
-              ) : (
-                activePlayers.map((player) => (
-                  <PlayerSlot
-                    key={player.id}
-                    player={player}
-                    isActive={true}
-                    onToggle={togglePlayer}
-                    disabled={deadlinePassed}
-                  />
-                ))
-              )}
-            </div>
-          </section>
-
-          <section className="space-y-3 rounded-lg bg-surface-100 p-4 shadow-card">
-            <h2 className="text-lg font-semibold text-text-primary">Bench ({benchPlayers.length}/6)</h2>
-            <div className="space-y-3">
-              {benchPlayers.length === 0 ? (
-                <p className="text-sm text-text-secondary">No bench players available</p>
-              ) : (
-                benchPlayers.map((player) => (
-                  <PlayerSlot
-                    key={player.id}
-                    player={player}
-                    isActive={false}
-                    onToggle={togglePlayer}
-                    disabled={deadlinePassed}
-                  />
-                ))
-              )}
-            </div>
-          </section>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
           <StartingLineup
             activePlayers={activePlayers}
             allPlayers={players}
             onTogglePlayer={togglePlayer}
             activePlayerIds={activePlayerIds}
             positionLimits={rosterBySport.positionLimits}
+            totalSlots={isMultiSport ? 9 : undefined}
             disabled={deadlinePassed}
           />
+        </div>
 
+        <div className="lg:col-span-1">
           <BenchPlayers
             benchPlayers={benchPlayers}
             onTogglePlayer={togglePlayer}
             disabled={deadlinePassed}
           />
         </div>
-      )}
+      </div>
 
       {!isLineupValid ? (
         <p className="text-sm text-red-600">Position limits exceeded. Adjust your lineup before saving.</p>

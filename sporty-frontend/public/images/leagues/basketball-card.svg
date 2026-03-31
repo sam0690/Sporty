@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Basketball court">
+  <defs>
+    <linearGradient id="arena" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1f2a44"/>
+      <stop offset="100%" stop-color="#4a5671"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#arena)"/>
+  <rect y="340" width="1200" height="260" fill="#7b4a2e"/>
+  <rect x="160" y="390" width="880" height="160" fill="none" stroke="#f4f4f4" stroke-width="4" opacity="0.85"/>
+  <circle cx="600" cy="470" r="55" fill="none" stroke="#f4f4f4" stroke-width="4" opacity="0.85"/>
+  <circle cx="920" cy="300" r="62" fill="#e27a2f"/>
+  <path d="M858 300h124M920 238v124" stroke="#3b2415" stroke-width="5" opacity="0.65"/>
+  <path d="M868 260c40 26 40 54 0 80M972 260c-40 26-40 54 0 80" stroke="#3b2415" stroke-width="5" fill="none" opacity="0.65"/>
+</svg>

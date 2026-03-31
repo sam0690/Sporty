@@ -24,12 +24,12 @@ export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps)
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-surface-100 p-6 shadow-2xl">
-        <div className="mb-4 text-3xl" aria-hidden="true">✅</div>
-        <h2 className="text-2xl font-semibold text-text-primary">Successfully Joined!</h2>
-        <p className="mt-2 text-sm text-text-secondary">You are now part of {leagueData.name}</p>
-        <p className="mt-1 text-sm text-text-secondary">Team: {leagueData.teamName ?? "Not assigned yet"}</p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
+      <div className="animate-fade-in-scale w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl">
+        <div className="mb-4 text-4xl text-green-500" aria-hidden="true">✅</div>
+        <h2 className="text-xl font-medium text-gray-900">Successfully Joined!</h2>
+        <p className="mt-2 font-medium text-primary-600">{leagueData.name}</p>
+        <p className="mt-1 text-sm text-gray-600">Team: {leagueData.teamName ?? "Not assigned yet"}</p>
 
         <div className="mt-6 space-y-2">
           <button
@@ -42,7 +42,7 @@ export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps)
 
               router.push(`/league/${leagueData.id}`);
             }}
-            className="w-full rounded-lg bg-primary-500 px-4 py-2 font-semibold text-white hover:bg-primary-600"
+            className="w-full rounded-full bg-primary-600 px-6 py-2 font-medium text-white transition-colors hover:bg-primary-700"
           >
             Go to League
           </button>
@@ -50,7 +50,7 @@ export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps)
           <button
             type="button"
             onClick={() => router.push(`/league/${leagueData.id}/lineup`)}
-            className="w-full rounded-lg border border-primary-500 px-4 py-2 font-semibold text-primary-500 hover:bg-primary-50"
+            className="w-full rounded-full border border-gray-300 bg-white px-6 py-2 font-semibold text-gray-800 transition-colors hover:border-primary-500"
           >
             Set Lineup
           </button>
@@ -58,7 +58,7 @@ export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps)
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-lg px-4 py-2 text-text-secondary hover:bg-surface-200"
+            className="w-full rounded-full border border-gray-300 bg-white px-6 py-2 text-sm font-medium text-gray-700 transition-colors hover:border-primary-500 hover:text-primary-600"
           >
             Close
           </button>

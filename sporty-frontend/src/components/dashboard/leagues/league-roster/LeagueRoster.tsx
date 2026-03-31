@@ -5,13 +5,14 @@ import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSe
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/libs/toastifier";
+import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { EmptyState } from "@/components/dashboard/leagues/league-roster/components/EmptyState";
 import { HybridPitch } from "@/components/dashboard/leagues/league-roster/components/HybridPitch";
 import { PlayerList } from "@/components/dashboard/leagues/league-roster/components/PlayerList";
 import { RosterHeader, type Sport } from "@/components/dashboard/leagues/league-roster/components/RosterHeader";
-import { RosterSkeleton } from "@/components/dashboard/leagues/league-roster/components/RosterSkeleton";
 import { StatsSummary } from "@/components/dashboard/leagues/league-roster/components/StatsSummary";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
+import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 
 const SLOT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 type SlotId = (typeof SLOT_IDS)[number];
@@ -137,6 +138,7 @@ export function LeagueRoster() {
   const { user } = useAuth();
 
   const leagueId = params?.id ?? "1";
+  const isCommissioner = leagueId === "1";
   const roster = mockRosters[leagueId] ?? mockRosters["1"];
 
   const [selectedPosition, setSelectedPosition] = useState("All");
@@ -386,7 +388,23 @@ export function LeagueRoster() {
   };
 
   if (isLoading) {
-    return <RosterSkeleton />;
+    return (
+      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+        <div className="h-10 w-56 animate-pulse rounded-lg bg-gray-100" />
+        <div className="mx-auto aspect-[3/4] w-full max-w-2xl rounded-2xl bg-gray-100 p-6">
+          <div className="grid grid-cols-3 gap-4">
+            {Array.from({ length: 9 }, (_, index) => (
+              <div key={index} className="h-12 w-12 animate-pulse rounded-full bg-gray-200" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 3 }, (_, index) => (
+            <PlayerCardSkeleton key={`roster-bench-skeleton-${index}`} />
+          ))}
+        </div>
+      </section>
+    );
   }
 
   if (roster.players.length === 0) {
@@ -394,8 +412,10 @@ export function LeagueRoster() {
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-text-primary">
-      <p className="text-sm text-text-secondary">Manager: {user?.name ?? "Sporty User"}</p>
+    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
+      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
+
+      <NavigationTabs activeTab="roster" leagueId={leagueId} isCommissioner={isCommissioner} />
 
       <RosterHeader
         leagueName={roster.leagueName}
@@ -450,16 +470,16 @@ export function LeagueRoster() {
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-lg border border-primary-300 bg-white px-3 py-2 shadow-2xl">
-              <p className="text-sm font-semibold text-text-primary">{playerById[activeDragPlayerId].name}</p>
-              <p className="text-xs text-text-secondary">{playerById[activeDragPlayerId].position}</p>
+            <div className="rounded-xl border border-primary-200 bg-white px-3 py-2 shadow-2xl">
+              <p className="text-sm font-medium text-gray-900">{playerById[activeDragPlayerId].name}</p>
+              <p className="text-xs text-gray-500">{playerById[activeDragPlayerId].position}</p>
             </div>
           ) : null}
         </DragOverlay>
       </DndContext>
 
       {isMultiSport ? (
-        <div className="rounded-lg border border-border bg-surface-100 p-3 text-sm text-text-primary">
+        <div className="rounded-xl border border-gray-100 bg-white p-3 text-sm text-gray-700">
           Sport Limits: {activeSportSummary}
         </div>
       ) : null}
@@ -469,7 +489,7 @@ export function LeagueRoster() {
           type="button"
           onClick={handleSave}
           disabled={!isDirty || isSaving}
-          className="rounded-lg bg-primary-500 px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary-600 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="rounded-full bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300"
         >
           {isSaving ? "Saving..." : "Save Lineup"}
         </button>

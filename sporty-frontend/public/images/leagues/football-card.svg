@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Football stadium">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#7cc3e8"/>
+      <stop offset="55%" stop-color="#f4b183"/>
+      <stop offset="100%" stop-color="#4b8f3d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#sky)"/>
+  <rect y="360" width="1200" height="240" fill="#3f7f35"/>
+  <rect x="210" y="410" width="780" height="140" fill="none" stroke="#ffffff" stroke-width="4" opacity="0.8"/>
+  <line x1="600" y1="410" x2="600" y2="550" stroke="#ffffff" stroke-width="3" opacity="0.75"/>
+  <circle cx="600" cy="480" r="36" fill="none" stroke="#ffffff" stroke-width="3" opacity="0.75"/>
+</svg>

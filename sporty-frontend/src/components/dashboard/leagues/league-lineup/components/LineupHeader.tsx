@@ -9,11 +9,11 @@ type LineupHeaderProps = {
   deadline: string;
 };
 
-const sportBadgeStyles: Record<Sport, string> = {
-  football: "bg-accent-football/10 text-accent-football",
-  basketball: "bg-accent-basketball/10 text-accent-basketball",
-  cricket: "bg-accent-cricket/10 text-accent-cricket",
-  multisport: "bg-gradient-to-r from-accent-football/15 via-accent-basketball/15 to-accent-cricket/15 text-primary-700",
+const sportIcons: Record<Sport, string> = {
+  football: "⚽",
+  basketball: "🏀",
+  cricket: "🏏",
+  multisport: "⚽🏀🏏",
 };
 
 function formatCountdown(deadline: string): { label: string; locked: boolean } {
@@ -43,32 +43,26 @@ export function LineupHeader({
   deadline,
 }: LineupHeaderProps) {
   const countdown = formatCountdown(deadline);
-  const isMultiSport = sport === "multisport";
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
+        <h1 className="text-2xl font-light tracking-tight text-gray-900">
           {leagueName}
         </h1>
-        {isMultiSport ? (
-          <span className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-accent-football/15 via-accent-basketball/15 to-accent-cricket/15 px-3 py-1 text-xs font-medium text-primary-700">
-            <span aria-hidden="true">⚽</span>
-            <span aria-hidden="true">🏀</span>
-            <span aria-hidden="true">🏏</span>
-            <span>Multi-Sport</span>
-          </span>
-        ) : (
-          <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${sportBadgeStyles[sport]}`}>
-            {sport}
-          </span>
-        )}
+        <span className="text-lg" aria-label={sport} title={sport}>{sportIcons[sport]}</span>
       </div>
 
-      <div className="text-right">
-        <p className="text-sm text-text-secondary">Week {currentWeek} Lineup</p>
-        <p className={`text-sm font-medium ${countdown.locked ? "text-amber-600" : "text-primary-600"}`}>
-          {countdown.label}
+      <div className="flex items-center gap-3">
+        <p className="text-sm text-gray-500">Week {currentWeek} Lineup</p>
+        <p
+          className={`rounded-full border px-4 py-1.5 text-sm ${
+            countdown.locked
+              ? "border-red-200 bg-red-50 text-red-500"
+              : "border-gray-100 bg-white text-gray-600"
+          }`}
+        >
+          {countdown.locked ? "Lineup Locked" : countdown.label}
         </p>
       </div>
     </header>

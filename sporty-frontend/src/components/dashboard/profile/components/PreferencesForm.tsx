@@ -20,13 +20,13 @@ type ToggleRowProps = {
 
 function ToggleRow({ label, enabled, onToggle }: ToggleRowProps) {
   return (
-    <div className="flex items-center justify-between border-b border-border py-3">
-      <p className="text-text-primary">{label}</p>
+    <div className="flex items-center justify-between py-2">
+      <p className="text-sm text-gray-600">{label}</p>
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={enabled}
-        className={`relative h-6 w-11 rounded-full transition-colors ${enabled ? "bg-primary-500" : "bg-surface-300"}`}
+        className={`relative h-6 w-11 rounded-full transition-colors ${enabled ? "bg-primary-600" : "bg-gray-200"}`}
       >
         <span
           className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
@@ -43,10 +43,10 @@ export function PreferencesForm({ preferences, onUpdate }: PreferencesFormProps)
   };
 
   return (
-    <section className="mt-6 border-t border-border pt-6">
-      <h2 className="mb-4 text-xl font-semibold text-text-primary">Preferences</h2>
+    <section className="card-fade-in space-y-4 rounded-2xl border border-gray-100 bg-white p-6">
+      <h2 className="text-md font-medium text-gray-800">Preferences</h2>
 
-      <div className="rounded-lg border border-border bg-surface-100 px-4">
+      <div className="space-y-4">
         <ToggleRow
           label="Email Notifications"
           enabled={preferences.emailNotifications}
@@ -65,12 +65,12 @@ export function PreferencesForm({ preferences, onUpdate }: PreferencesFormProps)
           onToggle={() => updatePreference({ darkMode: !preferences.darkMode })}
         />
 
-        <div className="flex items-center justify-between py-3">
-          <p className="text-text-primary">Language</p>
+        <div className="flex items-center justify-between pt-1">
+          <p className="text-sm text-gray-600">Language</p>
           <select
             value={preferences.language}
             onChange={(event) => updatePreference({ language: event.target.value })}
-            className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-primary"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none"
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>

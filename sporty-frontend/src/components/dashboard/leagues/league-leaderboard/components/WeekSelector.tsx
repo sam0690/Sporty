@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronLeft, ChevronRight } from "lucide-react";
+
 type SelectedWeek = number | "overall";
 
 type WeekSelectorProps = {
@@ -11,9 +13,11 @@ type WeekSelectorProps = {
 
 export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChange }: WeekSelectorProps) {
   const numericSelected = typeof selectedWeek === "number" ? selectedWeek : currentWeek;
+  const overallActive = selectedWeek === "overall";
 
   return (
-    <section className="flex flex-wrap items-center gap-2">
+    <section className="mb-6 flex flex-wrap items-center justify-end gap-2">
+      <div className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-2 py-1">
       <button
         type="button"
         onClick={() => {
@@ -21,29 +25,13 @@ export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChan
           onWeekChange(next);
         }}
         disabled={selectedWeek === "overall" ? false : numericSelected <= 1}
-        className="rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+        aria-label="Previous week"
       >
-        ‹
+        <ChevronLeft className="h-4 w-4" />
       </button>
 
-      <select
-        value={String(selectedWeek)}
-        onChange={(event) => {
-          const value = event.target.value;
-          if (value === "overall") {
-            onWeekChange("overall");
-            return;
-          }
-
-          onWeekChange(Number(value));
-        }}
-        className="rounded-lg border border-border bg-surface-100 px-3 py-2 text-sm text-text-primary"
-      >
-        <option value="overall">Overall</option>
-        {Array.from({ length: totalWeeks }, (_, index) => index + 1).map((week) => (
-          <option key={week} value={week}>Week {week}</option>
-        ))}
-      </select>
+      <p className="px-1 text-sm font-medium text-gray-700">Week {numericSelected}</p>
 
       <button
         type="button"
@@ -52,9 +40,23 @@ export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChan
           onWeekChange(next);
         }}
         disabled={selectedWeek === "overall" ? false : numericSelected >= totalWeeks}
-        className="rounded-lg border border-border px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+        aria-label="Next week"
       >
-        ›
+        <ChevronRight className="h-4 w-4" />
+      </button>
+      </div>
+
+      <button
+        type="button"
+        onClick={() => onWeekChange("overall")}
+        className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
+          overallActive
+            ? "border-primary-500 bg-primary-500 text-white"
+            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+        }`}
+      >
+        Overall
       </button>
     </section>
   );

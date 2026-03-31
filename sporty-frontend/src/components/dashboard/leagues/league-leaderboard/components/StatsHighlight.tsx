@@ -10,25 +10,26 @@ type StatsHighlightProps = StatsHighlights;
 
 export function StatsHighlight({ topScorer, highestWeeklyScore, closestMatch }: StatsHighlightProps) {
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <article className="rounded-lg bg-surface-100 p-4 shadow-card">
-        <p className="text-sm text-text-secondary">🏆 Top Scorer</p>
-        <p className="mt-1 font-semibold text-text-primary">{topScorer.name}</p>
-        <p className="text-sm text-text-secondary">{topScorer.team}</p>
-        <p className="mt-2 text-lg font-semibold text-primary-600">{topScorer.points} pts</p>
+    <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <article className="rounded-2xl border border-gray-100 bg-white p-4 [animation:fade-soft_0.2s_ease]">
+        <p className="mb-2 text-xl">🏆</p>
+        <p className="text-xs uppercase tracking-wider text-gray-500">Top Scorer</p>
+        <p className="mt-1 text-sm font-medium text-gray-900">{topScorer.name} · {topScorer.points} pts</p>
+        <p className="text-sm text-gray-600">{topScorer.team}</p>
       </article>
 
-      <article className="rounded-lg bg-surface-100 p-4 shadow-card">
-        <p className="text-sm text-text-secondary">🔥 Highest Weekly Score</p>
-        <p className="mt-1 font-semibold text-text-primary">{highestWeeklyScore.team}</p>
-        <p className="text-sm text-text-secondary">Week {highestWeeklyScore.week}</p>
-        <p className="mt-2 text-lg font-semibold text-primary-600">{highestWeeklyScore.score}</p>
+      <article className="rounded-2xl border border-gray-100 bg-white p-4 [animation:fade-soft_0.2s_ease]">
+        <p className="mb-2 text-xl">🔥</p>
+        <p className="text-xs uppercase tracking-wider text-gray-500">Highest Weekly Score</p>
+        <p className="mt-1 text-sm font-medium text-gray-900">{highestWeeklyScore.team} · {highestWeeklyScore.score}</p>
+        <p className="text-sm text-gray-600">Week {highestWeeklyScore.week}</p>
       </article>
 
-      <article className="rounded-lg bg-surface-100 p-4 shadow-card">
-        <p className="text-sm text-text-secondary">⚖️ Closest Match</p>
-        <p className="mt-1 font-semibold text-text-primary">{closestMatch.matchup}</p>
-        <p className="mt-2 text-lg font-semibold text-primary-600">{closestMatch.difference} pts diff</p>
+      <article className="rounded-2xl border border-gray-100 bg-white p-4 [animation:fade-soft_0.2s_ease]">
+        <p className="mb-2 text-xl">⚖️</p>
+        <p className="text-xs uppercase tracking-wider text-gray-500">Closest Match</p>
+        <p className="mt-1 text-sm font-medium text-gray-900">{closestMatch.matchup}</p>
+        <p className="text-sm text-gray-600">{closestMatch.difference} pts difference</p>
       </article>
     </section>
   );

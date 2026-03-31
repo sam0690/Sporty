@@ -58,9 +58,9 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
   };
 
   return (
-    <section className="rounded-xl border border-border bg-surface-100 p-4">
+    <section className="card-fade-in rounded-2xl border border-gray-100 bg-white p-4">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-primary-700">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-gray-500">
           {preview ? (
             <img src={preview} alt="Avatar preview" className="h-full w-full object-cover" />
           ) : (
@@ -79,7 +79,7 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="rounded-lg border border-primary-500 px-4 py-2 text-primary-500 transition-colors hover:bg-primary-50"
+            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50"
           >
             Upload New Avatar
           </button>
@@ -89,7 +89,7 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
               type="button"
               onClick={saveAvatar}
               disabled={isUploading}
-              className="rounded-lg bg-primary-500 px-4 py-2 text-white transition-colors hover:bg-primary-600 disabled:opacity-70"
+              className="rounded-lg bg-primary-600 px-4 py-2 text-white transition-colors hover:bg-primary-700 disabled:opacity-70"
             >
               {isUploading ? "Saving..." : "Save"}
             </button>

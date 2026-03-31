@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Cricket field">
+  <defs>
+    <linearGradient id="day" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#87ceeb"/>
+      <stop offset="100%" stop-color="#4ca55a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#day)"/>
+  <ellipse cx="600" cy="470" rx="540" ry="150" fill="#4c9a45"/>
+  <rect x="520" y="390" width="160" height="170" fill="#d8c3a5" opacity="0.9"/>
+  <rect x="568" y="428" width="8" height="70" fill="#ffffff"/>
+  <rect x="596" y="428" width="8" height="70" fill="#ffffff"/>
+  <rect x="624" y="428" width="8" height="70" fill="#ffffff"/>
+</svg>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { DashboardNavigation } from "@/components/dashboard/navigation/DashboardNavigation";
 
 export default function DashboardLayout({
   children,
@@ -9,7 +10,7 @@ export default function DashboardLayout({
 }) {
   return (
     <ProtectedRoute>
-      <main className="min-h-screen bg-surface-50">{children}</main>
+      <DashboardNavigation>{children}</DashboardNavigation>
     </ProtectedRoute>
   );
 }

@@ -21,9 +21,14 @@ function getInitials(name: string): string {
 
 export function ProfileHeader({ userName, userEmail, avatarUrl }: ProfileHeaderProps) {
   return (
-    <header className="flex flex-wrap items-center gap-6">
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-xl font-semibold text-primary-700">
+    <header className="space-y-5">
+      <div>
+        <h1 className="text-3xl font-light tracking-tight text-gray-900">Profile</h1>
+        <p className="mt-1 text-sm text-gray-500">Manage your account settings</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-6 border-b border-gray-100 pb-6">
+        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xl font-semibold text-gray-500">
           {avatarUrl ? (
             <img src={avatarUrl} alt={`${userName} avatar`} className="h-full w-full object-cover" />
           ) : (
@@ -31,19 +36,17 @@ export function ProfileHeader({ userName, userEmail, avatarUrl }: ProfileHeaderP
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => document.getElementById("avatar-upload")?.click()}
-          className="rounded-lg border border-primary-500 px-4 py-2 text-sm text-primary-500 transition-colors hover:bg-primary-50"
-        >
-          Change Avatar
-        </button>
-      </div>
-
-      <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-text-primary">Profile Settings</h1>
-        <p className="mt-1 text-text-secondary">Manage your account settings and preferences</p>
-        <p className="mt-2 text-sm text-text-secondary">{userName} • {userEmail}</p>
+        <div>
+          <p className="text-sm font-medium text-gray-700">{userName}</p>
+          <p className="text-sm text-gray-500">{userEmail}</p>
+          <button
+            type="button"
+            onClick={() => document.getElementById("avatar-upload")?.click()}
+            className="mt-2 text-sm text-primary-500 transition-colors hover:underline"
+          >
+            Change Avatar
+          </button>
+        </div>
       </div>
     </header>
   );

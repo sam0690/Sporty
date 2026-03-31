@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/libs/toastifier";
 import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
@@ -36,7 +36,7 @@ type ExtendedUser = {
 
 export function ProfileSettings() {
   const { user, logout } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userData, setUserData] = useState<ExtendedUser>({
     id: user?.id ?? mockUser.id,
@@ -46,6 +46,11 @@ export function ProfileSettings() {
     bio: mockUser.bio,
   });
   const [preferences, setPreferences] = useState<Preferences>(mockPreferences);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setIsLoading(false), 450);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   const profileFormUser: ProfileUser = useMemo(
     () => ({
@@ -114,29 +119,27 @@ export function ProfileSettings() {
   }
 
   return (
-    <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-text-primary">
+    <section className="mx-auto max-w-3xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <ProfileHeader
         userName={userData.name}
         userEmail={userData.email}
         avatarUrl={userData.avatar}
       />
 
-      <div className="mt-6 rounded-xl border border-border bg-surface-100 p-6 shadow-card">
+      <div className="mt-6 space-y-6">
         <AvatarUpload
           currentAvatar={userData.avatar}
           onAvatarChange={handleAvatarChange}
         />
 
-        <div className="mt-6">
-          <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
-          <PasswordForm onChangePassword={handleChangePassword} />
-          <PreferencesForm preferences={preferences} onUpdate={handleUpdatePreferences} />
-          <DangerZone onDeleteAccount={handleDeleteAccount} />
-        </div>
+        <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
+        <PasswordForm onChangePassword={handleChangePassword} />
+        <PreferencesForm preferences={preferences} onUpdate={handleUpdatePreferences} />
+        <DangerZone onDeleteAccount={handleDeleteAccount} />
       </div>
 
       {isDeleting ? (
-        <p className="mt-4 text-sm text-text-secondary">Processing account deletion...</p>
+        <p className="mt-4 text-sm text-gray-500">Processing account deletion...</p>
       ) : null}
     </section>
   );

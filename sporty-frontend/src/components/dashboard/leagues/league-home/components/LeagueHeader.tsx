@@ -9,10 +9,10 @@ type LeagueHeaderProps = {
   totalWeeks: number;
 };
 
-const sportBadgeStyles: Record<Sport, string> = {
-  football: "bg-accent-football/10 text-accent-football",
-  basketball: "bg-accent-basketball/10 text-accent-basketball",
-  cricket: "bg-accent-cricket/10 text-accent-cricket",
+const sportIcons: Record<Sport, string> = {
+  football: "⚽",
+  basketball: "🏀",
+  cricket: "🏏",
 };
 
 export function LeagueHeader({
@@ -22,17 +22,26 @@ export function LeagueHeader({
   totalWeeks,
 }: LeagueHeaderProps) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <h1 className="text-3xl font-semibold tracking-tight text-text-primary">
-          {leagueName}
-        </h1>
-        <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${sportBadgeStyles[sport]}`}>
-          {sport}
-        </span>
-      </div>
+    <header
+      className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white px-5 py-4"
+      style={{ backgroundImage: "url('/images/landing/hero-stadium.svg')", backgroundSize: "cover", backgroundPosition: "center" }}
+    >
+      <div className="absolute inset-0 bg-white/90" aria-hidden="true" />
 
-      <p className="text-sm text-text-secondary">Week {currentWeek} of {totalWeeks}</p>
+      <div className="relative flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-light tracking-tight text-gray-900">
+          {leagueName}
+          </h1>
+          <span className="text-lg leading-none" aria-label={sport} title={sport}>
+            {sportIcons[sport]}
+          </span>
+        </div>
+
+        <p className="rounded-full border border-gray-100 bg-white px-3 py-1 text-sm text-gray-500">
+          Week {currentWeek} of {totalWeeks}
+        </p>
+      </div>
     </header>
   );
 }

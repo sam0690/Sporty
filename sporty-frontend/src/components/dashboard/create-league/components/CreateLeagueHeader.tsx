@@ -14,20 +14,19 @@ export function CreateLeagueHeader({ step, totalSteps, leagueName }: CreateLeagu
   const progress = Math.round((clampedStep / totalSteps) * 100);
 
   return (
-    <div className="sticky top-0 z-10 rounded-b-lg bg-white/80 pb-4 backdrop-blur">
+    <div className="sticky top-0 z-10 bg-white/80 py-3 backdrop-blur-sm">
       <div className="flex flex-col gap-2">
-        <p className="text-xs uppercase tracking-[0.2em] text-text-secondary">Create League</p>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold text-text-primary">
+          <h1 className="text-xl font-light text-gray-900">
             {leagueName ? leagueName : "New League"}
           </h1>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-gray-500">
             Step {clampedStep} of {totalSteps}: {label}
           </p>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-200">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
           <div
-            className="h-full rounded-full bg-primary-500 transition-all"
+            className="h-full rounded-full bg-primary-600 transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>

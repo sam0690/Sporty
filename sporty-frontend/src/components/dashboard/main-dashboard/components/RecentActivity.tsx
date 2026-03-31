@@ -7,13 +7,13 @@ type RecentActivityProps = {
 
 export function RecentActivity({ items }: RecentActivityProps) {
   return (
-    <Card className="border-border-light bg-surface-100">
+    <Card className="rounded-2xl border border-gray-100 bg-white">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl text-text-primary">Recent Activity</CardTitle>
+        <CardTitle className="text-xl font-medium text-gray-900">Recent Activity</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
-        <div className="overflow-hidden rounded-lg border border-border-light">
-          <div className="grid grid-cols-[1.2fr_2fr_auto] gap-3 bg-secondary-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-text-secondary">
+        <div className="overflow-hidden rounded-xl border border-gray-100">
+          <div className="grid grid-cols-[1.2fr_2fr_auto] gap-3 bg-gray-50 px-4 py-2 text-xs font-medium uppercase tracking-wide text-gray-500">
             <span>Event</span>
             <span>Details</span>
             <span>Time</span>
@@ -22,11 +22,11 @@ export function RecentActivity({ items }: RecentActivityProps) {
             {items.map((item) => (
               <li
                 key={item.id}
-                className="grid grid-cols-[1.2fr_2fr_auto] gap-3 border-t border-border-light bg-white px-4 py-3 text-sm"
+                className="grid grid-cols-[1.2fr_2fr_auto] gap-3 border-t border-gray-100 bg-white px-4 py-3 text-sm"
               >
-                <span className="font-medium text-text-primary">{item.title}</span>
-                <span className="text-text-secondary">{item.detail}</span>
-                <span className="text-text-secondary">{item.time}</span>
+                <span className="font-medium text-gray-900">{item.title}</span>
+                <span className="text-gray-500">{item.detail}</span>
+                <span className="text-gray-500">{item.time}</span>
               </li>
             ))}
           </ul>

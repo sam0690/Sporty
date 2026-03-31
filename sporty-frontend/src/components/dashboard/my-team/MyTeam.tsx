@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import { EmptyState } from "@/components/dashboard/my-team/components/EmptyState";
 import { LeagueGroup } from "@/components/dashboard/my-team/components/LeagueGroup";
 import { TeamHeader } from "@/components/dashboard/my-team/components/TeamHeader";
 import type { Sport } from "@/components/dashboard/my-team/components/PlayerCard";
+import { EmptyPlayers } from "@/components/ui/empty-states";
+import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 
 type TeamLeague = {
   leagueId: number;
@@ -53,40 +54,43 @@ const mockTeams: TeamLeague[] = [
 
 export function MyTeam() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setIsLoading(false), 450);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   const teams = mockTeams;
 
   const totals = useMemo(() => {
     const allPlayers = teams.flatMap((team) => team.players);
     const totalPlayers = allPlayers.length;
-    const totalPoints = allPlayers.reduce((sum, player) => sum + player.totalPoints, 0);
-    const avgPointsPerGame =
-      totalPlayers > 0
-        ? allPlayers.reduce((sum, player) => sum + player.avgPoints, 0) / totalPlayers
-        : 0;
 
     return {
       totalPlayers,
-      totalPoints,
-      avgPointsPerGame,
     };
   }, [teams]);
 
   const hasPlayers = totals.totalPlayers > 0;
 
   return (
-    <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-text-primary">
-      <div className="mb-6">
-        <p className="text-sm text-text-secondary">Manager: {user?.name ?? "Sporty User"}</p>
+    <section className="mx-auto max-w-7xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+      <div className="mb-5">
+        <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
       </div>
 
       <TeamHeader
         totalPlayers={totals.totalPlayers}
-        totalPoints={totals.totalPoints}
-        avgPointsPerGame={totals.avgPointsPerGame}
       />
 
-      {hasPlayers ? (
+      {isLoading ? (
+        <div className="mt-8 space-y-3">
+          {Array.from({ length: 5 }, (_, index) => (
+            <PlayerCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : hasPlayers ? (
         <div className="mt-8 space-y-8">
           {teams.map((team) => (
             <LeagueGroup
@@ -99,7 +103,7 @@ export function MyTeam() {
         </div>
       ) : (
         <div className="mt-8">
-          <EmptyState />
+          <EmptyPlayers />
         </div>
       )}
     </section>

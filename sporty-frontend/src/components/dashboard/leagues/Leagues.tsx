@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/auth-context";
-import { EmptyState } from "@/components/dashboard/leagues/components/EmptyState";
 import { LeagueCard, type Sport } from "@/components/dashboard/leagues/components/LeagueCard";
 import { LeaguesHeader } from "@/components/dashboard/leagues/components/LeaguesHeader";
 import { StatsRow } from "@/components/dashboard/leagues/components/StatsRow";
+import { EmptyLeagues } from "@/components/ui/empty-states";
+import { LeagueCardSkeleton } from "@/components/ui/skeletons";
 
 type League = {
   id: number;
@@ -58,13 +60,19 @@ const mockStats = {
 
 export function Leagues() {
   const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setIsLoading(false), 450);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   const leagues = mockLeagues;
   const stats = mockStats;
   const userName = user?.name ?? "Sporty User";
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-text-primary">
+    <section className="mx-auto max-w-7xl bg-white px-6 py-12 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <LeaguesHeader userName={userName} />
 
       <div className="mt-8">
@@ -75,12 +83,18 @@ export function Leagues() {
         />
       </div>
 
-      <div className="mt-6">
-        {leagues.length === 0 ? (
-          <EmptyState />
+      <div className="mt-8">
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }, (_, index) => (
+              <LeagueCardSkeleton key={index} />
+            ))}
+          </div>
+        ) : leagues.length === 0 ? (
+          <EmptyLeagues />
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {leagues.map((league) => (
+            {leagues.map((league, index) => (
               <LeagueCard
                 key={league.id}
                 id={league.id}
@@ -89,6 +103,7 @@ export function Leagues() {
                 memberCount={league.memberCount}
                 yourRank={league.yourRank}
                 teamName={league.teamName}
+                animationDelay={index * 70}
               />
             ))}
           </div>
