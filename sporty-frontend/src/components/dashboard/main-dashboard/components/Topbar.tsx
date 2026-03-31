@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 type TopbarProps = {
   userName: string;
   avatar?: string;
@@ -10,7 +12,9 @@ export function Topbar({ userName, avatar }: TopbarProps) {
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border-light bg-surface-100 p-4 shadow-card">
       <div>
         <p className="text-sm text-text-secondary">Welcome back, {userName}</p>
-        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">Overview</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
+          Overview
+        </h1>
       </div>
 
       <div className="flex items-center gap-3 rounded-lg border border-border-light bg-surface px-3 py-2">
@@ -19,9 +23,12 @@ export function Topbar({ userName, avatar }: TopbarProps) {
           <p className="text-xs text-text-secondary">Team Manager</p>
         </div>
         {avatar ? (
-          <img
+          <Image
             src={avatar}
             alt={`${userName} avatar`}
+            width={36}
+            height={36}
+            sizes="36px"
             className="h-9 w-9 rounded-full object-cover"
           />
         ) : (

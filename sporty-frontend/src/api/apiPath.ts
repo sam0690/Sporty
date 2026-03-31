@@ -6,26 +6,28 @@
  */
 
 export const API_PATHS = {
-    AUTH: {
-        LOGIN: "/auth/login",
-        REGISTER: "/auth/register",
-        LOGOUT: "/auth/logout",
-        REFRESH: "/auth/refresh",
-        ME: "/auth/me",
-        FORGOT_PASSWORD: "/auth/forgot-password",
-        RESET_PASSWORD: "/auth/reset-password",
-    },
+  AUTH: {
+    LOGIN: "/auth/login",
+    REGISTER: "/auth/register",
+    LOGOUT: "/auth/logout",
+    REFRESH: "/auth/refresh",
+    ME: "/auth/me",
+    GOOGLE: "/auth/google",
+    GOOGLE_LINK: "/auth/google/link",
+    FORGOT_PASSWORD: "/auth/forgot-password",
+    RESET_PASSWORD: "/auth/reset-password",
+  },
 
-    USERS: {
-        LIST: "/users",
-        DETAIL: (id: string) => `/users/${id}`,
-        UPDATE: (id: string) => `/users/${id}`,
-        DELETE: (id: string) => `/users/${id}`,
-    },
+  USERS: {
+    LIST: "/users",
+    DETAIL: (id: string) => `/users/${id}`,
+    UPDATE: (id: string) => `/users/${id}`,
+    DELETE: (id: string) => `/users/${id}`,
+  },
 
-    // ── Add more resource groups below ──────────────────────────────
-    // BRANDS: {
-    //   LIST: "/brands",
-    //   DETAIL: (id: string) => `/brands/${id}`,
-    // },
+  // ── Add more resource groups below ──────────────────────────────
+  // BRANDS: {
+  //   LIST: "/brands",
+  //   DETAIL: (id: string) => `/brands/${id}`,
+  // },
 } as const;
