@@ -26,6 +26,9 @@ export interface User {
     avatar: string;
 }
 
+// 🔧 DEV MODE — set to false when backend is ready
+const DEV_BYPASS_AUTH = true;
+
 type AuthAction = "login" | "register" | "logout" | "forgotPassword" | "resetPassword";
 
 type AuthResult = {
@@ -158,6 +161,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Hydrate from localStorage on mount
     useEffect(() => {
         try {
+            // DEV MODE: bypass auth
+            if (DEV_BYPASS_AUTH) {
+                const devUser: User = {
+                    id: "dev-user-1",
+                    name: "Test User",
+                    email: "test@example.com",
+                    avatar: "",
+                };
+                setUser(devUser);
+                setBootstrapping(false);
+                return;
+            }
+
             const token = getToken();
             const savedUser = readStoredUser();
             if (token && savedUser) {
