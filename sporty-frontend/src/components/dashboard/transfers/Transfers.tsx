@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/context/auth-context";
-import { CurrentRoster, type OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
-import { FilterBar, type Sport } from "@/components/dashboard/transfers/components/FilterBar";
+import { useMe } from "@/hooks/auth/useMe";
+import {
+  CurrentRoster,
+  type OwnedPlayer,
+} from "@/components/dashboard/transfers/components/CurrentRoster";
+import {
+  FilterBar,
+  type Sport,
+} from "@/components/dashboard/transfers/components/FilterBar";
 import { PlayerCard } from "@/components/dashboard/transfers/components/PlayerCard";
 import { SearchBar } from "@/components/dashboard/transfers/components/SearchBar";
 import {
@@ -26,21 +32,85 @@ type AvailablePlayer = {
 };
 
 const mockOwnedPlayers: OwnedPlayer[] = [
-  { id: 1, name: "Lionel Messi", sport: "football", position: "Forward", price: 25, avgPoints: 12.5, form: 9 },
-  { id: 2, name: "LeBron James", sport: "basketball", position: "Forward", price: 30, avgPoints: 16.8, form: 8 },
-  { id: 3, name: "Virat Kohli", sport: "cricket", position: "Batsman", price: 20, avgPoints: 14.2, form: 8 },
+  {
+    id: 1,
+    name: "Lionel Messi",
+    sport: "football",
+    position: "Forward",
+    price: 25,
+    avgPoints: 12.5,
+    form: 9,
+  },
+  {
+    id: 2,
+    name: "LeBron James",
+    sport: "basketball",
+    position: "Forward",
+    price: 30,
+    avgPoints: 16.8,
+    form: 8,
+  },
+  {
+    id: 3,
+    name: "Virat Kohli",
+    sport: "cricket",
+    position: "Batsman",
+    price: 20,
+    avgPoints: 14.2,
+    form: 8,
+  },
 ];
 
 const mockAvailablePlayers: AvailablePlayer[] = [
-  { id: 4, name: "Kylian Mbappe", sport: "football", position: "Forward", price: 28, avgPoints: 14.2, form: 9 },
-  { id: 5, name: "Stephen Curry", sport: "basketball", position: "Guard", price: 32, avgPoints: 18.5, form: 8 },
-  { id: 6, name: "Jasprit Bumrah", sport: "cricket", position: "Bowler", price: 22, avgPoints: 10.8, form: 7 },
-  { id: 7, name: "Erling Haaland", sport: "football", position: "Forward", price: 35, avgPoints: 16.5, form: 10 },
-  { id: 8, name: "Nikola Jokic", sport: "basketball", position: "Center", price: 34, avgPoints: 17.2, form: 9 },
+  {
+    id: 4,
+    name: "Kylian Mbappe",
+    sport: "football",
+    position: "Forward",
+    price: 28,
+    avgPoints: 14.2,
+    form: 9,
+  },
+  {
+    id: 5,
+    name: "Stephen Curry",
+    sport: "basketball",
+    position: "Guard",
+    price: 32,
+    avgPoints: 18.5,
+    form: 8,
+  },
+  {
+    id: 6,
+    name: "Jasprit Bumrah",
+    sport: "cricket",
+    position: "Bowler",
+    price: 22,
+    avgPoints: 10.8,
+    form: 7,
+  },
+  {
+    id: 7,
+    name: "Erling Haaland",
+    sport: "football",
+    position: "Forward",
+    price: 35,
+    avgPoints: 16.5,
+    form: 10,
+  },
+  {
+    id: 8,
+    name: "Nikola Jokic",
+    sport: "basketball",
+    position: "Center",
+    price: 34,
+    avgPoints: 17.2,
+    form: 9,
+  },
 ];
 
 export function Transfers() {
-  const { user } = useAuth();
+  const { username } = useMe();
   const [isLoading, setIsLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,11 +118,14 @@ export function Transfers() {
   const [selectedSport, setSelectedSport] = useState<Sport>("All");
   const [selectedPosition, setSelectedPosition] = useState("All");
   const [budget, setBudget] = useState(100);
-  const [ownedPlayers, setOwnedPlayers] = useState<OwnedPlayer[]>(mockOwnedPlayers);
+  const [ownedPlayers, setOwnedPlayers] =
+    useState<OwnedPlayer[]>(mockOwnedPlayers);
   const [availablePlayers, setAvailablePlayers] =
     useState<AvailablePlayer[]>(mockAvailablePlayers);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayer | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayer | null>(
+    null,
+  );
   const [toastState, setToastState] = useState<{
     status: "success" | "error" | null;
     message: string;
@@ -105,7 +178,9 @@ export function Transfers() {
         form: selectedPlayer.form,
       },
     ]);
-    setAvailablePlayers((prev) => prev.filter((item) => item.id !== selectedPlayer.id));
+    setAvailablePlayers((prev) =>
+      prev.filter((item) => item.id !== selectedPlayer.id),
+    );
     setToastState({
       status: "success",
       message: `${selectedPlayer.name} added to your team`,
@@ -123,7 +198,9 @@ export function Transfers() {
 
     setOwnedPlayers((prev) => prev.filter((player) => player.id !== id));
     setAvailablePlayers((prev) => {
-      const alreadyExists = prev.some((player) => player.id === droppedPlayer.id);
+      const alreadyExists = prev.some(
+        (player) => player.id === droppedPlayer.id,
+      );
       if (alreadyExists || droppedPlayer.sport === "All") {
         return prev;
       }
@@ -172,12 +249,16 @@ export function Transfers() {
   return (
     <section className="mx-auto max-w-7xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <div className="mb-6 text-sm text-gray-500">
-        Manager: {user?.name ?? "Sporty User"}
+        Manager: {username || "Sporty User"}
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <TransfersHeader budget={budget} leagueName="Premier League Champions" currentWeek={24} />
+          <TransfersHeader
+            budget={budget}
+            leagueName="Premier League Champions"
+            currentWeek={24}
+          />
           <SearchBar onSearch={setSearchQuery} resetToken={searchResetToken} />
           <FilterBar
             selectedSport={selectedSport}
@@ -188,7 +269,9 @@ export function Transfers() {
 
           <div className="space-y-3">
             {isLoading ? (
-              Array.from({ length: 5 }, (_, index) => <PlayerCardSkeleton key={index} />)
+              Array.from({ length: 5 }, (_, index) => (
+                <PlayerCardSkeleton key={index} />
+              ))
             ) : filteredPlayers.length === 0 ? (
               <EmptyTransfers onClearFilters={clearAllFilters} />
             ) : (
@@ -211,7 +294,12 @@ export function Transfers() {
         </div>
 
         <div className="lg:col-span-1">
-          <CurrentRoster players={ownedPlayers} onDrop={handleDropPlayer} budget={budget} maxPlayers={15} />
+          <CurrentRoster
+            players={ownedPlayers}
+            onDrop={handleDropPlayer}
+            budget={budget}
+            maxPlayers={15}
+          />
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useAuth } from "@/context/auth-context";
+import { useMe } from "@/hooks/auth/useMe";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
 import { LeagueSettings } from "@/components/dashboard/create-league/components/LeagueSettings";
@@ -71,7 +71,7 @@ const scoringDefaults: Record<SportKey, Record<string, number>> = {
 };
 
 export function CreateLeague() {
-  const { user } = useAuth();
+  const { username } = useMe();
   const [step, setStep] = useState(1);
   const [leagueData, setLeagueData] = useState<LeagueData>({
     leagueName: "",
@@ -85,7 +85,9 @@ export function CreateLeague() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdLeague, setCreatedLeague] = useState<CreatedLeague | null>(null);
+  const [createdLeague, setCreatedLeague] = useState<CreatedLeague | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   const totalSteps = 4;
@@ -101,11 +103,17 @@ export function CreateLeague() {
       errors.push("Sport selection is required.");
     }
 
-    if (leagueData.teamSize < 4 || leagueData.teamSize > 16 || leagueData.teamSize % 2 !== 0) {
+    if (
+      leagueData.teamSize < 4 ||
+      leagueData.teamSize > 16 ||
+      leagueData.teamSize % 2 !== 0
+    ) {
       errors.push("Team size must be an even number between 4 and 16.");
     }
 
-    const invalidRule = Object.values(leagueData.scoringRules).some((value) => value < 0);
+    const invalidRule = Object.values(leagueData.scoringRules).some(
+      (value) => value < 0,
+    );
     if (invalidRule) {
       errors.push("Scoring rules must be zero or greater.");
     }
@@ -122,14 +130,20 @@ export function CreateLeague() {
     }
 
     if (step === 2) {
-      if (leagueData.teamSize % 2 !== 0 || leagueData.teamSize < 4 || leagueData.teamSize > 16) {
+      if (
+        leagueData.teamSize % 2 !== 0 ||
+        leagueData.teamSize < 4 ||
+        leagueData.teamSize > 16
+      ) {
         setError("Team size must be an even number between 4 and 16.");
         return;
       }
     }
 
     if (step === 3) {
-      const invalidRule = Object.values(leagueData.scoringRules).some((value) => value < 0);
+      const invalidRule = Object.values(leagueData.scoringRules).some(
+        (value) => value < 0,
+      );
       if (invalidRule) {
         setError("Scoring rules must be zero or greater.");
         return;
@@ -196,9 +210,15 @@ export function CreateLeague() {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system]">
-      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
+      <p className="text-sm text-gray-500">
+        Manager: {username || "Sporty User"}
+      </p>
 
-      <CreateLeagueHeader step={step} totalSteps={totalSteps} leagueName={leagueData.leagueName} />
+      <CreateLeagueHeader
+        step={step}
+        totalSteps={totalSteps}
+        leagueName={leagueData.leagueName}
+      />
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
@@ -215,7 +235,9 @@ export function CreateLeague() {
               leagueLogo={leagueData.leagueLogo}
               onLeagueNameChange={handleLeagueNameChange}
               onSportChange={handleSportChange}
-              onLeagueLogoChange={(value) => setLeagueData((prev) => ({ ...prev, leagueLogo: value }))}
+              onLeagueLogoChange={(value) =>
+                setLeagueData((prev) => ({ ...prev, leagueLogo: value }))
+              }
             />
           ) : null}
 
@@ -232,7 +254,9 @@ export function CreateLeague() {
           {step === 3 ? (
             <ScoringSettings
               scoringRules={leagueData.scoringRules}
-              onScoringChange={(next) => setLeagueData((prev) => ({ ...prev, scoringRules: next }))}
+              onScoringChange={(next) =>
+                setLeagueData((prev) => ({ ...prev, scoringRules: next }))
+              }
               sport={leagueData.sport}
             />
           ) : null}

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
+import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/libs/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
@@ -23,9 +23,27 @@ const mockLeague = {
   isPublic: false,
   inviteCode: "ABCD-1234-EFGH",
   members: [
-    { id: 1, name: "John Doe", teamName: "Goal Rush", joinDate: "2025-01-01", totalPoints: 212 },
-    { id: 2, name: "Mike T.", teamName: "Dunk FC", joinDate: "2025-01-02", totalPoints: 245 },
-    { id: 3, name: "Sarah K.", teamName: "FC United", joinDate: "2025-01-03", totalPoints: 198 },
+    {
+      id: 1,
+      name: "John Doe",
+      teamName: "Goal Rush",
+      joinDate: "2025-01-01",
+      totalPoints: 212,
+    },
+    {
+      id: 2,
+      name: "Mike T.",
+      teamName: "Dunk FC",
+      joinDate: "2025-01-02",
+      totalPoints: 245,
+    },
+    {
+      id: 3,
+      name: "Sarah K.",
+      teamName: "FC United",
+      joinDate: "2025-01-03",
+      totalPoints: 198,
+    },
   ],
   scoringRules: {
     goal: 5,
@@ -47,16 +65,37 @@ const mockLeague = {
     opponentScore: 72,
   },
   standings: [
-    { rank: 1, teamId: "team2", teamName: "Dunk FC", points: 245, wins: 2, losses: 0 },
-    { rank: 2, teamId: "team1", teamName: "Goal Rush", points: 212, wins: 1, losses: 1 },
-    { rank: 3, teamId: "team3", teamName: "FC United", points: 198, wins: 0, losses: 2 },
+    {
+      rank: 1,
+      teamId: "team2",
+      teamName: "Dunk FC",
+      points: 245,
+      wins: 2,
+      losses: 0,
+    },
+    {
+      rank: 2,
+      teamId: "team1",
+      teamName: "Goal Rush",
+      points: 212,
+      wins: 1,
+      losses: 1,
+    },
+    {
+      rank: 3,
+      teamId: "team3",
+      teamName: "FC United",
+      points: 198,
+      wins: 0,
+      losses: 2,
+    },
   ],
 };
 
 export function LeagueHome() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { username } = useMe();
 
   const leagueId = params?.id ?? mockLeague.id;
   const [currentWeek, setCurrentWeek] = useState(mockLeague.currentWeek);
@@ -87,7 +126,9 @@ export function LeagueHome() {
 
   const handleLeaveLeague = async () => {
     if (isCommissioner) {
-      toastifier.error("✕ Transfer commissioner role before leaving this league");
+      toastifier.error(
+        "✕ Transfer commissioner role before leaving this league",
+      );
       return;
     }
 
@@ -119,7 +160,9 @@ export function LeagueHome() {
 
   return (
     <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
-      <div className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</div>
+      <div className="text-sm text-gray-500">
+        Manager: {username || "Sporty User"}
+      </div>
 
       <LeagueHeader
         leagueName={league.name}
@@ -140,7 +183,11 @@ export function LeagueHome() {
         }}
       />
 
-      <NavigationTabs activeTab="overview" leagueId={league.id} isCommissioner={isCommissioner} />
+      <NavigationTabs
+        activeTab="overview"
+        leagueId={league.id}
+        isCommissioner={isCommissioner}
+      />
 
       <div className="flex justify-end">
         <button
@@ -176,7 +223,10 @@ export function LeagueHome() {
             </div>
 
             <div className="order-2 lg:order-1 lg:col-span-2">
-              <StandingsTable standings={league.standings} userTeamId={league.userTeam.id} />
+              <StandingsTable
+                standings={league.standings}
+                userTeamId={league.userTeam.id}
+              />
             </div>
           </div>
         </>

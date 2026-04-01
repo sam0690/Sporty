@@ -3,16 +3,19 @@
 import { useMemo } from "react";
 import { Home, Shield, Trophy, ArrowRightLeft, UserRound } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
-import { Sidebar, type DashboardNavItem } from "@/components/dashboard/navigation/Sidebar";
-import { useAuth } from "@/context/auth-context";
+import {
+  Sidebar,
+  type DashboardNavItem,
+} from "@/components/dashboard/navigation/Sidebar";
+import { useMe } from "@/hooks/auth/useMe";
 
 type DashboardNavigationProps = {
   children: React.ReactNode;
 };
 
 export function DashboardNavigation({ children }: DashboardNavigationProps) {
-  const { user } = useAuth();
-  const userId = user?.id ?? "1";
+  const { data: me } = useMe();
+  const userId = me?.id ?? "1";
 
   const navItems = useMemo<DashboardNavItem[]>(
     () => [

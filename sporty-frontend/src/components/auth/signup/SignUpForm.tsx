@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
 import {
   Button,
   Card,
@@ -43,31 +43,6 @@ export function SignUpForm() {
 
   const isSubmitting = actionLoading.register;
 
-  const passwordStrength = (() => {
-    if (!password) {
-      return { label: "", width: "0%", color: "bg-border-light", icon: "" };
-    }
-    const hasLetters = /[a-zA-Z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecial = /[^a-zA-Z\d]/.test(password);
-    if (password.length >= 10 && hasLetters && hasNumbers && hasSpecial) {
-      return {
-        label: "Strong",
-        width: "100%",
-        color: "bg-pitch-green",
-        icon: "✓",
-      };
-    }
-    if (password.length >= 6 && hasLetters && hasNumbers) {
-      return {
-        label: "Medium",
-        width: "66%",
-        color: "bg-accent-yellow",
-        icon: "!",
-      };
-    }
-    return { label: "Weak", width: "33%", color: "bg-accent-red", icon: "✕" };
-  })();
 
   const validate = (): boolean => {
     const nextErrors: SignUpErrors = {};
@@ -242,7 +217,7 @@ export function SignUpForm() {
 
                         <Button
                             type="submit"
-                            className="h-12 w-full rounded-xl border border-[#1e6785] !bg-[#247BA0] px-6 text-base font-semibold !text-white shadow-md transition-all duration-200 hover:!bg-[#1e6785] hover:shadow-lg active:scale-[0.98] disabled:!bg-[#247BA0]/70 disabled:!text-white"
+                            className="h-12 w-full rounded-xl border border-[#1e6785] bg-[#247BA0]! px-6 text-base font-semibold !text-white shadow-md transition-all duration-200 hover:!bg-[#1e6785] hover:shadow-lg active:scale-[0.98] disabled:!bg-[#247BA0]/70 disabled:!text-white"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? (

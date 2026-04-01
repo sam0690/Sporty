@@ -2,12 +2,19 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
+import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/libs/toastifier";
 import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
 import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
 import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";
-import { PreferencesForm, type Preferences } from "@/components/dashboard/profile/components/PreferencesForm";
-import { ProfileForm, type ProfileUser } from "@/components/dashboard/profile/components/ProfileForm";
+import {
+  PreferencesForm,
+  type Preferences,
+} from "@/components/dashboard/profile/components/PreferencesForm";
+import {
+  ProfileForm,
+  type ProfileUser,
+} from "@/components/dashboard/profile/components/ProfileForm";
 import { ProfileHeader } from "@/components/dashboard/profile/components/ProfileHeader";
 import { SettingsSkeleton } from "@/components/dashboard/profile/components/SettingsSkeleton";
 
@@ -35,14 +42,15 @@ type ExtendedUser = {
 };
 
 export function ProfileSettings() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { data: me, username } = useMe();
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userData, setUserData] = useState<ExtendedUser>({
-    id: user?.id ?? mockUser.id,
-    name: user?.name ?? mockUser.name,
-    email: user?.email ?? mockUser.email,
-    avatar: user?.avatar ?? mockUser.avatar,
+    id: me?.id ?? mockUser.id,
+    name: username || mockUser.name,
+    email: me?.email ?? mockUser.email,
+    avatar: me?.avatar_url ?? mockUser.avatar,
     bio: mockUser.bio,
   });
   const [preferences, setPreferences] = useState<Preferences>(mockPreferences);
@@ -51,6 +59,16 @@ export function ProfileSettings() {
     const timeout = window.setTimeout(() => setIsLoading(false), 450);
     return () => window.clearTimeout(timeout);
   }, []);
+
+  useEffect(() => {
+    setUserData((prev) => ({
+      ...prev,
+      id: me?.id ?? prev.id,
+      name: username || prev.name,
+      email: me?.email ?? prev.email,
+      avatar: me?.avatar_url ?? prev.avatar,
+    }));
+  }, [me?.avatar_url, me?.email, me?.id, username]);
 
   const profileFormUser: ProfileUser = useMemo(
     () => ({
@@ -61,7 +79,9 @@ export function ProfileSettings() {
     [userData],
   );
 
-  const handleUpdateProfile = async (nextUser: ProfileUser): Promise<boolean> => {
+  const handleUpdateProfile = async (
+    nextUser: ProfileUser,
+  ): Promise<boolean> => {
     try {
       setUserData((prev) => ({ ...prev, ...nextUser }));
       return true;
@@ -89,7 +109,9 @@ export function ProfileSettings() {
     return true;
   };
 
-  const handleUpdatePreferences = async (nextPreferences: Preferences): Promise<void> => {
+  const handleUpdatePreferences = async (
+    nextPreferences: Preferences,
+  ): Promise<void> => {
     setPreferences(nextPreferences);
     toastifier.info("i Preferences updated");
   };
@@ -134,12 +156,17 @@ export function ProfileSettings() {
 
         <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
         <PasswordForm onChangePassword={handleChangePassword} />
-        <PreferencesForm preferences={preferences} onUpdate={handleUpdatePreferences} />
+        <PreferencesForm
+          preferences={preferences}
+          onUpdate={handleUpdatePreferences}
+        />
         <DangerZone onDeleteAccount={handleDeleteAccount} />
       </div>
 
       {isDeleting ? (
-        <p className="mt-4 text-sm text-gray-500">Processing account deletion...</p>
+        <p className="mt-4 text-sm text-gray-500">
+          Processing account deletion...
+        </p>
       ) : null}
     </section>
   );

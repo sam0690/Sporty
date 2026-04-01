@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/auth-context";
-import { LeagueCard, type Sport } from "@/components/dashboard/leagues/components/LeagueCard";
+import { useMe } from "@/hooks/auth/useMe";
+import {
+  LeagueCard,
+  type Sport,
+} from "@/components/dashboard/leagues/components/LeagueCard";
 import { LeaguesHeader } from "@/components/dashboard/leagues/components/LeaguesHeader";
 import { StatsRow } from "@/components/dashboard/leagues/components/StatsRow";
 import { EmptyLeagues } from "@/components/ui/empty-states";
@@ -59,7 +62,7 @@ const mockStats = {
 };
 
 export function Leagues() {
-  const { user } = useAuth();
+  const { username } = useMe();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -69,7 +72,7 @@ export function Leagues() {
 
   const leagues = mockLeagues;
   const stats = mockStats;
-  const userName = user?.name ?? "Sporty User";
+  const userName = username || "Sporty User";
 
   return (
     <section className="mx-auto max-w-7xl bg-white px-6 py-12 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
