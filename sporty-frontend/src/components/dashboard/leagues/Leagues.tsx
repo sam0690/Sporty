@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useMe } from "@/hooks/auth/useMe";
+import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import {
   LeagueCard,
   type Sport,
@@ -11,68 +11,27 @@ import { StatsRow } from "@/components/dashboard/leagues/components/StatsRow";
 import { EmptyLeagues } from "@/components/ui/empty-states";
 import { LeagueCardSkeleton } from "@/components/ui/skeletons";
 
-type League = {
-  id: number;
-  name: string;
-  sport: Sport;
-  memberCount: number;
-  yourRank: number;
-  teamName: string;
-};
-
-const mockLeagues: League[] = [
-  {
-    id: 1,
-    name: "Premier League Champions",
-    sport: "football",
-    memberCount: 12,
-    yourRank: 3,
-    teamName: "Goal Rush",
-  },
-  {
-    id: 2,
-    name: "NBA Fantasy 2025",
-    sport: "basketball",
-    memberCount: 8,
-    yourRank: 1,
-    teamName: "Dunk Masters",
-  },
-  {
-    id: 3,
-    name: "Cricket World Cup",
-    sport: "cricket",
-    memberCount: 10,
-    yourRank: 7,
-    teamName: "Six Hitters",
-  },
-  {
-    id: 4,
-    name: "Ultimate All-Stars",
-    sport: "multisport",
-    memberCount: 15,
-    yourRank: 4,
-    teamName: "CrossSport Kings",
-  },
-];
-
-const mockStats = {
-  totalLeagues: 4,
-  highestRank: 1,
-  totalPoints: 587,
-};
-
 export function Leagues() {
   const { username } = useMe();
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: leaguesData, isLoading } = useMyLeagues();
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setIsLoading(false), 450);
-    return () => window.clearTimeout(timeout);
-  }, []);
-
-  const leagues = mockLeagues;
-  const stats = mockStats;
   const userName = username || "Sporty User";
+
+  // Map backend data to UI format
+  const leagues = (leaguesData || []).map((l) => ({
+    id: l.id,
+    name: l.name,
+    sport: (l.sports?.[0]?.sport.name as Sport) || "multisport",
+    memberCount: l.member_count,
+    yourRank: l.my_team?.rank || 0,
+    teamName: l.my_team?.name || "No Team",
+  }));
+
+  const stats = {
+    totalLeagues: leagues.length,
+    highestRank: 0,
+    totalPoints: 0,
+  };
 
   return (
     <section className="mx-auto max-w-7xl bg-white px-6 py-12 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">

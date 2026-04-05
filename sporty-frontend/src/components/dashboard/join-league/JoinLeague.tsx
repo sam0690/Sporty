@@ -14,141 +14,59 @@ import {
   type JoinedLeague,
 } from "@/components/dashboard/join-league/components/SuccessModal";
 import { CardSkeleton } from "@/components/ui/skeletons";
-
-const validCodes: Record<string, JoinedLeague> = {
-  "ABCD-1234-EFGH": {
-    id: 1,
-    name: "Premier League Champions",
-    sport: "football",
-    teamName: "Goal Rush",
-  },
-  "BASK-5678-BALL": {
-    id: 2,
-    name: "NBA Fantasy 2025",
-    sport: "basketball",
-    teamName: "Dunk Masters",
-  },
-  "CRIC-9012-KET": {
-    id: 3,
-    name: "Cricket World Cup",
-    sport: "cricket",
-    teamName: "Six Hitters",
-  },
-  "MULTI-3456-SPORT": {
-    id: 4,
-    name: "Ultimate All-Stars",
-    sport: "multisport",
-    teamName: "CrossSport Kings",
-  },
-};
-
-const publicLeagues: PublicLeague[] = [
-  {
-    id: 11,
-    name: "Weekend Football Clash",
-    sport: "football",
-    memberCount: 22,
-    requiresInviteCode: false,
-  },
-  {
-    id: 12,
-    name: "Open Hoops League",
-    sport: "basketball",
-    memberCount: 14,
-    requiresInviteCode: false,
-  },
-  {
-    id: 13,
-    name: "Elite Cricket Circle",
-    sport: "cricket",
-    memberCount: 10,
-    requiresInviteCode: true,
-  },
-  {
-    id: 14,
-    name: "Universal Legends",
-    sport: "multisport",
-    memberCount: 18,
-    requiresInviteCode: false,
-  },
-];
-
-async function mockJoinLeague(
-  inviteCode: string,
-): Promise<{ success: true; league: JoinedLeague }> {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  const league = validCodes[inviteCode];
-  if (league) {
-    return { success: true, league };
-  }
-
-  if (inviteCode === "ALREADY-1111-MEMB") {
-    throw new Error("You're already a member of this league");
-  }
-
-  if (inviteCode === "FULL-2222-LEAG") {
-    throw new Error("This league is full");
-  }
-
-  throw new Error("Invalid invite code. Please check and try again.");
-}
+import { useJoinLeague, useDiscoverLeagues } from "@/hooks/leagues/useLeagues";
 
 export function JoinLeague() {
   const { username } = useMe();
+  const { data: discoverLeagues, isLoading: discoverLoading } = useDiscoverLeagues();
+  const joinMutation = useJoinLeague();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<JoinedLeague | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (inviteCode: string) => {
     setError(null);
-
     if (!inviteCode) {
       setError("Invite code is required");
       return;
     }
 
-    const codeFormat = /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
-    if (!codeFormat.test(inviteCode)) {
-      setError("Invalid format. Use XXXX-XXXX-XXXX");
-      return;
-    }
-
     try {
-      setIsLoading(true);
-      const result = await mockJoinLeague(inviteCode);
-      setSuccessData(result.league);
+      const membership = await joinMutation.mutateAsync(inviteCode);
+      setSuccessData({
+        id: membership.id as any,
+        name: "Joined League",
+        sport: "football",
+        teamName: `${username || "Sporty"} Team`,
+      });
       setShowSuccessModal(true);
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Unable to join league";
-      setError(message);
-    } finally {
-      setIsLoading(false);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err.message || "Unable to join league");
     }
   };
 
-  const handleJoinPublicLeague = async (league: PublicLeague) => {
+  const handleJoinPublicLeague = async (league: any) => {
     if (league.requiresInviteCode) {
       setError("This league requires an invite code.");
       return;
     }
-
-    setError(null);
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    setSuccessData({
-      id: league.id,
-      name: league.name,
-      sport: league.sport,
-      teamName: `${username || "Sporty"} XI`,
-      requiresTeamCreation: false,
-    });
-    setShowSuccessModal(true);
-    setIsLoading(false);
+    // For public leagues without codes, we'd need a direct join endpoint or use an invite code if provided
+    if (league.invite_code) {
+      handleSubmit(league.invite_code);
+    }
   };
+
+  const publicLeagues: PublicLeague[] = (discoverLeagues || []).map((l) => ({
+    id: l.id as any,
+    name: l.name,
+    sport: (l.sports?.[0]?.sport.name as any) || "multisport",
+    memberCount: 0,
+    requiresInviteCode: !l.is_public,
+    invite_code: l.invite_code,
+  } as any));
+
+  const isLoading = discoverLoading || joinMutation.isPending;
 
   return (
     <section className="max-w-4xl mx-auto px-6 py-12 space-y-8 text-gray-900 [font-family:system-ui,-apple-system]">
@@ -171,7 +89,7 @@ export function JoinLeague() {
           <div className="h-10 animate-pulse rounded-full bg-gray-100" />
         </div>
       ) : (
-        <JoinForm onSubmit={handleSubmit} isLoading={isLoading} error={null} />
+        <JoinForm onSubmit={handleSubmit} isLoading={joinMutation.isPending} error={null} />
       )}
 
       <div className="mx-auto flex max-w-2xl items-center gap-4">

@@ -11,7 +11,7 @@ Rules applied:
 """
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -94,6 +94,16 @@ class LeagueSportResponse(BaseModel):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+class MyTeamSummary(BaseModel):
+    """Brief summary of the current user's team in a league."""
+    id: uuid.UUID
+    name: str
+    rank: int | None = None
+    points: Decimal | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LeagueResponse(BaseModel):
     """What gets returned when reading a league.
 
@@ -119,12 +129,17 @@ class LeagueResponse(BaseModel):
     transfers_per_window: int
     transfer_day: int
     created_at: datetime
+    member_count: int = 0
+    team_count: int = 0
 
     # Nested objects instead of raw UUIDs
     owner: UserBrief
     season: SeasonBrief
     # Sports attached to this league — list because multi-sport leagues exist
     sports: list[LeagueSportResponse] = []
+
+    # Optional: my_team summary for the requesting user
+    my_team: MyTeamSummary | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -416,5 +431,106 @@ class TeamBuildRequest(BaseModel):
     def no_duplicate_players(cls, v: list[uuid.UUID]) -> list[uuid.UUID]:
         if len(v) != len(set(v)):
             raise ValueError("Duplicate players not allowed")
+        return v
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Metadata (Seasons, Sports)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+
+
+class SeasonResponse(BaseModel):
+    """What gets returned for public season listings."""
+    id: uuid.UUID
+    sport_id: uuid.UUID
+    name: str
+    start_date: datetime | date
+    end_date: datetime | date
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class TransferWindowResponse(BaseModel):
+    """What gets returned for public transfer window listings."""
+    id: uuid.UUID
+    season_id: uuid.UUID
+    number: int
+    total_number: int
+    start_at: datetime
+    end_at: datetime
+    lineup_deadline_at: datetime
+    lineup_locked: bool
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SportResponse(BaseModel):
+    """What gets returned for public sport listings."""
+    id: uuid.UUID
+    name: str
+    display_name: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Lineup
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+class LeaderboardEntryResponse(BaseModel):
+    """A single team's standing in a league's leaderboard."""
+    team_id: uuid.UUID
+    team_name: str
+    owner_name: str
+    points: Decimal
+    rank: int | None
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LeaderboardResponse(BaseModel):
+    """The full leaderboard for a league/gameweek."""
+    league_id: uuid.UUID
+    transfer_window_id: uuid.UUID | None
+    entries: list[LeaderboardEntryResponse]
+    
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LineupEntryResponse(BaseModel):
+    """A single player inside a team's weekly lineup."""
+    player_id: uuid.UUID
+    is_captain: bool
+    is_vice_captain: bool
+    player: PlayerBrief
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LineupResponse(BaseModel):
+    """Result of GET /leagues/{id}/my-team/lineup."""
+    fantasy_team_id: uuid.UUID
+    transfer_window_id: uuid.UUID
+    entries: list[LineupEntryResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LineupUpdateRequest(BaseModel):
+    """POST /leagues/{id}/my-team/lineup — set starters for the week."""
+    player_ids: list[uuid.UUID] = Field(min_length=1, max_length=15)
+    captain_id: uuid.UUID
+    vice_captain_id: uuid.UUID
+
+    @field_validator("player_ids")
+    @classmethod
+    def no_duplicates(cls, v: list[uuid.UUID]) -> list[uuid.UUID]:
+        if len(v) != len(set(v)):
+            raise ValueError("Duplicate players in lineup")
         return v
 

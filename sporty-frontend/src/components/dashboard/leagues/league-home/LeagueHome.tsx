@@ -92,39 +92,34 @@ const mockLeague = {
   ],
 };
 
+import { useActiveWindow, useLeague, useMyTeam } from "@/hooks/leagues/useLeagues";
+
 export function LeagueHome() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+
+  const leagueId = params?.id ?? "";
+
+  const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
+  const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
+  const { data: activeWindow, isLoading: windowLoading } = useActiveWindow(leagueId);
   const { username } = useMe();
 
-  const leagueId = params?.id ?? mockLeague.id;
-  const [currentWeek, setCurrentWeek] = useState(mockLeague.currentWeek);
-  const [isLoading, setIsLoading] = useState(true);
+  const [currentWeek, setCurrentWeek] = useState(1);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 450);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, []);
-
-  const league = useMemo(() => {
-    if (leagueId !== mockLeague.id) {
-      return { ...mockLeague, id: leagueId };
+    if (activeWindow) {
+      setCurrentWeek(activeWindow.number);
     }
+  }, [activeWindow]);
 
-    return mockLeague;
-  }, [leagueId]);
-
-  const hasData = league.standings.length > 0;
-  const isCommissioner = league.isCommissioner;
+  const isCommissioner = league?.owner?.username === username;
+  const isLoading = leagueLoading || teamLoading || windowLoading;
 
   const handleLeaveLeague = async () => {
+    if (!league) return;
     if (isCommissioner) {
       toastifier.error(
         "✕ Transfer commissioner role before leaving this league",
@@ -165,17 +160,17 @@ export function LeagueHome() {
       </div>
 
       <LeagueHeader
-        leagueName={league.name}
-        sport={league.sport}
+        leagueName={league?.name || ""}
+        sport={(league?.sports?.[0]?.sport.name as any) || "football"}
         currentWeek={currentWeek}
-        totalWeeks={league.totalWeeks}
+        totalWeeks={activeWindow?.total_number || 16}
       />
 
       <WeekSelector
         currentWeek={currentWeek}
-        totalWeeks={league.totalWeeks}
+        totalWeeks={activeWindow?.total_number || 16}
         onWeekChange={(week) => {
-          if (week < 1 || week > league.totalWeeks) {
+          if (week < 1 || (activeWindow && week > activeWindow.total_number)) {
             return;
           }
 
@@ -185,7 +180,7 @@ export function LeagueHome() {
 
       <NavigationTabs
         activeTab="overview"
-        leagueId={league.id}
+        leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
@@ -205,33 +200,33 @@ export function LeagueHome() {
         </button>
       </div>
 
-      {hasData ? (
+      {(myTeam && league) ? (
         <>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 order-1 lg:order-2 lg:col-span-1">
               <CurrentMatchup
-                yourTeamName={league.userTeam.name}
-                yourScore={league.userTeam.score}
-                opponentTeamName={league.currentMatchup.opponentTeam}
-                opponentScore={league.currentMatchup.opponentScore}
+                yourTeamName={myTeam.name}
+                yourScore={0} // To be connected when scoring API is ready
+                opponentTeamName="TBD"
+                opponentScore={0}
               />
               <YourScoreCard
-                yourScore={league.userTeam.score}
-                weeklyRank={league.userTeam.weeklyRank}
-                pointsBehind={league.userTeam.pointsBehind}
+                yourScore={0}
+                weeklyRank={0}
+                pointsBehind={0}
               />
             </div>
 
             <div className="order-2 lg:order-1 lg:col-span-2">
               <StandingsTable
-                standings={league.standings}
-                userTeamId={league.userTeam.id}
+                standings={[]} // Will use Leaderboard API
+                userTeamId={myTeam.id}
               />
             </div>
           </div>
         </>
       ) : (
-        <EmptyState message="No data available for this league" />
+        <EmptyState message="No team data found for this league" />
       )}
 
       {showLeaveModal ? (
@@ -241,7 +236,7 @@ export function LeagueHome() {
             <p className="mt-2 text-sm text-gray-600">
               {isCommissioner
                 ? "Commissioners cannot leave until they transfer league ownership."
-                : `Leave ${league.name}? Your team will be permanently removed.`}
+                : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
             </p>
 
             <div className="mt-6 flex gap-2">

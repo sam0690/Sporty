@@ -77,7 +77,7 @@ const mockProfile: PublicProfile = {
   ],
 };
 
-export function UserProfile() {
+export function UserProfile({ userId }: { userId?: string }) {
   const { data: me, username } = useMe();
 
   const profile = useMemo(() => {

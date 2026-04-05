@@ -11,6 +11,7 @@ import { NavigationTabs } from "@/components/dashboard/leagues/league-home/compo
 import { PositionLimits } from "@/components/dashboard/leagues/league-lineup/components/PositionLimits";
 import { SaveLineupButton } from "@/components/dashboard/leagues/league-lineup/components/SaveLineupButton";
 import { StartingLineup } from "@/components/dashboard/leagues/league-lineup/components/StartingLineup";
+import { useActiveWindow, useLeague, useLineup, useUpdateLineup } from "@/hooks/leagues/useLeagues";
 import {
   type Player,
   type Sport,
@@ -24,440 +25,82 @@ type PositionLimit = {
 
 type LeagueSport = Sport | "multisport";
 
-const mockLeaguesById = {
-  "1": {
-    leagueId: "1",
-    leagueName: "Premier League Champions",
-    sport: "football" as const,
-    currentWeek: 3,
-    deadline: "2027-04-05T23:59:59",
-  },
-  "2": {
-    leagueId: "2",
-    leagueName: "NBA Fantasy 2025",
-    sport: "basketball" as const,
-    currentWeek: 3,
-    deadline: "2027-04-05T23:59:59",
-  },
-  "3": {
-    leagueId: "3",
-    leagueName: "Cricket World Cup",
-    sport: "cricket" as const,
-    currentWeek: 3,
-    deadline: "2027-04-05T23:59:59",
-  },
-  "4": {
-    leagueId: "4",
-    leagueName: "Ultimate All-Stars",
-    sport: "multisport" as const,
-    currentWeek: 3,
-    deadline: "2027-04-05T23:59:59",
-  },
-};
-
-function getRosterBySport(sport: LeagueSport): {
-  positionLimits: Record<string, PositionLimit>;
-  players: Array<Player & { isActive: boolean }>;
-} {
-  if (sport === "multisport") {
-    return {
-      positionLimits: {
-        Forward: { max: 2, current: 2 },
-        Midfielder: { max: 3, current: 1 },
-        Defender: { max: 3, current: 2 },
-        Goalkeeper: { max: 1, current: 1 },
-        PointGuard: { max: 2, current: 1 },
-        ShootingGuard: { max: 2, current: 0 },
-        SmallForward: { max: 2, current: 1 },
-        PowerForward: { max: 2, current: 0 },
-        Center: { max: 1, current: 1 },
-        Batsman: { max: 4, current: 1 },
-        Bowler: { max: 4, current: 1 },
-        AllRounder: { max: 2, current: 1 },
-        WicketKeeper: { max: 1, current: 0 },
-      },
-      players: [
-        {
-          id: 1,
-          name: "Lionel Messi",
-          sport: "football",
-          position: "Forward",
-          projected: 12.5,
-          isActive: true,
-        },
-        {
-          id: 2,
-          name: "Cristiano Ronaldo",
-          sport: "football",
-          position: "Forward",
-          projected: 11.8,
-          isActive: true,
-        },
-        {
-          id: 3,
-          name: "Kevin De Bruyne",
-          sport: "football",
-          position: "Midfielder",
-          projected: 9.2,
-          isActive: true,
-        },
-        {
-          id: 4,
-          name: "Rodri",
-          sport: "football",
-          position: "Midfielder",
-          projected: 7.5,
-          isActive: false,
-        },
-        {
-          id: 5,
-          name: "Virgil van Dijk",
-          sport: "football",
-          position: "Defender",
-          projected: 6.8,
-          isActive: false,
-        },
-        {
-          id: 6,
-          name: "Stephen Curry",
-          sport: "basketball",
-          position: "PointGuard",
-          projected: 18.5,
-          isActive: true,
-        },
-        {
-          id: 7,
-          name: "LeBron James",
-          sport: "basketball",
-          position: "SmallForward",
-          projected: 16.8,
-          isActive: true,
-        },
-        {
-          id: 8,
-          name: "Nikola Jokic",
-          sport: "basketball",
-          position: "Center",
-          projected: 19.5,
-          isActive: true,
-        },
-        {
-          id: 9,
-          name: "Luka Doncic",
-          sport: "basketball",
-          position: "PointGuard",
-          projected: 17.8,
-          isActive: false,
-        },
-        {
-          id: 10,
-          name: "Kevin Durant",
-          sport: "basketball",
-          position: "PowerForward",
-          projected: 17.2,
-          isActive: false,
-        },
-        {
-          id: 11,
-          name: "Virat Kohli",
-          sport: "cricket",
-          position: "Batsman",
-          projected: 14.2,
-          isActive: true,
-        },
-        {
-          id: 12,
-          name: "Jasprit Bumrah",
-          sport: "cricket",
-          position: "Bowler",
-          projected: 10.2,
-          isActive: true,
-        },
-        {
-          id: 13,
-          name: "Ravindra Jadeja",
-          sport: "cricket",
-          position: "AllRounder",
-          projected: 12.2,
-          isActive: true,
-        },
-        {
-          id: 14,
-          name: "Rohit Sharma",
-          sport: "cricket",
-          position: "Batsman",
-          projected: 13.5,
-          isActive: false,
-        },
-        {
-          id: 15,
-          name: "MS Dhoni",
-          sport: "cricket",
-          position: "WicketKeeper",
-          projected: 8.5,
-          isActive: false,
-        },
-      ],
-    };
-  }
-
-  if (sport === "basketball") {
-    return {
-      positionLimits: {
-        PointGuard: { max: 2, current: 2 },
-        ShootingGuard: { max: 2, current: 2 },
-        SmallForward: { max: 2, current: 1 },
-        PowerForward: { max: 2, current: 1 },
-        Center: { max: 1, current: 1 },
-      },
-      players: [
-        {
-          id: 1,
-          name: "Stephen Curry",
-          sport,
-          position: "PointGuard",
-          projected: 18.5,
-          isActive: true,
-        },
-        {
-          id: 2,
-          name: "Luka Doncic",
-          sport,
-          position: "PointGuard",
-          projected: 17.8,
-          isActive: true,
-        },
-        {
-          id: 3,
-          name: "Anthony Edwards",
-          sport,
-          position: "ShootingGuard",
-          projected: 15.2,
-          isActive: true,
-        },
-        {
-          id: 4,
-          name: "Devin Booker",
-          sport,
-          position: "ShootingGuard",
-          projected: 14.5,
-          isActive: true,
-        },
-        {
-          id: 5,
-          name: "LeBron James",
-          sport,
-          position: "SmallForward",
-          projected: 16.8,
-          isActive: true,
-        },
-        {
-          id: 6,
-          name: "Kevin Durant",
-          sport,
-          position: "PowerForward",
-          projected: 17.2,
-          isActive: false,
-        },
-        {
-          id: 7,
-          name: "Nikola Jokic",
-          sport,
-          position: "Center",
-          projected: 19.5,
-          isActive: true,
-        },
-      ],
-    };
-  }
-
-  if (sport === "cricket") {
-    return {
-      positionLimits: {
-        Batsman: { max: 4, current: 4 },
-        Bowler: { max: 4, current: 3 },
-        AllRounder: { max: 2, current: 1 },
-        WicketKeeper: { max: 1, current: 1 },
-      },
-      players: [
-        {
-          id: 1,
-          name: "Virat Kohli",
-          sport,
-          position: "Batsman",
-          projected: 14.2,
-          isActive: true,
-        },
-        {
-          id: 2,
-          name: "Rohit Sharma",
-          sport,
-          position: "Batsman",
-          projected: 13.5,
-          isActive: true,
-        },
-        {
-          id: 3,
-          name: "Shubman Gill",
-          sport,
-          position: "Batsman",
-          projected: 11.8,
-          isActive: true,
-        },
-        {
-          id: 4,
-          name: "KL Rahul",
-          sport,
-          position: "Batsman",
-          projected: 10.5,
-          isActive: true,
-        },
-        {
-          id: 5,
-          name: "Jasprit Bumrah",
-          sport,
-          position: "Bowler",
-          projected: 10.2,
-          isActive: true,
-        },
-        {
-          id: 6,
-          name: "Mohammed Shami",
-          sport,
-          position: "Bowler",
-          projected: 9.8,
-          isActive: true,
-        },
-        {
-          id: 7,
-          name: "Ravindra Jadeja",
-          sport,
-          position: "AllRounder",
-          projected: 12.2,
-          isActive: true,
-        },
-        {
-          id: 8,
-          name: "MS Dhoni",
-          sport,
-          position: "WicketKeeper",
-          projected: 8.5,
-          isActive: true,
-        },
-      ],
-    };
-  }
-
-  return {
-    positionLimits: {
-      Forward: { max: 2, current: 2 },
-      Midfielder: { max: 3, current: 2 },
-      Defender: { max: 3, current: 2 },
-      Goalkeeper: { max: 1, current: 1 },
-    },
-    players: [
-      {
-        id: 1,
-        name: "Lionel Messi",
-        sport,
-        position: "Forward",
-        projected: 12.5,
-        isActive: true,
-      },
-      {
-        id: 2,
-        name: "Cristiano Ronaldo",
-        sport,
-        position: "Forward",
-        projected: 11.8,
-        isActive: true,
-      },
-      {
-        id: 3,
-        name: "Kevin De Bruyne",
-        sport,
-        position: "Midfielder",
-        projected: 9.2,
-        isActive: true,
-      },
-      {
-        id: 4,
-        name: "Rodri",
-        sport,
-        position: "Midfielder",
-        projected: 7.5,
-        isActive: false,
-      },
-      {
-        id: 5,
-        name: "Virgil van Dijk",
-        sport,
-        position: "Defender",
-        projected: 6.8,
-        isActive: true,
-      },
-      {
-        id: 6,
-        name: "Trent Alexander-Arnold",
-        sport,
-        position: "Defender",
-        projected: 7.2,
-        isActive: true,
-      },
-      {
-        id: 7,
-        name: "Alisson",
-        sport,
-        position: "Goalkeeper",
-        projected: 5.5,
-        isActive: true,
-      },
-    ],
-  };
-}
-
-function activeIdsFromRoster(
-  players: Array<Player & { isActive: boolean }>,
-): number[] {
-  return players.filter((player) => player.isActive).map((player) => player.id);
-}
-
 export function LeagueLineup() {
   const params = useParams<{ id: string }>();
-  const { username } = useMe();
+  const leagueId = params?.id;
+  const { data: me } = useMe();
 
-  const leagueId = params?.id ?? "1";
-  const isCommissioner = leagueId === "1";
+  const { data: league, isLoading: leagueLoading } = useLeague(leagueId!);
+  const { data: lineupData, isLoading: lineupLoading } = useLineup(leagueId!);
+  const { data: activeWindow, isLoading: isWindowLoading } = useActiveWindow(leagueId!);
+  const updateLineupMutation = useUpdateLineup(leagueId!);
+
+  const isCommissioner = league?.owner?.id === me?.id;
+
+  // Map league info
   const selectedLeague = useMemo(() => {
-    return (
-      mockLeaguesById[leagueId as keyof typeof mockLeaguesById] ??
-      mockLeaguesById["1"]
-    );
-  }, [leagueId]);
-  const rosterBySport = useMemo(
-    () => getRosterBySport(selectedLeague.sport),
-    [selectedLeague.sport],
-  );
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const deadline = selectedLeague.deadline;
-  const [activePlayerIds, setActivePlayerIds] = useState<number[]>(
-    activeIdsFromRoster(rosterBySport.players),
-  );
-  const [originalLineup, setOriginalLineup] = useState<number[]>(
-    activeIdsFromRoster(rosterBySport.players),
-  );
+    if (!league) return null;
+    return {
+      leagueId: league.id,
+      leagueName: league.name,
+      sport: (league.sports?.[0]?.sport.name as LeagueSport) || "multisport",
+      currentWeek: activeWindow?.number || 1,
+      totalWeeks: activeWindow?.total_number || 16,
+      deadline: activeWindow?.lineup_deadline_at || league.created_at,
+    };
+  }, [league, activeWindow]);
+
+  // Map lineup entries to UI format
+  const players: Array<Player & { isActive: boolean }> = useMemo(() => {
+    if (!lineupData?.entries) return [];
+    return lineupData.entries.map(e => ({
+      id: e.player_id as any,
+      name: e.player.display_name,
+      sport: e.player.sport_name as Sport,
+      position: e.player.position,
+      projected: 0,
+      isActive: true,
+      isCaptain: e.is_captain,
+      isViceCaptain: e.is_vice_captain,
+    }));
+  }, [lineupData]);
+
+  // Compute limits from league lineup slots
+  const positionLimits: Record<string, PositionLimit> = useMemo(() => {
+    if (!league?.lineup_slots) return {};
+    const limits: Record<string, PositionLimit> = {};
+    league.lineup_slots.forEach(slot => {
+      limits[slot.position] = { max: slot.max_count, current: 0 };
+    });
+    return limits;
+  }, [league]);
+
+  const [isLoadingUI, setIsLoadingUI] = useState(true);
+  const deadline = selectedLeague?.deadline || new Date().toISOString();
+
+  const [activePlayerIds, setActivePlayerIds] = useState<any[]>([]);
+  const [originalLineup, setOriginalLineup] = useState<any[]>([]);
+  const [captainId, setCaptainId] = useState<any>(null);
+  const [viceCaptainId, setViceCaptainId] = useState<any>(null);
+
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    const nextActive = activeIdsFromRoster(rosterBySport.players);
-    setActivePlayerIds(nextActive);
-    setOriginalLineup(nextActive);
-  }, [rosterBySport]);
+    if (players.length > 0) {
+      const ids = players.map(p => p.id);
+      setActivePlayerIds(ids);
+      setOriginalLineup(ids);
+
+      const cap = players.find(p => p.isCaptain);
+      const vice = players.find(p => p.isViceCaptain);
+      if (cap) setCaptainId(cap.id);
+      if (vice) setViceCaptainId(vice.id);
+    }
+  }, [players]);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      setIsLoading(false);
+      setIsLoadingUI(false);
     }, 500);
 
     return () => window.clearTimeout(timeout);
@@ -487,8 +130,7 @@ export function LeagueLineup() {
     return () => window.removeEventListener("beforeunload", beforeUnload);
   }, [activePlayerIds, originalLineup]);
 
-  const players = useMemo(() => rosterBySport.players, [rosterBySport]);
-  const isMultiSport = selectedLeague.sport === "multisport";
+  const isMultiSport = (selectedLeague?.sport as string) === "multisport";
 
   const deadlinePassed = useMemo(() => {
     return Date.now() > new Date(deadline).getTime();
@@ -509,18 +151,18 @@ export function LeagueLineup() {
   }, [players, activePlayerIds]);
 
   const isLineupValid = useMemo(() => {
-    return Object.entries(rosterBySport.positionLimits).every(
+    return Object.entries(positionLimits).every(
       ([position, limit]) => {
         const current = currentCounts[position] ?? 0;
         return current <= limit.max;
       },
     );
-  }, [currentCounts, rosterBySport]);
+  }, [currentCounts, positionLimits]);
 
   const isDirty = useMemo(() => {
-    const sortedCurrent = [...activePlayerIds].sort((a, b) => a - b);
-    const sortedOriginal = [...originalLineup].sort((a, b) => a - b);
-    return JSON.stringify(sortedCurrent) !== JSON.stringify(sortedOriginal);
+    const sortedCurrent = [...activePlayerIds].sort().join();
+    const sortedOriginal = [...originalLineup].sort().join();
+    return sortedCurrent !== sortedOriginal;
   }, [activePlayerIds, originalLineup]);
 
   const activePlayers = players.filter((player) =>
@@ -529,6 +171,7 @@ export function LeagueLineup() {
   const benchPlayers = players.filter(
     (player) => !activePlayerIds.includes(player.id),
   );
+
   const activeBySport = useMemo(() => {
     return {
       football: activePlayers.filter((player) => player.sport === "football")
@@ -540,13 +183,14 @@ export function LeagueLineup() {
         .length,
     };
   }, [activePlayers]);
+
   const isMultiSportReady =
     activeBySport.football === 3 &&
     activeBySport.basketball === 3 &&
     activeBySport.cricket === 3 &&
     activePlayers.length === 9;
 
-  const togglePlayer = (playerId: number) => {
+  const togglePlayer = (playerId: any) => {
     if (deadlinePassed) {
       toastifier.warning("Lineup is locked for this week.");
       return;
@@ -583,7 +227,7 @@ export function LeagueLineup() {
         (item) => item.position === player.position && prev.includes(item.id),
       ).length;
       const limit =
-        rosterBySport.positionLimits[player.position]?.max ??
+        positionLimits[player.position]?.max ??
         Number.MAX_SAFE_INTEGER;
 
       if (!isMultiSport && currentForPosition >= limit) {
@@ -613,27 +257,33 @@ export function LeagueLineup() {
       return;
     }
 
-    setIsSaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    setOriginalLineup(activePlayerIds);
-    setIsSaving(false);
-    toastifier.success("✓ Lineup saved successfully");
+    if (!captainId || !viceCaptainId) {
+      toastifier.error("✕ Please select a captain and vice-captain");
+      return;
+    }
+
+    try {
+      await updateLineupMutation.mutateAsync({
+        player_ids: activePlayerIds.map(id => id.toString()),
+        captain_id: captainId.toString(),
+        vice_captain_id: viceCaptainId.toString(),
+      });
+      setOriginalLineup(activePlayerIds);
+    } catch (err) {
+      // toastifier handled by hook
+    }
   };
 
-  if (isLoading) {
+  if (leagueLoading || lineupLoading || isWindowLoading || isLoadingUI || !selectedLeague) {
     return (
-      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        <div className="h-10 w-56 animate-pulse rounded-lg bg-gray-100" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="space-y-3 lg:col-span-2">
-            {Array.from({ length: 5 }, (_, index) => (
-              <PlayerCardSkeleton key={`lineup-skeleton-${index}`} />
-            ))}
+      <section className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+        <div className="h-12 rounded-lg bg-gray-100 animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-[400px] rounded-2xl bg-gray-100 animate-pulse" />
           </div>
-          <div className="space-y-3 lg:col-span-1">
-            {Array.from({ length: 3 }, (_, index) => (
-              <PlayerCardSkeleton key={`bench-skeleton-${index}`} />
-            ))}
+          <div className="lg:col-span-1">
+            <div className="h-[600px] rounded-2xl bg-gray-100 animate-pulse" />
           </div>
         </div>
       </section>
@@ -647,20 +297,21 @@ export function LeagueLineup() {
   return (
     <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
       <p className="text-sm text-gray-500">
-        Manager: {username || "Sporty User"}
+        Manager: {me?.username || "Sporty User"}
       </p>
 
       <NavigationTabs
         activeTab="lineup"
-        leagueId={leagueId}
+        leagueId={leagueId!}
         isCommissioner={isCommissioner}
       />
 
       <LineupHeader
         leagueName={selectedLeague.leagueName}
-        sport={selectedLeague.sport}
+        sport={selectedLeague.sport as Sport}
         currentWeek={selectedLeague.currentWeek}
-        deadline={deadline}
+        totalWeeks={selectedLeague.totalWeeks}
+        deadline={selectedLeague.deadline}
       />
 
       {deadlinePassed ? (
@@ -670,7 +321,7 @@ export function LeagueLineup() {
       ) : null}
 
       <PositionLimits
-        limits={rosterBySport.positionLimits}
+        limits={positionLimits}
         currentCounts={currentCounts}
         isMultiSport={isMultiSport}
       />
@@ -683,29 +334,26 @@ export function LeagueLineup() {
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <span
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                activeBySport.football === 3
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-amber-200 bg-amber-50 text-amber-700"
-              }`}
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${activeBySport.football === 3
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+                }`}
             >
               ⚽ {activeBySport.football}/3
             </span>
             <span
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                activeBySport.basketball === 3
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-amber-200 bg-amber-50 text-amber-700"
-              }`}
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${activeBySport.basketball === 3
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+                }`}
             >
               🏀 {activeBySport.basketball}/3
             </span>
             <span
-              className={`rounded-full border px-3 py-1 text-xs font-medium ${
-                activeBySport.cricket === 3
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-amber-200 bg-amber-50 text-amber-700"
-              }`}
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${activeBySport.cricket === 3
+                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                : "border-amber-200 bg-amber-50 text-amber-700"
+                }`}
             >
               🏏 {activeBySport.cricket}/3
             </span>
@@ -720,7 +368,7 @@ export function LeagueLineup() {
             allPlayers={players}
             onTogglePlayer={togglePlayer}
             activePlayerIds={activePlayerIds}
-            positionLimits={rosterBySport.positionLimits}
+            positionLimits={positionLimits}
             totalSlots={isMultiSport ? 9 : undefined}
             disabled={deadlinePassed}
           />
@@ -750,7 +398,7 @@ export function LeagueLineup() {
 
       <SaveLineupButton
         onSave={handleSave}
-        isLoading={isSaving}
+        isLoading={updateLineupMutation.isPending}
         isDirty={isDirty}
         disabled={
           !isLineupValid ||

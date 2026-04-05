@@ -6,6 +6,7 @@ type LineupHeaderProps = {
   leagueName: string;
   sport: Sport;
   currentWeek: number;
+  totalWeeks: number;
   deadline: string;
 };
 
@@ -40,6 +41,7 @@ export function LineupHeader({
   leagueName,
   sport,
   currentWeek,
+  totalWeeks,
   deadline,
 }: LineupHeaderProps) {
   const countdown = formatCountdown(deadline);
@@ -54,13 +56,12 @@ export function LineupHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <p className="text-sm text-gray-500">Week {currentWeek} Lineup</p>
+        <p className="text-sm text-gray-500">Week {currentWeek} of {totalWeeks}</p>
         <p
-          className={`rounded-full border px-4 py-1.5 text-sm ${
-            countdown.locked
-              ? "border-red-200 bg-red-50 text-red-500"
-              : "border-gray-100 bg-white text-gray-600"
-          }`}
+          className={`rounded-full border px-4 py-1.5 text-sm ${countdown.locked
+            ? "border-red-200 bg-red-50 text-red-500"
+            : "border-gray-100 bg-white text-gray-600"
+            }`}
         >
           {countdown.locked ? "Lineup Locked" : countdown.label}
         </p>

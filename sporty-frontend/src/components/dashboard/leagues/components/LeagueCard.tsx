@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
 type LeagueCardProps = {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   sport: Sport;
   memberCount: number;

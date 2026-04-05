@@ -13,6 +13,7 @@ Transaction convention:
   - All reads:     call service → return directly (no commit)
 """
 
+import uuid
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Response, status
@@ -28,19 +29,27 @@ from app.league.models import FantasyTeam, League, TeamWeeklyScore
 from app.league.schemas import (
     DraftPickCreate,
     DraftPickResponse,
+    FantasyTeamOwnerResponse,
+    FantasyTeamResponse,
     JoinLeagueRequest,
     LeaderboardEntry,
+    LeaderboardResponse,
     LeagueCreate,
     LeagueResponse,
     LeagueSportAdd,
     LeagueSportResponse,
+    LineupResponse,
     LineupSlotCreate,
     LineupSlotResponse,
+    LineupUpdateRequest,
     MembershipResponse,
+    SeasonResponse,
+    SportResponse,
     StatusUpdate,
     TeamBuildRequest,
     TransferCreate,
     TransferResponse,
+    TransferWindowResponse,
 )
 
 router = APIRouter(prefix="/leagues", tags=["Leagues"])
@@ -53,54 +62,19 @@ router = APIRouter(prefix="/leagues", tags=["Leagues"])
 
 @router.get(
     "/{league_id}/leaderboard",
-    response_model=list[LeaderboardEntry],
-    summary="Get league leaderboard for a transfer window",
+    response_model=LeaderboardResponse,
+    summary="Get league leaderboard",
 )
 def get_league_leaderboard(
-    transfer_window_id: UUID,
+    window_id: UUID | None = None,
     league: League = Depends(require_league_member),
     db: Session = Depends(get_db),
 ):
-    """Return teams sorted by rank with team name, points, and rank.
-
-    Cached in Redis for 60 seconds under:
-      leaderboard:{league_id}:{transfer_window_id}
+    """Return the leaderboard for a league.
+    
+    If window_id is omitted, returns overall season standings.
     """
-
-    # Algorithm: read-through Redis cache by league+window key; on miss query ranked team_weekly_scores ordered by rank/points and cache for 60s.
-    cache_key = f"leaderboard:{league.id}:{transfer_window_id}"
-    cached = cache_get(cache_key)
-    if cached and isinstance(cached, dict) and "items" in cached:
-        return cached["items"]
-
-    rows = (
-        db.query(
-            FantasyTeam.name,
-            TeamWeeklyScore.points,
-            TeamWeeklyScore.rank_in_league,
-        )
-        .join(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
-        .filter(FantasyTeam.league_id == league.id)
-        .filter(TeamWeeklyScore.transfer_window_id == transfer_window_id)
-        .order_by(
-            TeamWeeklyScore.rank_in_league.asc().nullslast(),
-            TeamWeeklyScore.points.desc(),
-            FantasyTeam.name.asc(),
-        )
-        .all()
-    )
-
-    items = [
-        {
-            "team_name": team_name,
-            "points": str(points),
-            "rank": rank_in_league,
-        }
-        for team_name, points, rank_in_league in rows
-    ]
-
-    cache_set(cache_key, {"items": items}, ttl_seconds=60)
-    return items
+    return league_service.get_league_leaderboard(db, league.id, window_id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -180,6 +154,42 @@ def discover_public_leagues(
     new members can't join after the draft has started.
     """
     return league_service.discover_public_leagues(db)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/seasons — list active seasons
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/seasons",
+    response_model=list[SeasonResponse],
+    summary="List active seasons",
+)
+def get_seasons(
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Return all active seasons for league creation."""
+    return league_service.get_active_seasons(db)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/sports — list active sports
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/sports",
+    response_model=list[SportResponse],
+    summary="List active sports",
+)
+def get_sports(
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Return all active sports available on the platform."""
+    return league_service.get_active_sports(db)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -301,6 +311,8 @@ def add_sport(
     league_sport = league_service.add_sport(db, league.id, data.sport_name)
     db.commit()
     return league_sport
+
+
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -493,6 +505,25 @@ def build_team(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/{league_id}/my-team — get the user's fantasy team
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/{league_id}/my-team",
+    response_model=FantasyTeamOwnerResponse,
+    summary="Get the current user's fantasy team in this league",
+)
+def get_my_team(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return the user's fantasy team with budget and players loaded."""
+    return league_service.get_user_team(db, league.id, current_user.id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # POST /leagues/{league_id}/transfer-windows/generate — generate transfer windows
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -575,3 +606,61 @@ def get_transfers(
     public within a league (you can see who your rivals traded).
     """
     return league_service.get_transfers(db, league.id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Lineup Management
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/{league_id}/my-team/lineup",
+    response_model=LineupResponse,
+    summary="Get user's current lineup",
+)
+def get_my_lineup(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return the user's starters and captains for the current window."""
+    return league_service.get_current_lineup(db, league.id, current_user.id)
+
+
+@router.post(
+    "/{league_id}/my-team/lineup",
+    response_model=LineupResponse,
+    summary="Update user's lineup",
+)
+def update_my_lineup(
+    data: LineupUpdateRequest,
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Set starters and captains for the current window."""
+    lineup = league_service.update_lineup(
+        db,
+        league.id,
+        current_user.id,
+        data.player_ids,
+        data.captain_id,
+        data.vice_captain_id,
+    )
+    db.commit()
+    return lineup
+
+
+@router.get(
+    "/{league_id}/active-window",
+    response_model=TransferWindowResponse,
+    summary="Get the active transfer window for a league",
+)
+def get_active_window(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    """Return the current active transfer window and its deadline."""
+    return league_service.get_active_transfer_window(db, league.id)
+
+
