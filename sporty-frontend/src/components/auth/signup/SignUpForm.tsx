@@ -3,84 +3,92 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Eye, EyeOff, Lock, Mail, User } from "lucide-react";
-import { Button, Card, CardContent, CardHeader, CardTitle, Input } from "@/components/ui";
+import { CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Input,
+} from "@/components/ui";
 import { AuthHeroImage } from "@/components/auth/shared/AuthHeroImage";
 import { AuthPageShell } from "@/components/auth/shared/AuthPageShell";
 import { PasswordStrengthIndicator } from "@/components/auth/shared/PasswordStrengthIndicator";
-import { Divider } from "@/components/auth/login/components/Divider";
-import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/libs/toastifier";
+import { Divider } from "@/components/auth/login/components/Divider";
+import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 
 type SignUpErrors = {
-    name?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
+  username?: string;
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
 };
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function SignUpForm() {
-    const router = useRouter();
-    const { register, actionLoading } = useAuth();
+  const router = useRouter();
+  const { register, actionLoading } = useAuth();
 
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [errors, setErrors] = useState<SignUpErrors>({});
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState<SignUpErrors>({});
 
-    const isSubmitting = actionLoading.register;
+  const isSubmitting = actionLoading.register;
 
-    const validate = (): boolean => {
-        const nextErrors: SignUpErrors = {};
 
-        if (!name.trim()) {
-            nextErrors.name = "Username is required.";
-        }
+  const validate = (): boolean => {
+    const nextErrors: SignUpErrors = {};
 
-        if (!email.trim()) {
-            nextErrors.email = "Email is required.";
-        } else if (!emailRegex.test(email)) {
-            nextErrors.email = "Please enter a valid email address.";
-        }
+    if (!username.trim()) {
+      nextErrors.username = "Username is required.";
+    }
 
-        if (!password.trim()) {
-            nextErrors.password = "Password is required.";
-        } else if (password.length < 6) {
-            nextErrors.password = "Password must be at least 6 characters.";
-        }
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    } else if (!emailRegex.test(email)) {
+      nextErrors.email = "Please enter a valid email address.";
+    }
 
-        if (!confirmPassword.trim()) {
-            nextErrors.confirmPassword = "Please confirm your password.";
-        } else if (password !== confirmPassword) {
-            nextErrors.confirmPassword = "Passwords do not match.";
-        }
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
 
-        setErrors(nextErrors);
-        return Object.keys(nextErrors).length === 0;
-    };
+    if (!confirmPassword.trim()) {
+      nextErrors.confirmPassword = "Please confirm your password.";
+    } else if (password !== confirmPassword) {
+      nextErrors.confirmPassword = "Passwords do not match.";
+    }
 
-    const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-        event.preventDefault();
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
-        if (!validate()) {
-            return;
-        }
+  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
 
-        const result = await register(name, email, password);
-        if (!result.success) {
-            toastifier.error(result.error ?? "Unable to create account.");
-            return;
-        }
+    if (!validate()) {
+      return;
+    }
 
-        toastifier.success("Account created! Please sign in");
-        router.push("/login");
-    };
+    const result = await register(username, email, password);
+    if (!result.success) {
+      toastifier.error(result.error ?? "Unable to create account.");
+      return;
+    }
+
+    toastifier.success("Account created! Please sign in");
+    router.push("/login");
+  };
 
     return (
         <AuthPageShell
@@ -112,26 +120,26 @@ export function SignUpForm() {
                     <p className="text-sm text-text-secondary">Start your fantasy sports journey today</p>
                 </CardHeader>
 
-                <CardContent className="space-y-5 p-8 pt-0 sm:p-10 sm:pt-0">
-                    <form onSubmit={onSubmit} className="space-y-4">
-                        <div>
-                            <label htmlFor="name" className="mb-1 block text-sm font-medium text-text-primary">
-                                Username
-                            </label>
-                            <div className="relative">
-                                <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                                <Input
-                                    id="name"
-                                    type="text"
-                                    value={name}
-                                    onChange={(event) => setName(event.target.value)}
-                                    placeholder="Choose a username"
-                                    autoComplete="username"
-                                    error={errors.name}
-                                    className="h-12 rounded-xl border border-gray-300 bg-white px-4 pl-10 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
-                                />
-                            </div>
-                        </div>
+      <CardContent>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="username"
+              className="mb-1 block text-sm font-medium text-text-primary"
+            >
+              Username
+            </label>
+            <Input
+              id="username"
+              type="text"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="your-username"
+              autoComplete="username"
+              error={errors.username}
+              className="rounded-2xl border-border-light/80 bg-surface-50/80 px-5 py-3.5 text-text-primary placeholder:text-text-secondary transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20"
+            />
+          </div>
 
                         <div>
                             <label htmlFor="email" className="mb-1 block text-sm font-medium text-text-primary">
@@ -209,7 +217,7 @@ export function SignUpForm() {
 
                         <Button
                             type="submit"
-                            className="h-12 w-full rounded-xl border border-[#1e6785] !bg-[#247BA0] px-6 text-base font-semibold !text-white shadow-md transition-all duration-200 hover:!bg-[#1e6785] hover:shadow-lg active:scale-[0.98] disabled:!bg-[#247BA0]/70 disabled:!text-white"
+                            className="h-12 w-full rounded-xl border border-[#1e6785] bg-[#247BA0]! px-6 text-base font-semibold !text-white shadow-md transition-all duration-200 hover:!bg-[#1e6785] hover:shadow-lg active:scale-[0.98] disabled:!bg-[#247BA0]/70 disabled:!text-white"
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? (

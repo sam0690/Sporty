@@ -1,3 +1,6 @@
+export * from "./league";
+export * from "./player";
+
 export type TPagination = {
     total: number;
     totalItems: number;

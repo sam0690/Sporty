@@ -144,6 +144,11 @@ class Season(Base):
     )
 
     @property
+    def total_windows(self) -> int:
+        """Total number of transfer windows in this season."""
+        return len(self.transfer_windows)
+
+    @property
     def is_current(self) -> bool:
         """Season is current if today falls within [start_date, end_date]."""
         return self.start_date <= date.today() <= self.end_date
@@ -403,6 +408,14 @@ class League(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    @property
+    def member_count(self) -> int:
+        return len(self.memberships)
+
+    @property
+    def team_count(self) -> int:
+        return len(self.fantasy_teams)
 
     __table_args__ = (
         CheckConstraint("max_teams >= 2", name="ck_league_max_teams"),

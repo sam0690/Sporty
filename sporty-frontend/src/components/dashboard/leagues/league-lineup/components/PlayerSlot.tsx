@@ -5,11 +5,13 @@ import { GripVertical, Plus, X } from "lucide-react";
 type Sport = "football" | "basketball" | "cricket";
 
 type Player = {
-  id: number;
+  id: any;
   name: string;
   sport: Sport;
   position: string;
   projected: number;
+  isCaptain?: boolean;
+  isViceCaptain?: boolean;
 };
 
 type PlayerSlotProps = {
@@ -52,13 +54,11 @@ export function PlayerSlot({ player, onToggle, isActive, variant = "lineup", dis
           onToggle(player.id);
         }
       }}
-      className={`group flex items-center justify-between rounded-xl border p-3 transition-all duration-150 [animation:fade-soft_0.2s_ease] ${
-        isActive
+      className={`group flex items-center justify-between rounded-xl border p-3 transition-all duration-150 [animation:fade-soft_0.2s_ease] ${isActive
           ? "border-gray-100 bg-white"
           : "border-gray-100 bg-white"
-      } ${
-        variant === "bench" ? "cursor-grab active:cursor-grabbing hover:bg-gray-50" : "cursor-pointer"
-      } ${disabled ? "cursor-not-allowed opacity-60" : "active:rotate-1 active:opacity-50 active:shadow-lg"}`}
+        } ${variant === "bench" ? "cursor-grab active:cursor-grabbing hover:bg-gray-50" : "cursor-pointer"
+        } ${disabled ? "cursor-not-allowed opacity-60" : "active:rotate-1 active:opacity-50 active:shadow-lg"}`}
       aria-disabled={disabled}
     >
       <div className="min-w-0">

@@ -23,7 +23,7 @@ from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
 from app.league.models import Sport
 from app.match.models import Match
-from app.services.scoring.scoring_trigger import enqueue_scoring_for_finished_match
+from app.services.scoring.trigger import enqueue_scoring_for_finished_match
 
 
 async def sync_football_matches(

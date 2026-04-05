@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
+import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/libs/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
@@ -23,9 +23,27 @@ const mockLeague = {
   isPublic: false,
   inviteCode: "ABCD-1234-EFGH",
   members: [
-    { id: 1, name: "John Doe", teamName: "Goal Rush", joinDate: "2025-01-01", totalPoints: 212 },
-    { id: 2, name: "Mike T.", teamName: "Dunk FC", joinDate: "2025-01-02", totalPoints: 245 },
-    { id: 3, name: "Sarah K.", teamName: "FC United", joinDate: "2025-01-03", totalPoints: 198 },
+    {
+      id: 1,
+      name: "John Doe",
+      teamName: "Goal Rush",
+      joinDate: "2025-01-01",
+      totalPoints: 212,
+    },
+    {
+      id: 2,
+      name: "Mike T.",
+      teamName: "Dunk FC",
+      joinDate: "2025-01-02",
+      totalPoints: 245,
+    },
+    {
+      id: 3,
+      name: "Sarah K.",
+      teamName: "FC United",
+      joinDate: "2025-01-03",
+      totalPoints: 198,
+    },
   ],
   scoringRules: {
     goal: 5,
@@ -47,47 +65,65 @@ const mockLeague = {
     opponentScore: 72,
   },
   standings: [
-    { rank: 1, teamId: "team2", teamName: "Dunk FC", points: 245, wins: 2, losses: 0 },
-    { rank: 2, teamId: "team1", teamName: "Goal Rush", points: 212, wins: 1, losses: 1 },
-    { rank: 3, teamId: "team3", teamName: "FC United", points: 198, wins: 0, losses: 2 },
+    {
+      rank: 1,
+      teamId: "team2",
+      teamName: "Dunk FC",
+      points: 245,
+      wins: 2,
+      losses: 0,
+    },
+    {
+      rank: 2,
+      teamId: "team1",
+      teamName: "Goal Rush",
+      points: 212,
+      wins: 1,
+      losses: 1,
+    },
+    {
+      rank: 3,
+      teamId: "team3",
+      teamName: "FC United",
+      points: 198,
+      wins: 0,
+      losses: 2,
+    },
   ],
 };
+
+import { useActiveWindow, useLeague, useMyTeam } from "@/hooks/leagues/useLeagues";
 
 export function LeagueHome() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
 
-  const leagueId = params?.id ?? mockLeague.id;
-  const [currentWeek, setCurrentWeek] = useState(mockLeague.currentWeek);
-  const [isLoading, setIsLoading] = useState(true);
+  const leagueId = params?.id ?? "";
+
+  const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
+  const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
+  const { data: activeWindow, isLoading: windowLoading } = useActiveWindow(leagueId);
+  const { username } = useMe();
+
+  const [currentWeek, setCurrentWeek] = useState(1);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 450);
-
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, []);
-
-  const league = useMemo(() => {
-    if (leagueId !== mockLeague.id) {
-      return { ...mockLeague, id: leagueId };
+    if (activeWindow) {
+      setCurrentWeek(activeWindow.number);
     }
+  }, [activeWindow]);
 
-    return mockLeague;
-  }, [leagueId]);
-
-  const hasData = league.standings.length > 0;
-  const isCommissioner = league.isCommissioner;
+  const isCommissioner = league?.owner?.username === username;
+  const isLoading = leagueLoading || teamLoading || windowLoading;
 
   const handleLeaveLeague = async () => {
+    if (!league) return;
     if (isCommissioner) {
-      toastifier.error("✕ Transfer commissioner role before leaving this league");
+      toastifier.error(
+        "✕ Transfer commissioner role before leaving this league",
+      );
       return;
     }
 
@@ -119,20 +155,22 @@ export function LeagueHome() {
 
   return (
     <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
-      <div className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</div>
+      <div className="text-sm text-gray-500">
+        Manager: {username || "Sporty User"}
+      </div>
 
       <LeagueHeader
-        leagueName={league.name}
-        sport={league.sport}
+        leagueName={league?.name || ""}
+        sport={(league?.sports?.[0]?.sport.name as any) || "football"}
         currentWeek={currentWeek}
-        totalWeeks={league.totalWeeks}
+        totalWeeks={activeWindow?.total_number || 16}
       />
 
       <WeekSelector
         currentWeek={currentWeek}
-        totalWeeks={league.totalWeeks}
+        totalWeeks={activeWindow?.total_number || 16}
         onWeekChange={(week) => {
-          if (week < 1 || week > league.totalWeeks) {
+          if (week < 1 || (activeWindow && week > activeWindow.total_number)) {
             return;
           }
 
@@ -140,7 +178,11 @@ export function LeagueHome() {
         }}
       />
 
-      <NavigationTabs activeTab="overview" leagueId={league.id} isCommissioner={isCommissioner} />
+      <NavigationTabs
+        activeTab="overview"
+        leagueId={leagueId}
+        isCommissioner={isCommissioner}
+      />
 
       <div className="flex justify-end">
         <button
@@ -158,30 +200,33 @@ export function LeagueHome() {
         </button>
       </div>
 
-      {hasData ? (
+      {(myTeam && league) ? (
         <>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 order-1 lg:order-2 lg:col-span-1">
               <CurrentMatchup
-                yourTeamName={league.userTeam.name}
-                yourScore={league.userTeam.score}
-                opponentTeamName={league.currentMatchup.opponentTeam}
-                opponentScore={league.currentMatchup.opponentScore}
+                yourTeamName={myTeam.name}
+                yourScore={0} // To be connected when scoring API is ready
+                opponentTeamName="TBD"
+                opponentScore={0}
               />
               <YourScoreCard
-                yourScore={league.userTeam.score}
-                weeklyRank={league.userTeam.weeklyRank}
-                pointsBehind={league.userTeam.pointsBehind}
+                yourScore={0}
+                weeklyRank={0}
+                pointsBehind={0}
               />
             </div>
 
             <div className="order-2 lg:order-1 lg:col-span-2">
-              <StandingsTable standings={league.standings} userTeamId={league.userTeam.id} />
+              <StandingsTable
+                standings={[]} // Will use Leaderboard API
+                userTeamId={myTeam.id}
+              />
             </div>
           </div>
         </>
       ) : (
-        <EmptyState message="No data available for this league" />
+        <EmptyState message="No team data found for this league" />
       )}
 
       {showLeaveModal ? (
@@ -191,7 +236,7 @@ export function LeagueHome() {
             <p className="mt-2 text-sm text-gray-600">
               {isCommissioner
                 ? "Commissioners cannot leave until they transfer league ownership."
-                : `Leave ${league.name}? Your team will be permanently removed.`}
+                : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
             </p>
 
             <div className="mt-6 flex gap-2">

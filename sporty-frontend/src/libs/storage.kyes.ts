@@ -1,6 +1,7 @@
 export const LocalStorageKeys = {
   TOKEN: "token",
   USER: "user",
+  REFRESH_TOKEN: "refresh_token",
   THEME: "theme",
 } as const;
 

@@ -9,24 +9,24 @@ import { formatError } from "@/libs/api-error";
  * - A response interceptor normalises errors into ApiError instances.
  */
 const publicApi = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
-    headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-    },
-    timeout: 15_000,
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  },
+  timeout: 15_000,
 });
 
 // ── Request interceptor ────────────────────────────────────────────
 publicApi.interceptors.request.use(
-    (config) => config,
-    (error) => Promise.reject(formatError(error)),
+  (config) => config,
+  (error) => Promise.reject(formatError(error)),
 );
 
 // ── Response interceptor ───────────────────────────────────────────
 publicApi.interceptors.response.use(
-    (response) => response,
-    (error) => Promise.reject(formatError(error)),
+  (response) => response,
+  (error) => Promise.reject(formatError(error)),
 );
 
 export { publicApi };

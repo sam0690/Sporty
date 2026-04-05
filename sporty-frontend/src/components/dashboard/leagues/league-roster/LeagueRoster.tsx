@@ -1,18 +1,31 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { DndContext, DragOverlay, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 import { useParams } from "next/navigation";
-import { useAuth } from "@/context/auth-context";
+import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/libs/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { EmptyState } from "@/components/dashboard/leagues/league-roster/components/EmptyState";
 import { HybridPitch } from "@/components/dashboard/leagues/league-roster/components/HybridPitch";
 import { PlayerList } from "@/components/dashboard/leagues/league-roster/components/PlayerList";
-import { RosterHeader, type Sport } from "@/components/dashboard/leagues/league-roster/components/RosterHeader";
+import {
+  RosterHeader,
+  type Sport,
+} from "@/components/dashboard/leagues/league-roster/components/RosterHeader";
 import { StatsSummary } from "@/components/dashboard/leagues/league-roster/components/StatsSummary";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
+import { useActiveWindow, useLeague, useMyTeam } from "@/hooks/leagues/useLeagues";
+import type { TTeamPlayer } from "@/types";
 
 const SLOT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 type SlotId = (typeof SLOT_IDS)[number];
@@ -50,114 +63,74 @@ type Roster = {
   players: Player[];
 };
 
-const mockRosters: Record<string, Roster> = {
-  "1": {
-    leagueId: "1",
-    leagueName: "Premier League Champions",
-    sport: "football",
-    rosterSize: 15,
-    maxRosterSize: 20,
-    totalPoints: 487,
-    avgPointsPerGame: 97.4,
-    bestPlayer: { name: "Lionel Messi", points: 87 },
-    players: [
-      { id: 1, name: "Lionel Messi", sport: "football", position: "Forward", totalPoints: 87, avgPoints: 9.2, projected: 12.5, form: "hot" },
-      { id: 2, name: "Cristiano Ronaldo", sport: "football", position: "Forward", totalPoints: 76, avgPoints: 8.4, projected: 11.8, form: "hot" },
-      { id: 3, name: "Kevin De Bruyne", sport: "football", position: "Midfielder", totalPoints: 65, avgPoints: 7.2, projected: 9.2, form: "normal" },
-      { id: 4, name: "Rodri", sport: "football", position: "Midfielder", totalPoints: 54, avgPoints: 6.0, projected: 7.5, form: "normal" },
-      { id: 5, name: "Virgil van Dijk", sport: "football", position: "Defender", totalPoints: 48, avgPoints: 5.3, projected: 6.8, form: "cold" },
-      { id: 6, name: "Trent Alexander-Arnold", sport: "football", position: "Defender", totalPoints: 52, avgPoints: 5.8, projected: 7.2, form: "normal" },
-      { id: 7, name: "Alisson", sport: "football", position: "Goalkeeper", totalPoints: 45, avgPoints: 5.0, projected: 5.5, form: "normal" },
-    ],
-  },
-  "2": {
-    leagueId: "2",
-    leagueName: "NBA Fantasy 2025",
-    sport: "basketball",
-    rosterSize: 10,
-    maxRosterSize: 15,
-    totalPoints: 642,
-    avgPointsPerGame: 128.4,
-    bestPlayer: { name: "Nikola Jokic", points: 142 },
-    players: [
-      { id: 1, name: "Stephen Curry", sport: "basketball", position: "PG", totalPoints: 128, avgPoints: 14.2, projected: 18.5, form: "hot" },
-      { id: 2, name: "LeBron James", sport: "basketball", position: "SF", totalPoints: 118, avgPoints: 13.1, projected: 16.8, form: "normal" },
-      { id: 3, name: "Nikola Jokic", sport: "basketball", position: "C", totalPoints: 142, avgPoints: 15.8, projected: 19.5, form: "hot" },
-      { id: 4, name: "Luka Doncic", sport: "basketball", position: "PG", totalPoints: 134, avgPoints: 14.9, projected: 17.8, form: "hot" },
-      { id: 5, name: "Kevin Durant", sport: "basketball", position: "PF", totalPoints: 120, avgPoints: 13.3, projected: 17.2, form: "normal" },
-    ],
-  },
-  "3": {
-    leagueId: "3",
-    leagueName: "Cricket World Cup",
-    sport: "cricket",
-    rosterSize: 12,
-    maxRosterSize: 18,
-    totalPoints: 387,
-    avgPointsPerGame: 77.4,
-    bestPlayer: { name: "Virat Kohli", points: 94 },
-    players: [
-      { id: 1, name: "Virat Kohli", sport: "cricket", position: "Batsman", totalPoints: 94, avgPoints: 10.4, projected: 14.2, form: "hot" },
-      { id: 2, name: "Rohit Sharma", sport: "cricket", position: "Batsman", totalPoints: 82, avgPoints: 9.1, projected: 13.5, form: "normal" },
-      { id: 3, name: "Jasprit Bumrah", sport: "cricket", position: "Bowler", totalPoints: 67, avgPoints: 7.4, projected: 10.2, form: "normal" },
-      { id: 4, name: "Ravindra Jadeja", sport: "cricket", position: "AllRounder", totalPoints: 78, avgPoints: 8.7, projected: 12.2, form: "hot" },
-      { id: 5, name: "MS Dhoni", sport: "cricket", position: "WK", totalPoints: 66, avgPoints: 7.3, projected: 8.5, form: "cold" },
-    ],
-  },
-  "4": {
-    leagueId: "4",
-    leagueName: "Ultimate All-Stars",
-    sport: "multisport",
-    rosterSize: 15,
-    maxRosterSize: 20,
-    totalPoints: 897,
-    avgPointsPerGame: 99.7,
-    bestPlayer: { name: "Nikola Jokic", points: 142 },
-    players: [
-      { id: 1, name: "Lionel Messi", sport: "football", position: "Forward", totalPoints: 87, avgPoints: 9.2, projected: 12.5, form: "hot" },
-      { id: 2, name: "Cristiano Ronaldo", sport: "football", position: "Forward", totalPoints: 76, avgPoints: 8.4, projected: 11.8, form: "hot" },
-      { id: 3, name: "Kevin De Bruyne", sport: "football", position: "Midfielder", totalPoints: 65, avgPoints: 7.2, projected: 9.2, form: "normal" },
-      { id: 4, name: "Rodri", sport: "football", position: "Midfielder", totalPoints: 54, avgPoints: 6.0, projected: 7.5, form: "normal" },
-      { id: 5, name: "Virgil van Dijk", sport: "football", position: "Defender", totalPoints: 48, avgPoints: 5.3, projected: 6.8, form: "cold" },
-      { id: 6, name: "Stephen Curry", sport: "basketball", position: "PG", totalPoints: 128, avgPoints: 14.2, projected: 18.5, form: "hot" },
-      { id: 7, name: "LeBron James", sport: "basketball", position: "SF", totalPoints: 118, avgPoints: 13.1, projected: 16.8, form: "normal" },
-      { id: 8, name: "Nikola Jokic", sport: "basketball", position: "C", totalPoints: 142, avgPoints: 15.8, projected: 19.5, form: "hot" },
-      { id: 9, name: "Luka Doncic", sport: "basketball", position: "PG", totalPoints: 134, avgPoints: 14.9, projected: 17.8, form: "hot" },
-      { id: 10, name: "Kevin Durant", sport: "basketball", position: "PF", totalPoints: 120, avgPoints: 13.3, projected: 17.2, form: "normal" },
-      { id: 11, name: "Virat Kohli", sport: "cricket", position: "Batsman", totalPoints: 94, avgPoints: 10.4, projected: 14.2, form: "hot" },
-      { id: 12, name: "Rohit Sharma", sport: "cricket", position: "Batsman", totalPoints: 82, avgPoints: 9.1, projected: 13.5, form: "normal" },
-      { id: 13, name: "Jasprit Bumrah", sport: "cricket", position: "Bowler", totalPoints: 67, avgPoints: 7.4, projected: 10.2, form: "normal" },
-      { id: 14, name: "Ravindra Jadeja", sport: "cricket", position: "AllRounder", totalPoints: 78, avgPoints: 8.7, projected: 12.2, form: "hot" },
-      { id: 15, name: "MS Dhoni", sport: "cricket", position: "WK", totalPoints: 66, avgPoints: 7.3, projected: 8.5, form: "cold" },
-    ],
-  },
-};
 
 export function LeagueRoster() {
   const params = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const leagueId = params?.id ?? "";
 
-  const leagueId = params?.id ?? "1";
-  const isCommissioner = leagueId === "1";
-  const roster = mockRosters[leagueId] ?? mockRosters["1"];
+  const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
+  const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
+  const { data: activeWindow, isLoading: windowLoading } = useActiveWindow(leagueId);
+  const { username } = useMe();
 
   const [selectedPosition, setSelectedPosition] = useState("All");
   const [selectedSport, setSelectedSport] = useState("All");
-  const [isLoading, setIsLoading] = useState(true);
-  const [slotToPlayer, setSlotToPlayer] = useState<Record<number, number | null>>(EMPTY_SLOTS);
-  const [savedSlotToPlayer, setSavedSlotToPlayer] = useState<Record<number, number | null>>(EMPTY_SLOTS);
-  const [activeDragPlayerId, setActiveDragPlayerId] = useState<number | null>(null);
+  const [slotToPlayer, setSlotToPlayer] =
+    useState<Record<number, number | null>>(EMPTY_SLOTS);
+  const [savedSlotToPlayer, setSavedSlotToPlayer] =
+    useState<Record<number, number | null>>(EMPTY_SLOTS);
+  const [activeDragPlayerId, setActiveDragPlayerId] = useState<number | null>(
+    null,
+  );
   const [isSaving, setIsSaving] = useState(false);
 
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
+
+  const roster = useMemo(() => {
+    if (!league || !myTeam) return null;
+
+    // Map team players to the component's Player type
+    const mappedPlayers: Player[] = myTeam.players.map(p => ({
+      id: p.player?.id as any || 0,
+      name: p.player?.display_name || "Unknown",
+      sport: (p.player?.sport_name as Sport) || "football",
+      position: p.player?.position || "",
+      totalPoints: 0,
+      avgPoints: 0,
+      projected: 0,
+      form: "normal" as const
+    }));
+
+    return {
+      leagueId: league.id,
+      leagueName: league.name,
+      sport: (league.sports?.[0]?.sport.name as Sport) || "multisport",
+      rosterSize: mappedPlayers.length,
+      maxRosterSize: league.squad_size,
+      totalPoints: 0, // Sum from players
+      avgPointsPerGame: 0,
+      bestPlayer: { name: "", points: 0 },
+      players: mappedPlayers
+    };
+  }, [league, myTeam]);
 
   useEffect(() => {
+    if (!roster) return;
+
     const nextSlots: Record<number, number | null> = { ...EMPTY_SLOTS };
 
     if (roster.sport === "multisport") {
-      const footballPlayers = roster.players.filter((player) => player.sport === "football").slice(0, 3);
-      const basketballPlayers = roster.players.filter((player) => player.sport === "basketball").slice(0, 3);
-      const cricketPlayers = roster.players.filter((player) => player.sport === "cricket").slice(0, 3);
+      const footballPlayers = roster.players
+        .filter((player) => player.sport === "football")
+        .slice(0, 3);
+      const basketballPlayers = roster.players
+        .filter((player) => player.sport === "basketball")
+        .slice(0, 3);
+      const cricketPlayers = roster.players
+        .filter((player) => player.sport === "cricket")
+        .slice(0, 3);
 
       const preset: Array<{ slot: SlotId; player: Player | undefined }> = [
         { slot: 1, player: cricketPlayers[0] },
@@ -176,7 +149,10 @@ export function LeagueRoster() {
       });
     } else {
       const allowed = SPORT_ALLOWED_SLOTS[roster.sport];
-      const starters = roster.players.slice(0, Math.min(allowed.length, roster.players.length));
+      const starters = roster.players.slice(
+        0,
+        Math.min(allowed.length, roster.players.length),
+      );
       starters.forEach((player, index) => {
         const slotId = allowed[index];
         nextSlots[slotId] = player.id;
@@ -187,6 +163,9 @@ export function LeagueRoster() {
     setSavedSlotToPlayer(nextSlots);
   }, [roster]);
 
+  const isCommissioner = league?.owner?.username === username;
+  const isLoading = leagueLoading || teamLoading || windowLoading;
+
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setIsLoading(false);
@@ -196,59 +175,80 @@ export function LeagueRoster() {
   }, []);
 
   const positions = useMemo(() => {
-    const unique = Array.from(new Set(roster.players.map((player) => player.position)));
+    if (!roster) return ["All"];
+    const unique = Array.from(
+      new Set(roster.players.map((player) => player.position)),
+    );
     return ["All", ...unique];
-  }, [roster.players]);
+  }, [roster]);
 
-  const sports = useMemo(() => ["All", "football", "basketball", "cricket"], []);
+  const sportsList = useMemo(
+    () => ["All", "football", "basketball", "cricket"],
+    [],
+  );
 
   const playerById = useMemo(() => {
+    if (!roster) return {};
     return roster.players.reduce<Record<number, Player>>((acc, player) => {
       acc[player.id] = player;
       return acc;
     }, {});
-  }, [roster.players]);
+  }, [roster]);
 
   const assignedPlayerIds = useMemo(() => {
-    return new Set(Object.values(slotToPlayer).filter((id): id is number => id !== null));
+    return new Set(
+      Object.values(slotToPlayer).filter((id): id is number => id !== null),
+    );
   }, [slotToPlayer]);
 
   const listedPlayers = useMemo(() => {
+    if (!roster) return [];
     return roster.players.filter((player) => !assignedPlayerIds.has(player.id));
-  }, [roster.players, assignedPlayerIds]);
+  }, [roster, assignedPlayerIds]);
 
   const slotAssignments = useMemo(() => {
+    if (!roster) return {};
     return SLOT_IDS.reduce<Record<number, Player | null>>((acc, slotId) => {
       const playerId = slotToPlayer[slotId];
       acc[slotId] = playerId ? playerById[playerId] : null;
       return acc;
     }, {});
-  }, [slotToPlayer, playerById]);
+  }, [slotToPlayer, playerById, roster]);
 
   const activePlayers = useMemo(() => {
-    return Object.values(slotAssignments).filter((player): player is Player => player !== null);
+    return Object.values(slotAssignments).filter(
+      (player): player is Player => player !== null,
+    );
   }, [slotAssignments]);
 
   const activeCountsPerSport = useMemo(() => {
     return {
-      football: activePlayers.filter((player) => player.sport === "football").length,
-      basketball: activePlayers.filter((player) => player.sport === "basketball").length,
-      cricket: activePlayers.filter((player) => player.sport === "cricket").length,
+      football: activePlayers.filter((player) => player.sport === "football")
+        .length,
+      basketball: activePlayers.filter(
+        (player) => player.sport === "basketball",
+      ).length,
+      cricket: activePlayers.filter((player) => player.sport === "cricket")
+        .length,
     };
   }, [activePlayers]);
 
-  const isMultiSport = roster.sport === "multisport";
-  const isDirty = JSON.stringify(slotToPlayer) !== JSON.stringify(savedSlotToPlayer);
+  const isMultiSport = roster?.sport === "multisport";
+  const isDirty =
+    JSON.stringify(slotToPlayer) !== JSON.stringify(savedSlotToPlayer);
 
   const activeSportSummary = `⚽ ${activeCountsPerSport.football}/3 ${activeCountsPerSport.football === 3 ? "✅" : ""} | 🏀 ${activeCountsPerSport.basketball}/3 ${activeCountsPerSport.basketball === 3 ? "✅" : ""} | 🏏 ${activeCountsPerSport.cricket}/3 ${activeCountsPerSport.cricket === 3 ? "✅" : ""}`;
 
   const findCurrentSlotOfPlayer = (playerId: number): number | null => {
-    const entry = Object.entries(slotToPlayer).find(([, assignedPlayerId]) => assignedPlayerId === playerId);
+    const entry = Object.entries(slotToPlayer).find(
+      ([, assignedPlayerId]) => assignedPlayerId === playerId,
+    );
     return entry ? Number(entry[0]) : null;
   };
 
   const canPlaceInSlot = (player: Player, slotId: number): boolean => {
-    return SPORT_ALLOWED_SLOTS[player.sport].includes(slotId as SlotId);
+    const allowed = SPORT_ALLOWED_SLOTS[player.sport as keyof typeof SPORT_ALLOWED_SLOTS];
+    return allowed?.includes(slotId as SlotId) ?? false;
   };
 
   const canDropToSlot = (slotId: number): boolean => {
@@ -275,7 +275,9 @@ export function LeagueRoster() {
     }
 
     const currentSlot = findCurrentSlotOfPlayer(player.id);
-    const countInSport = activePlayers.filter((item) => item.sport === player.sport).length;
+    const countInSport = activePlayers.filter(
+      (item) => item.sport === player.sport,
+    ).length;
     if (currentSlot !== null) {
       return true;
     }
@@ -359,7 +361,9 @@ export function LeagueRoster() {
     });
 
     if (isMultiSport && nextCounts[player.sport] >= 3) {
-      toastifier.error(`✕ Cannot have more than 3 active players from ${player.sport}`);
+      toastifier.error(
+        `✕ Cannot have more than 3 active players from ${player.sport}`,
+      );
       return;
     }
 
@@ -374,8 +378,14 @@ export function LeagueRoster() {
     }
 
     if (isMultiSport) {
-      if (activeCountsPerSport.football !== 3 || activeCountsPerSport.basketball !== 3 || activeCountsPerSport.cricket !== 3) {
-        toastifier.error("✕ Multi-Sport lineup requires exactly 3 players per sport");
+      if (
+        activeCountsPerSport.football !== 3 ||
+        activeCountsPerSport.basketball !== 3 ||
+        activeCountsPerSport.cricket !== 3
+      ) {
+        toastifier.error(
+          "✕ Multi-Sport lineup requires exactly 3 players per sport",
+        );
         return;
       }
     }
@@ -387,14 +397,17 @@ export function LeagueRoster() {
     toastifier.success("✓ Lineup saved successfully");
   };
 
-  if (isLoading) {
+  if (isLoading || !roster) {
     return (
       <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         <div className="h-10 w-56 animate-pulse rounded-lg bg-gray-100" />
         <div className="mx-auto aspect-[3/4] w-full max-w-2xl rounded-2xl bg-gray-100 p-6">
           <div className="grid grid-cols-3 gap-4">
             {Array.from({ length: 9 }, (_, index) => (
-              <div key={index} className="h-12 w-12 animate-pulse rounded-full bg-gray-200" />
+              <div
+                key={index}
+                className="h-12 w-12 animate-pulse rounded-full bg-gray-200"
+              />
             ))}
           </div>
         </div>
@@ -413,15 +426,23 @@ export function LeagueRoster() {
 
   return (
     <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
-      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
+      <p className="text-sm text-gray-500">
+        Manager: {username || "Sporty User"}
+      </p>
 
-      <NavigationTabs activeTab="roster" leagueId={leagueId} isCommissioner={isCommissioner} />
+      <NavigationTabs
+        activeTab="roster"
+        leagueId={leagueId}
+        isCommissioner={isCommissioner}
+      />
 
       <RosterHeader
         leagueName={roster.leagueName}
         sport={roster.sport}
         rosterSize={roster.rosterSize}
         maxRosterSize={roster.maxRosterSize}
+        currentWeek={activeWindow?.number}
+        totalWeeks={activeWindow?.total_number}
       />
 
       <StatsSummary
@@ -455,7 +476,7 @@ export function LeagueRoster() {
             selectedPosition={selectedPosition}
             onSportChange={setSelectedSport}
             onPositionChange={setSelectedPosition}
-            sports={sports}
+            sports={sportsList}
             positions={positions}
           />
 
@@ -471,8 +492,12 @@ export function LeagueRoster() {
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
             <div className="rounded-xl border border-primary-200 bg-white px-3 py-2 shadow-2xl">
-              <p className="text-sm font-medium text-gray-900">{playerById[activeDragPlayerId].name}</p>
-              <p className="text-xs text-gray-500">{playerById[activeDragPlayerId].position}</p>
+              <p className="text-sm font-medium text-gray-900">
+                {playerById[activeDragPlayerId].name}
+              </p>
+              <p className="text-xs text-gray-500">
+                {playerById[activeDragPlayerId].position}
+              </p>
             </div>
           ) : null}
         </DragOverlay>

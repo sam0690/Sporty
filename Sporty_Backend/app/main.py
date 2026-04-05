@@ -91,11 +91,13 @@ from app.league.models import (  # noqa: F401
 )
 from app.match.models import Match  # noqa: F401
 from app.player.models import Player, PlayerGameweekStat, FootballStat, CricketStat  # noqa: F401
+from app.player.models_nba import NBAStat  # noqa: F401
 from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
 
 # Import routers AFTER models are registered
 from app.auth.router import router as auth_router
 from app.league.router import router as league_router
+from app.optimization.router import router as optimization_router
 from app.player.router import router as player_router
 from app.scoring.router import router as scoring_router
 
@@ -153,6 +155,7 @@ app.add_middleware(
 
 app.include_router(auth_router,    prefix="/api/v1")
 app.include_router(league_router,  prefix="/api/v1")
+app.include_router(optimization_router, prefix="/api/v1")
 app.include_router(player_router,  prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
 

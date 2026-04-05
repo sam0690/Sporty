@@ -31,9 +31,11 @@ from app.league.models import (
     LeagueStatus,
     LeagueSport,
     LineupSlot,
+    Season,
     Sport,
     TeamPlayer,
     Transfer,
+    TeamWeeklyScore,
 )
 from app.league.schemas import LeagueCreate, LineupSlotCreate
 from app.player.models import Player
@@ -57,6 +59,8 @@ _LEAGUE_OPTIONS = (
     joinedload(League.owner),
     joinedload(League.season),
     selectinload(League.sports).joinedload(LeagueSport.sport),
+    selectinload(League.memberships),
+    selectinload(League.fantasy_teams),
 )
 
 _MEMBERSHIP_OPTIONS = (
@@ -264,14 +268,11 @@ def get_leagues_for_user(db: Session, user_id: uuid.UUID) -> list[League]:
     every league the user joined (including ones they own, since the
     owner is auto-enrolled in create_league).
     """
-    league_ids = (
-        select(LeagueMembership.league_id)
-        .where(LeagueMembership.user_id == user_id)
-    )
     return (
         db.query(League)
+        .join(LeagueMembership)
+        .filter(LeagueMembership.user_id == user_id)
         .options(*_LEAGUE_OPTIONS)
-        .filter(League.id.in_(league_ids))
         .order_by(League.created_at.desc())
         .all()
     )
@@ -1253,11 +1254,11 @@ def discover_public_leagues(db: Session) -> list[League]:
     """
     return (
         db.query(League)
-        .options(*_LEAGUE_OPTIONS)
         .filter(
-            League.is_public.is_(True),
+            League.is_public == True,
             League.status == LeagueStatus.SETUP,
         )
+        .options(*_LEAGUE_OPTIONS)
         .order_by(League.created_at.desc())
         .all()
     )
@@ -1531,4 +1532,211 @@ def build_initial_team(
     )
     
     return team
+
+
+def get_active_seasons(db: Session) -> list[Season]:
+    """Return all active seasons across all sports."""
+    return (
+        db.query(Season)
+        .filter(Season.is_active.is_(True))
+        .order_by(Season.name.asc())
+        .all()
+    )
+
+
+def get_active_sports(db: Session) -> list[Sport]:
+    """Return all active sports available on the platform."""
+    return (
+        db.query(Sport)
+        .filter(Sport.is_active.is_(True))
+        .order_by(Sport.display_name.asc())
+        .all()
+    )
+
+
+    return team
+
+
+def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) -> dict:
+    """Fetch the user's lineup for the current active transfer window."""
+    team = _require_fantasy_team(db, league_id, user_id)
+    league = _require_league(db, league_id)
+    window = _current_transfer_window(db, league)
+
+    entries = (
+        db.query(TeamGameweekLineup)
+        .filter(
+            TeamGameweekLineup.fantasy_team_id == team.id,
+            TeamGameweekLineup.transfer_window_id == window.id,
+        )
+        .options(joinedload(TeamGameweekLineup.player).joinedload(Player.sport))
+        .all()
+    )
+
+    return {
+        "fantasy_team_id": team.id,
+        "transfer_window_id": window.id,
+        "entries": entries,
+    }
+
+
+def update_lineup(
+    db: Session,
+    league_id: uuid.UUID,
+    user_id: uuid.UUID,
+    player_ids: list[uuid.UUID],
+    captain_id: uuid.UUID,
+    vice_captain_id: uuid.UUID,
+) -> dict:
+    """Set starters and captains for the current window.
+    
+    Validates:
+      - Transfer window is active and lineups aren't locked.
+      - All players are on the user's fantasy team.
+      - Captain/Vice are in the players list.
+      - Position limits and squad size etc (handled in future, simple check for now).
+    """
+    team = _require_fantasy_team(db, league_id, user_id)
+    league = _require_league(db, league_id)
+    window = _current_transfer_window(db, league)
+
+    from datetime import datetime, timezone
+    if window.lineup_locked or datetime.now(timezone.utc) > window.lineup_deadline_at:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Lineup is locked for this window",
+        )
+
+    # 1. Verify all player_ids belong to the team
+    owned_player_ids = {tp.player_id for tp in team.players}
+    if not all(pid in owned_player_ids for pid in player_ids):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="One or more players are not in your squad",
+        )
+
+    # 2. Verify captain/vice are in the lineup
+    if captain_id not in player_ids or vice_captain_id not in player_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Captain and vice-captain must be in the starting lineup",
+        )
+
+    if captain_id == vice_captain_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Captain and vice-captain must be different players",
+        )
+
+    # 3. Clear existing lineup for this window
+    db.query(TeamGameweekLineup).filter(
+        TeamGameweekLineup.fantasy_team_id == team.id,
+        TeamGameweekLineup.transfer_window_id == window.id,
+    ).delete()
+
+    # 4. Create new entries
+    for pid in player_ids:
+        entry = TeamGameweekLineup(
+            fantasy_team_id=team.id,
+            transfer_window_id=window.id,
+            player_id=pid,
+            is_captain=(pid == captain_id),
+            is_vice_captain=(pid == vice_captain_id),
+        )
+        db.add(entry)
+
+    db.flush()
+    logger.info(
+        "Updated lineup for team=%s in window=%s (starters: %d)",
+        team.id, window.id, len(player_ids)
+    )
+
+    return get_current_lineup(db, league_id, user_id)
+
+
+def get_league_leaderboard(
+    db: Session,
+    league_id: uuid.UUID,
+    window_id: uuid.UUID | None = None,
+) -> dict:
+    """Return the leaderboard for a league.
+    
+    If window_id is None, returns the sum of points across all windows
+    (total season standing). If window_id is provided, returns standing
+    for that specific window.
+    """
+    from sqlalchemy import func
+    from app.league.models import FantasyTeam, TeamWeeklyScore
+    from app.auth.models import User
+    
+    if window_id:
+        # 1. Standing for a specific window
+        query = (
+            db.query(
+                FantasyTeam.id.label("team_id"),
+                FantasyTeam.name.label("team_name"),
+                User.username.label("owner_name"),
+                TeamWeeklyScore.points.label("points"),
+                TeamWeeklyScore.rank_in_league.label("rank"),
+            )
+            .join(FantasyTeam, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
+            .join(User, FantasyTeam.user_id == User.id)
+            .filter(FantasyTeam.league_id == league_id)
+            .filter(TeamWeeklyScore.transfer_window_id == window_id)
+            .order_by(TeamWeeklyScore.rank_in_league.asc(), TeamWeeklyScore.points.desc())
+        )
+    else:
+        # 2. Total season standing (sum of points)
+        query = (
+            db.query(
+                FantasyTeam.id.label("team_id"),
+                FantasyTeam.name.label("team_name"),
+                User.username.label("owner_name"),
+                func.coalesce(func.sum(TeamWeeklyScore.points), 0).label("points"),
+            )
+            .join(User, FantasyTeam.user_id == User.id)
+            .outerjoin(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
+            .filter(FantasyTeam.league_id == league_id)
+            .group_by(FantasyTeam.id, User.username)
+            .order_by(func.desc("points"))
+        )
+    
+    results = query.all()
+    
+    entries = []
+    for i, row in enumerate(results):
+        rank = getattr(row, "rank", None) if window_id else (i + 1)
+        entries.append({
+            "team_id": row.team_id,
+            "team_name": row.team_name,
+            "owner_name": row.owner_name,
+            "points": row.points,
+            "rank": rank,
+        })
+        
+    return {
+        "league_id": league_id,
+        "transfer_window_id": window_id,
+        "entries": entries,
+    }
+
+
+def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
+    """Public wrapper to fetch the current active transfer window."""
+    league = _require_league(db, league_id)
+    window = _current_transfer_window(db, league)
+    
+    # Season context for total windows
+    season = league.season
+    
+    return {
+        "id": window.id,
+        "season_id": window.season_id,
+        "number": window.number,
+        "total_number": len(season.transfer_windows),
+        "start_at": window.start_at,
+        "end_at": window.end_at,
+        "lineup_deadline_at": window.lineup_deadline_at,
+        "lineup_locked": window.lineup_locked
+    }
 

@@ -2,6 +2,7 @@ import {
     useQuery,
     type UseQueryOptions,
     type UseQueryResult,
+    type QueryKey,
 } from "@tanstack/react-query";
 
 /**
@@ -18,7 +19,7 @@ import {
  * ```
  */
 export function useApiQuery<TData>(
-    queryKey: string[],
+    queryKey: QueryKey,
     queryFn: () => Promise<TData>,
     options?: Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn">,
 ): UseQueryResult<TData, Error> {

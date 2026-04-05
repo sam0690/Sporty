@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/context/auth-context";
-import { CurrentRoster, type OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
-import { FilterBar, type Sport } from "@/components/dashboard/transfers/components/FilterBar";
+import { useSearchParams } from "next/navigation";
+import { useMe } from "@/hooks/auth/useMe";
+import {
+  CurrentRoster,
+  type OwnedPlayer,
+} from "@/components/dashboard/transfers/components/CurrentRoster";
+import {
+  FilterBar,
+  type Sport,
+} from "@/components/dashboard/transfers/components/FilterBar";
 import { PlayerCard } from "@/components/dashboard/transfers/components/PlayerCard";
 import { SearchBar } from "@/components/dashboard/transfers/components/SearchBar";
 import {
@@ -14,45 +21,31 @@ import { TransfersHeader } from "@/components/dashboard/transfers/components/Tra
 import { TransferSuccess } from "@/components/dashboard/transfers/components/TransferSuccess";
 import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
-
-type AvailablePlayer = {
-  id: number;
-  name: string;
-  sport: Exclude<Sport, "All">;
-  position: string;
-  price: number;
-  avgPoints: number;
-  form?: number;
-};
-
-const mockOwnedPlayers: OwnedPlayer[] = [
-  { id: 1, name: "Lionel Messi", sport: "football", position: "Forward", price: 25, avgPoints: 12.5, form: 9 },
-  { id: 2, name: "LeBron James", sport: "basketball", position: "Forward", price: 30, avgPoints: 16.8, form: 8 },
-  { id: 3, name: "Virat Kohli", sport: "cricket", position: "Batsman", price: 20, avgPoints: 14.2, form: 8 },
-];
-
-const mockAvailablePlayers: AvailablePlayer[] = [
-  { id: 4, name: "Kylian Mbappe", sport: "football", position: "Forward", price: 28, avgPoints: 14.2, form: 9 },
-  { id: 5, name: "Stephen Curry", sport: "basketball", position: "Guard", price: 32, avgPoints: 18.5, form: 8 },
-  { id: 6, name: "Jasprit Bumrah", sport: "cricket", position: "Bowler", price: 22, avgPoints: 10.8, form: 7 },
-  { id: 7, name: "Erling Haaland", sport: "football", position: "Forward", price: 35, avgPoints: 16.5, form: 10 },
-  { id: 8, name: "Nikola Jokic", sport: "basketball", position: "Center", price: 34, avgPoints: 17.2, form: 9 },
-];
+import { useLeague, useMyTeam, useMakeTransfer } from "@/hooks/leagues/useLeagues";
+import { usePlayers } from "@/hooks/players/usePlayers";
 
 export function Transfers() {
-  const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const leagueId = searchParams.get("leagueId") || "";
+  const { username } = useMe();
+
+  const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
+  const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
+  const { data: playersData, isLoading: playersLoading } = usePlayers({
+    sport_name: league?.sports?.[0]?.sport.name,
+    league_id: leagueId || undefined
+  });
+  const makeTransferMutation = useMakeTransfer(leagueId);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResetToken, setSearchResetToken] = useState(0);
   const [selectedSport, setSelectedSport] = useState<Sport>("All");
   const [selectedPosition, setSelectedPosition] = useState("All");
-  const [budget, setBudget] = useState(100);
-  const [ownedPlayers, setOwnedPlayers] = useState<OwnedPlayer[]>(mockOwnedPlayers);
-  const [availablePlayers, setAvailablePlayers] =
-    useState<AvailablePlayer[]>(mockAvailablePlayers);
+
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<SelectedPlayer | null>(null);
+  const [selectedInPlayer, setSelectedInPlayer] = useState<SelectedPlayer | null>(null);
+  const [selectedOutPlayer, setSelectedOutPlayer] = useState<OwnedPlayer | null>(null);
+
   const [toastState, setToastState] = useState<{
     status: "success" | "error" | null;
     message: string;
@@ -63,90 +56,34 @@ export function Transfers() {
     token: 0,
   });
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setIsLoading(false), 450);
-    return () => window.clearTimeout(timeout);
-  }, []);
+  const ownedPlayers: OwnedPlayer[] = useMemo(() => {
+    if (!myTeam?.players) return [];
+    return myTeam.players.map(p => ({
+      id: p.player.id as any,
+      name: p.player.display_name,
+      sport: p.player.sport_name as any,
+      position: p.player.position,
+      price: Number(p.player.current_cost),
+      avgPoints: 0,
+      form: 0,
+    }));
+  }, [myTeam]);
 
-  const handleAddPlayer = (id: number) => {
-    const player = availablePlayers.find((item) => item.id === id);
-    if (!player) {
-      return;
-    }
-
-    setSelectedPlayer(player);
-    setShowConfirmModal(true);
-  };
-
-  const confirmTransfer = () => {
-    if (!selectedPlayer) {
-      return;
-    }
-
-    if (selectedPlayer.price > budget) {
-      setToastState({
-        status: "error",
-        message: "Insufficient budget",
-        token: Date.now(),
-      });
-      return;
-    }
-
-    setBudget((prev) => Number((prev - selectedPlayer.price).toFixed(1)));
-    setOwnedPlayers((prev) => [
-      ...prev,
-      {
-        id: selectedPlayer.id,
-        name: selectedPlayer.name,
-        sport: selectedPlayer.sport,
-        position: selectedPlayer.position,
-        price: selectedPlayer.price,
-        avgPoints: selectedPlayer.avgPoints,
-        form: selectedPlayer.form,
-      },
-    ]);
-    setAvailablePlayers((prev) => prev.filter((item) => item.id !== selectedPlayer.id));
-    setToastState({
-      status: "success",
-      message: `${selectedPlayer.name} added to your team`,
-      token: Date.now(),
-    });
-    setShowConfirmModal(false);
-    setSelectedPlayer(null);
-  };
-
-  const handleDropPlayer = (id: number) => {
-    const droppedPlayer = ownedPlayers.find((player) => player.id === id);
-    if (!droppedPlayer) {
-      return;
-    }
-
-    setOwnedPlayers((prev) => prev.filter((player) => player.id !== id));
-    setAvailablePlayers((prev) => {
-      const alreadyExists = prev.some((player) => player.id === droppedPlayer.id);
-      if (alreadyExists || droppedPlayer.sport === "All") {
-        return prev;
-      }
-
-      const restored: AvailablePlayer = {
-        id: droppedPlayer.id,
-        name: droppedPlayer.name,
-        sport: droppedPlayer.sport,
-        position: droppedPlayer.position,
-        price: droppedPlayer.price,
-        avgPoints: droppedPlayer.avgPoints ?? 0,
-        form: droppedPlayer.form,
-      };
-
-      return [...prev, restored].sort((a, b) => a.id - b.id);
-    });
-    setBudget((prev) => Number((prev + droppedPlayer.price).toFixed(1)));
-    setToastState({
-      status: "success",
-      message: `${droppedPlayer.name} removed from your team`,
-      token: Date.now(),
-    });
-  };
+  const availablePlayers = useMemo(() => {
+    if (!playersData?.items) return [];
+    const ownedIds = new Set(ownedPlayers.map(p => p.id.toString()));
+    return playersData.items
+      .filter(p => !ownedIds.has(p.id))
+      .map(p => ({
+        id: p.id as any,
+        name: p.display_name,
+        sport: p.sport.name as any,
+        position: p.position,
+        price: Number(p.current_cost),
+        avgPoints: 0,
+        form: 0,
+      }));
+  }, [playersData, ownedPlayers]);
 
   const filteredPlayers = useMemo(() => {
     return availablePlayers.filter((player) => {
@@ -162,6 +99,39 @@ export function Transfers() {
     });
   }, [availablePlayers, searchQuery, selectedSport, selectedPosition]);
 
+  const handleAddPlayer = (id: any) => {
+    const player = availablePlayers.find((item) => item.id === id);
+    if (!player) return;
+    setSelectedInPlayer(player);
+    setShowConfirmModal(true);
+  };
+
+  const confirmTransfer = async () => {
+    if (!selectedInPlayer || !selectedOutPlayer || !leagueId) return;
+
+    try {
+      await makeTransferMutation.mutateAsync({
+        player_in_id: selectedInPlayer.id.toString(),
+        player_out_id: selectedOutPlayer.id.toString(),
+      });
+
+      setToastState({
+        status: "success",
+        message: `Transfer completed: ${selectedInPlayer.name} is in!`,
+        token: Date.now(),
+      });
+      setShowConfirmModal(false);
+      setSelectedInPlayer(null);
+      setSelectedOutPlayer(null);
+    } catch (err: any) {
+      setToastState({
+        status: "error",
+        message: err?.response?.data?.detail || err.message || "Transfer failed",
+        token: Date.now(),
+      });
+    }
+  };
+
   const clearAllFilters = () => {
     setSearchQuery("");
     setSelectedSport("All");
@@ -169,15 +139,29 @@ export function Transfers() {
     setSearchResetToken((prev) => prev + 1);
   };
 
+  const isLoading = leagueLoading || teamLoading || playersLoading;
+
+  if (!leagueId) {
+    return (
+      <div className="mx-auto max-w-7xl px-6 py-12 text-center">
+        <h2 className="text-xl font-semibold">Please select a league from your dashboard to manage transfers.</h2>
+      </div>
+    );
+  }
+
   return (
     <section className="mx-auto max-w-7xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <div className="mb-6 text-sm text-gray-500">
-        Manager: {user?.name ?? "Sporty User"}
+        Manager: {username || "Sporty User"}
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
-          <TransfersHeader budget={budget} leagueName="Premier League Champions" currentWeek={24} />
+          <TransfersHeader
+            budget={myTeam?.current_budget || 0}
+            leagueName={league?.name || "Loading..."}
+            currentWeek={24} // TODO: Get from backend
+          />
           <SearchBar onSearch={setSearchQuery} resetToken={searchResetToken} />
           <FilterBar
             selectedSport={selectedSport}
@@ -188,7 +172,9 @@ export function Transfers() {
 
           <div className="space-y-3">
             {isLoading ? (
-              Array.from({ length: 5 }, (_, index) => <PlayerCardSkeleton key={index} />)
+              Array.from({ length: 5 }, (_, index) => (
+                <PlayerCardSkeleton key={index} />
+              ))
             ) : filteredPlayers.length === 0 ? (
               <EmptyTransfers onClearFilters={clearAllFilters} />
             ) : (
@@ -211,7 +197,30 @@ export function Transfers() {
         </div>
 
         <div className="lg:col-span-1">
-          <CurrentRoster players={ownedPlayers} onDrop={handleDropPlayer} budget={budget} maxPlayers={15} />
+          <CurrentRoster
+            players={ownedPlayers}
+            onDrop={(id) => {
+              const player = ownedPlayers.find(p => p.id === id);
+              if (player) setSelectedOutPlayer(player);
+            }}
+            budget={myTeam?.current_budget || 0}
+            maxPlayers={league?.squad_size || 15}
+            selectedOutId={selectedOutPlayer?.id}
+          />
+          {selectedOutPlayer && (
+            <div className="mt-4 p-4 bg-primary-50 rounded-xl border border-primary-100 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+              <div>
+                <p className="text-xs text-primary-600 font-bold uppercase">Player to swap out</p>
+                <p className="font-semibold">{selectedOutPlayer.name}</p>
+              </div>
+              <button
+                onClick={() => setSelectedOutPlayer(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -219,10 +228,12 @@ export function Transfers() {
         isOpen={showConfirmModal}
         onClose={() => {
           setShowConfirmModal(false);
-          setSelectedPlayer(null);
+          setSelectedInPlayer(null);
         }}
-        player={selectedPlayer}
+        player={selectedInPlayer}
         onConfirm={confirmTransfer}
+        isLoading={makeTransferMutation.isPending}
+        selectedOutPlayer={selectedOutPlayer}
       />
 
       <TransferSuccess

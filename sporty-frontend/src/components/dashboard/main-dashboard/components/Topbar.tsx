@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { useRouter } from "next/navigation";
 
 type TopbarProps = {
@@ -14,7 +16,9 @@ export function Topbar({ userName, userId, avatar }: TopbarProps) {
     <header className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5">
       <div>
         <p className="text-sm text-gray-500">Welcome back, {userName}</p>
-        <h1 className="text-2xl font-light tracking-tight text-gray-900">Overview</h1>
+        <h1 className="text-2xl font-light tracking-tight text-gray-900">
+          Overview
+        </h1>
       </div>
 
       <button
@@ -28,9 +32,12 @@ export function Topbar({ userName, userId, avatar }: TopbarProps) {
           <p className="text-xs text-gray-500">Team Manager</p>
         </div>
         {avatar ? (
-          <img
+          <Image
             src={avatar}
             alt={`${userName} avatar`}
+            width={36}
+            height={36}
+            sizes="36px"
             className="h-9 w-9 rounded-full object-cover"
           />
         ) : (

@@ -23,7 +23,7 @@ function isActiveRoute(href: string, path: string): boolean {
 export function Sidebar({ items }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, actionLoading } = useAuth();
+  const { logout, actionLoading } = useAuth();
 
   const handleLogout = async () => {
     const result = await logout();
@@ -40,13 +40,19 @@ export function Sidebar({ items }: SidebarProps) {
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-gray-100 bg-white md:block [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <div className="relative h-full">
         <div className="p-6">
-          <Link href="/dashboard" className="inline-flex items-center gap-2 text-xl font-medium tracking-tight text-gray-900 transition-opacity hover:opacity-80">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-xl font-medium tracking-tight text-gray-900 transition-opacity hover:opacity-80"
+          >
             <span aria-hidden="true">⚽🏀🏏</span>
             <span>Sporty</span>
           </Link>
         </div>
 
-        <nav className="flex flex-col gap-1 px-3" aria-label="Dashboard Navigation">
+        <nav
+          className="flex flex-col gap-1 px-3"
+          aria-label="Dashboard Navigation"
+        >
           {items.map((item) => {
             const active = isActiveRoute(item.href, pathname);
             const Icon = item.icon;

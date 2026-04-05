@@ -1,45 +1,27 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useAuth } from "@/context/auth-context";
+import { useMemo, useState, useEffect } from "react";
+import { useMe } from "@/hooks/auth/useMe";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
 import { LeagueSettings } from "@/components/dashboard/create-league/components/LeagueSettings";
 import { ScoringSettings } from "@/components/dashboard/create-league/components/ScoringSettings";
 import { SummaryStep } from "@/components/dashboard/create-league/components/SummaryStep";
 import { SuccessModal } from "@/components/dashboard/create-league/components/SuccessModal";
+import { useSeasons, useCreateLeague } from "@/hooks/leagues/useLeagues";
 
 type SportKey = "football" | "basketball" | "cricket" | "multisport";
 
 type LeagueData = {
   leagueName: string;
   sport: SportKey;
+  seasonId: string;
   leagueLogo: string;
   isPrivate: boolean;
   teamSize: number;
-  draftType: string;
+  draftType: "snake" | "budget";
   draftDate: string;
   scoringRules: Record<string, number>;
-};
-
-type CreatedLeague = {
-  id: string;
-  name: string;
-  sport: SportKey;
-  isPrivate: boolean;
-  inviteCode: string;
-  teamSize: number;
-  draftType: string;
-};
-
-const mockCreatedLeague: CreatedLeague = {
-  id: "5",
-  name: "Champions League 2025",
-  sport: "football",
-  isPrivate: true,
-  inviteCode: "CHAMP-2025-FOOT",
-  teamSize: 10,
-  draftType: "snake",
 };
 
 const scoringDefaults: Record<SportKey, Record<string, number>> = {
@@ -71,11 +53,15 @@ const scoringDefaults: Record<SportKey, Record<string, number>> = {
 };
 
 export function CreateLeague() {
-  const { user } = useAuth();
+  const { username } = useMe();
+  const { data: seasons } = useSeasons();
+  const createMutation = useCreateLeague();
+
   const [step, setStep] = useState(1);
   const [leagueData, setLeagueData] = useState<LeagueData>({
     leagueName: "",
     sport: "football",
+    seasonId: "",
     leagueLogo: "",
     isPrivate: false,
     teamSize: 10,
@@ -83,12 +69,29 @@ export function CreateLeague() {
     draftDate: "",
     scoringRules: scoringDefaults.football,
   });
-  const [isLoading, setIsLoading] = useState(false);
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [createdLeague, setCreatedLeague] = useState<CreatedLeague | null>(null);
+  const [createdLeagueInfo, setCreatedLeagueInfo] = useState<{
+    id: string;
+    name: string;
+    inviteCode: string;
+    isPrivate: boolean;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const totalSteps = 4;
+
+  // Auto-select first season for the chosen sport if not set
+  useEffect(() => {
+    if (seasons && seasons.length > 0) {
+      const sportSeasons = seasons.filter(s => s.name.toLowerCase().includes(leagueData.sport) || seasons.length === 1);
+      if (sportSeasons.length > 0 && !leagueData.seasonId) {
+        setLeagueData(prev => ({ ...prev, seasonId: sportSeasons[0].id }));
+      } else if (seasons.length > 0 && !leagueData.seasonId) {
+        setLeagueData(prev => ({ ...prev, seasonId: seasons[0].id }));
+      }
+    }
+  }, [seasons, leagueData.sport]);
 
   const validationErrors = useMemo(() => {
     const errors: string[] = [];
@@ -97,17 +100,15 @@ export function CreateLeague() {
       errors.push("League name is required.");
     }
 
-    if (!leagueData.sport) {
-      errors.push("Sport selection is required.");
+    if (!leagueData.seasonId) {
+      errors.push("A valid season must be active for this sport.");
     }
 
-    if (leagueData.teamSize < 4 || leagueData.teamSize > 16 || leagueData.teamSize % 2 !== 0) {
-      errors.push("Team size must be an even number between 4 and 16.");
-    }
-
-    const invalidRule = Object.values(leagueData.scoringRules).some((value) => value < 0);
-    if (invalidRule) {
-      errors.push("Scoring rules must be zero or greater.");
+    if (
+      leagueData.teamSize < 2 ||
+      leagueData.teamSize > 64
+    ) {
+      errors.push("Team size must be between 2 and 64.");
     }
 
     return errors;
@@ -119,19 +120,8 @@ export function CreateLeague() {
         setError("League name is required.");
         return;
       }
-    }
-
-    if (step === 2) {
-      if (leagueData.teamSize % 2 !== 0 || leagueData.teamSize < 4 || leagueData.teamSize > 16) {
-        setError("Team size must be an even number between 4 and 16.");
-        return;
-      }
-    }
-
-    if (step === 3) {
-      const invalidRule = Object.values(leagueData.scoringRules).some((value) => value < 0);
-      if (invalidRule) {
-        setError("Scoring rules must be zero or greater.");
+      if (!leagueData.seasonId) {
+        setError("No active season found for this sport. Please contact admin.");
         return;
       }
     }
@@ -152,21 +142,30 @@ export function CreateLeague() {
     }
 
     setError(null);
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const result = await createMutation.mutateAsync({
+        name: leagueData.leagueName,
+        season_id: leagueData.seasonId,
+        is_public: !leagueData.isPrivate,
+        max_teams: leagueData.teamSize,
+        draft_mode: leagueData.draftType === "snake",
+        // Default values for other fields
+        squad_size: 15,
+        budget_per_team: 100,
+        transfers_per_window: 4,
+        transfer_day: 1,
+      });
 
-    const result: CreatedLeague = {
-      ...mockCreatedLeague,
-      name: leagueData.leagueName || mockCreatedLeague.name,
-      sport: leagueData.sport,
-      isPrivate: leagueData.isPrivate,
-      teamSize: leagueData.teamSize,
-      draftType: leagueData.draftType,
-    };
-
-    setCreatedLeague(result);
-    setIsLoading(false);
-    setShowSuccessModal(true);
+      setCreatedLeagueInfo({
+        id: result.id,
+        name: result.name,
+        inviteCode: result.invite_code,
+        isPrivate: !result.is_public,
+      });
+      setShowSuccessModal(true);
+    } catch (err: any) {
+      setError(err?.response?.data?.detail || err.message || "Failed to create league");
+    }
   };
 
   const handleLeagueNameChange = (value: string) => {
@@ -175,9 +174,11 @@ export function CreateLeague() {
 
   const handleSportChange = (value: string) => {
     const sport = value as SportKey;
+    // Reset seasonId when sport changes so useEffect re-selects
     setLeagueData((prev) => ({
       ...prev,
       sport,
+      seasonId: "",
       scoringRules: scoringDefaults[sport] ?? scoringDefaults.football,
     }));
   };
@@ -185,7 +186,7 @@ export function CreateLeague() {
   const handleSettingsChange = (next: {
     isPrivate?: boolean;
     teamSize?: number;
-    draftType?: string;
+    draftType?: "snake" | "budget";
     draftDate?: string;
   }) => {
     setLeagueData((prev) => ({
@@ -196,9 +197,15 @@ export function CreateLeague() {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system]">
-      <p className="text-sm text-gray-500">Manager: {user?.name ?? "Sporty User"}</p>
+      <p className="text-sm text-gray-500">
+        Manager: {username || "Sporty User"}
+      </p>
 
-      <CreateLeagueHeader step={step} totalSteps={totalSteps} leagueName={leagueData.leagueName} />
+      <CreateLeagueHeader
+        step={step}
+        totalSteps={totalSteps}
+        leagueName={leagueData.leagueName}
+      />
 
       {error ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
@@ -215,7 +222,9 @@ export function CreateLeague() {
               leagueLogo={leagueData.leagueLogo}
               onLeagueNameChange={handleLeagueNameChange}
               onSportChange={handleSportChange}
-              onLeagueLogoChange={(value) => setLeagueData((prev) => ({ ...prev, leagueLogo: value }))}
+              onLeagueLogoChange={(value) =>
+                setLeagueData((prev) => ({ ...prev, leagueLogo: value }))
+              }
             />
           ) : null}
 
@@ -225,24 +234,26 @@ export function CreateLeague() {
               teamSize={leagueData.teamSize}
               draftType={leagueData.draftType}
               draftDate={leagueData.draftDate}
-              onSettingsChange={handleSettingsChange}
+              onSettingsChange={handleSettingsChange as any}
             />
           ) : null}
 
           {step === 3 ? (
             <ScoringSettings
               scoringRules={leagueData.scoringRules}
-              onScoringChange={(next) => setLeagueData((prev) => ({ ...prev, scoringRules: next }))}
+              onScoringChange={(next) =>
+                setLeagueData((prev) => ({ ...prev, scoringRules: next }))
+              }
               sport={leagueData.sport}
             />
           ) : null}
 
           {step === 4 ? (
             <SummaryStep
-              leagueData={leagueData}
+              leagueData={leagueData as any}
               onBack={handlePreviousStep}
               onCreate={handleCreateLeague}
-              isLoading={isLoading}
+              isLoading={createMutation.isPending}
             />
           ) : null}
         </div>
@@ -258,12 +269,12 @@ export function CreateLeague() {
                 Back
               </button>
             ) : (
-              <span className="hidden sm:block" />
+              <div className="hidden sm:block" />
             )}
             <button
               type="button"
               onClick={handleNextStep}
-              className="w-full rounded-full bg-[#247BA0] px-8 py-2.5 font-semibold !text-white shadow-sm hover:bg-[#1d6280] sm:w-auto"
+              className="w-full rounded-full bg-[#247BA0] px-8 py-2.5 font-semibold text-white shadow-sm hover:bg-[#1d6280] sm:w-auto"
             >
               Next
             </button>
@@ -275,12 +286,12 @@ export function CreateLeague() {
         isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false);
-          setStep(1);
+          window.location.href = "/leagues";
         }}
-        leagueId={createdLeague?.id ?? mockCreatedLeague.id}
-        leagueName={createdLeague?.name ?? mockCreatedLeague.name}
-        inviteCode={createdLeague?.inviteCode ?? mockCreatedLeague.inviteCode}
-        isPrivate={createdLeague?.isPrivate ?? mockCreatedLeague.isPrivate}
+        leagueId={createdLeagueInfo?.id ?? ""}
+        leagueName={createdLeagueInfo?.name ?? ""}
+        inviteCode={createdLeagueInfo?.inviteCode ?? ""}
+        isPrivate={createdLeagueInfo?.isPrivate ?? false}
       />
     </section>
   );

@@ -16,39 +16,39 @@ type LoginErrors = {
 };
 
 export function LoginForm() {
-    const router = useRouter();
-    const { login, actionLoading } = useAuth();
+  const router = useRouter();
+  const { login, actionLoading } = useAuth();
 
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [errors, setErrors] = useState<LoginErrors>({});
 
-    const isSubmitting = actionLoading.login;
+  const isSubmitting = actionLoading.login;
 
-    const validate = (): boolean => {
-        const nextErrors: LoginErrors = {};
+  const validate = (): boolean => {
+    const nextErrors: LoginErrors = {};
 
         if (!username.trim()) {
             nextErrors.username = "Username is required.";
         }
 
-        if (!password.trim()) {
-            nextErrors.password = "Password is required.";
-        } else if (password.length < 6) {
-            nextErrors.password = "Password must be at least 6 characters.";
-        }
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      nextErrors.password = "Password must be at least 8 characters.";
+    }
 
-        setErrors(nextErrors);
-        return Object.keys(nextErrors).length === 0;
-    };
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
-    const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-        event.preventDefault();
+  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
 
-        if (!validate()) {
-            return;
-        }
+    if (!validate()) {
+      return;
+    }
 
         const result = await login(username, password);
         if (!result.success) {
@@ -56,8 +56,8 @@ export function LoginForm() {
             return;
         }
 
-        router.push("/dashboard");
-    };
+    router.push("/dashboard");
+  };
 
     return (
         <div className="relative mx-auto w-full max-w-md">

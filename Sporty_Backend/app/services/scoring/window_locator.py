@@ -19,8 +19,9 @@ def find_transfer_window_for_datetime(
     If sport_id is provided, limits to seasons of that sport.
     """
 
+    # Algorithm: select transfer window where start_at <= match_date < end_at.
     q = db.query(TransferWindow).join(Season, Season.id == TransferWindow.season_id)
-    q = q.filter(TransferWindow.start_at <= match_date, TransferWindow.end_at >= match_date)
+    q = q.filter(TransferWindow.start_at <= match_date, TransferWindow.end_at > match_date)
     if sport_id is not None:
         q = q.filter(Season.sport_id == sport_id)
     return q.order_by(TransferWindow.start_at.desc()).first()
@@ -34,8 +35,9 @@ def find_transfer_window_ids_for_datetime(
 ) -> list[UUID]:
     """Return all transfer window IDs covering a given datetime."""
 
+    # Algorithm: list all transfer window IDs satisfying start_at <= match_date < end_at.
     q = db.query(TransferWindow.id).join(Season, Season.id == TransferWindow.season_id)
-    q = q.filter(TransferWindow.start_at <= match_date, TransferWindow.end_at >= match_date)
+    q = q.filter(TransferWindow.start_at <= match_date, TransferWindow.end_at > match_date)
     if sport_id is not None:
         q = q.filter(Season.sport_id == sport_id)
 
