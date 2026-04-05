@@ -9,7 +9,7 @@ import { formatError } from "@/libs/api-error";
  * - A response interceptor normalises errors into ApiError instances.
  */
 const publicApi = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api",
+    baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
     headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
