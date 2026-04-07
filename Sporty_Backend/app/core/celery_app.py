@@ -21,7 +21,12 @@ celery_app = Celery(
     "sporty",
     broker=settings.CELERY_BROKER_URL,
     backend=settings.CELERY_RESULT_BACKEND,
-  include=["app.tasks.sync_tasks", "app.tasks.live_polling_tasks", "app.tasks.scoring_tasks"],
+  include=[
+    "app.tasks.sync_tasks",
+    "app.tasks.live_polling_tasks",
+    "app.tasks.scoring_tasks",
+    "app.tasks.pricing_tasks",
+  ],
 )
 
 celery_app.conf.update(
@@ -40,3 +45,4 @@ celery_app.conf.update(
 from app.tasks import sync_tasks as _sync_tasks  # noqa: F401,E402
 from app.tasks import live_polling_tasks as _live_polling_tasks  # noqa: F401,E402
 from app.tasks import scoring_tasks as _scoring_tasks  # noqa: F401,E402
+from app.tasks import pricing_tasks as _pricing_tasks  # noqa: F401,E402

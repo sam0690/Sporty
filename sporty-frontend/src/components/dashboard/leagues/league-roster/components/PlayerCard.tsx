@@ -7,6 +7,8 @@ type Player = {
   name: string;
   sport: Exclude<Sport, "multisport">;
   position: string;
+  realTeam: string;
+  cost: string;
   totalPoints: number;
   avgPoints: number;
   projected?: number;
@@ -26,11 +28,7 @@ const sportIcons: Record<Exclude<Sport, "multisport">, string> = {
 
 export function PlayerCard({ player, showSportIcon }: PlayerCardProps) {
   const formBadge =
-    player.form === "hot"
-      ? "🔥"
-      : player.form === "cold"
-        ? "❄️"
-        : "";
+    player.form === "hot" ? "🔥" : player.form === "cold" ? "❄️" : "";
 
   return (
     <article className="rounded-lg border border-border bg-surface-100 p-4 transition hover:shadow-card-hover">
@@ -38,11 +36,17 @@ export function PlayerCard({ player, showSportIcon }: PlayerCardProps) {
         <div className="flex items-center gap-2">
           <p className="font-semibold text-text-primary">{player.name}</p>
           {showSportIcon ? (
-            <span className="text-sm" aria-label={player.sport}>{sportIcons[player.sport]}</span>
+            <span className="text-sm" aria-label={player.sport}>
+              {sportIcons[player.sport]}
+            </span>
           ) : null}
         </div>
-        <span className="rounded bg-gray-100 px-2 py-1 text-xs text-text-secondary">{player.position}</span>
+        <span className="rounded bg-gray-100 px-2 py-1 text-xs text-text-secondary">
+          {player.position}
+        </span>
       </div>
+
+      <p className="mt-1 text-xs text-text-secondary">{player.realTeam}</p>
 
       <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
         <div>
@@ -51,11 +55,13 @@ export function PlayerCard({ player, showSportIcon }: PlayerCardProps) {
         </div>
         <div>
           <p className="text-text-secondary">Avg</p>
-          <p className="font-medium text-text-primary">{player.avgPoints.toFixed(1)}</p>
+          <p className="font-medium text-text-primary">
+            {player.avgPoints.toFixed(1)}
+          </p>
         </div>
         <div>
-          <p className="text-text-secondary">Projected</p>
-          <p className="font-medium text-primary-600">{player.projected ? player.projected.toFixed(1) : "-"}</p>
+          <p className="text-text-secondary">Cost</p>
+          <p className="font-medium text-primary-600">{player.cost}</p>
         </div>
       </div>
 

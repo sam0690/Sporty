@@ -1,98 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/libs/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
-import { LeagueHeader } from "@/components/dashboard/leagues/league-home/components/LeagueHeader";
+import {
+  LeagueHeader,
+  type Sport,
+} from "@/components/dashboard/leagues/league-home/components/LeagueHeader";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { StandingsTable } from "@/components/dashboard/leagues/league-home/components/StandingsTable";
 import { WeekSelector } from "@/components/dashboard/leagues/league-home/components/WeekSelector";
 import { YourScoreCard } from "@/components/dashboard/leagues/league-home/components/YourScoreCard";
+import { TransferFields } from "@/components/dashboard/leagues/league-home/components/TransferFields";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
+import { fetchTransferWindowStatus } from "@/lib/api/notifications";
 
-const mockLeague = {
-  id: "1",
-  name: "Premier League Champions",
-  sport: "football" as const,
-  currentWeek: 3,
-  totalWeeks: 16,
-  isCommissioner: true,
-  isPublic: false,
-  inviteCode: "ABCD-1234-EFGH",
-  members: [
-    {
-      id: 1,
-      name: "John Doe",
-      teamName: "Goal Rush",
-      joinDate: "2025-01-01",
-      totalPoints: 212,
-    },
-    {
-      id: 2,
-      name: "Mike T.",
-      teamName: "Dunk FC",
-      joinDate: "2025-01-02",
-      totalPoints: 245,
-    },
-    {
-      id: 3,
-      name: "Sarah K.",
-      teamName: "FC United",
-      joinDate: "2025-01-03",
-      totalPoints: 198,
-    },
-  ],
-  scoringRules: {
-    goal: 5,
-    assist: 3,
-    cleanSheet: 4,
-    save: 1,
-  },
-  teamSize: 11,
-  draftType: "snake",
-  userTeam: {
-    id: "team1",
-    name: "Goal Rush",
-    score: 87,
-    weeklyRank: 2,
-    pointsBehind: 12,
-  },
-  currentMatchup: {
-    opponentTeam: "FC Legends",
-    opponentScore: 72,
-  },
-  standings: [
-    {
-      rank: 1,
-      teamId: "team2",
-      teamName: "Dunk FC",
-      points: 245,
-      wins: 2,
-      losses: 0,
-    },
-    {
-      rank: 2,
-      teamId: "team1",
-      teamName: "Goal Rush",
-      points: 212,
-      wins: 1,
-      losses: 1,
-    },
-    {
-      rank: 3,
-      teamId: "team3",
-      teamName: "FC United",
-      points: 198,
-      wins: 0,
-      losses: 2,
-    },
-  ],
-};
-
-import { useActiveWindow, useLeague, useMyTeam } from "@/hooks/leagues/useLeagues";
+import {
+  useActiveWindow,
+  useLeague,
+  useLeaveLeague,
+  useMyTeam,
+} from "@/hooks/leagues/useLeagues";
+import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 
 export function LeagueHome() {
   const params = useParams<{ id: string }>();
@@ -101,11 +33,19 @@ export function LeagueHome() {
   const leagueId = params?.id ?? "";
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
-  const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
-  const { data: activeWindow, isLoading: windowLoading } = useActiveWindow(leagueId);
+  const {
+    data: myTeam,
+    isLoading: teamLoading,
+    isError: myTeamMissing,
+  } = useMyTeam(leagueId);
+  const { data: activeWindow, isLoading: windowLoading } =
+    useActiveWindow(leagueId);
+  const leaveLeague = useLeaveLeague();
   const { username } = useMe();
 
   const [currentWeek, setCurrentWeek] = useState(1);
+  const [windowStatusLoading, setWindowStatusLoading] = useState(false);
+  const [isTransferWindowActive, setIsTransferWindowActive] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -115,8 +55,37 @@ export function LeagueHome() {
     }
   }, [activeWindow]);
 
+  useEffect(() => {
+    if (!leagueId) {
+      setIsTransferWindowActive(false);
+      return;
+    }
+
+    const run = async () => {
+      setWindowStatusLoading(true);
+      try {
+        const status = await fetchTransferWindowStatus(leagueId);
+        setIsTransferWindowActive(status.is_active);
+      } catch {
+        setIsTransferWindowActive(false);
+      } finally {
+        setWindowStatusLoading(false);
+      }
+    };
+
+    void run();
+  }, [leagueId]);
+
   const isCommissioner = league?.owner?.username === username;
+  const { isDraftMode } = useLeagueCompetitionMode(league);
+  const isBudgetMode = !isDraftMode;
+  const hasMyTeam = Boolean(league?.my_team?.id || myTeam?.id);
+  const leagueStatus = league?.status;
   const isLoading = leagueLoading || teamLoading || windowLoading;
+  const leagueSport: Sport =
+    league?.sports?.[0]?.sport.name === "basketball"
+      ? league.sports[0].sport.name
+      : "football";
 
   const handleLeaveLeague = async () => {
     if (!league) return;
@@ -128,16 +97,18 @@ export function LeagueHome() {
     }
 
     setIsLeaving(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLeaving(false);
-    setShowLeaveModal(false);
-    toastifier.success("You left the league.");
-    router.push("/leagues");
+    try {
+      await leaveLeague.mutateAsync(league.id);
+      setShowLeaveModal(false);
+      router.push("/leagues");
+    } finally {
+      setIsLeaving(false);
+    }
   };
 
   if (isLoading) {
     return (
-      <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 [font-family:system-ui,-apple-system]">
+      <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system]">
         <div className="h-12 rounded-lg bg-gray-200 animate-pulse" />
         <div className="h-10 w-40 rounded-lg bg-gray-200 animate-pulse" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -154,14 +125,14 @@ export function LeagueHome() {
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
+    <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
       <div className="text-sm text-gray-500">
         Manager: {username || "Sporty User"}
       </div>
 
       <LeagueHeader
         leagueName={league?.name || ""}
-        sport={(league?.sports?.[0]?.sport.name as any) || "football"}
+        sport={leagueSport}
         currentWeek={currentWeek}
         totalWeeks={activeWindow?.total_number || 16}
       />
@@ -184,11 +155,23 @@ export function LeagueHome() {
         isCommissioner={isCommissioner}
       />
 
+      {windowStatusLoading ? (
+        <div className="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-500">
+          Checking transfer window status...
+        </div>
+      ) : isTransferWindowActive ? (
+        <TransferFields leagueId={leagueId} />
+      ) : (
+        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+          No transfer window is currently active for this league.
+        </div>
+      )}
+
       <div className="flex justify-end">
         <button
           type="button"
           onClick={() => setShowLeaveModal(true)}
-          disabled={isCommissioner}
+          disabled={isCommissioner || isLeaving}
           title={
             isCommissioner
               ? "Commissioner cannot leave - delete league or transfer ownership"
@@ -200,7 +183,7 @@ export function LeagueHome() {
         </button>
       </div>
 
-      {(myTeam && league) ? (
+      {myTeam && league ? (
         <>
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="space-y-6 order-1 lg:order-2 lg:col-span-1">
@@ -210,11 +193,7 @@ export function LeagueHome() {
                 opponentTeamName="TBD"
                 opponentScore={0}
               />
-              <YourScoreCard
-                yourScore={0}
-                weeklyRank={0}
-                pointsBehind={0}
-              />
+              <YourScoreCard yourScore={0} weeklyRank={0} pointsBehind={0} />
             </div>
 
             <div className="order-2 lg:order-1 lg:col-span-2">
@@ -226,7 +205,58 @@ export function LeagueHome() {
           </div>
         </>
       ) : (
-        <EmptyState message="No team data found for this league" />
+        <div className="space-y-4">
+          {isDraftMode ? (
+            leagueStatus === "setup" ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+                Draft has not started yet. Team creation happens through the
+                draft only.
+              </div>
+            ) : leagueStatus === "drafting" ? (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900">
+                Draft is in progress. Make your picks from the draft screen.
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-sm text-gray-700">
+                Draft is complete, but your team is not available yet.
+              </div>
+            )
+          ) : (
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+              Build your team to start competing in this budget league.
+            </div>
+          )}
+
+          {league && isBudgetMode ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    hasMyTeam
+                      ? `/leagues/${league.id}/roster`
+                      : `/leagues/${league.id}/create-team`,
+                  )
+                }
+                className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+              >
+                {hasMyTeam ? "View Team" : "Build Team"}
+              </button>
+            </div>
+          ) : myTeamMissing && league ? (
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => router.push(`/leagues/${league.id}/create-team`)}
+                className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+              >
+                Open Draft Screen
+              </button>
+            </div>
+          ) : (
+            <EmptyState message="No team data found for this league" />
+          )}
+        </div>
       )}
 
       {showLeaveModal ? (

@@ -7,10 +7,27 @@ import { LocalStorageKeys } from "@/libs/storage.kyes";
 
 let accessToken: string | null = null;
 
-export const getAccessToken = (): string | null => accessToken;
+export const getAccessToken = (): string | null => {
+  if (accessToken) {
+    return accessToken;
+  }
+
+  const persistedToken = getLocalStorage(LocalStorageKeys.TOKEN);
+  if (persistedToken) {
+    accessToken = persistedToken;
+  }
+
+  return accessToken;
+};
 
 export const setAccessToken = (token: string | null): void => {
   accessToken = token;
+  if (!token) {
+    removeLocalStorage(LocalStorageKeys.TOKEN);
+    return;
+  }
+
+  setLocalStorage(LocalStorageKeys.TOKEN, token);
 };
 
 export const getRefreshToken = (): string | null => {

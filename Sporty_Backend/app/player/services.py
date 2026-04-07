@@ -9,12 +9,15 @@ The service layer here is read-only: list, filter, get, stats.
 import uuid
 
 from fastapi import HTTPException, status
+from sqlalchemy import false
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.league.models import FantasyTeam, Sport, TeamPlayer
-from app.player.models import Player, PlayerGameweekStat
+from app.league.models import FantasyTeam, LeagueSport, Sport, TeamPlayer
+from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 from app.player.schemas import PlayerFilter
+
+SUPPORTED_PLAYER_POOL_SPORTS = {"football", "basketball"}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -32,6 +35,8 @@ def _apply_filters(query, filters: PlayerFilter):
     """
     # ── Sport filter (requires a JOIN) ──────────────────────────────
     if filters.sport_name:
+        if filters.sport_name not in SUPPORTED_PLAYER_POOL_SPORTS:
+            return query.filter(false())
         query = query.join(Sport, Player.sport_id == Sport.id).filter(
             Sport.name == filters.sport_name
         )
@@ -60,6 +65,26 @@ def _apply_filters(query, filters: PlayerFilter):
     return query
 
 
+def _league_supported_sport_ids(db: Session, league_id: uuid.UUID) -> set[uuid.UUID]:
+    rows = (
+        db.query(LeagueSport.sport_id)
+        .join(Sport, LeagueSport.sport_id == Sport.id)
+        .filter(
+            LeagueSport.league_id == league_id,
+            Sport.name.in_(SUPPORTED_PLAYER_POOL_SPORTS),
+        )
+        .all()
+    )
+    return {row[0] for row in rows}
+
+
+def _apply_league_player_pool(query, db: Session, league_id: uuid.UUID):
+    allowed_sport_ids = _league_supported_sport_ids(db, league_id)
+    if not allowed_sport_ids:
+        return query.filter(false())
+    return query.filter(Player.sport_id.in_(allowed_sport_ids))
+
+
 def _exclude_owned_players(query, league_id: uuid.UUID):
     """Exclude players currently active on any team in the league.
 
@@ -74,7 +99,7 @@ def _exclude_owned_players(query, league_id: uuid.UUID):
     Step 2 — find all player_ids that are ACTIVE on those teams:
         select(TeamPlayer.player_id).where(
             TeamPlayer.fantasy_team_id.in_(step_1),
-            TeamPlayer.released_gameweek_id.is_(None),   # still on roster
+            TeamPlayer.released_window_id.is_(None),   # still on roster
         )
 
     Step 3 — exclude those player_ids from the main query:
@@ -102,7 +127,7 @@ def _exclude_owned_players(query, league_id: uuid.UUID):
                     FantasyTeam.league_id == league_id
                 )
             ),
-            TeamPlayer.released_gameweek_id.is_(None),  # still active
+            TeamPlayer.released_window_id.is_(None),  # still active
         )
     )
     return query.filter(Player.id.notin_(owned_player_ids))
@@ -161,6 +186,7 @@ def get_players(
 
     # ── League-scoped exclusion (owned players) ─────────────────────
     if filters.league_id:
+        query = _apply_league_player_pool(query, db, filters.league_id)
         query = _exclude_owned_players(query, filters.league_id)
 
     query = _apply_filters(query, filters)
@@ -279,4 +305,27 @@ def get_player_stats(
             PlayerGameweekStat.transfer_window_id == gameweek_id,
         )
         .first()
+    )
+
+
+def get_player_price_history(
+    db: Session,
+    player_id: uuid.UUID,
+    *,
+    limit: int = 20,
+) -> list[PlayerPriceHistory]:
+    """Return newest-first price history for a player.
+
+    The first query ensures a consistent 404 when player_id is invalid.
+    """
+    get_player(db, player_id)
+
+    safe_limit = max(1, min(limit, 100))
+    return (
+        db.query(PlayerPriceHistory)
+        .options(joinedload(PlayerPriceHistory.transfer_window))
+        .filter(PlayerPriceHistory.player_id == player_id)
+        .order_by(PlayerPriceHistory.created_at.desc())
+        .limit(safe_limit)
+        .all()
     )

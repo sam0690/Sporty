@@ -1,6 +1,6 @@
 "use client";
 
-type Sport = "All" | "football" | "basketball" | "cricket";
+type Sport = "All" | "football" | "basketball";
 
 type FilterBarProps = {
   selectedSport: Sport;
@@ -9,19 +9,17 @@ type FilterBarProps = {
   onPositionChange: (position: string) => void;
 };
 
-const sports: Sport[] = ["All", "football", "basketball", "cricket"];
+const sports: Sport[] = ["All", "football", "basketball"];
 
 const sportLabels: Record<Sport, string> = {
   All: "All",
   football: "⚽ Football",
   basketball: "🏀 Basketball",
-  cricket: "🏏 Cricket",
 };
 
 const positionMap: Record<Exclude<Sport, "All">, string[]> = {
   football: ["All", "Forward", "Midfielder", "Defender", "Goalkeeper"],
   basketball: ["All", "Guard", "Forward", "Center"],
-  cricket: ["All", "Batsman", "Bowler", "All-Rounder", "Wicketkeeper"],
 };
 
 export function FilterBar({
@@ -31,9 +29,7 @@ export function FilterBar({
   onPositionChange,
 }: FilterBarProps) {
   const positionOptions =
-    selectedSport === "All"
-      ? ["All"]
-      : positionMap[selectedSport];
+    selectedSport === "All" ? ["All"] : positionMap[selectedSport];
 
   return (
     <section className="space-y-2">

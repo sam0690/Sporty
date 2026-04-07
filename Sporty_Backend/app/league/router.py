@@ -26,9 +26,12 @@ from app.database import get_db
 from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
 from app.league.models import FantasyTeam, League, TeamWeeklyScore
+from app.services import transfer_service
 from app.league.schemas import (
+    BudgetDiscardResponse,
     DraftPickCreate,
     DraftPickResponse,
+    DraftTurnResponse,
     FantasyTeamOwnerResponse,
     FantasyTeamResponse,
     JoinLeagueRequest,
@@ -253,6 +256,56 @@ def get_league(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# DELETE /leagues/{league_id} — delete a league (owner only)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.delete(
+    "/{league_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_class=Response,
+    summary="Delete a league",
+)
+def delete_league(
+    league: League = Depends(require_league_owner),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Delete a league and all related data.
+
+    Only the owner can perform this action.
+    """
+    league_service.delete_league(db, league.id, current_user)
+    db.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# POST /leagues/{league_id}/leave — leave a league (non-owner members)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.post(
+    "/{league_id}/leave",
+    response_model=dict,
+    summary="Leave a league",
+)
+def leave_league(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Leave a league as a non-owner member.
+
+    Removes membership and any user-owned team data in this league.
+    """
+    league_service.leave_league(db, league.id, current_user)
+    db.commit()
+    transfer_service.cancel_session(get_redis(), current_user)
+    return {"message": "Left league successfully"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # PATCH /leagues/{league_id}/status — transition lifecycle state
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -466,6 +519,25 @@ def make_pick(
     return pick
 
 
+@router.get(
+    "/{league_id}/draft/turn",
+    response_model=DraftTurnResponse,
+    summary="Get current draft turn",
+)
+def get_draft_turn(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    turn = league_service.get_current_draft_turn(db, league.id)
+    return {
+        "league_id": turn["league_id"],
+        "current_turn_user_id": turn["current_turn_user_id"],
+        "next_pick_number": turn["next_pick_number"],
+        "round_number": turn["round_number"],
+        "is_draft_complete": turn["is_draft_complete"],
+    }
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # POST /leagues/{league_id}/teams/build — build initial team (budget-mode)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -502,6 +574,22 @@ def build_team(
     )
     db.commit()
     return {"message": "Team created successfully", "team_id": team.id}
+
+
+@router.delete(
+    "/{league_id}/teams/players/{player_id}",
+    response_model=BudgetDiscardResponse,
+    summary="Discard a player from budget squad with refund penalty",
+)
+def discard_player(
+    player_id: uuid.UUID,
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    result = league_service.discard_team_player(db, league.id, player_id, current_user)
+    db.commit()
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -551,6 +639,18 @@ def generate_windows(
     windows = league_service.generate_transfer_windows(db, league.id, current_user)
     db.commit()
     return {"message": f"Generated {len(windows)} transfer windows", "count": len(windows)}
+
+
+@router.get(
+    "/{league_id}/transfer-window/status",
+    response_model=dict,
+    summary="Get transfer window active status for a league",
+)
+def transfer_window_status(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    return {"is_active": league_service.is_transfer_window_active(db, league.id)}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

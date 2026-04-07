@@ -42,6 +42,8 @@ class LeagueCreate(BaseModel):
     draft_mode: bool = Field(default=False)
     transfers_per_window: int = Field(default=4, ge=0, le=10)
     transfer_day: int = Field(default=1, ge=1, le=7)
+    start_date: date | None = None
+    end_date: date | None = None
 
     @field_validator("name")
     @classmethod
@@ -255,6 +257,15 @@ class FantasyTeamResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
+class TeamPlayerResponse(BaseModel):
+    """Minimal roster entry for a team owner view."""
+
+    player: PlayerBrief
+    joined_at: datetime = Field(alias="created_at")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
+
+
 class FantasyTeamOwnerResponse(FantasyTeamResponse):
     """Private view — only the team OWNER sees their budget.
 
@@ -262,6 +273,9 @@ class FantasyTeamOwnerResponse(FantasyTeamResponse):
     The router returns this schema when current_user owns the team.
     """
     current_budget: Decimal
+    players: list[TeamPlayerResponse] = Field(default_factory=list, alias="team_players")
+
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -374,6 +388,14 @@ class DraftPickCreate(BaseModel):
     player_id: uuid.UUID
 
 
+class DraftTurnResponse(BaseModel):
+    league_id: uuid.UUID
+    current_turn_user_id: uuid.UUID | None = None
+    next_pick_number: int
+    round_number: int
+    is_draft_complete: bool
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Transfer
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -432,6 +454,13 @@ class TeamBuildRequest(BaseModel):
         if len(v) != len(set(v)):
             raise ValueError("Duplicate players not allowed")
         return v
+
+
+class BudgetDiscardResponse(BaseModel):
+    message: str
+    refund: Decimal
+    penalty_applied: Decimal
+    remaining_budget: Decimal
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -517,6 +546,7 @@ class LineupResponse(BaseModel):
     fantasy_team_id: uuid.UUID
     transfer_window_id: uuid.UUID
     entries: list[LineupEntryResponse]
+    squad_players: list[TeamPlayerResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 

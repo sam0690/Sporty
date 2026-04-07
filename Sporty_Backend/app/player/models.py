@@ -110,9 +110,65 @@ class Player(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    price_history: Mapped[list["PlayerPriceHistory"]] = relationship(
+        back_populates="player",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         CheckConstraint("cost >= 0", name="ck_player_cost_non_negative"),
+    )
+
+
+class PlayerPriceHistory(Base):
+    __tablename__ = "player_price_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("players.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    transfer_window_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("transfer_windows.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
+    old_cost: Mapped[Decimal] = mapped_column(
+        Numeric(precision=10, scale=2), nullable=False
+    )
+    new_cost: Mapped[Decimal] = mapped_column(
+        Numeric(precision=10, scale=2), nullable=False
+    )
+    delta: Mapped[Decimal] = mapped_column(
+        Numeric(precision=10, scale=2), nullable=False
+    )
+    weighted_points: Mapped[Decimal | None] = mapped_column(
+        Numeric(precision=8, scale=2), nullable=True
+    )
+    algorithm_version: Mapped[str] = mapped_column(
+        String(30), nullable=False, default="v1"
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    player: Mapped["Player"] = relationship(back_populates="price_history")
+    transfer_window: Mapped["TransferWindow | None"] = relationship(
+        foreign_keys=[transfer_window_id]
+    )
+
+    __table_args__ = (
+        CheckConstraint("old_cost >= 0", name="ck_price_history_old_cost_non_negative"),
+        CheckConstraint("new_cost >= 0", name="ck_price_history_new_cost_non_negative"),
     )
 
 

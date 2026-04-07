@@ -24,8 +24,11 @@ import {
 import { StatsSummary } from "@/components/dashboard/leagues/league-roster/components/StatsSummary";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
-import { useActiveWindow, useLeague, useMyTeam } from "@/hooks/leagues/useLeagues";
-import type { TTeamPlayer } from "@/types";
+import {
+  useActiveWindow,
+  useLeague,
+  useMyTeam,
+} from "@/hooks/leagues/useLeagues";
 
 const SLOT_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
 type SlotId = (typeof SLOT_IDS)[number];
@@ -48,29 +51,26 @@ const EMPTY_SLOTS: Record<number, number | null> = {
   9: null,
 };
 
-type Roster = {
-  leagueId: string;
-  leagueName: string;
-  sport: Sport;
-  rosterSize: number;
-  maxRosterSize: number;
-  totalPoints: number;
-  avgPointsPerGame: number;
-  bestPlayer: {
-    name: string;
-    points: number;
-  };
-  players: Player[];
+const normalizeSport = (value: unknown): Player["sport"] => {
+  if (value === "football" || value === "basketball" || value === "cricket") {
+    return value;
+  }
+  return "football";
 };
-
 
 export function LeagueRoster() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
-  const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
-  const { data: activeWindow, isLoading: windowLoading } = useActiveWindow(leagueId);
+  const {
+    data: myTeam,
+    isLoading: teamLoading,
+    error: teamError,
+    refetch: refetchTeam,
+  } = useMyTeam(leagueId);
+  const { data: activeWindow, isLoading: windowLoading } =
+    useActiveWindow(leagueId);
   const { username } = useMe();
 
   const [selectedPosition, setSelectedPosition] = useState("All");
@@ -91,17 +91,24 @@ export function LeagueRoster() {
   const roster = useMemo(() => {
     if (!league || !myTeam) return null;
 
-    // Map team players to the component's Player type
-    const mappedPlayers: Player[] = myTeam.players.map(p => ({
-      id: p.player?.id as any || 0,
-      name: p.player?.display_name || "Unknown",
-      sport: (p.player?.sport_name as Sport) || "football",
-      position: p.player?.position || "",
-      totalPoints: 0,
-      avgPoints: 0,
-      projected: 0,
-      form: "normal" as const
-    }));
+    // Backend now returns team_players; keep players fallback for compatibility.
+    const rawTeamPlayers = myTeam.team_players ?? myTeam.players ?? [];
+    const mappedPlayers: Player[] = rawTeamPlayers.map((teamPlayer, index) => {
+      const sportName = teamPlayer.player?.sport?.name;
+
+      return {
+        id: index + 1,
+        name: teamPlayer.player?.name || "Unknown",
+        sport: normalizeSport(sportName),
+        position: teamPlayer.player?.position || "",
+        realTeam: teamPlayer.player?.real_team || "Unknown Team",
+        cost: teamPlayer.player?.cost || "0.00",
+        totalPoints: 0,
+        avgPoints: 0,
+        projected: 0,
+        form: "normal" as const,
+      };
+    });
 
     return {
       leagueId: league.id,
@@ -112,7 +119,7 @@ export function LeagueRoster() {
       totalPoints: 0, // Sum from players
       avgPointsPerGame: 0,
       bestPlayer: { name: "", points: 0 },
-      players: mappedPlayers
+      players: mappedPlayers,
     };
   }, [league, myTeam]);
 
@@ -159,20 +166,16 @@ export function LeagueRoster() {
       });
     }
 
-    setSlotToPlayer(nextSlots);
-    setSavedSlotToPlayer(nextSlots);
+    const frame = window.requestAnimationFrame(() => {
+      setSlotToPlayer(nextSlots);
+      setSavedSlotToPlayer(nextSlots);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [roster]);
 
   const isCommissioner = league?.owner?.username === username;
   const isLoading = leagueLoading || teamLoading || windowLoading;
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setIsLoading(false);
-    }, 450);
-
-    return () => window.clearTimeout(timeout);
-  }, []);
 
   const positions = useMemo(() => {
     if (!roster) return ["All"];
@@ -247,7 +250,8 @@ export function LeagueRoster() {
   };
 
   const canPlaceInSlot = (player: Player, slotId: number): boolean => {
-    const allowed = SPORT_ALLOWED_SLOTS[player.sport as keyof typeof SPORT_ALLOWED_SLOTS];
+    const allowed =
+      SPORT_ALLOWED_SLOTS[player.sport as keyof typeof SPORT_ALLOWED_SLOTS];
     return allowed?.includes(slotId as SlotId) ?? false;
   };
 
@@ -401,7 +405,7 @@ export function LeagueRoster() {
     return (
       <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         <div className="h-10 w-56 animate-pulse rounded-lg bg-gray-100" />
-        <div className="mx-auto aspect-[3/4] w-full max-w-2xl rounded-2xl bg-gray-100 p-6">
+        <div className="mx-auto aspect-3/4 w-full max-w-2xl rounded-2xl bg-gray-100 p-6">
           <div className="grid grid-cols-3 gap-4">
             {Array.from({ length: 9 }, (_, index) => (
               <div
@@ -420,12 +424,40 @@ export function LeagueRoster() {
     );
   }
 
+  if (teamError) {
+    return (
+      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
+        <NavigationTabs
+          activeTab="roster"
+          leagueId={leagueId}
+          isCommissioner={isCommissioner}
+        />
+
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+          <h2 className="text-base font-semibold text-red-800">
+            Unable to load roster
+          </h2>
+          <p className="mt-1 text-sm text-red-700">
+            {teamError.message || "Failed to fetch team players."}
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetchTeam()}
+            className="mt-4 rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+          >
+            Retry
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   if (roster.players.length === 0) {
     return <EmptyState leagueId={roster.leagueId} sport={roster.sport} />;
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
+    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
       <p className="text-sm text-gray-500">
         Manager: {username || "Sporty User"}
       </p>

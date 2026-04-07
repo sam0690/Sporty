@@ -2,7 +2,14 @@
 
 import { useRouter } from "next/navigation";
 
-type TabKey = "overview" | "lineup" | "roster" | "leaderboard" | "members" | "invite" | "settings";
+type TabKey =
+  | "overview"
+  | "lineup"
+  | "roster"
+  | "leaderboard"
+  | "members"
+  | "invite"
+  | "settings";
 
 type NavigationTabsProps = {
   activeTab: TabKey;
@@ -20,41 +27,45 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "settings", label: "Settings" },
 ];
 
-export function NavigationTabs({ activeTab, leagueId, isCommissioner = false }: NavigationTabsProps) {
+export function NavigationTabs({
+  activeTab,
+  leagueId,
+  isCommissioner = false,
+}: NavigationTabsProps) {
   const router = useRouter();
 
   const goToTab = (tab: TabKey) => {
     if (tab === "overview") {
-      router.push(`/league/${leagueId}`);
+      router.push(`/leagues/${leagueId}`);
       return;
     }
 
     if (tab === "lineup") {
-      router.push(`/league/${leagueId}/lineup`);
+      router.push(`/leagues/${leagueId}/lineup`);
       return;
     }
 
     if (tab === "roster") {
-      router.push(`/league/${leagueId}/roster`);
+      router.push(`/leagues/${leagueId}/roster`);
       return;
     }
 
     if (tab === "leaderboard") {
-      router.push(`/league/${leagueId}/leaderboard`);
+      router.push(`/leagues/${leagueId}/leaderboard`);
       return;
     }
 
     if (tab === "members") {
-      router.push(`/league/${leagueId}/members`);
+      router.push(`/leagues/${leagueId}/members`);
       return;
     }
 
     if (tab === "invite") {
-      router.push(`/league/${leagueId}/invite`);
+      router.push(`/leagues/${leagueId}/invite`);
       return;
     }
 
-    router.push(`/league/${leagueId}/settings`);
+    router.push(`/leagues/${leagueId}/settings`);
   };
 
   return (
@@ -63,24 +74,26 @@ export function NavigationTabs({ activeTab, leagueId, isCommissioner = false }: 
       aria-label="League Navigation Tabs"
     >
       <div className="flex min-w-max gap-2">
-      {tabs.filter((tab) => tab.key !== "settings" || isCommissioner).map((tab) => {
-        const isActive = tab.key === activeTab;
+        {tabs
+          .filter((tab) => tab.key !== "settings" || isCommissioner)
+          .map((tab) => {
+            const isActive = tab.key === activeTab;
 
-        return (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => goToTab(tab.key)}
-            className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
-              isActive
-                ? "border-primary-200 bg-primary-50 text-primary-900 shadow-sm"
-                : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
-            }`}
-          >
-            {tab.label}
-          </button>
-        );
-      })}
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => goToTab(tab.key)}
+                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                  isActive
+                    ? "border-primary-200 bg-primary-50 text-primary-900 shadow-sm"
+                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
       </div>
     </nav>
   );

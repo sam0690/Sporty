@@ -5,9 +5,13 @@ from app.auth import services
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.auth.schemas import (
+    ChangePasswordRequest,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     GoogleAuthRequest,
     GoogleLinkRequest,
     RefreshTokenRequest,
+    ResetPasswordRequest,
     RegisterRequest,
     RegisterResponse,
     LoginRequest,
@@ -40,6 +44,17 @@ def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
 @router.post("/refresh", response_model=TokenResponse)
 def refresh_token(data: RefreshTokenRequest, db: Session = Depends(get_db)):
     return services.refresh_access_token(db, data)
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordResponse, status_code=200)
+def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    return services.forgot_password(db, data.email)
+
+
+@router.post("/reset-password", status_code=200)
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    services.reset_password(db, data.token, data.new_password)
+    return {"detail": "Password reset successful"}
 
 
 # ── Protected endpoints (token required) ──────────────────────────────────────
@@ -76,3 +91,13 @@ def link_google(
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_active_user)):
     return current_user
+
+
+@router.post("/change-password", status_code=200)
+def change_password(
+    data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    services.change_password(db, current_user.id, data.current_password, data.new_password)
+    return {"detail": "Password changed successfully"}

@@ -1,5 +1,10 @@
 import { SignUpForm } from "@/components/auth/signup";
+import { GuestOnlyRoute } from "@/components/auth/GuestOnlyRoute";
 
 export default function SignUpPage() {
-    return <SignUpForm />;
+  return (
+    <GuestOnlyRoute>
+      <SignUpForm />
+    </GuestOnlyRoute>
+  );
 }

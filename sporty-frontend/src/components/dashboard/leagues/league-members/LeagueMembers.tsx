@@ -7,25 +7,40 @@ import { NavigationTabs } from "@/components/dashboard/leagues/league-home/compo
 import { KickMemberModal } from "@/components/dashboard/leagues/league-members/components/KickMemberModal";
 import { MemberList } from "@/components/dashboard/leagues/league-members/components/MemberList";
 import type { Member } from "@/components/dashboard/leagues/league-members/components/MemberCard";
-
-const initialMembers: Member[] = [
-  { id: 1, name: "John Doe", teamName: "Goal Rush", joinDate: "2025-01-01", totalPoints: 212 },
-  { id: 2, name: "Mike T.", teamName: "Dunk FC", joinDate: "2025-01-02", totalPoints: 245 },
-  { id: 3, name: "Sarah K.", teamName: "FC United", joinDate: "2025-01-03", totalPoints: 198 },
-  { id: 4, name: "Alex R.", teamName: "City FC", joinDate: "2025-01-04", totalPoints: 187 },
-];
+import { useLeague, useLeagueMembers } from "@/hooks/leagues/useLeagues";
+import { useMe } from "@/hooks/auth/useMe";
 
 export function LeagueMembers() {
   const params = useParams<{ id: string }>();
-  const leagueId = params?.id ?? "1";
-  const isCommissioner = leagueId === "1";
-  const selfId = 1;
-  const commissionerId = 1;
+  const leagueId = params?.id ?? "";
+  const { username } = useMe();
+  const { data: league } = useLeague(leagueId);
+  const { data: memberships, isLoading } = useLeagueMembers(leagueId);
+
+  const isCommissioner = league?.owner?.username === username;
+  const selfId =
+    memberships?.find((m) => m.user.username === username)?.id ?? "";
+  const commissionerId =
+    memberships?.find((m) => m.user.username === league?.owner?.username)?.id ??
+    "";
 
   const [query, setQuery] = useState("");
-  const [members, setMembers] = useState(initialMembers);
   const [isKicking, setIsKicking] = useState(false);
   const [targetMember, setTargetMember] = useState<Member | null>(null);
+
+  const members: Member[] = useMemo(
+    () =>
+      (memberships ?? []).map((membership) => ({
+        id: membership.id,
+        name: membership.user.username,
+        teamName: membership.draft_position
+          ? `Draft Position #${membership.draft_position}`
+          : "Team pending",
+        joinDate: new Date(membership.joined_at).toLocaleDateString(),
+        totalPoints: 0,
+      })),
+    [memberships],
+  );
 
   const filteredMembers = useMemo(() => {
     const lower = query.trim().toLowerCase();
@@ -33,8 +48,10 @@ export function LeagueMembers() {
       return members;
     }
 
-    return members.filter((member) =>
-      member.name.toLowerCase().includes(lower) || member.teamName.toLowerCase().includes(lower),
+    return members.filter(
+      (member) =>
+        member.name.toLowerCase().includes(lower) ||
+        member.teamName.toLowerCase().includes(lower),
     );
   }, [members, query]);
 
@@ -45,15 +62,20 @@ export function LeagueMembers() {
 
     setIsKicking(true);
     await new Promise((resolve) => setTimeout(resolve, 650));
-    setMembers((prev) => prev.filter((member) => member.id !== targetMember.id));
     setIsKicking(false);
-    toastifier.success(`✓ ${targetMember.name} removed from league`);
+    toastifier.info(
+      "Member removal endpoint is not implemented yet in backend",
+    );
     setTargetMember(null);
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-8 space-y-6 text-gray-900 [font-family:system-ui,-apple-system]">
-      <NavigationTabs activeTab="members" leagueId={leagueId} isCommissioner={isCommissioner} />
+    <section className="mx-auto max-w-6xl px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
+      <NavigationTabs
+        activeTab="members"
+        leagueId={leagueId}
+        isCommissioner={isCommissioner}
+      />
 
       <div className="rounded-2xl border border-gray-100 bg-white p-5">
         <h2 className="text-lg font-medium text-gray-900">League Members</h2>
@@ -64,6 +86,12 @@ export function LeagueMembers() {
           className="mt-4 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400"
         />
       </div>
+
+      {isLoading ? (
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
+          Loading members...
+        </div>
+      ) : null}
 
       <MemberList
         members={filteredMembers}

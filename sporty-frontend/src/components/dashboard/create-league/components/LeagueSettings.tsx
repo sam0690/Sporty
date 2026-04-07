@@ -3,14 +3,25 @@
 type LeagueSettingsProps = {
   isPrivate: boolean;
   teamSize: number;
-  draftType: string;
+  competitionType: "draft" | "budget";
   draftDate: string;
-  onSettingsChange: (next: { isPrivate?: boolean; teamSize?: number; draftType?: string; draftDate?: string }) => void;
+  onSettingsChange: (next: {
+    isPrivate?: boolean;
+    teamSize?: number;
+    competitionType?: "draft" | "budget";
+    draftDate?: string;
+  }) => void;
 };
 
 const teamSizes = [4, 6, 8, 10, 12, 14, 16];
 
-export function LeagueSettings({ isPrivate, teamSize, draftType, draftDate, onSettingsChange }: LeagueSettingsProps) {
+export function LeagueSettings({
+  isPrivate,
+  teamSize,
+  competitionType,
+  draftDate,
+  onSettingsChange,
+}: LeagueSettingsProps) {
   return (
     <div className="space-y-6">
       <div>
@@ -52,7 +63,9 @@ export function LeagueSettings({ isPrivate, teamSize, draftType, draftDate, onSe
         <select
           id="team-size"
           value={teamSize}
-          onChange={(event) => onSettingsChange({ teamSize: Number(event.target.value) })}
+          onChange={(event) =>
+            onSettingsChange({ teamSize: Number(event.target.value) })
+          }
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
         >
           {teamSizes.map((size) => (
@@ -64,30 +77,41 @@ export function LeagueSettings({ isPrivate, teamSize, draftType, draftDate, onSe
       </div>
 
       <div>
-        <label htmlFor="draft-type" className="mb-2 block text-sm text-gray-600">
-          Draft Type
+        <label
+          htmlFor="competition-type"
+          className="mb-2 block text-sm text-gray-600"
+        >
+          Competition Type
         </label>
         <select
-          id="draft-type"
-          value={draftType}
-          onChange={(event) => onSettingsChange({ draftType: event.target.value })}
+          id="competition-type"
+          value={competitionType}
+          onChange={(event) =>
+            onSettingsChange({
+              competitionType: event.target.value as "draft" | "budget",
+            })
+          }
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
         >
-          <option value="snake">Snake Draft</option>
-          <option value="auction">Auction</option>
-          <option value="auto">Auto-assign</option>
+          <option value="draft">Draft Mode</option>
+          <option value="budget">Budget Mode (Auto Assign)</option>
         </select>
       </div>
 
       <div>
-        <label htmlFor="draft-date" className="mb-2 block text-sm text-gray-600">
+        <label
+          htmlFor="draft-date"
+          className="mb-2 block text-sm text-gray-600"
+        >
           Draft Date (optional)
         </label>
         <input
           id="draft-date"
           type="date"
           value={draftDate}
-          onChange={(event) => onSettingsChange({ draftDate: event.target.value })}
+          onChange={(event) =>
+            onSettingsChange({ draftDate: event.target.value })
+          }
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
         />
       </div>

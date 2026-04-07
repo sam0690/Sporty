@@ -32,6 +32,25 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    detail: str
+    reset_token: str | None = None
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8)
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str = Field(min_length=1)
+    new_password: str = Field(min_length=8)
+
+
 # ── Responses ─────────────────────────────────────────────────────────────────
 
 class TokenResponse(BaseModel):

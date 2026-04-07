@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
+import { Carousel } from "@mantine/carousel";
 import { useMe } from "@/hooks/auth/useMe";
+import { useMyLeagues, useMyTeamsForLeagues } from "@/hooks/leagues/useLeagues";
 import { LeagueGroup } from "@/components/dashboard/my-team/components/LeagueGroup";
 import { TeamHeader } from "@/components/dashboard/my-team/components/TeamHeader";
 import type { Sport } from "@/components/dashboard/my-team/components/PlayerCard";
@@ -9,101 +11,81 @@ import { EmptyPlayers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 
 type TeamLeague = {
-  leagueId: number;
+  leagueId: string;
   leagueName: string;
   sport: Sport;
   players: {
-    id: number;
+    id: string;
     name: string;
     position: string;
     totalPoints: number;
     avgPoints: number;
   }[];
+  teamName: string;
 };
 
-const mockTeams: TeamLeague[] = [
-  {
-    leagueId: 1,
-    leagueName: "Premier League Champions",
-    sport: "football",
-    players: [
-      {
-        id: 1,
-        name: "Lionel Messi",
-        position: "Forward",
-        totalPoints: 87,
-        avgPoints: 9.2,
-      },
-      {
-        id: 2,
-        name: "Cristiano Ronaldo",
-        position: "Forward",
-        totalPoints: 76,
-        avgPoints: 8.4,
-      },
-      {
-        id: 3,
-        name: "Kevin De Bruyne",
-        position: "Midfielder",
-        totalPoints: 65,
-        avgPoints: 7.2,
-      },
-    ],
-  },
-  {
-    leagueId: 2,
-    leagueName: "NBA Fantasy 2025",
-    sport: "basketball",
-    players: [
-      {
-        id: 4,
-        name: "LeBron James",
-        position: "Forward",
-        totalPoints: 142,
-        avgPoints: 15.8,
-      },
-      {
-        id: 5,
-        name: "Stephen Curry",
-        position: "Guard",
-        totalPoints: 128,
-        avgPoints: 14.2,
-      },
-    ],
-  },
-  {
-    leagueId: 3,
-    leagueName: "Cricket World Cup",
-    sport: "cricket",
-    players: [
-      {
-        id: 6,
-        name: "Virat Kohli",
-        position: "Batsman",
-        totalPoints: 94,
-        avgPoints: 10.4,
-      },
-      {
-        id: 7,
-        name: "Jasprit Bumrah",
-        position: "Bowler",
-        totalPoints: 67,
-        avgPoints: 7.4,
-      },
-    ],
-  },
-];
+const normalizeSport = (sportName?: string): Sport => {
+  if (
+    sportName === "football" ||
+    sportName === "basketball" ||
+    sportName === "cricket"
+  ) {
+    return sportName;
+  }
+  return "football";
+};
 
 export function MyTeam() {
   const { username } = useMe();
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: leagues,
+    isLoading: leaguesLoading,
+    error: leaguesError,
+  } = useMyLeagues();
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setIsLoading(false), 450);
-    return () => window.clearTimeout(timeout);
-  }, []);
+  const leagueIds = useMemo(
+    () => (leagues ?? []).map((league) => league.id),
+    [leagues],
+  );
+  const teamQueries = useMyTeamsForLeagues(leagueIds);
 
-  const teams = mockTeams;
+  const teams = useMemo<TeamLeague[]>(() => {
+    if (!leagues?.length) {
+      return [];
+    }
+
+    return leagues
+      .map((league, index) => {
+        const teamData = teamQueries[index]?.data;
+        if (!teamData) {
+          return null;
+        }
+
+        const rows = teamData.team_players ?? teamData.players ?? [];
+        const sport = normalizeSport(
+          league.sports?.[0]?.sport.name ?? rows[0]?.player?.sport?.name,
+        );
+
+        return {
+          leagueId: league.id,
+          leagueName: league.name,
+          sport,
+          teamName: teamData.name,
+          players: rows.map((teamPlayer) => ({
+            id: teamPlayer.player.id,
+            name: teamPlayer.player.name,
+            position: teamPlayer.player.position,
+            totalPoints: 0,
+            avgPoints: 0,
+          })),
+        };
+      })
+      .filter((team): team is TeamLeague => Boolean(team));
+  }, [leagues, teamQueries]);
+
+  const isTeamLoading = teamQueries.some((query) => query.isLoading);
+  const teamError = teamQueries.find((query) => query.error)?.error;
+  const isLoading = leaguesLoading || isTeamLoading;
 
   const totals = useMemo(() => {
     const allPlayers = teams.flatMap((team) => team.players);
@@ -115,16 +97,17 @@ export function MyTeam() {
   }, [teams]);
 
   const hasPlayers = totals.totalPlayers > 0;
+  const hasLeagues = (leagues?.length ?? 0) > 0;
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-gray-900">
       <div className="mb-5">
         <p className="text-sm text-gray-500">
           Manager: {username || "Sporty User"}
         </p>
       </div>
 
-      <TeamHeader totalPlayers={totals.totalPlayers} totalPoints={0} avgPointsPerGame={0} />
+      <TeamHeader totalPlayers={totals.totalPlayers} />
 
       {isLoading ? (
         <div className="mt-8 space-y-3">
@@ -132,16 +115,43 @@ export function MyTeam() {
             <PlayerCardSkeleton key={index} />
           ))}
         </div>
+      ) : leaguesError || teamError ? (
+        <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          Failed to load team data. Please try again.
+        </div>
+      ) : !hasLeagues ? (
+        <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-600">
+          You are not part of any leagues yet.
+        </div>
       ) : hasPlayers ? (
-        <div className="mt-8 space-y-8">
-          {teams.map((team) => (
-            <LeagueGroup
-              key={team.leagueId}
-              leagueName={team.leagueName}
-              players={team.players}
-              sport={team.sport}
-            />
-          ))}
+        <div className="mt-8">
+          <Carousel
+            withIndicators
+            slideSize="100%"
+            slideGap="md"
+            emblaOptions={{ loop: teams.length > 1, align: "start" }}
+          >
+            {teams.map((team) => (
+              <Carousel.Slide key={team.leagueId}>
+                <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm text-gray-500">
+                      Team: {team.teamName}
+                    </p>
+                    <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+                      League {team.leagueName}
+                    </span>
+                  </div>
+
+                  <LeagueGroup
+                    leagueName={team.leagueName}
+                    players={team.players}
+                    sport={team.sport}
+                  />
+                </div>
+              </Carousel.Slide>
+            ))}
+          </Carousel>
         </div>
       ) : (
         <div className="mt-8">

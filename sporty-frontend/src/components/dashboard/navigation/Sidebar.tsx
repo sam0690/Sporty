@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
+import { NotificationBell } from "@/components/dashboard/navigation/NotificationBell";
 import { cn } from "@/utils/classUtils";
 
 export type DashboardNavItem = {
@@ -37,16 +38,19 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-gray-100 bg-white md:block [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-gray-100 bg-white font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] md:block">
       <div className="relative h-full">
         <div className="p-6">
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center gap-2 text-xl font-medium tracking-tight text-gray-900 transition-opacity hover:opacity-80"
-          >
-            <span aria-hidden="true">⚽🏀🏏</span>
-            <span>Sporty</span>
-          </Link>
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-xl font-medium tracking-tight text-gray-900 transition-opacity hover:opacity-80"
+            >
+              <span aria-hidden="true">⚽🏀🏏</span>
+              <span>Sporty</span>
+            </Link>
+            <NotificationBell />
+          </div>
         </div>
 
         <nav

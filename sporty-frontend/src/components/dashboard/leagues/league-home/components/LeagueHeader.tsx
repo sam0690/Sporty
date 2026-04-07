@@ -1,6 +1,6 @@
 "use client";
 
-type Sport = "football" | "basketball" | "cricket";
+type Sport = "football" | "basketball";
 
 type LeagueHeaderProps = {
   leagueName: string;
@@ -12,7 +12,6 @@ type LeagueHeaderProps = {
 const sportIcons: Record<Sport, string> = {
   football: "⚽",
   basketball: "🏀",
-  cricket: "🏏",
 };
 
 export function LeagueHeader({
@@ -24,16 +23,24 @@ export function LeagueHeader({
   return (
     <header
       className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white px-5 py-4"
-      style={{ backgroundImage: "url('/images/landing/hero-stadium.svg')", backgroundSize: "cover", backgroundPosition: "center" }}
+      style={{
+        backgroundImage: "url('/images/landing/hero-stadium.svg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
       <div className="absolute inset-0 bg-white/90" aria-hidden="true" />
 
       <div className="relative flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-light tracking-tight text-gray-900">
-          {leagueName}
+            {leagueName}
           </h1>
-          <span className="text-lg leading-none" aria-label={sport} title={sport}>
+          <span
+            className="text-lg leading-none"
+            aria-label={sport}
+            title={sport}
+          >
             {sportIcons[sport]}
           </span>
         </div>

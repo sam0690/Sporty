@@ -20,8 +20,7 @@ type SportOption = {
 const sportOptions: SportOption[] = [
   { value: "football", label: "Football", icon: "⚽" },
   { value: "basketball", label: "Basketball", icon: "🏀" },
-  { value: "cricket", label: "Cricket", icon: "🏏" },
-  { value: "multisport", label: "Multi-Sport", icon: "⚽🏀🏏" },
+  { value: "multisport", label: "Multi-Sport", icon: "⚽🏀" },
 ];
 
 export function LeagueBasicInfo({
@@ -41,7 +40,10 @@ export function LeagueBasicInfo({
   return (
     <div className="space-y-6">
       <div>
-        <label htmlFor="league-name" className="mb-1 block text-sm text-gray-600">
+        <label
+          htmlFor="league-name"
+          className="mb-1 block text-sm text-gray-600"
+        >
           League Name
         </label>
         <input
@@ -53,7 +55,9 @@ export function LeagueBasicInfo({
           placeholder="Champions League 2025"
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
         />
-        <p className="mt-2 text-right text-xs text-gray-400">{leagueName.length}/50</p>
+        <p className="mt-2 text-right text-xs text-gray-400">
+          {leagueName.length}/50
+        </p>
       </div>
 
       <div>
@@ -67,13 +71,17 @@ export function LeagueBasicInfo({
                 type="button"
                 onClick={() => onSportChange(option.value)}
                 className={`rounded-xl border p-4 text-center transition-colors ${
-                  isSelected ? "border-primary-500 bg-primary-50" : "border-gray-200 hover:border-gray-300"
+                  isSelected
+                    ? "border-primary-500 bg-primary-50"
+                    : "border-gray-200 hover:border-gray-300"
                 }`}
               >
                 <span className="mb-2 block text-3xl" aria-hidden="true">
                   {option.icon}
                 </span>
-                <span className="text-sm font-medium text-gray-700">{option.label}</span>
+                <span className="text-sm font-medium text-gray-700">
+                  {option.label}
+                </span>
               </button>
             );
           })}
@@ -85,7 +93,10 @@ export function LeagueBasicInfo({
         <p className="mb-2 text-sm text-gray-600">League Logo</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="league-logo" className="mb-1 block text-xs uppercase tracking-widest text-gray-500">
+            <label
+              htmlFor="league-logo"
+              className="mb-1 block text-xs uppercase tracking-widest text-gray-500"
+            >
               Emoji/Icon
             </label>
             <input
@@ -97,7 +108,10 @@ export function LeagueBasicInfo({
             />
           </div>
           <div>
-            <label htmlFor="league-logo-upload" className="mb-1 block text-xs uppercase tracking-widest text-gray-500">
+            <label
+              htmlFor="league-logo-upload"
+              className="mb-1 block text-xs uppercase tracking-widest text-gray-500"
+            >
               Upload
             </label>
             <input
@@ -114,7 +128,9 @@ export function LeagueBasicInfo({
             />
           </div>
         </div>
-        <p className="mt-2 text-xs text-gray-400">Optional: add an emoji or upload a badge.</p>
+        <p className="mt-2 text-xs text-gray-400">
+          Optional: add an emoji or upload a badge.
+        </p>
       </div>
     </div>
   );

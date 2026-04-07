@@ -2,21 +2,28 @@
 
 import { useMemo } from "react";
 import { EmptyState } from "@/components/dashboard/create-team/components/EmptyState";
-import { PlayerCard, type MarketPlayer } from "@/components/dashboard/create-team/components/PlayerCard";
+import {
+  PlayerCard,
+  type MarketPlayer,
+} from "@/components/dashboard/create-team/components/PlayerCard";
 
 type PlayerMarketProps = {
   players: MarketPlayer[];
   onAddPlayer: (player: MarketPlayer) => void;
-  onRemovePlayer: (playerId: number) => void;
-  selectedPlayerIds: number[];
+  onRemovePlayer: (playerId: string) => void;
+  selectedPlayerIds: string[];
   sport: "football" | "basketball" | "cricket" | "multisport";
   remainingBudget: number;
   searchQuery: string;
   selectedPosition: string;
   selectedSport: string;
+  selectedCostFilter: "All" | "Under 5" | "5 - 8" | "Above 8";
   onSearchQueryChange: (value: string) => void;
   onPositionChange: (value: string) => void;
   onSportChange: (value: string) => void;
+  onCostFilterChange: (value: "All" | "Under 5" | "5 - 8" | "Above 8") => void;
+  canAddPlayers?: boolean;
+  addDisabledReason?: string;
 };
 
 export function PlayerMarket({
@@ -29,24 +36,36 @@ export function PlayerMarket({
   searchQuery,
   selectedPosition,
   selectedSport,
+  selectedCostFilter,
   onSearchQueryChange,
   onPositionChange,
   onSportChange,
+  onCostFilterChange,
+  canAddPlayers = true,
+  addDisabledReason = "Action unavailable",
 }: PlayerMarketProps) {
   const positions = useMemo(() => {
-    return ["All", ...Array.from(new Set(players.map((player) => player.position)))];
+    return [
+      "All",
+      ...Array.from(new Set(players.map((player) => player.position))),
+    ];
   }, [players]);
 
   const sports = useMemo(() => {
-    return ["All", ...Array.from(new Set(players.map((player) => player.sport)))];
+    return [
+      "All",
+      ...Array.from(new Set(players.map((player) => player.sport))),
+    ];
   }, [players]);
 
   const filteredPlayers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     return players.filter((player) => {
-      const searchOk = query.length === 0 || player.name.toLowerCase().includes(query);
-      const positionOk = selectedPosition === "All" || player.position === selectedPosition;
+      const searchOk =
+        query.length === 0 || player.name.toLowerCase().includes(query);
+      const positionOk =
+        selectedPosition === "All" || player.position === selectedPosition;
       const sportOk = selectedSport === "All" || player.sport === selectedSport;
       return searchOk && positionOk && sportOk;
     });
@@ -74,6 +93,22 @@ export function PlayerMarket({
               className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary-500 text-white" : "bg-white text-text-secondary hover:bg-surface-200"}`}
             >
               {position}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {(["All", "Under 5", "5 - 8", "Above 8"] as const).map((costBand) => {
+          const active = costBand === selectedCostFilter;
+          return (
+            <button
+              key={costBand}
+              type="button"
+              onClick={() => onCostFilterChange(costBand)}
+              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary-500 text-white" : "bg-white text-text-secondary hover:bg-surface-200"}`}
+            >
+              {costBand === "All" ? "All Costs" : `$${costBand}M`}
             </button>
           );
         })}
@@ -115,6 +150,8 @@ export function PlayerMarket({
                   isSelected={isSelected}
                   canAfford={canAfford}
                   showSportIcon={sport === "multisport"}
+                  canAddPlayer={canAddPlayers}
+                  addDisabledReason={addDisabledReason}
                 />
               );
             })}

@@ -39,6 +39,12 @@ class GooglePayload:
     picture: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class PasswordResetPayload:
+    """Decoded contents of a valid password reset JWT."""
+    sub: uuid.UUID
+
+
 # ── Password hashing ─────────────────────────────────────────────────────────
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -72,6 +78,14 @@ def create_refresh_token() -> str:
     return secrets.token_urlsafe(64)
 
 
+def create_password_reset_token(user_id: uuid.UUID) -> str:
+    """Create a short-lived password reset JWT."""
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": str(user_id), "exp": expire, "iat": now, "type": "password_reset"}
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
 def get_refresh_token_expires_at() -> datetime:
     """Single source of truth for refresh token expiry."""
     return datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
@@ -97,6 +111,24 @@ def decode_access_token(token: str) -> AccessTokenPayload | None:
         return AccessTokenPayload(
             sub=uuid.UUID(payload["sub"]),
         )
+    except (KeyError, ValueError):
+        return None
+
+
+def decode_password_reset_token(token: str) -> PasswordResetPayload | None:
+    """Decode and validate a password reset JWT."""
+    try:
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
+    except JWTError:
+        return None
+
+    if payload.get("type") != "password_reset":
+        return None
+
+    try:
+        return PasswordResetPayload(sub=uuid.UUID(payload["sub"]))
     except (KeyError, ValueError):
         return None
 

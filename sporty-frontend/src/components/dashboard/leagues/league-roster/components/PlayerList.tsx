@@ -48,14 +48,23 @@ function DraggablePlayerCard({ player }: DraggablePlayerCardProps) {
       {...draggable.listeners}
       {...draggable.attributes}
       className="cursor-grab rounded-lg border border-border bg-white p-3 shadow-card transition hover:shadow-card-hover"
-      title={`${player.name} | ${player.position} | Total ${player.totalPoints} | Avg ${player.avgPoints.toFixed(1)}`}
+      title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-text-primary">{player.name}</p>
-        <span className="text-base" aria-label={player.sport}>{sportIcons[player.sport]}</span>
+        <p className="truncate text-sm font-semibold text-text-primary">
+          {player.name}
+        </p>
+        <span className="text-base" aria-label={player.sport}>
+          {sportIcons[player.sport]}
+        </span>
       </div>
       <p className="mt-1 text-xs text-text-secondary">{player.position}</p>
-      <p className="mt-1 text-xs font-medium text-primary-600">{player.totalPoints} pts</p>
+      <p className="mt-1 truncate text-xs text-text-secondary">
+        {player.realTeam}
+      </p>
+      <p className="mt-1 text-xs font-medium text-primary-600">
+        Cost {player.cost}
+      </p>
     </article>
   );
 }
@@ -77,8 +86,10 @@ export function PlayerList({
 
     return players.filter((player) => {
       const sportOk = selectedSport === "All" || player.sport === selectedSport;
-      const positionOk = selectedPosition === "All" || player.position === selectedPosition;
-      const queryOk = lower.length === 0 || player.name.toLowerCase().includes(lower);
+      const positionOk =
+        selectedPosition === "All" || player.position === selectedPosition;
+      const queryOk =
+        lower.length === 0 || player.name.toLowerCase().includes(lower);
       return sportOk && positionOk && queryOk;
     });
   }, [players, selectedSport, selectedPosition, query]);
@@ -101,7 +112,9 @@ export function PlayerList({
       activeClassName="border-primary-500 bg-primary-50/40"
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-text-primary">Available Players</h3>
+        <h3 className="text-base font-semibold text-text-primary">
+          Available Players
+        </h3>
         <p className="text-xs text-text-secondary">Drop here to bench</p>
       </div>
 
@@ -119,7 +132,9 @@ export function PlayerList({
           className="rounded-lg border border-border bg-white px-2 py-2 text-xs text-text-primary"
         >
           {sports.map((sport) => (
-            <option key={sport} value={sport}>{sport}</option>
+            <option key={sport} value={sport}>
+              {sport}
+            </option>
           ))}
         </select>
         <select
@@ -128,7 +143,9 @@ export function PlayerList({
           className="rounded-lg border border-border bg-white px-2 py-2 text-xs text-text-primary"
         >
           {positions.map((position) => (
-            <option key={position} value={position}>{position}</option>
+            <option key={position} value={position}>
+              {position}
+            </option>
           ))}
         </select>
       </div>
@@ -152,11 +169,15 @@ export function PlayerList({
 
       <div className="max-h-[620px] space-y-4 overflow-y-auto pr-1">
         {Object.keys(groupedPlayers).length === 0 ? (
-          <p className="rounded-lg border border-border bg-white p-3 text-sm text-text-secondary">No players found.</p>
+          <p className="rounded-lg border border-border bg-white p-3 text-sm text-text-secondary">
+            No players found.
+          </p>
         ) : (
           Object.entries(groupedPlayers).map(([group, groupPlayers]) => (
             <section key={group} className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">{group}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+                {group}
+              </p>
               <div className="space-y-2">
                 {groupPlayers.map((player) => (
                   <DraggablePlayerCard key={player.id} player={player} />

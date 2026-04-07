@@ -14,7 +14,9 @@ from app.auth.schemas import (
     TokenResponse,
 )
 from app.core.security import (
+    create_password_reset_token,
     create_access_token,
+    decode_password_reset_token,
     hash_password,
     verify_google_id_token,
     verify_password,
@@ -244,3 +246,59 @@ def link_google_account(
     if avatar_url:
         user.avatar_url = avatar_url
     db.commit()
+
+
+def forgot_password(db: Session, email: str) -> dict:
+    """Create a password reset token (email delivery handled outside API layer)."""
+    user = (
+        db.query(User)
+        .filter(User.email == email, User.auth_provider == AuthProvider.LOCAL, User.is_active.is_(True))
+        .first()
+    )
+
+    # Always return a token-shaped response to avoid account enumeration.
+    subject_id = user.id if user else uuid.uuid4()
+    token = create_password_reset_token(subject_id)
+    return {
+        "detail": "If an account exists for this email, password reset instructions were sent.",
+        "reset_token": token,
+    }
+
+
+def reset_password(db: Session, token: str, new_password: str) -> None:
+    """Reset local user password using a signed short-lived reset token."""
+    payload = decode_password_reset_token(token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+
+    user = db.query(User).filter(User.id == payload.sub).first()
+    if not user or not user.is_active or user.auth_provider != AuthProvider.LOCAL:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token",
+        )
+
+    user.password_hash = hash_password(new_password)
+    db.commit()
+
+
+def change_password(db: Session, user_id: uuid.UUID, current_password: str, new_password: str) -> None:
+    """Change password for an authenticated local user."""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    if user.auth_provider != AuthProvider.LOCAL:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password change is only available for local accounts",
+        )
+    if not user.password_hash or not verify_password(current_password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid current password")
+
+    user.password_hash = hash_password(new_password)
+
+    # Revoke all sessions to force re-authentication after password change.
+    logout_all_devices(db, user.id)

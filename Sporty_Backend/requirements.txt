@@ -48,3 +48,5 @@ redis==5.0.1
 tenacity==9.1.4
 celery[redis]
 PuLP==2.9.0
+resend==2.13.0
+apscheduler==3.11.0

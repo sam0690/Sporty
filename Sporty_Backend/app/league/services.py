@@ -15,16 +15,19 @@ import logging
 import random
 import secrets
 import uuid
+from datetime import date
 from decimal import Decimal
 
 from fastapi import HTTPException, status
 from sqlalchemy import func, select
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy.orm import Session, joinedload, selectinload, with_loader_criteria
 
 from app.auth.models import User
 from app.league.models import (
+    BudgetTransaction,
     DraftPick,
     FantasyTeam,
+    TeamGameweekLineup,
     TransferWindow,
     League,
     LeagueMembership,
@@ -39,6 +42,7 @@ from app.league.models import (
 )
 from app.league.schemas import LeagueCreate, LineupSlotCreate
 from app.player.models import Player
+from app.services.budget_utils import calculate_refund
 
 
 # ── Reusable eager-loading option sets ──────────────────────────────
@@ -80,6 +84,18 @@ _TRANSFER_OPTIONS = (
 )
 
 logger = logging.getLogger(__name__)
+
+VALID_TRANSITIONS: dict[str, list[str]] = {
+    "setup": ["drafting", "active"],
+    "drafting": ["active"],
+    "active": ["completed"],
+    "completed": [],
+}
+
+SUPPORTED_LEAGUE_SPORTS = {"football", "basketball"}
+FLEXIBLE_TEAM_SPORTS = {"football", "basketball"}
+FLEXIBLE_TEAM_MIN_PLAYERS = 12
+FLEXIBLE_TEAM_MAX_PLAYERS = 15
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -224,6 +240,34 @@ def create_league(
     """
     invite_code = _generate_invite_code(db)
 
+    season = db.query(Season).filter(Season.id == data.season_id).first()
+    if not season:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Season not found",
+        )
+
+    season_sport = db.query(Sport).filter(Sport.id == season.sport_id).first()
+    if not season_sport:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Season sport not found",
+        )
+
+    if season_sport.name not in SUPPORTED_LEAGUE_SPORTS:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Sport '{season_sport.name}' is not supported",
+        )
+
+    league_start: date = data.start_date or season.start_date
+    league_end: date = data.end_date or season.end_date
+    if league_end < league_start:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="end_date must be on or after start_date",
+        )
+
     league = League(
         owner_id=owner.id,
         season_id=data.season_id,
@@ -237,9 +281,20 @@ def create_league(
         draft_mode=data.draft_mode,
         transfers_per_window=data.transfers_per_window,
         transfer_day=data.transfer_day,
+        start_date=league_start,
+        end_date=league_end,
     )
     db.add(league)
     db.flush()  # populate league.id for the membership FK
+
+    # Auto-attach the season's sport so league.sports is populated immediately.
+    db.add(
+        LeagueSport(
+            league_id=league.id,
+            sport_id=season.sport_id,
+        )
+    )
+    db.flush()
 
     # Auto-enrol owner
     membership = LeagueMembership(
@@ -287,7 +342,7 @@ def update_league_status(
     """Transition a league to a new lifecycle state.
 
     Valid transitions (enforced here, not at the DB level):
-        SETUP     → DRAFTING
+        SETUP     → DRAFTING | ACTIVE
         DRAFTING  → ACTIVE
         ACTIVE    → COMPLETED
         (no backward transitions — a completed league can't revert)
@@ -310,14 +365,8 @@ def update_league_status(
             detail="Only the league owner can change the status",
         )
 
-    allowed_transitions: dict[LeagueStatus, LeagueStatus] = {
-        LeagueStatus.SETUP: LeagueStatus.DRAFTING,
-        LeagueStatus.DRAFTING: LeagueStatus.ACTIVE,
-        LeagueStatus.ACTIVE: LeagueStatus.COMPLETED,
-    }
-
-    expected_next = allowed_transitions.get(league.status)
-    if expected_next is None or expected_next != new_status:
+    allowed_next = VALID_TRANSITIONS.get(league.status.value, [])
+    if new_status.value not in allowed_next:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
@@ -433,6 +482,62 @@ def get_members(
         .order_by(LeagueMembership.joined_at)
         .all()
     )
+
+
+def delete_league(
+    db: Session,
+    league_id: uuid.UUID,
+    current_user: User,
+) -> None:
+    """Delete a league and all related data.
+
+    Only the league owner can delete the league. Related rows are removed
+    via existing FK and ORM cascades.
+    """
+    league = _require_league(db, league_id)
+
+    if league.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the league owner can delete this league",
+        )
+
+    db.delete(league)
+    db.flush()
+
+
+def leave_league(
+    db: Session,
+    league_id: uuid.UUID,
+    current_user: User,
+) -> None:
+    """Leave a league for non-owner members.
+
+    Removes membership and the user's team (if present). Team-scoped rows such
+    as team players, transfers, lineups, and scores are cleaned up by cascade.
+    """
+    league = _require_league(db, league_id)
+    membership = _require_membership(db, league_id, current_user.id)
+
+    if league.owner_id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="League owner cannot leave the league",
+        )
+
+    team = (
+        db.query(FantasyTeam)
+        .filter(
+            FantasyTeam.league_id == league_id,
+            FantasyTeam.user_id == current_user.id,
+        )
+        .first()
+    )
+    if team:
+        db.delete(team)
+
+    db.delete(membership)
+    db.flush()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -609,51 +714,22 @@ def make_draft_pick(
             detail="League is not in DRAFTING status",
         )
 
-    # Fetch all members ordered by draft_position
-    members = (
-        db.query(LeagueMembership)
-        .filter(LeagueMembership.league_id == league_id)
-        .order_by(LeagueMembership.draft_position)
-        .all()
-    )
-    n_members = len(members)
-    total_picks_possible = n_members * league.squad_size
-
-    # What pick number are we on?
-    picks_made = (
-        db.query(func.count(DraftPick.id))
-        .filter(DraftPick.league_id == league_id)
-        .scalar()
-    )
-
-    if picks_made >= total_picks_possible:
+    turn = get_current_draft_turn(db, league_id)
+    if turn["is_draft_complete"]:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Draft is complete — all picks have been made",
         )
 
-    next_pick_number = picks_made + 1
-    round_number = ((next_pick_number - 1) // n_members) + 1
-
-    # Snake: odd rounds ascending, even rounds descending
-    index_in_round = (next_pick_number - 1) % n_members
-    if round_number % 2 == 1:
-        # Odd round: draft_position 1, 2, 3, …, N
-        expected_draft_pos = index_in_round + 1
-    else:
-        # Even round: draft_position N, N-1, …, 1
-        expected_draft_pos = n_members - index_in_round
-
-    # Whose turn is it?
-    picking_member = next(
-        (m for m in members if m.draft_position == expected_draft_pos),
-        None,
-    )
-    if not picking_member or picking_member.user_id != current_user.id:
+    if turn["current_turn_user_id"] != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="It is not your turn to pick",
         )
+
+    next_pick_number = int(turn["next_pick_number"])
+    round_number = int(turn["round_number"])
+    total_picks_possible = int(turn["total_picks_possible"])
 
     # Validate player
     player = db.query(Player).filter(Player.id == player_id).first()
@@ -945,18 +1021,15 @@ def make_transfer(
         )
 
     # ── Budget check ────────────────────────────────────────────────
-    # Refund the outgoing player's acquisition cost, deduct incoming cost
-    budget_after = (
-        team.current_budget
-        + team_player_out.cost_at_acquisition
-        - player_in.cost
-    )
+    # Refund outgoing player with fixed transaction penalty.
+    refund_amount, penalty = calculate_refund(team_player_out.cost_at_acquisition)
+    budget_after = team.current_budget + refund_amount - player_in.cost
     if budget_after < 0:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=(
                 f"Insufficient budget: releasing gives back "
-                f"{team_player_out.cost_at_acquisition}, incoming costs "
+                f"{refund_amount} (penalty {penalty}), incoming costs "
                 f"{player_in.cost}, shortfall of {abs(budget_after)}"
             ),
         )
@@ -974,6 +1047,27 @@ def make_transfer(
         cost_at_acquisition=player_in.cost,
     )
     db.add(team_player_in)
+
+    db.add(
+        BudgetTransaction(
+            fantasy_team_id=team.id,
+            player_id=player_out_id,
+            transfer_window_id=window.id,
+            transaction_type="transfer_out_refund",
+            amount=refund_amount,
+            penalty_applied=penalty,
+        )
+    )
+    db.add(
+        BudgetTransaction(
+            fantasy_team_id=team.id,
+            player_id=player_in_id,
+            transfer_window_id=window.id,
+            transaction_type="transfer_in_cost",
+            amount=player_in.cost,
+            penalty_applied=Decimal("0.00"),
+        )
+    )
 
     # Update budget
     team.current_budget = budget_after
@@ -1067,6 +1161,12 @@ def add_sport(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Sport '{sport_name}' is currently disabled",
+        )
+
+    if sport.name not in SUPPORTED_LEAGUE_SPORTS:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Sport '{sport_name}' is not supported",
         )
 
     existing = (
@@ -1317,6 +1417,22 @@ def generate_transfer_windows(
             status_code=status.HTTP_409_CONFLICT,
             detail="League has no associated season",
         )
+
+    # Idempotency: transfer windows are unique by (season_id, number).
+    # If they already exist for this season, reuse them instead of re-inserting.
+    existing_windows = (
+        db.query(TransferWindow)
+        .filter(TransferWindow.season_id == season.id)
+        .order_by(TransferWindow.number.asc())
+        .all()
+    )
+    if existing_windows:
+        logger.info(
+            "Transfer windows already exist for season=%s, reusing %d windows",
+            season.id,
+            len(existing_windows),
+        )
+        return existing_windows
     
     # Calculate transfer windows
     # Each window is a single day on the designated weekday
@@ -1434,7 +1550,27 @@ def build_initial_team(
         )
     
     # Validate squad size
-    if len(player_ids) != league.squad_size:
+    league_sport_names = {
+        sport.name
+        for sport in (
+            db.query(Sport)
+            .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+            .filter(LeagueSport.league_id == league_id)
+            .all()
+        )
+    }
+    uses_flexible_team_size = bool(league_sport_names & FLEXIBLE_TEAM_SPORTS)
+
+    if uses_flexible_team_size:
+        if not (FLEXIBLE_TEAM_MIN_PLAYERS <= len(player_ids) <= FLEXIBLE_TEAM_MAX_PLAYERS):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Must select between {FLEXIBLE_TEAM_MIN_PLAYERS} "
+                    f"and {FLEXIBLE_TEAM_MAX_PLAYERS} players"
+                ),
+            )
+    elif len(player_ids) != league.squad_size:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Must select exactly {league.squad_size} players",
@@ -1470,6 +1606,7 @@ def build_initial_team(
     
     # Validate each player
     total_cost = Decimal("0.00")
+    picked_counts: dict[tuple[uuid.UUID, str], int] = {}
     for player in players:
         if not player.is_available:
             raise HTTPException(
@@ -1482,8 +1619,40 @@ def build_initial_team(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Player {player.name}'s sport is not part of this league",
             )
+
+        key = (player.sport_id, player.position.strip().upper())
+        picked_counts[key] = picked_counts.get(key, 0) + 1
         
         total_cost += player.cost
+
+    # Enforce position constraints only when lineup slots are configured.
+    lineup_slots = (
+        db.query(LineupSlot)
+        .filter(LineupSlot.league_id == league_id)
+        .all()
+    )
+    if lineup_slots:
+        for slot in lineup_slots:
+            slot_key = (slot.sport_id, slot.position.strip().upper())
+            count = picked_counts.get(slot_key, 0)
+
+            if count < slot.min_count:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Position constraint not met for {slot.position}: "
+                        f"minimum {slot.min_count}, selected {count}"
+                    ),
+                )
+
+            if count > slot.max_count:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Position constraint exceeded for {slot.position}: "
+                        f"maximum {slot.max_count}, selected {count}"
+                    ),
+                )
     
     # Budget check
     if total_cost > league.budget_per_team:
@@ -1517,6 +1686,15 @@ def build_initial_team(
     
     # Add all players to the team
     for player in players:
+        db.add(
+            BudgetTransaction(
+                fantasy_team_id=team.id,
+                player_id=player.id,
+                transaction_type="purchase",
+                amount=player.cost,
+                penalty_applied=Decimal("0.00"),
+            )
+        )
         team_player = TeamPlayer(
             fantasy_team_id=team.id,
             player_id=player.id,
@@ -1534,11 +1712,155 @@ def build_initial_team(
     return team
 
 
+def get_current_draft_turn(db: Session, league_id: uuid.UUID) -> dict:
+    """Return current draft turn metadata for polling clients."""
+    league = _require_league(db, league_id)
+
+    members = (
+        db.query(LeagueMembership)
+        .filter(LeagueMembership.league_id == league_id)
+        .order_by(LeagueMembership.draft_position)
+        .all()
+    )
+    n_members = len(members)
+    total_picks_possible = n_members * league.squad_size if n_members else 0
+
+    picks_made = (
+        db.query(func.count(DraftPick.id))
+        .filter(DraftPick.league_id == league_id)
+        .scalar()
+    )
+
+    is_complete = picks_made >= total_picks_possible if total_picks_possible else False
+    next_pick_number = picks_made + 1
+    round_number = ((next_pick_number - 1) // n_members) + 1 if n_members else 1
+
+    current_turn_user_id = None
+    if not is_complete and n_members > 0:
+        index_in_round = (next_pick_number - 1) % n_members
+        # Keep existing snake behavior: odd rounds ascending, even rounds descending.
+        expected_draft_pos = index_in_round + 1 if round_number % 2 == 1 else n_members - index_in_round
+        picking_member = next((m for m in members if m.draft_position == expected_draft_pos), None)
+        current_turn_user_id = picking_member.user_id if picking_member else None
+
+    return {
+        "league_id": league_id,
+        "current_turn_user_id": current_turn_user_id,
+        "next_pick_number": next_pick_number,
+        "round_number": round_number,
+        "is_draft_complete": is_complete,
+        "total_picks_possible": total_picks_possible,
+    }
+
+
+def discard_team_player(
+    db: Session,
+    league_id: uuid.UUID,
+    player_id: uuid.UUID,
+    current_user: User,
+) -> dict:
+    """Discard player from setup budget squad and apply refund minus penalty."""
+    league = _require_league(db, league_id)
+
+    if league.status != LeagueStatus.SETUP:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Players can only be discarded during SETUP",
+        )
+
+    if league.draft_mode:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Discard is only available in budget-mode leagues",
+        )
+
+    team = _require_fantasy_team(db, league_id, current_user.id)
+
+    team_player = (
+        db.query(TeamPlayer)
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.player_id == player_id,
+            TeamPlayer.released_window_id.is_(None),
+        )
+        .first()
+    )
+    if not team_player:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Player is not in your squad",
+        )
+
+    refund, penalty = calculate_refund(team_player.cost_at_acquisition)
+    team.current_budget += refund
+
+    db.add(
+        BudgetTransaction(
+            fantasy_team_id=team.id,
+            player_id=player_id,
+            transaction_type="discard",
+            amount=refund,
+            penalty_applied=penalty,
+        )
+    )
+
+    db.delete(team_player)
+    db.flush()
+
+    return {
+        "message": "Player discarded successfully",
+        "refund": refund,
+        "penalty_applied": penalty,
+        "remaining_budget": team.current_budget,
+    }
+
+
+def get_user_team(
+    db: Session,
+    league_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> FantasyTeam:
+    """Return the current user's fantasy team in a league.
+
+    Used by GET /leagues/{league_id}/my-team.
+    """
+    _require_membership(db, league_id, user_id)
+
+    team = (
+        db.query(FantasyTeam)
+        .options(
+            joinedload(FantasyTeam.user),
+            selectinload(FantasyTeam.team_players)
+            .joinedload(TeamPlayer.player)
+            .joinedload(Player.sport),
+            with_loader_criteria(
+                TeamPlayer,
+                TeamPlayer.released_window_id.is_(None),
+                include_aliases=True,
+            ),
+        )
+        .filter(
+            FantasyTeam.league_id == league_id,
+            FantasyTeam.user_id == user_id,
+        )
+        .first()
+    )
+    if not team:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="You don't have a fantasy team in this league",
+        )
+
+    return team
+
+
 def get_active_seasons(db: Session) -> list[Season]:
     """Return all active seasons across all sports."""
     return (
         db.query(Season)
+        .join(Sport, Season.sport_id == Sport.id)
         .filter(Season.is_active.is_(True))
+        .filter(Sport.name.in_(SUPPORTED_LEAGUE_SPORTS))
         .order_by(Season.name.asc())
         .all()
     )
@@ -1549,6 +1871,7 @@ def get_active_sports(db: Session) -> list[Sport]:
     return (
         db.query(Sport)
         .filter(Sport.is_active.is_(True))
+        .filter(Sport.name.in_(SUPPORTED_LEAGUE_SPORTS))
         .order_by(Sport.display_name.asc())
         .all()
     )
@@ -1573,10 +1896,22 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
         .all()
     )
 
+    squad_players = (
+        db.query(TeamPlayer)
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.released_window_id.is_(None),
+        )
+        .options(joinedload(TeamPlayer.player).joinedload(Player.sport))
+        .order_by(TeamPlayer.created_at.asc())
+        .all()
+    )
+
     return {
         "fantasy_team_id": team.id,
         "transfer_window_id": window.id,
         "entries": entries,
+        "squad_players": squad_players,
     }
 
 
@@ -1608,7 +1943,7 @@ def update_lineup(
         )
 
     # 1. Verify all player_ids belong to the team
-    owned_player_ids = {tp.player_id for tp in team.players}
+    owned_player_ids = {tp.player_id for tp in team.team_players if tp.released_window_id is None}
     if not all(pid in owned_player_ids for pid in player_ids):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -1679,6 +2014,7 @@ def get_league_leaderboard(
                 TeamWeeklyScore.points.label("points"),
                 TeamWeeklyScore.rank_in_league.label("rank"),
             )
+            .select_from(TeamWeeklyScore)
             .join(FantasyTeam, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
             .join(User, FantasyTeam.user_id == User.id)
             .filter(FantasyTeam.league_id == league_id)
@@ -1687,18 +2023,19 @@ def get_league_leaderboard(
         )
     else:
         # 2. Total season standing (sum of points)
+        total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
         query = (
             db.query(
                 FantasyTeam.id.label("team_id"),
                 FantasyTeam.name.label("team_name"),
                 User.username.label("owner_name"),
-                func.coalesce(func.sum(TeamWeeklyScore.points), 0).label("points"),
+                total_points.label("points"),
             )
             .join(User, FantasyTeam.user_id == User.id)
             .outerjoin(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
             .filter(FantasyTeam.league_id == league_id)
             .group_by(FantasyTeam.id, User.username)
-            .order_by(func.desc("points"))
+            .order_by(total_points.desc())
         )
     
     results = query.all()
@@ -1739,4 +2076,23 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
         "lineup_deadline_at": window.lineup_deadline_at,
         "lineup_locked": window.lineup_locked
     }
+
+
+def is_transfer_window_active(db: Session, league_id: uuid.UUID) -> bool:
+    """Return whether any transfer window is open now for the league's season."""
+    from datetime import datetime, timezone
+
+    league = _require_league(db, league_id)
+    now = datetime.now(timezone.utc)
+
+    row = (
+        db.query(TransferWindow.id)
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            TransferWindow.start_at <= now,
+            TransferWindow.end_at >= now,
+        )
+        .first()
+    )
+    return row is not None
 

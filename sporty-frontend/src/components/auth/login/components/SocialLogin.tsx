@@ -31,7 +31,7 @@ export function SocialLogin() {
         return;
       }
 
-      router.push("/dashboard");
+      router.replace("/dashboard");
     });
   };
 

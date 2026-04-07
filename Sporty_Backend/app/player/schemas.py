@@ -93,7 +93,7 @@ class PlayerFilter(BaseModel):
             TeamPlayer.fantasy_team_id.in_(
                 select(FantasyTeam.id).where(FantasyTeam.league_id == league_id)
             ),
-            TeamPlayer.released_gameweek_id.is_(None),  # still active
+            TeamPlayer.released_window_id.is_(None),  # still active
         )
         query = query.where(Player.id.not_in(subq))
 
@@ -241,3 +241,23 @@ class PlayerGameweekStatResponse(BaseModel):
     cricket_stat: CricketStatResponse | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class PlayerPriceHistoryItem(BaseModel):
+    """Immutable player price movement record."""
+
+    old_cost: Decimal
+    new_cost: Decimal
+    delta: Decimal
+    weighted_points: Decimal | None = None
+    algorithm_version: str
+    created_at: datetime
+    transfer_window: TransferWindowBrief | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PlayerPriceHistoryResponse(BaseModel):
+    """Recent player price history for market charts and audit views."""
+
+    items: list[PlayerPriceHistoryItem]

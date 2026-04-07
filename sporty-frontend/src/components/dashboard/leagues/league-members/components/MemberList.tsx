@@ -1,16 +1,25 @@
 "use client";
 
-import { MemberCard, type Member } from "@/components/dashboard/leagues/league-members/components/MemberCard";
+import {
+  MemberCard,
+  type Member,
+} from "@/components/dashboard/leagues/league-members/components/MemberCard";
 
 type MemberListProps = {
   members: Member[];
-  commissionerId: number;
-  selfId: number;
+  commissionerId: string;
+  selfId: string;
   isCommissioner: boolean;
   onKick: (member: Member) => void;
 };
 
-export function MemberList({ members, commissionerId, selfId, isCommissioner, onKick }: MemberListProps) {
+export function MemberList({
+  members,
+  commissionerId,
+  selfId,
+  isCommissioner,
+  onKick,
+}: MemberListProps) {
   return (
     <div className="space-y-3">
       {members.map((member) => (

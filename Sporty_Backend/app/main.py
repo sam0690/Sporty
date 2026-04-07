@@ -77,7 +77,11 @@ Lifespan (asynccontextmanager):
 """
 
 from contextlib import asynccontextmanager
+import asyncio
+import logging
+import os
 
+from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -86,20 +90,94 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.auth.models import User, RefreshToken  # noqa: F401
 from app.league.models import (  # noqa: F401
     Sport, Season, TransferWindow, League, LeagueSport, LineupSlot,
-    LeagueMembership, FantasyTeam, TeamPlayer, Transfer, 
+  LeagueMembership, FantasyTeam, TeamPlayer, Transfer, BudgetTransaction,
     TeamGameweekLineup, TeamWeeklyScore
 )
 from app.match.models import Match  # noqa: F401
-from app.player.models import Player, PlayerGameweekStat, FootballStat, CricketStat  # noqa: F401
+from app.player.models import (  # noqa: F401
+  Player,
+  PlayerGameweekStat,
+  FootballStat,
+  CricketStat,
+  PlayerPriceHistory,
+)
 from app.player.models_nba import NBAStat  # noqa: F401
+from app.notification.models import Notification  # noqa: F401
 from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+from app.database import SessionLocal
+from app.core.redis import get_redis
+from app.services.league_status_service import auto_update_league_statuses
+from app.services.cache_warming_service import warm_cache
+from app.services.notification_service import check_and_notify_open_windows
+from app.services.price_update_service import update_player_prices
 
 # Import routers AFTER models are registered
 from app.auth.router import router as auth_router
 from app.league.router import router as league_router
 from app.optimization.router import router as optimization_router
 from app.player.router import router as player_router
+from app.notification.router import router as notification_router
 from app.scoring.router import router as scoring_router
+from app.user.router import router as user_router
+from app.api.v1.transfers import router as transfers_router
+
+logger = logging.getLogger(__name__)
+
+
+def _run_transfer_window_notification_job() -> None:
+  db = SessionLocal()
+  try:
+    stats = check_and_notify_open_windows(db)
+    db.commit()
+    logger.info(
+      "Daily transfer-window notification job completed: %s",
+      stats,
+    )
+  except Exception:
+    db.rollback()
+    logger.exception("Daily transfer-window notification job failed")
+  finally:
+    db.close()
+
+
+def _run_league_lifecycle_job() -> None:
+  db = SessionLocal()
+  try:
+    stats = auto_update_league_statuses(db)
+    logger.info(
+      "Daily league lifecycle job completed: %s",
+      stats,
+    )
+  except Exception:
+    db.rollback()
+    logger.exception("Daily league lifecycle job failed")
+  finally:
+    db.close()
+
+
+def _run_cache_warming_job() -> None:
+  db = SessionLocal()
+  try:
+    redis = get_redis()
+    stats = asyncio.run(warm_cache(db, redis))
+    logger.info("Cache warming job completed: %s", stats)
+  except Exception:
+    logger.exception("Cache warming job failed")
+  finally:
+    db.close()
+
+
+def _run_price_update_job() -> None:
+  db = SessionLocal()
+  try:
+    redis = get_redis()
+    stats = asyncio.run(update_player_prices(db, redis))
+    logger.info("Price update job completed: %s", stats)
+  except Exception:
+    db.rollback()
+    logger.exception("Price update job failed")
+  finally:
+    db.close()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -111,12 +189,46 @@ from app.scoring.router import router as scoring_router
 async def lifespan(app: FastAPI):
     # ── Startup ─────────────────────────────────────────────────────
     # Future: verify DB connection, run Alembic check, warm caches.
-    # For now this is a no-op placeholder — the important thing is
-    # the STRUCTURE exists so adding startup logic later doesn't
-    # require refactoring main.py.
+    scheduler = BackgroundScheduler(timezone="UTC")
+    scheduler.add_job(
+      _run_transfer_window_notification_job,
+      trigger="cron",
+      hour=8,
+      minute=0,
+      id="daily_transfer_window_notifications",
+      replace_existing=True,
+    )
+    scheduler.add_job(
+      _run_league_lifecycle_job,
+      trigger="cron",
+      hour=0,
+      minute=0,
+      id="daily_league_lifecycle",
+      replace_existing=True,
+    )
+    scheduler.add_job(
+      _run_cache_warming_job,
+      trigger="cron",
+      hour=0,
+      minute=5,
+      id="daily_cache_warming",
+      replace_existing=True,
+    )
+    scheduler.add_job(
+      _run_price_update_job,
+      trigger="cron",
+      hour="*/4",
+      minute=0,
+      id="price_update_every_4h",
+      replace_existing=True,
+    )
+    scheduler.start()
+    logger.info("APScheduler started with transfer, lifecycle, cache warming, and price-update jobs")
+
     yield
     # ── Shutdown ────────────────────────────────────────────────────
-    # Future: close connection pools, flush caches, cancel tasks.
+    scheduler.shutdown(wait=False)
+    logger.info("APScheduler shut down")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -139,11 +251,28 @@ app = FastAPI(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+default_origins = (
+  "http://localhost:5173,"
+  "http://127.0.0.1:5173,"
+  "http://localhost:3000,"
+  "http://127.0.0.1:3000"
+)
+raw_origins = os.getenv("CORS_ALLOW_ORIGINS", default_origins)
+allow_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
+if not allow_origins:
+    allow_origins = [origin.strip() for origin in default_origins.split(",")]
+
+default_origin_regex = r"https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.\d+\.\d+)(:\d+)?"
+allow_origin_regex = (os.getenv("CORS_ALLOW_ORIGIN_REGEX") or "").strip() or default_origin_regex
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],        # TODO: lock down to actual frontend origin in prod
+    allow_origins=allow_origins,
+  # Helpful in local dev when frontend runs on a different localhost/LAN port.
+    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
+  # Includes Authorization so JWT-bearing requests are accepted.
     allow_headers=["*"],
 )
 
@@ -157,7 +286,10 @@ app.include_router(auth_router,    prefix="/api/v1")
 app.include_router(league_router,  prefix="/api/v1")
 app.include_router(optimization_router, prefix="/api/v1")
 app.include_router(player_router,  prefix="/api/v1")
+app.include_router(notification_router, prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
+app.include_router(user_router, prefix="/api/v1")
+app.include_router(transfers_router, prefix="/api/v1")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

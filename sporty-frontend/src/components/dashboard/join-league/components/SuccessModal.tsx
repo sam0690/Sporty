@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 
 type JoinedLeague = {
-  id: number;
+  id?: string;
   name: string;
   sport: "football" | "basketball" | "cricket" | "multisport";
   teamName?: string;
@@ -16,7 +16,11 @@ type SuccessModalProps = {
   leagueData: JoinedLeague | null;
 };
 
-export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps) {
+export function SuccessModal({
+  isOpen,
+  onClose,
+  leagueData,
+}: SuccessModalProps) {
   const router = useRouter();
 
   if (!isOpen || !leagueData) {
@@ -26,21 +30,31 @@ export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
       <div className="animate-fade-in-scale w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl">
-        <div className="mb-4 text-4xl text-green-500" aria-hidden="true">✅</div>
-        <h2 className="text-xl font-medium text-gray-900">Successfully Joined!</h2>
+        <div className="mb-4 text-4xl text-green-500" aria-hidden="true">
+          ✅
+        </div>
+        <h2 className="text-xl font-medium text-gray-900">
+          Successfully Joined!
+        </h2>
         <p className="mt-2 font-medium text-primary-600">{leagueData.name}</p>
-        <p className="mt-1 text-sm text-gray-600">Team: {leagueData.teamName ?? "Not assigned yet"}</p>
+        <p className="mt-1 text-sm text-gray-600">
+          Team: {leagueData.teamName ?? "Not assigned yet"}
+        </p>
 
         <div className="mt-6 space-y-2">
           <button
             type="button"
             onClick={() => {
-              if (leagueData.requiresTeamCreation) {
+              if (leagueData.requiresTeamCreation && leagueData.id) {
                 router.push(`/create-team?leagueId=${leagueData.id}`);
                 return;
               }
 
-              router.push(`/league/${leagueData.id}`);
+              if (leagueData.id) {
+                router.push(`/leagues/${leagueData.id}`);
+                return;
+              }
+              router.push(`/leagues`);
             }}
             className="w-full rounded-full bg-primary-600 px-6 py-2 font-medium text-white transition-colors hover:bg-primary-700"
           >
@@ -49,7 +63,13 @@ export function SuccessModal({ isOpen, onClose, leagueData }: SuccessModalProps)
 
           <button
             type="button"
-            onClick={() => router.push(`/league/${leagueData.id}/lineup`)}
+            onClick={() => {
+              if (leagueData.id) {
+                router.push(`/leagues/${leagueData.id}/lineup`);
+                return;
+              }
+              router.push(`/leagues`);
+            }}
             className="w-full rounded-full border border-gray-300 bg-white px-6 py-2 font-semibold text-gray-800 transition-colors hover:border-primary-500"
           >
             Set Lineup

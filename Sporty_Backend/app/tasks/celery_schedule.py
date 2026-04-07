@@ -52,4 +52,10 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 600.0,
         "args": (),
     },
+    # Reprice player market values from recent transfer-window performance.
+    "recalculate-player-prices-daily": {
+        "task": "pricing.recalculate",
+        "schedule": crontab(minute=30, hour=4),
+        "args": (3,),
+    },
 }

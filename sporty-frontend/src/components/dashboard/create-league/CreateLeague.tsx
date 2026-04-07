@@ -9,8 +9,9 @@ import { ScoringSettings } from "@/components/dashboard/create-league/components
 import { SummaryStep } from "@/components/dashboard/create-league/components/SummaryStep";
 import { SuccessModal } from "@/components/dashboard/create-league/components/SuccessModal";
 import { useSeasons, useCreateLeague } from "@/hooks/leagues/useLeagues";
+import type { TCompetitionType } from "@/types";
 
-type SportKey = "football" | "basketball" | "cricket" | "multisport";
+type SportKey = "football" | "basketball" | "multisport";
 
 type LeagueData = {
   leagueName: string;
@@ -19,7 +20,7 @@ type LeagueData = {
   leagueLogo: string;
   isPrivate: boolean;
   teamSize: number;
-  draftType: "snake" | "budget";
+  competitionType: TCompetitionType;
   draftDate: string;
   scoringRules: Record<string, number>;
 };
@@ -37,12 +38,6 @@ const scoringDefaults: Record<SportKey, Record<string, number>> = {
     Assist: 1.5,
     Steal: 2,
     Block: 2,
-  },
-  cricket: {
-    Run: 1,
-    Wicket: 20,
-    Catch: 5,
-    "Run Out": 5,
   },
   multisport: {
     Goal: 5,
@@ -65,7 +60,7 @@ export function CreateLeague() {
     leagueLogo: "",
     isPrivate: false,
     teamSize: 10,
-    draftType: "snake",
+    competitionType: "draft",
     draftDate: "",
     scoringRules: scoringDefaults.football,
   });
@@ -84,11 +79,15 @@ export function CreateLeague() {
   // Auto-select first season for the chosen sport if not set
   useEffect(() => {
     if (seasons && seasons.length > 0) {
-      const sportSeasons = seasons.filter(s => s.name.toLowerCase().includes(leagueData.sport) || seasons.length === 1);
+      const sportSeasons = seasons.filter(
+        (s) =>
+          s.name.toLowerCase().includes(leagueData.sport) ||
+          seasons.length === 1,
+      );
       if (sportSeasons.length > 0 && !leagueData.seasonId) {
-        setLeagueData(prev => ({ ...prev, seasonId: sportSeasons[0].id }));
+        setLeagueData((prev) => ({ ...prev, seasonId: sportSeasons[0].id }));
       } else if (seasons.length > 0 && !leagueData.seasonId) {
-        setLeagueData(prev => ({ ...prev, seasonId: seasons[0].id }));
+        setLeagueData((prev) => ({ ...prev, seasonId: seasons[0].id }));
       }
     }
   }, [seasons, leagueData.sport]);
@@ -104,10 +103,7 @@ export function CreateLeague() {
       errors.push("A valid season must be active for this sport.");
     }
 
-    if (
-      leagueData.teamSize < 2 ||
-      leagueData.teamSize > 64
-    ) {
+    if (leagueData.teamSize < 2 || leagueData.teamSize > 64) {
       errors.push("Team size must be between 2 and 64.");
     }
 
@@ -121,7 +117,9 @@ export function CreateLeague() {
         return;
       }
       if (!leagueData.seasonId) {
-        setError("No active season found for this sport. Please contact admin.");
+        setError(
+          "No active season found for this sport. Please contact admin.",
+        );
         return;
       }
     }
@@ -143,12 +141,14 @@ export function CreateLeague() {
 
     setError(null);
     try {
+      const competitionType = leagueData.competitionType;
       const result = await createMutation.mutateAsync({
         name: leagueData.leagueName,
         season_id: leagueData.seasonId,
+        competitionType,
         is_public: !leagueData.isPrivate,
         max_teams: leagueData.teamSize,
-        draft_mode: leagueData.draftType === "snake",
+        draft_mode: competitionType === "draft",
         // Default values for other fields
         squad_size: 15,
         budget_per_team: 100,
@@ -164,7 +164,9 @@ export function CreateLeague() {
       });
       setShowSuccessModal(true);
     } catch (err: any) {
-      setError(err?.response?.data?.detail || err.message || "Failed to create league");
+      setError(
+        err?.response?.data?.detail || err.message || "Failed to create league",
+      );
     }
   };
 
@@ -186,7 +188,7 @@ export function CreateLeague() {
   const handleSettingsChange = (next: {
     isPrivate?: boolean;
     teamSize?: number;
-    draftType?: "snake" | "budget";
+    competitionType?: TCompetitionType;
     draftDate?: string;
   }) => {
     setLeagueData((prev) => ({
@@ -196,7 +198,7 @@ export function CreateLeague() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system]">
+    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-gray-900 font-[system-ui,-apple-system]">
       <p className="text-sm text-gray-500">
         Manager: {username || "Sporty User"}
       </p>
@@ -213,7 +215,7 @@ export function CreateLeague() {
         </div>
       ) : null}
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-8 [animation:fade-soft_0.2s_ease]">
+      <div className="rounded-2xl border border-gray-100 bg-white p-8 animate-[fade-soft_0.2s_ease]">
         <div className="mt-2">
           {step === 1 ? (
             <LeagueBasicInfo
@@ -232,7 +234,7 @@ export function CreateLeague() {
             <LeagueSettings
               isPrivate={leagueData.isPrivate}
               teamSize={leagueData.teamSize}
-              draftType={leagueData.draftType}
+              competitionType={leagueData.competitionType}
               draftDate={leagueData.draftDate}
               onSettingsChange={handleSettingsChange as any}
             />

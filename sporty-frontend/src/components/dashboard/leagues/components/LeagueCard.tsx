@@ -60,11 +60,11 @@ export function LeagueCard({
     <article
       role="button"
       tabIndex={0}
-      onClick={() => router.push(`/league/${id}`)}
+      onClick={() => router.push(`/leagues/${id}`)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          router.push(`/league/${id}`);
+          router.push(`/leagues/${id}`);
         }
       }}
       className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white opacity-0 transition-all duration-200 hover:shadow-md animate-fade-soft"
@@ -84,7 +84,10 @@ export function LeagueCard({
       <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-md font-medium text-gray-900">{name}</h3>
-          <span className="inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-xs" aria-label={sport}>
+          <span
+            className="inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-xs"
+            aria-label={sport}
+          >
             {sportIcons[sport]}
           </span>
         </div>
@@ -99,7 +102,9 @@ export function LeagueCard({
             <span>{rankIcon(yourRank)}</span>
             <span>Rank #{yourRank}</span>
           </div>
-          <span className="text-sm text-gray-400 transition-colors group-hover:text-primary-500">View</span>
+          <span className="text-sm text-gray-400 transition-colors group-hover:text-primary-500">
+            View
+          </span>
         </div>
       </div>
     </article>

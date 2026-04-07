@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { PlayerCard, type Sport } from "@/components/dashboard/my-team/components/PlayerCard";
+import {
+  PlayerCard,
+  type Sport,
+} from "@/components/dashboard/my-team/components/PlayerCard";
 
 type LeaguePlayer = {
-  id: number;
+  id: string;
   name: string;
   position: string;
   totalPoints: number;
@@ -45,7 +48,9 @@ export function LeagueGroup({ leagueName, players, sport }: LeagueGroupProps) {
 
         <header className="relative z-10 flex h-full items-center justify-between gap-3 px-4">
           <div className="flex items-center gap-2">
-            <span className="text-base" aria-hidden="true">{sportIcons[sport]}</span>
+            <span className="text-base" aria-hidden="true">
+              {sportIcons[sport]}
+            </span>
             <h2 className="text-lg font-medium text-gray-800">{leagueName}</h2>
           </div>
           <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">

@@ -16,6 +16,8 @@ import {
 } from "@/components/dashboard/user-profile/components/RecentActivity";
 import { StatsCards } from "@/components/dashboard/user-profile/components/StatsCards";
 import { useMe } from "@/hooks/auth/useMe";
+import { useMyLeagues } from "@/hooks/leagues/useLeagues";
+import { useUser } from "@/hooks/users/useUsers";
 
 type PublicProfile = {
   id: string;
@@ -79,20 +81,51 @@ const mockProfile: PublicProfile = {
 
 export function UserProfile({ userId }: { userId?: string }) {
   const { data: me, username } = useMe();
+  const { data: profileUser } = useUser(userId ?? "");
+  const { data: leagues } = useMyLeagues();
+
+  const mappedLeagues = useMemo<LeagueRow[]>(
+    () =>
+      (leagues ?? []).map((league, index) => ({
+        id: index + 1,
+        name: league.name,
+        sport:
+          (league.sports?.[0]?.sport.name as
+            | "football"
+            | "basketball"
+            | "cricket") || "football",
+        rank: league.my_team?.rank ?? 0,
+        points: Number(league.my_team?.points ?? 0),
+      })),
+    [leagues],
+  );
 
   const profile = useMemo(() => {
     return {
       ...mockProfile,
-      id: me?.id ?? mockProfile.id,
-      name: username || mockProfile.name,
-      avatar: me?.avatar_url ?? mockProfile.avatar,
-      joinDate: me?.created_at ?? mockProfile.joinDate,
+      id: profileUser?.id ?? me?.id ?? mockProfile.id,
+      name: (profileUser?.username ?? username) || mockProfile.name,
+      avatar: profileUser?.avatar_url ?? me?.avatar_url ?? mockProfile.avatar,
+      joinDate:
+        profileUser?.created_at ?? me?.created_at ?? mockProfile.joinDate,
       bio: "Public profile",
+      totalLeagues: mappedLeagues.length,
+      leagues: mappedLeagues,
     };
-  }, [me?.avatar_url, me?.created_at, me?.id, username]);
+  }, [
+    mappedLeagues,
+    me?.avatar_url,
+    me?.created_at,
+    me?.id,
+    profileUser?.avatar_url,
+    profileUser?.created_at,
+    profileUser?.id,
+    profileUser?.username,
+    username,
+  ]);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system]">
+    <section className="mx-auto w-full max-w-7xl px-6 py-8 font-[system-ui,-apple-system] text-gray-900">
       <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5">
         <p className="text-sm text-gray-500">Public Profile</p>
         <h1 className="mt-1 text-2xl font-light tracking-tight text-gray-900">

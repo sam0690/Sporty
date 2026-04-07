@@ -1,6 +1,7 @@
 import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
 import { API_PATHS } from "@/api/apiPath";
+import { getRefreshToken } from "@/libs/auth-tokens";
 import type { ApiResponse } from "@/types";
 import type { AxiosResponse } from "axios";
 
@@ -13,6 +14,22 @@ export type TMe = {
   avatar_url: string | null;
   is_active: boolean;
   created_at: string;
+};
+
+export type TTokenResponse = {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+};
+
+export type TUserProfile = TMe;
+
+export type TUsersListResponse = {
+  items: TUserProfile[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
 };
 
 const unwrapResponseData = <T>(payload: T | ApiResponse<T>): T => {
@@ -45,9 +62,9 @@ export const UserService = {
   async login(payload: {
     username: string;
     password: string;
-  }): Promise<ApiResponse<{ access_token: string; refresh_token: string }>> {
+  }): Promise<TTokenResponse> {
     const res = await publicApi.post(API_PATHS.AUTH.LOGIN, payload);
-    return res.data;
+    return unwrapResponseData(res.data);
   },
 
   /** Register a new account */
@@ -56,13 +73,94 @@ export const UserService = {
     email: string;
     password: string;
     auto_login?: boolean;
-  }): Promise<ApiResponse<{ access_token: string; refresh_token: string }>> {
+  }): Promise<TTokenResponse | TUserProfile> {
     const res = await publicApi.post(API_PATHS.AUTH.REGISTER, payload);
-    return res.data;
+    return unwrapResponseData(res.data);
   },
 
   /** Logout */
   async logout(): Promise<void> {
-    await authApi.post(API_PATHS.AUTH.LOGOUT);
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+      return;
+    }
+    await authApi.post(API_PATHS.AUTH.LOGOUT, { refresh_token: refreshToken });
+  },
+
+  async logoutAll(): Promise<{ detail: string }> {
+    const res = await authApi.post(API_PATHS.AUTH.LOGOUT_ALL);
+    return unwrapResponseData(res.data);
+  },
+
+  async loginWithGoogle(idToken: string): Promise<TTokenResponse> {
+    const res = await publicApi.post(API_PATHS.AUTH.GOOGLE, {
+      id_token: idToken,
+    });
+    return unwrapResponseData(res.data);
+  },
+
+  async linkGoogle(
+    idToken: string,
+    password?: string,
+  ): Promise<{ detail: string }> {
+    const payload = password
+      ? { id_token: idToken, password }
+      : { id_token: idToken };
+    const res = await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, payload);
+    return unwrapResponseData(res.data);
+  },
+
+  async forgotPassword(
+    email: string,
+  ): Promise<{ detail: string; reset_token?: string | null }> {
+    const res = await publicApi.post(API_PATHS.AUTH.FORGOT_PASSWORD, { email });
+    return unwrapResponseData(res.data);
+  },
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ detail: string }> {
+    const res = await publicApi.post(API_PATHS.AUTH.RESET_PASSWORD, {
+      token,
+      new_password: newPassword,
+    });
+    return unwrapResponseData(res.data);
+  },
+
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ detail: string }> {
+    const res = await authApi.post(API_PATHS.AUTH.CHANGE_PASSWORD, {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+    return unwrapResponseData(res.data);
+  },
+
+  async listUsers(params?: {
+    page?: number;
+    page_size?: number;
+  }): Promise<TUsersListResponse> {
+    const res = await authApi.get(API_PATHS.USERS.LIST, { params });
+    return unwrapResponseData(res.data);
+  },
+
+  async getUser(id: string): Promise<TUserProfile> {
+    const res = await authApi.get(API_PATHS.USERS.DETAIL(id));
+    return unwrapResponseData(res.data);
+  },
+
+  async updateUser(
+    id: string,
+    payload: { username?: string; avatar_url?: string | null },
+  ): Promise<TUserProfile> {
+    const res = await authApi.patch(API_PATHS.USERS.UPDATE(id), payload);
+    return unwrapResponseData(res.data);
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    await authApi.delete(API_PATHS.USERS.DELETE(id));
   },
 };

@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     # ── JWT ───────────────────────────────────────────────────
     JWT_SECRET_KEY: str
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 90
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 30
 
     # ── Google OAuth ──────────────────────────────────────────
     GOOGLE_CLIENT_ID: str
@@ -32,6 +33,10 @@ class Settings(BaseSettings):
 
     # BallDontLie (Basketball - Free API)
     BALLDONTLIE_API_KEY: str = ""
+
+    # ── Email / notifications ───────────────────────────────────
+    RESEND_API_KEY: str = ""
+    FROM_EMAIL: str = ""
 
     model_config = {
         "env_file": ".env",

@@ -26,6 +26,7 @@ from app.player.schemas import (
     PlayerFilter,
     PlayerGameweekStatResponse,
     PlayerListResponse,
+    PlayerPriceHistoryResponse,
     PlayerResponse,
 )
 
@@ -149,3 +150,19 @@ def get_player_stats(
             detail="No stats found for this player in the given gameweek",
         )
     return stat
+
+
+@router.get(
+    "/{player_id}/price-history",
+    response_model=PlayerPriceHistoryResponse,
+    summary="Get recent player price history",
+)
+def get_player_price_history(
+    player_id: uuid.UUID,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Return newest-first price change records for a player."""
+    rows = player_service.get_player_price_history(db, player_id, limit=limit)
+    return PlayerPriceHistoryResponse(items=rows)

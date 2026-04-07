@@ -10,8 +10,10 @@ export const API_PATHS = {
     LOGIN: "/auth/login",
     REGISTER: "/auth/register",
     LOGOUT: "/auth/logout",
+    LOGOUT_ALL: "/auth/logout/all",
     REFRESH: "/auth/refresh",
     ME: "/auth/me",
+    CHANGE_PASSWORD: "/auth/change-password",
     GOOGLE: "/auth/google",
     GOOGLE_LINK: "/auth/google/link",
     FORGOT_PASSWORD: "/auth/forgot-password",
@@ -33,17 +35,24 @@ export const API_PATHS = {
     SEASONS: "/leagues/seasons",
     SPORTS: "/leagues/sports",
     DETAIL: (id: string) => `/leagues/${id}`,
+    DELETE: (id: string) => `/leagues/${id}`,
+    LEAVE: (id: string) => `/leagues/${id}/leave`,
     UPDATE_STATUS: (id: string) => `/leagues/${id}/status`,
     MEMBERS: (id: string) => `/leagues/${id}/members`,
     MY_TEAM: (id: string) => `/leagues/${id}/my-team`,
     LEAGUE_SPORTS: (id: string) => `/leagues/${id}/sports`,
-    SPORT_DETAIL: (id: string, sport: string) => `/leagues/${id}/sports/${sport}`,
+    SPORT_DETAIL: (id: string, sport: string) =>
+      `/leagues/${id}/sports/${sport}`,
     LINEUP_SLOTS: (id: string) => `/leagues/${id}/lineup-slots`,
     LINEUP: (id: string) => `/leagues/${id}/my-team/lineup`,
     DRAFT_START: (id: string) => `/leagues/${id}/draft/start`,
     DRAFT_PICK: (id: string) => `/leagues/${id}/draft/pick`,
+    DRAFT_TURN: (id: string) => `/leagues/${id}/draft/turn`,
     BUILD_TEAM: (id: string) => `/leagues/${id}/teams/build`,
-    GENERATE_WINDOWS: (id: string) => `/leagues/${id}/transfer-windows/generate`,
+    DISCARD_TEAM_PLAYER: (id: string, playerId: string) =>
+      `/leagues/${id}/teams/players/${playerId}`,
+    GENERATE_WINDOWS: (id: string) =>
+      `/leagues/${id}/transfer-windows/generate`,
     TRANSFERS: (id: string) => `/leagues/${id}/transfers`,
     LEADERBOARD: (id: string, windowId?: string) =>
       `/leagues/${id}/leaderboard${windowId ? `?window_id=${windowId}` : ""}`,
@@ -61,5 +70,16 @@ export const API_PATHS = {
     OVERRIDES: (id: string) => `/leagues/${id}/scoring-overrides`,
     OVERRIDE_DETAIL: (id: string, overrideId: string) =>
       `/leagues/${id}/scoring-overrides/${overrideId}`,
+  },
+
+  OPTIMIZATION: {
+    LINEUP: "/optimization/lineup",
+  },
+
+  TRANSFERS: {
+    STAGE_OUT: "/transfers/stage-out",
+    STAGE_IN: "/transfers/stage-in",
+    CONFIRM: "/transfers/confirm",
+    CANCEL: "/transfers/cancel",
   },
 } as const;

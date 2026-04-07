@@ -15,10 +15,12 @@ import {
 } from "@/components/dashboard/join-league/components/SuccessModal";
 import { CardSkeleton } from "@/components/ui/skeletons";
 import { useJoinLeague, useDiscoverLeagues } from "@/hooks/leagues/useLeagues";
+import type { TLeague } from "@/types";
 
 export function JoinLeague() {
   const { username } = useMe();
-  const { data: discoverLeagues, isLoading: discoverLoading } = useDiscoverLeagues();
+  const { data: discoverLeagues, isLoading: discoverLoading } =
+    useDiscoverLeagues();
   const joinMutation = useJoinLeague();
 
   const [successData, setSuccessData] = useState<JoinedLeague | null>(null);
@@ -33,43 +35,49 @@ export function JoinLeague() {
     }
 
     try {
-      const membership = await joinMutation.mutateAsync(inviteCode);
+      await joinMutation.mutateAsync(inviteCode);
       setSuccessData({
-        id: membership.id as any,
         name: "Joined League",
         sport: "football",
         teamName: `${username || "Sporty"} Team`,
       });
       setShowSuccessModal(true);
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || err.message || "Unable to join league");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "Unable to join league");
+        return;
+      }
+      setError("Unable to join league");
     }
   };
 
-  const handleJoinPublicLeague = async (league: any) => {
+  const handleJoinPublicLeague = async (league: PublicLeague) => {
     if (league.requiresInviteCode) {
       setError("This league requires an invite code.");
       return;
     }
     // For public leagues without codes, we'd need a direct join endpoint or use an invite code if provided
-    if (league.invite_code) {
-      handleSubmit(league.invite_code);
+    if (league.inviteCode) {
+      handleSubmit(league.inviteCode);
     }
   };
 
-  const publicLeagues: PublicLeague[] = (discoverLeagues || []).map((l) => ({
-    id: l.id as any,
-    name: l.name,
-    sport: (l.sports?.[0]?.sport.name as any) || "multisport",
-    memberCount: 0,
-    requiresInviteCode: !l.is_public,
-    invite_code: l.invite_code,
-  } as any));
+  const publicLeagues: PublicLeague[] = (discoverLeagues || []).map(
+    (l: TLeague) => ({
+      id: l.id,
+      name: l.name,
+      sport:
+        (l.sports?.[0]?.sport.name as PublicLeague["sport"]) || "multisport",
+      memberCount: 0,
+      requiresInviteCode: !l.is_public,
+      inviteCode: l.invite_code,
+    }),
+  );
 
   const isLoading = discoverLoading || joinMutation.isPending;
 
   return (
-    <section className="max-w-4xl mx-auto px-6 py-12 space-y-8 text-gray-900 [font-family:system-ui,-apple-system]">
+    <section className="max-w-4xl mx-auto px-6 py-12 space-y-8 text-gray-900 font-[system-ui,-apple-system]">
       <header className="mb-10 text-center">
         <h1 className="text-3xl font-light tracking-tight text-gray-900">
           Join a League
@@ -89,7 +97,11 @@ export function JoinLeague() {
           <div className="h-10 animate-pulse rounded-full bg-gray-100" />
         </div>
       ) : (
-        <JoinForm onSubmit={handleSubmit} isLoading={joinMutation.isPending} error={null} />
+        <JoinForm
+          onSubmit={handleSubmit}
+          isLoading={joinMutation.isPending}
+          error={null}
+        />
       )}
 
       <div className="mx-auto flex max-w-2xl items-center gap-4">
@@ -110,7 +122,7 @@ export function JoinLeague() {
           href="/create-league"
           className="text-gray-500 transition-colors hover:text-primary-600"
         >
-          Don't have a league? Create one →
+          Don&apos;t have a league? Create one →
         </Link>
       </div>
 

@@ -1,11 +1,11 @@
 "use client";
 
 type Member = {
-  id: number;
+  id: string;
   name: string;
   teamName: string;
   joinDate: string;
-  totalPoints: number;
+  totalPoints?: number;
 };
 
 type MemberCardProps = {
@@ -24,7 +24,12 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-export function MemberCard({ member, isCommissionerMember, canKick, onKick }: MemberCardProps) {
+export function MemberCard({
+  member,
+  isCommissionerMember,
+  canKick,
+  onKick,
+}: MemberCardProps) {
   return (
     <article className="rounded-2xl border border-gray-100 bg-white p-4">
       <div className="flex items-center justify-between gap-3">
@@ -34,14 +39,17 @@ export function MemberCard({ member, isCommissionerMember, canKick, onKick }: Me
           </div>
           <div>
             <p className="text-sm font-medium text-gray-900">
-              {member.name} {isCommissionerMember ? <span className="ml-1">👑</span> : null}
+              {member.name}{" "}
+              {isCommissionerMember ? <span className="ml-1">👑</span> : null}
             </p>
             <p className="text-xs text-gray-500">{member.teamName}</p>
           </div>
         </div>
 
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">{member.totalPoints} pts</p>
+          <p className="text-sm font-medium text-gray-900">
+            {member.totalPoints ?? 0} pts
+          </p>
           <p className="text-xs text-gray-500">Joined {member.joinDate}</p>
         </div>
       </div>

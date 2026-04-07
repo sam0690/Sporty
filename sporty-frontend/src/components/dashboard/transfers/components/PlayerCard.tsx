@@ -3,14 +3,14 @@
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 
 type PlayerCardProps = {
-  id: number;
+  id: string;
   name: string;
   sport: Sport;
   position: string;
   price: number;
   avgPoints: number;
   form?: number;
-  onAdd: (id: number) => void;
+  onAdd: (id: string) => void;
   animationDelay?: number;
 };
 
@@ -31,7 +31,8 @@ export function PlayerCard({
   onAdd,
   animationDelay = 0,
 }: PlayerCardProps) {
-  const sportLabel = sport === "All" ? "🏟️" : `${sportIcons[sport]} ${position}`;
+  const sportLabel =
+    sport === "All" ? "🏟️" : `${sportIcons[sport]} ${position}`;
 
   return (
     <article
@@ -39,11 +40,13 @@ export function PlayerCard({
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-medium text-gray-900">👤 {name}</p>
+        <p className="truncate text-base font-medium text-gray-900">
+          👤 {name}
+        </p>
         <p className="mt-1 text-sm text-gray-500">{sportLabel}</p>
       </div>
 
-      <div className="text-right sm:min-w-[110px]">
+      <div className="text-right sm:min-w-27.5">
         <p className="text-sm font-semibold text-gray-900">💰 ${price}M</p>
         <p className="text-xs text-gray-400">Proj: {avgPoints.toFixed(1)}</p>
         {form ? <p className="text-xs text-gray-400">Form: {form}/10</p> : null}

@@ -6,7 +6,7 @@ import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/libs/toastifier";
 import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
 import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
-import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";
+// import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";
 import {
   PreferencesForm,
   type Preferences,
@@ -17,6 +17,8 @@ import {
 } from "@/components/dashboard/profile/components/ProfileForm";
 import { ProfileHeader } from "@/components/dashboard/profile/components/ProfileHeader";
 import { SettingsSkeleton } from "@/components/dashboard/profile/components/SettingsSkeleton";
+import { useUpdateUser } from "@/hooks/users/useUsers";
+import { UserService } from "@/services/UserService";
 
 const mockUser = {
   id: "1",
@@ -44,6 +46,7 @@ type ExtendedUser = {
 export function ProfileSettings() {
   const { logout } = useAuth();
   const { data: me, username } = useMe();
+  const updateUser = useUpdateUser(me?.id ?? "");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userData, setUserData] = useState<ExtendedUser>({
@@ -83,6 +86,11 @@ export function ProfileSettings() {
     nextUser: ProfileUser,
   ): Promise<boolean> => {
     try {
+      if (me?.id) {
+        await updateUser.mutateAsync({
+          username: nextUser.name,
+        });
+      }
       setUserData((prev) => ({ ...prev, ...nextUser }));
       return true;
     } catch {
@@ -92,6 +100,9 @@ export function ProfileSettings() {
   };
 
   const handleAvatarChange = async (avatar: string): Promise<void> => {
+    if (me?.id) {
+      await updateUser.mutateAsync({ avatar_url: avatar });
+    }
     setUserData((prev) => ({ ...prev, avatar }));
     toastifier.success("✓ Avatar updated successfully");
   };
@@ -105,8 +116,13 @@ export function ProfileSettings() {
       return false;
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    return true;
+    try {
+      await UserService.changePassword(currentPassword, newPassword);
+      return true;
+    } catch {
+      toastifier.error("✕ Unable to update password");
+      return false;
+    }
   };
 
   const handleUpdatePreferences = async (
@@ -119,7 +135,9 @@ export function ProfileSettings() {
   const handleDeleteAccount = async (): Promise<boolean> => {
     try {
       setIsDeleting(true);
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      if (me?.id) {
+        await UserService.deleteUser(me.id);
+      }
       const result = await logout();
       if (!result.success) {
         toastifier.error(`✕ ${result.error ?? "Unable to delete account"}`);
@@ -141,7 +159,7 @@ export function ProfileSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <section className="mx-auto max-w-3xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-gray-900">
       <ProfileHeader
         userName={userData.name}
         userEmail={userData.email}
@@ -155,7 +173,7 @@ export function ProfileSettings() {
         />
 
         <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
-        <PasswordForm onChangePassword={handleChangePassword} />
+        {/* <PasswordForm onChangePassword={handleChangePassword} /> */}
         <PreferencesForm
           preferences={preferences}
           onUpdate={handleUpdatePreferences}

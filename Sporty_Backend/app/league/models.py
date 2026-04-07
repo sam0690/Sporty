@@ -237,6 +237,7 @@ class TransferWindow(Base):
     # Explicit bools — flipped by scheduler or admin, not derived from time
     transfers_locked: Mapped[bool] = mapped_column(Boolean, default=False)
     lineup_locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    notified: Mapped[bool] = mapped_column(Boolean, default=False)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -342,6 +343,10 @@ class League(Base):
         SAEnum(LeagueStatus, name="leaguestatus_enum"),
         nullable=False, default=LeagueStatus.SETUP,
     )
+
+    # Optional lifecycle boundaries used by scheduled status automation.
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     max_teams: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=10)
 
@@ -627,6 +632,11 @@ class FantasyTeam(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    budget_transactions: Mapped[list["BudgetTransaction"]] = relationship(
+        back_populates="fantasy_team",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     __table_args__ = (
         UniqueConstraint("league_id", "user_id", name="uq_team_league_user"),
@@ -803,6 +813,59 @@ class Transfer(Base):
         Index(
             "ix_transfer_team_window",
             "fantasy_team_id", "transfer_window_id",
+        ),
+    )
+
+
+class BudgetTransaction(Base):
+    __tablename__ = "budget_transactions"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    fantasy_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    player_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("players.id"),
+        nullable=True,
+        index=True,
+    )
+
+    transfer_window_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("transfer_windows.id"),
+        nullable=True,
+        index=True,
+    )
+
+    transaction_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
+    penalty_applied: Mapped[Decimal] = mapped_column(
+        Numeric(precision=10, scale=2),
+        nullable=False,
+        default=Decimal("0.00"),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    fantasy_team: Mapped["FantasyTeam"] = relationship(back_populates="budget_transactions")
+    player: Mapped["Player | None"] = relationship(foreign_keys=[player_id])
+    transfer_window: Mapped["TransferWindow | None"] = relationship(foreign_keys=[transfer_window_id])
+
+    __table_args__ = (
+        CheckConstraint("amount >= 0", name="ck_budget_tx_amount_non_negative"),
+        CheckConstraint("penalty_applied >= 0", name="ck_budget_tx_penalty_non_negative"),
+        CheckConstraint(
+            "transaction_type IN ('purchase', 'discard', 'transfer_out_refund', 'transfer_in_cost')",
+            name="ck_budget_tx_type_allowed",
         ),
     )
 

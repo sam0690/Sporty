@@ -13,7 +13,14 @@ type SuccessModalProps = {
   isPrivate: boolean;
 };
 
-export function SuccessModal({ isOpen, onClose, leagueId, leagueName, inviteCode, isPrivate }: SuccessModalProps) {
+export function SuccessModal({
+  isOpen,
+  onClose,
+  leagueId,
+  leagueName,
+  inviteCode,
+  isPrivate,
+}: SuccessModalProps) {
   const router = useRouter();
 
   if (!isOpen) {
@@ -37,12 +44,16 @@ export function SuccessModal({ isOpen, onClose, leagueId, leagueName, inviteCode
         <div className="text-4xl" aria-hidden="true">
           🎉
         </div>
-        <h2 className="mt-3 text-xl font-medium text-gray-900">League Created!</h2>
+        <h2 className="mt-3 text-xl font-medium text-gray-900">
+          League Created!
+        </h2>
         <p className="mt-2 font-medium text-primary-600">{leagueName}</p>
 
         {isPrivate ? (
           <div className="mt-5 space-y-2 text-left">
-            <p className="text-xs font-medium uppercase tracking-widest text-gray-500">Invite Code</p>
+            <p className="text-xs font-medium uppercase tracking-widest text-gray-500">
+              Invite Code
+            </p>
             <InviteCodeDisplay inviteCode={inviteCode} />
           </div>
         ) : null}
@@ -50,7 +61,7 @@ export function SuccessModal({ isOpen, onClose, leagueId, leagueName, inviteCode
         <div className="mt-6 space-y-2">
           <button
             type="button"
-            onClick={() => router.push(`/league/${leagueId}`)}
+            onClick={() => router.push(`/leagues/${leagueId}`)}
             className="w-full rounded-full bg-primary-600 px-6 py-2 font-semibold !text-white shadow-sm hover:bg-primary-700"
           >
             Go to League
