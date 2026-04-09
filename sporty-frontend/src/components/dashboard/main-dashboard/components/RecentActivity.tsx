@@ -58,7 +58,7 @@ export function RecentActivity({
           </div>
         ) : items.length === 0 ? (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-            No recent activity in the past week.
+            There are no recent activities yet.
           </div>
         ) : (
           <ul className="space-y-3">

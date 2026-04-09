@@ -19,8 +19,8 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session, joinedload, selectinload, with_loader_criteria
+from sqlalchemy import and_, func, or_, select
+from sqlalchemy.orm import Session, aliased, joinedload, selectinload, with_loader_criteria
 
 from app.auth.models import User
 from app.league.models import (
@@ -43,6 +43,7 @@ from app.league.models import (
 from app.league.schemas import LeagueCreate, LineupSlotCreate
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
+from app.core.config import settings
 
 
 # ── Reusable eager-loading option sets ──────────────────────────────
@@ -302,6 +303,7 @@ def create_league(
         squad_size=data.squad_size,
         budget_per_team=data.budget_per_team,
         draft_mode=data.draft_mode,
+        allow_midseason_join=data.allow_midseason_join,
         transfers_per_window=data.transfers_per_window,
         transfer_day=data.transfer_day,
         start_date=league_start,
@@ -388,6 +390,44 @@ def update_league_status(
             detail="Only the league owner can change the status",
         )
 
+    # Mode-aware lifecycle restrictions:
+    # - Budget leagues do not have a drafting phase.
+    # - Draft leagues should not skip directly from setup to active.
+    if not league.draft_mode and new_status == LeagueStatus.DRAFTING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Budget leagues cannot transition to drafting",
+        )
+    if (
+        league.draft_mode
+        and league.status == LeagueStatus.SETUP
+        and new_status == LeagueStatus.ACTIVE
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Draft leagues must enter drafting before becoming active",
+        )
+
+    if (
+        not league.draft_mode
+        and league.status == LeagueStatus.SETUP
+        and new_status == LeagueStatus.ACTIVE
+    ):
+        member_count = (
+            db.query(func.count(LeagueMembership.id))
+            .filter(LeagueMembership.league_id == league.id)
+            .scalar()
+        )
+        if member_count < settings.LEAGUE_MIN_MEMBERS_TO_ACTIVATE:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "At least "
+                    f"{settings.LEAGUE_MIN_MEMBERS_TO_ACTIVATE} members are required "
+                    "before activating this league"
+                ),
+            )
+
     allowed_next = VALID_TRANSITIONS.get(league.status.value, [])
     if new_status.value not in allowed_next:
         raise HTTPException(
@@ -432,18 +472,42 @@ def join_league(
 
     Does NOT commit — caller owns the transaction.
     """
+    normalized_code = invite_code.strip()
+
+    # Prefer exact match first (fast path), then fallback to case-insensitive
+    # lookup so users can join even if they typed different letter casing.
     league = (
         db.query(League)
-        .filter(League.invite_code == invite_code)
+        .filter(League.invite_code == normalized_code)
         .first()
     )
+    if not league:
+        case_insensitive_matches = (
+            db.query(League)
+            .filter(func.lower(League.invite_code) == normalized_code.lower())
+            .all()
+        )
+        if len(case_insensitive_matches) == 1:
+            league = case_insensitive_matches[0]
+        elif len(case_insensitive_matches) > 1:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Invite code is ambiguous; please use exact casing",
+            )
+
     if not league:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Invalid invite code",
         )
 
-    if league.status != LeagueStatus.SETUP:
+    is_setup_join = league.status == LeagueStatus.SETUP
+    is_midseason_budget_join = (
+        league.status == LeagueStatus.ACTIVE
+        and not league.draft_mode
+        and league.allow_midseason_join
+    )
+    if not is_setup_join and not is_midseason_budget_join:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="This league is no longer accepting new members",
@@ -476,9 +540,29 @@ def join_league(
             detail="This league is full",
         )
 
+    eligible_from_window_id = None
+    if is_midseason_budget_join:
+        now = datetime.now(timezone.utc)
+        next_window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.start_at > now,
+            )
+            .order_by(TransferWindow.start_at.asc())
+            .first()
+        )
+        if not next_window:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="No upcoming transfer window is available for late joiners",
+            )
+        eligible_from_window_id = next_window.id
+
     membership = LeagueMembership(
         league_id=league.id,
         user_id=user.id,
+        eligible_from_window_id=eligible_from_window_id,
     )
     db.add(membership)
     db.flush()
@@ -1406,24 +1490,95 @@ def add_lineup_slot(
 
 
 def discover_public_leagues(db: Session) -> list[League]:
-    """Return all public leagues in SETUP status (accepting members).
+    """Return public leagues that are currently joinable.
 
-    Used by the "discover leagues" UI — shows leagues anyone can browse
-    and join. Only SETUP leagues are shown because once a league moves
-    to DRAFTING or ACTIVE, new members can't join (they'd miss the draft).
+        Includes:
+            - SETUP leagues (standard join flow)
+            - ACTIVE budget-mode leagues with allow_midseason_join=True
+                and at least one upcoming transfer window.
 
     Ordered by newest first so fresh leagues appear at the top.
     """
-    return (
+    now = datetime.now(timezone.utc)
+    leagues = (
         db.query(League)
         .filter(
             League.is_public == True,
-            League.status == LeagueStatus.SETUP,
+            or_(
+                League.status == LeagueStatus.SETUP,
+                and_(
+                    League.status == LeagueStatus.ACTIVE,
+                    League.draft_mode == False,
+                    League.allow_midseason_join == True,
+                ),
+            ),
         )
         .options(*_LEAGUE_OPTIONS)
         .order_by(League.created_at.desc())
         .all()
     )
+
+    filtered: list[League] = []
+    for league in leagues:
+        if league.status == LeagueStatus.SETUP:
+            league.joinable_now = True
+            league.midseason_entry_window_number = None
+            league.midseason_join_message = "Join now. Build your team before kickoff."
+            filtered.append(league)
+            continue
+
+        next_window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.start_at > now,
+            )
+            .order_by(TransferWindow.start_at.asc())
+            .first()
+        )
+        if not next_window:
+            continue
+
+        league.joinable_now = True
+        league.midseason_entry_window_number = next_window.number
+        league.midseason_join_message = (
+            f"Join now. Your team starts scoring from transfer window {next_window.number}."
+        )
+        filtered.append(league)
+
+    return filtered
+
+
+def update_midseason_join_setting(
+    db: Session,
+    league_id: uuid.UUID,
+    allow_midseason_join: bool,
+    current_user: User,
+) -> League:
+    """Toggle whether an active budget league accepts late joiners."""
+    league = _require_league(db, league_id)
+
+    if league.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the league owner can update this setting",
+        )
+
+    if league.draft_mode:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Mid-season joining is only available for budget leagues",
+        )
+
+    if league.status == LeagueStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot update mid-season joining for completed leagues",
+        )
+
+    league.allow_midseason_join = allow_midseason_join
+    db.flush()
+    return _require_league(db, league_id, eager=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -2277,11 +2432,23 @@ def get_league_leaderboard(
     (total season standing). If window_id is provided, returns standing
     for that specific window.
     """
-    from sqlalchemy import func
     from app.league.models import FantasyTeam, TeamWeeklyScore
     from app.auth.models import User
+
+    eligibility_window = aliased(TransferWindow)
     
     if window_id:
+        requested_window = (
+            db.query(TransferWindow)
+            .filter(TransferWindow.id == window_id)
+            .first()
+        )
+        if not requested_window:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Transfer window not found",
+            )
+
         # 1. Standing for a specific window
         query = (
             db.query(
@@ -2294,12 +2461,31 @@ def get_league_leaderboard(
             .select_from(TeamWeeklyScore)
             .join(FantasyTeam, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
             .join(User, FantasyTeam.user_id == User.id)
+            .join(
+                LeagueMembership,
+                and_(
+                    LeagueMembership.league_id == FantasyTeam.league_id,
+                    LeagueMembership.user_id == FantasyTeam.user_id,
+                ),
+            )
+            .outerjoin(
+                eligibility_window,
+                LeagueMembership.eligible_from_window_id == eligibility_window.id,
+            )
             .filter(FantasyTeam.league_id == league_id)
             .filter(TeamWeeklyScore.transfer_window_id == window_id)
+            .filter(
+                or_(
+                    LeagueMembership.eligible_from_window_id.is_(None),
+                    eligibility_window.number <= requested_window.number,
+                )
+            )
             .order_by(TeamWeeklyScore.rank_in_league.asc(), TeamWeeklyScore.points.desc())
         )
     else:
         # 2. Total season standing (sum of points)
+        now = datetime.now(timezone.utc)
+        score_window = aliased(TransferWindow)
         total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
         query = (
             db.query(
@@ -2309,8 +2495,33 @@ def get_league_leaderboard(
                 total_points.label("points"),
             )
             .join(User, FantasyTeam.user_id == User.id)
+            .join(
+                LeagueMembership,
+                and_(
+                    LeagueMembership.league_id == FantasyTeam.league_id,
+                    LeagueMembership.user_id == FantasyTeam.user_id,
+                ),
+            )
+            .outerjoin(
+                eligibility_window,
+                LeagueMembership.eligible_from_window_id == eligibility_window.id,
+            )
             .outerjoin(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
+            .outerjoin(score_window, TeamWeeklyScore.transfer_window_id == score_window.id)
             .filter(FantasyTeam.league_id == league_id)
+            .filter(
+                or_(
+                    LeagueMembership.eligible_from_window_id.is_(None),
+                    eligibility_window.start_at <= now,
+                )
+            )
+            .filter(
+                or_(
+                    TeamWeeklyScore.id.is_(None),
+                    LeagueMembership.eligible_from_window_id.is_(None),
+                    score_window.number >= eligibility_window.number,
+                )
+            )
             .group_by(FantasyTeam.id, User.username)
             .order_by(total_points.desc())
         )

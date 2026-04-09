@@ -40,6 +40,7 @@ type AuthAction =
 type AuthResult = {
   success: boolean;
   error?: string;
+  message?: string;
 };
 
 /* ── Types ────────────────────────────────────────────────────────── */
@@ -314,12 +315,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (email: string): Promise<AuthResult> => {
       setLoading("forgotPassword", true);
       try {
-        await publicApi.post(API_PATHS.AUTH.FORGOT_PASSWORD, { email });
-        return { success: true };
-      } catch {
-        // Intentionally return success to avoid account enumeration and
-        // keep UX consistent even if backend endpoint is unavailable.
-        return { success: true };
+        const response = await publicApi.post(API_PATHS.AUTH.FORGOT_PASSWORD, {
+          email,
+        });
+        const detail =
+          typeof response?.data?.detail === "string"
+            ? response.data.detail
+            : "If an account exists with that email, you'll receive a reset link.";
+        return { success: true, message: detail };
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unable to submit your reset request. Please try again.";
+        return { success: false, error: message };
       } finally {
         setLoading("forgotPassword", false);
       }

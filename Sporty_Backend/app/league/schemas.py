@@ -40,6 +40,7 @@ class LeagueCreate(BaseModel):
     squad_size: int = Field(default=15, ge=1, le=30)
     budget_per_team: Decimal = Field(default=Decimal("100.00"), gt=0, max_digits=12, decimal_places=2)
     draft_mode: bool = Field(default=False)
+    allow_midseason_join: bool = Field(default=False)
     transfers_per_window: int = Field(default=4, ge=0, le=10)
     transfer_day: int = Field(default=1, ge=1, le=7)
     start_date: date | None = None
@@ -127,11 +128,15 @@ class LeagueResponse(BaseModel):
     squad_size: int
     budget_per_team: Decimal
     draft_mode: bool
+    allow_midseason_join: bool
     transfers_per_window: int
     transfer_day: int
     created_at: datetime
     member_count: int = 0
     team_count: int = 0
+    joinable_now: bool | None = None
+    midseason_entry_window_number: int | None = None
+    midseason_join_message: str | None = None
 
     # Nested objects instead of raw UUIDs
     owner: UserBrief
@@ -208,6 +213,7 @@ class MembershipResponse(BaseModel):
     user: UserBrief
     draft_position: int | None = None
     joined_at: datetime
+    eligible_from_window_id: uuid.UUID | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -355,6 +361,12 @@ class StatusUpdate(BaseModel):
        generated OpenAPI spec, so Swagger UI / Redoc can't render them.
     """
     new_status: LeagueStatus
+
+
+class MidseasonJoinUpdate(BaseModel):
+    """PATCH /leagues/{id}/midseason-join — toggle active budget joining."""
+
+    allow_midseason_join: bool
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

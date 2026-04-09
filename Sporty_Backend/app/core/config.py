@@ -37,6 +37,14 @@ class Settings(BaseSettings):
     # ── Email / notifications ───────────────────────────────────
     RESEND_API_KEY: str = ""
     FROM_EMAIL: str = ""
+    FRONTEND_BASE_URL: str = "http://localhost:3000"
+
+    # Forgot-password abuse protection
+    FORGOT_PASSWORD_RATE_LIMIT_WINDOW_SECONDS: int = 300
+    FORGOT_PASSWORD_RATE_LIMIT_MAX_REQUESTS: int = 5
+
+    # League lifecycle safeguards
+    LEAGUE_MIN_MEMBERS_TO_ACTIVATE: int = 2
 
     model_config = {
         "env_file": ".env",

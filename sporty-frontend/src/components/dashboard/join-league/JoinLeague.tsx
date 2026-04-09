@@ -56,9 +56,13 @@ export function JoinLeague() {
       setError("This league requires an invite code.");
       return;
     }
+    if (league.joinableNow === false) {
+      setError("This league is not accepting new members right now.");
+      return;
+    }
     // For public leagues without codes, we'd need a direct join endpoint or use an invite code if provided
     if (league.inviteCode) {
-      handleSubmit(league.inviteCode);
+      await handleSubmit(league.inviteCode);
     }
   };
 
@@ -68,8 +72,11 @@ export function JoinLeague() {
       name: l.name,
       sport:
         (l.sports?.[0]?.sport.name as PublicLeague["sport"]) || "multisport",
-      memberCount: 0,
+      memberCount: l.member_count ?? 0,
       requiresInviteCode: !l.is_public,
+      joinableNow: l.joinable_now ?? true,
+      joinMessage: l.midseason_join_message ?? undefined,
+      midseasonEntryWindowNumber: l.midseason_entry_window_number ?? null,
       inviteCode: l.invite_code,
     }),
   );

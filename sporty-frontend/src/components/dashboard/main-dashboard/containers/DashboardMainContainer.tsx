@@ -119,13 +119,16 @@ export function DashboardMainContainer() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr]">
             <TeamPreview
               slides={previews}
-              isLoading={leaguesLoading || previewLoading || !activeLeagueId}
+              isLoading={leaguesLoading || previewLoading}
               isError={Boolean(previewError)}
               hasLeagues={hasLeagues}
             />
             <RecentActivity
               items={mappedActivity}
-              isLoading={recentActivityLoading || !activeLeagueId}
+              isLoading={
+                leaguesLoading ||
+                (Boolean(activeLeagueId) && recentActivityLoading)
+              }
               isError={Boolean(recentActivityError)}
             />
           </div>

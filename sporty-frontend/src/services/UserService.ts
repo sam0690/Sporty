@@ -132,9 +132,7 @@ export const UserService = {
     return unwrapResponseData(res.data);
   },
 
-  async forgotPassword(
-    email: string,
-  ): Promise<{ detail: string; reset_token?: string | null }> {
+  async forgotPassword(email: string): Promise<{ detail: string }> {
     const res = await publicApi.post(API_PATHS.AUTH.FORGOT_PASSWORD, { email });
     return unwrapResponseData(res.data);
   },

@@ -77,6 +77,7 @@ export const LeagueService = {
     squad_size?: number;
     budget_per_team?: number;
     draft_mode?: boolean;
+    allow_midseason_join?: boolean;
     transfers_per_window?: number;
     transfer_day?: number;
   }): Promise<TLeague> {
@@ -187,6 +188,20 @@ export const LeagueService = {
     const res = await authApi.patch(API_PATHS.LEAGUES.UPDATE_STATUS(id), {
       new_status: newStatus,
     });
+    return res.data;
+  },
+
+  /** Toggle active-league mid-season joining (budget mode only). */
+  async updateMidseasonJoin(
+    id: string,
+    allowMidseasonJoin: boolean,
+  ): Promise<TLeague> {
+    const res = await authApi.patch(
+      API_PATHS.LEAGUES.UPDATE_MIDSEASON_JOIN(id),
+      {
+        allow_midseason_join: allowMidseasonJoin,
+      },
+    );
     return res.data;
   },
 

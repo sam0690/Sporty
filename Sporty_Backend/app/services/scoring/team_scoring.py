@@ -3,11 +3,17 @@ from __future__ import annotations
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import and_, case, func, select
+from sqlalchemy import and_, case, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
-from app.league.models import FantasyTeam, TeamGameweekLineup, TeamWeeklyScore
+from app.league.models import (
+    FantasyTeam,
+    LeagueMembership,
+    TeamGameweekLineup,
+    TeamWeeklyScore,
+    TransferWindow,
+)
 from app.player.models import PlayerGameweekStat
 
 
@@ -34,9 +40,35 @@ def upsert_team_weekly_scores(
     transfer_window_id: uuid.UUID,
 ) -> int:
     # Algorithm: aggregate lineup+player stats in SQL for each team, apply captain/vice rule in SQL CASE expression, then upsert team_weekly_scores.
+    current_window_number = (
+        db.query(TransferWindow.number)
+        .filter(TransferWindow.id == transfer_window_id)
+        .scalar()
+    )
+    if current_window_number is None:
+        return 0
+
+    eligibility_window = aliased(TransferWindow)
     teams_subquery = (
         select(FantasyTeam.id.label("fantasy_team_id"))
+        .join(
+            LeagueMembership,
+            and_(
+                LeagueMembership.league_id == FantasyTeam.league_id,
+                LeagueMembership.user_id == FantasyTeam.user_id,
+            ),
+        )
+        .outerjoin(
+            eligibility_window,
+            LeagueMembership.eligible_from_window_id == eligibility_window.id,
+        )
         .where(FantasyTeam.league_id == league_id)
+        .where(
+            or_(
+                LeagueMembership.eligible_from_window_id.is_(None),
+                eligibility_window.number <= current_window_number,
+            )
+        )
         .subquery()
     )
 

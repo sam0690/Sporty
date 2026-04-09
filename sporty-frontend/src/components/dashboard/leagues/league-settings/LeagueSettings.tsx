@@ -19,9 +19,14 @@ import {
   useLeague,
   useRemoveLeagueSport,
   useSports,
+  useUpdateMidseasonJoin,
   useUpdateLeagueStatus,
 } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
+import {
+  getLifecycleStatusesForLeague,
+  getLifecycleStatusLabel,
+} from "@/libs/league-lifecycle";
 import {
   useDefaultScoringRules,
   useDeleteScoringOverride,
@@ -54,6 +59,7 @@ export function LeagueSettings() {
   const upsertOverride = useUpsertScoringOverride(leagueId);
   const deleteOverride = useDeleteScoringOverride(leagueId);
   const updateStatus = useUpdateLeagueStatus(leagueId);
+  const updateMidseasonJoin = useUpdateMidseasonJoin(leagueId);
   const generateWindows = useGenerateTransferWindows(leagueId);
   const addSport = useAddLeagueSport(leagueId);
   const removeSport = useRemoveLeagueSport(leagueId);
@@ -71,10 +77,16 @@ export function LeagueSettings() {
     draftType: competitionType === "draft" ? "snake" : "auto",
     draftDate: "",
     matchesStarted: league?.status !== "setup",
+    allowMidseasonJoin: Boolean(leagueWithSettings?.allow_midseason_join),
+    showMidseasonJoinToggle: isBudgetMode,
   });
   const [scoringRules, setScoringRules] = useState<Record<string, number>>({});
 
   const maxTeamSizeAllowed = useMemo(() => 16, []);
+  const lifecycleStatuses = useMemo(
+    () => getLifecycleStatusesForLeague(league),
+    [league],
+  );
 
   useEffect(() => {
     if (!league) {
@@ -88,8 +100,16 @@ export function LeagueSettings() {
       teamSize: league.squad_size,
       draftType: competitionType === "draft" ? "snake" : "auto",
       matchesStarted: league.status !== "setup",
+      allowMidseasonJoin: Boolean(leagueWithSettings?.allow_midseason_join),
+      showMidseasonJoinToggle: isBudgetMode,
     }));
-  }, [competitionType, league, leagueWithSettings?.is_public]);
+  }, [
+    competitionType,
+    isBudgetMode,
+    league,
+    leagueWithSettings?.allow_midseason_join,
+    leagueWithSettings?.is_public,
+  ]);
 
   useEffect(() => {
     if (!defaultRules) {
@@ -155,6 +175,10 @@ export function LeagueSettings() {
           action: rule.action,
           points: nextPoints,
         });
+      }
+
+      if (isBudgetMode) {
+        await updateMidseasonJoin.mutateAsync(data.allowMidseasonJoin);
       }
 
       toastifier.success("League scoring settings saved");
@@ -241,18 +265,16 @@ export function LeagueSettings() {
       <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
         <h3 className="text-sm font-medium text-gray-900">League Lifecycle</h3>
         <div className="flex flex-wrap gap-2">
-          {(["setup", "drafting", "active", "completed"] as const).map(
-            (status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => handleStatusChange(status)}
-                className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-primary-500 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-600"}`}
-              >
-                {status}
-              </button>
-            ),
-          )}
+          {lifecycleStatuses.map((status) => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => handleStatusChange(status)}
+              className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-primary-500 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-600"}`}
+            >
+              {getLifecycleStatusLabel(status, league)}
+            </button>
+          ))}
         </div>
 
         {isBudgetMode ? (

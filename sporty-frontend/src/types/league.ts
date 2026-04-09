@@ -37,11 +37,15 @@ export type TLeague = {
   owner: TUser;
   competition_type?: TCompetitionType;
   draft_mode?: boolean;
+  allow_midseason_join?: boolean;
   budget_per_team?: number;
   is_public?: boolean;
   sports: TLeagueSport[];
   member_count: number;
   invite_code?: string;
+  joinable_now?: boolean;
+  midseason_entry_window_number?: number | null;
+  midseason_join_message?: string | null;
   status: string;
   squad_size: number;
   team_count?: number;
@@ -113,6 +117,7 @@ export type TMembership = {
   user: TUser;
   draft_position: number | null;
   joined_at: string;
+  eligible_from_window_id?: string | null;
 };
 
 export type TLineupSlot = {

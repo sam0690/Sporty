@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy.orm import Session
 
 from app.auth import services
@@ -47,8 +47,11 @@ def refresh_token(data: RefreshTokenRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse, status_code=200)
-def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    return services.forgot_password(db, data.email)
+def forgot_password(data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    if not client_ip:
+        client_ip = request.client.host if request.client else "unknown"
+    return services.forgot_password(db, data.email, client_ip)
 
 
 @router.post("/reset-password", status_code=200)

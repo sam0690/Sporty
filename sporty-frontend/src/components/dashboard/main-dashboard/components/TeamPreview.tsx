@@ -280,7 +280,7 @@ export function TeamPreview({
           </div>
         ) : !hasLeagues ? (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-            No leagues joined yet.
+            You have not joined a league yet.
           </div>
         ) : !activeSlide ? (
           <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">

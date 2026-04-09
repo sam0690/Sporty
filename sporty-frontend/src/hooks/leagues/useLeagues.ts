@@ -99,6 +99,7 @@ export function useCreateLeague() {
       squad_size?: number;
       budget_per_team?: number;
       draft_mode?: boolean;
+      allow_midseason_join?: boolean;
       transfers_per_window?: number;
       transfer_day?: number;
     }) => LeagueService.createLeague(payload),
@@ -362,6 +363,21 @@ export function useGenerateTransferWindows(leagueId: string) {
     },
     successMessage: "Transfer windows generated",
   });
+}
+
+export function useUpdateMidseasonJoin(leagueId: string) {
+  const queryClient = useQueryClient();
+  return useApiMutation(
+    (allowMidseasonJoin: boolean) =>
+      LeagueService.updateMidseasonJoin(leagueId, allowMidseasonJoin),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
+        queryClient.invalidateQueries({ queryKey: ["leagues", "discover"] });
+      },
+      successMessage: "Mid-season join setting updated",
+    },
+  );
 }
 
 export function useAddLeagueSport(leagueId: string) {

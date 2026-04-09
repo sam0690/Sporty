@@ -101,7 +101,6 @@ export function CreateLeague() {
     () => mapSportSelectionToPayload(leagueData.sport),
     [leagueData.sport],
   );
-  const selectedSportsKey = selectedSports.join(",");
 
   useEffect(() => {
     if (!footballRules?.length) {
@@ -162,13 +161,16 @@ export function CreateLeague() {
         const name = s.name.toLowerCase();
         return selectedSports.some((sport) => name.includes(sport));
       });
-      if (sportSeasons.length > 0 && !leagueData.seasonId) {
-        setLeagueData((prev) => ({ ...prev, seasonId: sportSeasons[0].id }));
-      } else if (seasons.length > 0 && !leagueData.seasonId) {
-        setLeagueData((prev) => ({ ...prev, seasonId: seasons[0].id }));
+      const firstSportSeasonId = sportSeasons.find((season) => season.id)?.id;
+      const firstAnySeasonId = seasons.find((season) => season.id)?.id;
+
+      if (firstSportSeasonId && !leagueData.seasonId) {
+        setLeagueData((prev) => ({ ...prev, seasonId: firstSportSeasonId }));
+      } else if (firstAnySeasonId && !leagueData.seasonId) {
+        setLeagueData((prev) => ({ ...prev, seasonId: firstAnySeasonId }));
       }
     }
-  }, [seasons, selectedSportsKey, leagueData.seasonId]);
+  }, [seasons, selectedSports, leagueData.seasonId]);
 
   const customScoringValidationError = useMemo(() => {
     for (const sport of selectedSports) {
@@ -275,6 +277,7 @@ export function CreateLeague() {
         is_public: !leagueData.isPrivate,
         max_teams: leagueData.teamSize,
         draft_mode: competitionType === "draft",
+        allow_midseason_join: competitionType === "budget",
         // Default values for other fields
         squad_size: 15,
         budget_per_team: 100,
@@ -329,14 +332,28 @@ export function CreateLeague() {
       setCreatedLeagueInfo({
         id: result.id,
         name: result.name,
-        inviteCode: result.invite_code,
+        inviteCode: result.invite_code ?? "",
         isPrivate: !result.is_public,
       });
       setShowSuccessModal(true);
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.detail || err.message || "Failed to create league",
-      );
+    } catch (err: unknown) {
+      const fallback = "Failed to create league";
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: unknown }).response === "object" &&
+        (err as { response?: { data?: { detail?: unknown } } }).response?.data
+          ?.detail
+      ) {
+        const detail = (err as { response?: { data?: { detail?: unknown } } })
+          .response?.data?.detail;
+        setError(typeof detail === "string" ? detail : fallback);
+      } else if (err instanceof Error) {
+        setError(err.message || fallback);
+      } else {
+        setError(fallback);
+      }
     }
   };
 
@@ -450,7 +467,7 @@ export function CreateLeague() {
               teamSize={leagueData.teamSize}
               competitionType={leagueData.competitionType}
               draftDate={leagueData.draftDate}
-              onSettingsChange={handleSettingsChange as any}
+              onSettingsChange={handleSettingsChange}
             />
           ) : null}
 

@@ -6,6 +6,9 @@ type PublicLeague = {
   sport: "football" | "basketball" | "cricket" | "multisport";
   memberCount: number;
   requiresInviteCode: boolean;
+  joinableNow?: boolean;
+  joinMessage?: string;
+  midseasonEntryWindowNumber?: number | null;
   inviteCode?: string;
 };
 
@@ -49,10 +52,21 @@ export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
                 ? "Requires invite code"
                 : "Open for direct join"}
             </p>
+            {league.joinMessage ? (
+              <p className="mt-1 text-xs text-gray-500">{league.joinMessage}</p>
+            ) : null}
+            {league.midseasonEntryWindowNumber ? (
+              <p className="mt-1 text-xs text-amber-700">
+                Scoring starts from transfer window{" "}
+                {league.midseasonEntryWindowNumber}
+              </p>
+            ) : null}
 
             <button
               type="button"
-              disabled={league.requiresInviteCode}
+              disabled={
+                league.requiresInviteCode || league.joinableNow === false
+              }
               onClick={() => onJoin(league)}
               className="mt-3 rounded-full border border-gray-300 bg-white px-4 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-primary-500 disabled:cursor-not-allowed disabled:border-gray-200 disabled:bg-gray-100 disabled:text-gray-400"
             >

@@ -40,6 +40,7 @@ export const API_PATHS = {
     DELETE: (id: string) => `/leagues/${id}`,
     LEAVE: (id: string) => `/leagues/${id}/leave`,
     UPDATE_STATUS: (id: string) => `/leagues/${id}/status`,
+    UPDATE_MIDSEASON_JOIN: (id: string) => `/leagues/${id}/midseason-join`,
     MEMBERS: (id: string) => `/leagues/${id}/members`,
     MY_TRANSFERS: "/leagues/me/transfers",
     MY_TEAM: (id: string) => `/leagues/${id}/my-team`,

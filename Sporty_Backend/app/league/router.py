@@ -47,6 +47,7 @@ from app.league.schemas import (
     LineupSlotResponse,
     LineupUpdateRequest,
     MembershipResponse,
+    MidseasonJoinUpdate,
     SeasonResponse,
     SportResponse,
     StatusUpdate,
@@ -152,11 +153,10 @@ def discover_public_leagues(
     db: Session = Depends(get_db),
     _current_user: User = Depends(get_current_active_user),
 ):
-    """Return all public leagues that are still in SETUP status.
+    """Return public leagues that are currently accepting joins.
 
-    These are the leagues anyone can browse and join. Once a league
-    moves to DRAFTING or ACTIVE, it stops appearing here because
-    new members can't join after the draft has started.
+    Includes setup leagues and active budget-mode leagues that explicitly
+    allow mid-season joins.
     """
     return league_service.discover_public_leagues(db)
 
@@ -237,6 +237,28 @@ def join_league(
     membership = league_service.join_league(db, data.invite_code, current_user)
     db.commit()
     return membership
+
+
+@router.patch(
+    "/{league_id}/midseason-join",
+    response_model=LeagueResponse,
+    summary="Toggle mid-season joining",
+)
+def update_midseason_join_setting(
+    data: MidseasonJoinUpdate,
+    league: League = Depends(require_league_owner),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Enable or disable late joining for budget-mode leagues."""
+    updated = league_service.update_midseason_join_setting(
+        db,
+        league.id,
+        data.allow_midseason_join,
+        current_user,
+    )
+    db.commit()
+    return updated
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

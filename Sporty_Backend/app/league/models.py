@@ -383,6 +383,13 @@ class League(Base):
     # True = anyone with the invite code can join; False = invite-only
     is_public: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Budget-mode only: allow new members to join after league is ACTIVE.
+    allow_midseason_join: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -577,9 +584,22 @@ class LeagueMembership(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    # NULL = immediately eligible for scoring (setup/draft join).
+    # Non-NULL = first transfer window where this member becomes eligible
+    # for points (late join in active budget leagues).
+    eligible_from_window_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("transfer_windows.id"),
+        nullable=True,
+        index=True,
+    )
+
     # Relationships
     league: Mapped["League"] = relationship(back_populates="memberships")
     user: Mapped["User"] = relationship(foreign_keys=[user_id])
+    eligible_from_window: Mapped["TransferWindow | None"] = relationship(
+        foreign_keys=[eligible_from_window_id]
+    )
 
     __table_args__ = (
         UniqueConstraint("league_id", "user_id", name="uq_membership_league_user"),

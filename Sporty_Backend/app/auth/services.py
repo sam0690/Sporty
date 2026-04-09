@@ -1,5 +1,8 @@
 import uuid
-from datetime import datetime, timezone
+import hashlib
+import logging
+from datetime import datetime, timedelta, timezone
+from urllib.parse import quote_plus
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -21,6 +24,11 @@ from app.core.security import (
     verify_google_id_token,
     verify_password,
 )
+from app.core.config import settings
+from app.core.redis import get_redis
+from app.services.email_service import send_password_reset_email
+
+logger = logging.getLogger(__name__)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -52,6 +60,28 @@ def _generate_unique_username(db: Session, base: str) -> str:
             return candidate
     # Fallback: full UUID (virtually impossible to reach)
     return f"{base}_{uuid.uuid4().hex}"
+
+
+def _hash_password_reset_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def _is_forgot_password_rate_limited(client_ip: str, email: str) -> bool:
+    """Return True when forgot-password traffic exceeds configured limits."""
+    try:
+        redis = get_redis()
+        key_material = f"{client_ip}:{email.strip().lower()}"
+        key_hash = hashlib.sha256(key_material.encode()).hexdigest()
+        key = f"auth:forgot-password:rl:{key_hash}"
+
+        current = redis.incr(key)
+        if current == 1:
+            redis.expire(key, settings.FORGOT_PASSWORD_RATE_LIMIT_WINDOW_SECONDS)
+
+        return current > settings.FORGOT_PASSWORD_RATE_LIMIT_MAX_REQUESTS
+    except Exception:
+        # Fail open if Redis is unavailable; do not block legitimate resets.
+        return False
 
 
 # ── Public service functions ──────────────────────────────────────────────────
@@ -248,20 +278,46 @@ def link_google_account(
     db.commit()
 
 
-def forgot_password(db: Session, email: str) -> dict:
-    """Create a password reset token (email delivery handled outside API layer)."""
+def forgot_password(db: Session, email: str, client_ip: str) -> dict:
+    """Issue password reset email while returning a generic public-safe response."""
+    normalized_email = email.strip().lower()
+
+    if _is_forgot_password_rate_limited(client_ip, normalized_email):
+        return {
+            "detail": "If an account exists for this email, password reset instructions were sent.",
+        }
+
     user = (
         db.query(User)
-        .filter(User.email == email, User.auth_provider == AuthProvider.LOCAL, User.is_active.is_(True))
+        .filter(User.email == normalized_email, User.auth_provider == AuthProvider.LOCAL, User.is_active.is_(True))
         .first()
     )
 
-    # Always return a token-shaped response to avoid account enumeration.
-    subject_id = user.id if user else uuid.uuid4()
-    token = create_password_reset_token(subject_id)
+    if user:
+        token = create_password_reset_token(user.id)
+        expires_at = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES
+        )
+
+        user.password_reset_token_hash = _hash_password_reset_token(token)
+        user.password_reset_token_expires_at = expires_at
+        user.password_reset_requested_at = datetime.now(timezone.utc)
+
+        reset_url = (
+            f"{settings.FRONTEND_BASE_URL.rstrip('/')}/reset-password?token={quote_plus(token)}"
+        )
+        sent = send_password_reset_email(
+            to_email=user.email,
+            username=user.username,
+            reset_url=reset_url,
+            expires_minutes=settings.PASSWORD_RESET_TOKEN_EXPIRE_MINUTES,
+        )
+        if not sent:
+            logger.warning("Password reset email could not be sent for user_id=%s", user.id)
+        db.commit()
+
     return {
         "detail": "If an account exists for this email, password reset instructions were sent.",
-        "reset_token": token,
     }
 
 
@@ -281,7 +337,31 @@ def reset_password(db: Session, token: str, new_password: str) -> None:
             detail="Invalid reset token",
         )
 
+    now = datetime.now(timezone.utc)
+    token_hash = _hash_password_reset_token(token)
+    if (
+        not user.password_reset_token_hash
+        or user.password_reset_token_hash != token_hash
+        or not user.password_reset_token_expires_at
+        or user.password_reset_token_expires_at < now
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token",
+        )
+
     user.password_hash = hash_password(new_password)
+    user.password_reset_token_hash = None
+    user.password_reset_token_expires_at = None
+    user.password_reset_requested_at = None
+
+    # Revoke all active sessions after a password reset.
+    now = datetime.now(timezone.utc)
+    (
+        db.query(RefreshToken)
+        .filter(RefreshToken.user_id == user.id, RefreshToken.revoked_at.is_(None))
+        .update({"revoked_at": now})
+    )
     db.commit()
 
 
