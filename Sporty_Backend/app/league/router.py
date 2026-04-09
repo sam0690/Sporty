@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
-from app.core.redis import cache_get, cache_set
+from app.core.redis import cache_get, cache_set, get_redis
 from app.database import get_db
 from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
@@ -37,6 +37,7 @@ from app.league.schemas import (
     JoinLeagueRequest,
     LeaderboardEntry,
     LeaderboardResponse,
+    LeagueDashboardStatsResponse,
     LeagueCreate,
     LeagueResponse,
     LeagueSportAdd,
@@ -53,6 +54,7 @@ from app.league.schemas import (
     TransferCreate,
     TransferResponse,
     TransferWindowResponse,
+    UserTransferHistoryLeagueResponse,
 )
 
 router = APIRouter(prefix="/leagues", tags=["Leagues"])
@@ -157,6 +159,19 @@ def discover_public_leagues(
     new members can't join after the draft has started.
     """
     return league_service.discover_public_leagues(db)
+
+
+@router.get(
+    "/me/transfers",
+    response_model=list[UserTransferHistoryLeagueResponse],
+    summary="Get my transfer history grouped by league",
+)
+def get_my_transfers_grouped(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return authenticated user's transfer history grouped by league."""
+    return league_service.get_user_transfers_grouped_by_league(db, current_user.id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -727,10 +742,15 @@ def get_my_lineup(
     return league_service.get_current_lineup(db, league.id, current_user.id)
 
 
-@router.post(
+@router.patch(
     "/{league_id}/my-team/lineup",
     response_model=LineupResponse,
     summary="Update user's lineup",
+)
+@router.post(
+    "/{league_id}/my-team/lineup",
+    response_model=LineupResponse,
+    summary="Update user's lineup (legacy POST)",
 )
 def update_my_lineup(
     data: LineupUpdateRequest,
@@ -743,7 +763,7 @@ def update_my_lineup(
         db,
         league.id,
         current_user.id,
-        data.player_ids,
+        data.starting_lineup_player_ids,
         data.captain_id,
         data.vice_captain_id,
     )
@@ -762,5 +782,18 @@ def get_active_window(
 ):
     """Return the current active transfer window and its deadline."""
     return league_service.get_active_transfer_window(db, league.id)
+
+
+@router.get(
+    "/{league_id}/dashboard/stats",
+    response_model=LeagueDashboardStatsResponse,
+    summary="Get league-scoped dashboard stats for current user",
+)
+def get_dashboard_stats(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return league_service.get_dashboard_stats(db, league.id, current_user.id)
 
 

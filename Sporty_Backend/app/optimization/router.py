@@ -28,6 +28,7 @@ class PositionConstraintPayload(BaseModel):
 
 class CandidatePlayerPayload(BaseModel):
     id: UUID
+    sport: str
     position: str
     club: str
     cost: Decimal
@@ -39,6 +40,7 @@ class OptimizationConstraintsPayload(BaseModel):
     budget: Decimal
     squad_size: int = Field(ge=1)
     positions: dict[str, PositionConstraintPayload] = Field(default_factory=dict)
+    sports: dict[str, PositionConstraintPayload] = Field(default_factory=dict)
     max_per_club: int = Field(ge=1)
     locked_player_ids: list[UUID] = Field(default_factory=list)
     banned_player_ids: list[UUID] = Field(default_factory=list)
@@ -73,6 +75,7 @@ def optimize_lineup_endpoint(
     candidates = [
         CandidatePlayer(
             id=str(player.id),
+            sport=player.sport,
             position=player.position,
             club=player.club,
             cost=player.cost,
@@ -88,6 +91,10 @@ def optimize_lineup_endpoint(
         positions={
             position: PositionConstraint(min=rule.min, max=rule.max, exact=rule.exact)
             for position, rule in payload.constraints.positions.items()
+        },
+        sports={
+            sport: PositionConstraint(min=rule.min, max=rule.max, exact=rule.exact)
+            for sport, rule in payload.constraints.sports.items()
         },
         max_per_club=payload.constraints.max_per_club,
         locked_player_ids={str(pid) for pid in payload.constraints.locked_player_ids},

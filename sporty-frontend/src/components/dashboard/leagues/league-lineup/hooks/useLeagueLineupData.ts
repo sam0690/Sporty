@@ -35,7 +35,7 @@ export function useLeagueLineupData(leagueId: string) {
   const lineupQuery = useLineup(leagueId);
 
   const players = useMemo<LineupPlayerCardModel[]>(() => {
-    const entries = lineupQuery.data?.entries ?? [];
+    const entries = lineupQuery.data?.starting_lineup ?? [];
     const squadPlayers = lineupQuery.data?.squad_players ?? [];
     const starterIds = new Set(entries.map((entry) => entry.player_id));
     const flagsByPlayerId = entries.reduce<

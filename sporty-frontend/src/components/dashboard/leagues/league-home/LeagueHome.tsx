@@ -234,7 +234,7 @@ export function LeagueHome() {
                 onClick={() =>
                   router.push(
                     hasMyTeam
-                      ? `/leagues/${league.id}/roster`
+                      ? `/leagues/${league.id}/lineup`
                       : `/leagues/${league.id}/create-team`,
                   )
                 }

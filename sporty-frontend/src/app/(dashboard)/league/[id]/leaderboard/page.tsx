@@ -1,7 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { LeagueLeaderboard } from "@/components/dashboard/leagues/league-leaderboard";
+type LeagueLeaderboardPageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default function LeagueLeaderboardPage() {
-  return <LeagueLeaderboard />;
+export default async function LeagueLeaderboardPage({
+  params,
+}: LeagueLeaderboardPageProps) {
+  const { id } = await params;
+  redirect(`/leagues/${id}/leaderboard`);
 }

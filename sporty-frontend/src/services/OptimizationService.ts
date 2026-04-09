@@ -3,6 +3,7 @@ import { API_PATHS } from "@/api/apiPath";
 
 export type TOptimizationCandidate = {
   id: string;
+  sport: string;
   position: string;
   club: string;
   cost: number;
@@ -16,6 +17,7 @@ export type TOptimizationRequest = {
     budget: number;
     squad_size: number;
     positions: Record<string, { min?: number; max?: number; exact?: number }>;
+    sports: Record<string, { min?: number; max?: number; exact?: number }>;
     max_per_club: number;
     locked_player_ids: string[];
     banned_player_ids: string[];

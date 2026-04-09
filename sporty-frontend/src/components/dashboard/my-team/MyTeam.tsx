@@ -13,11 +13,14 @@ import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 type TeamLeague = {
   leagueId: string;
   leagueName: string;
-  sport: Sport;
+  sports: Sport[];
   players: {
     id: string;
     name: string;
+    sport: Sport;
     position: string;
+    realTeam: string;
+    cost: string;
     totalPoints: number;
     avgPoints: number;
   }[];
@@ -25,12 +28,13 @@ type TeamLeague = {
 };
 
 const normalizeSport = (sportName?: string): Sport => {
+  const normalized = sportName?.trim().toLowerCase();
   if (
-    sportName === "football" ||
-    sportName === "basketball" ||
-    sportName === "cricket"
+    normalized === "football" ||
+    normalized === "basketball" ||
+    normalized === "cricket"
   ) {
-    return sportName;
+    return normalized;
   }
   return "football";
 };
@@ -62,22 +66,27 @@ export function MyTeam() {
         }
 
         const rows = teamData.team_players ?? teamData.players ?? [];
-        const sport = normalizeSport(
-          league.sports?.[0]?.sport.name ?? rows[0]?.player?.sport?.name,
+        const players = rows.map((teamPlayer) => ({
+          id: teamPlayer.player.id,
+          name: teamPlayer.player.name,
+          sport: normalizeSport(teamPlayer.player.sport?.name),
+          position: teamPlayer.player.position,
+          realTeam: teamPlayer.player.real_team,
+          cost: teamPlayer.player.cost,
+          totalPoints: 0,
+          avgPoints: 0,
+        }));
+
+        const sports = Array.from(
+          new Set(players.map((player) => player.sport)),
         );
 
         return {
           leagueId: league.id,
           leagueName: league.name,
-          sport,
+          sports,
           teamName: teamData.name,
-          players: rows.map((teamPlayer) => ({
-            id: teamPlayer.player.id,
-            name: teamPlayer.player.name,
-            position: teamPlayer.player.position,
-            totalPoints: 0,
-            avgPoints: 0,
-          })),
+          players,
         };
       })
       .filter((team): team is TeamLeague => Boolean(team));
@@ -146,7 +155,7 @@ export function MyTeam() {
                   <LeagueGroup
                     leagueName={team.leagueName}
                     players={team.players}
-                    sport={team.sport}
+                    sports={team.sports}
                   />
                 </div>
               </Carousel.Slide>

@@ -1,7 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { LeagueMembers } from "@/components/dashboard/leagues/league-members";
+type LeagueMembersPageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default function LeagueMembersPage() {
-  return <LeagueMembers />;
+export default async function LeagueMembersPage({
+  params,
+}: LeagueMembersPageProps) {
+  const { id } = await params;
+  redirect(`/leagues/${id}/members`);
 }

@@ -1,7 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { InviteFriends } from "@/components/dashboard/leagues/invite-friends";
+type LeagueInvitePageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default function LeagueInvitePage() {
-  return <InviteFriends />;
+export default async function LeagueInvitePage({
+  params,
+}: LeagueInvitePageProps) {
+  const { id } = await params;
+  redirect(`/leagues/${id}/invite`);
 }

@@ -3,6 +3,7 @@ export const LocalStorageKeys = {
   USER: "user",
   REFRESH_TOKEN: "refresh_token",
   THEME: "theme",
+  DASHBOARD_SELECTED_LEAGUE_ID: "dashboard_selected_league_id",
 } as const;
 
 export const SessionStorageKeys = {

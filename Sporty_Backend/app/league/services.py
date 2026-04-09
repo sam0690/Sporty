@@ -15,7 +15,7 @@ import logging
 import random
 import secrets
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
@@ -64,7 +64,7 @@ _LEAGUE_OPTIONS = (
     joinedload(League.season),
     selectinload(League.sports).joinedload(LeagueSport.sport),
     selectinload(League.memberships),
-    selectinload(League.fantasy_teams),
+    selectinload(League.fantasy_teams).joinedload(FantasyTeam.user),
 )
 
 _MEMBERSHIP_OPTIONS = (
@@ -96,6 +96,29 @@ SUPPORTED_LEAGUE_SPORTS = {"football", "basketball"}
 FLEXIBLE_TEAM_SPORTS = {"football", "basketball"}
 FLEXIBLE_TEAM_MIN_PLAYERS = 12
 FLEXIBLE_TEAM_MAX_PLAYERS = 15
+MULTISPORT_TEAM_MIN_PLAYERS = 13
+MULTISPORT_TEAM_MAX_PLAYERS = 15
+MULTISPORT_STARTERS_REQUIRED = 9
+MULTISPORT_STARTER_SPORT_REQUIREMENTS: dict[str, int] = {
+    "football": 5,
+    "basketball": 4,
+}
+
+LINEUP_SIZE_RULES: dict[str, dict[str, int]] = {
+    "football": {"starting": 11, "bench": 4, "total": 15},
+    "basketball": {"starting": 5, "bench": 10, "total": 15},
+    "multisport": {"starting": MULTISPORT_STARTERS_REQUIRED, "bench": 6, "total": 15},
+}
+
+
+def _detect_team_sport_name(sport_names: set[str]) -> str:
+    if len(sport_names) > 1:
+        return "multisport"
+
+    only_sport = next(iter(sport_names), "multisport")
+    if only_sport in {"football", "basketball"}:
+        return only_sport
+    return "multisport"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1118,6 +1141,45 @@ def get_transfers(
     )
 
 
+def get_user_transfers_grouped_by_league(
+    db: Session,
+    user_id: uuid.UUID,
+) -> list[dict]:
+    """Return authenticated user's transfers grouped by league, newest first."""
+    transfers = (
+        db.query(Transfer)
+        .options(
+            *_TRANSFER_OPTIONS,
+            joinedload(Transfer.fantasy_team)
+            .joinedload(FantasyTeam.league)
+            .selectinload(League.sports)
+            .joinedload(LeagueSport.sport),
+        )
+        .join(FantasyTeam, Transfer.fantasy_team_id == FantasyTeam.id)
+        .filter(FantasyTeam.user_id == user_id)
+        .order_by(Transfer.created_at.desc())
+        .all()
+    )
+
+    grouped_by_league_id: dict[uuid.UUID, dict] = {}
+    league_order: list[uuid.UUID] = []
+
+    for transfer in transfers:
+        league = transfer.fantasy_team.league
+        league_id = league.id
+
+        if league_id not in grouped_by_league_id:
+            grouped_by_league_id[league_id] = {
+                "league": league,
+                "transfers": [],
+            }
+            league_order.append(league_id)
+
+        grouped_by_league_id[league_id]["transfers"].append(transfer)
+
+    return [grouped_by_league_id[league_id] for league_id in league_order]
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Section 5 — League sport & lineup slot management
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1559,15 +1621,28 @@ def build_initial_team(
             .all()
         )
     }
-    uses_flexible_team_size = bool(league_sport_names & FLEXIBLE_TEAM_SPORTS)
+    flexible_sports_in_league = league_sport_names & FLEXIBLE_TEAM_SPORTS
+    uses_flexible_team_size = bool(flexible_sports_in_league)
+    is_multisport_league = len(flexible_sports_in_league) > 1
 
     if uses_flexible_team_size:
-        if not (FLEXIBLE_TEAM_MIN_PLAYERS <= len(player_ids) <= FLEXIBLE_TEAM_MAX_PLAYERS):
+        min_players = (
+            MULTISPORT_TEAM_MIN_PLAYERS
+            if is_multisport_league
+            else FLEXIBLE_TEAM_MIN_PLAYERS
+        )
+        max_players = (
+            MULTISPORT_TEAM_MAX_PLAYERS
+            if is_multisport_league
+            else FLEXIBLE_TEAM_MAX_PLAYERS
+        )
+
+        if not (min_players <= len(player_ids) <= max_players):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=(
-                    f"Must select between {FLEXIBLE_TEAM_MIN_PLAYERS} "
-                    f"and {FLEXIBLE_TEAM_MAX_PLAYERS} players"
+                    f"Must select between {min_players} "
+                    f"and {max_players} players"
                 ),
             )
     elif len(player_ids) != league.squad_size:
@@ -1607,6 +1682,7 @@ def build_initial_team(
     # Validate each player
     total_cost = Decimal("0.00")
     picked_counts: dict[tuple[uuid.UUID, str], int] = {}
+    selected_counts_by_sport_id: dict[uuid.UUID, int] = {}
     for player in players:
         if not player.is_available:
             raise HTTPException(
@@ -1622,8 +1698,37 @@ def build_initial_team(
 
         key = (player.sport_id, player.position.strip().upper())
         picked_counts[key] = picked_counts.get(key, 0) + 1
+        selected_counts_by_sport_id[player.sport_id] = (
+            selected_counts_by_sport_id.get(player.sport_id, 0) + 1
+        )
         
         total_cost += player.cost
+
+    if is_multisport_league:
+        league_sports = (
+            db.query(Sport)
+            .filter(Sport.id.in_(league_sport_ids))
+            .all()
+        )
+        sport_id_by_name = {sport.name.strip().lower(): sport.id for sport in league_sports}
+
+        for sport_name, required_count in MULTISPORT_STARTER_SPORT_REQUIREMENTS.items():
+            sport_id = sport_id_by_name.get(sport_name)
+            if not sport_id:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Multisport league is missing required sport '{sport_name}'",
+                )
+
+            selected_count = selected_counts_by_sport_id.get(sport_id, 0)
+            if selected_count < required_count:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"Multisport team must include at least {required_count} "
+                        f"{sport_name} players in the squad"
+                    ),
+                )
 
     # Enforce position constraints only when lineup slots are configured.
     lineup_slots = (
@@ -1886,13 +1991,14 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
     league = _require_league(db, league_id)
     window = _current_transfer_window(db, league)
 
-    entries = (
+    starting_lineup_entries = (
         db.query(TeamGameweekLineup)
         .filter(
             TeamGameweekLineup.fantasy_team_id == team.id,
             TeamGameweekLineup.transfer_window_id == window.id,
         )
         .options(joinedload(TeamGameweekLineup.player).joinedload(Player.sport))
+        .order_by(TeamGameweekLineup.id.asc())
         .all()
     )
 
@@ -1907,10 +2013,28 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
         .all()
     )
 
+    created_at_by_player_id = {
+        row.player_id: row.created_at
+        for row in squad_players
+    }
+    fallback_created_at = datetime.now(timezone.utc)
+
+    starting_lineup = [
+        {
+            "player_id": row.player_id,
+            "is_captain": row.is_captain,
+            "is_vice_captain": row.is_vice_captain,
+            "player": row.player,
+            "created_at": created_at_by_player_id.get(row.player_id, fallback_created_at),
+        }
+        for row in starting_lineup_entries
+    ]
+
     return {
         "fantasy_team_id": team.id,
+        "team_name": team.name,
         "transfer_window_id": window.id,
-        "entries": entries,
+        "starting_lineup": starting_lineup,
         "squad_players": squad_players,
     }
 
@@ -1935,7 +2059,6 @@ def update_lineup(
     league = _require_league(db, league_id)
     window = _current_transfer_window(db, league)
 
-    from datetime import datetime, timezone
     if window.lineup_locked or datetime.now(timezone.utc) > window.lineup_deadline_at:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -1943,12 +2066,87 @@ def update_lineup(
         )
 
     # 1. Verify all player_ids belong to the team
-    owned_player_ids = {tp.player_id for tp in team.team_players if tp.released_window_id is None}
+    squad_players = (
+        db.query(TeamPlayer)
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.released_window_id.is_(None),
+        )
+        .options(joinedload(TeamPlayer.player).joinedload(Player.sport))
+        .all()
+    )
+
+    owned_player_ids = {tp.player_id for tp in squad_players}
     if not all(pid in owned_player_ids for pid in player_ids):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="One or more players are not in your squad",
         )
+
+    sport_names = {
+        tp.player.sport.name.strip().lower()
+        for tp in squad_players
+        if tp.player and tp.player.sport and tp.player.sport.name
+    }
+    team_sport = _detect_team_sport_name(sport_names)
+    rules = LINEUP_SIZE_RULES[team_sport]
+
+    total_squad_players = len(owned_player_ids)
+    starting_players = len(player_ids)
+    bench_players = total_squad_players - starting_players
+
+    if team_sport == "multisport":
+        if not (
+            MULTISPORT_TEAM_MIN_PLAYERS
+            <= total_squad_players
+            <= MULTISPORT_TEAM_MAX_PLAYERS
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={
+                    "error": (
+                        "Multisport squad must have between "
+                        f"{MULTISPORT_TEAM_MIN_PLAYERS} and "
+                        f"{MULTISPORT_TEAM_MAX_PLAYERS} players."
+                    )
+                },
+            )
+
+        expected_bench = total_squad_players - MULTISPORT_STARTERS_REQUIRED
+        if starting_players != MULTISPORT_STARTERS_REQUIRED:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={
+                    "error": (
+                        "Multisport lineup must have exactly "
+                        f"{MULTISPORT_STARTERS_REQUIRED} starters "
+                        f"(5 football + 4 basketball) and {expected_bench} bench players."
+                    )
+                },
+            )
+    else:
+        if total_squad_players != rules["total"]:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={
+                    "error": (
+                        f"{team_sport.title()} team must have exactly "
+                        f"{rules['total']} squad players."
+                    )
+                },
+            )
+
+        if starting_players != rules["starting"] or bench_players != rules["bench"]:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail={
+                    "error": (
+                        f"{team_sport.title()} lineup must have exactly "
+                        f"{rules['starting']} starting players and "
+                        f"{rules['bench']} bench players."
+                    )
+                },
+            )
 
     # 2. Verify captain/vice are in the lineup
     if captain_id not in player_ids or vice_captain_id not in player_ids:
@@ -1962,6 +2160,85 @@ def update_lineup(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Captain and vice-captain must be different players",
         )
+
+    starters = (
+        db.query(Player)
+        .filter(Player.id.in_(player_ids))
+        .all()
+    )
+    if len(starters) != len(player_ids):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="One or more selected lineup players were not found",
+        )
+
+    if team_sport == "multisport":
+        league_sports = (
+            db.query(Sport)
+            .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+            .filter(LeagueSport.league_id == league.id)
+            .all()
+        )
+        sport_id_by_name = {sport.name.strip().lower(): sport.id for sport in league_sports}
+
+        starter_counts_by_sport_id: dict[uuid.UUID, int] = {}
+        for player in starters:
+            starter_counts_by_sport_id[player.sport_id] = (
+                starter_counts_by_sport_id.get(player.sport_id, 0) + 1
+            )
+
+        for sport_name, required_count in MULTISPORT_STARTER_SPORT_REQUIREMENTS.items():
+            sport_id = sport_id_by_name.get(sport_name)
+            if not sport_id:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Multisport league is missing required sport '{sport_name}'",
+                )
+
+            starter_count = starter_counts_by_sport_id.get(sport_id, 0)
+            if starter_count != required_count:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail={
+                        "error": (
+                            "Multisport starting lineup must include exactly "
+                            f"{MULTISPORT_STARTER_SPORT_REQUIREMENTS['football']} football "
+                            f"and {MULTISPORT_STARTER_SPORT_REQUIREMENTS['basketball']} basketball players."
+                        )
+                    },
+                )
+
+    starter_counts: dict[tuple[uuid.UUID, str], int] = {}
+    for player in starters:
+        slot_key = (player.sport_id, player.position.strip().upper())
+        starter_counts[slot_key] = starter_counts.get(slot_key, 0) + 1
+
+    lineup_slots = (
+        db.query(LineupSlot)
+        .filter(LineupSlot.league_id == league.id)
+        .all()
+    )
+    for slot in lineup_slots:
+        slot_key = (slot.sport_id, slot.position.strip().upper())
+        count = starter_counts.get(slot_key, 0)
+
+        if count < slot.min_count:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Starting lineup constraint not met for {slot.position}: "
+                    f"minimum {slot.min_count}, selected {count}"
+                ),
+            )
+
+        if count > slot.max_count:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=(
+                    f"Starting lineup constraint exceeded for {slot.position}: "
+                    f"maximum {slot.max_count}, selected {count}"
+                ),
+            )
 
     # 3. Clear existing lineup for this window
     db.query(TeamGameweekLineup).filter(
@@ -2075,6 +2352,58 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
         "end_at": window.end_at,
         "lineup_deadline_at": window.lineup_deadline_at,
         "lineup_locked": window.lineup_locked
+    }
+
+
+def get_dashboard_stats(
+    db: Session,
+    league_id: uuid.UUID,
+    user_id: uuid.UUID,
+) -> dict:
+    """Return league-scoped dashboard KPIs for the authenticated user's team."""
+    league = _require_league(db, league_id)
+    team = _require_fantasy_team(db, league_id, user_id)
+
+    now = datetime.now(timezone.utc)
+    active_window = (
+        db.query(TransferWindow)
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            TransferWindow.start_at <= now,
+            TransferWindow.end_at >= now,
+        )
+        .order_by(TransferWindow.number.desc())
+        .first()
+    )
+
+    gameweek_points: Decimal | None = None
+    rank: int | None = None
+    if active_window:
+        active_score = (
+            db.query(TeamWeeklyScore)
+            .filter(
+                TeamWeeklyScore.fantasy_team_id == team.id,
+                TeamWeeklyScore.transfer_window_id == active_window.id,
+            )
+            .first()
+        )
+        if active_score:
+            gameweek_points = active_score.points
+            rank = active_score.rank_in_league
+
+    total_points = (
+        db.query(func.coalesce(func.sum(TeamWeeklyScore.points), 0))
+        .filter(TeamWeeklyScore.fantasy_team_id == team.id)
+        .scalar()
+    )
+
+    return {
+        "league_id": league_id,
+        "team_id": team.id,
+        "rank": rank,
+        "gameweek_points": gameweek_points,
+        "total_points": total_points,
+        "budget": team.current_budget,
     }
 
 

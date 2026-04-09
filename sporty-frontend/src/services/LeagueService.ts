@@ -16,7 +16,9 @@ import type {
   TLineupResponse,
   TLineupUpdateRequest,
   TTransfer,
+  TUserTransferLeagueGroup,
   TTransferWindow,
+  TLeagueDashboardStats,
   TStageOutRequest,
   TStageOutResponse,
   TStageInRequest,
@@ -68,6 +70,7 @@ export const LeagueService = {
   async createLeague(payload: {
     name: string;
     season_id: string;
+    sports?: string[];
     competitionType?: TCompetitionType;
     is_public?: boolean;
     max_teams?: number;
@@ -213,6 +216,12 @@ export const LeagueService = {
     return res.data;
   },
 
+  /** List authenticated user's transfer history grouped by league */
+  async getMyTransfersGrouped(): Promise<TUserTransferLeagueGroup[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.MY_TRANSFERS);
+    return res.data;
+  },
+
   /** Get the user's current lineup for a league */
   async getLineup(id: string): Promise<TLineupResponse> {
     const res = await authApi.get(API_PATHS.LEAGUES.LINEUP(id));
@@ -225,7 +234,7 @@ export const LeagueService = {
     data: TLineupUpdateRequest,
   ): Promise<TLineupResponse> {
     return (
-      await authApi.post<TLineupResponse>(
+      await authApi.patch<TLineupResponse>(
         API_PATHS.LEAGUES.LINEUP(leagueId),
         data,
       )
@@ -247,6 +256,14 @@ export const LeagueService = {
     return (
       await authApi.get<TTransferWindow>(
         API_PATHS.LEAGUES.ACTIVE_WINDOW(leagueId),
+      )
+    ).data;
+  },
+
+  async getDashboardStats(leagueId: string): Promise<TLeagueDashboardStats> {
+    return (
+      await authApi.get<TLeagueDashboardStats>(
+        API_PATHS.LEAGUES.DASHBOARD_STATS(leagueId),
       )
     ).data;
   },

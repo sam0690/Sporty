@@ -14,7 +14,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from app.league.models import LeagueStatus
 from app.schemas.common import (
@@ -96,12 +96,11 @@ class LeagueSportResponse(BaseModel):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
-class MyTeamSummary(BaseModel):
-    """Brief summary of the current user's team in a league."""
-    id: uuid.UUID
-    name: str
-    rank: int | None = None
-    points: Decimal | None = None
+class LeagueTeamDetail(BaseModel):
+    """Team details for league response."""
+    team_name: str
+    team_owner: UserBrief
+    joined_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -140,8 +139,8 @@ class LeagueResponse(BaseModel):
     # Sports attached to this league — list because multi-sport leagues exist
     sports: list[LeagueSportResponse] = []
 
-    # Optional: my_team summary for the requesting user
-    my_team: MyTeamSummary | None = None
+    # Team details with owner and membership join timestamp
+    teams_detail: list[LeagueTeamDetail] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -427,6 +426,23 @@ class TransferResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserTransferHistoryLeagueBrief(BaseModel):
+    """Minimal league metadata for grouped user transfer history."""
+    id: uuid.UUID
+    name: str
+    sports: list[LeagueSportResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserTransferHistoryLeagueResponse(BaseModel):
+    """Transfers made by the authenticated user within one league."""
+    league: UserTransferHistoryLeagueBrief
+    transfers: list[TransferResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Build initial team (budget-mode leagues)
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -531,12 +547,26 @@ class LeaderboardResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LeagueDashboardStatsResponse(BaseModel):
+    """GET /leagues/{id}/dashboard/stats — league-scoped dashboard KPIs."""
+
+    league_id: uuid.UUID
+    team_id: uuid.UUID
+    rank: int | None = None
+    gameweek_points: Decimal | None = None
+    total_points: Decimal = Decimal("0")
+    budget: Decimal
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LineupEntryResponse(BaseModel):
     """A single player inside a team's weekly lineup."""
     player_id: uuid.UUID
     is_captain: bool
     is_vice_captain: bool
     player: PlayerBrief
+    created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -544,20 +574,25 @@ class LineupEntryResponse(BaseModel):
 class LineupResponse(BaseModel):
     """Result of GET /leagues/{id}/my-team/lineup."""
     fantasy_team_id: uuid.UUID
+    team_name: str
     transfer_window_id: uuid.UUID
-    entries: list[LineupEntryResponse]
+    starting_lineup: list[LineupEntryResponse]
     squad_players: list[TeamPlayerResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class LineupUpdateRequest(BaseModel):
-    """POST /leagues/{id}/my-team/lineup — set starters for the week."""
-    player_ids: list[uuid.UUID] = Field(min_length=1, max_length=15)
+    """PATCH /leagues/{id}/my-team/lineup — set starters/captains for the week."""
+    starting_lineup_player_ids: list[uuid.UUID] = Field(
+        min_length=1,
+        max_length=15,
+        validation_alias=AliasChoices("starting_lineup_player_ids", "player_ids"),
+    )
     captain_id: uuid.UUID
     vice_captain_id: uuid.UUID
 
-    @field_validator("player_ids")
+    @field_validator("starting_lineup_player_ids")
     @classmethod
     def no_duplicates(cls, v: list[uuid.UUID]) -> list[uuid.UUID]:
         if len(v) != len(set(v)):

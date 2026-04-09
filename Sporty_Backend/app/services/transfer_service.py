@@ -27,6 +27,10 @@ from app.services.transfer_session_service import clear_session, get_session, sa
 logger = logging.getLogger(__name__)
 
 SUPPORTED_TRANSFER_POOL_SPORTS = {"football", "basketball"}
+MULTISPORT_MAX_PLAYERS_BY_SPORT: dict[str, int] = {
+    "football": 8,
+    "basketball": 7,
+}
 
 
 def _safe_hget(redis: Redis, key: str, field: str) -> str | None:
@@ -81,6 +85,48 @@ def _league_supported_sport_ids(db: Session, league_id: uuid.UUID) -> set[uuid.U
         .all()
     )
     return {row[0] for row in rows}
+
+
+def _league_supported_sports(db: Session, league_id: uuid.UUID) -> list[Sport]:
+    return (
+        db.query(Sport)
+        .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+        .filter(
+            LeagueSport.league_id == league_id,
+            Sport.name.in_(SUPPORTED_TRANSFER_POOL_SPORTS),
+        )
+        .all()
+    )
+
+
+def _is_multisport_league(db: Session, league_id: uuid.UUID) -> bool:
+    sport_names = {
+        sport.name.strip().lower()
+        for sport in _league_supported_sports(db, league_id)
+        if sport.name
+    }
+    return len(sport_names) > 1
+
+
+def _sport_counts_for_player_ids(db: Session, player_ids: set[str]) -> dict[str, int]:
+    if not player_ids:
+        return {}
+
+    player_uuids = [uuid.UUID(player_id) for player_id in player_ids]
+    rows = (
+        db.query(Player.id, Sport.name)
+        .join(Sport, Player.sport_id == Sport.id)
+        .filter(Player.id.in_(player_uuids))
+        .all()
+    )
+
+    counts: dict[str, int] = {}
+    for _player_id, sport_name in rows:
+        key = (sport_name or "").strip().lower()
+        if not key:
+            continue
+        counts[key] = counts.get(key, 0) + 1
+    return counts
 
 
 def _ensure_player_allowed_for_league_pool(
@@ -246,6 +292,7 @@ def stage_in(
     current_user: User,
 ) -> dict[str, float | int]:
     league, team = _require_league_and_team(db, league_id, current_user)
+    is_multisport_league = _is_multisport_league(db, league_id)
     _ensure_player_allowed_for_league_pool(db, league_id, player_id)
     price = _player_price(db, redis, player_id)
 
@@ -276,6 +323,11 @@ def stage_in(
 
     current_budget = Decimal(str(session["currentBudget"]))
     if current_budget < price:
+        if is_multisport_league:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Insufficient budget. Stage out a player first to free funds.",
+            )
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Insufficient budget")
 
     transfers_allowed = int(session["transfersAllowed"])
@@ -287,10 +339,46 @@ def stage_in(
     original_size = len(session["originalTeam"])
     projected_total = original_size - len(session["pendingOut"]) + len(session["pendingIn"]) + 1
     if projected_total > max_total:
+        if is_multisport_league:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"Adding this player would exceed squad max ({max_total}). "
+                    "Stage out a player first."
+                ),
+            )
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Squad max {max_total} exceeded",
         )
+
+    if is_multisport_league:
+        projected_team_ids = set(session.get("originalTeam", []))
+        projected_team_ids -= set(session.get("pendingOut", []))
+        projected_team_ids |= set(session.get("pendingIn", []))
+        projected_team_ids.add(player_str)
+
+        projected_counts = _sport_counts_for_player_ids(db, projected_team_ids)
+        incoming_player = (
+            db.query(Player)
+            .join(Sport, Player.sport_id == Sport.id)
+            .filter(Player.id == player_id)
+            .first()
+        )
+        incoming_sport = (
+            incoming_player.sport.name.strip().lower()
+            if incoming_player and incoming_player.sport and incoming_player.sport.name
+            else ""
+        )
+        sport_cap = MULTISPORT_MAX_PLAYERS_BY_SPORT.get(incoming_sport)
+        if sport_cap is not None and projected_counts.get(incoming_sport, 0) > sport_cap:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"Multisport roster limit reached: max {sport_cap} {incoming_sport} players. "
+                    "Stage out a player from that sport first."
+                ),
+            )
 
     if player_str not in session["pendingIn"]:
         session["pendingIn"].append(player_str)
@@ -313,6 +401,7 @@ def confirm_transfers(
     current_user: User,
 ) -> dict[str, bool | float | int]:
     league, team = _require_league_and_team(db, league_id, current_user)
+    is_multisport_league = _is_multisport_league(db, league_id)
     window_id = _current_window_id(db, league)
 
     user_id = str(current_user.id)
@@ -325,7 +414,10 @@ def confirm_transfers(
     pending_out_ids = [uuid.UUID(pid) for pid in session.get("pendingOut", [])]
     pending_in_ids = [uuid.UUID(pid) for pid in session.get("pendingIn", [])]
 
-    if len(pending_out_ids) != len(pending_in_ids):
+    if not pending_out_ids and not pending_in_ids:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No staged transfers to confirm")
+
+    if not is_multisport_league and len(pending_out_ids) != len(pending_in_ids):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Pending in/out counts must match")
 
     for pid in pending_in_ids:
@@ -352,6 +444,32 @@ def confirm_transfers(
         if pid not in active_player_ids:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Attempted to transfer out a non-owned player")
 
+    final_player_ids = set(str(row.player_id) for row in active_rows)
+    final_player_ids -= {str(pid) for pid in pending_out_ids}
+    final_player_ids |= {str(pid) for pid in pending_in_ids}
+
+    if is_multisport_league:
+        max_total = int(_transfer_rules(db, redis, "football", league).get("max_total", 15))
+        if len(final_player_ids) > max_total:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"Final squad would exceed max size ({max_total}). "
+                    "Stage out additional players before confirming."
+                ),
+            )
+
+        final_counts_by_sport = _sport_counts_for_player_ids(db, final_player_ids)
+        for sport_name, sport_cap in MULTISPORT_MAX_PLAYERS_BY_SPORT.items():
+            if final_counts_by_sport.get(sport_name, 0) > sport_cap:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=(
+                        f"Final multisport roster would exceed the {sport_name} cap ({sport_cap}). "
+                        "Adjust staged moves before confirming."
+                    ),
+                )
+
     refunds = Decimal("0")
     penalties_by_player_out: dict[uuid.UUID, Decimal] = {}
     refunds_by_player_out: dict[uuid.UUID, Decimal] = {}
@@ -367,7 +485,7 @@ def confirm_transfers(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Final budget would be negative")
 
     # Atomic transaction under request-scoped session.
-    for pid_out, pid_in in zip(pending_out_ids, pending_in_ids):
+    for pid_out in pending_out_ids:
         row_out = (
             db.query(TeamPlayer)
             .filter(
@@ -383,25 +501,6 @@ def confirm_transfers(
         row_out.released_window_id = window_id
 
         db.add(
-            TeamPlayer(
-                fantasy_team_id=team.id,
-                player_id=pid_in,
-                acquired_window_id=window_id,
-                cost_at_acquisition=price_map.get(pid_in, Decimal("0")),
-            )
-        )
-
-        db.add(
-            Transfer(
-                fantasy_team_id=team.id,
-                transfer_window_id=window_id,
-                player_out_id=pid_out,
-                player_in_id=pid_in,
-                cost_at_transfer=price_map.get(pid_in, Decimal("0")),
-            )
-        )
-
-        db.add(
             BudgetTransaction(
                 fantasy_team_id=team.id,
                 player_id=pid_out,
@@ -411,6 +510,20 @@ def confirm_transfers(
                 penalty_applied=penalties_by_player_out.get(pid_out, Decimal("0.10")),
             )
         )
+
+    for pid_in in pending_in_ids:
+        if pid_in in active_player_ids and pid_in not in pending_out_ids:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Attempted to transfer in an already-owned player")
+
+        db.add(
+            TeamPlayer(
+                fantasy_team_id=team.id,
+                player_id=pid_in,
+                acquired_window_id=window_id,
+                cost_at_acquisition=price_map.get(pid_in, Decimal("0")),
+            )
+        )
+
         db.add(
             BudgetTransaction(
                 fantasy_team_id=team.id,
@@ -419,6 +532,22 @@ def confirm_transfers(
                 transaction_type="transfer_in_cost",
                 amount=price_map.get(pid_in, Decimal("0")),
                 penalty_applied=Decimal("0.00"),
+            )
+        )
+
+    # Keep immutable transfer audit rows as swap pairs when possible.
+    paired_count = min(len(pending_out_ids), len(pending_in_ids))
+    for index in range(paired_count):
+        pid_out = pending_out_ids[index]
+        pid_in = pending_in_ids[index]
+
+        db.add(
+            Transfer(
+                fantasy_team_id=team.id,
+                transfer_window_id=window_id,
+                player_out_id=pid_out,
+                player_in_id=pid_in,
+                cost_at_transfer=price_map.get(pid_in, Decimal("0")),
             )
         )
 

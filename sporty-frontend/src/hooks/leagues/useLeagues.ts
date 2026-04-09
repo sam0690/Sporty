@@ -10,6 +10,7 @@ import {
   TSport,
   TFantasyTeam,
   TTransfer,
+  TUserTransferLeagueGroup,
   TLineupUpdateRequest,
   TLineupResponse,
   TLeaderboardResponse,
@@ -91,6 +92,7 @@ export function useCreateLeague() {
     (payload: {
       name: string;
       season_id: string;
+      sports?: string[];
       competitionType?: TCompetitionType;
       is_public?: boolean;
       max_teams?: number;
@@ -327,6 +329,13 @@ export function useTransfers(leagueId: string) {
     ["leagues", leagueId, "transfers"],
     () => LeagueService.getTransfers(leagueId),
     { enabled: !!leagueId },
+  );
+}
+
+export function useUserTransfers() {
+  return useApiQuery<TUserTransferLeagueGroup[]>(
+    ["leagues", "me", "transfers"],
+    () => LeagueService.getMyTransfersGrouped(),
   );
 }
 

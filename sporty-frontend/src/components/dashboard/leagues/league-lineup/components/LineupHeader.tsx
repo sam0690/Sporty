@@ -4,6 +4,7 @@ type Sport = "football" | "basketball" | "cricket" | "multisport";
 
 type LineupHeaderProps = {
   leagueName: string;
+  teamName?: string;
   sport: Sport;
   currentWeek: number;
   totalWeeks: number;
@@ -39,6 +40,7 @@ function formatCountdown(deadline: string): { label: string; locked: boolean } {
 
 export function LineupHeader({
   leagueName,
+  teamName,
   sport,
   currentWeek,
   totalWeeks,
@@ -49,19 +51,29 @@ export function LineupHeader({
   return (
     <header className="flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-light tracking-tight text-gray-900">
-          {leagueName}
-        </h1>
-        <span className="text-lg" aria-label={sport} title={sport}>{sportIcons[sport]}</span>
+        <div>
+          <h1 className="text-2xl font-light tracking-tight text-gray-900">
+            {leagueName}
+          </h1>
+          {teamName ? (
+            <p className="text-sm text-gray-500">Team: {teamName}</p>
+          ) : null}
+        </div>
+        <span className="text-lg" aria-label={sport} title={sport}>
+          {sportIcons[sport]}
+        </span>
       </div>
 
       <div className="flex items-center gap-3">
-        <p className="text-sm text-gray-500">Week {currentWeek} of {totalWeeks}</p>
+        <p className="text-sm text-gray-500">
+          Week {currentWeek} of {totalWeeks}
+        </p>
         <p
-          className={`rounded-full border px-4 py-1.5 text-sm ${countdown.locked
-            ? "border-red-200 bg-red-50 text-red-500"
-            : "border-gray-100 bg-white text-gray-600"
-            }`}
+          className={`rounded-full border px-4 py-1.5 text-sm ${
+            countdown.locked
+              ? "border-red-200 bg-red-50 text-red-500"
+              : "border-gray-100 bg-white text-gray-600"
+          }`}
         >
           {countdown.locked ? "Lineup Locked" : countdown.label}
         </p>

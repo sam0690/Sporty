@@ -49,6 +49,11 @@ export type TLeague = {
   teams?: TFantasyTeam[];
   season?: TSeasonBrief;
   lineup_slots?: TLineupSlot[];
+  teams_detail?: {
+    team_name: string;
+    team_owner: TUser;
+    joined_at: string;
+  }[];
   my_team?: {
     id: string;
     name: string;
@@ -61,6 +66,7 @@ export type TLineupEntry = {
   player_id: string;
   is_captain: boolean;
   is_vice_captain: boolean;
+  created_at: string;
   player: {
     id: string;
     name: string;
@@ -76,13 +82,14 @@ export type TLineupEntry = {
 
 export type TLineupResponse = {
   fantasy_team_id: string;
+  team_name: string;
   transfer_window_id: string;
-  entries: TLineupEntry[];
+  starting_lineup: TLineupEntry[];
   squad_players: TTeamPlayer[];
 };
 
 export type TLineupUpdateRequest = {
-  player_ids: string[];
+  starting_lineup_player_ids: string[];
   captain_id: string;
   vice_captain_id: string;
 };
@@ -161,18 +168,37 @@ export type TTeamPlayer = {
   joined_at?: string;
 };
 
+export type TTransferPlayer = {
+  id: string;
+  name?: string;
+  display_name?: string;
+  position: string;
+  real_team: string;
+  cost: number | string;
+  sport: TSportBrief;
+};
+
 export type TTransfer = {
   id: string;
-  player_out: TPlayerBrief;
-  player_in: TPlayerBrief;
+  player_out: TTransferPlayer;
+  player_in: TTransferPlayer;
   transfer_window: {
     id: string;
     number: number;
     start_at: string;
     end_at: string;
   };
-  cost_at_transfer: number;
+  cost_at_transfer: number | string;
   created_at: string;
+};
+
+export type TUserTransferLeagueGroup = {
+  league: {
+    id: string;
+    name: string;
+    sports: TLeagueSport[];
+  };
+  transfers: TTransfer[];
 };
 
 export type TTransferWindow = {
@@ -190,6 +216,15 @@ export type TStageOutRequest = {
   league_id: string;
   gameweek_id: string;
   player_id: string;
+};
+
+export type TLeagueDashboardStats = {
+  league_id: string;
+  team_id: string;
+  rank: number | null;
+  gameweek_points: number | null;
+  total_points: number;
+  budget: number;
 };
 
 export type TStageOutResponse = {

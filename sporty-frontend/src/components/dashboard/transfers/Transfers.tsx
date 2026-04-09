@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import {
@@ -16,6 +16,7 @@ import { SearchBar } from "@/components/dashboard/transfers/components/SearchBar
 import { TransferConfirmation } from "@/components/dashboard/transfers/components/TransferConfirmation";
 import { TransfersHeader } from "@/components/dashboard/transfers/components/TransfersHeader";
 import { TransferSuccess } from "@/components/dashboard/transfers/components/TransferSuccess";
+import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/components/UserTransferHistoryCarousel";
 import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import {
@@ -26,12 +27,13 @@ import {
   useMyTeam,
   useStageIn,
   useStageOut,
+  useUserTransfers,
 } from "@/hooks/leagues/useLeagues";
-import { usePlayers } from "@/hooks/players/usePlayers";
+import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { toastifier } from "@/libs/toastifier";
 
 const toSport = (value?: string): Exclude<Sport, "All"> => {
-  if (value === "football" || value === "basketball") {
+  if (value === "football" || value === "basketball" || value === "cricket") {
     return value;
   }
   return "football";
@@ -44,12 +46,30 @@ export function Transfers() {
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
   const { data: myTeam, isLoading: teamLoading } = useMyTeam(leagueId);
+  const {
+    data: userTransferGroups,
+    isLoading: userTransfersLoading,
+    error: userTransfersError,
+  } = useUserTransfers();
   const { data: activeWindow, isLoading: windowLoading } =
     useActiveWindow(leagueId);
-  const { data: playersData, isLoading: playersLoading } = usePlayers({
-    sport_name: league?.sports?.[0]?.sport.name,
-    league_id: leagueId || undefined,
-  });
+  const leagueSports = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          (league?.sports ?? [])
+            .map((entry) => toSport(entry?.sport?.name))
+            .filter(
+              (sport): sport is Exclude<Sport, "All"> =>
+                sport === "football" || sport === "basketball",
+            ),
+        ),
+      ),
+    [league?.sports],
+  );
+
+  const { data: playersData, isLoading: playersLoading } =
+    useTransferPoolPlayers(leagueId, league?.sports);
   const stageOutMutation = useStageOut(leagueId);
   const stageInMutation = useStageIn(leagueId);
   const confirmTransfersMutation = useConfirmTransfers(leagueId);
@@ -80,6 +100,7 @@ export function Transfers() {
   const [transfersRemaining, setTransfersRemaining] = useState<number | null>(
     null,
   );
+  const isMultiSportLeague = leagueSports.length > 1;
 
   const ownedPlayers: OwnedPlayer[] = useMemo(() => {
     const rows = myTeam?.team_players ?? myTeam?.players ?? [];
@@ -136,13 +157,75 @@ export function Transfers() {
     });
   }, [availablePlayers, searchQuery, selectedSport, selectedPosition]);
 
+  const availableSportsForFilter = useMemo(
+    () =>
+      leagueSports.length > 0
+        ? leagueSports
+        : Array.from(
+            new Set(
+              availablePlayers
+                .map((player) => player.sport)
+                .filter((sport) => sport !== "cricket"),
+            ),
+          ),
+    [leagueSports, availablePlayers],
+  );
+
+  const positionOptionsBySport = useMemo(() => {
+    const bySport: Partial<Record<Sport, string[]>> = {
+      All: ["All"],
+    };
+
+    for (const sport of availableSportsForFilter) {
+      const sportPositions = Array.from(
+        new Set(
+          availablePlayers
+            .filter((player) => player.sport === sport)
+            .map((player) => player.position)
+            .filter(Boolean),
+        ),
+      ).sort((a, b) => a.localeCompare(b));
+
+      bySport[sport] = ["All", ...sportPositions];
+    }
+
+    const allPositions = Array.from(
+      new Set(
+        availablePlayers.map((player) => player.position).filter(Boolean),
+      ),
+    ).sort((a, b) => a.localeCompare(b));
+    bySport.All = ["All", ...allPositions];
+
+    return bySport;
+  }, [availablePlayers, availableSportsForFilter]);
+
+  useEffect(() => {
+    if (
+      selectedSport !== "All" &&
+      !availableSportsForFilter.includes(selectedSport)
+    ) {
+      setSelectedSport("All");
+      setSelectedPosition("All");
+    }
+  }, [selectedSport, availableSportsForFilter]);
+
+  useEffect(() => {
+    const validPositions = positionOptionsBySport[selectedSport] ?? ["All"];
+    if (!validPositions.includes(selectedPosition)) {
+      setSelectedPosition("All");
+    }
+  }, [selectedPosition, selectedSport, positionOptionsBySport]);
+
   const handleAddPlayer = async (id: string) => {
-    if (stagedOutPlayers.length === 0) {
+    if (!isMultiSportLeague && stagedOutPlayers.length === 0) {
       toastifier.error("Stage out at least one player first");
       return;
     }
 
-    if (stagedInPlayers.length >= stagedOutPlayers.length) {
+    if (
+      !isMultiSportLeague &&
+      stagedInPlayers.length >= stagedOutPlayers.length
+    ) {
       toastifier.error("You have already staged enough players in");
       return;
     }
@@ -235,12 +318,15 @@ export function Transfers() {
   const confirmAllTransfers = async () => {
     if (!leagueId || !activeWindow?.id) return;
 
-    if (stagedOutPlayers.length === 0 || stagedInPlayers.length === 0) {
-      toastifier.error("Stage players out and in before confirming");
+    if (stagedOutPlayers.length === 0 && stagedInPlayers.length === 0) {
+      toastifier.error("Stage at least one transfer action before confirming");
       return;
     }
 
-    if (stagedOutPlayers.length !== stagedInPlayers.length) {
+    if (
+      !isMultiSportLeague &&
+      stagedOutPlayers.length !== stagedInPlayers.length
+    ) {
       toastifier.error("Pending in/out counts must match before confirming");
       return;
     }
@@ -287,10 +373,24 @@ export function Transfers() {
 
   if (!leagueId) {
     return (
-      <div className="mx-auto max-w-7xl px-6 py-12 text-center">
-        <h2 className="text-xl font-semibold">
-          Please select a league from your dashboard to manage transfers.
-        </h2>
+      <div className="mx-auto max-w-7xl px-6 py-8 text-gray-900">
+        <div className="mb-6 text-sm text-gray-500">
+          Manager: {username || "Sporty User"}
+        </div>
+        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 text-center">
+          <h2 className="text-xl font-semibold">
+            Select a league to manage transfers.
+          </h2>
+          <p className="mt-2 text-sm text-gray-500">
+            Your transfer history is still available below.
+          </p>
+        </div>
+
+        <UserTransferHistoryCarousel
+          groups={userTransferGroups ?? []}
+          isLoading={userTransfersLoading}
+          isError={Boolean(userTransfersError)}
+        />
       </div>
     );
   }
@@ -352,8 +452,10 @@ export function Transfers() {
                 onClick={() => setShowConfirmModal(true)}
                 disabled={
                   confirmTransfersMutation.isPending ||
-                  stagedOutPlayers.length === 0 ||
-                  stagedOutPlayers.length !== stagedInPlayers.length
+                  (stagedOutPlayers.length === 0 &&
+                    stagedInPlayers.length === 0) ||
+                  (!isMultiSportLeague &&
+                    stagedOutPlayers.length !== stagedInPlayers.length)
                 }
                 className="mt-3 w-full rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
@@ -361,12 +463,20 @@ export function Transfers() {
                   ? "Confirming..."
                   : "Confirm All Staged Transfers"}
               </button>
+              {isMultiSportLeague ? (
+                <p className="mt-2 text-xs text-gray-500">
+                  Multisport: you can stage players in directly when budget and
+                  roster limits allow.
+                </p>
+              ) : null}
             </div>
           ) : null}
           <SearchBar onSearch={setSearchQuery} resetToken={searchResetToken} />
           <FilterBar
             selectedSport={selectedSport}
             selectedPosition={selectedPosition}
+            availableSports={availableSportsForFilter}
+            positionOptionsBySport={positionOptionsBySport}
             onSportChange={setSelectedSport}
             onPositionChange={setSelectedPosition}
           />
@@ -477,6 +587,7 @@ export function Transfers() {
         }}
         onConfirm={confirmAllTransfers}
         isLoading={confirmTransfersMutation.isPending}
+        allowUnpaired={isMultiSportLeague}
         stagedOutPlayers={stagedOutPlayers}
         stagedInPlayers={stagedInPlayers}
       />
@@ -486,6 +597,14 @@ export function Transfers() {
         message={toastState.message}
         token={toastState.token}
       />
+
+      <div className="mt-8">
+        <UserTransferHistoryCarousel
+          groups={userTransferGroups ?? []}
+          isLoading={userTransfersLoading}
+          isError={Boolean(userTransfersError)}
+        />
+      </div>
     </section>
   );
 }

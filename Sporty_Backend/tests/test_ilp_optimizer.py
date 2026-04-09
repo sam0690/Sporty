@@ -15,12 +15,12 @@ from app.services.optimization.ilp_optimizer import (
 
 def _base_candidates() -> list[CandidatePlayer]:
     return [
-        CandidatePlayer(id="1", position="GKP", club="A", cost=Decimal("5"), projected_points=Decimal("10"), is_available=True),
-        CandidatePlayer(id="2", position="DEF", club="A", cost=Decimal("6"), projected_points=Decimal("9"), is_available=True),
-        CandidatePlayer(id="3", position="DEF", club="B", cost=Decimal("4"), projected_points=Decimal("8"), is_available=True),
-        CandidatePlayer(id="4", position="MID", club="B", cost=Decimal("7"), projected_points=Decimal("12"), is_available=True),
-        CandidatePlayer(id="5", position="FWD", club="C", cost=Decimal("8"), projected_points=Decimal("13"), is_available=True),
-        CandidatePlayer(id="6", position="MID", club="C", cost=Decimal("5"), projected_points=Decimal("7"), is_available=True),
+        CandidatePlayer(id="1", sport="football", position="GKP", club="A", cost=Decimal("5"), projected_points=Decimal("10"), is_available=True),
+        CandidatePlayer(id="2", sport="football", position="DEF", club="A", cost=Decimal("6"), projected_points=Decimal("9"), is_available=True),
+        CandidatePlayer(id="3", sport="football", position="DEF", club="B", cost=Decimal("4"), projected_points=Decimal("8"), is_available=True),
+        CandidatePlayer(id="4", sport="football", position="MID", club="B", cost=Decimal("7"), projected_points=Decimal("12"), is_available=True),
+        CandidatePlayer(id="5", sport="football", position="FWD", club="C", cost=Decimal("8"), projected_points=Decimal("13"), is_available=True),
+        CandidatePlayer(id="6", sport="football", position="MID", club="C", cost=Decimal("5"), projected_points=Decimal("7"), is_available=True),
     ]
 
 
@@ -34,6 +34,7 @@ def _base_constraints() -> OptimizerConstraints:
             "MID": PositionConstraint(min=1, max=2),
             "FWD": PositionConstraint(min=0, max=1),
         },
+        sports={},
         max_per_club=2,
         locked_player_ids=set(),
         banned_player_ids=set(),
@@ -52,6 +53,7 @@ def test_optimizer_budget_infeasible_case() -> None:
         budget=Decimal("5"),
         squad_size=constraints.squad_size,
         positions=constraints.positions,
+        sports=constraints.sports,
         max_per_club=constraints.max_per_club,
         locked_player_ids=constraints.locked_player_ids,
         banned_player_ids=constraints.banned_player_ids,
@@ -66,6 +68,7 @@ def test_optimizer_locked_banned_conflict_case() -> None:
         budget=constraints.budget,
         squad_size=constraints.squad_size,
         positions=constraints.positions,
+        sports=constraints.sports,
         max_per_club=constraints.max_per_club,
         locked_player_ids={"1"},
         banned_player_ids={"1"},
@@ -93,6 +96,7 @@ def test_optimizer_position_constraint_enforcement() -> None:
             "MID": PositionConstraint(exact=1),
             "FWD": PositionConstraint(exact=1),
         },
+        sports={},
         max_per_club=constraints.max_per_club,
         locked_player_ids=constraints.locked_player_ids,
         banned_player_ids=constraints.banned_player_ids,
@@ -103,3 +107,36 @@ def test_optimizer_position_constraint_enforcement() -> None:
     for player in selected:
         counts[player.position] += 1
     assert counts == {"GKP": 1, "DEF": 1, "MID": 1, "FWD": 1}
+
+
+def test_optimizer_multisport_constraints_enforcement() -> None:
+    candidates = [
+        CandidatePlayer(id="f1", sport="football", position="FWD", club="A", cost=Decimal("6"), projected_points=Decimal("11"), is_available=True),
+        CandidatePlayer(id="f2", sport="football", position="MID", club="B", cost=Decimal("6"), projected_points=Decimal("10"), is_available=True),
+        CandidatePlayer(id="f3", sport="football", position="DEF", club="C", cost=Decimal("5"), projected_points=Decimal("9"), is_available=True),
+        CandidatePlayer(id="b1", sport="basketball", position="PG", club="D", cost=Decimal("7"), projected_points=Decimal("12"), is_available=True),
+        CandidatePlayer(id="b2", sport="basketball", position="SG", club="E", cost=Decimal("6"), projected_points=Decimal("10"), is_available=True),
+        CandidatePlayer(id="b3", sport="basketball", position="PF", club="F", cost=Decimal("6"), projected_points=Decimal("9"), is_available=True),
+    ]
+
+    constraints = OptimizerConstraints(
+        budget=Decimal("40"),
+        squad_size=4,
+        positions={},
+        sports={
+            "football": PositionConstraint(exact=2),
+            "basketball": PositionConstraint(exact=2),
+        },
+        max_per_club=2,
+        locked_player_ids=set(),
+        banned_player_ids=set(),
+    )
+
+    result = optimize_lineup(candidates=candidates, constraints=constraints)
+    selected = [player for player in candidates if player.id in result["selected_player_ids"]]
+
+    football_count = sum(1 for player in selected if player.sport == "football")
+    basketball_count = sum(1 for player in selected if player.sport == "basketball")
+
+    assert football_count == 2
+    assert basketball_count == 2

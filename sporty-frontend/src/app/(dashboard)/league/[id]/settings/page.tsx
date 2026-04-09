@@ -1,7 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { LeagueSettings } from "@/components/dashboard/leagues/league-settings";
+type LeagueSettingsPageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default function LeagueSettingsPage() {
-  return <LeagueSettings />;
+export default async function LeagueSettingsPage({
+  params,
+}: LeagueSettingsPageProps) {
+  const { id } = await params;
+  redirect(`/leagues/${id}/settings`);
 }

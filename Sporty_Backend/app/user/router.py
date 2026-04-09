@@ -7,7 +7,12 @@ from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.database import get_db
 from app.user import services
-from app.user.schemas import UserListResponse, UserProfileResponse, UserUpdateRequest
+from app.user.schemas import (
+    UserActivityResponse,
+    UserListResponse,
+    UserProfileResponse,
+    UserUpdateRequest,
+)
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -29,6 +34,15 @@ def list_users(
     }
 
 
+@router.get("/me/activity", response_model=list[UserActivityResponse], summary="Get my recent activity")
+def get_my_activity(
+    league_id: uuid.UUID | None = Query(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return services.get_user_activity(db, current_user.id, league_id=league_id)
+
+
 @router.get("/{user_id}", response_model=UserProfileResponse, summary="Get user profile")
 def get_user(
     user_id: uuid.UUID,
@@ -36,6 +50,15 @@ def get_user(
     _current_user: User = Depends(get_current_active_user),
 ):
     return services.get_user(db, user_id)
+
+
+@router.get("/{user_id}/activity", response_model=list[UserActivityResponse], summary="Get user profile activity")
+def get_user_activity(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    return services.get_user_activity(db, user_id)
 
 
 @router.patch("/{user_id}", response_model=UserProfileResponse, summary="Update user profile")

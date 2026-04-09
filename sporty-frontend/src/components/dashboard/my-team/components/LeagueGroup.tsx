@@ -9,7 +9,10 @@ import {
 type LeaguePlayer = {
   id: string;
   name: string;
+  sport: Sport;
   position: string;
+  realTeam: string;
+  cost: string;
   totalPoints: number;
   avgPoints: number;
   teamName?: string;
@@ -18,7 +21,7 @@ type LeaguePlayer = {
 type LeagueGroupProps = {
   leagueName: string;
   players: LeaguePlayer[];
-  sport: Sport;
+  sports: Sport[];
 };
 
 const sportIcons: Record<Sport, string> = {
@@ -33,27 +36,43 @@ const sportImages: Record<Sport, string> = {
   cricket: "/images/leagues/cricket-card.svg",
 };
 
-export function LeagueGroup({ leagueName, players, sport }: LeagueGroupProps) {
+export function LeagueGroup({ leagueName, players, sports }: LeagueGroupProps) {
+  const primarySport = sports[0] ?? "football";
+  const sportCounts = sports.map((sport) => ({
+    sport,
+    count: players.filter((player) => player.sport === sport).length,
+  }));
+
   return (
     <section className="space-y-5">
-      <div className="relative h-16 overflow-hidden rounded-xl border border-gray-100 bg-white">
+      <div className="relative h-24 overflow-hidden rounded-2xl border border-gray-100 bg-linear-to-r from-slate-50 via-white to-slate-50">
         <Image
-          src={sportImages[sport]}
+          src={sportImages[primarySport]}
           alt=""
           fill
           className="object-cover opacity-20"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-white via-white/80 to-transparent" />
 
-        <header className="relative z-10 flex h-full items-center justify-between gap-3 px-4">
-          <div className="flex items-center gap-2">
-            <span className="text-base" aria-hidden="true">
-              {sportIcons[sport]}
-            </span>
-            <h2 className="text-lg font-medium text-gray-800">{leagueName}</h2>
+        <header className="relative z-10 flex h-full items-center justify-between gap-3 px-4 sm:px-5">
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-semibold text-gray-900">
+              {leagueName}
+            </h2>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              {sportCounts.map(({ sport, count }) => (
+                <span
+                  key={sport}
+                  className="rounded-full border border-gray-200 bg-white/90 px-2 py-0.5 text-[11px] font-medium text-gray-600"
+                >
+                  {sportIcons[sport]} {count}
+                </span>
+              ))}
+            </div>
           </div>
-          <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-500">
+
+          <span className="rounded-full border border-gray-200 bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-600">
             {players.length} players
           </span>
         </header>
@@ -66,8 +85,10 @@ export function LeagueGroup({ leagueName, players, sport }: LeagueGroupProps) {
           <PlayerCard
             key={player.id}
             name={player.name}
-            sport={sport}
+            sport={player.sport}
             position={player.position}
+            realTeam={player.realTeam}
+            cost={player.cost}
             totalPoints={player.totalPoints}
             avgPoints={player.avgPoints}
             teamName={player.teamName}

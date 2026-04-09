@@ -6,11 +6,21 @@ import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/leagu
 type LineupContainerProps = {
   startersGroupedBySport: Record<string, LineupPlayerCardModel[]>;
   benchGroupedBySport: Record<string, LineupPlayerCardModel[]>;
+  onToggleStarter: (playerId: string) => void;
+  onSetCaptain: (playerId: string) => void;
+  onSetViceCaptain: (playerId: string) => void;
+  starterLimitReached: boolean;
+  disabled?: boolean;
 };
 
 export function LineupContainer({
   startersGroupedBySport,
   benchGroupedBySport,
+  onToggleStarter,
+  onSetCaptain,
+  onSetViceCaptain,
+  starterLimitReached,
+  disabled = false,
 }: LineupContainerProps) {
   const starterSports = Object.entries(startersGroupedBySport);
   const benchSports = Object.entries(benchGroupedBySport);
@@ -35,7 +45,17 @@ export function LineupContainer({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {players.map((player) => (
-                  <PlayerCard key={player.playerId} player={player} />
+                  <PlayerCard
+                    key={player.playerId}
+                    player={player}
+                    onToggleStarter={onToggleStarter}
+                    onSetCaptain={onSetCaptain}
+                    onSetViceCaptain={onSetViceCaptain}
+                    starterToggleDisabled={
+                      disabled || (!player.isStarter && starterLimitReached)
+                    }
+                    disabled={disabled}
+                  />
                 ))}
               </div>
             </section>
@@ -61,7 +81,17 @@ export function LineupContainer({
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {players.map((player) => (
-                  <PlayerCard key={player.playerId} player={player} />
+                  <PlayerCard
+                    key={player.playerId}
+                    player={player}
+                    onToggleStarter={onToggleStarter}
+                    onSetCaptain={onSetCaptain}
+                    onSetViceCaptain={onSetViceCaptain}
+                    starterToggleDisabled={
+                      disabled || (!player.isStarter && starterLimitReached)
+                    }
+                    disabled={disabled}
+                  />
                 ))}
               </div>
             </section>

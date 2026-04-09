@@ -1,7 +1,12 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { LeagueLineup } from "@/components/dashboard/leagues/league-lineup";
+type LeagueLineupPageProps = {
+  params: Promise<{ id: string }>;
+};
 
-export default function LeagueLineupPage() {
-  return <LeagueLineup />;
+export default async function LeagueLineupPage({
+  params,
+}: LeagueLineupPageProps) {
+  const { id } = await params;
+  redirect(`/leagues/${id}/lineup`);
 }

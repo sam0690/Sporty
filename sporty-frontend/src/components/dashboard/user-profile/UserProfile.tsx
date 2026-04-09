@@ -17,7 +17,7 @@ import {
 import { StatsCards } from "@/components/dashboard/user-profile/components/StatsCards";
 import { useMe } from "@/hooks/auth/useMe";
 import { useMyLeagues } from "@/hooks/leagues/useLeagues";
-import { useUser } from "@/hooks/users/useUsers";
+import { useUser, useUserActivity } from "@/hooks/users/useUsers";
 
 type PublicProfile = {
   id: string;
@@ -65,14 +65,7 @@ const mockProfile: PublicProfile = {
       points: 387,
     },
   ],
-  recentActivity: [
-    { type: "transfer", description: "Added Lionel Messi", date: "2025-03-30" },
-    {
-      type: "lineup",
-      description: "Set lineup for Week 3",
-      date: "2025-03-29",
-    },
-  ],
+  recentActivity: [],
   topPlayers: [
     { name: "Nikola Jokic", points: 142, league: "NBA Fantasy 2025" },
     { name: "Lionel Messi", points: 87, league: "Premier League Champions" },
@@ -83,6 +76,12 @@ export function UserProfile({ userId }: { userId?: string }) {
   const { data: me, username } = useMe();
   const { data: profileUser } = useUser(userId ?? "");
   const { data: leagues } = useMyLeagues();
+  const activityUserId = userId ?? me?.id ?? "";
+  const {
+    data: activityFeed,
+    isLoading: activityLoading,
+    error: activityError,
+  } = useUserActivity(activityUserId);
 
   const mappedLeagues = useMemo<LeagueRow[]>(
     () =>
@@ -101,6 +100,15 @@ export function UserProfile({ userId }: { userId?: string }) {
   );
 
   const profile = useMemo(() => {
+    const totalPoints = mappedLeagues.reduce(
+      (sum, league) => sum + league.points,
+      0,
+    );
+    const bestRankValue = mappedLeagues
+      .map((league) => league.rank)
+      .filter((rank) => rank > 0)
+      .sort((a, b) => a - b)[0];
+
     return {
       ...mockProfile,
       id: profileUser?.id ?? me?.id ?? mockProfile.id,
@@ -109,10 +117,14 @@ export function UserProfile({ userId }: { userId?: string }) {
       joinDate:
         profileUser?.created_at ?? me?.created_at ?? mockProfile.joinDate,
       bio: "Public profile",
+      totalPoints,
       totalLeagues: mappedLeagues.length,
+      bestRank: bestRankValue ?? mockProfile.bestRank,
       leagues: mappedLeagues,
+      recentActivity: activityFeed ?? [],
     };
   }, [
+    activityFeed,
     mappedLeagues,
     me?.avatar_url,
     me?.created_at,
@@ -150,7 +162,11 @@ export function UserProfile({ userId }: { userId?: string }) {
 
         <div className="space-y-6 lg:col-span-2">
           <LeagueHistory leagues={profile.leagues} />
-          <RecentActivity recentActivity={profile.recentActivity} />
+          <RecentActivity
+            recentActivity={profile.recentActivity}
+            isLoading={activityLoading}
+            errorMessage={activityError?.message ?? null}
+          />
           <PlayerHighlights topPlayers={profile.topPlayers} />
         </div>
       </div>

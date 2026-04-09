@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 type TabKey =
   | "overview"
   | "lineup"
-  | "roster"
   | "leaderboard"
   | "members"
   | "invite"
@@ -20,7 +19,6 @@ type NavigationTabsProps = {
 const tabs: { key: TabKey; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "lineup", label: "Lineup" },
-  { key: "roster", label: "Roster" },
   { key: "leaderboard", label: "Leaderboard" },
   { key: "members", label: "Members" },
   { key: "invite", label: "Invite" },
@@ -42,11 +40,6 @@ export function NavigationTabs({
 
     if (tab === "lineup") {
       router.push(`/leagues/${leagueId}/lineup`);
-      return;
-    }
-
-    if (tab === "roster") {
-      router.push(`/leagues/${leagueId}/roster`);
       return;
     }
 

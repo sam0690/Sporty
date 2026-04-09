@@ -1,35 +1,64 @@
 "use client";
 
-type Sport = "All" | "football" | "basketball";
+type Sport = "All" | "football" | "basketball" | "cricket";
 
 type FilterBarProps = {
   selectedSport: Sport;
   selectedPosition: string;
+  availableSports?: Exclude<Sport, "All">[];
+  positionOptionsBySport?: Partial<Record<Sport, string[]>>;
   onSportChange: (sport: Sport) => void;
   onPositionChange: (position: string) => void;
 };
 
-const sports: Sport[] = ["All", "football", "basketball"];
+const defaultSports: Exclude<Sport, "All">[] = [
+  "football",
+  "basketball",
+  "cricket",
+];
 
 const sportLabels: Record<Sport, string> = {
   All: "All",
   football: "⚽ Football",
   basketball: "🏀 Basketball",
+  cricket: "🏏 Cricket",
 };
 
 const positionMap: Record<Exclude<Sport, "All">, string[]> = {
   football: ["All", "Forward", "Midfielder", "Defender", "Goalkeeper"],
   basketball: ["All", "Guard", "Forward", "Center"],
+  cricket: ["All", "Batter", "Bowler", "All-Rounder", "Wicketkeeper"],
 };
 
 export function FilterBar({
   selectedSport,
   selectedPosition,
+  availableSports,
+  positionOptionsBySport,
   onSportChange,
   onPositionChange,
 }: FilterBarProps) {
+  const leagueSports =
+    availableSports && availableSports.length > 0
+      ? availableSports
+      : defaultSports;
+  const sports: Sport[] = ["All", ...leagueSports];
+
+  const dynamicAllPositions =
+    positionOptionsBySport?.All && positionOptionsBySport.All.length > 0
+      ? positionOptionsBySport.All
+      : ["All"];
+  const dynamicSportPositions =
+    selectedSport !== "All" &&
+    positionOptionsBySport?.[selectedSport] &&
+    positionOptionsBySport[selectedSport]!.length > 0
+      ? positionOptionsBySport[selectedSport]!
+      : selectedSport === "All"
+        ? dynamicAllPositions
+        : positionMap[selectedSport];
+
   const positionOptions =
-    selectedSport === "All" ? ["All"] : positionMap[selectedSport];
+    selectedSport === "All" ? dynamicAllPositions : dynamicSportPositions;
 
   return (
     <section className="space-y-2">

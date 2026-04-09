@@ -422,6 +422,22 @@ class League(Base):
     def team_count(self) -> int:
         return len(self.fantasy_teams)
 
+    @property
+    def teams_detail(self) -> list[dict]:
+        joined_at_by_user_id = {
+            membership.user_id: membership.joined_at
+            for membership in self.memberships
+        }
+
+        return [
+            {
+                "team_name": team.name,
+                "team_owner": team.user,
+                "joined_at": joined_at_by_user_id.get(team.user_id, team.created_at),
+            }
+            for team in self.fantasy_teams
+        ]
+
     __table_args__ = (
         CheckConstraint("max_teams >= 2", name="ck_league_max_teams"),
         CheckConstraint("squad_size >= 1", name="ck_league_squad_size"),

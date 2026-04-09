@@ -24,6 +24,28 @@ export type TTokenResponse = {
 
 export type TUserProfile = TMe;
 
+export type TUserActivityType =
+  | "transfer"
+  | "points"
+  | "lineup"
+  | "rank"
+  | "league_joined"
+  | "league_created";
+
+export type TUserActivityItem = {
+  id: string;
+  type: TUserActivityType;
+  title: string;
+  description: string;
+  timestamp: string;
+  league: {
+    id: string;
+    name: string;
+    sports: string[];
+  };
+  details: Record<string, unknown>;
+};
+
 export type TUsersListResponse = {
   items: TUserProfile[];
   total: number;
@@ -162,5 +184,17 @@ export const UserService = {
 
   async deleteUser(id: string): Promise<void> {
     await authApi.delete(API_PATHS.USERS.DELETE(id));
+  },
+
+  async getUserActivity(id: string): Promise<TUserActivityItem[]> {
+    const res = await authApi.get(API_PATHS.USERS.ACTIVITY(id));
+    return unwrapResponseData(res.data);
+  },
+
+  async getMyActivity(leagueId?: string): Promise<TUserActivityItem[]> {
+    const res = await authApi.get(API_PATHS.USERS.ME_ACTIVITY, {
+      params: leagueId ? { league_id: leagueId } : undefined,
+    });
+    return unwrapResponseData(res.data);
   },
 };

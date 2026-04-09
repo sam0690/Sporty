@@ -7,6 +7,50 @@ interface AxiosErrorShape {
   message?: string;
 }
 
+function extractBackendMessage(data: unknown): string | null {
+  if (typeof data === "string" && data.trim()) {
+    return data;
+  }
+
+  if (typeof data !== "object" || data === null) {
+    return null;
+  }
+
+  const record = data as Record<string, unknown>;
+
+  const directMessage =
+    (typeof record.detail === "string" && record.detail) ||
+    (typeof record.message === "string" && record.message) ||
+    (typeof record.error === "string" && record.error) ||
+    (typeof record.code === "string" && record.code);
+
+  if (directMessage) {
+    return directMessage;
+  }
+
+  if (Array.isArray(record.detail)) {
+    const joined = record.detail
+      .map((item) => {
+        if (typeof item === "string") {
+          return item;
+        }
+        if (item && typeof item === "object") {
+          const itemRecord = item as Record<string, unknown>;
+          if (typeof itemRecord.msg === "string") {
+            return itemRecord.msg;
+          }
+        }
+        return "";
+      })
+      .filter(Boolean)
+      .join("; ");
+
+    return joined || null;
+  }
+
+  return null;
+}
+
 function isAxiosError(error: unknown): error is AxiosErrorShape {
   if (typeof error !== "object" || error === null) {
     return false;
@@ -95,14 +139,16 @@ export function extractErrorInfo(error: AxiosErrorShape): {
   details?: unknown;
 } {
   const statusCode = error.response?.status || 0;
-  const responseData = error.response?.data as
-    | Record<string, unknown>
-    | undefined;
+  const responseData = error.response?.data;
+  const responseRecord =
+    typeof responseData === "object" && responseData !== null
+      ? (responseData as Record<string, unknown>)
+      : undefined;
 
   // Try to extract error code from various response formats
   let code =
-    (responseData?.code as string) ||
-    (responseData?.error as string) ||
+    (responseRecord?.code as string) ||
+    (responseRecord?.error as string) ||
     error.code ||
     "UNKNOWN_ERROR";
 
@@ -116,13 +162,17 @@ export function extractErrorInfo(error: AxiosErrorShape): {
     else code = "NETWORK_ERROR";
   }
 
-  const userMessage = getErrorMessage(code, statusCode);
+  const backendMessage = extractBackendMessage(responseData) || error.message;
+  const userMessage =
+    backendMessage && backendMessage.trim()
+      ? backendMessage
+      : getErrorMessage(code, statusCode);
 
   return {
     code,
     statusCode,
     userMessage,
-    details: responseData?.details || responseData?.message,
+    details: responseRecord?.details ?? responseData,
   };
 }
 

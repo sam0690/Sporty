@@ -26,6 +26,11 @@ const sportIconByName: Record<string, string> = {
   basketball: "🏀",
 };
 
+const MULTISPORT_MIN_BY_SPORT = {
+  football: 5,
+  basketball: 4,
+} as const;
+
 function normalizeLeagueSport(
   sports: Array<{ sport: { name: string } }> | undefined,
 ): "football" | "basketball" | "multisport" {
@@ -123,6 +128,15 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     [selectedPlayers],
   );
 
+  const selectedCountsBySport = useMemo(
+    () =>
+      selectedPlayers.reduce<Record<string, number>>((acc, player) => {
+        acc[player.sport] = (acc[player.sport] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [selectedPlayers],
+  );
+
   const totalCost = useMemo(
     () => selectedPlayers.reduce((sum, player) => sum + player.price, 0),
     [selectedPlayers],
@@ -132,12 +146,14 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
   const budget = Number.isFinite(rawBudget) ? rawBudget : 100;
   const rawSquadSize = Number(league?.squad_size ?? 15);
   const requiredPlayers = Number.isFinite(rawSquadSize) ? rawSquadSize : 15;
-  const minPlayersRequired =
-    leagueSport === "football" || leagueSport === "basketball"
+  const minPlayersRequired = isMultiSportLeague
+    ? 13
+    : leagueSport === "football" || leagueSport === "basketball"
       ? 12
       : requiredPlayers;
-  const maxPlayersAllowed =
-    leagueSport === "football" || leagueSport === "basketball"
+  const maxPlayersAllowed = isMultiSportLeague
+    ? 15
+    : leagueSport === "football" || leagueSport === "basketball"
       ? 15
       : requiredPlayers;
   const remainingBudget = budget - totalCost;
@@ -262,6 +278,22 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
       toastifier.info(message);
       return;
     }
+
+    if (isMultiSportLeague) {
+      const footballCount = selectedCountsBySport.football ?? 0;
+      const basketballCount = selectedCountsBySport.basketball ?? 0;
+
+      if (
+        footballCount < MULTISPORT_MIN_BY_SPORT.football ||
+        basketballCount < MULTISPORT_MIN_BY_SPORT.basketball
+      ) {
+        const message = `Multisport squads must include at least ${MULTISPORT_MIN_BY_SPORT.football} football and ${MULTISPORT_MIN_BY_SPORT.basketball} basketball players.`;
+        setError(message);
+        toastifier.info(message);
+        return;
+      }
+    }
+
     setError(null);
     setStep(2);
   };
@@ -287,6 +319,21 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
         toastifier.info(message);
         setStep(1);
         return;
+      }
+
+      if (isMultiSportLeague) {
+        const footballCount = selectedCountsBySport.football ?? 0;
+        const basketballCount = selectedCountsBySport.basketball ?? 0;
+        if (
+          footballCount < MULTISPORT_MIN_BY_SPORT.football ||
+          basketballCount < MULTISPORT_MIN_BY_SPORT.basketball
+        ) {
+          const message = `Multisport squads must include at least ${MULTISPORT_MIN_BY_SPORT.football} football and ${MULTISPORT_MIN_BY_SPORT.basketball} basketball players.`;
+          setError(message);
+          toastifier.info(message);
+          setStep(1);
+          return;
+        }
       }
 
       await buildTeamMutation.mutateAsync({
@@ -532,6 +579,18 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
             style={{ width: `${budgetProgress}%` }}
           />
         </div>
+        {isMultiSportLeague ? (
+          <div className="mt-3 flex flex-wrap gap-2 text-xs">
+            <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-700">
+              ⚽ Football: {selectedCountsBySport.football ?? 0}/
+              {MULTISPORT_MIN_BY_SPORT.football} min
+            </span>
+            <span className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-orange-700">
+              🏀 Basketball: {selectedCountsBySport.basketball ?? 0}/
+              {MULTISPORT_MIN_BY_SPORT.basketball} min
+            </span>
+          </div>
+        ) : null}
       </section>
 
       <div className="flex justify-end">

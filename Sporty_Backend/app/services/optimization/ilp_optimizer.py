@@ -13,6 +13,7 @@ class LineupOptimizationError(ValueError):
 @dataclass(frozen=True)
 class CandidatePlayer:
     id: str
+    sport: str
     position: str
     club: str
     cost: Decimal
@@ -32,6 +33,7 @@ class OptimizerConstraints:
     budget: Decimal
     squad_size: int
     positions: dict[str, PositionConstraint]
+    sports: dict[str, PositionConstraint]
     max_per_club: int
     locked_player_ids: set[str]
     banned_player_ids: set[str]
@@ -63,6 +65,12 @@ def _diagnose_infeasible(
         required = rule.exact if rule.exact is not None else rule.min
         if count < required:
             return f"Insufficient players for required position '{position}'"
+
+    for sport, rule in constraints.sports.items():
+        count = sum(1 for player in available if player.sport == sport)
+        required = rule.exact if rule.exact is not None else rule.min
+        if count < required:
+            return f"Insufficient players for required sport '{sport}'"
 
     return "Optimization infeasible under current constraints"
 
@@ -114,6 +122,15 @@ def optimize_lineup(
             model += pos_expr >= rule.min
             if rule.max is not None:
                 model += pos_expr <= rule.max
+
+    for sport, rule in constraints.sports.items():
+        sport_expr = pulp.lpSum([x[pid] for pid, player in players_by_id.items() if player.sport == sport])
+        if rule.exact is not None:
+            model += sport_expr == rule.exact
+        else:
+            model += sport_expr >= rule.min
+            if rule.max is not None:
+                model += sport_expr <= rule.max
 
     clubs = {player.club for player in players_by_id.values()}
     for club in clubs:

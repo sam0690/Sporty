@@ -3,6 +3,7 @@ import { useApiMutation } from "@/hooks/api/useApiMutation";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import {
   UserService,
+  type TUserActivityItem,
   type TUserProfile,
   type TUsersListResponse,
 } from "@/services/UserService";
@@ -33,5 +34,13 @@ export function useUpdateUser(userId: string) {
       },
       successMessage: "Profile updated",
     },
+  );
+}
+
+export function useUserActivity(userId: string) {
+  return useApiQuery<TUserActivityItem[]>(
+    ["users", userId, "activity"],
+    () => UserService.getUserActivity(userId),
+    { enabled: !!userId },
   );
 }

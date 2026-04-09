@@ -18,6 +18,7 @@ type TransferConfirmationProps = {
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
+  allowUnpaired?: boolean;
   stagedOutPlayers?: OwnedPlayer[];
   stagedInPlayers?: SelectedPlayer[];
 };
@@ -27,16 +28,20 @@ export function TransferConfirmation({
   onClose,
   onConfirm,
   isLoading,
+  allowUnpaired = false,
   stagedOutPlayers = [],
   stagedInPlayers = [],
 }: TransferConfirmationProps) {
   if (!isOpen) {
     return null;
   }
-  const isValidBatch =
-    stagedOutPlayers.length > 0 &&
-    stagedInPlayers.length > 0 &&
-    stagedOutPlayers.length === stagedInPlayers.length;
+  const hasAnyStagedMoves =
+    stagedOutPlayers.length > 0 || stagedInPlayers.length > 0;
+  const isValidBatch = allowUnpaired
+    ? hasAnyStagedMoves
+    : stagedOutPlayers.length > 0 &&
+      stagedInPlayers.length > 0 &&
+      stagedOutPlayers.length === stagedInPlayers.length;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">

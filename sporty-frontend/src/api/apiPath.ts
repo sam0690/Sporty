@@ -22,7 +22,9 @@ export const API_PATHS = {
 
   USERS: {
     LIST: "/users",
+    ME_ACTIVITY: "/users/me/activity",
     DETAIL: (id: string) => `/users/${id}`,
+    ACTIVITY: (id: string) => `/users/${id}/activity`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
   },
@@ -39,6 +41,7 @@ export const API_PATHS = {
     LEAVE: (id: string) => `/leagues/${id}/leave`,
     UPDATE_STATUS: (id: string) => `/leagues/${id}/status`,
     MEMBERS: (id: string) => `/leagues/${id}/members`,
+    MY_TRANSFERS: "/leagues/me/transfers",
     MY_TEAM: (id: string) => `/leagues/${id}/my-team`,
     LEAGUE_SPORTS: (id: string) => `/leagues/${id}/sports`,
     SPORT_DETAIL: (id: string, sport: string) =>
@@ -57,6 +60,7 @@ export const API_PATHS = {
     LEADERBOARD: (id: string, windowId?: string) =>
       `/leagues/${id}/leaderboard${windowId ? `?window_id=${windowId}` : ""}`,
     ACTIVE_WINDOW: (id: string) => `/leagues/${id}/active-window`,
+    DASHBOARD_STATS: (id: string) => `/leagues/${id}/dashboard/stats`,
   },
 
   PLAYERS: {

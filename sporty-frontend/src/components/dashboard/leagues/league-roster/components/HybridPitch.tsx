@@ -1,7 +1,10 @@
 "use client";
 
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
-import { PitchSlot, type PitchSlotConfig } from "@/components/dashboard/leagues/league-roster/components/PitchSlot";
+import {
+  PitchSlot,
+  type PitchSlotConfig,
+} from "@/components/dashboard/leagues/league-roster/components/PitchSlot";
 
 type SportCount = {
   football: number;
@@ -15,6 +18,8 @@ type HybridPitchProps = {
   activeCountsPerSport: SportCount;
   isMultiSport: boolean;
   canDropToSlot: (slotId: number) => boolean;
+  onSelectPlayer?: (playerId: number) => void;
+  selectedPlayerId?: number | null;
 };
 
 type PitchSpot = {
@@ -46,18 +51,32 @@ const pitchSpots: PitchSpot[] = [
   { id: 9, className: "left-1/2 top-[84%] -translate-x-1/2" },
 ];
 
-export function HybridPitch({ slotAssignments, onRemoveFromSlot, activeCountsPerSport, isMultiSport, canDropToSlot }: HybridPitchProps) {
+export function HybridPitch({
+  slotAssignments,
+  onRemoveFromSlot,
+  activeCountsPerSport,
+  isMultiSport,
+  canDropToSlot,
+  onSelectPlayer,
+  selectedPlayerId,
+}: HybridPitchProps) {
   return (
     <section className="w-full max-w-2xl mx-auto [animation:fade-soft_0.2s_ease]">
       {isMultiSport ? (
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-sm">
-          <span className={`rounded-full border px-3 py-1 ${activeCountsPerSport.football === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+          <span
+            className={`rounded-full border px-3 py-1 ${activeCountsPerSport.football === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+          >
             ⚽ {activeCountsPerSport.football}/3
           </span>
-          <span className={`rounded-full border px-3 py-1 ${activeCountsPerSport.basketball === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+          <span
+            className={`rounded-full border px-3 py-1 ${activeCountsPerSport.basketball === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+          >
             🏀 {activeCountsPerSport.basketball}/3
           </span>
-          <span className={`rounded-full border px-3 py-1 ${activeCountsPerSport.cricket === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}>
+          <span
+            className={`rounded-full border px-3 py-1 ${activeCountsPerSport.cricket === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+          >
             🏏 {activeCountsPerSport.cricket}/3
           </span>
         </div>
@@ -90,13 +109,18 @@ export function HybridPitch({ slotAssignments, onRemoveFromSlot, activeCountsPer
                 dropId={`slot-${spot.id}`}
                 isDropDisabled={!canDropToSlot(spot.id)}
                 onRemove={onRemoveFromSlot}
+                onSelectPlayer={onSelectPlayer}
+                isSelected={!!player && selectedPlayerId === player.id}
               />
             </div>
           );
         })}
       </div>
 
-      <p className="mt-3 text-center text-xs text-gray-400">Drag players into slots. Drag slotted players to bench list or other slots.</p>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        Drag players into slots. Drag slotted players to bench list or other
+        slots.
+      </p>
     </section>
   );
 }

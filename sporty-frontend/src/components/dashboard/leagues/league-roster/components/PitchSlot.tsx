@@ -18,6 +18,8 @@ type PitchSlotProps = {
   dropId: string;
   isDropDisabled: boolean;
   onRemove: (slotId: number) => void;
+  onSelectPlayer?: (playerId: number) => void;
+  isSelected?: boolean;
 };
 
 const sportIcons = {
@@ -32,7 +34,15 @@ const ringStyles = {
   cricket: "ring-2 ring-amber-600/50",
 };
 
-export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: PitchSlotProps) {
+export function PitchSlot({
+  slot,
+  player,
+  dropId,
+  isDropDisabled,
+  onRemove,
+  onSelectPlayer,
+  isSelected = false,
+}: PitchSlotProps) {
   const draggable = useDraggable({
     id: player ? `player-${player.id}` : `empty-${slot.id}`,
     disabled: !player,
@@ -65,10 +75,19 @@ export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: Pi
         style={style}
         {...(player ? draggable.listeners : undefined)}
         {...(player ? draggable.attributes : undefined)}
-        title={player ? `${player.name} | ${player.position} | Total: ${player.totalPoints} | Avg: ${player.avgPoints.toFixed(1)}` : slot.label}
+        onClick={() => {
+          if (player && onSelectPlayer) {
+            onSelectPlayer(player.id);
+          }
+        }}
+        title={
+          player
+            ? `${player.name} | ${player.position} | Total: ${player.totalPoints} | Avg: ${player.avgPoints.toFixed(1)}`
+            : slot.label
+        }
         className={`relative flex h-10 w-10 items-center justify-center rounded-full text-center transition-all duration-150 sm:h-14 sm:w-14 ${
           player
-            ? `cursor-grab bg-white shadow-md hover:scale-105 hover:shadow-lg ${ringStyles[player.sport]}`
+            ? `cursor-grab bg-white shadow-md hover:scale-105 hover:shadow-lg ${ringStyles[player.sport]} ${isSelected ? "outline-2 outline-offset-2 outline-white" : ""}`
             : "border border-dashed border-white/40 bg-white/20 backdrop-blur-sm"
         } ${draggable.isDragging ? "rotate-1 shadow-lg" : ""} ${!isDropDisabled ? "" : "opacity-70"}`}
       >
@@ -78,8 +97,12 @@ export function PitchSlot({ slot, player, dropId, isDropDisabled, onRemove }: Pi
               {sportIcons[player.sport]}
             </div>
             <div className="pointer-events-none absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 text-center">
-              <p className="w-20 truncate text-xs font-medium text-white/90">{player.name}</p>
-              <p className="text-[10px] text-white/70">{player.totalPoints} pts</p>
+              <p className="w-20 truncate text-xs font-medium text-white/90">
+                {player.name}
+              </p>
+              <p className="text-[10px] text-white/70">
+                {player.totalPoints} pts
+              </p>
             </div>
 
             <button
