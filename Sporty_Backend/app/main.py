@@ -84,6 +84,7 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Import all models FIRST to ensure SQLAlchemy registers them before routers load
 # This prevents "failed to locate a name" errors in relationships
@@ -105,7 +106,8 @@ from app.player.models_nba import NBAStat  # noqa: F401
 from app.notification.models import Notification  # noqa: F401
 from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
 from app.database import SessionLocal
-from app.core.redis import get_redis
+from app.core.redis import close_async_redis, get_redis
+from app.core.config import settings
 from app.services.league_status_service import auto_update_league_statuses
 from app.services.cache_warming_service import warm_cache
 from app.services.notification_service import check_and_notify_open_windows
@@ -120,6 +122,9 @@ from app.notification.router import router as notification_router
 from app.scoring.router import router as scoring_router
 from app.user.router import router as user_router
 from app.api.v1.transfers import router as transfers_router
+from app.api.routes.match import router as realtime_match_router
+from app.api.routes.websocket import router as realtime_websocket_router
+from app.api.routes.sse import router as realtime_sse_router
 
 logger = logging.getLogger(__name__)
 
@@ -225,8 +230,32 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     logger.info("APScheduler started with transfer, lifecycle, cache warming, and price-update jobs")
 
+    realtime_started = False
+    if settings.REALTIME_PIPELINE_ENABLED:
+      from app.core.kafka import create_producer
+      from app.services.match_scheduler import MatchScheduler
+
+      producer = await create_producer()
+      match_scheduler = MatchScheduler(
+        producer=producer,
+        refresh_interval_seconds=settings.MATCH_SCHEDULER_REFRESH_SECONDS,
+      )
+      await match_scheduler.start()
+
+      app.state.realtime_producer = producer
+      app.state.match_scheduler = match_scheduler
+      realtime_started = True
+      logger.info("Realtime match scheduler started")
+
     yield
     # ── Shutdown ────────────────────────────────────────────────────
+    if realtime_started:
+      await app.state.match_scheduler.stop()
+      await app.state.realtime_producer.stop()
+      logger.info("Realtime match scheduler stopped")
+
+    await close_async_redis()
+
     scheduler.shutdown(wait=False)
     logger.info("APScheduler shut down")
 
@@ -244,6 +273,8 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+Instrumentator().instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -290,6 +321,9 @@ app.include_router(notification_router, prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(transfers_router, prefix="/api/v1")
+app.include_router(realtime_match_router, prefix="/api")
+app.include_router(realtime_websocket_router, prefix="/api")
+app.include_router(realtime_sse_router, prefix="/api")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

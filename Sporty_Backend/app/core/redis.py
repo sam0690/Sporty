@@ -9,6 +9,7 @@ import json
 import logging
 
 from redis import Redis
+import redis.asyncio as aioredis
 from redis.connection import ConnectionPool
 
 from app.core.config import settings
@@ -17,6 +18,39 @@ logger = logging.getLogger(__name__)
 
 # Global Redis client instance
 _redis_client: Optional[Redis] = None
+_async_redis_client: Optional[aioredis.Redis] = None
+
+
+async def create_redis_pool() -> aioredis.Redis:
+    """Create or return an async Redis client for realtime services."""
+    global _async_redis_client
+
+    if _async_redis_client is None:
+        _async_redis_client = aioredis.from_url(
+            settings.REDIS_URL,
+            decode_responses=True,
+            socket_connect_timeout=5,
+            socket_keepalive=True,
+            health_check_interval=30,
+        )
+        await _async_redis_client.ping()
+        logger.info("✅ Async Redis connection established")
+
+    return _async_redis_client
+
+
+async def get_async_redis() -> aioredis.Redis:
+    """Return the async Redis client, creating it if needed."""
+    return await create_redis_pool()
+
+
+async def close_async_redis() -> None:
+    """Close async Redis connection used by realtime components."""
+    global _async_redis_client
+    if _async_redis_client is not None:
+        await _async_redis_client.close()
+        _async_redis_client = None
+        logger.info("✅ Async Redis connection closed")
 
 
 def get_redis() -> Redis:

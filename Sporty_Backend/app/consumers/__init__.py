@@ -1,0 +1,1 @@
+"""Realtime stream consumer package."""
