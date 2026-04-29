@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.auth import services
@@ -18,32 +18,92 @@ from app.auth.schemas import (
     TokenResponse,
     UserResponse,
 )
+from app.core.config import settings
 from app.database import get_db
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+ACCESS_TOKEN_COOKIE = "access_token"
+REFRESH_TOKEN_COOKIE = "refresh_token"
+
+
+def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    response.set_cookie(
+        key=ACCESS_TOKEN_COOKIE,
+        value=access_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        path="/",
+    )
+    response.set_cookie(
+        key=REFRESH_TOKEN_COOKIE,
+        value=refresh_token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
+        path="/",
+    )
+
+
+def _clear_auth_cookies(response: Response) -> None:
+    response.delete_cookie(
+        key=ACCESS_TOKEN_COOKIE,
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="lax",
+    )
+    response.delete_cookie(
+        key=REFRESH_TOKEN_COOKIE,
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="lax",
+    )
 
 
 # ── Public endpoints (no token required) ──────────────────────────────────────
 
 @router.post("/register", response_model=RegisterResponse)
-def register(data: RegisterRequest, db: Session = Depends(get_db)):
+def register(data: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     """Register a new user. Set auto_login=true to receive tokens immediately."""
-    return services.register(db, data)
+    result = services.register(db, data)
+    if data.auto_login and isinstance(result, TokenResponse):
+        _set_auth_cookies(response, result.access_token, result.refresh_token)
+    return result
 
 
-@router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest, db: Session = Depends(get_db)):
-    return services.login(db, data)
+@router.post("/login", status_code=200)
+def login(data: LoginRequest, response: Response, db: Session = Depends(get_db)):
+    tokens = services.login(db, data)
+    _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+    return {"detail": "Login successful"}
 
 
 @router.post("/google", response_model=TokenResponse)
-def google_auth(data: GoogleAuthRequest, db: Session = Depends(get_db)):
-    return services.google_auth(db, data)
+def google_auth(data: GoogleAuthRequest, response: Response, db: Session = Depends(get_db)):
+    result = services.google_auth(db, data)
+    _set_auth_cookies(response, result.access_token, result.refresh_token)
+    return result
 
 
-@router.post("/refresh", response_model=TokenResponse)
-def refresh_token(data: RefreshTokenRequest, db: Session = Depends(get_db)):
-    return services.refresh_access_token(db, data)
+@router.post("/refresh", status_code=200)
+def refresh_token(
+    response: Response,
+    request: Request,
+    data: RefreshTokenRequest | None = None,
+    db: Session = Depends(get_db),
+):
+    refresh_token_value = data.refresh_token if data is not None else request.cookies.get(REFRESH_TOKEN_COOKIE)
+    if not refresh_token_value:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing")
+
+    tokens = services.refresh_access_token(db, RefreshTokenRequest(refresh_token=refresh_token_value))
+    _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
+    return {"detail": "Token refreshed"}
 
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse, status_code=200)
@@ -62,22 +122,29 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
 
 # ── Protected endpoints (token required) ──────────────────────────────────────
 
-@router.post("/logout", status_code=204, response_class=Response)
+@router.post("/logout", status_code=200)
 def logout(
-    data: RefreshTokenRequest,
+    response: Response,
+    request: Request,
+    data: RefreshTokenRequest | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    services.logout(db, data.refresh_token)
-    return Response(status_code=204)
+    refresh_token_value = data.refresh_token if data is not None else request.cookies.get(REFRESH_TOKEN_COOKIE)
+    if refresh_token_value:
+        services.logout(db, refresh_token_value)
+    _clear_auth_cookies(response)
+    return {"detail": "Logged out"}
 
 
 @router.post("/logout/all", status_code=200)
 def logout_all(
+    response: Response,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
     count = services.logout_all_devices(db, current_user.id)
+    _clear_auth_cookies(response)
     return {"detail": f"Revoked {count} active session(s)"}
 
 

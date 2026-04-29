@@ -129,9 +129,9 @@ def register(db: Session, data: RegisterRequest):
 
 
 def login(db: Session, data: LoginRequest) -> TokenResponse:
-    """Authenticate with username + password and return tokens."""
+    """Authenticate with email + password and return tokens."""
 
-    user = db.query(User).filter(User.username == data.username).first()
+    user = db.query(User).filter(User.email == data.email).first()
     if not user or not user.password_hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not verify_password(data.password, user.password_hash):

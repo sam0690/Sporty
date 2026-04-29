@@ -42,6 +42,7 @@ def _extract_bearer_token(value: str | None) -> str | None:
 
 async def get_current_active_user_async(request: Request, db=Depends(get_async_db)) -> User:
     token = _extract_bearer_token(request.headers.get("Authorization"))
+    token = token or request.cookies.get("access_token")
     if token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
 
@@ -61,6 +62,7 @@ async def get_current_active_user_async(request: Request, db=Depends(get_async_d
 
 async def get_current_active_user_ws(ws: WebSocket, db=Depends(get_async_db)) -> User:
     token = _extract_bearer_token(ws.headers.get("Authorization"))
+    token = token or ws.cookies.get("access_token")
     token = token or ws.query_params.get("token")
     if token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
