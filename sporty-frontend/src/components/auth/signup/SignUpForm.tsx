@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
   Card,
@@ -16,70 +18,42 @@ import { AuthHeroImage } from "@/components/auth/shared/AuthHeroImage";
 import { AuthPageShell } from "@/components/auth/shared/AuthPageShell";
 import { PasswordStrengthIndicator } from "@/components/auth/shared/PasswordStrengthIndicator";
 import { useAuth } from "@/context/auth-context";
+import { RegisterSchema, type RegisterValues } from "@/lib/validations";
 import { toastifier } from "@/libs/toastifier";
 import { Divider } from "@/components/auth/login/components/Divider";
 import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
-
-type SignUpErrors = {
-  username?: string;
-  email?: string;
-  password?: string;
-  confirmPassword?: string;
-};
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function SignUpForm() {
   const router = useRouter();
   const { register, actionLoading } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [errors, setErrors] = useState<SignUpErrors>({});
+  const {
+    control,
+    register: registerField,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterValues>({
+    resolver: zodResolver(RegisterSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+    mode: "onSubmit",
+  });
 
   const isSubmitting = actionLoading.register;
+  const password = useWatch({ control, name: "password" }) ?? "";
 
-  const validate = (): boolean => {
-    const nextErrors: SignUpErrors = {};
-
-    if (!username.trim()) {
-      nextErrors.username = "Username is required.";
-    }
-
-    if (!email.trim()) {
-      nextErrors.email = "Email is required.";
-    } else if (!emailRegex.test(email)) {
-      nextErrors.email = "Please enter a valid email address.";
-    }
-
-    if (!password.trim()) {
-      nextErrors.password = "Password is required.";
-    } else if (password.length < 8) {
-      nextErrors.password = "Password must be at least 8 characters.";
-    }
-
-    if (!confirmPassword.trim()) {
-      nextErrors.confirmPassword = "Please confirm your password.";
-    } else if (password !== confirmPassword) {
-      nextErrors.confirmPassword = "Passwords do not match.";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    const result = await register(username, email, password);
+  const onSubmit = handleSubmit(async (values) => {
+    const result = await register(
+      values.username,
+      values.email,
+      values.password,
+    );
     if (!result.success) {
       toastifier.error(result.error ?? "Unable to create account.");
       return;
@@ -87,7 +61,7 @@ export function SignUpForm() {
 
     toastifier.success("Account created! Welcome to Sporty.");
     router.replace("/dashboard");
-  };
+  });
 
   return (
     <AuthPageShell
@@ -141,12 +115,11 @@ export function SignUpForm() {
                 <Input
                   id="username"
                   type="text"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
                   placeholder="your-username"
                   autoComplete="username"
-                  error={errors.username}
+                  error={errors.username?.message}
                   className="rounded-2xl border-border-light/80 bg-surface-50/80 px-5 py-3.5 text-text-primary placeholder:text-text-secondary transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/20"
+                  {...registerField("username")}
                 />
               </div>
 
@@ -162,12 +135,11 @@ export function SignUpForm() {
                   <Input
                     id="email"
                     type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
                     placeholder="name@example.com"
                     autoComplete="email"
-                    error={errors.email}
+                    error={errors.email?.message}
                     className="h-12 rounded-xl border border-gray-300 bg-white px-4 pl-10 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
+                    {...registerField("email")}
                   />
                 </div>
               </div>
@@ -184,10 +156,9 @@ export function SignUpForm() {
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
                     placeholder="Create a password"
                     autoComplete="new-password"
+                    {...registerField("password")}
                     className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 pl-10 pr-14 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
                   />
                   <button
@@ -205,12 +176,12 @@ export function SignUpForm() {
                     )}
                   </button>
                 </div>
-                {errors.password && (
+                {errors.password?.message && (
                   <span className="mt-1 block text-xs text-accent-red">
-                    {errors.password}
+                    {errors.password.message}
                   </span>
                 )}
-                <PasswordStrengthIndicator password={password} />
+                <PasswordStrengthIndicator password={password ?? ""} />
               </div>
 
               <div className="relative">
@@ -225,10 +196,9 @@ export function SignUpForm() {
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
                     placeholder="Confirm your password"
                     autoComplete="new-password"
+                    {...registerField("confirmPassword")}
                     className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 pl-10 pr-14 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
                   />
                   <button
@@ -248,9 +218,9 @@ export function SignUpForm() {
                     )}
                   </button>
                 </div>
-                {errors.confirmPassword && (
+                {errors.confirmPassword?.message && (
                   <span className="mt-1 block text-xs text-accent-red">
-                    {errors.confirmPassword}
+                    {errors.confirmPassword.message}
                   </span>
                 )}
               </div>

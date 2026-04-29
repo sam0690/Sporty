@@ -290,7 +290,7 @@ export function TeamPreview({
           <button
             type="button"
             onClick={() =>
-              router.push(`/league/${activeSlide.leagueId}/lineup`)
+              router.push(`/leagues/${activeSlide.leagueId}/lineup`)
             }
             className="w-full rounded-xl border border-gray-200 p-3 text-left transition hover:border-primary-200"
           >

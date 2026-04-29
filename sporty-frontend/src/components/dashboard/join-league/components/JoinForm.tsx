@@ -1,21 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui";
+import { JoinLeagueSchema, type JoinLeagueValues } from "@/lib/validations";
 
 type JoinFormProps = {
-  onSubmit: (inviteCode: string, leagueName?: string) => Promise<void> | void;
+  onSubmit: (inviteCode: string) => Promise<void> | void;
   isLoading: boolean;
   error?: string | null;
 };
 
 export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
-  const [inviteCode, setInviteCode] = useState("");
-  const [leagueName, setLeagueName] = useState("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<JoinLeagueValues>({
+    resolver: zodResolver(JoinLeagueSchema),
+    defaultValues: {
+      invite_code: "",
+    },
+    mode: "onSubmit",
+  });
 
-  const submit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    await onSubmit(inviteCode.trim(), leagueName.trim());
-  };
+  const submit = handleSubmit(async (values) => {
+    await onSubmit(values.invite_code.trim());
+  });
 
   return (
     <form
@@ -29,33 +40,16 @@ export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
         >
           Invite Code
         </label>
-        <input
+        <Input
           id="invite-code"
-          value={inviteCode}
-          onChange={(event) => setInviteCode(event.target.value)}
           placeholder="e.g. j4YEA1lf"
-          required
           className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center font-mono text-lg tracking-wider text-gray-900 outline-none transition focus:border-primary-400"
+          error={errors.invite_code?.message}
+          {...register("invite_code")}
         />
         <p className="mt-2 text-center text-xs text-gray-400">
           Invite codes are case-sensitive.
         </p>
-      </div>
-
-      <div>
-        <label
-          htmlFor="league-name"
-          className="mb-1 block text-sm text-gray-600"
-        >
-          League Name (optional)
-        </label>
-        <input
-          id="league-name"
-          value={leagueName}
-          onChange={(event) => setLeagueName(event.target.value)}
-          placeholder="Search by league name"
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
-        />
       </div>
 
       {error ? (

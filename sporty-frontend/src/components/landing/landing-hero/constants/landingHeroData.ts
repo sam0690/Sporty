@@ -11,7 +11,7 @@ export const LANDING_HERO_CONTENT: LandingHeroContent = {
   ctas: [
     {
       label: "Get Started",
-      href: "/signUp",
+      href: "/register",
       variant: "primary",
     },
     {

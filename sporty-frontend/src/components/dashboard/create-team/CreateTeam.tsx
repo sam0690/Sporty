@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMe } from "@/hooks/auth/useMe";
 import { CreateTeamHeader } from "@/components/dashboard/create-team/components/CreateTeamHeader";
 import { CurrentTeam } from "@/components/dashboard/create-team/components/CurrentTeam";
@@ -19,6 +21,7 @@ import {
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { CardSkeleton } from "@/components/ui/skeletons";
+import { CreateTeamSchema, type CreateTeamValues } from "@/lib/validations";
 import { toastifier } from "@/libs/toastifier";
 
 const sportIconByName: Record<string, string> = {
@@ -85,7 +88,6 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
 
   const [step, setStep] = useState(1);
   const [selectedPlayers, setSelectedPlayers] = useState<MarketPlayer[]>([]);
-  const [teamName, setTeamName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPosition, setSelectedPosition] = useState("All");
   const [selectedSport, setSelectedSport] = useState("All");
@@ -93,6 +95,23 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     useState<BudgetCostFilter>("All");
   const [error, setError] = useState<string | null>(null);
   const [pickHistory, setPickHistory] = useState<string[]>([]);
+
+  const {
+    control,
+    setValue,
+    trigger,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateTeamValues>({
+    resolver: zodResolver(CreateTeamSchema),
+    defaultValues: {
+      player_ids: [],
+      team_name: "",
+    },
+    mode: "onSubmit",
+  });
+
+  const teamName = useWatch({ control, name: "team_name" }) ?? "";
 
   const marketPlayers: MarketPlayer[] = useMemo(() => {
     if (!playersData?.items) return [];
@@ -127,6 +146,13 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     () => selectedPlayers.map((player) => player.id),
     [selectedPlayers],
   );
+
+  useEffect(() => {
+    setValue("player_ids", selectedPlayerIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [selectedPlayerIds, setValue]);
 
   const selectedCountsBySport = useMemo(
     () =>
@@ -265,7 +291,15 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     }
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
+    setError(null);
+
+    const selectionValid = await trigger("player_ids");
+    if (!selectionValid) {
+      setError("Select at least one player.");
+      return;
+    }
+
     if (
       selectedPlayers.length < minPlayersRequired ||
       selectedPlayers.length > maxPlayersAllowed
@@ -294,19 +328,13 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
       }
     }
 
-    setError(null);
     setStep(2);
   };
 
-  const handleCreateTeam = async () => {
+  const handleCreateTeam = handleSubmit(async (values) => {
     if (!leagueId) return;
+
     try {
-      if (teamName.trim().length < 1) {
-        const message = "Team name is required.";
-        setError(message);
-        toastifier.info(message);
-        return;
-      }
       if (
         selectedPlayers.length < minPlayersRequired ||
         selectedPlayers.length > maxPlayersAllowed
@@ -339,8 +367,8 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
       await buildTeamMutation.mutateAsync({
         id: leagueId,
         payload: {
-          team_name: teamName.trim(),
-          player_ids: selectedPlayerIds.map((id) => id.toString()),
+          team_name: values.team_name.trim(),
+          player_ids: values.player_ids.map((id) => id.toString()),
         },
       });
 
@@ -349,7 +377,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
       setError(err instanceof Error ? err.message : "Failed to create team");
       setStep(2);
     }
-  };
+  });
 
   if (leagueLoading || !league) {
     return (
@@ -652,10 +680,16 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
       {step === 2 ? (
         <TeamNameForm
           teamName={teamName}
-          onTeamNameChange={setTeamName}
+          onTeamNameChange={(value) =>
+            setValue("team_name", value, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
           onSubmit={handleCreateTeam}
           onBack={() => setStep(1)}
           isSaving={buildTeamMutation.isPending}
+          error={errors.team_name?.message ?? null}
         />
       ) : null}
     </section>

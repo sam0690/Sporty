@@ -107,7 +107,7 @@ export function JoinLeague() {
         <JoinForm
           onSubmit={handleSubmit}
           isLoading={joinMutation.isPending}
-          error={null}
+          error={error}
         />
       )}
 

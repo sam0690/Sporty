@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useForm, useWatch, type Resolver } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useMe } from "@/hooks/auth/useMe";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
@@ -14,6 +16,7 @@ import {
   useCreateLeague,
   useSports,
 } from "@/hooks/leagues/useLeagues";
+import { CreateLeagueSchema, type CreateLeagueValues } from "@/lib/validations";
 import { toastifier } from "@/libs/toastifier";
 import { LeagueService } from "@/services/LeagueService";
 import { ScoringService } from "@/services/ScoringService";
@@ -28,17 +31,6 @@ type EditableScoringRule = {
   defaultPoints: number;
   points: number;
   enabled: boolean;
-};
-
-type LeagueData = {
-  leagueName: string;
-  sport: SportKey;
-  seasonId: string;
-  leagueLogo: string;
-  isPrivate: boolean;
-  teamSize: number;
-  competitionType: TCompetitionType;
-  draftDate: string;
 };
 
 const MIN_CUSTOM_POINTS = -50;
@@ -67,16 +59,38 @@ export function CreateLeague() {
   const createMutation = useCreateLeague();
 
   const [step, setStep] = useState(1);
-  const [leagueData, setLeagueData] = useState<LeagueData>({
-    leagueName: "",
-    sport: "football",
-    seasonId: "",
-    leagueLogo: "",
-    isPrivate: false,
-    teamSize: 10,
-    competitionType: "draft",
-    draftDate: "",
+  const [leagueLogo, setLeagueLogo] = useState("");
+  const [draftDate, setDraftDate] = useState("");
+  const [seasonId, setSeasonId] = useState("");
+
+  const {
+    control,
+    setValue,
+    trigger,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateLeagueValues>({
+    resolver: zodResolver(CreateLeagueSchema) as unknown as Resolver<
+      CreateLeagueValues,
+      unknown,
+      CreateLeagueValues
+    >,
+    defaultValues: {
+      name: "",
+      sport_ids: ["football"],
+      budget: 100,
+      squad_size: 10,
+      draft_mode: true,
+      is_public: true,
+    },
+    mode: "onSubmit",
   });
+
+  const leagueName = useWatch({ control, name: "name" }) ?? "";
+  const sportIds = useWatch({ control, name: "sport_ids" });
+  const squadSize = useWatch({ control, name: "squad_size" }) ?? 10;
+  const draftMode = useWatch({ control, name: "draft_mode" }) ?? true;
+  const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
   const [scoringRulesBySport, setScoringRulesBySport] = useState<
     Record<LeagueSportName, EditableScoringRule[]>
@@ -97,9 +111,41 @@ export function CreateLeague() {
   const [error, setError] = useState<string | null>(null);
 
   const totalSteps = 4;
-  const selectedSports = useMemo(
-    () => mapSportSelectionToPayload(leagueData.sport),
-    [leagueData.sport],
+  const selectedSports = useMemo(() => {
+    const currentSportIds = sportIds ?? ["football"];
+
+    return currentSportIds.length > 1
+      ? (currentSportIds as LeagueSportName[])
+      : mapSportSelectionToPayload(
+          (currentSportIds[0] as SportKey) ?? "football",
+        );
+  }, [sportIds]);
+  const leagueData = useMemo(
+    () => ({
+      leagueName,
+      sport:
+        selectedSports.length > 1
+          ? ("multisport" as SportKey)
+          : ((selectedSports[0] as SportKey) ?? "football"),
+      seasonId,
+      leagueLogo,
+      isPrivate: !isPublic,
+      teamSize: squadSize,
+      competitionType: draftMode
+        ? ("draft" as TCompetitionType)
+        : ("budget" as TCompetitionType),
+      draftDate,
+    }),
+    [
+      draftDate,
+      draftMode,
+      isPublic,
+      leagueName,
+      leagueLogo,
+      seasonId,
+      selectedSports,
+      squadSize,
+    ],
   );
 
   useEffect(() => {
@@ -164,13 +210,13 @@ export function CreateLeague() {
       const firstSportSeasonId = sportSeasons.find((season) => season.id)?.id;
       const firstAnySeasonId = seasons.find((season) => season.id)?.id;
 
-      if (firstSportSeasonId && !leagueData.seasonId) {
-        setLeagueData((prev) => ({ ...prev, seasonId: firstSportSeasonId }));
-      } else if (firstAnySeasonId && !leagueData.seasonId) {
-        setLeagueData((prev) => ({ ...prev, seasonId: firstAnySeasonId }));
+      if (firstSportSeasonId && !seasonId) {
+        setSeasonId(firstSportSeasonId);
+      } else if (firstAnySeasonId && !seasonId) {
+        setSeasonId(firstAnySeasonId);
       }
     }
-  }, [seasons, selectedSports, leagueData.seasonId]);
+  }, [seasonId, seasons, selectedSports]);
 
   const customScoringValidationError = useMemo(() => {
     for (const sport of selectedSports) {
@@ -197,27 +243,17 @@ export function CreateLeague() {
     return null;
   }, [selectedSports, customScoringEnabledBySport, scoringRulesBySport]);
 
-  const validationErrors = useMemo(() => {
-    const errors: string[] = [];
+  const schemaError =
+    step === 1
+      ? errors.name?.message || errors.sport_ids?.message
+      : step === 2
+        ? errors.budget?.message ||
+          errors.squad_size?.message ||
+          errors.draft_mode?.message ||
+          errors.is_public?.message
+        : null;
 
-    if (!leagueData.leagueName.trim()) {
-      errors.push("League name is required.");
-    }
-
-    if (!leagueData.seasonId) {
-      errors.push("A valid season must be active for this sport.");
-    }
-
-    if (leagueData.teamSize < 2 || leagueData.teamSize > 64) {
-      errors.push("Team size must be between 2 and 64.");
-    }
-
-    if (customScoringValidationError) {
-      errors.push(customScoringValidationError);
-    }
-
-    return errors;
-  }, [leagueData, customScoringValidationError]);
+  const displayError = schemaError || error;
 
   const customOverrides = useMemo(
     () =>
@@ -237,13 +273,21 @@ export function CreateLeague() {
     [selectedSports, customScoringEnabledBySport, scoringRulesBySport],
   );
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
+    setError(null);
+
+    const fields =
+      step === 1
+        ? (["name", "sport_ids"] as const)
+        : (["budget", "squad_size", "draft_mode", "is_public"] as const);
+
+    const isValid = await trigger(fields);
+    if (!isValid) {
+      return;
+    }
+
     if (step === 1) {
-      if (!leagueData.leagueName.trim()) {
-        setError("League name is required.");
-        return;
-      }
-      if (!leagueData.seasonId) {
+      if (!seasonId) {
         setError(
           "No active season found for this sport. Please contact admin.",
         );
@@ -251,7 +295,6 @@ export function CreateLeague() {
       }
     }
 
-    setError(null);
     setStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
@@ -260,27 +303,26 @@ export function CreateLeague() {
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleCreateLeague = async () => {
-    if (validationErrors.length > 0) {
-      setError(validationErrors[0]);
+  const handleCreateLeague = handleSubmit(async (values) => {
+    if (customScoringValidationError) {
+      setError(customScoringValidationError);
       return;
     }
 
     setError(null);
     try {
-      const competitionType = leagueData.competitionType;
+      const competitionType = values.draft_mode ? "draft" : "budget";
       const result = await createMutation.mutateAsync({
-        name: leagueData.leagueName,
-        season_id: leagueData.seasonId,
-        sports: selectedSports,
+        name: values.name,
+        season_id: seasonId,
+        sports: values.sport_ids,
         competitionType,
-        is_public: !leagueData.isPrivate,
-        max_teams: leagueData.teamSize,
-        draft_mode: competitionType === "draft",
+        is_public: values.is_public,
+        max_teams: values.squad_size,
+        squad_size: values.squad_size,
+        budget_per_team: values.budget,
+        draft_mode: values.draft_mode,
         allow_midseason_join: competitionType === "budget",
-        // Default values for other fields
-        squad_size: 15,
-        budget_per_team: 100,
         transfers_per_window: 4,
         transfer_day: 1,
       });
@@ -355,20 +397,19 @@ export function CreateLeague() {
         setError(fallback);
       }
     }
-  };
+  });
 
   const handleLeagueNameChange = (value: string) => {
-    setLeagueData((prev) => ({ ...prev, leagueName: value }));
+    setValue("name", value, { shouldDirty: true, shouldValidate: true });
   };
 
   const handleSportChange = (value: string) => {
     const sport = value as SportKey;
-    // Reset seasonId when sport changes so useEffect re-selects
-    setLeagueData((prev) => ({
-      ...prev,
-      sport,
-      seasonId: "",
-    }));
+    setValue("sport_ids", mapSportSelectionToPayload(sport), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setSeasonId("");
   };
 
   const handleToggleSportCustomScoring = (
@@ -422,10 +463,27 @@ export function CreateLeague() {
     competitionType?: TCompetitionType;
     draftDate?: string;
   }) => {
-    setLeagueData((prev) => ({
-      ...prev,
-      ...next,
-    }));
+    if (typeof next.isPrivate === "boolean") {
+      setValue("is_public", !next.isPrivate, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (typeof next.teamSize === "number") {
+      setValue("squad_size", next.teamSize, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (typeof next.competitionType === "string") {
+      setValue("draft_mode", next.competitionType === "draft", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (typeof next.draftDate === "string") {
+      setDraftDate(next.draftDate);
+    }
   };
 
   return (
@@ -440,9 +498,9 @@ export function CreateLeague() {
         leagueName={leagueData.leagueName}
       />
 
-      {error ? (
+      {displayError ? (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
-          {error}
+          {displayError}
         </div>
       ) : null}
 
@@ -455,9 +513,7 @@ export function CreateLeague() {
               leagueLogo={leagueData.leagueLogo}
               onLeagueNameChange={handleLeagueNameChange}
               onSportChange={handleSportChange}
-              onLeagueLogoChange={(value) =>
-                setLeagueData((prev) => ({ ...prev, leagueLogo: value }))
-              }
+              onLeagueLogoChange={(value) => setLeagueLogo(value)}
             />
           ) : null}
 

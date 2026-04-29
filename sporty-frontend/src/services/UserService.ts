@@ -1,7 +1,6 @@
 import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
 import { API_PATHS } from "@/api/apiPath";
-import { getRefreshToken } from "@/libs/auth-tokens";
 import type { ApiResponse } from "@/types";
 import type { AxiosResponse } from "axios";
 
@@ -14,12 +13,6 @@ export type TMe = {
   avatar_url: string | null;
   is_active: boolean;
   created_at: string;
-};
-
-export type TTokenResponse = {
-  access_token: string;
-  refresh_token: string;
-  token_type: string;
 };
 
 export type TUserProfile = TMe;
@@ -82,9 +75,9 @@ export const UserService = {
 
   /** Login with credentials */
   async login(payload: {
-    username: string;
+    email: string;
     password: string;
-  }): Promise<TTokenResponse> {
+  }): Promise<{ detail: string }> {
     const res = await publicApi.post(API_PATHS.AUTH.LOGIN, payload);
     return unwrapResponseData(res.data);
   },
@@ -95,18 +88,14 @@ export const UserService = {
     email: string;
     password: string;
     auto_login?: boolean;
-  }): Promise<TTokenResponse | TUserProfile> {
+  }): Promise<{ detail: string } | TUserProfile> {
     const res = await publicApi.post(API_PATHS.AUTH.REGISTER, payload);
     return unwrapResponseData(res.data);
   },
 
   /** Logout */
   async logout(): Promise<void> {
-    const refreshToken = getRefreshToken();
-    if (!refreshToken) {
-      return;
-    }
-    await authApi.post(API_PATHS.AUTH.LOGOUT, { refresh_token: refreshToken });
+    await authApi.post(API_PATHS.AUTH.LOGOUT);
   },
 
   async logoutAll(): Promise<{ detail: string }> {
@@ -114,7 +103,7 @@ export const UserService = {
     return unwrapResponseData(res.data);
   },
 
-  async loginWithGoogle(idToken: string): Promise<TTokenResponse> {
+  async loginWithGoogle(idToken: string): Promise<{ detail: string }> {
     const res = await publicApi.post(API_PATHS.AUTH.GOOGLE, {
       id_token: idToken,
     });

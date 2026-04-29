@@ -1,13 +1,6 @@
 import axios from "axios";
 import { API_PATHS } from "@/api/apiPath";
 import { formatError } from "@/libs/api-error";
-import {
-  clearAuthTokens,
-  getAccessToken,
-  getRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from "@/libs/auth-tokens";
 import { publicApi } from "@/api/public-api-client";
 import { emitAuthInvalidated } from "@/libs/auth-events";
 
@@ -17,6 +10,7 @@ import { emitAuthInvalidated } from "@/libs/auth-events";
  */
 const authApi = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -24,73 +18,21 @@ const authApi = axios.create({
   timeout: 15_000,
 });
 
-type TokenPayload = {
-  accessToken: string;
-  refreshToken: string;
-};
+let refreshPromise: Promise<boolean> | null = null;
 
-const parseTokenPayload = (value: unknown): TokenPayload | null => {
-  if (!value || typeof value !== "object") {
-    return null;
-  }
-
-  const record = value as Record<string, unknown>;
-  const data =
-    typeof record.data === "object" && record.data !== null
-      ? (record.data as Record<string, unknown>)
-      : record;
-
-  const accessToken =
-    typeof data.access_token === "string"
-      ? data.access_token
-      : typeof data.accessToken === "string"
-        ? data.accessToken
-        : null;
-
-  const refreshToken =
-    typeof data.refresh_token === "string"
-      ? data.refresh_token
-      : typeof data.refreshToken === "string"
-        ? data.refreshToken
-        : null;
-
-  if (!accessToken || !refreshToken) {
-    return null;
-  }
-
-  return { accessToken, refreshToken };
-};
-
-let refreshPromise: Promise<string | null> | null = null;
-
-export const refreshAccessToken = async (): Promise<string | null> => {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return null;
-  }
-
+export const refreshAccessToken = async (): Promise<boolean> => {
   if (refreshPromise) {
     return refreshPromise;
   }
 
   refreshPromise = publicApi
-    .post(API_PATHS.AUTH.REFRESH, { refresh_token: refreshToken })
-    .then((response) => {
-      const payload = parseTokenPayload(response.data);
-      if (!payload) {
-        clearAuthTokens();
-        emitAuthInvalidated("refresh_failed");
-        return null;
-      }
-
-      setAccessToken(payload.accessToken);
-      setRefreshToken(payload.refreshToken);
-      return payload.accessToken;
+    .post(API_PATHS.AUTH.REFRESH)
+    .then(() => {
+      return true;
     })
     .catch(() => {
-      clearAuthTokens();
       emitAuthInvalidated("refresh_failed");
-      return null;
+      return false;
     })
     .finally(() => {
       refreshPromise = null;
@@ -101,13 +43,7 @@ export const refreshAccessToken = async (): Promise<string | null> => {
 
 // ── Request interceptor – attach token ─────────────────────────────
 authApi.interceptors.request.use(
-  (config) => {
-    const token = getAccessToken();
-    if (token && config.headers) {
-      config.headers.set("Authorization", `Bearer ${token}`);
-    }
-    return config;
-  },
+  (config) => config,
   (error) => Promise.reject(formatError(error)),
 );
 
@@ -127,13 +63,9 @@ authApi.interceptors.response.use(
     }
 
     originalRequest._retry = true;
-    const refreshedToken = await refreshAccessToken();
-    if (!refreshedToken) {
+    const refreshed = await refreshAccessToken();
+    if (!refreshed) {
       return Promise.reject(formatError(error));
-    }
-
-    if (originalRequest.headers) {
-      originalRequest.headers.Authorization = `Bearer ${refreshedToken}`;
     }
 
     return authApi(originalRequest);

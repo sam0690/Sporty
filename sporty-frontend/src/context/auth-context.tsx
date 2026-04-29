@@ -10,14 +10,9 @@ import {
   type ReactNode,
 } from "react";
 import { API_PATHS } from "@/api/apiPath";
-import { authApi, refreshAccessToken } from "@/api/auth-api-client";
+import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
-import {
-  clearAuthTokens,
-  getRefreshToken,
-  setAccessToken,
-  setRefreshToken,
-} from "@/libs/auth-tokens";
+import { clearAuthTokens } from "@/libs/auth-tokens";
 import { subscribeAuthInvalidated } from "@/libs/auth-events";
 import { ROUTES } from "@/libs/route.config";
 import { useRouter } from "next/navigation";
@@ -49,7 +44,7 @@ export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   actionLoading: Record<AuthAction, boolean>;
-  login: (username: string, password: string) => Promise<AuthResult>;
+  login: (email: string, password: string) => Promise<AuthResult>;
   register: (
     username: string,
     email: string,
@@ -71,11 +66,6 @@ const initialActionLoading: Record<AuthAction, boolean> = {
 };
 
 type AnyObject = Record<string, unknown>;
-
-type TokenPayload = {
-  accessToken: string;
-  refreshToken: string;
-};
 
 const toRecord = (value: unknown): AnyObject => {
   if (!value || typeof value !== "object") {
@@ -104,24 +94,6 @@ const toUser = (value: unknown): User => {
   };
 };
 
-const parseTokenPayload = (value: unknown): TokenPayload | null => {
-  const root = toRecord(value);
-  const nestedData = toRecord(root.data);
-  const data = Object.keys(nestedData).length > 0 ? nestedData : root;
-
-  const accessToken =
-    readString(data, "access_token") || readString(data, "accessToken");
-
-  const refreshToken =
-    readString(data, "refresh_token") || readString(data, "refreshToken");
-
-  if (!accessToken || !refreshToken) {
-    return null;
-  }
-
-  return { accessToken, refreshToken };
-};
-
 /* ── Context ──────────────────────────────────────────────────────── */
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -143,24 +115,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isLoading = bootstrapping || Object.values(actionLoading).some(Boolean);
 
-  // Hydrate from refresh token on mount
   useEffect(() => {
     let isMounted = true;
 
     const bootstrapSession = async (): Promise<void> => {
       try {
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-          clearAuthTokens();
-          return;
-        }
-
-        const token = await refreshAccessToken();
-        if (!token) {
-          clearAuthTokens();
-          return;
-        }
-
         const response = await authApi.get(API_PATHS.AUTH.ME);
         if (isMounted) {
           setUser(toUser(response.data));
@@ -190,25 +149,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const login = useCallback(
-    async (username: string, password: string): Promise<AuthResult> => {
+    async (email: string, password: string): Promise<AuthResult> => {
       setLoading("login", true);
       try {
-        const response = await publicApi.post(API_PATHS.AUTH.LOGIN, {
-          username,
+        await publicApi.post(API_PATHS.AUTH.LOGIN, {
+          email,
           password,
         });
-        const payload = parseTokenPayload(response.data);
-
-        if (!payload) {
-          return {
-            success: false,
-            error: "Invalid login response from server.",
-          };
-        }
-
-        setAccessToken(payload.accessToken);
-        setRefreshToken(payload.refreshToken);
-
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
         setUser(toUser(meResponse.data));
         return { success: true };
@@ -231,21 +178,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ): Promise<AuthResult> => {
       setLoading("register", true);
       try {
-        const response = await publicApi.post(API_PATHS.AUTH.REGISTER, {
+        await publicApi.post(API_PATHS.AUTH.REGISTER, {
           username,
           email,
           password,
           auto_login: true,
         });
 
-        const payload = parseTokenPayload(response.data);
-        if (payload) {
-          setAccessToken(payload.accessToken);
-          setRefreshToken(payload.refreshToken);
-
-          const meResponse = await authApi.get(API_PATHS.AUTH.ME);
-          setUser(toUser(meResponse.data));
-        }
+        const meResponse = await authApi.get(API_PATHS.AUTH.ME);
+        setUser(toUser(meResponse.data));
 
         return { success: true };
       } catch (error) {
@@ -263,18 +204,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (idToken: string): Promise<AuthResult> => {
       setLoading("google", true);
       try {
-        const response = await publicApi.post(API_PATHS.AUTH.GOOGLE, {
+        await publicApi.post(API_PATHS.AUTH.GOOGLE, {
           id_token: idToken,
         });
-        const payload = parseTokenPayload(response.data);
-
-        if (!payload) {
-          return { success: false, error: "Invalid Google login response." };
-        }
-
-        setAccessToken(payload.accessToken);
-        setRefreshToken(payload.refreshToken);
-
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
         setUser(toUser(meResponse.data));
         return { success: true };
@@ -292,12 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async (): Promise<AuthResult> => {
     setLoading("logout", true);
     try {
-      const refreshToken = getRefreshToken();
-      if (refreshToken) {
-        await authApi.post(API_PATHS.AUTH.LOGOUT, {
-          refresh_token: refreshToken,
-        });
-      }
+      await authApi.post(API_PATHS.AUTH.LOGOUT);
       clearAuthTokens();
       setUser(null);
       return { success: true };

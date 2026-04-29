@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
   Card,
@@ -13,58 +15,40 @@ import {
   Input,
 } from "@/components/ui";
 import { useAuth } from "@/context/auth-context";
+import { LoginSchema, type LoginValues } from "@/lib/validations";
 import { toastifier } from "@/libs/toastifier";
 import { Divider } from "./components/Divider";
 import { SocialLogin } from "./components/SocialLogin";
-
-type LoginErrors = {
-  username?: string;
-  password?: string;
-};
 
 export function LoginForm() {
   const router = useRouter();
   const { login, actionLoading } = useAuth();
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<LoginErrors>({});
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    mode: "onSubmit",
+  });
 
   const isSubmitting = actionLoading.login;
 
-  const validate = (): boolean => {
-    const nextErrors: LoginErrors = {};
-
-    if (!username.trim()) {
-      nextErrors.username = "Username is required.";
-    }
-
-    if (!password.trim()) {
-      nextErrors.password = "Password is required.";
-    } else if (password.length < 8) {
-      nextErrors.password = "Password must be at least 8 characters.";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const onSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    const result = await login(username, password);
+  const onSubmit = handleSubmit(async (values) => {
+    const result = await login(values.email, values.password);
     if (!result.success) {
       toastifier.error(result.error ?? "Unable to sign in.");
       return;
     }
 
     router.replace("/dashboard");
-  };
+  });
 
   return (
     <div className="relative mx-auto w-full max-w-md">
@@ -100,27 +84,20 @@ export function LoginForm() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label
-                htmlFor="username"
+                htmlFor="email"
                 className="mb-1 block text-sm font-medium text-text-primary"
               >
-                Username
+                Email
               </label>
               <div className="relative">
-                <span
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400"
-                  aria-hidden="true"
-                >
-                  @
-                </span>
                 <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Enter your username"
-                  autoComplete="username"
-                  error={errors.username}
-                  className="h-12 rounded-xl border border-gray-300 bg-white px-4 pl-10 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
+                  id="email"
+                  type="email"
+                  placeholder="name@example.com"
+                  autoComplete="email"
+                  error={errors.email?.message}
+                  className="h-12 rounded-xl border border-gray-300 bg-white px-4 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
+                  {...register("email")}
                 />
               </div>
             </div>
@@ -142,10 +119,9 @@ export function LoginForm() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
                   placeholder="Enter your password"
                   autoComplete="current-password"
+                  {...register("password")}
                   className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 pl-10 pr-14 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
                 />
                 <button
@@ -161,9 +137,9 @@ export function LoginForm() {
                   )}
                 </button>
               </div>
-              {errors.password && (
+              {errors.password?.message && (
                 <span className="mt-1 block text-xs text-accent-red">
-                  {errors.password}
+                  {errors.password.message}
                 </span>
               )}
             </div>
@@ -199,7 +175,7 @@ export function LoginForm() {
           <div className="border-t border-gray-200 pt-4 text-center text-sm text-text-secondary">
             Don&apos;t have an account?{" "}
             <Link
-              href="/signUp"
+              href="/register"
               className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
             >
               Create account
