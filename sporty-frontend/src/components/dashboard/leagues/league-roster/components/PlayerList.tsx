@@ -51,18 +51,18 @@ function DraggablePlayerCard({ player }: DraggablePlayerCardProps) {
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-text-primary">
+        <p className="truncate text-sm font-semibold text-black">
           {player.name}
         </p>
         <span className="text-base" aria-label={player.sport}>
           {sportIcons[player.sport]}
         </span>
       </div>
-      <p className="mt-1 text-xs text-text-secondary">{player.position}</p>
-      <p className="mt-1 truncate text-xs text-text-secondary">
+      <p className="mt-1 text-xs text-secondary">{player.position}</p>
+      <p className="mt-1 truncate text-xs text-secondary">
         {player.realTeam}
       </p>
-      <p className="mt-1 text-xs font-medium text-primary-600">
+      <p className="mt-1 text-xs font-medium text-primary">
         Cost {player.cost}
       </p>
     </article>
@@ -108,28 +108,28 @@ export function PlayerList({
   return (
     <DropZone
       id="bench-drop"
-      className="space-y-4 rounded-xl border border-border bg-surface-100 p-4"
-      activeClassName="border-primary-500 bg-primary-50/40"
+      className="space-y-4 rounded-md border border-border bg-[#F4F4F9] p-4"
+      activeClassName="border-primary-500 bg-primary/10/40"
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-text-primary">
+        <h3 className="text-base font-semibold text-black">
           Available Players
         </h3>
-        <p className="text-xs text-text-secondary">Drop here to bench</p>
+        <p className="text-xs text-secondary">Drop here to bench</p>
       </div>
 
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search by name..."
-        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-primary"
+        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-black"
       />
 
       <div className="grid grid-cols-2 gap-2">
         <select
           value={selectedSport}
           onChange={(event) => onSportChange(event.target.value)}
-          className="rounded-lg border border-border bg-white px-2 py-2 text-xs text-text-primary"
+          className="rounded-lg border border-border bg-white px-2 py-2 text-xs text-black"
         >
           {sports.map((sport) => (
             <option key={sport} value={sport}>
@@ -140,7 +140,7 @@ export function PlayerList({
         <select
           value={selectedPosition}
           onChange={(event) => onPositionChange(event.target.value)}
-          className="rounded-lg border border-border bg-white px-2 py-2 text-xs text-text-primary"
+          className="rounded-lg border border-border bg-white px-2 py-2 text-xs text-black"
         >
           {positions.map((position) => (
             <option key={position} value={position}>
@@ -154,14 +154,14 @@ export function PlayerList({
         <button
           type="button"
           onClick={() => setGroupBy("sport")}
-          className={`rounded-md px-2 py-1 text-xs ${groupBy === "sport" ? "bg-primary-500 text-white" : "bg-white text-text-secondary"}`}
+          className={`rounded-md px-2 py-1 text-xs ${groupBy === "sport" ? "bg-primary/100 text-white" : "bg-white text-secondary"}`}
         >
           Group: Sport
         </button>
         <button
           type="button"
           onClick={() => setGroupBy("position")}
-          className={`rounded-md px-2 py-1 text-xs ${groupBy === "position" ? "bg-primary-500 text-white" : "bg-white text-text-secondary"}`}
+          className={`rounded-md px-2 py-1 text-xs ${groupBy === "position" ? "bg-primary/100 text-white" : "bg-white text-secondary"}`}
         >
           Group: Position
         </button>
@@ -169,13 +169,13 @@ export function PlayerList({
 
       <div className="max-h-[620px] space-y-4 overflow-y-auto pr-1">
         {Object.keys(groupedPlayers).length === 0 ? (
-          <p className="rounded-lg border border-border bg-white p-3 text-sm text-text-secondary">
+          <p className="rounded-lg border border-border bg-white p-3 text-sm text-secondary">
             No players found.
           </p>
         ) : (
           Object.entries(groupedPlayers).map(([group, groupPlayers]) => (
             <section key={group} className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              <p className="text-xs font-semibold uppercase tracking-wide text-secondary">
                 {group}
               </p>
               <div className="space-y-2">

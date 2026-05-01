@@ -52,14 +52,14 @@ export function ForgotPasswordForm() {
       setSuccessMessage("");
       setSubmitError(
         result.error ??
-          "Unable to send reset email right now. Please try again.",
+        "Unable to send reset email right now. Please try again.",
       );
       return;
     }
 
     setSuccessMessage(
       result.message ??
-        "If an account exists with that email, you'll receive a reset link.",
+      "If an account exists with that email, you'll receive a reset link.",
     );
     setIsSubmitted(true);
   };
@@ -74,18 +74,18 @@ export function ForgotPasswordForm() {
         />
       }
     >
-      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-2xl border border-gray-100 bg-white shadow-2xl">
+      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-xl border border-accent/20 bg-white shadow-strong">
         <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
-          <div className="flex items-center gap-2 text-primary-800">
+          <div className="flex items-center gap-2 text-primary">
             <span className="text-lg" aria-hidden="true">
               ⚽🏀🏏
             </span>
-            <span className="text-base font-semibold">Sporty</span>
+            <span className="font-display text-base font-bold">Sporty</span>
           </div>
-          <CardTitle className="text-3xl font-bold text-primary-800 sm:text-4xl">
+          <CardTitle className="font-display text-3xl font-bold text-black sm:text-4xl">
             Forgot password?
           </CardTitle>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-secondary">
             No worries, we&apos;ll send you reset instructions
           </p>
         </CardHeader>
@@ -95,12 +95,12 @@ export function ForgotPasswordForm() {
             <div>
               <label
                 htmlFor="email"
-                className="mb-1 block text-sm font-medium text-text-primary"
+                className="mb-1 block text-sm font-medium text-black"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
                 <Input
                   id="email"
                   type="email"
@@ -109,19 +109,19 @@ export function ForgotPasswordForm() {
                   placeholder="name@example.com"
                   autoComplete="email"
                   error={emailError}
-                  className="h-12 rounded-xl border border-gray-300 bg-white px-4 pl-10 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
+                  className="h-12 rounded-md border border-border bg-white px-4 pl-10 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/40"
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              className="h-12 w-full rounded-xl border border-[#1e6785] bg-[#247BA0]! px-6 text-base font-semibold text-white! shadow-md transition-all duration-200 hover:bg-[#1e6785]! hover:shadow-lg active:scale-[0.98] disabled:bg-[#247BA0]/70! disabled:text-white!"
+              className="h-12 w-full rounded-md text-base font-semibold shadow-card hover:shadow-hover transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#F4F4F9]/30 border-t-[#F4F4F9]" />
                   Sending...
                 </span>
               ) : (
@@ -131,21 +131,21 @@ export function ForgotPasswordForm() {
           </form>
 
           {isSubmitted && (
-            <p className="rounded-xl border border-secondary-300/70 bg-secondary-50 p-3 text-sm font-medium text-primary-700">
+            <p className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm font-medium text-primary">
               {successMessage}
             </p>
           )}
 
           {submitError && (
-            <p className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+            <p className="rounded-md border border-danger/20 bg-danger/5 p-3 text-sm font-medium text-danger">
               {submitError}
             </p>
           )}
 
-          <p className="border-t border-gray-200 pt-4 text-center text-sm text-text-secondary">
+          <p className="border-t border-accent/20 pt-4 text-center text-sm text-secondary">
             <Link
               href="/login"
-              className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+              className="font-semibold text-primary hover:text-[#035c3d] hover:underline"
             >
               Back to Login
             </Link>

@@ -55,27 +55,27 @@ export function LoginForm() {
       <div className="mb-4">
         <Link
           href="/"
-          className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-800"
+          className="text-sm font-medium text-secondary transition-colors hover:text-black"
         >
           ← Back to Home
         </Link>
       </div>
 
-      <div className="pointer-events-none absolute -left-10 -top-10 h-24 w-24 rounded-full bg-primary-200/40 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-12 -right-10 h-28 w-28 rounded-full bg-accent-basketball/25 blur-2xl" />
+      <div className="pointer-events-none absolute -left-10 -top-10 h-24 w-24 rounded-full bg-primary/20 blur-2xl" />
+      <div className="pointer-events-none absolute -bottom-12 -right-10 h-28 w-28 rounded-full bg-accent/25 blur-2xl" />
 
-      <Card className="animate-fade-in w-full rounded-2xl border border-gray-100 bg-white shadow-2xl">
+      <Card className="animate-fade-in w-full rounded-xl border border-accent/20 bg-white shadow-strong">
         <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
-          <div className="flex items-center gap-2 text-primary-800">
+          <div className="flex items-center gap-2 text-primary">
             <span className="text-lg" aria-hidden="true">
               ⚽🏀🏏
             </span>
-            <span className="text-base font-semibold">Sporty</span>
+            <span className="font-display text-base font-bold">Sporty</span>
           </div>
-          <CardTitle className="text-3xl font-bold text-primary-800 sm:text-4xl">
+          <CardTitle className="font-display text-3xl font-bold text-black sm:text-4xl">
             Sign in
           </CardTitle>
-          <p className="text-sm text-text-secondary">
+          <p className="text-sm text-secondary">
             Sign in to your fantasy sports account
           </p>
         </CardHeader>
@@ -85,7 +85,7 @@ export function LoginForm() {
             <div>
               <label
                 htmlFor="identifier"
-                className="mb-1 block text-sm font-medium text-text-primary"
+                className="mb-1 block text-sm font-medium text-black"
               >
                 Email or Username
               </label>
@@ -96,7 +96,7 @@ export function LoginForm() {
                   placeholder="Email or username"
                   autoComplete="username"
                   error={errors.identifier?.message}
-                  className="h-12 rounded-xl border border-gray-300 bg-white px-4 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
+                  className="h-12 rounded-md border border-border bg-white px-4 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/40"
                   {...register("identifier")}
                 />
               </div>
@@ -105,13 +105,13 @@ export function LoginForm() {
             <div className="relative">
               <label
                 htmlFor="password"
-                className="mb-1 block text-sm font-medium text-text-primary"
+                className="mb-1 block text-sm font-medium text-black"
               >
                 Password
               </label>
               <div className="relative">
                 <span
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400"
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-secondary/60"
                   aria-hidden="true"
                 >
                   *
@@ -122,12 +122,12 @@ export function LoginForm() {
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   {...register("password")}
-                  className="h-12 w-full rounded-xl border border-gray-300 bg-white px-4 pl-10 pr-14 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-4 focus:ring-primary-500/30"
+                  className="h-12 w-full rounded-md border border-border bg-white px-4 pl-10 pr-14 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 transition-colors hover:text-primary-600"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary transition-colors hover:text-primary"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
@@ -138,7 +138,7 @@ export function LoginForm() {
                 </button>
               </div>
               {errors.password?.message && (
-                <span className="mt-1 block text-xs text-accent-red">
+                <span className="mt-1 block text-xs text-danger">
                   {errors.password.message}
                 </span>
               )}
@@ -147,7 +147,7 @@ export function LoginForm() {
             <div className="flex justify-end">
               <Link
                 href="/forgot-password"
-                className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 hover:underline"
+                className="text-sm font-medium text-primary transition-colors hover:text-[#035c3d] hover:underline"
               >
                 Forgot password?
               </Link>
@@ -155,12 +155,12 @@ export function LoginForm() {
 
             <Button
               type="submit"
-              className="h-12 w-full rounded-xl border border-[#1e6785] bg-[#247BA0]! px-6 text-base font-semibold text-white! shadow-md transition-all duration-200 hover:bg-[#1e6785]! hover:shadow-lg active:scale-[0.98] disabled:bg-[#247BA0]/70! disabled:text-white!"
+              className="h-12 w-full rounded-md text-base font-semibold shadow-card hover:shadow-hover transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#F4F4F9]/30 border-t-[#F4F4F9]" />
                   Please wait
                 </span>
               ) : (
@@ -172,11 +172,11 @@ export function LoginForm() {
           <Divider />
           <SocialLogin />
 
-          <div className="border-t border-gray-200 pt-4 text-center text-sm text-text-secondary">
+          <div className="border-t border-accent/20 pt-4 text-center text-sm text-secondary">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"
-              className="font-semibold text-primary-600 hover:text-primary-700 hover:underline"
+              className="font-semibold text-primary hover:text-[#035c3d] hover:underline"
             >
               Create account
             </Link>

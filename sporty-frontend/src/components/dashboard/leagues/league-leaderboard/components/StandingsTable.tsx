@@ -39,7 +39,7 @@ function rankLabel(rank: number): string {
 function streakClass(streak: string): string {
   if (streak.includes("🔥")) return "text-orange-500";
   if (streak.includes("❄️")) return "text-blue-400";
-  return "text-gray-400";
+  return "text-secondary/60";
 }
 
 function streakLabel(streak: string): string {
@@ -54,26 +54,26 @@ export function StandingsTable({ standings, userTeamId, selectedWeek, weeklyStan
   const weeklyMode = selectedWeek !== "overall";
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white [animation:fade-soft_0.2s_ease]">
+    <section className="overflow-hidden rounded-lg border border-accent/20 bg-white [animation:fade-soft_0.2s_ease]">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-50">
+          <thead className="bg-[#F4F4F9]">
             {weeklyMode ? (
               <tr>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rank</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Team</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Manager</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Weekly Score</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Rank</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Team</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Manager</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Weekly Score</th>
               </tr>
             ) : (
               <tr>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rank</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Team</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Manager</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Points</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Weekly Avg</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">W-L</th>
-                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Streak</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Rank</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Team</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Manager</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Points</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Weekly Avg</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">W-L</th>
+                <th className="px-5 py-4 text-left text-xs font-medium uppercase tracking-wider text-secondary">Streak</th>
               </tr>
             )}
           </thead>
@@ -86,12 +86,12 @@ export function StandingsTable({ standings, userTeamId, selectedWeek, weeklyStan
                   return (
                     <tr
                       key={team.teamId}
-                      className={`border-b border-gray-100 text-sm transition-colors hover:bg-gray-50 ${isUser ? "bg-primary-50/50" : ""}`}
+                      className={`border-b border-accent/20 text-sm transition-colors hover:bg-[#F4F4F9] ${isUser ? "bg-primary/10/50" : ""}`}
                     >
-                      <td className="px-5 py-4 font-medium text-gray-900">{rankLabel(team.rank)}</td>
-                      <td className="px-5 py-4 font-medium text-gray-900">{team.teamName}</td>
-                      <td className="px-5 py-4 text-gray-600">{team.manager}</td>
-                      <td className="px-5 py-4 text-sm font-medium text-gray-900">{team.weeklyScore}</td>
+                      <td className="px-5 py-4 font-medium text-black">{rankLabel(team.rank)}</td>
+                      <td className="px-5 py-4 font-medium text-black">{team.teamName}</td>
+                      <td className="px-5 py-4 text-secondary">{team.manager}</td>
+                      <td className="px-5 py-4 text-sm font-medium text-black">{team.weeklyScore}</td>
                     </tr>
                   );
                 })
@@ -101,14 +101,14 @@ export function StandingsTable({ standings, userTeamId, selectedWeek, weeklyStan
                   return (
                     <tr
                       key={team.teamId}
-                      className={`border-b border-gray-100 text-sm transition-colors hover:bg-gray-50 ${isUser ? "bg-primary-50/50" : ""}`}
+                      className={`border-b border-accent/20 text-sm transition-colors hover:bg-[#F4F4F9] ${isUser ? "bg-primary/10/50" : ""}`}
                     >
-                      <td className="px-5 py-4 font-medium text-gray-900">{rankLabel(team.rank)}</td>
-                      <td className="px-5 py-4 font-medium text-gray-900">{team.teamName}</td>
-                      <td className="px-5 py-4 text-gray-600">{team.manager}</td>
-                      <td className="px-5 py-4 text-sm font-medium text-gray-900">{team.totalPoints}</td>
-                      <td className="px-5 py-4 text-gray-600">{team.weeklyAvg.toFixed(1)}</td>
-                      <td className="px-5 py-4 text-gray-600">{team.wins}-{team.losses}</td>
+                      <td className="px-5 py-4 font-medium text-black">{rankLabel(team.rank)}</td>
+                      <td className="px-5 py-4 font-medium text-black">{team.teamName}</td>
+                      <td className="px-5 py-4 text-secondary">{team.manager}</td>
+                      <td className="px-5 py-4 text-sm font-medium text-black">{team.totalPoints}</td>
+                      <td className="px-5 py-4 text-secondary">{team.weeklyAvg.toFixed(1)}</td>
+                      <td className="px-5 py-4 text-secondary">{team.wins}-{team.losses}</td>
                       <td className={`px-5 py-4 font-medium ${streakClass(team.streak)}`}>{streakLabel(team.streak)}</td>
                     </tr>
                   );

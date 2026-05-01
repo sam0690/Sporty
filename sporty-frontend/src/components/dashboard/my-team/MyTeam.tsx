@@ -109,9 +109,9 @@ export function MyTeam() {
   const hasLeagues = (leagues?.length ?? 0) > 0;
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-gray-900">
+    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-black">
       <div className="mb-5">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-secondary">
           Manager: {username || "Sporty User"}
         </p>
       </div>
@@ -125,11 +125,11 @@ export function MyTeam() {
           ))}
         </div>
       ) : leaguesError || teamError ? (
-        <div className="mt-8 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+        <div className="mt-8 rounded-md border border-danger/20 bg-danger/5 p-4 text-sm text-danger">
           Failed to load team data. Please try again.
         </div>
       ) : !hasLeagues ? (
-        <div className="mt-8 rounded-xl border border-gray-200 bg-white p-6 text-sm text-gray-600">
+        <div className="mt-8 rounded-md border border-border bg-white p-6 text-sm text-secondary">
           You are not part of any leagues yet.
         </div>
       ) : hasPlayers ? (
@@ -142,12 +142,12 @@ export function MyTeam() {
           >
             {teams.map((team) => (
               <Carousel.Slide key={team.leagueId}>
-                <div className="rounded-2xl border border-gray-100 bg-white p-4 sm:p-5">
+                <div className="rounded-lg border border-accent/20 bg-white p-4 sm:p-5">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-secondary">
                       Team: {team.teamName}
                     </p>
-                    <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+                    <span className="rounded-full border border-border bg-[#F4F4F9] px-2.5 py-1 text-xs font-medium text-secondary">
                       League {team.leagueName}
                     </span>
                   </div>

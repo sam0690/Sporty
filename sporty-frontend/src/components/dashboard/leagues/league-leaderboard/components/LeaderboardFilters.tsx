@@ -19,8 +19,8 @@ export function LeaderboardFilters({ selectedGroup, groups, onGroupChange }: Lea
             onClick={() => onGroupChange?.(group)}
             className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
               isActive
-                ? "bg-primary-500 text-white"
-                : "bg-surface-100 text-text-secondary hover:bg-surface-200"
+                ? "bg-primary/100 text-white"
+                : "bg-[#F4F4F9] text-secondary hover:bg-white-200"
             }`}
           >
             {group}

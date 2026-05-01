@@ -19,23 +19,23 @@ export function ProfileHeader({ name, avatar, bio, joinDate }: ProfileHeaderProp
   const initial = name.slice(0, 1).toUpperCase();
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5">
+    <section className="rounded-lg border border-accent/20 bg-white p-5">
       <div className="flex items-center gap-4">
         {avatar ? (
           <img src={avatar} alt={`${name} avatar`} className="h-16 w-16 rounded-full object-cover" />
         ) : (
-          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-gray-200 text-xl font-semibold text-gray-700">
+          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent/30 text-xl font-semibold text-black">
             {initial}
           </span>
         )}
 
         <div>
-          <h2 className="text-xl font-medium text-gray-900">{name}</h2>
-          <p className="text-sm text-gray-500">Joined {formatDate(joinDate)}</p>
+          <h2 className="text-xl font-medium text-black">{name}</h2>
+          <p className="text-sm text-secondary">Joined {formatDate(joinDate)}</p>
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-gray-600">{bio}</p>
+      <p className="mt-4 text-sm text-secondary">{bio}</p>
     </section>
   );
 }

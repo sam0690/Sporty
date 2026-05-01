@@ -38,20 +38,20 @@ export function PlayerCard({
 
   return (
     <article
-      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-xl border border-gray-100 bg-white p-4 transition-all duration-200 hover:border-gray-200 hover:shadow-sm"
+      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-md border border-accent/20 bg-white p-4 transition-all duration-200 hover:border-border hover:shadow-sm"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-medium text-gray-900">
+        <p className="truncate text-base font-medium text-black">
           👤 {name}
         </p>
-        <p className="mt-1 text-sm text-gray-500">{sportLabel}</p>
+        <p className="mt-1 text-sm text-secondary">{sportLabel}</p>
       </div>
 
       <div className="text-right sm:min-w-27.5">
-        <p className="text-sm font-semibold text-gray-900">💰 ${price}M</p>
-        <p className="text-xs text-gray-400">Proj: {avgPoints.toFixed(1)}</p>
-        {form ? <p className="text-xs text-gray-400">Form: {form}/10</p> : null}
+        <p className="text-sm font-semibold text-black">💰 ${price}M</p>
+        <p className="text-xs text-secondary/60">Proj: {avgPoints.toFixed(1)}</p>
+        {form ? <p className="text-xs text-secondary/60">Form: {form}/10</p> : null}
       </div>
 
       <div>
@@ -59,7 +59,7 @@ export function PlayerCard({
           type="button"
           disabled={disabled}
           onClick={() => onAdd(id)}
-          className="rounded-full border border-gray-300 px-3.5 py-1.5 text-sm text-gray-600 transition-colors hover:border-primary-500 hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-border px-3.5 py-1.5 text-sm text-secondary transition-colors hover:border-primary-500 hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Add
         </button>

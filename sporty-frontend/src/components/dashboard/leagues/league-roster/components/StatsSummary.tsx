@@ -16,18 +16,18 @@ export function StatsSummary({ totalPoints, avgPointsPerGame, bestPlayer, totalP
   return (
     <section className="mb-8 grid grid-cols-3 gap-4">
       <div className="text-center">
-        <p className="text-lg font-medium text-gray-900">{totalPoints}</p>
-        <p className="text-sm text-gray-500">Total Points ({totalPlayers} players)</p>
+        <p className="text-lg font-medium text-black">{totalPoints}</p>
+        <p className="text-sm text-secondary">Total Points ({totalPlayers} players)</p>
       </div>
 
       <div className="text-center">
-        <p className="text-lg font-medium text-gray-900">{avgPointsPerGame.toFixed(1)}</p>
-        <p className="text-sm text-gray-500">Avg Points/Game</p>
+        <p className="text-lg font-medium text-black">{avgPointsPerGame.toFixed(1)}</p>
+        <p className="text-sm text-secondary">Avg Points/Game</p>
       </div>
 
       <div className="text-center">
-        <p className="text-lg font-medium text-gray-900">{bestPlayer.name}</p>
-        <p className="text-sm text-gray-500">Best Player ({bestPlayer.points} pts)</p>
+        <p className="text-lg font-medium text-black">{bestPlayer.name}</p>
+        <p className="text-sm text-secondary">Best Player ({bestPlayer.points} pts)</p>
       </div>
     </section>
   );

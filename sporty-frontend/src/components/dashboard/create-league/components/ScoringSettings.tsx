@@ -56,8 +56,8 @@ export function ScoringSettings({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-medium text-gray-900">Scoring Rules</h3>
-        <p className="text-xs text-gray-500">
+        <h3 className="text-sm font-medium text-black">Scoring Rules</h3>
+        <p className="text-xs text-secondary">
           Enable custom scoring per sport, then toggle and edit individual
           rules.
         </p>
@@ -71,19 +71,19 @@ export function ScoringSettings({
           <details
             key={sport}
             open={sportIndex === 0}
-            className="rounded-xl border border-gray-200 bg-gray-50/40"
+            className="rounded-md border border-border bg-[#F4F4F9]/40"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-black">
                 {sportTitles[sport]}
               </span>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-secondary">
                 {rules.length} rules
               </span>
             </summary>
 
-            <div className="space-y-4 border-t border-gray-200 bg-white px-4 py-4">
-              <label className="flex items-center justify-between gap-3 text-sm text-gray-700">
+            <div className="space-y-4 border-t border-border bg-white px-4 py-4">
+              <label className="flex items-center justify-between gap-3 text-sm text-black">
                 <span>Enable custom scoring for {sport}</span>
                 <button
                   type="button"
@@ -91,7 +91,7 @@ export function ScoringSettings({
                     onToggleSportCustomScoring(sport, !allowCustom)
                   }
                   className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
-                    allowCustom ? "bg-primary-600" : "bg-gray-300"
+                    allowCustom ? "bg-primary" : "bg-accent/40"
                   }`}
                   aria-pressed={allowCustom}
                   aria-label={`Toggle ${sport} custom scoring`}
@@ -119,13 +119,13 @@ export function ScoringSettings({
                       className={`rounded-lg border px-3 py-3 transition-colors ${
                         isCustomized
                           ? "border-amber-300 bg-amber-50"
-                          : "border-gray-200 bg-white"
+                          : "border-border bg-white"
                       }`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-black">
                               {formatRuleLabel(rule.action)}
                             </p>
                             {isCustomized ? (
@@ -134,16 +134,16 @@ export function ScoringSettings({
                               </span>
                             ) : null}
                           </div>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-secondary">
                             {rule.description}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-secondary/60">
                             Default: {rule.defaultPoints} pts
                           </p>
                         </div>
 
                         <div className="flex flex-col gap-2 sm:min-w-55">
-                          <label className="flex items-center justify-between text-xs text-gray-600">
+                          <label className="flex items-center justify-between text-xs text-secondary">
                             <span>Custom rule</span>
                             <input
                               type="checkbox"
@@ -156,7 +156,7 @@ export function ScoringSettings({
                                   event.target.checked,
                                 )
                               }
-                              className="h-4 w-4 rounded border-gray-300 text-primary-600 disabled:cursor-not-allowed"
+                              className="h-4 w-4 rounded border-border text-primary disabled:cursor-not-allowed"
                             />
                           </label>
 
@@ -177,12 +177,12 @@ export function ScoringSettings({
                                   : nextValue,
                               );
                             }}
-                            className={`w-full rounded-lg border px-3 py-2 text-gray-900 outline-none transition focus:border-primary-400 disabled:bg-gray-100 ${
-                              isInvalid ? "border-red-300" : "border-gray-200"
+                            className={`w-full rounded-lg border px-3 py-2 text-black outline-none transition focus:border-primary-400 disabled:bg-accent/20 ${
+                              isInvalid ? "border-danger/30" : "border-border"
                             }`}
                           />
                           {isInvalid && allowCustom && rule.enabled ? (
-                            <p className="text-xs text-red-600">
+                            <p className="text-xs text-danger">
                               Use a value between {minPoints} and {maxPoints}.
                             </p>
                           ) : null}
@@ -197,7 +197,7 @@ export function ScoringSettings({
         );
       })}
 
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-secondary">
         Only changed rules are submitted as league scoring overrides.
       </p>
     </div>

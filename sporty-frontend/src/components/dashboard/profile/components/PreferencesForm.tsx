@@ -21,12 +21,12 @@ type ToggleRowProps = {
 function ToggleRow({ label, enabled, onToggle }: ToggleRowProps) {
   return (
     <div className="flex items-center justify-between py-2">
-      <p className="text-sm text-gray-600">{label}</p>
+      <p className="text-sm text-secondary">{label}</p>
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={enabled}
-        className={`relative h-6 w-11 rounded-full transition-colors ${enabled ? "bg-primary-600" : "bg-gray-200"}`}
+        className={`relative h-6 w-11 rounded-full transition-colors ${enabled ? "bg-primary" : "bg-accent/30"}`}
       >
         <span
           className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
@@ -43,8 +43,8 @@ export function PreferencesForm({ preferences, onUpdate }: PreferencesFormProps)
   };
 
   return (
-    <section className="card-fade-in space-y-4 rounded-2xl border border-gray-100 bg-white p-6">
-      <h2 className="text-md font-medium text-gray-800">Preferences</h2>
+    <section className="card-fade-in space-y-4 rounded-lg border border-accent/20 bg-white p-6">
+      <h2 className="text-md font-medium text-black">Preferences</h2>
 
       <div className="space-y-4">
         <ToggleRow
@@ -66,11 +66,11 @@ export function PreferencesForm({ preferences, onUpdate }: PreferencesFormProps)
         />
 
         <div className="flex items-center justify-between pt-1">
-          <p className="text-sm text-gray-600">Language</p>
+          <p className="text-sm text-secondary">Language</p>
           <select
             value={preferences.language}
             onChange={(event) => updatePreference({ language: event.target.value })}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none"
+            className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-black outline-none"
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>

@@ -376,15 +376,15 @@ export function Transfers() {
 
   if (!leagueId) {
     return (
-      <div className="mx-auto max-w-7xl px-6 py-8 text-gray-900">
-        <div className="mb-6 text-sm text-gray-500">
+      <div className="mx-auto max-w-7xl px-6 py-8 text-black">
+        <div className="mb-6 text-sm text-secondary">
           Manager: {username || "Sporty User"}
         </div>
-        <div className="mb-6 rounded-xl border border-gray-200 bg-white p-6 text-center">
+        <div className="mb-6 rounded-md border border-border bg-white p-6 text-center">
           <h2 className="text-xl font-semibold">
             Select a league to manage transfers.
           </h2>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-secondary">
             Your transfer history is still available below.
           </p>
         </div>
@@ -399,8 +399,8 @@ export function Transfers() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-gray-900">
-      <div className="mb-6 text-sm text-gray-500">
+    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-black">
+      <div className="mb-6 text-sm text-secondary">
         Manager: {username || "Sporty User"}
       </div>
 
@@ -412,38 +412,38 @@ export function Transfers() {
             currentWeek={activeWindow?.number || 0}
           />
           {transfersRemaining !== null ? (
-            <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-2 text-sm text-blue-700">
+            <div className="rounded-md border border-blue-100 bg-primary/5 px-4 py-2 text-sm text-primary">
               Transfers remaining in session: {transfersRemaining}
             </div>
           ) : null}
           {stagedOutPlayers.length > 0 || stagedInPlayers.length > 0 ? (
-            <div className="rounded-xl border border-gray-200 bg-white p-4 text-sm">
-              <p className="font-medium text-gray-900">Staged Transfers</p>
-              <p className="mt-1 text-gray-600">
+            <div className="rounded-md border border-border bg-white p-4 text-sm">
+              <p className="font-medium text-black">Staged Transfers</p>
+              <p className="mt-1 text-secondary">
                 Out: {stagedOutPlayers.length} | In: {stagedInPlayers.length}
               </p>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-gray-500">
+                  <p className="text-xs font-semibold uppercase text-secondary">
                     Out
                   </p>
                   {stagedOutPlayers.map((player) => (
                     <p
                       key={player.id}
-                      className="truncate text-xs text-gray-700"
+                      className="truncate text-xs text-black"
                     >
                       {player.name}
                     </p>
                   ))}
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase text-gray-500">
+                  <p className="text-xs font-semibold uppercase text-secondary">
                     In
                   </p>
                   {stagedInPlayers.map((player) => (
                     <p
                       key={player.id}
-                      className="truncate text-xs text-gray-700"
+                      className="truncate text-xs text-black"
                     >
                       {player.name}
                     </p>
@@ -461,14 +461,14 @@ export function Transfers() {
                     stagedOutPlayers.length !== stagedInPlayers.length) ||
                   !isTransfersOpen
                 }
-                className="mt-3 w-full rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="mt-3 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 {confirmTransfersMutation.isPending
                   ? "Confirming..."
                   : "Confirm All Staged Transfers"}
               </button>
               {isMultiSportLeague ? (
-                <p className="mt-2 text-xs text-gray-500">
+                <p className="mt-2 text-xs text-secondary">
                   Multisport: you can stage players in directly when budget and
                   roster limits allow.
                 </p>
@@ -522,9 +522,9 @@ export function Transfers() {
             disabled={!isTransfersOpen}
           />
           {selectedOutPlayer && (
-            <div className="mt-4 p-4 bg-primary-50 rounded-xl border border-primary-100 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+            <div className="mt-4 p-4 bg-primary/10 rounded-md border border-primary/20 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
               <div>
-                <p className="text-xs text-primary-600 font-bold uppercase">
+                <p className="text-xs text-primary font-bold uppercase">
                   Player to swap out
                 </p>
                 <p className="font-semibold">{selectedOutPlayer.name}</p>
@@ -543,7 +543,7 @@ export function Transfers() {
                   setTransfersRemaining(null);
                   setShowConfirmModal(false);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-secondary/60 hover:text-secondary"
               >
                 ✕
               </button>
@@ -578,7 +578,7 @@ export function Transfers() {
                   });
                 }
               }}
-              className="mt-3 w-full rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="mt-3 w-full rounded-full border border-border px-4 py-2 text-sm font-medium text-black hover:bg-[#F4F4F9]"
             >
               Cancel Staged Session
             </button>

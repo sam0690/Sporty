@@ -8,7 +8,7 @@ type StatsRowProps = {
 
 export function StatsRow({ totalLeagues, highestRank, totalPoints }: StatsRowProps) {
   return (
-    <section className="flex flex-wrap items-center gap-2 rounded-full border border-gray-100 bg-gray-50 px-4 py-2 text-xs font-light text-gray-600">
+    <section className="flex flex-wrap items-center gap-2 rounded-full border border-accent/20 bg-[#F4F4F9] px-4 py-2 text-xs font-bold text-secondary">
       <span>{totalLeagues} leagues</span>
       <span>•</span>
       <span>Best rank #{highestRank}</span>

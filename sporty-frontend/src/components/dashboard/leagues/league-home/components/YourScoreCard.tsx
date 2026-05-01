@@ -12,10 +12,10 @@ export function YourScoreCard({
   pointsBehind,
 }: YourScoreCardProps) {
   return (
-    <section className="rounded-2xl border border-primary-100 bg-primary-50 p-5 text-center [animation:fade-soft_0.2s_ease]">
-      <h2 className="mb-2 text-sm font-medium text-primary-700">Your Score</h2>
-      <p className="text-4xl font-light text-primary-900">{yourScore}</p>
-      <p className="mt-2 text-sm text-primary-600">Rank #{weeklyRank} this week</p>
+    <section className="rounded-lg border border-primary/20 bg-primary/10 p-5 text-center [animation:fade-soft_0.2s_ease]">
+      <h2 className="mb-2 text-sm font-medium text-primary">Your Score</h2>
+      <p className="text-4xl font-bold text-primary-900">{yourScore}</p>
+      <p className="mt-2 text-sm text-primary">Rank #{weeklyRank} this week</p>
       <p className="mt-1 text-xs text-primary-500">{pointsBehind} points behind 1st</p>
     </section>
   );

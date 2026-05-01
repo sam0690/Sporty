@@ -31,26 +31,26 @@ export function MemberCard({
   onKick,
 }: MemberCardProps) {
   return (
-    <article className="rounded-2xl border border-gray-100 bg-white p-4">
+    <article className="rounded-lg border border-accent/20 bg-white p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-700">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20 text-sm font-medium text-black">
             {initials(member.name)}
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-black">
               {member.name}{" "}
               {isCommissionerMember ? <span className="ml-1">👑</span> : null}
             </p>
-            <p className="text-xs text-gray-500">{member.teamName}</p>
+            <p className="text-xs text-secondary">{member.teamName}</p>
           </div>
         </div>
 
         <div className="text-right">
-          <p className="text-sm font-medium text-gray-900">
+          <p className="text-sm font-medium text-black">
             {member.totalPoints ?? 0} pts
           </p>
-          <p className="text-xs text-gray-500">Joined {member.joinDate}</p>
+          <p className="text-xs text-secondary">Joined {member.joinDate}</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export function MemberCard({
           <button
             type="button"
             onClick={() => onKick(member)}
-            className="rounded-full border border-red-200 px-3 py-1 text-xs text-red-600 hover:bg-red-50"
+            className="rounded-full border border-danger/20 px-3 py-1 text-xs text-danger hover:bg-danger/5"
           >
             Kick
           </button>

@@ -159,7 +159,7 @@ export function ProfileSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-gray-900">
+    <section className="mx-auto max-w-3xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-black">
       <ProfileHeader
         userName={userData.name}
         userEmail={userData.email}
@@ -182,7 +182,7 @@ export function ProfileSettings() {
       </div>
 
       {isDeleting ? (
-        <p className="mt-4 text-sm text-gray-500">
+        <p className="mt-4 text-sm text-secondary">
           Processing account deletion...
         </p>
       ) : null}

@@ -8,7 +8,7 @@ type TransferFieldsProps = {
 
 export function TransferFields({ leagueId }: TransferFieldsProps) {
   return (
-    <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+    <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4">
       <p className="text-sm font-semibold text-emerald-800">
         Transfer window is active
       </p>

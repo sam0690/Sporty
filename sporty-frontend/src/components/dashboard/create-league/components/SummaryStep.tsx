@@ -49,9 +49,9 @@ export function SummaryStep({
 }: SummaryStepProps) {
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-100 bg-white p-1">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <p className="text-sm text-gray-500">League Details</p>
+      <div className="rounded-lg border border-accent/20 bg-white p-1">
+        <div className="flex items-center justify-between border-b border-accent/20 px-4 py-3">
+          <p className="text-sm text-secondary">League Details</p>
           <button
             type="button"
             onClick={onBack}
@@ -61,49 +61,49 @@ export function SummaryStep({
           </button>
         </div>
         <div className="space-y-0">
-          <div className="grid grid-cols-2 gap-2 border-b border-gray-100 px-4 py-3">
-            <p className="text-sm text-gray-500">Name</p>
-            <p className="text-sm text-gray-900">
+          <div className="grid grid-cols-2 gap-2 border-b border-accent/20 px-4 py-3">
+            <p className="text-sm text-secondary">Name</p>
+            <p className="text-sm text-black">
               {leagueData.leagueName || "-"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-gray-100 px-4 py-3">
-            <p className="text-sm text-gray-500">Sport</p>
-            <p className="text-sm text-gray-900">
+          <div className="grid grid-cols-2 gap-2 border-b border-accent/20 px-4 py-3">
+            <p className="text-sm text-secondary">Sport</p>
+            <p className="text-sm text-black">
               {selectedSports.map((sport) => sportLabels[sport]).join(", ") ||
                 "-"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-gray-100 px-4 py-3">
-            <p className="text-sm text-gray-500">Type</p>
-            <p className="text-sm text-gray-900">
+          <div className="grid grid-cols-2 gap-2 border-b border-accent/20 px-4 py-3">
+            <p className="text-sm text-secondary">Type</p>
+            <p className="text-sm text-black">
               {leagueData.isPrivate ? "Private" : "Public"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-gray-100 px-4 py-3">
-            <p className="text-sm text-gray-500">Team Size</p>
-            <p className="text-sm text-gray-900">{leagueData.teamSize}</p>
+          <div className="grid grid-cols-2 gap-2 border-b border-accent/20 px-4 py-3">
+            <p className="text-sm text-secondary">Team Size</p>
+            <p className="text-sm text-black">{leagueData.teamSize}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-gray-100 px-4 py-3">
-            <p className="text-sm text-gray-500">Competition Type</p>
-            <p className="text-sm text-gray-900">
+          <div className="grid grid-cols-2 gap-2 border-b border-accent/20 px-4 py-3">
+            <p className="text-sm text-secondary">Competition Type</p>
+            <p className="text-sm text-black">
               {leagueData.competitionType === "draft"
                 ? "Draft Mode"
                 : "Budget Mode"}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 px-4 py-3">
-            <p className="text-sm text-gray-500">Draft Date</p>
-            <p className="text-sm text-gray-900">
+            <p className="text-sm text-secondary">Draft Date</p>
+            <p className="text-sm text-black">
               {leagueData.draftDate || "Not set"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-1">
-        <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
-          <p className="text-sm text-gray-500">Scoring Rules</p>
+      <div className="rounded-lg border border-accent/20 bg-white p-1">
+        <div className="flex items-center justify-between border-b border-accent/20 px-4 py-3">
+          <p className="text-sm text-secondary">Scoring Rules</p>
           <button
             type="button"
             onClick={onBack}
@@ -121,12 +121,12 @@ export function SummaryStep({
             );
 
             return (
-              <div key={sport} className="rounded-xl border border-gray-100">
-                <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
-                  <p className="text-sm font-medium text-gray-800">
+              <div key={sport} className="rounded-md border border-accent/20">
+                <div className="flex items-center justify-between border-b border-accent/20 px-3 py-2">
+                  <p className="text-sm font-medium text-black">
                     {sportLabels[sport]}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-secondary">
                     {isCustomEnabled
                       ? `${customRules.length} custom rule(s)`
                       : "Default scoring"}
@@ -136,12 +136,12 @@ export function SummaryStep({
                   {(isCustomEnabled ? customRules : rules).map((rule) => (
                     <div
                       key={`${sport}-${rule.action}`}
-                      className="grid grid-cols-2 border-b border-gray-100 px-3 py-2 last:border-b-0"
+                      className="grid grid-cols-2 border-b border-accent/20 px-3 py-2 last:border-b-0"
                     >
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-secondary">
                         {formatRuleLabel(rule.action)}
                       </p>
-                      <p className="text-sm text-gray-900">
+                      <p className="text-sm text-black">
                         {isCustomEnabled && rule.enabled
                           ? `${rule.points} (default ${rule.defaultPoints})`
                           : rule.defaultPoints}
@@ -159,7 +159,7 @@ export function SummaryStep({
         <button
           type="button"
           onClick={onBack}
-          className="w-full rounded-full border border-gray-300 bg-white px-8 py-2.5 font-medium text-gray-700 hover:bg-gray-50 sm:w-auto"
+          className="w-full rounded-full border border-border bg-white px-8 py-2.5 font-medium text-black hover:bg-[#F4F4F9] sm:w-auto"
         >
           Back
         </button>
@@ -167,7 +167,7 @@ export function SummaryStep({
           type="button"
           onClick={onCreate}
           disabled={isLoading}
-          className="w-full rounded-full bg-[#247BA0] px-8 py-2.5 font-semibold text-white! shadow-sm hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600! disabled:opacity-100 sm:w-auto"
+          className="w-full rounded-full bg-[#247BA0] px-8 py-2.5 font-semibold text-white! shadow-sm hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-accent/40 disabled:text-secondary! disabled:opacity-100 sm:w-auto"
         >
           {isLoading ? "Creating..." : "Create League"}
         </button>

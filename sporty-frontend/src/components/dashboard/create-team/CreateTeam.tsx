@@ -391,12 +391,12 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     const status = league.status;
 
     return (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-gray-900 font-[system-ui,-apple-system]">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-black font-[system-ui,-apple-system]">
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-secondary">
             Manager: {username || "Sporty User"}
           </p>
-          <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold uppercase tracking-wider">
+          <span className="px-3 py-1 bg-primary/15 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
             Draft Mode
           </span>
         </div>
@@ -413,13 +413,13 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
         />
 
         {error ? (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+          <p className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-2 text-sm text-danger">
             {error}
           </p>
         ) : null}
 
         {status === "setup" ? (
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-6 space-y-3">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 space-y-3">
             <h2 className="text-lg font-semibold text-amber-900">
               Draft Not Started
             </h2>
@@ -441,7 +441,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <div
-                className={`mb-3 rounded-lg border px-4 py-2 text-sm ${isMyDraftTurn ? "border-green-200 bg-green-50 text-green-700" : "border-amber-200 bg-amber-50 text-amber-800"}`}
+                className={`mb-3 rounded-lg border px-4 py-2 text-sm ${isMyDraftTurn ? "border-primary/20 bg-primary/5 text-primary" : "border-amber-200 bg-amber-50 text-amber-800"}`}
               >
                 {isMyDraftTurn
                   ? "Your turn: choose a player now."
@@ -480,8 +480,8 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
 
         {status === "active" || status === "completed" ? (
           draftedPlayers.length > 0 ? (
-            <div className="space-y-4 rounded-2xl border border-gray-100 bg-white p-6">
-              <h2 className="text-lg font-semibold text-gray-900">
+            <div className="space-y-4 rounded-lg border border-accent/20 bg-white p-6">
+              <h2 className="text-lg font-semibold text-black">
                 Final Team
               </h2>
               <CurrentTeam
@@ -493,14 +493,14 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
               />
             </div>
           ) : (
-            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-600">
+            <div className="rounded-lg border border-border bg-[#F4F4F9] p-6 text-sm text-secondary">
               Draft is complete, but your team was not found.
             </div>
           )
         ) : null}
 
         {playersLoading || makeDraftPickMutation.isPending ? (
-          <div className="text-sm text-gray-500">Updating draft board...</div>
+          <div className="text-sm text-secondary">Updating draft board...</div>
         ) : null}
       </section>
     );
@@ -510,12 +510,12 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     const canDiscardInSetup = league.status === "setup" && !isDraftLeague;
 
     return (
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-gray-900 font-[system-ui,-apple-system]">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-black font-[system-ui,-apple-system]">
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-secondary">
             Manager: {username || "Sporty User"}
           </p>
-          <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold uppercase tracking-wider">
+          <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
             Team Ready
           </span>
         </div>
@@ -545,7 +545,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
           <button
             type="button"
             onClick={() => router.push(`/leagues/${league.id}`)}
-            className="rounded-full bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
           >
             Go to League
           </button>
@@ -555,12 +555,12 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-gray-900 font-[system-ui,-apple-system]">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 text-black font-[system-ui,-apple-system]">
       <div className="flex justify-between items-center">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-secondary">
           Manager: {username || "Sporty User"}
         </p>
-        <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-semibold uppercase tracking-wider">
+        <span className="px-3 py-1 bg-primary/15 text-primary rounded-full text-xs font-semibold uppercase tracking-wider">
           {league.sports[0]?.sport.display_name || "Multisport"}
         </span>
       </div>
@@ -577,39 +577,39 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
       />
 
       {error ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-600">
+        <p className="rounded-lg border border-danger/20 bg-danger/5 px-4 py-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
 
-      <section className="rounded-2xl border border-gray-100 bg-white p-4">
-        <div className="flex items-center justify-between text-sm text-gray-600">
+      <section className="rounded-lg border border-accent/20 bg-white p-4">
+        <div className="flex items-center justify-between text-sm text-secondary">
           <span>
             Budget used: ${budgetUsed.toFixed(1)} / ${budget.toFixed(1)}
           </span>
           <span
             className={
               remainingBudget >= 0
-                ? "text-green-600 font-medium"
-                : "text-red-600 font-medium"
+                ? "text-primary font-medium"
+                : "text-danger font-medium"
             }
           >
             ${remainingBudget.toFixed(1)} left
           </span>
         </div>
-        <div className="mt-2 h-2 w-full rounded-full bg-gray-200">
+        <div className="mt-2 h-2 w-full rounded-full bg-accent/30">
           <div
             className={
               remainingBudget >= 0
-                ? "h-2 rounded-full bg-green-500"
-                : "h-2 rounded-full bg-red-500"
+                ? "h-2 rounded-full bg-primary/50"
+                : "h-2 rounded-full bg-danger/50"
             }
             style={{ width: `${budgetProgress}%` }}
           />
         </div>
         {isMultiSportLeague ? (
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-700">
+            <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-primary">
               ⚽ Football: {selectedCountsBySport.football ?? 0}/
               {MULTISPORT_MIN_BY_SPORT.football} min
             </span>
@@ -626,7 +626,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
           type="button"
           onClick={handleUndoLastPick}
           disabled={pickHistory.length === 0}
-          className="rounded-full border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-border px-4 py-2 text-sm font-medium text-black hover:bg-[#F4F4F9] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Undo Last Pick
         </button>
@@ -669,7 +669,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
             <button
               type="button"
               onClick={handleNextStep}
-              className="rounded-full bg-primary-600 px-10 py-3 font-semibold text-black hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60 shadow-lg transition-all"
+              className="rounded-full bg-primary px-10 py-3 font-semibold text-black hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60 shadow-lg transition-all"
             >
               Review Team & Name
             </button>

@@ -106,9 +106,9 @@ const sportIcons: Record<PitchPlayer["sport"], string> = {
 };
 
 const sportAccentClasses: Record<PitchPlayer["sport"], string> = {
-  football: "border-green-200 bg-green-50 text-green-700",
+  football: "border-primary/20 bg-primary/5 text-primary",
   basketball: "border-orange-200 bg-orange-50 text-orange-700",
-  cricket: "border-blue-200 bg-blue-50 text-blue-700",
+  cricket: "border-primary/20 bg-primary/5 text-primary",
 };
 
 function detectPitchMode(players: LineupPlayerCardModel[]): PitchMode {
@@ -215,7 +215,7 @@ function PitchSlotMarker({
               </span>
             ) : null}
             {isViceCaptain ? (
-              <span className="absolute -right-1 -top-1 rounded-full border border-blue-300 bg-blue-100 px-1 text-[10px] font-bold text-blue-800">
+              <span className="absolute -right-1 -top-1 rounded-full border border-blue-300 bg-primary/10 px-1 text-[10px] font-bold text-blue-800">
                 VC
               </span>
             ) : null}
@@ -226,7 +226,7 @@ function PitchSlotMarker({
                 event.stopPropagation();
                 onRemove(slot.id);
               }}
-              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] text-gray-500 shadow hover:text-red-500"
+              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] text-secondary shadow hover:text-danger"
               aria-label={`Bench ${player.name}`}
             >
               x
@@ -269,20 +269,20 @@ function DraggableBenchPlayerCard({ player }: DraggableBenchPlayerCardProps) {
       style={style}
       {...draggable.listeners}
       {...draggable.attributes}
-      className="cursor-grab rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition hover:shadow-md"
+      className="cursor-grab rounded-lg border border-border bg-white p-3 shadow-sm transition hover:shadow-md"
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-gray-900">
+        <p className="truncate text-sm font-semibold text-black">
           {player.name}
         </p>
         <span className="text-base" aria-label={player.sport}>
           {sportIcons[player.sport]}
         </span>
       </div>
-      <p className="mt-1 text-xs text-gray-500">{player.position}</p>
-      <p className="mt-1 truncate text-xs text-gray-500">{player.realTeam}</p>
-      <p className="mt-1 text-xs font-medium text-primary-600">
+      <p className="mt-1 text-xs text-secondary">{player.position}</p>
+      <p className="mt-1 truncate text-xs text-secondary">{player.realTeam}</p>
+      <p className="mt-1 text-xs font-medium text-primary">
         Cost {player.cost}
       </p>
     </article>
@@ -637,17 +637,17 @@ export function LineupPitchView({
         }}
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
-          <section className="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+          <section className="space-y-4 rounded-md border border-border bg-[#F4F4F9] p-4">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-black">
                 Bench Players
               </h3>
-              <p className="text-xs text-gray-500">Drag to pitch</p>
+              <p className="text-xs text-secondary">Drag to pitch</p>
             </div>
 
             <div className="max-h-155 space-y-2 overflow-y-auto pr-1">
               {benchPlayers.length === 0 ? (
-                <p className="rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-500">
+                <p className="rounded-lg border border-border bg-white p-3 text-sm text-secondary">
                   No bench players.
                 </p>
               ) : (
@@ -665,13 +665,13 @@ export function LineupPitchView({
                   🏀 Basketball: {activeSportCounts.basketball ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.basketball}
                 </span>
-                <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 font-medium text-green-700">
+                <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-medium text-primary">
                   ⚽ Football: {activeSportCounts.football ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.football}
                 </span>
               </div>
             ) : null}
-            <div className="relative mx-auto aspect-3/4 w-full overflow-hidden rounded-2xl bg-linear-to-b from-[#1a4d2e] to-[#0f3a22] shadow-xl">
+            <div className="relative mx-auto aspect-3/4 w-full overflow-hidden rounded-lg bg-linear-to-b from-[#1a4d2e] to-[#0f3a22] shadow-xl">
               <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
               <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
               <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
@@ -706,11 +706,11 @@ export function LineupPitchView({
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-xl border border-primary-200 bg-white px-3 py-2 shadow-2xl">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="rounded-md border border-primary/30 bg-white px-3 py-2 shadow-strong">
+              <p className="text-sm font-medium text-black">
                 {playerById[activeDragPlayerId].name}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-secondary">
                 {playerById[activeDragPlayerId].position}
               </p>
             </div>
@@ -718,42 +718,42 @@ export function LineupPitchView({
         </DragOverlay>
       </DndContext>
 
-      <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
+      <section className="space-y-4 rounded-lg border border-accent/20 bg-white p-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-black">
             Captain Assignment
           </h3>
-          <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs font-medium text-gray-600">
+          <span className="rounded-full border border-border bg-[#F4F4F9] px-3 py-1 text-xs font-medium text-secondary">
             Click a player on the pitch to assign C/VC
           </span>
         </div>
 
         {!selectedLineupPlayer ? (
-          <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-center text-sm text-gray-500">
+          <div className="rounded-md border border-dashed border-border bg-[#F4F4F9] p-4 text-center text-sm text-secondary">
             Select a starter on the pitch to assign captain or vice-captain.
           </div>
         ) : (
-          <div className="rounded-xl border border-gray-200 p-4">
-            <p className="text-sm font-semibold text-gray-900">
+          <div className="rounded-md border border-border p-4">
+            <p className="text-sm font-semibold text-black">
               {selectedLineupPlayer.name}
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-secondary">
               {selectedLineupPlayer.position} • {selectedLineupPlayer.realTeam}
             </p>
 
             <div className="mt-4 space-y-3">
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm text-black">
                 <input
                   type="checkbox"
                   checked={selectedLineupPlayer.isCaptain}
                   onChange={() => onSetCaptain(selectedLineupPlayer.playerId)}
                   disabled={disabled || selectedLineupPlayer.isViceCaptain}
-                  className="h-4 w-4 rounded border-gray-300 text-yellow-500 focus:ring-yellow-300"
+                  className="h-4 w-4 rounded border-border text-yellow-500 focus:ring-yellow-300"
                 />
                 Make Captain
               </label>
 
-              <label className="flex items-center gap-2 text-sm text-gray-700">
+              <label className="flex items-center gap-2 text-sm text-black">
                 <input
                   type="checkbox"
                   checked={selectedLineupPlayer.isViceCaptain}
@@ -761,7 +761,7 @@ export function LineupPitchView({
                     onSetViceCaptain(selectedLineupPlayer.playerId)
                   }
                   disabled={disabled || selectedLineupPlayer.isCaptain}
-                  className="h-4 w-4 rounded border-gray-300 text-blue-500 focus:ring-blue-300"
+                  className="h-4 w-4 rounded border-border text-blue-500 focus:ring-blue-300"
                 />
                 Make Vice-Captain
               </label>

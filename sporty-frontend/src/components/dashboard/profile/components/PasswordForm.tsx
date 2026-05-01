@@ -71,10 +71,10 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
 
   const strengthColor =
     strength === "Strong"
-      ? "bg-green-500"
+      ? "bg-primary/50"
       : strength === "Medium"
         ? "bg-amber-500"
-        : "bg-red-500";
+        : "bg-danger/50";
 
   const strengthWidth =
     strength === "Strong"
@@ -84,12 +84,12 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
         : "33%";
 
   return (
-    <section className="card-fade-in space-y-4 rounded-2xl border border-gray-100 bg-white p-6">
-      <h2 className="text-md font-medium text-gray-800">Change Password</h2>
+    <section className="card-fade-in space-y-4 rounded-lg border border-accent/20 bg-white p-6">
+      <h2 className="text-md font-medium text-black">Change Password</h2>
 
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="current-password" className="text-sm text-gray-600">
+          <label htmlFor="current-password" className="text-sm text-secondary">
             Current Password
           </label>
           <div className="flex items-center gap-2">
@@ -98,12 +98,12 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
               type={show.current ? "text" : "password"}
               value={currentPassword}
               onChange={(event) => setCurrentPassword(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              className="w-full rounded-lg border border-border px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             <button
               type="button"
               onClick={() => setShow((prev) => ({ ...prev, current: !prev.current }))}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600"
+              className="rounded-lg border border-border px-3 py-2 text-sm text-secondary"
             >
               {show.current ? "Hide" : "Show"}
             </button>
@@ -111,7 +111,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="new-password" className="text-sm text-gray-600">
+          <label htmlFor="new-password" className="text-sm text-secondary">
             New Password
           </label>
           <div className="flex items-center gap-2">
@@ -120,26 +120,26 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
               type={show.new ? "text" : "password"}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              className="w-full rounded-lg border border-border px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             <button
               type="button"
               onClick={() => setShow((prev) => ({ ...prev, new: !prev.new }))}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600"
+              className="rounded-lg border border-border px-3 py-2 text-sm text-secondary"
             >
               {show.new ? "Hide" : "Show"}
             </button>
           </div>
           <div className="space-y-1">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent/30">
               <div className={`h-full ${strengthColor} transition-all duration-200`} style={{ width: strengthWidth }} />
             </div>
-            <p className="text-xs text-gray-500">Strength: {strength}</p>
+            <p className="text-xs text-secondary">Strength: {strength}</p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="confirm-password" className="text-sm text-gray-600">
+          <label htmlFor="confirm-password" className="text-sm text-secondary">
             Confirm New Password
           </label>
           <div className="flex items-center gap-2">
@@ -148,12 +148,12 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
               type={show.confirm ? "text" : "password"}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+              className="w-full rounded-lg border border-border px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             <button
               type="button"
               onClick={() => setShow((prev) => ({ ...prev, confirm: !prev.confirm }))}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600"
+              className="rounded-lg border border-border px-3 py-2 text-sm text-secondary"
             >
               {show.confirm ? "Hide" : "Show"}
             </button>
@@ -164,7 +164,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
           <button
             type="submit"
             disabled={isSaving}
-            className="rounded-lg border border-gray-300 px-6 py-2 text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-70"
+            className="rounded-lg border border-border px-6 py-2 text-black transition-colors hover:bg-[#F4F4F9] disabled:opacity-70"
           >
             {isSaving ? "Saving..." : "Update Password"}
           </button>

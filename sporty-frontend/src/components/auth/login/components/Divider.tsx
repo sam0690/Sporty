@@ -1,9 +1,9 @@
 export function Divider() {
     return (
-        <div className="my-6 flex items-center gap-4 text-xs font-medium uppercase tracking-[0.12em] text-text-secondary">
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border-light to-transparent" />
+        <div className="flex items-center gap-3 my-6 text-xs font-semibold uppercase tracking-widest text-secondary">
+            <span className="flex-1 h-px bg-accent/40" />
             <span>or continue with</span>
-            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-border-light to-transparent" />
+            <span className="flex-1 h-px bg-accent/40" />
         </div>
     );
 }

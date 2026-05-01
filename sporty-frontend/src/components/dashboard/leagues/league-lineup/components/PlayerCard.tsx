@@ -28,20 +28,20 @@ export function PlayerCard({
   const captainStyle = player.isCaptain
     ? "border-yellow-300 bg-yellow-50"
     : player.isViceCaptain
-      ? "border-blue-300 bg-blue-50"
-      : "border-gray-100 bg-white";
+      ? "border-blue-300 bg-primary/5"
+      : "border-accent/20 bg-white";
 
   const sportAccent =
-    sportAccentStyles[player.sportName] ?? "border-gray-200 bg-gray-50";
+    sportAccentStyles[player.sportName] ?? "border-border bg-[#F4F4F9]";
 
   return (
     <article
-      className={`rounded-xl border p-4 shadow-sm transition-colors ${captainStyle}`}
+      className={`rounded-md border p-4 shadow-sm transition-colors ${captainStyle}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-base font-semibold text-gray-900">{player.name}</p>
-          <p className="mt-1 text-sm text-gray-500">{player.realTeam}</p>
+          <p className="text-base font-semibold text-black">{player.name}</p>
+          <p className="mt-1 text-sm text-secondary">{player.realTeam}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -51,7 +51,7 @@ export function PlayerCard({
             </span>
           ) : null}
           {player.isViceCaptain ? (
-            <span className="rounded-full border border-blue-300 bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
+            <span className="rounded-full border border-blue-300 bg-primary/10 px-2 py-0.5 text-xs font-semibold text-blue-800">
               VC
             </span>
           ) : null}
@@ -59,17 +59,17 @@ export function PlayerCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700">
+        <span className="rounded-full border border-border bg-[#F4F4F9] px-2.5 py-1 text-xs font-medium text-black">
           {player.position}
         </span>
         <span
-          className={`rounded-full border px-2.5 py-1 text-xs font-medium text-gray-700 ${sportAccent}`}
+          className={`rounded-full border px-2.5 py-1 text-xs font-medium text-black ${sportAccent}`}
         >
           {player.sportDisplayName}
         </span>
       </div>
 
-      <p className="mt-4 text-sm font-medium text-gray-700">
+      <p className="mt-4 text-sm font-medium text-black">
         Cost: {player.cost}
       </p>
 
@@ -80,7 +80,7 @@ export function PlayerCard({
           disabled={disabled || starterToggleDisabled}
           className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
             player.isStarter
-              ? "border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+              ? "border-danger/20 bg-danger/5 text-danger hover:bg-danger/10"
               : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
           } disabled:cursor-not-allowed disabled:opacity-60`}
         >
@@ -111,8 +111,8 @@ export function PlayerCard({
               disabled={disabled}
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
                 player.isViceCaptain
-                  ? "border-blue-300 bg-blue-100 text-blue-800"
-                  : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  ? "border-blue-300 bg-primary/10 text-blue-800"
+                  : "border-primary/20 bg-primary/5 text-primary hover:bg-primary/10"
               } disabled:cursor-not-allowed disabled:opacity-60`}
             >
               Set Vice-Captain

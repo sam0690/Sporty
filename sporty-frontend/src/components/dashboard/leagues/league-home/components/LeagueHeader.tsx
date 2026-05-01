@@ -22,7 +22,7 @@ export function LeagueHeader({
 }: LeagueHeaderProps) {
   return (
     <header
-      className="relative overflow-hidden rounded-2xl border border-gray-100 bg-white px-5 py-4"
+      className="relative overflow-hidden rounded-lg border border-accent/20 bg-white px-5 py-4"
       style={{
         backgroundImage: "url('/images/landing/hero-stadium.svg')",
         backgroundSize: "cover",
@@ -33,7 +33,7 @@ export function LeagueHeader({
 
       <div className="relative flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-light tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-black">
             {leagueName}
           </h1>
           <span
@@ -45,7 +45,7 @@ export function LeagueHeader({
           </span>
         </div>
 
-        <p className="rounded-full border border-gray-100 bg-white px-3 py-1 text-sm text-gray-500">
+        <p className="rounded-full border border-accent/20 bg-white px-3 py-1 text-sm text-secondary">
           Week {currentWeek} of {totalWeeks}
         </p>
       </div>

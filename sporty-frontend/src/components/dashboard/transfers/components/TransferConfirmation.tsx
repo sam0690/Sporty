@@ -89,25 +89,25 @@ export function TransferConfirmation({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="w-full max-w-md rounded-3xl border border-gray-100 bg-white p-8 shadow-2xl animate-in zoom-in-95 duration-200">
-        <h3 className="text-2xl font-bold text-gray-900">
+      <div className="w-full max-w-md rounded-3xl border border-accent/20 bg-white p-8 shadow-strong animate-in zoom-in-95 duration-200">
+        <h3 className="text-2xl font-bold text-black">
           Confirm Staged Transfers
         </h3>
 
-        <p className="mt-4 text-sm text-gray-600">
+        <p className="mt-4 text-sm text-secondary">
           Out: {stagedOutPlayers.length} | In: {stagedInPlayers.length}
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-red-600">
+          <div className="rounded-lg border border-red-100 bg-danger/5 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-danger">
               Out
             </p>
             <div className="mt-2 space-y-1">
               {stagedOutPlayers.map((player) => (
                 <p
                   key={player.id.toString()}
-                  className="truncate text-xs text-gray-700"
+                  className="truncate text-xs text-black"
                 >
                   {player.name}
                 </p>
@@ -115,15 +115,15 @@ export function TransferConfirmation({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-green-100 bg-green-50 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-green-600">
+          <div className="rounded-lg border border-green-100 bg-primary/5 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
               In
             </p>
             <div className="mt-2 space-y-1">
               {stagedInPlayers.map((player) => (
                 <p
                   key={player.id.toString()}
-                  className="truncate text-xs text-gray-700"
+                  className="truncate text-xs text-black"
                 >
                   {player.name}
                 </p>
@@ -132,13 +132,13 @@ export function TransferConfirmation({
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm leading-relaxed text-gray-500">
+        <p className="mt-6 text-center text-sm leading-relaxed text-secondary">
           Confirming will apply all staged transfers at once.
         </p>
 
         <div className="mt-8 flex flex-col gap-3">
           {!transfersOpen && (
-            <div className="rounded-xl border border-yellow-100 bg-yellow-50 p-3 text-sm text-yellow-800">
+            <div className="rounded-md border border-yellow-100 bg-yellow-50 p-3 text-sm text-yellow-800">
               Transfers are closed for this window.
               {formattedCountdown ? (
                 <span className="ml-2 font-mono">
@@ -152,7 +152,7 @@ export function TransferConfirmation({
             type="button"
             onClick={onConfirm}
             disabled={confirmDisabled}
-            className="w-full rounded-full bg-primary-600 py-3.5 font-bold text-white transition-all hover:bg-primary-700 disabled:opacity-50 shadow-lg shadow-primary-200"
+            className="w-full rounded-full bg-primary py-3.5 font-bold text-white transition-all hover:bg-primary-700 disabled:opacity-50 shadow-lg shadow-primary-200"
           >
             {isLoading ? "Processing..." : "Confirm Transfers"}
           </button>
@@ -160,7 +160,7 @@ export function TransferConfirmation({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full rounded-full py-3 font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+            className="w-full rounded-full py-3 font-semibold text-secondary/60 hover:text-secondary transition-colors"
           >
             Cancel
           </button>

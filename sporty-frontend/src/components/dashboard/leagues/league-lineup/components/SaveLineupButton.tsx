@@ -16,7 +16,7 @@ export function SaveLineupButton({
   const isDisabled = !isDirty || disabled || isLoading;
 
   return (
-    <div className="sticky bottom-0 border-t border-gray-100 bg-white/90 py-4 backdrop-blur-sm">
+    <div className="sticky bottom-0 border-t border-accent/20 bg-white/90 py-4 backdrop-blur-sm">
       <div className="flex items-center justify-end gap-2">
         {isDirty && !isDisabled ? (
           <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" aria-hidden="true" />
@@ -28,8 +28,8 @@ export function SaveLineupButton({
           disabled={isDisabled}
           className={`rounded-full px-8 py-2.5 font-medium text-white transition-colors ${
             isDisabled
-              ? "cursor-not-allowed bg-gray-300"
-              : `bg-primary-600 hover:bg-primary-700 ${isDirty ? "animate-pulse" : ""}`
+              ? "cursor-not-allowed bg-accent/40"
+              : `bg-primary hover:bg-primary-700 ${isDirty ? "animate-pulse" : ""}`
           }`}
         >
           {isLoading ? (

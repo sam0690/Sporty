@@ -24,22 +24,22 @@ export function ConfirmationModal({ isOpen, onClose, onConfirm, teamData, isLoad
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-2xl bg-surface-100 p-6 shadow-2xl">
-        <h2 className="text-xl font-semibold text-text-primary">Confirm Team Creation</h2>
+      <div className="w-full max-w-md rounded-lg bg-[#F4F4F9] p-6 shadow-strong">
+        <h2 className="text-xl font-semibold text-black">Confirm Team Creation</h2>
 
-        <div className="mt-4 space-y-2 rounded-lg border border-border p-4 text-sm text-text-secondary">
-          <p><span className="font-medium text-text-primary">Team Name:</span> {teamData.teamName}</p>
-          <p><span className="font-medium text-text-primary">League:</span> {teamData.leagueName}</p>
-          <p><span className="font-medium text-text-primary">Players:</span> {teamData.selectedCount}/{teamData.requiredPlayers}</p>
-          <p><span className="font-medium text-text-primary">Total Cost:</span> ${teamData.totalCost}</p>
-          <p><span className="font-medium text-text-primary">Remaining:</span> ${teamData.remainingBudget}</p>
+        <div className="mt-4 space-y-2 rounded-lg border border-border p-4 text-sm text-secondary">
+          <p><span className="font-medium text-black">Team Name:</span> {teamData.teamName}</p>
+          <p><span className="font-medium text-black">League:</span> {teamData.leagueName}</p>
+          <p><span className="font-medium text-black">Players:</span> {teamData.selectedCount}/{teamData.requiredPlayers}</p>
+          <p><span className="font-medium text-black">Total Cost:</span> ${teamData.totalCost}</p>
+          <p><span className="font-medium text-black">Remaining:</span> ${teamData.remainingBudget}</p>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-primary-500 px-4 py-2 text-primary-500 hover:bg-primary-50"
+            className="rounded-lg border border-primary-500 px-4 py-2 text-primary-500 hover:bg-primary/10"
           >
             Back
           </button>
@@ -47,7 +47,7 @@ export function ConfirmationModal({ isOpen, onClose, onConfirm, teamData, isLoad
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="rounded-lg bg-primary-500 px-4 py-2 font-semibold text-white hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-primary/100 px-4 py-2 font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? "Creating..." : "Create Team"}
           </button>

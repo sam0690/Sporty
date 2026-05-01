@@ -42,7 +42,7 @@ export function LeagueBasicInfo({
       <div>
         <label
           htmlFor="league-name"
-          className="mb-1 block text-sm text-gray-600"
+          className="mb-1 block text-sm text-secondary"
         >
           League Name
         </label>
@@ -53,15 +53,15 @@ export function LeagueBasicInfo({
           maxLength={50}
           required
           placeholder="Champions League 2025"
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
+          className="w-full rounded-md border border-border px-4 py-3 text-black outline-none transition focus:border-primary-400"
         />
-        <p className="mt-2 text-right text-xs text-gray-400">
+        <p className="mt-2 text-right text-xs text-secondary/60">
           {leagueName.length}/50
         </p>
       </div>
 
       <div>
-        <p className="mb-2 text-sm text-gray-600">Select Sport</p>
+        <p className="mb-2 text-sm text-secondary">Select Sport</p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           {sportOptions.map((option) => {
             const isSelected = option.value === sport;
@@ -70,32 +70,32 @@ export function LeagueBasicInfo({
                 key={option.value}
                 type="button"
                 onClick={() => onSportChange(option.value)}
-                className={`rounded-xl border p-4 text-center transition-colors ${
+                className={`rounded-md border p-4 text-center transition-colors ${
                   isSelected
-                    ? "border-primary-500 bg-primary-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "border-primary-500 bg-primary/10"
+                    : "border-border hover:border-border"
                 }`}
               >
                 <span className="mb-2 block text-3xl" aria-hidden="true">
                   {option.icon}
                 </span>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-black">
                   {option.label}
                 </span>
               </button>
             );
           })}
         </div>
-        <p className="mt-2 text-xs text-gray-400">{helperText}</p>
+        <p className="mt-2 text-xs text-secondary/60">{helperText}</p>
       </div>
 
       <div>
-        <p className="mb-2 text-sm text-gray-600">League Logo</p>
+        <p className="mb-2 text-sm text-secondary">League Logo</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
               htmlFor="league-logo"
-              className="mb-1 block text-xs uppercase tracking-widest text-gray-500"
+              className="mb-1 block text-xs uppercase tracking-widest text-secondary"
             >
               Emoji/Icon
             </label>
@@ -104,13 +104,13 @@ export function LeagueBasicInfo({
               value={leagueLogo}
               onChange={(event) => onLeagueLogoChange(event.target.value)}
               placeholder="🏆"
-              className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition focus:border-primary-400"
+              className="w-full rounded-md border border-border px-4 py-3 text-black outline-none transition focus:border-primary-400"
             />
           </div>
           <div>
             <label
               htmlFor="league-logo-upload"
-              className="mb-1 block text-xs uppercase tracking-widest text-gray-500"
+              className="mb-1 block text-xs uppercase tracking-widest text-secondary"
             >
               Upload
             </label>
@@ -124,11 +124,11 @@ export function LeagueBasicInfo({
                   onLeagueLogoChange(file.name);
                 }
               }}
-              className="w-full cursor-pointer rounded-xl border border-gray-200 px-4 py-3 text-gray-700 file:mr-3 file:rounded-md file:border-0 file:bg-primary-50 file:px-3 file:py-1 file:text-sm file:font-medium file:text-primary-600"
+              className="w-full cursor-pointer rounded-md border border-border px-4 py-3 text-black file:mr-3 file:rounded-md file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-sm file:font-medium file:text-primary"
             />
           </div>
         </div>
-        <p className="mt-2 text-xs text-gray-400">
+        <p className="mt-2 text-xs text-secondary/60">
           Optional: add an emoji or upload a badge.
         </p>
       </div>

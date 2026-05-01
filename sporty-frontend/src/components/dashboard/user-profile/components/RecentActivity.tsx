@@ -76,7 +76,7 @@ function ActivityCard({ activity }: { activity: TUserActivityItem }) {
       : null;
 
   return (
-    <li className="rounded-2xl border border-slate-200 bg-linear-to-br from-white to-slate-50 p-4 shadow-sm">
+    <li className="rounded-lg border border-slate-200 bg-linear-to-br from-white to-slate-50 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700">
@@ -142,9 +142,9 @@ export function RecentActivity({
   }, [activeFilter, recentActivity]);
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5">
+    <section className="rounded-lg border border-accent/20 bg-white p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-medium text-gray-900">Recent Activity</h3>
+        <h3 className="text-base font-medium text-black">Recent Activity</h3>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((filter) => (
             <button
@@ -164,19 +164,19 @@ export function RecentActivity({
       </div>
 
       {isLoading && (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="mt-4 rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
           Loading activity feed...
         </div>
       )}
 
       {!isLoading && errorMessage && (
-        <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
           {errorMessage}
         </div>
       )}
 
       {!isLoading && !errorMessage && filtered.length === 0 && (
-        <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="mt-4 rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
           No activity found for this filter.
         </div>
       )}

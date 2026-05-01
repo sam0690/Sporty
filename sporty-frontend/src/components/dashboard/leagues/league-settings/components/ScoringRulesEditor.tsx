@@ -7,12 +7,12 @@ type ScoringRulesEditorProps = {
 
 export function ScoringRulesEditor({ scoringRules, onChange }: ScoringRulesEditorProps) {
   return (
-    <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
-      <h3 className="text-sm font-medium text-gray-900">Scoring Rules</h3>
+    <section className="space-y-4 rounded-lg border border-accent/20 bg-white p-5">
+      <h3 className="text-sm font-medium text-black">Scoring Rules</h3>
       <div className="grid grid-cols-2 gap-4">
         {Object.entries(scoringRules).map(([rule, value]) => (
           <div key={rule}>
-            <label className="mb-1 block text-sm text-gray-600">{rule}</label>
+            <label className="mb-1 block text-sm text-secondary">{rule}</label>
             <input
               type="number"
               min={0}
@@ -25,7 +25,7 @@ export function ScoringRulesEditor({ scoringRules, onChange }: ScoringRulesEdito
                   [rule]: Number.isNaN(next) ? 0 : next,
                 });
               }}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-gray-900 outline-none focus:border-primary-400"
+              className="w-full rounded-lg border border-border px-3 py-2 text-black outline-none focus:border-primary-400"
             />
           </div>
         ))}

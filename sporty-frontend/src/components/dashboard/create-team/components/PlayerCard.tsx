@@ -27,7 +27,7 @@ const sportBadgeStyles: Record<SportType, string> = {
   football: "bg-accent-football/10 text-accent-football",
   basketball: "bg-accent-basketball/10 text-accent-basketball",
   cricket: "bg-accent-cricket/10 text-accent-cricket",
-  multisport: "bg-primary-100 text-primary-700",
+  multisport: "bg-primary/15 text-primary",
 };
 
 export function PlayerCard({
@@ -48,10 +48,10 @@ export function PlayerCard({
       : "Add player";
 
   return (
-    <article className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface-100 p-3">
+    <article className="flex items-center justify-between gap-3 rounded-lg border border-border bg-[#F4F4F9] p-3">
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <p className="truncate font-semibold text-text-primary">
+          <p className="truncate font-semibold text-black">
             {player.name}
           </p>
           {showSportIcon ? (
@@ -64,11 +64,11 @@ export function PlayerCard({
           >
             {player.position}
           </span>
-          <span className="text-sm font-bold text-primary-600">
+          <span className="text-sm font-bold text-primary">
             ${player.price}
           </span>
         </div>
-        <p className="mt-1 text-sm text-text-secondary">
+        <p className="mt-1 text-sm text-secondary">
           Proj: {player.projected.toFixed(1)}
         </p>
       </div>
@@ -77,7 +77,7 @@ export function PlayerCard({
         <button
           type="button"
           onClick={() => onRemove(player.id)}
-          className="rounded-md border border-primary-500 px-2 py-1 text-xs text-primary-500 hover:bg-primary-50"
+          className="rounded-md border border-primary-500 px-2 py-1 text-xs text-primary-500 hover:bg-primary/10"
         >
           Remove
         </button>
@@ -87,7 +87,7 @@ export function PlayerCard({
           disabled={addDisabled}
           title={addButtonTitle}
           onClick={() => onAdd(player)}
-          className="rounded-md bg-primary-500 px-2 py-1 text-xs font-semibold text-white hover:bg-primary-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md bg-primary/100 px-2 py-1 text-xs font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Add
         </button>

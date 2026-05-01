@@ -23,12 +23,12 @@ export function ProfileHeader({ userName, userEmail, avatarUrl }: ProfileHeaderP
   return (
     <header className="space-y-5">
       <div>
-        <h1 className="text-3xl font-light tracking-tight text-gray-900">Profile</h1>
-        <p className="mt-1 text-sm text-gray-500">Manage your account settings</p>
+        <h1 className="text-3xl font-bold tracking-tight text-black">Profile</h1>
+        <p className="mt-1 text-sm text-secondary">Manage your account settings</p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6 border-b border-gray-100 pb-6">
-        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-xl font-semibold text-gray-500">
+      <div className="flex flex-wrap items-center gap-6 border-b border-accent/20 pb-6">
+        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-accent/30 text-xl font-semibold text-secondary">
           {avatarUrl ? (
             <img src={avatarUrl} alt={`${userName} avatar`} className="h-full w-full object-cover" />
           ) : (
@@ -37,8 +37,8 @@ export function ProfileHeader({ userName, userEmail, avatarUrl }: ProfileHeaderP
         </div>
 
         <div>
-          <p className="text-sm font-medium text-gray-700">{userName}</p>
-          <p className="text-sm text-gray-500">{userEmail}</p>
+          <p className="text-sm font-medium text-black">{userName}</p>
+          <p className="text-sm text-secondary">{userEmail}</p>
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}

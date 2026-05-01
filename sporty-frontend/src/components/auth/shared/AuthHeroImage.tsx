@@ -10,7 +10,7 @@ type AuthHeroImageProps = {
 
 export function AuthHeroImage({ title, subtitle, bullets = [] }: AuthHeroImageProps) {
   return (
-    <div className="relative hidden min-h-[460px] overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-primary-100/60 via-white to-surface-100 shadow-2xl md:block">
+    <div className="relative hidden min-h-[460px] overflow-hidden rounded-xl border border-accent/20 bg-gradient-to-br from-primary/10 via-white to-[#F4F4F9] shadow-strong md:block">
       <div className="absolute inset-0 opacity-70">
         <Image
           src="/images/landing/hero-stadium.svg"
@@ -20,10 +20,10 @@ export function AuthHeroImage({ title, subtitle, bullets = [] }: AuthHeroImagePr
           sizes="(min-width: 768px) 45vw, 0vw"
         />
       </div>
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-primary/10 to-transparent" />
 
       <div className="relative z-10 flex h-full flex-col justify-end gap-2 p-7 text-white">
-        <h3 className="text-2xl font-bold leading-tight">{title}</h3>
+        <h3 className="font-display text-2xl font-bold leading-tight">{title}</h3>
         {subtitle ? <p className="text-sm text-white/90">{subtitle}</p> : null}
         {bullets.length > 0 ? (
           <ul className="mt-2 space-y-1 text-sm text-white/90">

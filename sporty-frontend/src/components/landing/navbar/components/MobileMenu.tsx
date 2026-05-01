@@ -12,7 +12,7 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
     <div className="md:hidden">
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-700 transition-colors hover:bg-gray-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-white text-secondary transition-colors hover:bg-accent/20 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-expanded={open}
         aria-controls="mobile-nav-menu"
         aria-label={open ? "Close navigation menu" : "Open navigation menu"}
@@ -55,10 +55,10 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
           open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}
       >
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" onClick={onToggle} />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onToggle} />
         <div
           className={cn(
-            "absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white p-5 shadow-xl transition-transform duration-300",
+            "absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white p-5 shadow-strong transition-transform duration-300",
             open ? "translate-x-0" : "translate-x-full",
           )}
         >

@@ -137,10 +137,10 @@ export function UserProfile({ userId }: { userId?: string }) {
   ]);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-8 font-[system-ui,-apple-system] text-gray-900">
-      <div className="mb-6 rounded-2xl border border-gray-100 bg-white p-5">
-        <p className="text-sm text-gray-500">Public Profile</p>
-        <h1 className="mt-1 text-2xl font-light tracking-tight text-gray-900">
+    <section className="mx-auto w-full max-w-7xl px-6 py-8 font-[system-ui,-apple-system] text-black">
+      <div className="mb-6 rounded-lg border border-accent/20 bg-white p-5">
+        <p className="text-sm text-secondary">Public Profile</p>
+        <h1 className="mt-1 text-2xl font-bold tracking-tight text-black">
           {profile.name}
         </h1>
       </div>

@@ -662,7 +662,7 @@ export function LeagueLineup() {
       leagueError?.message || lineupError?.message || windowError?.message;
 
     return (
-      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
+      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
         <NavigationTabs
           activeTab="lineup"
           leagueId={leagueId}
@@ -678,8 +678,8 @@ export function LeagueLineup() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
-      <p className="text-sm text-gray-500">
+    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
+      <p className="text-sm text-secondary">
         Manager: {me?.username || "Sporty User"}
       </p>
 
@@ -700,20 +700,20 @@ export function LeagueLineup() {
 
       <LineupViewToggle value={viewMode} onChange={setViewMode} />
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-4">
+      <div className="rounded-lg border border-accent/20 bg-white p-4">
         <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={handleOptimizeLineup}
             disabled={isOptimizing || updateLineup.isPending}
-            className="rounded-full border border-primary-200 bg-primary-50 px-4 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isOptimizing ? "Optimizing..." : "Auto-Optimize Lineup"}
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
-          <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-secondary">
+          <span className="rounded-full border border-border bg-[#F4F4F9] px-3 py-1">
             Total Players: {editablePlayers.length}
           </span>
           <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-800">
@@ -725,12 +725,12 @@ export function LeagueLineup() {
           <span className="rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-yellow-800">
             Captain: {captain?.name || "N/A"}
           </span>
-          <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-blue-800">
+          <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-blue-800">
             Vice-Captain: {viceCaptain?.name || "N/A"}
           </span>
           {lineupSport === "multisport" ? (
             <>
-              <span className="rounded-full border border-green-200 bg-green-50 px-3 py-1 text-green-800">
+              <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-green-800">
                 Football Starters: {starterCountsBySport.football ?? 0} /{" "}
                 {MULTISPORT_STARTER_REQUIREMENTS.football}
               </span>
@@ -742,7 +742,7 @@ export function LeagueLineup() {
           ) : null}
         </div>
         {selectionErrorMessage ? (
-          <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p className="mt-3 rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-sm text-danger">
             {selectionErrorMessage}
           </p>
         ) : null}

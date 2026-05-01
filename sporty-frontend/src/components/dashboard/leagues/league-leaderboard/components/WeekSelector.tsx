@@ -17,7 +17,7 @@ export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChan
 
   return (
     <section className="mb-6 flex flex-wrap items-center justify-end gap-2">
-      <div className="inline-flex items-center gap-2 rounded-full border border-gray-100 bg-white px-2 py-1">
+      <div className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-white px-2 py-1">
       <button
         type="button"
         onClick={() => {
@@ -25,13 +25,13 @@ export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChan
           onWeekChange(next);
         }}
         disabled={selectedWeek === "overall" ? false : numericSelected <= 1}
-        className="rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-full p-1 text-secondary/60 transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40"
         aria-label="Previous week"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
 
-      <p className="px-1 text-sm font-medium text-gray-700">Week {numericSelected}</p>
+      <p className="px-1 text-sm font-medium text-black">Week {numericSelected}</p>
 
       <button
         type="button"
@@ -40,7 +40,7 @@ export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChan
           onWeekChange(next);
         }}
         disabled={selectedWeek === "overall" ? false : numericSelected >= totalWeeks}
-        className="rounded-full p-1 text-gray-400 transition-colors hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-full p-1 text-secondary/60 transition-colors hover:text-secondary disabled:cursor-not-allowed disabled:opacity-40"
         aria-label="Next week"
       >
         <ChevronRight className="h-4 w-4" />
@@ -52,8 +52,8 @@ export function WeekSelector({ currentWeek, totalWeeks, selectedWeek, onWeekChan
         onClick={() => onWeekChange("overall")}
         className={`rounded-full border px-4 py-1.5 text-sm transition-colors ${
           overallActive
-            ? "border-primary-500 bg-primary-500 text-white"
-            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+            ? "border-primary-500 bg-primary/100 text-white"
+            : "border-border bg-white text-secondary hover:border-border"
         }`}
       >
         Overall

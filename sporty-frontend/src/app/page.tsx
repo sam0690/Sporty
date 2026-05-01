@@ -5,7 +5,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function HomePage() {
   return (
-    <div className="landing-shell min-h-screen bg-surface">
+    <div className="landing-shell min-h-screen bg-[#F4F4F9]">
       <Navbar />
       <main>
         <LandingHero />

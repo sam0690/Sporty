@@ -109,8 +109,8 @@ export function LeagueHome() {
   if (isLoading) {
     return (
       <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system]">
-        <div className="h-12 rounded-lg bg-gray-200 animate-pulse" />
-        <div className="h-10 w-40 rounded-lg bg-gray-200 animate-pulse" />
+        <div className="h-12 rounded-lg bg-accent/30 animate-pulse" />
+        <div className="h-10 w-40 rounded-lg bg-accent/30 animate-pulse" />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <TableSkeleton />
@@ -125,8 +125,8 @@ export function LeagueHome() {
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
-      <div className="text-sm text-gray-500">
+    <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
+      <div className="text-sm text-secondary">
         Manager: {username || "Sporty User"}
       </div>
 
@@ -156,13 +156,13 @@ export function LeagueHome() {
       />
 
       {windowStatusLoading ? (
-        <div className="rounded-2xl border border-gray-100 bg-white p-4 text-sm text-gray-500">
+        <div className="rounded-lg border border-accent/20 bg-white p-4 text-sm text-secondary">
           Checking transfer window status...
         </div>
       ) : isTransferWindowActive ? (
         <TransferFields leagueId={leagueId} />
       ) : (
-        <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+        <div className="rounded-lg border border-border bg-[#F4F4F9] p-4 text-sm text-secondary">
           No transfer window is currently active for this league.
         </div>
       )}
@@ -177,7 +177,7 @@ export function LeagueHome() {
               ? "Commissioner cannot leave - delete league or transfer ownership"
               : "Leave this league"
           }
-          className="rounded-full border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-full border border-danger/20 px-4 py-2 text-sm font-medium text-danger hover:bg-danger/5 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Leave League
         </button>
@@ -208,21 +208,21 @@ export function LeagueHome() {
         <div className="space-y-4">
           {isDraftMode ? (
             leagueStatus === "setup" ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
                 Draft has not started yet. Team creation happens through the
                 draft only.
               </div>
             ) : leagueStatus === "drafting" ? (
-              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5 text-sm text-blue-900">
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-5 text-sm text-blue-900">
                 Draft is in progress. Make your picks from the draft screen.
               </div>
             ) : (
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5 text-sm text-gray-700">
+              <div className="rounded-lg border border-border bg-[#F4F4F9] p-5 text-sm text-black">
                 Draft is complete, but your team is not available yet.
               </div>
             )
           ) : (
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
               Build your team to start competing in this budget league.
             </div>
           )}
@@ -238,7 +238,7 @@ export function LeagueHome() {
                       : `/leagues/${league.id}/create-team`,
                   )
                 }
-                className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+                className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
               >
                 {hasMyTeam ? "View Team" : "Build Team"}
               </button>
@@ -248,7 +248,7 @@ export function LeagueHome() {
               <button
                 type="button"
                 onClick={() => router.push(`/leagues/${league.id}/create-team`)}
-                className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+                className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700"
               >
                 Open Draft Screen
               </button>
@@ -261,9 +261,9 @@ export function LeagueHome() {
 
       {showLeaveModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6">
-            <h3 className="text-lg font-medium text-gray-900">Leave League?</h3>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="w-full max-w-md rounded-lg bg-white p-6">
+            <h3 className="text-lg font-medium text-black">Leave League?</h3>
+            <p className="mt-2 text-sm text-secondary">
               {isCommissioner
                 ? "Commissioners cannot leave until they transfer league ownership."
                 : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
@@ -273,7 +273,7 @@ export function LeagueHome() {
               <button
                 type="button"
                 onClick={() => setShowLeaveModal(false)}
-                className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                className="flex-1 rounded-full border border-border px-4 py-2 text-black hover:bg-[#F4F4F9]"
               >
                 Cancel
               </button>
@@ -281,7 +281,7 @@ export function LeagueHome() {
                 type="button"
                 onClick={handleLeaveLeague}
                 disabled={isLeaving || isCommissioner}
-                className="flex-1 rounded-full border border-red-300 bg-red-50 px-4 py-2 font-medium text-red-700 hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-full border border-danger/30 bg-danger/5 px-4 py-2 font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isLeaving ? "Leaving..." : "Confirm Leave"}
               </button>

@@ -17,16 +17,16 @@ export function CreateLeagueHeader({ step, totalSteps, leagueName }: CreateLeagu
     <div className="sticky top-0 z-10 bg-white/80 py-3 backdrop-blur-sm">
       <div className="flex flex-col gap-2">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-light text-gray-900">
+          <h1 className="text-xl font-bold text-black">
             {leagueName ? leagueName : "New League"}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-secondary">
             Step {clampedStep} of {totalSteps}: {label}
           </p>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-accent/30">
           <div
-            className="h-full rounded-full bg-primary-600 transition-all"
+            className="h-full rounded-full bg-primary transition-all"
             style={{ width: `${progress}%` }}
           />
         </div>

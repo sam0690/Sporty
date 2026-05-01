@@ -38,23 +38,23 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-gray-100 bg-white font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] md:block">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 bg-black font-sans md:block">
       <div className="relative h-full">
-        <div className="p-6">
+        <div className="p-6 border-b border-white/10">
           <div className="flex items-center justify-between gap-2">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 text-xl font-medium tracking-tight text-gray-900 transition-opacity hover:opacity-80"
+              className="inline-flex items-center gap-2 font-display text-xl font-bold tracking-tight text-[#F4F4F9] transition-opacity hover:opacity-80 hover:no-underline"
             >
               <span aria-hidden="true">⚽🏀🏏</span>
               <span>Sporty</span>
             </Link>
-            <NotificationBell />
+            <NotificationBell className="text-[#F4F4F9]/70 hover:text-[#F4F4F9]" />
           </div>
         </div>
 
         <nav
-          className="flex flex-col gap-1 px-3"
+          className="flex flex-col gap-1 px-3 pt-4"
           aria-label="Dashboard Navigation"
         >
           {items.map((item) => {
@@ -66,10 +66,10 @@ export function Sidebar({ items }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "mx-3 flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:no-underline",
                   active
-                    ? "bg-gray-100 text-gray-900"
-                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900",
+                    ? "bg-primary text-white font-semibold"
+                    : "text-[#F4F4F9]/70 hover:bg-white/10 hover:text-white",
                 )}
                 aria-current={active ? "page" : undefined}
               >
@@ -80,13 +80,13 @@ export function Sidebar({ items }: SidebarProps) {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-100 p-6">
+        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-6">
           <div className="flex justify-end">
             <button
               type="button"
               onClick={handleLogout}
               disabled={actionLoading.logout}
-              className="inline-flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm text-gray-800 transition-transform duration-150 hover:scale-[1.03] disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 text-sm text-[#F4F4F9]/70 transition-all duration-200 hover:bg-white/10 hover:text-white disabled:opacity-50"
               aria-label="Log out"
             >
               <LogOut className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function Sidebar({ items }: SidebarProps) {
           <button
             type="button"
             onClick={handleOpenSettings}
-            className="mt-3 flex w-full items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:border-primary-300 hover:text-primary-700"
+            className="mt-3 flex w-full items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 text-sm text-[#F4F4F9]/70 transition-all duration-200 hover:bg-white/10 hover:text-white"
           >
             <Settings className="h-4 w-4" />
             <span>Settings</span>

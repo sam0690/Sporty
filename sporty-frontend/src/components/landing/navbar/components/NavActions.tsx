@@ -18,13 +18,12 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
       <Link
         href="/login"
         onClick={onNavigate}
-        className={mobile ? "w-full" : undefined}
+        className={cn(mobile ? "w-full" : undefined, "hover:no-underline")}
       >
         <Button
           variant="outline"
           size="md"
           className={cn(
-            "border border-gray-300 bg-white! text-gray-700! hover:border-gray-400 hover:bg-gray-50!",
             mobile && "w-full justify-center",
           )}
         >
@@ -34,12 +33,11 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
       <Link
         href="/register"
         onClick={onNavigate}
-        className={mobile ? "w-full" : undefined}
+        className={cn(mobile ? "w-full" : undefined, "hover:no-underline")}
       >
         <Button
           size="md"
           className={cn(
-            "bg-[#247BA0]! text-white! hover:bg-[#1d6280]!",
             mobile && "w-full justify-center",
           )}
         >

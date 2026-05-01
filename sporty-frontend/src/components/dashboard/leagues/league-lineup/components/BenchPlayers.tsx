@@ -14,12 +14,12 @@ export function BenchPlayers({
   disabled = false,
 }: BenchPlayersProps) {
   return (
-    <section className="space-y-3 rounded-2xl border border-gray-100 bg-white p-5 [animation:fade-soft_0.2s_ease]">
-      <h2 className="text-md font-medium text-gray-800">Bench ({benchPlayers.length})</h2>
+    <section className="space-y-3 rounded-lg border border-accent/20 bg-white p-5 [animation:fade-soft_0.2s_ease]">
+      <h2 className="text-md font-medium text-black">Bench ({benchPlayers.length})</h2>
 
       <div className="space-y-2">
         {benchPlayers.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center text-sm text-gray-400">
+          <div className="rounded-md border border-dashed border-border bg-[#F4F4F9]/50 p-4 text-center text-sm text-secondary/60">
             No bench players available
           </div>
         ) : (

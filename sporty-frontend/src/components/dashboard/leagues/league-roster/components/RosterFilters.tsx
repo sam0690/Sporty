@@ -18,7 +18,7 @@ export function RosterFilters({
   onSportChange,
 }: RosterFiltersProps) {
   return (
-    <section className="space-y-3 rounded-lg bg-surface-100 p-4 shadow-card">
+    <section className="space-y-3 rounded-lg bg-[#F4F4F9] p-4 shadow-card">
       {sports.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {sports.map((sport) => {
@@ -30,8 +30,8 @@ export function RosterFilters({
                 onClick={() => onSportChange?.(sport)}
                 className={`rounded-lg px-3 py-2 text-sm capitalize transition-colors ${
                   active
-                    ? "bg-primary-500 text-white"
-                    : "bg-surface-100 text-text-secondary hover:bg-surface-200"
+                    ? "bg-primary/100 text-white"
+                    : "bg-[#F4F4F9] text-secondary hover:bg-white-200"
                 }`}
               >
                 {sport}
@@ -42,12 +42,12 @@ export function RosterFilters({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
-        <label htmlFor="position-filter" className="text-sm text-text-secondary">Position</label>
+        <label htmlFor="position-filter" className="text-sm text-secondary">Position</label>
         <select
           id="position-filter"
           value={selectedPosition}
           onChange={(event) => onPositionChange(event.target.value)}
-          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-text-primary"
+          className="rounded-lg border border-border bg-white px-3 py-2 text-sm text-black"
         >
           {positions.map((position) => (
             <option key={position} value={position}>{position}</option>

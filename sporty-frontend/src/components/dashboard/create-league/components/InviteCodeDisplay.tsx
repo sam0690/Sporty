@@ -17,12 +17,12 @@ export function InviteCodeDisplay({ inviteCode }: InviteCodeDisplayProps) {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-gray-50 p-3">
-      <span className="font-mono text-lg tracking-wider text-gray-900">{inviteCode}</span>
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-[#F4F4F9] p-3">
+      <span className="font-mono text-lg tracking-wider text-black">{inviteCode}</span>
       <button
         type="button"
         onClick={handleCopy}
-        className="rounded-full border border-gray-300 bg-white px-3 py-1 text-xs font-medium text-gray-700 hover:border-primary-500"
+        className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-black hover:border-primary-500"
       >
         Copy
       </button>

@@ -404,13 +404,13 @@ export function LeagueRoster() {
   if (isLoading || !roster) {
     return (
       <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        <div className="h-10 w-56 animate-pulse rounded-lg bg-gray-100" />
-        <div className="mx-auto aspect-3/4 w-full max-w-2xl rounded-2xl bg-gray-100 p-6">
+        <div className="h-10 w-56 animate-pulse rounded-lg bg-accent/20" />
+        <div className="mx-auto aspect-3/4 w-full max-w-2xl rounded-lg bg-accent/20 p-6">
           <div className="grid grid-cols-3 gap-4">
             {Array.from({ length: 9 }, (_, index) => (
               <div
                 key={index}
-                className="h-12 w-12 animate-pulse rounded-full bg-gray-200"
+                className="h-12 w-12 animate-pulse rounded-full bg-accent/30"
               />
             ))}
           </div>
@@ -426,24 +426,24 @@ export function LeagueRoster() {
 
   if (teamError) {
     return (
-      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
+      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
         <NavigationTabs
           activeTab="roster"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
 
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+        <div className="rounded-lg border border-danger/20 bg-danger/5 p-5">
           <h2 className="text-base font-semibold text-red-800">
             Unable to load roster
           </h2>
-          <p className="mt-1 text-sm text-red-700">
+          <p className="mt-1 text-sm text-danger">
             {teamError.message || "Failed to fetch team players."}
           </p>
           <button
             type="button"
             onClick={() => void refetchTeam()}
-            className="mt-4 rounded-full border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+            className="mt-4 rounded-full border border-danger/30 bg-white px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10"
           >
             Retry
           </button>
@@ -457,8 +457,8 @@ export function LeagueRoster() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
-      <p className="text-sm text-gray-500">
+    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
+      <p className="text-sm text-secondary">
         Manager: {username || "Sporty User"}
       </p>
 
@@ -523,11 +523,11 @@ export function LeagueRoster() {
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-xl border border-primary-200 bg-white px-3 py-2 shadow-2xl">
-              <p className="text-sm font-medium text-gray-900">
+            <div className="rounded-md border border-primary/30 bg-white px-3 py-2 shadow-strong">
+              <p className="text-sm font-medium text-black">
                 {playerById[activeDragPlayerId].name}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-secondary">
                 {playerById[activeDragPlayerId].position}
               </p>
             </div>
@@ -536,7 +536,7 @@ export function LeagueRoster() {
       </DndContext>
 
       {isMultiSport ? (
-        <div className="rounded-xl border border-gray-100 bg-white p-3 text-sm text-gray-700">
+        <div className="rounded-md border border-accent/20 bg-white p-3 text-sm text-black">
           Sport Limits: {activeSportSummary}
         </div>
       ) : null}
@@ -546,7 +546,7 @@ export function LeagueRoster() {
           type="button"
           onClick={handleSave}
           disabled={!isDirty || isSaving}
-          className="rounded-full bg-primary-600 px-6 py-2.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-accent/40"
         >
           {isSaving ? "Saving..." : "Save Lineup"}
         </button>

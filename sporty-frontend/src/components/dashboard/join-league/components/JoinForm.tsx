@@ -31,29 +31,29 @@ export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
   return (
     <form
       onSubmit={submit}
-      className="mx-auto max-w-md space-y-4 rounded-2xl border border-gray-100 bg-white p-8 animate-[fade-soft_0.2s_ease]"
+      className="mx-auto max-w-md space-y-4 rounded-lg border border-accent/20 bg-white p-8 animate-[fade-soft_0.2s_ease]"
     >
       <div>
         <label
           htmlFor="invite-code"
-          className="mb-1 block text-sm text-gray-600"
+          className="mb-1 block text-sm text-secondary"
         >
           Invite Code
         </label>
         <Input
           id="invite-code"
           placeholder="e.g. j4YEA1lf"
-          className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center font-mono text-lg tracking-wider text-gray-900 outline-none transition focus:border-primary-400"
+          className="w-full rounded-md border border-border px-4 py-3 text-center font-mono text-lg tracking-wider text-black outline-none transition focus:border-primary-400"
           error={errors.invite_code?.message}
           {...register("invite_code")}
         />
-        <p className="mt-2 text-center text-xs text-gray-400">
+        <p className="mt-2 text-center text-xs text-secondary/60">
           Invite codes are case-sensitive.
         </p>
       </div>
 
       {error ? (
-        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="rounded-md bg-danger/5 px-3 py-2 text-sm text-danger">
           {error}
         </p>
       ) : null}
@@ -61,7 +61,7 @@ export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
       <button
         type="submit"
         disabled={isLoading}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#247BA0] px-8 py-3 font-semibold text-white! shadow-sm transition-colors hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-600! disabled:opacity-100"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#247BA0] px-8 py-3 font-semibold text-white! shadow-sm transition-colors hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-accent/40 disabled:text-secondary! disabled:opacity-100"
       >
         {isLoading ? (
           <>

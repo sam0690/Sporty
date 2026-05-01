@@ -23,24 +23,24 @@ export function Topbar({
   const initial = userName.slice(0, 1).toUpperCase();
 
   return (
-    <header className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-gray-100 bg-white p-5">
+    <header className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-accent/20 bg-white p-5 shadow-card">
       <div>
-        <p className="text-sm text-gray-500">Welcome back, {userName}</p>
-        <h1 className="text-2xl font-light tracking-tight text-gray-900">
+        <p className="text-sm text-secondary">Welcome back, {userName}</p>
+        <h1 className="font-display text-2xl font-bold tracking-tight text-black">
           Overview
         </h1>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <label className="min-w-52">
-          <span className="mb-1 block text-xs font-medium text-gray-500">
+          <span className="mb-1 block text-xs font-medium text-secondary">
             Active League
           </span>
           <select
             value={selectedLeagueId ?? ""}
             onChange={(event) => onLeagueChange(event.target.value)}
             disabled={leagues.length === 0}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-primary-500 focus:outline-none"
+            className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-black focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200"
             aria-label="Choose active league"
           >
             {leagues.map((league) => (
@@ -54,12 +54,12 @@ export function Topbar({
         <button
           type="button"
           onClick={() => router.push(`/user/${userId}`)}
-          className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-left hover:bg-gray-100"
+          className="flex items-center gap-3 rounded-md border border-accent/20 bg-[#F4F4F9] px-3 py-2 text-left hover:bg-accent/20 transition-colors duration-200"
           aria-label="Open public profile"
         >
           <div className="text-right">
-            <p className="text-sm font-medium text-gray-800">{userName}</p>
-            <p className="text-xs text-gray-500">Team Manager</p>
+            <p className="text-sm font-medium text-black">{userName}</p>
+            <p className="text-xs text-secondary">Team Manager</p>
           </div>
           {avatar ? (
             <Image
@@ -71,7 +71,7 @@ export function Topbar({
               className="h-9 w-9 rounded-full object-cover"
             />
           ) : (
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-gray-200 text-sm font-semibold text-gray-700">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
               {initial}
             </span>
           )}

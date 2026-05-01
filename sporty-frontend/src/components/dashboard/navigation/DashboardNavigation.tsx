@@ -29,7 +29,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <div className="min-h-screen bg-[#F4F4F9] font-sans">
       <Sidebar items={navItems} />
 
       <div className="pb-20 pt-8 md:ml-64 md:pb-8">

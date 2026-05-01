@@ -9,13 +9,13 @@ export function Logo({ onClick }: LogoProps) {
     <Link
       href="/"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-md px-1 py-1 text-gray-900 transition-colors hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      className="inline-flex items-center gap-2 rounded-md px-1 py-1 text-black transition-colors hover:text-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       aria-label="Sporty home"
     >
       <span className="text-base" aria-hidden="true">
         ⚽ 🏀 🏏
       </span>
-      <span className="text-xl font-light tracking-tight">
+      <span className="font-display text-xl font-bold tracking-tight">
         Sporty
       </span>
     </Link>

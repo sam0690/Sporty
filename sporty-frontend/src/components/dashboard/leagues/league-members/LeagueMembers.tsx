@@ -70,25 +70,25 @@ export function LeagueMembers() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
+    <section className="mx-auto max-w-6xl px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
       <NavigationTabs
         activeTab="members"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <div className="rounded-2xl border border-gray-100 bg-white p-5">
-        <h2 className="text-lg font-medium text-gray-900">League Members</h2>
+      <div className="rounded-lg border border-accent/20 bg-white p-5">
+        <h2 className="text-lg font-medium text-black">League Members</h2>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by member or team name"
-          className="mt-4 w-full rounded-xl border border-gray-200 px-4 py-2.5 text-gray-900 outline-none focus:border-primary-400"
+          className="mt-4 w-full rounded-md border border-border px-4 py-2.5 text-black outline-none focus:border-primary-400"
         />
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 text-sm text-gray-600">
+        <div className="rounded-lg border border-accent/20 bg-white p-5 text-sm text-secondary">
           Loading members...
         </div>
       ) : null}

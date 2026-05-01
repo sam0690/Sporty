@@ -8,10 +8,10 @@ type ShareLinksProps = {
 
 export function ShareLinks({ shareUrl }: ShareLinksProps) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5">
-      <p className="text-sm text-gray-600">Share Link</p>
-      <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-        <span className="truncate text-sm text-gray-700">{shareUrl}</span>
+    <div className="rounded-lg border border-accent/20 bg-white p-5">
+      <p className="text-sm text-secondary">Share Link</p>
+      <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-border bg-[#F4F4F9] px-4 py-3">
+        <span className="truncate text-sm text-black">{shareUrl}</span>
         <CopyButton value={shareUrl} label="Share link" />
       </div>
 
@@ -20,7 +20,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
           href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-gray-200 px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-50"
+          className="rounded-full border border-border px-4 py-2 text-center text-sm text-black hover:bg-[#F4F4F9]"
         >
           Share on WhatsApp
         </a>
@@ -28,7 +28,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
           href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-gray-200 px-4 py-2 text-center text-sm text-gray-700 hover:bg-gray-50"
+          className="rounded-full border border-border px-4 py-2 text-center text-sm text-black hover:bg-[#F4F4F9]"
         >
           Share on Telegram
         </a>

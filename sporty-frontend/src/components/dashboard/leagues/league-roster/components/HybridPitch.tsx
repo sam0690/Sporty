@@ -82,7 +82,7 @@ export function HybridPitch({
         </div>
       ) : null}
 
-      <div className="relative mx-auto aspect-[3/4] w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#1a4d2e] to-[#0f3a22] shadow-xl">
+      <div className="relative mx-auto aspect-[3/4] w-full overflow-hidden rounded-lg bg-gradient-to-b from-[#1a4d2e] to-[#0f3a22] shadow-xl">
         <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
         <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
         <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
@@ -117,7 +117,7 @@ export function HybridPitch({
         })}
       </div>
 
-      <p className="mt-3 text-center text-xs text-gray-400">
+      <p className="mt-3 text-center text-xs text-secondary/60">
         Drag players into slots. Drag slotted players to bench list or other
         slots.
       </p>

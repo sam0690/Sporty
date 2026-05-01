@@ -28,17 +28,17 @@ export function LineupContainer({
   return (
     <div className="space-y-8">
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Starting XI</h2>
+        <h2 className="text-xl font-semibold text-black">Starting XI</h2>
         {starterSports.length === 0 ? (
-          <p className="text-sm text-gray-500">No starters selected yet.</p>
+          <p className="text-sm text-secondary">No starters selected yet.</p>
         ) : (
           starterSports.map(([sportDisplayName, players]) => (
             <section key={`starter-${sportDisplayName}`} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-black">
                   {sportDisplayName}
                 </h3>
-                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600">
+                <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-secondary">
                   {players.length} players
                 </span>
               </div>
@@ -64,17 +64,17 @@ export function LineupContainer({
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900">Bench</h2>
+        <h2 className="text-xl font-semibold text-black">Bench</h2>
         {benchSports.length === 0 ? (
-          <p className="text-sm text-gray-500">No bench players.</p>
+          <p className="text-sm text-secondary">No bench players.</p>
         ) : (
           benchSports.map(([sportDisplayName, players]) => (
             <section key={`bench-${sportDisplayName}`} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-gray-900">
+                <h3 className="text-lg font-medium text-black">
                   {sportDisplayName}
                 </h3>
-                <span className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600">
+                <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-secondary">
                   {players.length} players
                 </span>
               </div>

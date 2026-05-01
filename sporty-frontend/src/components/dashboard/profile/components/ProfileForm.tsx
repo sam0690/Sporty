@@ -51,22 +51,22 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   };
 
   return (
-    <form onSubmit={handleSave} className="card-fade-in space-y-5 rounded-2xl border border-gray-100 bg-white p-6">
+    <form onSubmit={handleSave} className="card-fade-in space-y-5 rounded-lg border border-accent/20 bg-white p-6">
       <div className="space-y-2">
-        <label htmlFor="display-name" className="text-sm text-gray-600">
+        <label htmlFor="display-name" className="text-sm text-secondary">
           Display Name
         </label>
         <input
           id="display-name"
           value={form.name}
           onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
-          className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          className="w-full rounded-lg border border-border px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-primary/30"
           required
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="email" className="text-sm text-gray-600">
+        <label htmlFor="email" className="text-sm text-secondary">
           Email
         </label>
         <input
@@ -74,14 +74,14 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           type="email"
           value={form.email}
           onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-          className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          className="w-full rounded-lg border border-border px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-primary/30"
           required
           readOnly
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="bio" className="text-sm text-gray-600">
+        <label htmlFor="bio" className="text-sm text-secondary">
           Bio
         </label>
         <textarea
@@ -89,17 +89,17 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           rows={3}
           value={form.bio}
           onChange={(event) => setForm((prev) => ({ ...prev, bio: event.target.value.slice(0, 160) }))}
-          className="w-full rounded-lg border border-gray-200 px-4 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+          className="w-full rounded-lg border border-border px-4 py-2 text-black focus:outline-none focus:ring-2 focus:ring-primary/30"
           maxLength={160}
         />
-        <p className="text-right text-xs text-gray-400">{form.bio.length}/160</p>
+        <p className="text-right text-xs text-secondary/60">{form.bio.length}/160</p>
       </div>
 
       <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={isSaving}
-          className="rounded-lg bg-primary-600 px-6 py-2 text-white transition-colors hover:bg-primary-700 disabled:opacity-70"
+          className="rounded-lg bg-primary px-6 py-2 text-white transition-colors hover:bg-primary-700 disabled:opacity-70"
         >
           {isSaving ? "Saving..." : "Save"}
         </button>
@@ -107,7 +107,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         <button
           type="button"
           onClick={() => setForm(user)}
-          className="rounded-lg border border-gray-300 px-6 py-2 text-gray-600 transition-colors hover:bg-gray-50"
+          className="rounded-lg border border-border px-6 py-2 text-secondary transition-colors hover:bg-[#F4F4F9]"
         >
           Cancel
         </button>

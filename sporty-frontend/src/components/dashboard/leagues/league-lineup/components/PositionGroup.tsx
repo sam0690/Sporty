@@ -43,12 +43,12 @@ export function PositionGroup({
   const emptySlots = Math.max(0, limits.max - activeCount);
 
   return (
-    <section className="space-y-3 rounded-xl border border-gray-100 p-4">
+    <section className="space-y-3 rounded-md border border-accent/20 p-4">
       <header className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-gray-900">
+        <h3 className="text-sm font-medium text-black">
           {positionIcon(position)} {position}
         </h3>
-        <p className={`text-sm ${activeCount >= limits.max ? "text-amber-600" : "text-gray-500"}`}>
+        <p className={`text-sm ${activeCount >= limits.max ? "text-amber-600" : "text-secondary"}`}>
           {activeCount}/{limits.max}
         </p>
       </header>
@@ -68,7 +68,7 @@ export function PositionGroup({
         {Array.from({ length: emptySlots }).map((_, index) => (
           <div
             key={`${position}-empty-${index}`}
-            className="rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-4 text-center text-sm text-gray-400 transition-all duration-150"
+            className="rounded-md border border-dashed border-border bg-[#F4F4F9]/50 p-4 text-center text-sm text-secondary/60 transition-all duration-150"
           >
             Drop {position} here
           </div>

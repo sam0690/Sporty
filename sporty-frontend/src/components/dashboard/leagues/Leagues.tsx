@@ -34,7 +34,7 @@ export function Leagues() {
   };
 
   return (
-    <section className="mx-auto max-w-7xl bg-white px-6 py-12 text-gray-900 [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <section className="mx-auto max-w-7xl bg-white px-6 py-12 text-black [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <LeaguesHeader userName={userName} />
 
       <div className="mt-8">

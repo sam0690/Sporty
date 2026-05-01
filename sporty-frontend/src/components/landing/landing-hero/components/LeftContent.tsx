@@ -12,13 +12,13 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center rounded-full border border-gray-200 px-3 py-1 text-[11px] font-medium tracking-[0.08em] text-gray-500">
+      <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold tracking-[0.08em] text-primary">
         {content.badge}
       </span>
 
       <h1
         id="landing-hero-title"
-        className="mt-6 text-4xl font-light tracking-tight text-gray-900 md:text-5xl"
+        className="mt-6 font-display text-4xl font-bold tracking-tight text-[#F4F4F9] md:text-5xl"
       >
         {titleLines.map((line) => (
           <span key={line} className="block">
@@ -27,7 +27,7 @@ export function LeftContent({ content }: LeftContentProps) {
         ))}
       </h1>
 
-      <p className="mt-5 max-w-xl text-base leading-7 text-gray-500 md:text-lg">
+      <p className="mt-5 max-w-xl text-base leading-7 text-[#F4F4F9]/70 md:text-lg">
         {content.description}
       </p>
 
@@ -36,15 +36,13 @@ export function LeftContent({ content }: LeftContentProps) {
           const isPrimary = cta.variant === "primary";
 
           return (
-            <Link key={cta.label} href={cta.href}>
+            <Link key={cta.label} href={cta.href} className="hover:no-underline">
               <Button
                 variant={isPrimary ? "primary" : "outline"}
                 size="lg"
                 className={cn(
-                  "h-11 min-w-36 rounded-full px-6 text-sm font-semibold shadow-sm",
-                  isPrimary
-                    ? "!bg-[#247BA0] !text-white hover:!bg-[#1d6280]"
-                    : "border border-gray-300 !bg-white !text-gray-700 hover:!bg-gray-50",
+                  "h-11 min-w-36 rounded-full px-6 text-sm font-semibold",
+                  !isPrimary && "!border-[#F4F4F9]/40 !text-[#F4F4F9] hover:!bg-[#F4F4F9] hover:!text-black",
                 )}
               >
                 {!isPrimary ? (
@@ -69,14 +67,14 @@ export function LeftContent({ content }: LeftContentProps) {
         })}
       </div>
 
-      <p className="mt-5 text-sm text-gray-500">Football | Basketball | Cricket - All in one place</p>
+      <p className="mt-5 text-sm text-[#F4F4F9]/50">Football | Basketball | Cricket - All in one place</p>
 
-      <div className="mt-8 flex items-center gap-4 text-sm text-gray-500">
+      <div className="mt-8 flex items-center gap-4 text-sm text-[#F4F4F9]/60">
         <div className="flex -space-x-2" aria-hidden="true">
           {content.stat.avatars.map((avatar) => (
             <span
               key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-gray-100 text-[10px] font-semibold text-gray-700"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-black bg-primary/20 text-[10px] font-semibold text-[#F4F4F9]"
             >
               {avatar}
             </span>

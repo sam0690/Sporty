@@ -72,14 +72,14 @@ export function PlayerMarket({
   }, [players, searchQuery, selectedPosition, selectedSport]);
 
   return (
-    <section className="space-y-4 rounded-lg bg-surface-100 p-4 shadow-card">
-      <h2 className="text-lg font-semibold text-text-primary">Player Market</h2>
+    <section className="space-y-4 rounded-lg bg-[#F4F4F9] p-4 shadow-card">
+      <h2 className="text-lg font-semibold text-black">Player Market</h2>
 
       <input
         value={searchQuery}
         onChange={(event) => onSearchQueryChange(event.target.value)}
         placeholder="Search by player name..."
-        className="w-full rounded-lg border border-border px-4 py-2 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary-500"
+        className="w-full rounded-lg border border-border px-4 py-2 text-sm text-black outline-none focus:ring-2 focus:ring-primary"
       />
 
       <div className="flex flex-wrap gap-2">
@@ -90,7 +90,7 @@ export function PlayerMarket({
               key={position}
               type="button"
               onClick={() => onPositionChange(position)}
-              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary-500 text-white" : "bg-white text-text-secondary hover:bg-surface-200"}`}
+              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary/100 text-white" : "bg-white text-secondary hover:bg-white-200"}`}
             >
               {position}
             </button>
@@ -106,7 +106,7 @@ export function PlayerMarket({
               key={costBand}
               type="button"
               onClick={() => onCostFilterChange(costBand)}
-              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary-500 text-white" : "bg-white text-text-secondary hover:bg-surface-200"}`}
+              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary/100 text-white" : "bg-white text-secondary hover:bg-white-200"}`}
             >
               {costBand === "All" ? "All Costs" : `$${costBand}M`}
             </button>
@@ -123,7 +123,7 @@ export function PlayerMarket({
                 key={sportOption}
                 type="button"
                 onClick={() => onSportChange(sportOption)}
-                className={`rounded-md px-3 py-1.5 text-xs capitalize ${active ? "bg-primary-500 text-white" : "bg-white text-text-secondary hover:bg-surface-200"}`}
+                className={`rounded-md px-3 py-1.5 text-xs capitalize ${active ? "bg-primary/100 text-white" : "bg-white text-secondary hover:bg-white-200"}`}
               >
                 {sportOption}
               </button>

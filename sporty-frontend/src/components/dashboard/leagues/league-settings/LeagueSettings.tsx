@@ -234,7 +234,7 @@ export function LeagueSettings() {
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-2xl border border-gray-100 bg-white p-6 text-sm text-gray-600">
+        <div className="rounded-lg border border-accent/20 bg-white p-6 text-sm text-secondary">
           Only the league commissioner can access settings.
         </div>
       </section>
@@ -242,7 +242,7 @@ export function LeagueSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-gray-900">
+    <section className="mx-auto max-w-6xl px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
       <NavigationTabs
         activeTab="settings"
         leagueId={leagueId}
@@ -262,15 +262,15 @@ export function LeagueSettings() {
         }}
       />
 
-      <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
-        <h3 className="text-sm font-medium text-gray-900">League Lifecycle</h3>
+      <section className="space-y-4 rounded-lg border border-accent/20 bg-white p-5">
+        <h3 className="text-sm font-medium text-black">League Lifecycle</h3>
         <div className="flex flex-wrap gap-2">
           {lifecycleStatuses.map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => handleStatusChange(status)}
-              className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-primary-500 bg-primary-50 text-primary-700" : "border-gray-300 text-gray-600"}`}
+              className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-primary-500 bg-primary/10 text-primary" : "border-border text-secondary"}`}
             >
               {getLifecycleStatusLabel(status, league)}
             </button>
@@ -281,22 +281,22 @@ export function LeagueSettings() {
           <button
             type="button"
             onClick={handleGenerateWindows}
-            className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            className="rounded-full border border-border px-4 py-2 text-sm text-black hover:bg-[#F4F4F9]"
           >
             Generate Transfer Windows
           </button>
         ) : null}
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5">
-        <h3 className="text-sm font-medium text-gray-900">League Sports</h3>
+      <section className="space-y-4 rounded-lg border border-accent/20 bg-white p-5">
+        <h3 className="text-sm font-medium text-black">League Sports</h3>
         <div className="flex flex-wrap gap-2">
           {(league?.sports ?? []).map((leagueSport) => (
             <button
               key={leagueSport.sport.name}
               type="button"
               onClick={() => removeSport.mutateAsync(leagueSport.sport.name)}
-              className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="rounded-full border border-border px-4 py-2 text-sm text-black hover:bg-[#F4F4F9]"
             >
               {leagueSport.sport.display_name} x
             </button>
@@ -313,7 +313,7 @@ export function LeagueSettings() {
                 key={sport.name}
                 type="button"
                 onClick={() => addSport.mutateAsync(sport.name)}
-                className="rounded-full border border-primary-300 px-4 py-2 text-sm text-primary-700 hover:bg-primary-50"
+                className="rounded-full border border-primary-300 px-4 py-2 text-sm text-primary hover:bg-primary/10"
               >
                 + {sport.display_name}
               </button>
@@ -331,7 +331,7 @@ export function LeagueSettings() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="rounded-full bg-[#247BA0] px-6 py-2.5 font-semibold text-white hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-gray-300"
+          className="rounded-full bg-[#247BA0] px-6 py-2.5 font-semibold text-white hover:bg-[#1d6280] disabled:cursor-not-allowed disabled:bg-accent/40"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>

@@ -67,7 +67,7 @@ export function LeagueCard({
           router.push(`/leagues/${id}`);
         }
       }}
-      className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 bg-white opacity-0 transition-all duration-200 hover:shadow-md animate-fade-soft"
+      className="group cursor-pointer overflow-hidden rounded-lg border border-accent/20 bg-white opacity-0 transition-all duration-200 hover:shadow-md animate-fade-soft"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       <div className="relative h-32 overflow-hidden">
@@ -83,26 +83,26 @@ export function LeagueCard({
 
       <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-md font-medium text-gray-900">{name}</h3>
+          <h3 className="text-md font-medium text-black">{name}</h3>
           <span
-            className="inline-flex items-center rounded-full border border-gray-200 px-2 py-1 text-xs"
+            className="inline-flex items-center rounded-full border border-border px-2 py-1 text-xs"
             aria-label={sport}
           >
             {sportIcons[sport]}
           </span>
         </div>
 
-        <div className="space-y-2 text-sm text-gray-500">
+        <div className="space-y-2 text-sm text-secondary">
           <p>👤 {teamName}</p>
           <p>👥 {memberCount} members</p>
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 text-sm text-secondary">
             <span>{rankIcon(yourRank)}</span>
             <span>Rank #{yourRank}</span>
           </div>
-          <span className="text-sm text-gray-400 transition-colors group-hover:text-primary-500">
+          <span className="text-sm text-secondary/60 transition-colors group-hover:text-primary-500">
             View
           </span>
         </div>

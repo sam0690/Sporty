@@ -76,8 +76,8 @@ export function FilterBar({
               }}
               className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all ${
                 isActive
-                  ? "border-primary-500 bg-primary-500 text-white"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                  ? "border-primary-500 bg-primary/100 text-white"
+                  : "border-border bg-white text-secondary hover:border-border"
               }`}
             >
               {sportLabels[sport]}
@@ -98,8 +98,8 @@ export function FilterBar({
                 onClick={() => onPositionChange(position)}
                 className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all ${
                   isActive
-                    ? "border-primary-500 bg-primary-500 text-white"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
+                    ? "border-primary-500 bg-primary/100 text-white"
+                    : "border-border bg-white text-secondary hover:border-border"
                 }`}
               >
                 {position}

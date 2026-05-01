@@ -109,14 +109,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   key={item.id}
                   type="button"
                   onClick={() => void onRead(item.id)}
-                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
-                    item.is_read
-                      ? "border-gray-100 bg-white text-gray-500"
-                      : "border-blue-100 bg-blue-50 text-gray-800"
-                  }`}
+                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${item.is_read
+                      ? "border-accent/30 bg-white text-secondary"
+                      : "border-primary/20 bg-primary/5 text-black"
+                    }`}
                 >
                   <p>{item.message}</p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="mt-1 text-xs text-secondary/60">
                     {new Date(item.created_at).toLocaleString()}
                   </p>
                 </button>

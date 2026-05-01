@@ -27,7 +27,7 @@ function rankClass(rank: number): string {
     return "text-[#50514F]";
   }
 
-  return "text-text-primary";
+  return "text-black";
 }
 
 function rankLabel(rank: number): string {
@@ -48,19 +48,19 @@ function rankLabel(rank: number): string {
 
 export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-gray-100 bg-white [animation:fade-soft_0.2s_ease]">
-      <h2 className="p-5 pb-0 text-md font-medium text-gray-800">
+    <section className="overflow-hidden rounded-lg border border-accent/20 bg-white [animation:fade-soft_0.2s_ease]">
+      <h2 className="p-5 pb-0 text-md font-medium text-black">
         Standings
       </h2>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-50">
+          <thead className="bg-[#F4F4F9]">
             <tr>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Rank</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Team</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Points</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">W-L</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Rank</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Team</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Points</th>
+              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">W-L</th>
             </tr>
           </thead>
           <tbody>
@@ -70,14 +70,14 @@ export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
               return (
                 <tr
                   key={team.teamId}
-                  className={`border-b border-gray-100 text-sm transition-colors hover:bg-gray-50 ${isUser ? "bg-gray-50/50" : ""}`}
+                  className={`border-b border-accent/20 text-sm transition-colors hover:bg-[#F4F4F9] ${isUser ? "bg-[#F4F4F9]/50" : ""}`}
                 >
                   <td className={`px-5 py-3 font-medium ${rankClass(team.rank)}`}>
                     {rankLabel(team.rank)}
                   </td>
-                  <td className="px-5 py-3 text-gray-900">{team.teamName}</td>
-                  <td className="px-5 py-3 text-gray-900">{team.points}</td>
-                  <td className="px-5 py-3 text-gray-600">{team.wins}-{team.losses}</td>
+                  <td className="px-5 py-3 text-black">{team.teamName}</td>
+                  <td className="px-5 py-3 text-black">{team.points}</td>
+                  <td className="px-5 py-3 text-secondary">{team.wins}-{team.losses}</td>
                 </tr>
               );
             })}

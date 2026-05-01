@@ -111,7 +111,7 @@ export function PitchSlot({
                 event.stopPropagation();
                 onRemove(slot.id);
               }}
-              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] text-gray-500 shadow hover:text-red-500"
+              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] text-secondary shadow hover:text-danger"
               aria-label={`Bench ${player.name}`}
             >
               x

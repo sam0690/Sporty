@@ -61,11 +61,11 @@ export function PositionLimits({ limits, currentCounts, isMultiSport = false }: 
           return (
             <div
               key={position}
-              className="rounded-full border border-gray-100 bg-white px-4 py-1.5 text-sm text-gray-600"
+              className="rounded-full border border-accent/20 bg-white px-4 py-1.5 text-sm text-secondary"
             >
-              <span className="mr-1 text-gray-500">{sportIcon}</span>
+              <span className="mr-1 text-secondary">{sportIcon}</span>
               <span>{position}</span>
-              <span className={`ml-2 font-medium ${atLimit ? "text-amber-600" : "text-gray-700"}`}>
+              <span className={`ml-2 font-medium ${atLimit ? "text-amber-600" : "text-black"}`}>
                 {current}/{max}
               </span>
             </div>

@@ -4,8 +4,8 @@ import { HOW_IT_WORKS_CONTENT } from "@/components/landing/how-it-works/constant
 
 export function HowItWorksContainer() {
   return (
-    <section className="relative bg-white" aria-labelledby="how-it-works-title" id="how-it-works">
-      <div className="pointer-events-none absolute inset-0 opacity-[0.08]">
+    <section className="relative bg-[#F4F4F9]" aria-labelledby="how-it-works-title" id="how-it-works">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.04]">
         <div
           className="h-full w-full bg-cover bg-center"
           style={{ backgroundImage: "url('/images/landing/football-action.jpg')" }}

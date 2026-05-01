@@ -188,7 +188,7 @@ function PitchPreview({ players }: { players: TeamPlayer[] }) {
     const footballBottomRow = footballPlayers.slice(4);
 
     return (
-      <div className="relative mx-auto aspect-3/4 w-full max-w-155 overflow-hidden rounded-2xl bg-linear-to-b from-[#1a4d2e] to-[#0f3a22] px-4 py-3 shadow-xl">
+      <div className="relative mx-auto aspect-3/4 w-full max-w-155 overflow-hidden rounded-xl bg-linear-to-b from-[#04724D] to-[#035c3d] px-4 py-3 shadow-xl">
         <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
         <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
         <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
@@ -205,7 +205,7 @@ function PitchPreview({ players }: { players: TeamPlayer[] }) {
   const otherPlayers = formation.others;
 
   return (
-    <div className="relative mx-auto aspect-3/4 w-full max-w-155 overflow-hidden rounded-2xl bg-linear-to-b from-[#1a4d2e] to-[#0f3a22] px-4 py-3 shadow-xl">
+    <div className="relative mx-auto aspect-3/4 w-full max-w-155 overflow-hidden rounded-xl bg-linear-to-b from-[#04724D] to-[#035c3d] px-4 py-3 shadow-xl">
       <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
       <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
       <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
@@ -222,7 +222,7 @@ function PitchPreview({ players }: { players: TeamPlayer[] }) {
 
 function LoadingPitch() {
   return (
-    <div className="relative mx-auto aspect-3/4 w-full max-w-155 animate-pulse overflow-hidden rounded-2xl bg-linear-to-b from-[#1a4d2e] to-[#0f3a22]">
+    <div className="relative mx-auto aspect-3/4 w-full max-w-155 animate-pulse overflow-hidden rounded-xl bg-linear-to-b from-[#04724D] to-[#035c3d]">
       <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
       <div className="pointer-events-none absolute left-1/2 top-1/2 h-18 w-18 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
       {[
@@ -261,9 +261,9 @@ export function TeamPreview({
   );
 
   return (
-    <Card className="rounded-2xl border border-gray-100 bg-white">
+    <Card className="rounded-lg border border-accent/20 bg-white">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl font-medium text-gray-900">
+        <CardTitle className="font-display text-xl font-bold text-black">
           Team Preview
         </CardTitle>
       </CardHeader>
@@ -275,15 +275,15 @@ export function TeamPreview({
             ))}
           </div>
         ) : isError ? (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <div className="rounded-md border border-danger/20 bg-danger/5 p-4 text-sm text-danger">
             Failed to load team previews.
           </div>
         ) : !hasLeagues ? (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          <div className="rounded-md border border-accent/20 bg-[#F4F4F9] p-4 text-sm text-secondary">
             You have not joined a league yet.
           </div>
         ) : !activeSlide ? (
-          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          <div className="rounded-md border border-accent/20 bg-[#F4F4F9] p-4 text-sm text-secondary">
             No lineup has been set yet.
           </div>
         ) : (
@@ -292,13 +292,13 @@ export function TeamPreview({
             onClick={() =>
               router.push(`/leagues/${activeSlide.leagueId}/lineup`)
             }
-            className="w-full rounded-xl border border-gray-200 p-3 text-left transition hover:border-primary-200"
+            className="w-full rounded-md border border-accent/20 p-3 text-left transition-all duration-200 hover:border-primary/40 hover:shadow-card"
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-black">
                 {activeSlide.leagueName}
               </p>
-              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
                 {activeSlide.gameweek
                   ? `GW ${activeSlide.gameweek}`
                   : "Current GW"}
