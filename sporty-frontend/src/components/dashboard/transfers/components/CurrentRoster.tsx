@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 
 type OwnedPlayer = {
-  id: any;
+  id: string;
   name: string;
   sport: Sport;
   position: string;
@@ -15,10 +15,11 @@ type OwnedPlayer = {
 
 type CurrentRosterProps = {
   players: OwnedPlayer[];
-  onDrop: (id: any) => void;
+  onDrop: (id: string) => void;
   budget: number;
   maxPlayers: number;
-  selectedOutId?: any;
+  selectedOutId?: string;
+  disabled?: boolean;
 };
 
 const sportIcons: Record<Exclude<Sport, "All">, string> = {
@@ -27,8 +28,14 @@ const sportIcons: Record<Exclude<Sport, "All">, string> = {
   cricket: "🏏",
 };
 
-export function CurrentRoster({ players, onDrop, budget, maxPlayers, selectedOutId }: CurrentRosterProps) {
-  const totalSpent = players.reduce((sum, player) => sum + player.price, 0);
+export function CurrentRoster({
+  players,
+  onDrop,
+  budget,
+  maxPlayers,
+  selectedOutId,
+  disabled = false,
+}: CurrentRosterProps) {
   const progressPercent = Math.min((players.length / maxPlayers) * 100, 100);
 
   return (
@@ -36,7 +43,9 @@ export function CurrentRoster({ players, onDrop, budget, maxPlayers, selectedOut
       <div className="mb-4 border-b border-gray-100 pb-3">
         <div className="flex items-center justify-between">
           <h2 className="text-md font-medium text-gray-900">Your Squad</h2>
-          <span className="text-sm text-gray-500">({players.length}/{maxPlayers})</span>
+          <span className="text-sm text-gray-500">
+            ({players.length}/{maxPlayers})
+          </span>
         </div>
       </div>
 
@@ -46,17 +55,22 @@ export function CurrentRoster({ players, onDrop, budget, maxPlayers, selectedOut
           return (
             <div
               key={player.id}
-              className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-all ${isSelected
+              className={`flex items-center justify-between rounded-xl border px-3 py-2 transition-all ${
+                isSelected
                   ? "border-primary-500 bg-primary-50 ring-2 ring-primary-100"
                   : "border-gray-100 bg-white"
-                }`}
+              }`}
             >
               <div className="min-w-0">
-                <p className={`truncate text-sm font-medium ${isSelected ? "text-primary-900" : "text-gray-700"}`}>
+                <p
+                  className={`truncate text-sm font-medium ${isSelected ? "text-primary-900" : "text-gray-700"}`}
+                >
                   {player.name}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-gray-500">
-                  <span>{player.sport === "All" ? "🏟️" : sportIcons[player.sport]}</span>
+                  <span>
+                    {player.sport === "All" ? "🏟️" : sportIcons[player.sport]}
+                  </span>
                   <span>{player.position}</span>
                   <span className="text-gray-400">• ${player.price}M</span>
                 </div>
@@ -64,13 +78,19 @@ export function CurrentRoster({ players, onDrop, budget, maxPlayers, selectedOut
 
               <button
                 type="button"
+                disabled={disabled}
                 onClick={() => onDrop(player.id)}
-                className={`ml-2 transition-colors ${isSelected ? "text-primary-600" : "text-gray-400 hover:text-red-500"
-                  }`}
+                className={`ml-2 transition-colors ${
+                  isSelected
+                    ? "text-primary-600"
+                    : "text-gray-400 hover:text-red-500"
+                }`}
                 aria-label={`Drop ${player.name}`}
               >
                 {isSelected ? (
-                  <span className="text-[10px] font-bold uppercase">Active</span>
+                  <span className="text-[10px] font-bold uppercase">
+                    Active
+                  </span>
                 ) : (
                   <X className="h-4 w-4" />
                 )}
@@ -83,11 +103,16 @@ export function CurrentRoster({ players, onDrop, budget, maxPlayers, selectedOut
       <div className="mt-3 border-t border-gray-100 pt-3 text-sm">
         <div className="flex items-center justify-between text-gray-600">
           <span>In-bank:</span>
-          <span className="font-medium text-green-600">${budget.toFixed(1)}M</span>
+          <span className="font-medium text-green-600">
+            ${budget.toFixed(1)}M
+          </span>
         </div>
 
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-          <div className="h-full rounded-full bg-primary-600" style={{ width: `${progressPercent}%` }} />
+          <div
+            className="h-full rounded-full bg-primary-600"
+            style={{ width: `${progressPercent}%` }}
+          />
         </div>
         <div className="mt-2 flex justify-between text-[11px] text-gray-400 font-medium">
           <span>{players.length} Players</span>

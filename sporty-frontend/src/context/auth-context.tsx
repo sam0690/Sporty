@@ -149,11 +149,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const login = useCallback(
-    async (email: string, password: string): Promise<AuthResult> => {
+    async (identifier: string, password: string): Promise<AuthResult> => {
       setLoading("login", true);
       try {
         await publicApi.post(API_PATHS.AUTH.LOGIN, {
-          email,
+          identifier,
           password,
         });
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);

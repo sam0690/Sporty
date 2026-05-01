@@ -13,11 +13,8 @@ import { InitialLineupBoard } from "@/components/dashboard/leagues/league-lineup
 import { LineupSkeleton } from "@/components/dashboard/leagues/league-lineup/components/LineupSkeleton";
 import { SaveLineupButton } from "@/components/dashboard/leagues/league-lineup/components/SaveLineupButton";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
-import {
-  useActiveWindow,
-  useLeague,
-  useUpdateLineup,
-} from "@/hooks/leagues/useLeagues";
+import { useLeague, useUpdateLineup } from "@/hooks/leagues/useLeagues";
+import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import {
   useLeagueLineupData,
   type LineupPlayerCardModel,
@@ -133,7 +130,7 @@ export function LeagueLineup() {
     data: activeWindow,
     isLoading: isWindowLoading,
     error: windowError,
-  } = useActiveWindow(leagueId);
+  } = useSmartActiveWindowSync(leagueId);
   const {
     players,
     data: lineupData,
@@ -304,6 +301,9 @@ export function LeagueLineup() {
         multisportStarterMixValid
       : lineupCountValid) && leadershipValid;
 
+  const isLineupOpen =
+    Boolean(activeWindow?.id) && !activeWindow?.lineup_locked;
+
   const isDirty = useMemo(
     () => lineupFingerprint(players) !== lineupFingerprint(editablePlayers),
     [players, editablePlayers],
@@ -424,6 +424,11 @@ export function LeagueLineup() {
   }, []);
 
   const handleSaveLineup = useCallback(() => {
+    if (!isLineupOpen) {
+      toastifier.error("Lineup is locked for this window.");
+      return;
+    }
+
     const starterIds = editablePlayers
       .filter((player) => player.isStarter)
       .map((player) => player.playerId);
@@ -445,7 +450,13 @@ export function LeagueLineup() {
       captain_id: selectedCaptain!.playerId,
       vice_captain_id: selectedViceCaptain!.playerId,
     });
-  }, [canSave, editablePlayers, selectionErrorMessage, updateLineup]);
+  }, [
+    canSave,
+    editablePlayers,
+    isLineupOpen,
+    selectionErrorMessage,
+    updateLineup,
+  ]);
 
   const handleOptimizeLineup = useCallback(async () => {
     if (!activeWindow?.id) {
@@ -754,8 +765,8 @@ export function LeagueLineup() {
           onToggleStarter={toggleStarter}
           onSetCaptain={setCaptain}
           onSetViceCaptain={setViceCaptain}
-          disabled={updateLineup.isPending}
           starterLimitReached={startersCount >= lineupRules.starters}
+          disabled={updateLineup.isPending || !isLineupOpen}
         />
       ) : (
         <LineupPitchView
@@ -764,7 +775,7 @@ export function LeagueLineup() {
           onSetCaptain={setCaptain}
           onSetViceCaptain={setViceCaptain}
           starterLimitReached={startersCount >= lineupRules.starters}
-          disabled={updateLineup.isPending}
+          disabled={updateLineup.isPending || !isLineupOpen}
         />
       )}
 
@@ -772,7 +783,7 @@ export function LeagueLineup() {
         onSave={handleSaveLineup}
         isLoading={updateLineup.isPending || isOptimizing}
         isDirty={isDirty}
-        disabled={!canSave || isOptimizing}
+        disabled={!canSave || isOptimizing || !isLineupOpen}
       />
     </section>
   );

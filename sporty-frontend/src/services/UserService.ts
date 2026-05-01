@@ -75,7 +75,7 @@ export const UserService = {
 
   /** Login with credentials */
   async login(payload: {
-    email: string;
+    identifier: string;
     password: string;
   }): Promise<{ detail: string }> {
     const res = await publicApi.post(API_PATHS.AUTH.LOGIN, payload);

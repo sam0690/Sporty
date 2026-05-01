@@ -145,6 +145,7 @@ def _run_transfer_window_notification_job() -> None:
     db.close()
 
 
+
 def _run_league_lifecycle_job() -> None:
   db = SessionLocal()
   try:

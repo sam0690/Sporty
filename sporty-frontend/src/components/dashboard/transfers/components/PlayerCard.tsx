@@ -12,6 +12,7 @@ type PlayerCardProps = {
   form?: number;
   onAdd: (id: string) => void;
   animationDelay?: number;
+  disabled?: boolean;
 };
 
 const sportIcons: Record<Exclude<Sport, "All">, string> = {
@@ -30,6 +31,7 @@ export function PlayerCard({
   form,
   onAdd,
   animationDelay = 0,
+  disabled = false,
 }: PlayerCardProps) {
   const sportLabel =
     sport === "All" ? "🏟️" : `${sportIcons[sport]} ${position}`;
@@ -55,6 +57,7 @@ export function PlayerCard({
       <div>
         <button
           type="button"
+          disabled={disabled}
           onClick={() => onAdd(id)}
           className="rounded-full border border-gray-300 px-3.5 py-1.5 text-sm text-gray-600 transition-colors hover:border-primary-500 hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
         >

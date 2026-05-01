@@ -52,6 +52,18 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": 600.0,
         "args": (),
     },
+    # Auto-lock transfer windows when deadlines pass (runs every 1 minute)
+    "auto-lock-transfer-windows-every-1-min": {
+        "task": "transfer.auto_lock_expired",
+        "schedule": crontab(minute="*/1"),
+        "args": (),
+    },
+    # Auto-lock lineup windows when deadlines pass (runs every 1 minute)
+    "auto-lock-lineup-windows-every-1-min": {
+        "task": "lineup.auto_lock_expired",
+        "schedule": crontab(minute="*/1"),
+        "args": (),
+    },
     # Reprice player market values from recent transfer-window performance.
     "recalculate-player-prices-daily": {
         "task": "pricing.recalculate",

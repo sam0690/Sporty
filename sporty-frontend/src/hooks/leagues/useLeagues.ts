@@ -1,4 +1,8 @@
-import { useQueries, useQueryClient } from "@tanstack/react-query";
+import {
+  useQueries,
+  useQueryClient,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { useApiQuery } from "../api/useApiQuery";
 import { useApiMutation } from "../api/useApiMutation";
 import { LeagueService } from "@/services/LeagueService";
@@ -26,6 +30,7 @@ import {
   TDiscardPlayerResponse,
 } from "@/types";
 import { toastifier } from "@/libs/toastifier";
+import { isApiError } from "@/libs/api-error";
 
 /**
  * Hook to fetch all active seasons.
@@ -219,6 +224,27 @@ export const useDraftTurn = (leagueId: string, enabled = true) => {
   );
 };
 
+const ACTIVE_WINDOW_QUERY_KEY = (leagueId: string) => [
+  "leagues",
+  leagueId,
+  "active-window",
+];
+
+const shouldRefreshActiveWindow = (error: unknown) =>
+  isApiError(error) && (error.statusCode === 403 || error.statusCode === 409);
+
+async function refreshActiveWindow(
+  queryClient: ReturnType<typeof useQueryClient>,
+  leagueId: string,
+) {
+  if (!leagueId) return;
+
+  await queryClient.refetchQueries({
+    queryKey: ACTIVE_WINDOW_QUERY_KEY(leagueId),
+    exact: true,
+  });
+}
+
 /**
  * Hook to make a player transfer.
  */
@@ -231,6 +257,12 @@ export const useMakeTransfer = (leagueId: string) => {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
         queryClient.invalidateQueries({ queryKey: ["players"] });
+        void refreshActiveWindow(queryClient, leagueId);
+      },
+      onError: (error) => {
+        if (shouldRefreshActiveWindow(error)) {
+          void refreshActiveWindow(queryClient, leagueId);
+        }
       },
       successMessage: "Transfer completed successfully!",
     },
@@ -246,6 +278,12 @@ export function useStageOut(leagueId: string) {
         queryClient.invalidateQueries({
           queryKey: ["leagues", leagueId, "my-team"],
         });
+        void refreshActiveWindow(queryClient, leagueId);
+      },
+      onError: (error) => {
+        if (shouldRefreshActiveWindow(error)) {
+          void refreshActiveWindow(queryClient, leagueId);
+        }
       },
       successMessage: "Player staged out",
       silent: true,
@@ -279,6 +317,12 @@ export function useStageIn(leagueId: string) {
         queryClient.invalidateQueries({
           queryKey: ["leagues", leagueId, "my-team"],
         });
+        void refreshActiveWindow(queryClient, leagueId);
+      },
+      onError: (error) => {
+        if (shouldRefreshActiveWindow(error)) {
+          void refreshActiveWindow(queryClient, leagueId);
+        }
       },
       successMessage: "Player staged in",
       silent: true,
@@ -297,6 +341,12 @@ export function useConfirmTransfers(leagueId: string) {
         });
         queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
         queryClient.invalidateQueries({ queryKey: ["players"] });
+        void refreshActiveWindow(queryClient, leagueId);
+      },
+      onError: (error) => {
+        if (shouldRefreshActiveWindow(error)) {
+          void refreshActiveWindow(queryClient, leagueId);
+        }
       },
       successMessage: "Transfers confirmed",
       silent: true,
@@ -421,7 +471,13 @@ export function useUpdateLineup(leagueId: string) {
         queryClient.invalidateQueries({
           queryKey: ["leagues", leagueId, "lineup"],
         });
+        void refreshActiveWindow(queryClient, leagueId);
         toastifier.success("Lineup saved successfully");
+      },
+      onError: (error) => {
+        if (shouldRefreshActiveWindow(error)) {
+          void refreshActiveWindow(queryClient, leagueId);
+        }
       },
     },
   );
@@ -435,10 +491,19 @@ export function useLeaderboard(leagueId: string, windowId?: string) {
   );
 }
 
-export function useActiveWindow(leagueId: string) {
+export function useActiveWindow(
+  leagueId: string,
+  options?: Omit<
+    UseQueryOptions<TTransferWindow, Error>,
+    "queryKey" | "queryFn"
+  >,
+) {
   return useApiQuery<TTransferWindow>(
     ["leagues", leagueId, "active-window"],
     () => LeagueService.getActiveWindow(leagueId),
-    { enabled: !!leagueId },
+    {
+      enabled: !!leagueId,
+      ...options,
+    },
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 import type { OwnedPlayer } from "./CurrentRoster";
 
 type SelectedPlayer = {
-  id: any;
+  id: string;
   name: string;
   sport: Sport;
   position: string;
@@ -21,6 +22,10 @@ type TransferConfirmationProps = {
   allowUnpaired?: boolean;
   stagedOutPlayers?: OwnedPlayer[];
   stagedInPlayers?: SelectedPlayer[];
+  // new: whether transfers are currently open; if false, confirm is disabled
+  transfersOpen?: boolean;
+  // optional deadline (ISO string) for countdown display
+  transferDeadlineAt?: string | null;
 };
 
 export function TransferConfirmation({
@@ -31,10 +36,36 @@ export function TransferConfirmation({
   allowUnpaired = false,
   stagedOutPlayers = [],
   stagedInPlayers = [],
+  transfersOpen = true,
+  transferDeadlineAt = null,
 }: TransferConfirmationProps) {
+  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!transferDeadlineAt) {
+      return;
+    }
+    let mounted = true;
+    const update = () => {
+      const deadline = new Date(transferDeadlineAt as string);
+      const diff = Math.max(
+        0,
+        Math.floor((deadline.getTime() - Date.now()) / 1000),
+      );
+      if (mounted) setSecondsLeft(diff);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => {
+      mounted = false;
+      clearInterval(id);
+    };
+  }, [transferDeadlineAt]);
+
   if (!isOpen) {
     return null;
   }
+
   const hasAnyStagedMoves =
     stagedOutPlayers.length > 0 || stagedInPlayers.length > 0;
   const isValidBatch = allowUnpaired
@@ -42,6 +73,19 @@ export function TransferConfirmation({
     : stagedOutPlayers.length > 0 &&
       stagedInPlayers.length > 0 &&
       stagedOutPlayers.length === stagedInPlayers.length;
+
+  const formattedCountdown =
+    secondsLeft == null
+      ? null
+      : (() => {
+          const s = secondsLeft;
+          const h = Math.floor(s / 3600);
+          const m = Math.floor((s % 3600) / 60);
+          const sec = s % 60;
+          return `${h > 0 ? `${h}:` : ""}${h > 0 ? String(m).padStart(2, "0") : m}:${String(sec).padStart(2, "0")}`;
+        })();
+
+  const confirmDisabled = isLoading || !isValidBatch || !transfersOpen;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
@@ -61,7 +105,10 @@ export function TransferConfirmation({
             </p>
             <div className="mt-2 space-y-1">
               {stagedOutPlayers.map((player) => (
-                <p key={player.id} className="truncate text-xs text-gray-700">
+                <p
+                  key={player.id.toString()}
+                  className="truncate text-xs text-gray-700"
+                >
                   {player.name}
                 </p>
               ))}
@@ -74,7 +121,10 @@ export function TransferConfirmation({
             </p>
             <div className="mt-2 space-y-1">
               {stagedInPlayers.map((player) => (
-                <p key={player.id} className="truncate text-xs text-gray-700">
+                <p
+                  key={player.id.toString()}
+                  className="truncate text-xs text-gray-700"
+                >
                   {player.name}
                 </p>
               ))}
@@ -87,10 +137,21 @@ export function TransferConfirmation({
         </p>
 
         <div className="mt-8 flex flex-col gap-3">
+          {!transfersOpen && (
+            <div className="rounded-xl border border-yellow-100 bg-yellow-50 p-3 text-sm text-yellow-800">
+              Transfers are closed for this window.
+              {formattedCountdown ? (
+                <span className="ml-2 font-mono">
+                  Closing: {formattedCountdown}
+                </span>
+              ) : null}
+            </div>
+          )}
+
           <button
             type="button"
             onClick={onConfirm}
-            disabled={isLoading || !isValidBatch}
+            disabled={confirmDisabled}
             className="w-full rounded-full bg-primary-600 py-3.5 font-bold text-white transition-all hover:bg-primary-700 disabled:opacity-50 shadow-lg shadow-primary-200"
           >
             {isLoading ? "Processing..." : "Confirm Transfers"}

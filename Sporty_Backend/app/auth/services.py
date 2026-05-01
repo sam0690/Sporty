@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import quote_plus
 
 from fastapi import HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.auth.models import AuthProvider, RefreshToken, User
@@ -129,9 +130,15 @@ def register(db: Session, data: RegisterRequest):
 
 
 def login(db: Session, data: LoginRequest) -> TokenResponse:
-    """Authenticate with email + password and return tokens."""
+    """Authenticate with a username or email + password and return tokens."""
 
-    user = db.query(User).filter(User.email == data.email).first()
+    identifier = data.identifier.strip()
+    normalized_identifier = identifier.lower()
+    user = (
+        db.query(User)
+        .filter(or_(User.email == normalized_identifier, User.username == identifier))
+        .first()
+    )
     if not user or not user.password_hash:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     if not verify_password(data.password, user.password_hash):

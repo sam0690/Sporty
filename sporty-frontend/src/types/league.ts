@@ -213,7 +213,9 @@ export type TTransferWindow = {
   total_number: number;
   start_at: string;
   end_at: string;
+  transfer_deadline_at: string;
   lineup_deadline_at: string;
+  transfers_locked: boolean;
   lineup_locked: boolean;
 };
 

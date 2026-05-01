@@ -25,8 +25,7 @@ celery_app = Celery(
     "app.tasks.sync_tasks",
     "app.tasks.live_polling_tasks",
     "app.tasks.scoring_tasks",
-    "app.tasks.pricing_tasks",
-  ],
+    "app.tasks.pricing_tasks",    "app.tasks.transfer_tasks",  ],
 )
 
 celery_app.conf.update(
@@ -46,3 +45,4 @@ from app.tasks import sync_tasks as _sync_tasks  # noqa: F401,E402
 from app.tasks import live_polling_tasks as _live_polling_tasks  # noqa: F401,E402
 from app.tasks import scoring_tasks as _scoring_tasks  # noqa: F401,E402
 from app.tasks import pricing_tasks as _pricing_tasks  # noqa: F401,E402
+from app.tasks import transfer_tasks as _transfer_tasks  # noqa: F401,E402

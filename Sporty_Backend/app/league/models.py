@@ -267,6 +267,7 @@ class TransferWindow(Base):
         ),
         CheckConstraint("number > 0", name="ck_transfer_window_number_positive"),
         UniqueConstraint("season_id", "number", name="uq_transfer_window_season_number"),
+        # Prevent overlapping windows: exclusion constraint enforced in DB migration (gist exclusion)
     )
 
 

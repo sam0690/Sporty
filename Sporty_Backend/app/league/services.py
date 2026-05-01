@@ -1035,11 +1035,10 @@ def make_transfer(
 
     window = _current_transfer_window(db, league)
 
-    if window.transfers_locked:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Transfers are locked for this transfer window",
-        )
+    # Enforce transfer deadline and explicit lock flag
+    from app.services.transfer_window_service import validate_transfer_window_for_transfer
+
+    validate_transfer_window_for_transfer(window)
 
     if player_out_id == player_in_id:
         raise HTTPException(
@@ -2214,11 +2213,10 @@ def update_lineup(
     league = _require_league(db, league_id)
     window = _current_transfer_window(db, league)
 
-    if window.lineup_locked or datetime.now(timezone.utc) > window.lineup_deadline_at:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Lineup is locked for this window",
-        )
+    # Enforce lineup deadline and explicit lock flag
+    from app.services.transfer_window_service import validate_transfer_window_for_lineup
+    
+    validate_transfer_window_for_lineup(window)
 
     # 1. Verify all player_ids belong to the team
     squad_players = (
@@ -2554,6 +2552,16 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
     # Season context for total windows
     season = league.season
     
+    # derive status
+    from datetime import timezone, datetime as _dt
+    now = _dt.now(timezone.utc)
+    if now < window.start_at:
+        status_str = "UPCOMING"
+    elif window.start_at <= now <= window.end_at:
+        status_str = "ACTIVE"
+    else:
+        status_str = "CLOSED"
+
     return {
         "id": window.id,
         "season_id": window.season_id,
@@ -2561,8 +2569,11 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
         "total_number": len(season.transfer_windows),
         "start_at": window.start_at,
         "end_at": window.end_at,
+        "transfer_deadline_at": window.transfer_deadline_at,
         "lineup_deadline_at": window.lineup_deadline_at,
-        "lineup_locked": window.lineup_locked
+        "transfers_locked": window.transfers_locked,
+        "lineup_locked": window.lineup_locked,
+        "status": status_str,
     }
 
 

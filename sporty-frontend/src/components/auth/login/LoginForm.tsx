@@ -32,7 +32,7 @@ export function LoginForm() {
   } = useForm<LoginValues>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
-      email: "",
+      identifier: "",
       password: "",
     },
     mode: "onSubmit",
@@ -41,7 +41,7 @@ export function LoginForm() {
   const isSubmitting = actionLoading.login;
 
   const onSubmit = handleSubmit(async (values) => {
-    const result = await login(values.email, values.password);
+    const result = await login(values.identifier, values.password);
     if (!result.success) {
       toastifier.error(result.error ?? "Unable to sign in.");
       return;
@@ -84,20 +84,20 @@ export function LoginForm() {
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label
-                htmlFor="email"
+                htmlFor="identifier"
                 className="mb-1 block text-sm font-medium text-text-primary"
               >
-                Email
+                Email or Username
               </label>
               <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  autoComplete="email"
-                  error={errors.email?.message}
+                  id="identifier"
+                  type="text"
+                  placeholder="Email or username"
+                  autoComplete="username"
+                  error={errors.identifier?.message}
                   className="h-12 rounded-xl border border-gray-300 bg-white px-4 text-base text-text-primary placeholder:text-gray-400 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/30"
-                  {...register("email")}
+                  {...register("identifier")}
                 />
               </div>
             </div>

@@ -20,7 +20,6 @@ import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/co
 import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import {
-  useActiveWindow,
   useCancelTransfers,
   useConfirmTransfers,
   useLeague,
@@ -29,6 +28,7 @@ import {
   useStageOut,
   useUserTransfers,
 } from "@/hooks/leagues/useLeagues";
+import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { toastifier } from "@/libs/toastifier";
 
@@ -51,8 +51,9 @@ export function Transfers() {
     isLoading: userTransfersLoading,
     error: userTransfersError,
   } = useUserTransfers();
-  const { data: activeWindow, isLoading: windowLoading } =
-    useActiveWindow(leagueId);
+  const activeWindowQuery = useSmartActiveWindowSync(leagueId);
+  const activeWindow = activeWindowQuery.data;
+  const windowLoading = activeWindowQuery.isLoading;
   const leagueSports = useMemo(
     () =>
       Array.from(
@@ -101,6 +102,8 @@ export function Transfers() {
     null,
   );
   const isMultiSportLeague = leagueSports.length > 1;
+  const isTransfersOpen =
+    Boolean(activeWindow?.id) && !activeWindow?.transfers_locked;
 
   const ownedPlayers: OwnedPlayer[] = useMemo(() => {
     const rows = myTeam?.team_players ?? myTeam?.players ?? [];
@@ -233,8 +236,8 @@ export function Transfers() {
     const player = availablePlayers.find((item) => item.id === id);
     if (!player) return;
 
-    if (!leagueId || !activeWindow?.id) {
-      toastifier.error("No active transfer window right now");
+    if (!leagueId || !activeWindow?.id || !isTransfersOpen) {
+      toastifier.error("Transfers are closed for this window");
       return;
     }
 
@@ -265,8 +268,8 @@ export function Transfers() {
   };
 
   const handleStageOut = async (id: string) => {
-    if (!activeWindow?.id) {
-      toastifier.error("No active transfer window right now");
+    if (!isTransfersOpen) {
+      toastifier.error("Transfers are closed for this window");
       return;
     }
 
@@ -455,7 +458,8 @@ export function Transfers() {
                   (stagedOutPlayers.length === 0 &&
                     stagedInPlayers.length === 0) ||
                   (!isMultiSportLeague &&
-                    stagedOutPlayers.length !== stagedInPlayers.length)
+                    stagedOutPlayers.length !== stagedInPlayers.length) ||
+                  !isTransfersOpen
                 }
                 className="mt-3 w-full rounded-full bg-primary-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
@@ -501,6 +505,7 @@ export function Transfers() {
                   form={player.form}
                   onAdd={handleAddPlayer}
                   animationDelay={index * 60}
+                  disabled={!isTransfersOpen}
                 />
               ))
             )}
@@ -514,6 +519,7 @@ export function Transfers() {
             budget={budget}
             maxPlayers={league?.squad_size || 15}
             selectedOutId={selectedOutPlayer?.id}
+            disabled={!isTransfersOpen}
           />
           {selectedOutPlayer && (
             <div className="mt-4 p-4 bg-primary-50 rounded-xl border border-primary-100 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
@@ -590,6 +596,8 @@ export function Transfers() {
         allowUnpaired={isMultiSportLeague}
         stagedOutPlayers={stagedOutPlayers}
         stagedInPlayers={stagedInPlayers}
+        transfersOpen={isTransfersOpen}
+        transferDeadlineAt={activeWindow?.transfer_deadline_at}
       />
 
       <TransferSuccess
