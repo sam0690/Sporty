@@ -1,0 +1,2617 @@
+{
+  "communities": {
+    "0": [
+      "auth_schemas_changepasswordrequest",
+      "auth_schemas_forgotpasswordrequest",
+      "auth_schemas_forgotpasswordresponse",
+      "auth_schemas_googleauthrequest",
+      "auth_schemas_googlelinkrequest",
+      "auth_schemas_loginrequest",
+      "auth_schemas_registerrequest",
+      "auth_schemas_resetpasswordrequest",
+      "auth_schemas_userresponse",
+      "basemodel",
+      "league_models_leaguestatus",
+      "league_schemas_budgetdiscardresponse",
+      "league_schemas_draftpickcreate",
+      "league_schemas_draftpickresponse",
+      "league_schemas_draftturnresponse",
+      "league_schemas_fantasyteamcreate",
+      "league_schemas_fantasyteamownerresponse",
+      "league_schemas_fantasyteamresponse",
+      "league_schemas_joinleaguerequest",
+      "league_schemas_leaderboardentry",
+      "league_schemas_leaderboardentryresponse",
+      "league_schemas_leaderboardresponse",
+      "league_schemas_leaguecreate",
+      "league_schemas_leaguedashboardstatsresponse",
+      "league_schemas_leagueresponse",
+      "league_schemas_leaguesportadd",
+      "league_schemas_leaguesportresponse",
+      "league_schemas_leagueteamdetail",
+      "league_schemas_lineupentryresponse",
+      "league_schemas_lineupresponse",
+      "league_schemas_lineupslotcreate",
+      "league_schemas_lineupslotresponse",
+      "league_schemas_lineupupdaterequest",
+      "league_schemas_max_gte_min",
+      "league_schemas_membershipresponse",
+      "league_schemas_midseasonjoinupdate",
+      "league_schemas_name_not_blank",
+      "league_schemas_no_duplicate_players",
+      "league_schemas_no_duplicates",
+      "league_schemas_position_uppercase",
+      "league_schemas_rationale_1",
+      "league_schemas_rationale_101",
+      "league_schemas_rationale_110",
+      "league_schemas_rationale_159",
+      "league_schemas_rationale_189",
+      "league_schemas_rationale_205",
+      "league_schemas_rationale_227",
+      "league_schemas_rationale_239",
+      "league_schemas_rationale_266",
+      "league_schemas_rationale_275",
+      "league_schemas_rationale_292",
+      "league_schemas_rationale_315",
+      "league_schemas_rationale_335",
+      "league_schemas_rationale_35",
+      "league_schemas_rationale_351",
+      "league_schemas_rationale_367",
+      "league_schemas_rationale_378",
+      "league_schemas_rationale_388",
+      "league_schemas_rationale_416",
+      "league_schemas_rationale_422",
+      "league_schemas_rationale_442",
+      "league_schemas_rationale_451",
+      "league_schemas_rationale_464",
+      "league_schemas_rationale_502",
+      "league_schemas_rationale_514",
+      "league_schemas_rationale_528",
+      "league_schemas_rationale_543",
+      "league_schemas_rationale_554",
+      "league_schemas_rationale_563",
+      "league_schemas_rationale_576",
+      "league_schemas_rationale_587",
+      "league_schemas_rationale_598",
+      "league_schemas_rationale_63",
+      "league_schemas_rationale_88",
+      "league_schemas_seasonresponse",
+      "league_schemas_sport_name_lowercase",
+      "league_schemas_sportresponse",
+      "league_schemas_statusupdate",
+      "league_schemas_teambuildrequest",
+      "league_schemas_teamplayerresponse",
+      "league_schemas_teamweeklyscoreresponse",
+      "league_schemas_transfercreate",
+      "league_schemas_transferresponse",
+      "league_schemas_transferwindowresponse",
+      "league_schemas_usertransferhistoryleaguebrief",
+      "league_schemas_usertransferhistoryleagueresponse",
+      "notification_schemas_notificationresponse",
+      "player_schemas_cricketstatresponse",
+      "player_schemas_footballstatresponse",
+      "player_schemas_max_gte_min",
+      "player_schemas_playerfilter",
+      "player_schemas_playergameweekstatresponse",
+      "player_schemas_playerlistresponse",
+      "player_schemas_playerpricehistoryitem",
+      "player_schemas_playerpricehistoryresponse",
+      "player_schemas_playerresponse",
+      "player_schemas_position_uppercase",
+      "player_schemas_rationale_1",
+      "player_schemas_rationale_165",
+      "player_schemas_rationale_192",
+      "player_schemas_rationale_216",
+      "player_schemas_rationale_247",
+      "player_schemas_rationale_261",
+      "player_schemas_rationale_28",
+      "player_schemas_rationale_56",
+      "player_schemas_rationale_77",
+      "player_schemas_sport_name_lowercase",
+      "schemas_common_playerbrief",
+      "schemas_common_rationale_1",
+      "schemas_common_rationale_29",
+      "schemas_common_rationale_37",
+      "schemas_common_rationale_46",
+      "schemas_common_rationale_55",
+      "schemas_common_rationale_71",
+      "schemas_common_seasonbrief",
+      "schemas_common_sportbrief",
+      "schemas_common_transferwindowbrief",
+      "schemas_common_userbrief",
+      "scoring_schemas_action_lowercase_snake",
+      "scoring_schemas_rationale_1",
+      "scoring_schemas_rationale_28",
+      "scoring_schemas_rationale_51",
+      "scoring_schemas_rationale_85",
+      "scoring_schemas_scoringoverridecreate",
+      "scoring_schemas_scoringoverrideresponse",
+      "scoring_schemas_scoringruleresponse",
+      "sporty_backend_app_auth_schemas_py",
+      "sporty_backend_app_league_schemas_py",
+      "sporty_backend_app_notification_schemas_py",
+      "sporty_backend_app_player_schemas_py",
+      "sporty_backend_app_schemas_common_py",
+      "sporty_backend_app_scoring_schemas_py",
+      "sporty_backend_app_user_schemas_py",
+      "user_schemas_useractivityleagueresponse",
+      "user_schemas_useractivityresponse",
+      "user_schemas_userlistresponse",
+      "user_schemas_userprofileresponse",
+      "user_schemas_userupdaterequest",
+      "valueerror"
+    ],
+    "1": [
+      "api_deps_get_async_redis_dep",
+      "api_deps_get_connection_manager",
+      "app_main_lifespan",
+      "consumers_normalizer_is_duplicate",
+      "consumers_normalizer_run",
+      "consumers_notifications_notificationevent",
+      "consumers_notifications_run",
+      "consumers_points_engine_milestone_for_event",
+      "consumers_points_engine_publish_leaderboard_delta",
+      "consumers_points_engine_publish_with_retry",
+      "consumers_points_engine_run",
+      "consumers_points_engine_send_kafka_with_retry",
+      "core_influx_create_influx_client",
+      "core_influx_rationale_1",
+      "core_influx_write_stat_point",
+      "core_kafka_bootstrap_servers",
+      "core_kafka_create_consumer",
+      "core_kafka_create_producer",
+      "core_kafka_rationale_1",
+      "core_redis_close_async_redis",
+      "core_redis_create_redis_pool",
+      "core_redis_get_async_redis",
+      "core_redis_rationale_1",
+      "core_redis_rationale_25",
+      "core_redis_rationale_43",
+      "core_redis_rationale_48",
+      "schemas_events_fantasypointsdelta",
+      "schemas_events_wsmessage",
+      "services_connection_manager_channel_type",
+      "services_connection_manager_connectionmanager",
+      "services_connection_manager_connectionmanager_connect",
+      "services_connection_manager_connectionmanager_disconnect",
+      "services_connection_manager_connectionmanager_init",
+      "services_connection_manager_connectionmanager_listen",
+      "services_connection_manager_rationale_16",
+      "services_push_notifications_init_firebase",
+      "services_push_notifications_rationale_1",
+      "services_push_notifications_send_apns",
+      "services_push_notifications_send_fcm",
+      "services_rate_limiter_redistokenbucketlimiter_allow",
+      "sporty_backend_app_consumers_normalizer_py",
+      "sporty_backend_app_consumers_notifications_py",
+      "sporty_backend_app_consumers_points_engine_py",
+      "sporty_backend_app_core_influx_py",
+      "sporty_backend_app_core_kafka_py",
+      "sporty_backend_app_core_redis_py",
+      "sporty_backend_app_services_connection_manager_py",
+      "sporty_backend_app_services_push_notifications_py"
+    ],
+    "2": [
+      "abc",
+      "adapters_base_isportadapter",
+      "adapters_base_normalize",
+      "adapters_base_poll",
+      "adapters_basketball_basketballadapter",
+      "adapters_basketball_basketballadapter_get",
+      "adapters_basketball_basketballadapter_init",
+      "adapters_basketball_basketballadapter_normalize",
+      "adapters_basketball_basketballadapter_poll",
+      "adapters_basketball_coerce_float",
+      "adapters_basketball_coerce_int",
+      "adapters_basketball_status_is_live",
+      "adapters_cricket_coerce_int",
+      "adapters_cricket_cricketadapter",
+      "adapters_cricket_cricketadapter_get",
+      "adapters_cricket_cricketadapter_init",
+      "adapters_cricket_cricketadapter_normalize",
+      "adapters_cricket_cricketadapter_poll",
+      "adapters_cricket_extract_live_match_ids",
+      "adapters_cricket_walk_dicts",
+      "adapters_football_footballadapter",
+      "adapters_football_footballadapter_get",
+      "adapters_football_footballadapter_init",
+      "adapters_football_footballadapter_normalize",
+      "adapters_football_footballadapter_poll",
+      "enum",
+      "isportadapter",
+      "schemas_events_eventtype",
+      "schemas_events_lineupchange",
+      "schemas_events_normalizedevent",
+      "schemas_events_rawevent",
+      "schemas_events_scoreupdate",
+      "schemas_events_sporttype",
+      "services_rate_limiter_rationale_41",
+      "services_rate_limiter_redistokenbucketlimiter",
+      "sporty_backend_app_adapters_base_py",
+      "sporty_backend_app_adapters_basketball_py",
+      "sporty_backend_app_adapters_cricket_py",
+      "sporty_backend_app_adapters_football_py",
+      "sporty_backend_app_models_schemas_events_py",
+      "sporty_backend_app_services_rate_limiter_py",
+      "sporty_backend_tests_test_basketball_adapter_normalization_py",
+      "sporty_backend_tests_test_cricket_adapter_normalization_py",
+      "str",
+      "tests_test_basketball_adapter_normalization_test_basketball_normalize_basket_event_type_mapping",
+      "tests_test_basketball_adapter_normalization_test_basketball_normalize_stat_event",
+      "tests_test_cricket_adapter_normalization_test_cricket_normalize_stat_event",
+      "tests_test_cricket_adapter_normalization_test_cricket_normalize_wicket_event"
+    ],
+    "3": [
+      "app_main_health_check",
+      "app_main_rationale_1",
+      "app_main_rationale_337",
+      "app_main_run_cache_warming_job",
+      "app_main_run_league_lifecycle_job",
+      "app_main_run_price_update_job",
+      "app_main_run_transfer_window_notification_job",
+      "notification_models_notification",
+      "services_cache_warming_service_rationale_22",
+      "services_cache_warming_service_to_str_decimal",
+      "services_cache_warming_service_warm_cache",
+      "services_email_service_rationale_11",
+      "services_email_service_rationale_114",
+      "services_email_service_rationale_89",
+      "services_email_service_render_password_reset_email_html",
+      "services_email_service_send_email_via_resend",
+      "services_email_service_send_password_reset_email",
+      "services_email_service_send_transfer_window_open_email",
+      "services_league_status_service_auto_update_league_statuses",
+      "services_league_status_service_rationale_13",
+      "services_notification_service_check_and_notify_open_windows",
+      "services_notification_service_create_league_status_notifications",
+      "services_notification_service_get_user_notifications",
+      "services_notification_service_mark_notification_as_read",
+      "services_notification_service_notify_league_active",
+      "services_notification_service_notify_league_completed",
+      "services_notification_service_rationale_22",
+      "services_notification_service_rationale_51",
+      "services_notification_service_rationale_60",
+      "services_notification_service_rationale_99",
+      "services_price_update_service_clamp_delta",
+      "services_price_update_service_on_player_price_update",
+      "services_price_update_service_quantize_price",
+      "services_price_update_service_rationale_32",
+      "services_price_update_service_rationale_47",
+      "services_price_update_service_update_player_prices",
+      "sporty_backend_app_main_py",
+      "sporty_backend_app_notification_models_py",
+      "sporty_backend_app_services_cache_warming_service_py",
+      "sporty_backend_app_services_email_service_py",
+      "sporty_backend_app_services_league_status_service_py",
+      "sporty_backend_app_services_notification_service_py",
+      "sporty_backend_app_services_price_update_service_py"
+    ],
+    "4": [
+      "league_services_current_transfer_window",
+      "league_services_delete_league",
+      "league_services_detect_team_sport_name",
+      "league_services_generate_transfer_windows",
+      "league_services_get_active_transfer_window",
+      "league_services_get_current_lineup",
+      "league_services_get_dashboard_stats",
+      "league_services_get_league",
+      "league_services_get_league_leaderboard",
+      "league_services_get_members",
+      "league_services_get_transfers",
+      "league_services_is_transfer_window_active",
+      "league_services_make_transfer",
+      "league_services_rationale_1",
+      "league_services_rationale_1012",
+      "league_services_rationale_1210",
+      "league_services_rationale_1355",
+      "league_services_rationale_1557",
+      "league_services_rationale_158",
+      "league_services_rationale_1593",
+      "league_services_rationale_201",
+      "league_services_rationale_2143",
+      "league_services_rationale_219",
+      "league_services_rationale_2204",
+      "league_services_rationale_2427",
+      "league_services_rationale_2548",
+      "league_services_rationale_2585",
+      "league_services_rationale_2633",
+      "league_services_rationale_337",
+      "league_services_rationale_367",
+      "league_services_rationale_583",
+      "league_services_rationale_599",
+      "league_services_remove_sport",
+      "league_services_require_fantasy_team",
+      "league_services_require_league",
+      "league_services_update_league_status",
+      "league_services_update_lineup",
+      "league_services_update_midseason_join_setting",
+      "sporty_backend_app_league_services_py"
+    ],
+    "5": [
+      "docs_football_api_complete_example_footballapiclient",
+      "docs_football_api_complete_example_footballapiclient_close",
+      "docs_football_api_complete_example_footballapiclient_enter",
+      "docs_football_api_complete_example_footballapiclient_exit",
+      "docs_football_api_complete_example_footballapiclient_get_fixture",
+      "docs_football_api_complete_example_footballapiclient_get_fixture_statistics",
+      "docs_football_api_complete_example_footballapiclient_get_fixtures",
+      "docs_football_api_complete_example_footballapiclient_get_live_fixtures",
+      "docs_football_api_complete_example_footballapiclient_get_player",
+      "docs_football_api_complete_example_footballapiclient_get_player_statistics",
+      "docs_football_api_complete_example_footballapiclient_get_players",
+      "docs_football_api_complete_example_footballapiclient_get_standings",
+      "docs_football_api_complete_example_footballapiclient_get_team",
+      "docs_football_api_complete_example_footballapiclient_get_team_squad",
+      "docs_football_api_complete_example_footballapiclient_get_teams",
+      "docs_football_api_complete_example_footballapiclient_get_top_scorers",
+      "docs_football_api_complete_example_rationale_1",
+      "docs_football_api_complete_example_rationale_119",
+      "docs_football_api_complete_example_rationale_136",
+      "docs_football_api_complete_example_rationale_150",
+      "docs_football_api_complete_example_rationale_158",
+      "docs_football_api_complete_example_rationale_178",
+      "docs_football_api_complete_example_rationale_18",
+      "docs_football_api_complete_example_rationale_212",
+      "docs_football_api_complete_example_rationale_226",
+      "docs_football_api_complete_example_rationale_244",
+      "docs_football_api_complete_example_rationale_266",
+      "docs_football_api_complete_example_rationale_286",
+      "docs_football_api_complete_example_rationale_304",
+      "docs_football_api_complete_example_rationale_322",
+      "docs_football_api_complete_example_rationale_327",
+      "docs_football_api_complete_example_rationale_331",
+      "docs_football_api_complete_example_rationale_62",
+      "sporty_backend_docs_football_api_complete_example_py"
+    ],
+    "6": [
+      "api_notifications_fetchtransferwindowstatus",
+      "components_leaderboardfilters_leaderboardfilters",
+      "components_leaderboardheader_leaderboardheader",
+      "components_leagueheader_leagueheader",
+      "components_standingstable_standingstable",
+      "components_statshighlight_statshighlight",
+      "components_transferfields_transferfields",
+      "components_userrankcard_rankmedal",
+      "components_userrankcard_userrankcard",
+      "components_weekselector_weekselector",
+      "components_yourscorecard_yourscorecard",
+      "league_home_leaguehome_handleleaveleague",
+      "league_home_leaguehome_run",
+      "leagues_useleagues_useactivewindow",
+      "leagues_useleagues_useleaderboard",
+      "leagues_useleagues_useleaveleague",
+      "leagues_usesmartactivewindowsync_getsoonestdeadlinems",
+      "leagues_usesmartactivewindowsync_todeadlinems",
+      "leagues_usesmartactivewindowsync_usesmartactivewindowsync",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_leagueheader_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_transferfields_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_yourscorecard_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_leaguehome_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_leaderboardfilters_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_leaderboardheader_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_statshighlight_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_userrankcard_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_weekselector_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_leagueleaderboard_tsx",
+      "sporty_frontend_src_hooks_leagues_usesmartactivewindowsync_ts"
+    ],
+    "7": [
+      "services_budget_utils_calculate_refund",
+      "services_budget_utils_rationale_7",
+      "services_transfer_service_build_new_session",
+      "services_transfer_service_cancel_session",
+      "services_transfer_service_confirm_transfers",
+      "services_transfer_service_current_window_id",
+      "services_transfer_service_ensure_player_allowed_for_league_pool",
+      "services_transfer_service_is_multisport_league",
+      "services_transfer_service_league_supported_sport_ids",
+      "services_transfer_service_league_supported_sports",
+      "services_transfer_service_player_price",
+      "services_transfer_service_require_league_and_team",
+      "services_transfer_service_safe_get",
+      "services_transfer_service_safe_hget",
+      "services_transfer_service_safe_sismember",
+      "services_transfer_service_sport_counts_for_player_ids",
+      "services_transfer_service_stage_in",
+      "services_transfer_service_stage_out",
+      "services_transfer_service_transfer_rules",
+      "services_transfer_session_service_clear_session",
+      "services_transfer_session_service_get_session",
+      "services_transfer_session_service_rationale_17",
+      "services_transfer_session_service_rationale_33",
+      "services_transfer_session_service_rationale_41",
+      "services_transfer_session_service_save_session",
+      "services_transfer_session_service_session_key",
+      "sporty_backend_app_services_budget_utils_py",
+      "sporty_backend_app_services_transfer_service_py",
+      "sporty_backend_app_services_transfer_session_service_py"
+    ],
+    "8": [
+      "services_ingestion_worker_ingestionworker",
+      "services_ingestion_worker_ingestionworker_init",
+      "services_ingestion_worker_ingestionworker_loop",
+      "services_ingestion_worker_ingestionworker_send_with_retry",
+      "services_ingestion_worker_ingestionworker_start",
+      "services_ingestion_worker_ingestionworker_stop",
+      "services_match_scheduler_matchscheduler",
+      "services_match_scheduler_matchscheduler_fetch_live_matches",
+      "services_match_scheduler_matchscheduler_init",
+      "services_match_scheduler_matchscheduler_reconcile_workers",
+      "services_match_scheduler_matchscheduler_run",
+      "services_match_scheduler_matchscheduler_start",
+      "services_match_scheduler_matchscheduler_stop",
+      "services_match_scheduler_rationale_21",
+      "sporty_backend_app_services_ingestion_worker_py",
+      "sporty_backend_app_services_match_scheduler_py",
+      "sporty_backend_tests_test_realtime_retry_logic_py",
+      "tests_test_realtime_retry_logic_adapter",
+      "tests_test_realtime_retry_logic_adapter_normalize",
+      "tests_test_realtime_retry_logic_adapter_poll",
+      "tests_test_realtime_retry_logic_flakyproducer",
+      "tests_test_realtime_retry_logic_flakyproducer_init",
+      "tests_test_realtime_retry_logic_flakyproducer_send_and_wait",
+      "tests_test_realtime_retry_logic_flakyredis",
+      "tests_test_realtime_retry_logic_flakyredis_init",
+      "tests_test_realtime_retry_logic_flakyredis_publish",
+      "tests_test_realtime_retry_logic_test_ingestion_worker_send_with_retry_eventually_succeeds",
+      "tests_test_realtime_retry_logic_test_points_engine_kafka_retry_eventually_succeeds",
+      "tests_test_realtime_retry_logic_test_points_engine_redis_retry_eventually_succeeds"
+    ],
+    "9": [
+      "auth_models_refreshtoken",
+      "base",
+      "components_statssummary_statssummary",
+      "db_live_event_liveevent",
+      "league_models_season",
+      "league_models_teamgameweeklineup",
+      "league_models_teamweeklyscore",
+      "league_models_transfer",
+      "league_models_transferwindow",
+      "player_models_cricketstat",
+      "player_models_footballstat",
+      "player_models_nba_nbastat",
+      "player_models_nba_rationale_1",
+      "player_models_player",
+      "player_models_playergameweekstat",
+      "player_models_playerpricehistory",
+      "player_models_rationale_21",
+      "pricing_repricing_pricingpolicy",
+      "pricing_repricing_rationale_22",
+      "scoring_models_defaultscoringrule",
+      "scoring_models_leaguescoringoverride",
+      "scoring_models_rationale_18",
+      "sporty_backend_app_models_db_live_event_py",
+      "sporty_backend_app_player_models_nba_py",
+      "sporty_backend_app_player_models_py",
+      "sporty_backend_app_scoring_models_py",
+      "sporty_backend_seed_data_playertierconfig",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_statssummary_tsx"
+    ],
+    "10": [
+      "components_filterbar_filterbar",
+      "components_searchbar_searchbar",
+      "components_transfersheader_transfersheader",
+      "components_transfersuccess_transfersuccess",
+      "leagues_useleagues_active_window_query_key",
+      "leagues_useleagues_refreshactivewindow",
+      "leagues_useleagues_usecanceltransfers",
+      "leagues_useleagues_useconfirmtransfers",
+      "leagues_useleagues_usecreateleague",
+      "leagues_useleagues_usemaketransfer",
+      "leagues_useleagues_usemyteam",
+      "leagues_useleagues_usestagein",
+      "leagues_useleagues_usestageout",
+      "leagues_useleagues_usestartdraft",
+      "leagues_useleagues_useusertransfers",
+      "sporty_frontend_src_components_dashboard_transfers_components_filterbar_tsx",
+      "sporty_frontend_src_components_dashboard_transfers_components_searchbar_tsx",
+      "sporty_frontend_src_components_dashboard_transfers_components_transfersheader_tsx",
+      "sporty_frontend_src_components_dashboard_transfers_components_transfersuccess_tsx",
+      "sporty_frontend_src_components_dashboard_transfers_transfers_tsx",
+      "sporty_frontend_src_hooks_leagues_useleagues_ts",
+      "transfers_transfers_clearallfilters",
+      "transfers_transfers_confirmalltransfers",
+      "transfers_transfers_handleaddplayer",
+      "transfers_transfers_handlestageout",
+      "transfers_transfers_isloading",
+      "transfers_transfers_tosport"
+    ],
+    "11": [
+      "sporty_backend_tests_test_realtime_delivery_endpoints_py",
+      "tests_test_realtime_delivery_endpoints_build_app",
+      "tests_test_realtime_delivery_endpoints_fakeasyncdb",
+      "tests_test_realtime_delivery_endpoints_fakeasyncdb_execute",
+      "tests_test_realtime_delivery_endpoints_fakemanager",
+      "tests_test_realtime_delivery_endpoints_fakemanager_connect",
+      "tests_test_realtime_delivery_endpoints_fakemanager_disconnect",
+      "tests_test_realtime_delivery_endpoints_fakepubsub",
+      "tests_test_realtime_delivery_endpoints_fakepubsub_close",
+      "tests_test_realtime_delivery_endpoints_fakepubsub_init",
+      "tests_test_realtime_delivery_endpoints_fakepubsub_listen",
+      "tests_test_realtime_delivery_endpoints_fakepubsub_subscribe",
+      "tests_test_realtime_delivery_endpoints_fakepubsub_unsubscribe",
+      "tests_test_realtime_delivery_endpoints_fakeredis",
+      "tests_test_realtime_delivery_endpoints_fakeredis_hget",
+      "tests_test_realtime_delivery_endpoints_fakeredis_init",
+      "tests_test_realtime_delivery_endpoints_fakeredis_keys",
+      "tests_test_realtime_delivery_endpoints_fakeredis_pubsub",
+      "tests_test_realtime_delivery_endpoints_fakeresult",
+      "tests_test_realtime_delivery_endpoints_fakeresult_first",
+      "tests_test_realtime_delivery_endpoints_fakeresult_init",
+      "tests_test_realtime_delivery_endpoints_fakeresult_mappings",
+      "tests_test_realtime_delivery_endpoints_fakeresult_scalar_one_or_none",
+      "tests_test_realtime_delivery_endpoints_test_match_state_hydration_endpoint_returns_snapshot",
+      "tests_test_realtime_delivery_endpoints_test_sse_leaderboard_stream_yields_events",
+      "tests_test_realtime_delivery_endpoints_test_websocket_match_stream_connects_and_receives_message"
+    ],
+    "12": [
+      "auth_models_user",
+      "optimization_ilp_optimizer_candidateplayer",
+      "optimization_ilp_optimizer_diagnose_infeasible",
+      "optimization_ilp_optimizer_lineupoptimizationerror",
+      "optimization_ilp_optimizer_optimize_lineup",
+      "optimization_ilp_optimizer_optimizerconstraints",
+      "optimization_ilp_optimizer_positionconstraint",
+      "optimization_router_candidateplayerpayload",
+      "optimization_router_optimizationconstraintspayload",
+      "optimization_router_optimize_lineup_endpoint",
+      "optimization_router_optimizelineuprequest",
+      "optimization_router_optimizelineupresponse",
+      "optimization_router_positionconstraintpayload",
+      "sporty_backend_app_optimization_router_py",
+      "sporty_backend_app_services_optimization_ilp_optimizer_py",
+      "sporty_backend_tests_test_ilp_optimizer_py",
+      "tests_test_ilp_optimizer_base_candidates",
+      "tests_test_ilp_optimizer_base_constraints",
+      "tests_test_ilp_optimizer_test_optimizer_budget_infeasible_case",
+      "tests_test_ilp_optimizer_test_optimizer_captain_vice_validity",
+      "tests_test_ilp_optimizer_test_optimizer_feasible_baseline_case",
+      "tests_test_ilp_optimizer_test_optimizer_locked_banned_conflict_case",
+      "tests_test_ilp_optimizer_test_optimizer_multisport_constraints_enforcement",
+      "tests_test_ilp_optimizer_test_optimizer_position_constraint_enforcement"
+    ],
+    "13": [
+      "api_useapimutation_useapimutation",
+      "components_deleteleaguemodal_deleteleaguemodal",
+      "components_settingsform_settingsform",
+      "league_settings_leaguesettings_leaguesettings",
+      "leagues_useleaguecompetitionmode_derivecompetitiontype",
+      "leagues_useleaguecompetitionmode_useleaguecompetitionmode",
+      "leagues_useleagues_useaddleaguesport",
+      "leagues_useleagues_usedeleteleague",
+      "leagues_useleagues_usegeneratetransferwindows",
+      "leagues_useleagues_useremoveleaguesport",
+      "leagues_useleagues_usesports",
+      "leagues_useleagues_useupdateleaguestatus",
+      "leagues_useleagues_useupdatemidseasonjoin",
+      "scoring_usescoring_usedefaultscoringrules",
+      "scoring_usescoring_usedeletescoringoverride",
+      "scoring_usescoring_usescoringoverrides",
+      "scoring_usescoring_useupsertscoringoverride",
+      "sporty_frontend_src_components_dashboard_leagues_league_settings_components_deleteleaguemodal_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_settings_components_settingsform_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_settings_leaguesettings_tsx",
+      "sporty_frontend_src_hooks_api_useapimutation_ts",
+      "sporty_frontend_src_hooks_leagues_useleaguecompetitionmode_ts",
+      "sporty_frontend_src_hooks_scoring_usescoring_ts"
+    ],
+    "14": [
+      "components_errorstate_errorstate",
+      "components_initiallineupboard_initiallineupboard",
+      "components_lineupheader_formatcountdown",
+      "components_lineupheader_lineupheader",
+      "components_lineupskeleton_lineupskeleton",
+      "components_lineupviewtoggle_lineupviewtoggle",
+      "hooks_useleaguelineupdata_groupplayersbysport",
+      "hooks_useleaguelineupdata_useleaguelineupdata",
+      "league_lineup_leaguelineup_detectlineupsport",
+      "league_lineup_leaguelineup_groupplayersbysport",
+      "league_lineup_leaguelineup_leaguelineup",
+      "league_lineup_leaguelineup_lineupfingerprint",
+      "league_lineup_leaguelineup_positionbaselineprojection",
+      "leagues_useleagues_useleague",
+      "leagues_useleagues_uselineup",
+      "leagues_useleagues_useupdatelineup",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_errorstate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_initiallineupboard_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_lineupheader_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_lineupskeleton_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_lineupviewtoggle_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_hooks_useleaguelineupdata_ts",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_leaguelineup_tsx"
+    ],
+    "15": [
+      "components_createleagueheader_createleagueheader",
+      "components_leaguebasicinfo_leaguebasicinfo",
+      "components_leaguesettings_leaguesettings",
+      "components_successmodal_successmodal",
+      "components_summarystep_formatrulelabel",
+      "components_summarystep_summarystep",
+      "create_league_createleague_formatrulelabel",
+      "create_league_createleague_handleleaguenamechange",
+      "create_league_createleague_handlenextstep",
+      "create_league_createleague_handlepreviousstep",
+      "create_league_createleague_handlerulepointschange",
+      "create_league_createleague_handleruletoggle",
+      "create_league_createleague_handlesettingschange",
+      "create_league_createleague_handlesportchange",
+      "create_league_createleague_handletogglesportcustomscoring",
+      "create_league_createleague_mapsportselectiontopayload",
+      "sporty_frontend_src_components_dashboard_create_league_components_createleagueheader_tsx",
+      "sporty_frontend_src_components_dashboard_create_league_components_leaguebasicinfo_tsx",
+      "sporty_frontend_src_components_dashboard_create_league_components_leaguesettings_tsx",
+      "sporty_frontend_src_components_dashboard_create_league_components_summarystep_tsx",
+      "sporty_frontend_src_components_dashboard_create_league_createleague_tsx",
+      "sporty_frontend_src_components_dashboard_create_team_components_successmodal_tsx",
+      "sporty_frontend_src_components_dashboard_join_league_components_successmodal_tsx"
+    ],
+    "16": [
+      "core_redis_cache_get",
+      "core_redis_cache_set",
+      "core_redis_rationale_114",
+      "core_redis_rationale_93",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_get_all_games",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_get_all_players",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_get_game_stats",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_get_player_by_id",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_get_team_by_id",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_get_teams",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_init",
+      "external_apis_basketball_balldontlie_rationale_1",
+      "external_apis_basketball_balldontlie_rationale_152",
+      "external_apis_basketball_balldontlie_rationale_181",
+      "external_apis_basketball_balldontlie_rationale_216",
+      "external_apis_basketball_balldontlie_rationale_251",
+      "external_apis_basketball_balldontlie_rationale_26",
+      "external_apis_basketball_balldontlie_rationale_29",
+      "external_apis_basketball_balldontlie_rationale_42",
+      "external_apis_basketball_balldontlie_rationale_95",
+      "sporty_backend_app_external_apis_basketball_balldontlie_py"
+    ],
+    "17": [
+      "api_useapiquery_useapiquery",
+      "components_overviewcards_overviewcards",
+      "containers_dashboardmaincontainer_dashboardmaincontainer",
+      "dashboard_usedashboarddata_usedashboardleaguestats",
+      "dashboard_usedashboarddata_usedashboardteampreview",
+      "dashboard_usedashboarddata_userecentactivity",
+      "general_uselocalstorage_uselocalstorage",
+      "leagues_useleagues_usemyleagues",
+      "leagues_useleagues_useseasons",
+      "leagues_useleagues_usetransfers",
+      "main_dashboard_dashboardmain_dashboardmain",
+      "players_useplayers_useplayer",
+      "players_useplayers_useplayers",
+      "players_useplayers_useplayerstats",
+      "players_useplayers_usetransferpoolplayers",
+      "sporty_frontend_src_components_dashboard_main_dashboard_components_overviewcards_tsx",
+      "sporty_frontend_src_components_dashboard_main_dashboard_containers_dashboardmaincontainer_tsx",
+      "sporty_frontend_src_components_dashboard_main_dashboard_dashboardmain_tsx",
+      "sporty_frontend_src_hooks_api_useapiquery_ts",
+      "sporty_frontend_src_hooks_dashboard_usedashboarddata_ts",
+      "sporty_frontend_src_hooks_general_uselocalstorage_ts",
+      "sporty_frontend_src_hooks_players_useplayers_ts"
+    ],
+    "18": [
+      "league_models_is_active",
+      "league_models_is_current",
+      "league_models_league",
+      "league_models_leaguemembership",
+      "league_models_leaguesport",
+      "league_models_member_count",
+      "league_models_rationale_249",
+      "league_models_rationale_27",
+      "league_models_team_count",
+      "league_models_teams_detail",
+      "league_models_total_windows",
+      "league_services_add_sport",
+      "league_services_create_league",
+      "league_services_generate_invite_code",
+      "league_services_join_league",
+      "league_services_rationale_1276",
+      "league_services_rationale_131",
+      "league_services_rationale_254",
+      "league_services_rationale_458",
+      "sporty_backend_app_league_models_py"
+    ],
+    "19": [
+      "player_services_apply_filters",
+      "player_services_apply_league_player_pool",
+      "player_services_exclude_owned_players",
+      "player_services_get_available_players_for_league",
+      "player_services_get_player",
+      "player_services_get_player_price_history",
+      "player_services_get_player_stats",
+      "player_services_get_players",
+      "player_services_league_supported_sport_ids",
+      "player_services_paginate",
+      "player_services_rationale_1",
+      "player_services_rationale_137",
+      "player_services_rationale_177",
+      "player_services_rationale_202",
+      "player_services_rationale_235",
+      "player_services_rationale_264",
+      "player_services_rationale_29",
+      "player_services_rationale_317",
+      "player_services_rationale_89",
+      "sporty_backend_app_player_services_py"
+    ],
+    "20": [
+      "scripts_sync_live_stats_main",
+      "scripts_sync_live_stats_rationale_1",
+      "scripts_sync_live_stats_rationale_55",
+      "sporty_backend_app_services_sync_stats_sync_py",
+      "sporty_backend_scripts_sync_live_stats_py",
+      "sync_stats_sync_rationale_1",
+      "sync_stats_sync_rationale_102",
+      "sync_stats_sync_rationale_109",
+      "sync_stats_sync_rationale_114",
+      "sync_stats_sync_rationale_121",
+      "sync_stats_sync_rationale_126",
+      "sync_stats_sync_rationale_30",
+      "sync_stats_sync_rationale_69",
+      "sync_stats_sync_rationale_89",
+      "sync_stats_sync_sync_basketball_match_stats",
+      "sync_stats_sync_sync_cricket_match_stats",
+      "sync_stats_sync_sync_finished_match_stats",
+      "sync_stats_sync_sync_football_match_stats",
+      "sync_stats_sync_sync_live_match_stats"
+    ],
+    "21": [
+      "docs_football_api_complete_example_footballapiclient_init",
+      "docs_football_api_complete_example_rationale_35",
+      "docs_football_api_refactor_example_footballapiclientrefactored_init",
+      "docs_football_api_refactor_example_rationale_33",
+      "external_apis_rapidapi_client_rapidapiclient",
+      "external_apis_rapidapi_client_rapidapiclient_generate_cache_key",
+      "external_apis_rapidapi_client_rapidapiclient_get",
+      "external_apis_rapidapi_client_rapidapiclient_get_raw",
+      "external_apis_rapidapi_client_rapidapiclient_init",
+      "external_apis_rapidapi_client_rapidapiclient_post",
+      "external_apis_rapidapi_client_rationale_1",
+      "external_apis_rapidapi_client_rationale_136",
+      "external_apis_rapidapi_client_rationale_186",
+      "external_apis_rapidapi_client_rationale_227",
+      "external_apis_rapidapi_client_rationale_38",
+      "external_apis_rapidapi_client_rationale_56",
+      "external_apis_rapidapi_client_rationale_87",
+      "external_apis_rapidapi_client_request_with_retry",
+      "sporty_backend_app_external_apis_rapidapi_client_py"
+    ],
+    "22": [
+      "auth_services_change_password",
+      "auth_services_forgot_password",
+      "auth_services_hash_password_reset_token",
+      "auth_services_is_forgot_password_rate_limited",
+      "auth_services_logout",
+      "auth_services_logout_all_devices",
+      "auth_services_rationale_225",
+      "auth_services_rationale_238",
+      "auth_services_rationale_289",
+      "auth_services_rationale_332",
+      "auth_services_rationale_376",
+      "auth_services_rationale_71",
+      "auth_services_rationale_91",
+      "auth_services_register",
+      "auth_services_reset_password",
+      "core_security_hash_password",
+      "core_security_rationale_54",
+      "sporty_backend_app_auth_services_py"
+    ],
+    "23": [
+      "docs_football_api_refactor_example_footballapiclientrefactored",
+      "docs_football_api_refactor_example_footballapiclientrefactored_close",
+      "docs_football_api_refactor_example_footballapiclientrefactored_get_fixtures",
+      "docs_football_api_refactor_example_footballapiclientrefactored_get_live_fixtures",
+      "docs_football_api_refactor_example_footballapiclientrefactored_get_match_stats",
+      "docs_football_api_refactor_example_footballapiclientrefactored_get_players",
+      "docs_football_api_refactor_example_footballapiclientrefactored_get_teams",
+      "docs_football_api_refactor_example_footballapiclientrefactored_get_top_scorers",
+      "docs_football_api_refactor_example_rationale_1",
+      "docs_football_api_refactor_example_rationale_118",
+      "docs_football_api_refactor_example_rationale_137",
+      "docs_football_api_refactor_example_rationale_145",
+      "docs_football_api_refactor_example_rationale_153",
+      "docs_football_api_refactor_example_rationale_20",
+      "docs_football_api_refactor_example_rationale_53",
+      "docs_football_api_refactor_example_rationale_79",
+      "docs_football_api_refactor_example_rationale_99",
+      "sporty_backend_docs_football_api_refactor_example_py"
+    ],
+    "24": [
+      "hooks_usematchsocket_usematchsocket",
+      "lib_realtimeapi_fetchmatchsnapshot",
+      "lib_socket_buildmatchsocketurl",
+      "live_lineupcard_lineupcard",
+      "live_liveleaderboard_liveleaderboard",
+      "live_livematchclient_load",
+      "live_pointscard_pointscard",
+      "live_scoreticker_scoreticker",
+      "live_toastalert_toastalert",
+      "sporty_frontend_src_components_live_lineupcard_tsx",
+      "sporty_frontend_src_components_live_liveleaderboard_tsx",
+      "sporty_frontend_src_components_live_livematchclient_tsx",
+      "sporty_frontend_src_components_live_pointscard_tsx",
+      "sporty_frontend_src_components_live_scoreticker_tsx",
+      "sporty_frontend_src_components_live_toastalert_tsx",
+      "sporty_frontend_src_hooks_usematchsocket_ts",
+      "sporty_frontend_src_lib_realtimeapi_ts",
+      "sporty_frontend_src_lib_socket_ts"
+    ],
+    "25": [
+      "external_apis_football_api_footballapiclient",
+      "external_apis_football_api_footballapiclient_get_fixtures",
+      "external_apis_football_api_footballapiclient_get_live_fixtures",
+      "external_apis_football_api_footballapiclient_get_match_events",
+      "external_apis_football_api_footballapiclient_get_match_stats",
+      "external_apis_football_api_footballapiclient_get_player_by_id",
+      "external_apis_football_api_footballapiclient_get_players",
+      "external_apis_football_api_footballapiclient_init",
+      "external_apis_football_api_rationale_1",
+      "external_apis_football_api_rationale_106",
+      "external_apis_football_api_rationale_123",
+      "external_apis_football_api_rationale_142",
+      "external_apis_football_api_rationale_26",
+      "external_apis_football_api_rationale_45",
+      "external_apis_football_api_rationale_69",
+      "external_apis_football_api_rationale_86",
+      "sporty_backend_app_external_apis_football_api_py"
+    ],
+    "26": [
+      "components_emptystate_emptystate",
+      "league_roster_leagueroster_candroptoslot",
+      "league_roster_leagueroster_canplaceinslot",
+      "league_roster_leagueroster_findcurrentslotofplayer",
+      "league_roster_leagueroster_handledragend",
+      "league_roster_leagueroster_handleremovefromslot",
+      "league_roster_leagueroster_handlesave",
+      "league_roster_leagueroster_normalizesport",
+      "sporty_frontend_src_components_dashboard_create_team_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_leagueroster_tsx",
+      "sporty_frontend_src_components_dashboard_my_team_components_emptystate_tsx",
+      "sporty_frontend_src_components_dashboard_transfers_components_emptystate_tsx"
+    ],
+    "27": [
+      "auth_useme_useme",
+      "components_memberlist_memberlist",
+      "components_navigationtabs_navigationtabs",
+      "components_teamheader_teamheader",
+      "league_members_leaguemembers_confirmkick",
+      "leagues_useleagues_useleaguemembers",
+      "leagues_useleagues_usemyteamsforleagues",
+      "my_team_myteam_normalizesport",
+      "navigation_dashboardnavigation_dashboardnavigation",
+      "sporty_frontend_src_components_dashboard_leagues_invite_friends_invitefriends_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_navigationtabs_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_members_components_memberlist_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_members_leaguemembers_tsx",
+      "sporty_frontend_src_components_dashboard_my_team_components_teamheader_tsx",
+      "sporty_frontend_src_components_dashboard_my_team_myteam_tsx",
+      "sporty_frontend_src_components_dashboard_navigation_dashboardnavigation_tsx",
+      "sporty_frontend_src_hooks_auth_useme_ts"
+    ],
+    "28": [
+      "components_navlinks_isitemactive",
+      "components_sidebar_isactiveroute",
+      "navigation_mobilebottomnav_isactiveroute",
+      "navigation_mobilebottomnav_mobilebottomnav",
+      "sporty_frontend_src_components_dashboard_main_dashboard_components_sidebar_tsx",
+      "sporty_frontend_src_components_dashboard_navigation_mobilebottomnav_tsx",
+      "sporty_frontend_src_components_landing_landing_hero_components_leftcontent_tsx",
+      "sporty_frontend_src_components_landing_navbar_components_mobilemenu_tsx",
+      "sporty_frontend_src_components_landing_navbar_components_navactions_tsx",
+      "sporty_frontend_src_components_landing_navbar_components_navlinks_tsx",
+      "sporty_frontend_src_components_ui_backtotopaffix_tsx",
+      "sporty_frontend_src_components_ui_button_tsx",
+      "sporty_frontend_src_components_ui_card_tsx",
+      "sporty_frontend_src_components_ui_input_tsx",
+      "sporty_frontend_src_utils_classutils_ts",
+      "ui_backtotopaffix_backtotopaffix",
+      "utils_classutils_cn"
+    ],
+    "29": [
+      "auth_router_change_password",
+      "auth_router_clear_auth_cookies",
+      "auth_router_forgot_password",
+      "auth_router_get_me",
+      "auth_router_google_auth",
+      "auth_router_link_google",
+      "auth_router_login",
+      "auth_router_logout",
+      "auth_router_logout_all",
+      "auth_router_rationale_72",
+      "auth_router_refresh_token",
+      "auth_router_register",
+      "auth_router_reset_password",
+      "auth_router_set_auth_cookies",
+      "auth_schemas_refreshtokenrequest",
+      "sporty_backend_app_auth_router_py"
+    ],
+    "30": [
+      "services_transfer_window_service_auto_lock_expired_lineups",
+      "services_transfer_window_service_auto_lock_expired_transfers",
+      "services_transfer_window_service_now_utc",
+      "services_transfer_window_service_rationale_18",
+      "services_transfer_window_service_rationale_44",
+      "services_transfer_window_service_rationale_51",
+      "services_transfer_window_service_rationale_58",
+      "services_transfer_window_service_validate_transfer_window_for_lineup",
+      "services_transfer_window_service_validate_transfer_window_for_transfer",
+      "sporty_backend_app_services_transfer_window_service_py",
+      "sporty_backend_app_tasks_transfer_tasks_py",
+      "tasks_transfer_tasks_auto_lock_expired_lineups_task",
+      "tasks_transfer_tasks_auto_lock_expired_transfers_task",
+      "tasks_transfer_tasks_rationale_1",
+      "tasks_transfer_tasks_rationale_15",
+      "tasks_transfer_tasks_rationale_41"
+    ],
+    "31": [
+      "components_currentteam_currentteam",
+      "components_teamnameform_teamnameform",
+      "create_team_createteam_handleaddplayer",
+      "create_team_createteam_handlediscardteamplayer",
+      "create_team_createteam_handledraftpick",
+      "create_team_createteam_handlenextstep",
+      "create_team_createteam_handleremoveplayer",
+      "create_team_createteam_handleundolastpick",
+      "create_team_createteam_normalizeleaguesport",
+      "leagues_useleagues_usebuildteam",
+      "leagues_useleagues_usediscardteamplayer",
+      "leagues_useleagues_usedraftturn",
+      "leagues_useleagues_usemakedraftpick",
+      "sporty_frontend_src_components_dashboard_create_team_components_currentteam_tsx",
+      "sporty_frontend_src_components_dashboard_create_team_components_teamnameform_tsx",
+      "sporty_frontend_src_components_dashboard_create_team_createteam_tsx"
+    ],
+    "32": [
+      "auth_protectedroute_protectedroute",
+      "auth_usegoogleidentity_loadgooglescript",
+      "auth_usegoogleidentity_usegoogleidentity",
+      "components_divider_divider",
+      "components_sociallogin_sociallogin",
+      "context_auth_context_useauth",
+      "dashboard_layout_dashboardlayout",
+      "shared_authheroimage_authheroimage",
+      "sporty_frontend_src_app_dashboard_layout_tsx",
+      "sporty_frontend_src_components_auth_login_components_divider_tsx",
+      "sporty_frontend_src_components_auth_login_components_sociallogin_tsx",
+      "sporty_frontend_src_components_auth_login_loginform_tsx",
+      "sporty_frontend_src_components_auth_protectedroute_tsx",
+      "sporty_frontend_src_components_auth_shared_authheroimage_tsx",
+      "sporty_frontend_src_components_auth_signup_signupform_tsx",
+      "sporty_frontend_src_hooks_auth_usegoogleidentity_ts"
+    ],
+    "33": [
+      "components_recentactivity_activityicon",
+      "components_recentactivity_formatdatetime",
+      "components_recentactivity_tonumber",
+      "components_usertransferhistorycarousel_formatmoney",
+      "components_usertransferhistorycarousel_formattransfertime",
+      "components_usertransferhistorycarousel_resolveplayername",
+      "league_lineup_leaguelineup_parsenumericcost",
+      "services_playerservice_mapbackendplayer",
+      "sporty_frontend_src_components_dashboard_transfers_components_usertransferhistorycarousel_tsx",
+      "sporty_frontend_src_components_dashboard_user_profile_components_recentactivity_tsx",
+      "sporty_frontend_src_services_playerservice_ts",
+      "sporty_frontend_src_utils_formatter_ts",
+      "utils_formatter_formatter",
+      "utils_formatter_formatter_currency",
+      "utils_formatter_formatter_number",
+      "utils_formatter_formatter_percent"
+    ],
+    "34": [
+      "match_models_match",
+      "match_models_match_repr",
+      "match_models_rationale_1",
+      "match_models_rationale_23",
+      "scoring_trigger_enqueue_scoring_for_finished_match",
+      "sporty_backend_app_match_models_py",
+      "sporty_backend_app_services_scoring_trigger_py",
+      "sporty_backend_app_services_sync_match_sync_py",
+      "sync_match_sync_rationale_1",
+      "sync_match_sync_rationale_153",
+      "sync_match_sync_rationale_259",
+      "sync_match_sync_rationale_32",
+      "sync_match_sync_sync_basketball_games",
+      "sync_match_sync_sync_cricket_matches",
+      "sync_match_sync_sync_football_matches"
+    ],
+    "35": [
+      "core_redis_cache_delete",
+      "core_redis_get_redis",
+      "core_redis_rationale_135",
+      "core_redis_rationale_57",
+      "league_router_leave_league",
+      "league_router_rationale_335",
+      "sporty_backend_app_api_v1_transfers_py",
+      "v1_transfers_cancel",
+      "v1_transfers_cancelrequest",
+      "v1_transfers_confirm",
+      "v1_transfers_confirmrequest",
+      "v1_transfers_stage_in",
+      "v1_transfers_stage_out",
+      "v1_transfers_stageinrequest",
+      "v1_transfers_stageoutrequest"
+    ],
+    "36": [
+      "components_dangerzone_dangerzone",
+      "components_preferencesform_preferencesform",
+      "components_preferencesform_togglerow",
+      "components_profileform_profileform",
+      "components_settingsskeleton_settingsskeleton",
+      "profile_profilesettings_handleavatarchange",
+      "profile_profilesettings_handlechangepassword",
+      "profile_profilesettings_handledeleteaccount",
+      "profile_profilesettings_handleupdatepreferences",
+      "profile_profilesettings_handleupdateprofile",
+      "sporty_frontend_src_components_dashboard_leagues_league_settings_components_dangerzone_tsx",
+      "sporty_frontend_src_components_dashboard_profile_components_preferencesform_tsx",
+      "sporty_frontend_src_components_dashboard_profile_components_profileform_tsx",
+      "sporty_frontend_src_components_dashboard_profile_components_settingsskeleton_tsx",
+      "sporty_frontend_src_components_dashboard_profile_profilesettings_tsx"
+    ],
+    "37": [
+      "sporty_backend_seed_data_build_player_name",
+      "sporty_backend_seed_data_create_players",
+      "sporty_backend_seed_data_create_seasons",
+      "sporty_backend_seed_data_create_sports",
+      "sporty_backend_seed_data_create_team_catalog",
+      "sporty_backend_seed_data_pick_tier",
+      "sporty_backend_seed_data_py",
+      "sporty_backend_seed_data_quantize_1",
+      "sporty_backend_seed_data_rand_decimal",
+      "sporty_backend_seed_data_rationale_1",
+      "sporty_backend_seed_data_rationale_394",
+      "sporty_backend_seed_data_run_seed",
+      "sporty_backend_seed_data_seed_player_season_if_supported",
+      "sporty_backend_seed_data_stat_line_for_season"
+    ],
+    "38": [
+      "scoring_services_build_scoring_lookup",
+      "scoring_services_delete_scoring_override",
+      "scoring_services_get_default_rules_for_sport",
+      "scoring_services_get_overrides_for_league",
+      "scoring_services_get_points_for_action",
+      "scoring_services_rationale_1",
+      "scoring_services_rationale_109",
+      "scoring_services_rationale_160",
+      "scoring_services_rationale_226",
+      "scoring_services_rationale_280",
+      "scoring_services_rationale_299",
+      "scoring_services_rationale_62",
+      "scoring_services_upsert_scoring_override",
+      "sporty_backend_app_scoring_services_py"
+    ],
+    "39": [
+      "external_apis_cricket_api_cricketapiclient",
+      "external_apis_cricket_api_cricketapiclient_get_fantasy_summary",
+      "external_apis_cricket_api_cricketapiclient_get_match_info",
+      "external_apis_cricket_api_cricketapiclient_get_match_stats",
+      "external_apis_cricket_api_cricketapiclient_get_matches",
+      "external_apis_cricket_api_cricketapiclient_get_player_info",
+      "external_apis_cricket_api_cricketapiclient_init",
+      "external_apis_cricket_api_rationale_1",
+      "external_apis_cricket_api_rationale_34",
+      "external_apis_cricket_api_rationale_49",
+      "external_apis_cricket_api_rationale_64",
+      "external_apis_cricket_api_rationale_79",
+      "external_apis_cricket_api_rationale_94",
+      "sporty_backend_app_external_apis_cricket_api_py"
+    ],
+    "40": [
+      "core_redis_lock_acquire_lock",
+      "core_redis_lock_rationale_1",
+      "core_redis_lock_rationale_70",
+      "core_redis_lock_redis_lock",
+      "core_redis_lock_release_lock",
+      "sporty_backend_app_core_redis_lock_py",
+      "sporty_backend_app_tasks_sync_tasks_py",
+      "tasks_sync_tasks_rationale_1",
+      "tasks_sync_tasks_rationale_22",
+      "tasks_sync_tasks_run_async",
+      "tasks_sync_tasks_sync_finished_stats_task",
+      "tasks_sync_tasks_sync_football_matches_task",
+      "tasks_sync_tasks_sync_football_players_task",
+      "tasks_sync_tasks_sync_live_stats_task"
+    ],
+    "41": [
+      "components_leaguehistory_leaguehistory",
+      "components_leaguehistory_sportlabel",
+      "components_playerhighlights_playerhighlights",
+      "components_statscards_statscards",
+      "sporty_frontend_src_components_dashboard_user_profile_components_leaguehistory_tsx",
+      "sporty_frontend_src_components_dashboard_user_profile_components_playerhighlights_tsx",
+      "sporty_frontend_src_components_dashboard_user_profile_components_statscards_tsx",
+      "sporty_frontend_src_components_dashboard_user_profile_userprofile_tsx",
+      "sporty_frontend_src_hooks_users_useusers_ts",
+      "user_profile_userprofile_userprofile",
+      "users_useusers_useupdateuser",
+      "users_useusers_useuser",
+      "users_useusers_useuseractivity",
+      "users_useusers_useusers"
+    ],
+    "42": [
+      "external_apis_basketball_api_basketballapiclient",
+      "external_apis_basketball_api_basketballapiclient_get_game_stats",
+      "external_apis_basketball_api_basketballapiclient_get_games",
+      "external_apis_basketball_api_basketballapiclient_get_live_games",
+      "external_apis_basketball_api_basketballapiclient_get_players",
+      "external_apis_basketball_api_basketballapiclient_init",
+      "external_apis_basketball_api_rationale_1",
+      "external_apis_basketball_api_rationale_25",
+      "external_apis_basketball_api_rationale_40",
+      "external_apis_basketball_api_rationale_59",
+      "external_apis_basketball_api_rationale_82",
+      "external_apis_basketball_api_rationale_99",
+      "sporty_backend_app_external_apis_basketball_api_py"
+    ],
+    "43": [
+      "sporty_backend_app_services_sync_cricket_live_sync_py",
+      "sporty_backend_app_services_sync_football_live_sync_py",
+      "sporty_backend_app_services_sync_nba_live_sync_py",
+      "sporty_backend_app_tasks_live_polling_tasks_py",
+      "sync_cricket_live_sync_sync_cricket_live_matches",
+      "sync_football_live_sync_rationale_7",
+      "sync_football_live_sync_sync_football_live_matches",
+      "sync_nba_live_sync_sync_nba_live_matches",
+      "tasks_live_polling_tasks_poll_live_cricket_task",
+      "tasks_live_polling_tasks_poll_live_football_task",
+      "tasks_live_polling_tasks_poll_live_nba_task",
+      "tasks_live_polling_tasks_rationale_1",
+      "tasks_live_polling_tasks_run_async"
+    ],
+    "44": [
+      "components_dropzone_dropzone",
+      "components_lineuppitchview_detectpitchmode",
+      "components_lineuppitchview_normalizesport",
+      "components_lineuppitchview_ontogglestarter",
+      "components_lineuppitchview_pitchslotmarker",
+      "components_playerlist_draggableplayercard",
+      "components_playerlist_playerlist",
+      "components_playerstatscard_playerstatscard",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_lineuppitchview_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_dropzone_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_pitchslot_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_playerlist_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_playerstatscard_tsx"
+    ],
+    "45": [
+      "leagues_useleagues_shouldrefreshactivewindow",
+      "sporty_frontend_src_utils_api_error_ts",
+      "utils_api_error_apierror",
+      "utils_api_error_apierror_constructor",
+      "utils_api_error_extractbackendmessage",
+      "utils_api_error_extracterrorinfo",
+      "utils_api_error_formaterror",
+      "utils_api_error_geterrormessage",
+      "utils_api_error_isapierror",
+      "utils_api_error_isautherror",
+      "utils_api_error_isaxioserror",
+      "utils_api_error_isnetworkerror",
+      "utils_api_error_isvalidationerror"
+    ],
+    "46": [
+      "components_transferconfirmation_update",
+      "scoring_player_scoring_compute_nba_fantasy_points",
+      "scoring_player_scoring_score_cricket_players_for_window",
+      "scoring_player_scoring_score_football_players_for_window",
+      "scoring_player_scoring_score_nba_players_for_window",
+      "scoring_rules_effectiverules",
+      "scoring_rules_resolve_effective_rules",
+      "scoring_rules_to_decimal",
+      "sporty_backend_app_services_scoring_player_scoring_py",
+      "sporty_backend_app_services_scoring_rules_py",
+      "sporty_frontend_src_components_dashboard_transfers_components_transferconfirmation_tsx",
+      "tests_test_scoring_algorithms_test_basketball_fractional_scoring_points_example"
+    ],
+    "47": [
+      "scoring_engine_score_active_transfer_windows",
+      "scoring_engine_score_transfer_window_for_league",
+      "scoring_engine_score_transfer_window_for_season_leagues",
+      "sporty_backend_app_services_scoring_engine_py",
+      "sporty_backend_app_tasks_scoring_tasks_py",
+      "tasks_scoring_tasks_rationale_1",
+      "tasks_scoring_tasks_rationale_28",
+      "tasks_scoring_tasks_rationale_51",
+      "tasks_scoring_tasks_rationale_68",
+      "tasks_scoring_tasks_score_active_transfer_windows_task",
+      "tasks_scoring_tasks_score_active_windows_task",
+      "tasks_scoring_tasks_score_transfer_window_task"
+    ],
+    "48": [
+      "auth_schemas_tokenresponse",
+      "auth_services_build_tokens",
+      "auth_services_generate_unique_username",
+      "auth_services_google_auth",
+      "auth_services_rationale_155",
+      "auth_services_rationale_197",
+      "auth_services_rationale_38",
+      "auth_services_rationale_51",
+      "auth_services_refresh_access_token",
+      "core_security_create_access_token",
+      "core_security_rationale_66"
+    ],
+    "49": [
+      "pricing_repricing_clamp",
+      "pricing_repricing_quantize_cost",
+      "pricing_repricing_rationale_1",
+      "pricing_repricing_rationale_89",
+      "pricing_repricing_recalculate_player_prices",
+      "pricing_repricing_window_weights",
+      "sporty_backend_app_services_pricing_repricing_py",
+      "sporty_backend_app_tasks_pricing_tasks_py",
+      "tasks_pricing_tasks_pricing_recalculate_task",
+      "tasks_pricing_tasks_rationale_1",
+      "tasks_pricing_tasks_rationale_16"
+    ],
+    "50": [
+      "auth_services_link_google_account",
+      "auth_services_login",
+      "auth_services_rationale_133",
+      "auth_services_rationale_254",
+      "core_security_googlepayload",
+      "core_security_rationale_139",
+      "core_security_rationale_34",
+      "core_security_rationale_59",
+      "core_security_verify_google_id_token",
+      "core_security_verify_password"
+    ],
+    "51": [
+      "core_security_accesstokenpayload",
+      "core_security_create_password_reset_token",
+      "core_security_decode_password_reset_token",
+      "core_security_passwordresetpayload",
+      "core_security_rationale_1",
+      "core_security_rationale_119",
+      "core_security_rationale_28",
+      "core_security_rationale_44",
+      "core_security_rationale_82",
+      "sporty_backend_app_core_security_py"
+    ],
+    "52": [
+      "player_router_get_player",
+      "player_router_get_player_price_history",
+      "player_router_get_player_stats",
+      "player_router_get_players",
+      "player_router_rationale_1",
+      "player_router_rationale_124",
+      "player_router_rationale_166",
+      "player_router_rationale_51",
+      "player_router_rationale_99",
+      "sporty_backend_app_player_router_py"
+    ],
+    "53": [
+      "scoring_router_create_or_update_override",
+      "scoring_router_delete_override",
+      "scoring_router_get_default_rules",
+      "scoring_router_get_overrides",
+      "scoring_router_rationale_1",
+      "scoring_router_rationale_116",
+      "scoring_router_rationale_150",
+      "scoring_router_rationale_49",
+      "scoring_router_rationale_91",
+      "sporty_backend_app_scoring_router_py"
+    ],
+    "54": [
+      "scripts_sync_all_data_main",
+      "scripts_sync_all_data_rationale_1",
+      "scripts_sync_all_data_rationale_105",
+      "scripts_sync_all_data_rationale_67",
+      "scripts_sync_all_data_rationale_80",
+      "scripts_sync_all_data_rationale_93",
+      "scripts_sync_all_data_sync_basketball",
+      "scripts_sync_all_data_sync_cricket",
+      "scripts_sync_all_data_sync_football",
+      "sporty_backend_scripts_sync_all_data_py"
+    ],
+    "55": [
+      "scoring_ranking_apply_rankings_for_league_window",
+      "scoring_ranking_compute_rank_map",
+      "scoring_team_scoring_apply_captain_vice_bonus",
+      "scoring_team_scoring_upsert_team_weekly_scores",
+      "sporty_backend_app_services_scoring_ranking_py",
+      "sporty_backend_app_services_scoring_team_scoring_py",
+      "sporty_backend_tests_test_scoring_algorithms_py",
+      "tests_test_scoring_algorithms_test_captain_vice_logic_captain_plays",
+      "tests_test_scoring_algorithms_test_captain_vice_logic_vice_substitutes_when_captain_dnp",
+      "tests_test_scoring_algorithms_test_tie_ranking_uses_sql_rank_semantics"
+    ],
+    "56": [
+      "auth_guestonlyroute_guestonlyroute",
+      "forgot_password_page_forgotpasswordpage",
+      "login_page_loginpage",
+      "register_page_registerpage",
+      "reset_password_page_resetpasswordpage",
+      "sporty_frontend_src_app_auth_forgot_password_page_tsx",
+      "sporty_frontend_src_app_auth_login_page_tsx",
+      "sporty_frontend_src_app_auth_register_page_tsx",
+      "sporty_frontend_src_app_auth_reset_password_page_tsx",
+      "sporty_frontend_src_components_auth_guestonlyroute_tsx"
+    ],
+    "57": [
+      "components_recentactivity_iconforactivity",
+      "general_userelativetime_userelativetime",
+      "sporty_frontend_src_components_dashboard_main_dashboard_components_recentactivity_tsx",
+      "sporty_frontend_src_hooks_general_userelativetime_ts",
+      "sporty_frontend_src_utils_dateutils_ts",
+      "utils_dateutils_formatdate",
+      "utils_dateutils_formatdatetime",
+      "utils_dateutils_formatrelativetime",
+      "utils_dateutils_ispastdate",
+      "utils_dateutils_parsetimestamp"
+    ],
+    "58": [
+      "api_deps_ensure_user_can_access_match",
+      "api_deps_extract_bearer_token",
+      "api_deps_get_current_active_user_async",
+      "api_deps_get_current_active_user_ws",
+      "api_deps_require_match_access",
+      "api_deps_require_match_access_ws",
+      "core_security_decode_access_token",
+      "core_security_rationale_95",
+      "sporty_backend_app_api_deps_py"
+    ],
+    "59": [
+      "auth_models_authprovider",
+      "auth_models_create_for_user",
+      "auth_models_hash_token",
+      "auth_models_is_active",
+      "core_security_create_refresh_token",
+      "core_security_get_refresh_token_expires_at",
+      "core_security_rationale_74",
+      "core_security_rationale_90",
+      "sporty_backend_app_auth_models_py"
+    ],
+    "60": [
+      "league_router_discard_player",
+      "league_router_get_dashboard_stats",
+      "league_router_get_draft_turn",
+      "league_router_get_sports",
+      "league_router_rationale_1",
+      "league_router_rationale_141",
+      "league_router_rationale_209",
+      "league_router_transfer_window_status",
+      "sporty_backend_app_league_router_py"
+    ],
+    "61": [
+      "league_models_budgettransaction",
+      "league_models_fantasyteam",
+      "league_models_teamplayer",
+      "league_services_build_initial_team",
+      "league_services_discard_team_player",
+      "league_services_rationale_1719",
+      "league_services_rationale_2021",
+      "league_services_rationale_676",
+      "league_services_start_draft"
+    ],
+    "62": [
+      "core_redis_close_redis",
+      "core_redis_rationale_80",
+      "sporty_backend_tests_test_redis_rapidapi_py",
+      "tests_test_redis_rapidapi_main",
+      "tests_test_redis_rapidapi_rationale_1",
+      "tests_test_redis_rapidapi_rationale_20",
+      "tests_test_redis_rapidapi_rationale_49",
+      "tests_test_redis_rapidapi_test_rapidapi_client",
+      "tests_test_redis_rapidapi_test_redis"
+    ],
+    "63": [
+      "sporty_backend_app_user_services_py",
+      "user_services_delete_user",
+      "user_services_get_user",
+      "user_services_get_user_activity",
+      "user_services_get_users",
+      "user_services_league_payload",
+      "user_services_rationale_55",
+      "user_services_to_float",
+      "user_services_update_user"
+    ],
+    "64": [
+      "components_erroralert_erroralert",
+      "components_publicleagueslist_publicleagueslist",
+      "join_league_joinleague_handlejoinpublicleague",
+      "join_league_joinleague_handlesubmit",
+      "leagues_useleagues_usediscoverleagues",
+      "leagues_useleagues_usejoinleague",
+      "sporty_frontend_src_components_dashboard_join_league_components_erroralert_tsx",
+      "sporty_frontend_src_components_dashboard_join_league_components_publicleagueslist_tsx",
+      "sporty_frontend_src_components_dashboard_join_league_joinleague_tsx"
+    ],
+    "65": [
+      "api_auth_api_client_refreshaccesstoken",
+      "context_auth_context_readstring",
+      "context_auth_context_torecord",
+      "context_auth_context_touser",
+      "libs_auth_events_emitauthinvalidated",
+      "libs_auth_events_subscribeauthinvalidated",
+      "sporty_frontend_src_api_auth_api_client_ts",
+      "sporty_frontend_src_context_auth_context_tsx",
+      "sporty_frontend_src_libs_auth_events_ts"
+    ],
+    "66": [
+      "league_dependencies_get_league_or_404",
+      "league_dependencies_rationale_1",
+      "league_dependencies_rationale_36",
+      "league_dependencies_rationale_54",
+      "league_dependencies_rationale_88",
+      "league_dependencies_require_league_member",
+      "league_dependencies_require_league_owner",
+      "sporty_backend_app_league_dependencies_py"
+    ],
+    "67": [
+      "sporty_backend_app_services_sync_player_sync_py",
+      "sync_player_sync_rationale_1",
+      "sync_player_sync_rationale_132",
+      "sync_player_sync_rationale_208",
+      "sync_player_sync_rationale_31",
+      "sync_player_sync_sync_basketball_players",
+      "sync_player_sync_sync_cricket_players",
+      "sync_player_sync_sync_football_players"
+    ],
+    "68": [
+      "components_playercard_playercard",
+      "sporty_frontend_src_components_dashboard_create_team_components_playermarket_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_lineupcontainer_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_playercard_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_playercard_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_positiongroup_tsx",
+      "sporty_frontend_src_components_dashboard_my_team_components_leaguegroup_tsx",
+      "sporty_frontend_src_components_dashboard_transfers_components_playercard_tsx"
+    ],
+    "69": [
+      "components_leaguecard_leaguecard",
+      "components_leaguecard_rankicon",
+      "components_leaguesheader_leaguesheader",
+      "components_statsrow_statsrow",
+      "sporty_frontend_src_components_dashboard_leagues_components_leaguecard_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_components_leaguesheader_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_components_statsrow_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_leagues_tsx"
+    ],
+    "70": [
+      "components_teampreview_formationrow",
+      "components_teampreview_groupbyformation",
+      "components_teampreview_infersporticon",
+      "components_teampreview_infersportname",
+      "components_teampreview_pitchpreview",
+      "components_teampreview_playerchip",
+      "components_teampreview_rowpositions",
+      "sporty_frontend_src_components_dashboard_main_dashboard_components_teampreview_tsx"
+    ],
+    "71": [
+      "components_copybutton_copybutton",
+      "components_invitecodedisplay_invitecodedisplay",
+      "components_successmodal_handlecopyinvitelink",
+      "sporty_frontend_src_components_dashboard_create_league_components_invitecodedisplay_tsx",
+      "sporty_frontend_src_components_dashboard_create_league_components_successmodal_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_invite_friends_components_copybutton_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_invite_friends_components_invitecodedisplay_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_invite_friends_components_sharelinks_tsx"
+    ],
+    "72": [
+      "sporty_backend_app_user_router_py",
+      "user_router_delete_user",
+      "user_router_get_my_activity",
+      "user_router_get_user",
+      "user_router_get_user_activity",
+      "user_router_list_users",
+      "user_router_update_user"
+    ],
+    "73": [
+      "app_client_clientproviders",
+      "app_layout_rootlayout",
+      "context_auth_context_authprovider",
+      "context_query_context_queryprovider",
+      "sporty_frontend_src_app_client_tsx",
+      "sporty_frontend_src_app_layout_tsx",
+      "sporty_frontend_src_context_query_context_tsx"
+    ],
+    "74": [
+      "league_services_get_user_team",
+      "league_services_leave_league",
+      "league_services_rationale_181",
+      "league_services_rationale_2082",
+      "league_services_rationale_621",
+      "league_services_require_membership"
+    ],
+    "75": [
+      "league_services_discover_public_leagues",
+      "league_services_get_active_seasons",
+      "league_services_get_leagues_for_user",
+      "league_services_rationale_1492",
+      "league_services_rationale_2117",
+      "league_services_rationale_342"
+    ],
+    "76": [
+      "sporty_backend_app_services_sync_basketball_sync_py",
+      "sync_basketball_sync_rationale_1",
+      "sync_basketball_sync_rationale_127",
+      "sync_basketball_sync_rationale_29",
+      "sync_basketball_sync_sync_basketball_games",
+      "sync_basketball_sync_sync_basketball_players"
+    ],
+    "77": [
+      "alembic_env_rationale_1",
+      "alembic_env_rationale_44",
+      "alembic_env_rationale_58",
+      "alembic_env_run_migrations_offline",
+      "alembic_env_run_migrations_online",
+      "sporty_backend_alembic_env_py"
+    ],
+    "78": [
+      "scripts_realtime_smoke_test_fail",
+      "scripts_realtime_smoke_test_main",
+      "scripts_realtime_smoke_test_ok",
+      "scripts_realtime_smoke_test_rationale_1",
+      "scripts_realtime_smoke_test_warn",
+      "sporty_backend_scripts_realtime_smoke_test_py"
+    ],
+    "79": [
+      "api_notifications_fetchnotifications",
+      "api_notifications_marknotificationread",
+      "navigation_notificationbell_loadnotifications",
+      "navigation_notificationbell_onread",
+      "sporty_frontend_src_components_dashboard_navigation_notificationbell_tsx",
+      "sporty_frontend_src_lib_api_notifications_ts"
+    ],
+    "80": [
+      "components_standingstable_rankclass",
+      "components_standingstable_ranklabel",
+      "components_standingstable_streakclass",
+      "components_standingstable_streaklabel",
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_standingstable_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_standingstable_tsx"
+    ],
+    "81": [
+      "components_rightcontent_rightcontent",
+      "containers_landingherocontainer_landingherocontainer",
+      "landing_hero_landinghero_landinghero",
+      "sporty_frontend_src_components_landing_landing_hero_components_rightcontent_tsx",
+      "sporty_frontend_src_components_landing_landing_hero_containers_landingherocontainer_tsx",
+      "sporty_frontend_src_components_landing_landing_hero_landinghero_tsx"
+    ],
+    "82": [
+      "components_howitworkscard_howitworkscard",
+      "components_howitworkscard_stepicon",
+      "components_howitworksheader_howitworksheader",
+      "sporty_frontend_src_components_landing_how_it_works_components_howitworkscard_tsx",
+      "sporty_frontend_src_components_landing_how_it_works_components_howitworksheader_tsx",
+      "sporty_frontend_src_components_landing_how_it_works_containers_howitworkscontainer_tsx"
+    ],
+    "83": [
+      "auth_dependencies_get_current_active_user",
+      "auth_dependencies_get_current_user",
+      "auth_dependencies_rationale_17",
+      "auth_dependencies_rationale_45",
+      "sporty_backend_app_auth_dependencies_py"
+    ],
+    "84": [
+      "league_models_sport",
+      "scripts_create_sports_create_sports",
+      "scripts_create_sports_rationale_1",
+      "scripts_create_sports_rationale_49",
+      "sporty_backend_scripts_create_sports_py"
+    ],
+    "85": [
+      "league_models_draftpick",
+      "league_services_get_current_draft_turn",
+      "league_services_make_draft_pick",
+      "league_services_rationale_1975",
+      "league_services_rationale_786"
+    ],
+    "86": [
+      "scoring_window_locator_find_transfer_window_for_datetime",
+      "scoring_window_locator_find_transfer_window_ids_for_datetime",
+      "scoring_window_locator_rationale_17",
+      "scoring_window_locator_rationale_36",
+      "sporty_backend_app_services_scoring_window_locator_py"
+    ],
+    "87": [
+      "scripts_seed_season_and_windows_day_start_utc",
+      "scripts_seed_season_and_windows_parse_date",
+      "scripts_seed_season_and_windows_rationale_1",
+      "scripts_seed_season_and_windows_seed_season_and_windows",
+      "sporty_backend_scripts_seed_season_and_windows_py"
+    ],
+    "88": [
+      "components_playerslot_playerslot",
+      "components_positiongroup_positionicon",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_benchplayers_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_playerslot_tsx",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_positiongroup_tsx"
+    ],
+    "89": [
+      "components_logo_logo",
+      "containers_navbarcontainer_closemobilemenu",
+      "containers_navbarcontainer_handlescroll",
+      "sporty_frontend_src_components_landing_navbar_components_logo_tsx",
+      "sporty_frontend_src_components_landing_navbar_containers_navbarcontainer_tsx"
+    ],
+    "90": [
+      "libs_toastifier_ensureroot",
+      "libs_toastifier_geticon",
+      "libs_toastifier_removetoast",
+      "libs_toastifier_showtoast",
+      "sporty_frontend_src_libs_toastifier_ts"
+    ],
+    "91": [
+      "core_database_get_async_db",
+      "core_database_rationale_1",
+      "core_database_rationale_29",
+      "sporty_backend_app_core_database_py"
+    ],
+    "92": [
+      "external_apis_rapidapi_client_rapidapiclient_close",
+      "external_apis_rapidapi_client_rapidapiclient_del",
+      "external_apis_rapidapi_client_rationale_246",
+      "external_apis_rapidapi_client_rationale_80"
+    ],
+    "93": [
+      "core_redis_cache_pattern_delete",
+      "core_redis_rationale_154",
+      "external_apis_basketball_balldontlie_basketballballdontlieclient_clear_cache",
+      "external_apis_basketball_balldontlie_rationale_284"
+    ],
+    "94": [
+      "sporty_backend_alembic_versions_f37971ec400e_initial_schema_with_transfer_windows_py",
+      "versions_f37971ec400e_initial_schema_with_transfer_windows_downgrade",
+      "versions_f37971ec400e_initial_schema_with_transfer_windows_rationale_1",
+      "versions_f37971ec400e_initial_schema_with_transfer_windows_upgrade"
+    ],
+    "95": [
+      "sporty_backend_alembic_versions_87b9b4cc2f07_add_matches_table_and_external_api_py",
+      "versions_87b9b4cc2f07_add_matches_table_and_external_api_downgrade",
+      "versions_87b9b4cc2f07_add_matches_table_and_external_api_rationale_1",
+      "versions_87b9b4cc2f07_add_matches_table_and_external_api_upgrade"
+    ],
+    "96": [
+      "sporty_backend_alembic_versions_025e80bbd3b6_add_matches_table_py",
+      "versions_025e80bbd3b6_add_matches_table_downgrade",
+      "versions_025e80bbd3b6_add_matches_table_rationale_1",
+      "versions_025e80bbd3b6_add_matches_table_upgrade"
+    ],
+    "97": [
+      "sporty_backend_alembic_versions_4d7296a4da76_add_nba_stats_table_py",
+      "versions_4d7296a4da76_add_nba_stats_table_downgrade",
+      "versions_4d7296a4da76_add_nba_stats_table_rationale_1",
+      "versions_4d7296a4da76_add_nba_stats_table_upgrade"
+    ],
+    "98": [
+      "sporty_backend_alembic_versions_9f2c7b7f11a4_add_player_price_history_table_py",
+      "versions_9f2c7b7f11a4_add_player_price_history_table_downgrade",
+      "versions_9f2c7b7f11a4_add_player_price_history_table_rationale_1",
+      "versions_9f2c7b7f11a4_add_player_price_history_table_upgrade"
+    ],
+    "99": [
+      "sporty_backend_alembic_versions_b1c2d3e4f5a6_add_notifications_and_transfer_window_notified_py",
+      "versions_b1c2d3e4f5a6_add_notifications_and_transfer_window_notified_downgrade",
+      "versions_b1c2d3e4f5a6_add_notifications_and_transfer_window_notified_rationale_1",
+      "versions_b1c2d3e4f5a6_add_notifications_and_transfer_window_notified_upgrade"
+    ],
+    "100": [
+      "sporty_backend_alembic_versions_c9e4f12a7b21_add_league_start_end_dates_py",
+      "versions_c9e4f12a7b21_add_league_start_end_dates_downgrade",
+      "versions_c9e4f12a7b21_add_league_start_end_dates_rationale_1",
+      "versions_c9e4f12a7b21_add_league_start_end_dates_upgrade"
+    ],
+    "101": [
+      "sporty_backend_alembic_versions_d4a7c2b1e8f0_add_budget_transactions_table_py",
+      "versions_d4a7c2b1e8f0_add_budget_transactions_table_downgrade",
+      "versions_d4a7c2b1e8f0_add_budget_transactions_table_rationale_1",
+      "versions_d4a7c2b1e8f0_add_budget_transactions_table_upgrade"
+    ],
+    "102": [
+      "sporty_backend_alembic_versions_a12d9f4c8b77_add_midseason_join_and_eligibility_fields_py",
+      "versions_a12d9f4c8b77_add_midseason_join_and_eligibility_fields_downgrade",
+      "versions_a12d9f4c8b77_add_midseason_join_and_eligibility_fields_rationale_1",
+      "versions_a12d9f4c8b77_add_midseason_join_and_eligibility_fields_upgrade"
+    ],
+    "103": [
+      "sporty_backend_alembic_versions_f0c1a2b3d4e5_add_live_events_table_py",
+      "versions_f0c1a2b3d4e5_add_live_events_table_downgrade",
+      "versions_f0c1a2b3d4e5_add_live_events_table_rationale_1",
+      "versions_f0c1a2b3d4e5_add_live_events_table_upgrade"
+    ],
+    "104": [
+      "sporty_backend_alembic_versions_zz_add_transfer_windows_exclude_constraint_py",
+      "versions_zz_add_transfer_windows_exclude_constraint_downgrade",
+      "versions_zz_add_transfer_windows_exclude_constraint_rationale_1",
+      "versions_zz_add_transfer_windows_exclude_constraint_upgrade"
+    ],
+    "105": [
+      "scripts_seed_default_scoring_rules_rationale_1",
+      "scripts_seed_default_scoring_rules_seed_default_scoring_rules",
+      "scripts_seed_default_scoring_rules_upsert_rules",
+      "sporty_backend_scripts_seed_default_scoring_rules_py"
+    ],
+    "106": [
+      "libs_league_lifecycle_getcompetitiontype",
+      "libs_league_lifecycle_getlifecyclestatusesforleague",
+      "libs_league_lifecycle_getlifecyclestatuslabel",
+      "sporty_frontend_src_libs_league_lifecycle_ts"
+    ],
+    "107": [
+      "containers_landingfootercontainer_landingfootercontainer",
+      "landing_footer_landingfooter_landingfooter",
+      "sporty_frontend_src_components_landing_landing_footer_containers_landingfootercontainer_tsx",
+      "sporty_frontend_src_components_landing_landing_footer_landingfooter_tsx"
+    ],
+    "108": [
+      "libs_sanitize_sanitizetext",
+      "sporty_frontend_src_components_ui_sanitizedtext_tsx",
+      "sporty_frontend_src_libs_sanitize_ts",
+      "ui_sanitizedtext_sanitizedtext"
+    ],
+    "109": [
+      "navigation_sidebar_handlelogout",
+      "navigation_sidebar_handleopensettings",
+      "navigation_sidebar_isactiveroute",
+      "sporty_frontend_src_components_dashboard_navigation_sidebar_tsx"
+    ],
+    "110": [
+      "shared_authpageshell_authpageshell",
+      "shared_floatingsportsicons_floatingsportsicons",
+      "sporty_frontend_src_components_auth_shared_authpageshell_tsx",
+      "sporty_frontend_src_components_auth_shared_floatingsportsicons_tsx"
+    ],
+    "111": [
+      "libs_route_utils_getroutemetabypath",
+      "libs_route_utils_isguestonlyroute",
+      "libs_route_utils_isprotectedroute",
+      "sporty_frontend_src_libs_route_utils_ts"
+    ],
+    "112": [
+      "libs_storage_local_getlocalstorage",
+      "libs_storage_local_removelocalstorage",
+      "libs_storage_local_setlocalstorage",
+      "sporty_frontend_src_libs_storage_local_ts"
+    ],
+    "113": [
+      "libs_storage_session_getsessionstorage",
+      "libs_storage_session_removesessionstorage",
+      "libs_storage_session_setsessionstorage",
+      "sporty_frontend_src_libs_storage_session_ts"
+    ],
+    "114": [
+      "sporty_frontend_src_utils_common_ts",
+      "utils_common_isbrowser",
+      "utils_common_noop",
+      "utils_common_sleep"
+    ],
+    "115": [
+      "sporty_frontend_src_utils_imageutils_ts",
+      "utils_imageutils_isimagefile",
+      "utils_imageutils_revokeobjecturl",
+      "utils_imageutils_toobjecturl"
+    ],
+    "116": [
+      "sporty_frontend_src_utils_objectutils_ts",
+      "utils_objectutils_isrecord",
+      "utils_objectutils_omit",
+      "utils_objectutils_pick"
+    ],
+    "117": [
+      "sporty_frontend_src_utils_stringutils_ts",
+      "utils_stringutils_slugify",
+      "utils_stringutils_totitlecase",
+      "utils_stringutils_truncate"
+    ],
+    "118": [
+      "app_database_get_db",
+      "app_database_rationale_17",
+      "sporty_backend_app_database_py"
+    ],
+    "119": [
+      "basesettings",
+      "core_config_settings",
+      "sporty_backend_app_core_config_py"
+    ],
+    "120": [
+      "league_models_lineupslot",
+      "league_services_add_lineup_slot",
+      "league_services_rationale_1406"
+    ],
+    "121": [
+      "sporty_backend_app_services_sync_status_normalizer_py",
+      "sync_status_normalizer_normalize_match_status",
+      "sync_status_normalizer_rationale_5"
+    ],
+    "122": [
+      "notification_router_list_my_notifications",
+      "notification_router_mark_notification_read",
+      "sporty_backend_app_notification_router_py"
+    ],
+    "123": [
+      "routes_websocket_leaderboard_websocket",
+      "routes_websocket_match_websocket",
+      "sporty_backend_app_api_routes_websocket_py"
+    ],
+    "124": [
+      "scripts_sync_basketball_main",
+      "scripts_sync_basketball_rationale_1",
+      "sporty_backend_scripts_sync_basketball_py"
+    ],
+    "125": [
+      "components_avatarupload_onfilechange",
+      "components_avatarupload_saveavatar",
+      "sporty_frontend_src_components_dashboard_profile_components_avatarupload_tsx"
+    ],
+    "126": [
+      "sporty_frontend_src_utils_processmonitor_ts",
+      "utils_processmonitor_endprocess",
+      "utils_processmonitor_startprocess"
+    ],
+    "127": [
+      "core_celery_app_rationale_1",
+      "sporty_backend_app_core_celery_app_py"
+    ],
+    "128": [
+      "core_metrics_rationale_1",
+      "sporty_backend_app_core_metrics_py"
+    ],
+    "129": [
+      "league_router_get_my_lineup",
+      "league_router_rationale_763"
+    ],
+    "130": [
+      "league_router_rationale_424",
+      "league_router_remove_sport"
+    ],
+    "131": [
+      "league_router_get_members",
+      "league_router_rationale_477"
+    ],
+    "132": [
+      "league_router_get_my_transfers_grouped",
+      "league_router_rationale_173"
+    ],
+    "133": [
+      "league_router_join_league",
+      "league_router_rationale_229"
+    ],
+    "134": [
+      "league_router_build_team",
+      "league_router_rationale_595"
+    ],
+    "135": [
+      "league_router_rationale_361",
+      "league_router_update_status"
+    ],
+    "136": [
+      "league_router_get_seasons",
+      "league_router_rationale_191"
+    ],
+    "137": [
+      "league_router_get_my_leagues",
+      "league_router_rationale_129"
+    ],
+    "138": [
+      "league_router_get_league_leaderboard",
+      "league_router_rationale_79"
+    ],
+    "139": [
+      "league_router_create_league",
+      "league_router_rationale_102"
+    ],
+    "140": [
+      "league_router_make_pick",
+      "league_router_rationale_536"
+    ],
+    "141": [
+      "league_router_rationale_783",
+      "league_router_update_my_lineup"
+    ],
+    "142": [
+      "league_router_get_active_window",
+      "league_router_rationale_805"
+    ],
+    "143": [
+      "league_router_rationale_502",
+      "league_router_start_draft"
+    ],
+    "144": [
+      "league_router_get_league",
+      "league_router_rationale_278"
+    ],
+    "145": [
+      "league_router_generate_windows",
+      "league_router_rationale_666"
+    ],
+    "146": [
+      "league_router_delete_league",
+      "league_router_rationale_311"
+    ],
+    "147": [
+      "league_router_rationale_253",
+      "league_router_update_midseason_join_setting"
+    ],
+    "148": [
+      "league_router_get_my_team",
+      "league_router_rationale_647"
+    ],
+    "149": [
+      "league_router_make_transfer",
+      "league_router_rationale_710"
+    ],
+    "150": [
+      "league_router_add_lineup_slot",
+      "league_router_rationale_451"
+    ],
+    "151": [
+      "league_router_add_sport",
+      "league_router_rationale_396"
+    ],
+    "152": [
+      "league_router_get_transfers",
+      "league_router_rationale_740"
+    ],
+    "153": [
+      "league_router_discover_public_leagues",
+      "league_router_rationale_156"
+    ],
+    "154": [
+      "league_services_get_user_transfers_grouped_by_league",
+      "league_services_rationale_1231"
+    ],
+    "155": [
+      "league_services_get_active_sports",
+      "league_services_rationale_2129"
+    ],
+    "156": [
+      "sporty_backend_app_services_sync_init_py",
+      "sync_init_rationale_1"
+    ],
+    "157": [
+      "scoring_init_rationale_1",
+      "sporty_backend_app_services_scoring_init_py"
+    ],
+    "158": [
+      "pricing_init_rationale_1",
+      "sporty_backend_app_services_pricing_init_py"
+    ],
+    "159": [
+      "sporty_backend_app_tasks_init_py",
+      "tasks_init_rationale_1"
+    ],
+    "160": [
+      "sporty_backend_app_tasks_celery_schedule_py",
+      "tasks_celery_schedule_rationale_1"
+    ],
+    "161": [
+      "routes_sse_leaderboard_stream",
+      "sporty_backend_app_api_routes_sse_py"
+    ],
+    "162": [
+      "routes_match_get_match_state",
+      "sporty_backend_app_api_routes_match_py"
+    ],
+    "163": [
+      "routes_init_rationale_1",
+      "sporty_backend_app_api_routes_init_py"
+    ],
+    "164": [
+      "models_init_rationale_1",
+      "sporty_backend_app_models_init_py"
+    ],
+    "165": [
+      "schemas_init_rationale_1",
+      "sporty_backend_app_models_schemas_init_py"
+    ],
+    "166": [
+      "db_init_rationale_1",
+      "sporty_backend_app_models_db_init_py"
+    ],
+    "167": [
+      "adapters_init_rationale_1",
+      "sporty_backend_app_adapters_init_py"
+    ],
+    "168": [
+      "consumers_init_rationale_1",
+      "sporty_backend_app_consumers_init_py"
+    ],
+    "169": [
+      "sporty_backend_app_workers_entry_points_py",
+      "workers_entry_points_main"
+    ],
+    "170": [
+      "sporty_backend_app_workers_init_py",
+      "workers_init_rationale_1"
+    ],
+    "171": [
+      "app_not_found_notfoundpage",
+      "sporty_frontend_src_app_not_found_tsx"
+    ],
+    "172": [
+      "app_page_homepage",
+      "sporty_frontend_src_app_page_tsx"
+    ],
+    "173": [
+      "auth_layout_authlayout",
+      "sporty_frontend_src_app_auth_layout_tsx"
+    ],
+    "174": [
+      "public_layout_publiclayout",
+      "sporty_frontend_src_app_public_layout_tsx"
+    ],
+    "175": [
+      "dashboard_page_dashboardpage",
+      "sporty_frontend_src_app_dashboard_dashboard_page_tsx"
+    ],
+    "176": [
+      "create_team_page_createteampage",
+      "sporty_frontend_src_app_dashboard_create_team_page_tsx"
+    ],
+    "177": [
+      "join_league_page_joinleaguepage",
+      "sporty_frontend_src_app_dashboard_join_league_page_tsx"
+    ],
+    "178": [
+      "leagues_page_leaguespage",
+      "sporty_frontend_src_app_dashboard_leagues_page_tsx"
+    ],
+    "179": [
+      "id_page_leaguehomepage",
+      "sporty_frontend_src_app_dashboard_leagues_id_page_tsx"
+    ],
+    "180": [
+      "lineup_page_leaguelineuppage",
+      "sporty_frontend_src_app_dashboard_leagues_id_lineup_page_tsx"
+    ],
+    "181": [
+      "roster_page_leaguerosterpage",
+      "sporty_frontend_src_app_dashboard_leagues_id_roster_page_tsx"
+    ],
+    "182": [
+      "leaderboard_page_leagueleaderboardpage",
+      "sporty_frontend_src_app_dashboard_leagues_id_leaderboard_page_tsx"
+    ],
+    "183": [
+      "members_page_leaguememberspage",
+      "sporty_frontend_src_app_dashboard_leagues_id_members_page_tsx"
+    ],
+    "184": [
+      "invite_page_invitefriendspage",
+      "sporty_frontend_src_app_dashboard_leagues_id_invite_page_tsx"
+    ],
+    "185": [
+      "settings_page_leaguesettingspage",
+      "sporty_frontend_src_app_dashboard_leagues_id_settings_page_tsx"
+    ],
+    "186": [
+      "create_team_page_leaguecreateteampage",
+      "sporty_frontend_src_app_dashboard_leagues_id_create_team_page_tsx"
+    ],
+    "187": [
+      "my_team_page_myteampage",
+      "sporty_frontend_src_app_dashboard_my_team_page_tsx"
+    ],
+    "188": [
+      "profile_page_profilepage",
+      "sporty_frontend_src_app_dashboard_profile_page_tsx"
+    ],
+    "189": [
+      "sporty_frontend_src_app_dashboard_transfers_page_tsx",
+      "transfers_page_transferspage"
+    ],
+    "190": [
+      "create_league_page_createleaguepage",
+      "sporty_frontend_src_app_dashboard_create_league_page_tsx"
+    ],
+    "191": [
+      "id_page_userprofilepage",
+      "sporty_frontend_src_app_dashboard_user_id_page_tsx"
+    ],
+    "192": [
+      "matchid_page_matchpage",
+      "sporty_frontend_src_app_match_matchid_page_tsx"
+    ],
+    "193": [
+      "services_featureservice_crudservicefactory",
+      "sporty_frontend_src_services_featureservice_ts"
+    ],
+    "194": [
+      "services_userservice_unwrapresponsedata",
+      "sporty_frontend_src_services_userservice_ts"
+    ],
+    "195": [
+      "components_confirmationmodal_confirmationmodal",
+      "sporty_frontend_src_components_dashboard_create_team_components_confirmationmodal_tsx"
+    ],
+    "196": [
+      "components_createteamheader_steplabel",
+      "sporty_frontend_src_components_dashboard_create_team_components_createteamheader_tsx"
+    ],
+    "197": [
+      "components_loadingstate_loadingstate",
+      "sporty_frontend_src_components_dashboard_join_league_components_loadingstate_tsx"
+    ],
+    "198": [
+      "components_positionlimits_positionlimits",
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_positionlimits_tsx"
+    ],
+    "199": [
+      "components_rosterfilters_rosterfilters",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_rosterfilters_tsx"
+    ],
+    "200": [
+      "components_rosterskeleton_rosterskeleton",
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_rosterskeleton_tsx"
+    ],
+    "201": [
+      "components_membercard_initials",
+      "sporty_frontend_src_components_dashboard_leagues_league_members_components_membercard_tsx"
+    ],
+    "202": [
+      "components_dangerzone_handledelete",
+      "sporty_frontend_src_components_dashboard_profile_components_dangerzone_tsx"
+    ],
+    "203": [
+      "components_profileheader_getinitials",
+      "sporty_frontend_src_components_dashboard_profile_components_profileheader_tsx"
+    ],
+    "204": [
+      "components_scoringsettings_formatrulelabel",
+      "sporty_frontend_src_components_dashboard_create_league_components_scoringsettings_tsx"
+    ],
+    "205": [
+      "components_profileheader_formatdate",
+      "sporty_frontend_src_components_dashboard_user_profile_components_profileheader_tsx"
+    ],
+    "206": [
+      "navbar_navbar_navbar",
+      "sporty_frontend_src_components_landing_navbar_navbar_tsx"
+    ],
+    "207": [
+      "how_it_works_howitworks_howitworks",
+      "sporty_frontend_src_components_landing_how_it_works_howitworks_tsx"
+    ],
+    "208": [
+      "components_footercta_footercta",
+      "sporty_frontend_src_components_landing_landing_footer_components_footercta_tsx"
+    ],
+    "209": [
+      "empty_states_emptyleagues_emptyleagues",
+      "sporty_frontend_src_components_ui_empty_states_emptyleagues_tsx"
+    ],
+    "210": [
+      "empty_states_emptyplayers_emptyplayers",
+      "sporty_frontend_src_components_ui_empty_states_emptyplayers_tsx"
+    ],
+    "211": [
+      "empty_states_emptysearch_emptysearch",
+      "sporty_frontend_src_components_ui_empty_states_emptysearch_tsx"
+    ],
+    "212": [
+      "empty_states_emptytransfers_emptytransfers",
+      "sporty_frontend_src_components_ui_empty_states_emptytransfers_tsx"
+    ],
+    "213": [
+      "skeletons_cardskeleton_cardskeleton",
+      "sporty_frontend_src_components_ui_skeletons_cardskeleton_tsx"
+    ],
+    "214": [
+      "skeletons_leaguecardskeleton_leaguecardskeleton",
+      "sporty_frontend_src_components_ui_skeletons_leaguecardskeleton_tsx"
+    ],
+    "215": [
+      "skeletons_playercardskeleton_playercardskeleton",
+      "sporty_frontend_src_components_ui_skeletons_playercardskeleton_tsx"
+    ],
+    "216": [
+      "skeletons_tableskeleton_tableskeleton",
+      "sporty_frontend_src_components_ui_skeletons_tableskeleton_tsx"
+    ],
+    "217": [
+      "sporty_frontend_src_utils_consolefilter_ts",
+      "utils_consolefilter_withconsolefilter"
+    ],
+    "218": [
+      "sporty_frontend_src_utils_selectutils_ts",
+      "utils_selectutils_toselectoptions"
+    ],
+    "219": [
+      "auth_models_rationale_110"
+    ],
+    "220": [
+      "auth_models_rationale_119"
+    ],
+    "221": [
+      "auth_models_rationale_124"
+    ],
+    "222": [
+      "sporty_backend_app_auth_init_py"
+    ],
+    "223": [
+      "league_models_rationale_148"
+    ],
+    "224": [
+      "league_models_rationale_153"
+    ],
+    "225": [
+      "league_models_rationale_254"
+    ],
+    "226": [
+      "league_models_rationale_749"
+    ],
+    "227": [
+      "scoring_schemas_rationale_67"
+    ],
+    "228": [
+      "sporty_backend_app_scoring_rules_py"
+    ],
+    "229": [
+      "external_apis_rapidapi_client_rationale_115"
+    ],
+    "230": [
+      "sporty_backend_app_services_init_py"
+    ],
+    "231": [
+      "sporty_backend_app_services_scoring_scoring_trigger_py"
+    ],
+    "232": [
+      "sporty_backend_app_services_optimization_init_py"
+    ],
+    "233": [
+      "sporty_backend_app_optimization_init_py"
+    ],
+    "234": [
+      "sporty_backend_app_notification_init_py"
+    ],
+    "235": [
+      "sporty_backend_app_api_init_py"
+    ],
+    "236": [
+      "sporty_backend_app_api_v1_init_py"
+    ],
+    "237": [
+      "adapters_base_rationale_13"
+    ],
+    "238": [
+      "adapters_base_rationale_17"
+    ],
+    "239": [
+      "sporty_backend_app_adapters_registry_py"
+    ],
+    "240": [
+      "sporty_frontend_eslint_config_mjs"
+    ],
+    "241": [
+      "sporty_frontend_next_env_d_ts"
+    ],
+    "242": [
+      "sporty_frontend_next_config_ts"
+    ],
+    "243": [
+      "sporty_frontend_postcss_config_mjs"
+    ],
+    "244": [
+      "sporty_frontend_tailwind_config_js"
+    ],
+    "245": [
+      "sporty_frontend_src_features_landing_types_ts"
+    ],
+    "246": [
+      "sporty_frontend_src_services_leagueservice_ts"
+    ],
+    "247": [
+      "sporty_frontend_src_services_scoringservice_ts"
+    ],
+    "248": [
+      "sporty_frontend_src_services_optimizationservice_ts"
+    ],
+    "249": [
+      "sporty_frontend_src_types_index_ts"
+    ],
+    "250": [
+      "sporty_frontend_src_types_league_ts"
+    ],
+    "251": [
+      "sporty_frontend_src_types_player_ts"
+    ],
+    "252": [
+      "sporty_frontend_src_types_events_ts"
+    ],
+    "253": [
+      "sporty_frontend_src_components_dashboard_create_team_index_ts"
+    ],
+    "254": [
+      "sporty_frontend_src_components_dashboard_create_team_components_playercard_tsx"
+    ],
+    "255": [
+      "sporty_frontend_src_components_dashboard_join_league_index_ts"
+    ],
+    "256": [
+      "sporty_frontend_src_components_dashboard_join_league_components_joinform_tsx"
+    ],
+    "257": [
+      "sporty_frontend_src_components_dashboard_leagues_index_ts"
+    ],
+    "258": [
+      "sporty_frontend_src_components_dashboard_leagues_league_home_index_ts"
+    ],
+    "259": [
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_currentmatchup_tsx"
+    ],
+    "260": [
+      "sporty_frontend_src_components_dashboard_leagues_league_home_components_weekselector_tsx"
+    ],
+    "261": [
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_index_ts"
+    ],
+    "262": [
+      "sporty_frontend_src_components_dashboard_leagues_league_leaderboard_components_leaderboardskeleton_tsx"
+    ],
+    "263": [
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_index_ts"
+    ],
+    "264": [
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_savelineupbutton_tsx"
+    ],
+    "265": [
+      "sporty_frontend_src_components_dashboard_leagues_league_lineup_components_startinglineup_tsx"
+    ],
+    "266": [
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_index_ts"
+    ],
+    "267": [
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_benchsection_tsx"
+    ],
+    "268": [
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_hybridpitch_tsx"
+    ],
+    "269": [
+      "sporty_frontend_src_components_dashboard_leagues_league_roster_components_rosterheader_tsx"
+    ],
+    "270": [
+      "sporty_frontend_src_components_dashboard_leagues_invite_friends_index_ts"
+    ],
+    "271": [
+      "sporty_frontend_src_components_dashboard_leagues_league_members_index_ts"
+    ],
+    "272": [
+      "sporty_frontend_src_components_dashboard_leagues_league_members_components_kickmembermodal_tsx"
+    ],
+    "273": [
+      "sporty_frontend_src_components_dashboard_leagues_league_settings_index_ts"
+    ],
+    "274": [
+      "sporty_frontend_src_components_dashboard_leagues_league_settings_components_scoringruleseditor_tsx"
+    ],
+    "275": [
+      "sporty_frontend_src_components_dashboard_main_dashboard_index_ts"
+    ],
+    "276": [
+      "sporty_frontend_src_components_dashboard_main_dashboard_components_topbar_tsx"
+    ],
+    "277": [
+      "sporty_frontend_src_components_dashboard_main_dashboard_constants_dashboarddata_ts"
+    ],
+    "278": [
+      "sporty_frontend_src_components_dashboard_main_dashboard_types_index_ts"
+    ],
+    "279": [
+      "sporty_frontend_src_components_dashboard_my_team_index_ts"
+    ],
+    "280": [
+      "sporty_frontend_src_components_dashboard_my_team_components_playercard_tsx"
+    ],
+    "281": [
+      "sporty_frontend_src_components_dashboard_profile_index_ts"
+    ],
+    "282": [
+      "sporty_frontend_src_components_dashboard_transfers_index_ts"
+    ],
+    "283": [
+      "sporty_frontend_src_components_dashboard_transfers_components_currentroster_tsx"
+    ],
+    "284": [
+      "sporty_frontend_src_components_dashboard_create_league_index_ts"
+    ],
+    "285": [
+      "sporty_frontend_src_components_dashboard_user_profile_index_ts"
+    ],
+    "286": [
+      "sporty_frontend_src_components_landing_navbar_index_ts"
+    ],
+    "287": [
+      "sporty_frontend_src_components_landing_navbar_types_index_ts"
+    ],
+    "288": [
+      "sporty_frontend_src_components_landing_navbar_constants_navitems_ts"
+    ],
+    "289": [
+      "sporty_frontend_src_components_landing_landing_hero_index_ts"
+    ],
+    "290": [
+      "sporty_frontend_src_components_landing_landing_hero_types_index_ts"
+    ],
+    "291": [
+      "sporty_frontend_src_components_landing_landing_hero_constants_landingherodata_ts"
+    ],
+    "292": [
+      "sporty_frontend_src_components_landing_how_it_works_index_ts"
+    ],
+    "293": [
+      "sporty_frontend_src_components_landing_how_it_works_types_index_ts"
+    ],
+    "294": [
+      "sporty_frontend_src_components_landing_how_it_works_constants_howitworksdata_ts"
+    ],
+    "295": [
+      "sporty_frontend_src_components_landing_landing_footer_index_ts"
+    ],
+    "296": [
+      "sporty_frontend_src_components_landing_landing_footer_types_index_ts"
+    ],
+    "297": [
+      "sporty_frontend_src_components_landing_landing_footer_constants_landingfooterdata_ts"
+    ],
+    "298": [
+      "sporty_frontend_src_components_landing_landing_footer_components_footerbottombar_tsx"
+    ],
+    "299": [
+      "sporty_frontend_src_components_ui_index_ts"
+    ],
+    "300": [
+      "sporty_frontend_src_components_ui_empty_states_index_ts"
+    ],
+    "301": [
+      "sporty_frontend_src_components_ui_skeletons_index_ts"
+    ],
+    "302": [
+      "sporty_frontend_src_components_auth_forgot_password_index_ts"
+    ],
+    "303": [
+      "sporty_frontend_src_components_auth_login_index_ts"
+    ],
+    "304": [
+      "sporty_frontend_src_components_auth_reset_password_index_ts"
+    ],
+    "305": [
+      "sporty_frontend_src_components_auth_signup_index_ts"
+    ],
+    "306": [
+      "sporty_frontend_src_libs_storage_index_ts"
+    ],
+    "307": [
+      "sporty_frontend_src_libs_api_error_ts"
+    ],
+    "308": [
+      "sporty_frontend_src_libs_route_config_ts"
+    ],
+    "309": [
+      "sporty_frontend_src_libs_storage_kyes_ts"
+    ],
+    "310": [
+      "sporty_frontend_src_api_apipath_ts"
+    ],
+    "311": [
+      "sporty_frontend_src_api_public_api_client_ts"
+    ],
+    "312": [
+      "sporty_frontend_src_lib_validations_ts"
+    ],
+    "313": [
+      "sporty_frontend_src_store_matchstore_ts"
+    ],
+    "314": [
+      "sporty_frontend_tests_example_spec_ts"
+    ]
+  },
+  "cohesion": {},
+  "god_nodes": [
+    {
+      "id": "schemas_common_sportbrief",
+      "label": "SportBrief",
+      "degree": 49
+    },
+    {
+      "id": "schemas_common_playerbrief",
+      "label": "PlayerBrief",
+      "degree": 46
+    },
+    {
+      "id": "schemas_common_transferwindowbrief",
+      "label": "TransferWindowBrief",
+      "degree": 46
+    },
+    {
+      "id": "schemas_common_seasonbrief",
+      "label": "SeasonBrief",
+      "degree": 38
+    },
+    {
+      "id": "schemas_common_userbrief",
+      "label": "UserBrief",
+      "degree": 38
+    },
+    {
+      "id": "league_models_leaguestatus",
+      "label": "LeagueStatus",
+      "degree": 37
+    },
+    {
+      "id": "api_useapiquery_useapiquery",
+      "label": "useApiQuery()",
+      "degree": 32
+    },
+    {
+      "id": "api_useapimutation_useapimutation",
+      "label": "useApiMutation()",
+      "degree": 26
+    },
+    {
+      "id": "league_services_require_league",
+      "label": "_require_league()",
+      "degree": 25
+    },
+    {
+      "id": "auth_useme_useme",
+      "label": "useMe()",
+      "degree": 24
+    }
+  ],
+  "surprises": [
+    {
+      "source": "score_transfer_window_for_league()",
+      "target": "upsert_team_weekly_scores()",
+      "source_files": [
+        "Sporty_Backend/app/services/scoring/engine.py",
+        "Sporty_Backend/app/services/scoring/team_scoring.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities; peripheral node `upsert_team_weekly_scores()` unexpectedly reaches hub `score_transfer_window_for_league()`"
+    },
+    {
+      "source": "useStartDraft()",
+      "target": "useApiMutation()",
+      "source_files": [
+        "sporty-frontend/src/hooks/leagues/useLeagues.ts",
+        "sporty-frontend/src/hooks/api/useApiMutation.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities; peripheral node `useStartDraft()` unexpectedly reaches hub `useApiMutation()`"
+    },
+    {
+      "source": "useMakeTransfer()",
+      "target": "useApiMutation()",
+      "source_files": [
+        "sporty-frontend/src/hooks/leagues/useLeagues.ts",
+        "sporty-frontend/src/hooks/api/useApiMutation.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities; peripheral node `useMakeTransfer()` unexpectedly reaches hub `useApiMutation()`"
+    },
+    {
+      "source": "useUsers()",
+      "target": "useApiQuery()",
+      "source_files": [
+        "sporty-frontend/src/hooks/users/useUsers.ts",
+        "sporty-frontend/src/hooks/api/useApiQuery.ts"
+      ],
+      "confidence": "INFERRED",
+      "relation": "calls",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities; peripheral node `useUsers()` unexpectedly reaches hub `useApiQuery()`"
+    },
+    {
+      "source": "PlayerTierConfig",
+      "target": "User",
+      "source_files": [
+        "Sporty_Backend/seed_data.py",
+        "Sporty_Backend/app/auth/models.py"
+      ],
+      "confidence": "INFERRED",
+      "relation": "uses",
+      "why": "inferred connection - not explicitly stated in source; bridges separate communities"
+    }
+  ]
+}
