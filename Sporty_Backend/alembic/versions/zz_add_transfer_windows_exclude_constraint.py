@@ -1,6 +1,6 @@
 """add exclusion constraint to prevent overlapping transfer_windows per season
 
-Revision ID: zz_add_transfer_windows_exclude_constraint
+Revision ID: zz_twx_excl_20260501
 Revises: f37971ec400e
 Create Date: 2026-05-01 00:00:00.000000
 """
@@ -8,7 +8,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = 'zz_add_transfer_windows_exclude_constraint'
+revision = 'zz_twx_excl_20260501'
 down_revision = 'f37971ec400e'
 branch_labels = None
 depends_on = None
