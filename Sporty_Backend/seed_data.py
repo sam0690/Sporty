@@ -46,7 +46,7 @@ from app.league.models import (  # noqa: F401
     TransferWindow,
 )
 from app.match.models import Match  # noqa: F401
-from app.player.models import CricketStat, FootballStat, Player, PlayerGameweekStat  # noqa: F401
+from app.player.models import CricketStat, FootballStat, Player, PlayerGameweekStat, RealTeam  # noqa: F401
 from app.player.models_nba import NBAStat  # noqa: F401
 from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
 
@@ -276,8 +276,39 @@ def create_seasons(db: Session, sports: dict[str, Sport]) -> dict[tuple[str, str
 
 
 def create_team_catalog() -> dict[str, list[str]]:
-    # No Team table currently; use these names through Player.real_team.
+    # Keep the central catalog of real-world team names in one place.
     return TEAM_CATALOG
+
+
+def create_real_teams(
+    db: Session,
+    sports: dict[str, Sport],
+    teams_by_sport: dict[str, list[str]],
+) -> dict[str, dict[str, RealTeam]]:
+    teams: dict[str, dict[str, RealTeam]] = {}
+
+    for sport_name, sport in sports.items():
+        teams[sport_name] = {}
+        for index, team_name in enumerate(teams_by_sport.get(sport_name, []), start=1):
+            existing = (
+                db.query(RealTeam)
+                .filter(RealTeam.sport_id == sport.id, RealTeam.name == team_name)
+                .first()
+            )
+            if existing:
+                teams[sport_name][team_name] = existing
+                continue
+
+            real_team = RealTeam(
+                sport_id=sport.id,
+                external_api_id=f"seed:{sport_name}:{index:02d}",
+                name=team_name,
+            )
+            db.add(real_team)
+            teams[sport_name][team_name] = real_team
+
+    db.flush()
+    return teams
 
 
 def _build_player_name(
@@ -308,7 +339,7 @@ def _build_player_name(
 def create_players(
     db: Session,
     sports: dict[str, Sport],
-    teams_by_sport: dict[str, list[str]],
+    teams_by_sport: dict[str, dict[str, RealTeam]],
     seasons_by_key: dict[tuple[str, str], Season],
 ) -> tuple[int, int]:
     rng = random.Random(SEED)
@@ -339,7 +370,8 @@ def create_players(
             season_idx = 0
             active_stat = _stat_line_for_season(tier=tier, season_idx=season_idx, rng=rng)
 
-            team_name = teams[(idx - 1) % len(teams)]
+            team_name = list(teams.keys())[(idx - 1) % len(teams)]
+            team = teams[team_name]
             position = positions[(idx - 1) % len(positions)]
             player_name = _build_player_name(
                 sport_name=sport_name,
@@ -353,6 +385,7 @@ def create_players(
                 existing.name = player_name
                 existing.position = position
                 existing.real_team = team_name
+                existing.real_team_id = team.id
                 existing.cost = active_stat["current_price"]  # type: ignore[assignment]
                 existing.is_available = True
                 updated += 1
@@ -365,6 +398,7 @@ def create_players(
                     name=player_name,
                     position=position,
                     real_team=team_name,
+                    real_team_id=team.id,
                     cost=active_stat["current_price"],  # type: ignore[arg-type]
                     is_available=True,
                 )
@@ -459,7 +493,7 @@ def run_seed() -> None:
     try:
         sports = create_sports(db)
         seasons = create_seasons(db, sports)
-        teams = create_team_catalog()
+        teams = create_real_teams(db, sports, create_team_catalog())
         created, updated = create_players(db, sports, teams, seasons)
 
         db.commit()

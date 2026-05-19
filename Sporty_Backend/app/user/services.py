@@ -39,10 +39,15 @@ def _to_float(value: Decimal | float | int | None) -> float:
 
 
 def _league_payload(team: FantasyTeam) -> dict:
-    sports = [ls.sport.display_name for ls in (team.league.sports or []) if getattr(ls, "sport", None)]
+    sports = []
+    if team.league and team.league.sports:
+        for ls in team.league.sports:
+            sport = getattr(ls, "sport", None)
+            if sport and sport.display_name:
+                sports.append(sport.display_name)
     return {
-        "id": team.league.id,
-        "name": team.league.name,
+        "id": team.league.id if team.league else None,
+        "name": team.league.name if team.league else "Unknown League",
         "sports": sports,
     }
 
@@ -91,6 +96,8 @@ def get_user_activity(
     for transfer in transfers:
         team = transfer.fantasy_team
         if not team or not team.league:
+            continue
+        if not transfer.player_in or not transfer.player_out:
             continue
 
         activities.append(

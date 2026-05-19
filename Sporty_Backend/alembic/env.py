@@ -19,6 +19,7 @@ from app.database import Base
 from app.auth import models as auth_models  # noqa: F401
 from app.league import models as league_models  # noqa: F401
 from app.match import models as match_models  # noqa: F401
+from app.ingestion import models as ingestion_models  # noqa: F401
 from app.player import models as player_models  # noqa: F401
 from app.player import models_nba as player_models_nba  # noqa: F401
 from app.scoring import models as scoring_models  # noqa: F401

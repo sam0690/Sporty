@@ -83,7 +83,7 @@ async def sync_basketball(db):
     print("=" * 60 + "\n")
 
     # Sync players
-    await sync_basketball_players(db, season=2024)
+    await sync_basketball_players(db)
 
     # Sync games
     await sync_basketball_games(db, season=2024)

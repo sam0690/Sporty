@@ -1,12 +1,8 @@
 """
-Basketball data sync service — Syncs NBA players and games from BallDontLie API.
+Basketball data sync service.
 
-Usage:
-    from app.services.sync.basketball_sync import sync_basketball_players, sync_basketball_games
-    
-    db = SessionLocal()
-    await sync_basketball_players(db)
-    await sync_basketball_games(db, season=2024)
+Players and teams are ingested from nba_api via the shared sync helper.
+Game syncing still uses the existing BallDontLie flow.
 """
 
 import asyncio
@@ -17,110 +13,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.redis import cache_get, cache_set, cache_pattern_delete
-from app.external_apis.basketball_balldontlie import BasketballBallDontLieClient
 from app.match.models import Match
-from app.player.models import Player
 from app.league.models import Sport, Season
+from app.services.sync.player_sync import sync_basketball_players
 
 logger = logging.getLogger(__name__)
-
-
-async def sync_basketball_players(db: Session) -> dict:
-    """
-    Sync all NBA players from BallDontLie API.
-
-    Args:
-        db: SQLAlchemy Session for database operations
-
-    Returns:
-        Dict with sync statistics: {total: int, new: int, updated: int, errors: int}
-    """
-    logger.info("🏀 Starting basketball players sync...")
-    stats = {"total": 0, "new": 0, "updated": 0, "errors": 0}
-
-    try:
-        # Get Basketball sport
-        sport = db.query(Sport).filter(Sport.name == "basketball").first()
-
-        if not sport:
-            logger.error("Basketball sport not found in database")
-            return stats
-
-        # Initialize API client
-        api_client = BasketballBallDontLieClient(api_key=settings.BALLDONTLIE_API_KEY)
-
-        # Fetch all players from BallDontLie
-        players_data = await api_client.get_all_players(use_cache=True)
-        logger.info(f"Fetched {len(players_data)} players from BallDontLie")
-
-        for player_data in players_data:
-            try:
-                external_id = player_data.get("id")
-                first_name = player_data.get("first_name", "")
-                last_name = player_data.get("last_name", "")
-                position = player_data.get("position", "")
-
-                if not external_id or not first_name or not last_name:
-                    logger.warning(f"Skipping player with incomplete data: {player_data}")
-                    stats["errors"] += 1
-                    continue
-
-                # Combine names if model expects a single name field
-                full_name = f"{first_name} {last_name}".strip()
-
-                # Check if player already exists
-                existing_player = (
-                    db.query(Player)
-                    .filter(Player.external_api_id == str(external_id))
-                    .first()
-                )
-
-                if existing_player:
-                    # Update existing player
-                    existing_player.name = full_name
-                    if position:
-                        existing_player.position = position
-                    existing_player.updated_at = datetime.utcnow()
-                    stats["updated"] += 1
-                    logger.debug(f"Updated player: {full_name}")
-                else:
-                    # Create new player
-                    new_player = Player(
-                        sport_id=sport.id,
-                        name=full_name,
-                        position=position or "Unknown",
-                        real_team="NBA",
-                        cost=0,  # Default cost, can be updated later
-                        external_api_id=str(external_id),
-                    )
-                    db.add(new_player)
-                    stats["new"] += 1
-                    logger.debug(f"Added player: {full_name}")
-
-                stats["total"] += 1
-
-            except Exception as e:
-                logger.error(f"Error processing player {player_data}: {e}")
-                stats["errors"] += 1
-                continue
-
-        # Commit all changes
-        db.commit()
-        logger.info(f"✓ Basketball players sync complete: {stats}")
-
-        # Update cache with last sync time
-        cache_set(
-            "sync:basketball:players:last_sync",
-            {"timestamp": datetime.utcnow().isoformat()},
-            ttl_seconds=86400,  # 24 hours
-        )
-
-        return stats
-
-    except Exception as e:
-        logger.error(f"✗ Basketball players sync failed: {e}")
-        db.rollback()
-        return stats
 
 
 async def sync_basketball_games(db: Session, season: int = 2024) -> dict:
@@ -161,7 +58,10 @@ async def sync_basketball_games(db: Session, season: int = 2024) -> dict:
             # In production, you'd create seasons via a separate management command
             return stats
 
-        # Initialize API client
+        # Initialize API client lazily so importing this module does not require
+        # the optional BallDontLie dependency unless game sync is used.
+        from app.external_apis.basketball_balldontlie import BasketballBallDontLieClient
+
         api_client = BasketballBallDontLieClient(api_key=settings.BALLDONTLIE_API_KEY)
 
         # Fetch all games from BallDontLie

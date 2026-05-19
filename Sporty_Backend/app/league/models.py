@@ -74,6 +74,7 @@ class Sport(Base):
     # No cascade — sport deletion is blocked by FK if seasons exist.
     # Use is_active=False to "remove" a sport, not DELETE.
     seasons: Mapped[list["Season"]] = relationship(back_populates="sport")
+    real_teams: Mapped[list["RealTeam"]] = relationship(foreign_keys="[RealTeam.sport_id]")
     players: Mapped[list["Player"]] = relationship(foreign_keys="[Player.sport_id]")
     matches: Mapped[list["Match"]] = relationship(back_populates="sport")
 

@@ -24,7 +24,47 @@ from app.database import Base
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 1. Player
+# 1. RealTeam
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Normalized table for real-world clubs/teams. The legacy Player.real_team
+# string stays in place for compatibility while Player.real_team_id becomes
+# the relationship used by new ingestion paths.
+
+
+class RealTeam(Base):
+    __tablename__ = "real_teams"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    sport_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sports.id"),
+        nullable=False, index=True,
+    )
+
+    external_api_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
+
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    abbreviation: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    conference: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    division: Mapped[str | None] = mapped_column(String(50), nullable=True)
+
+    sport: Mapped["Sport"] = relationship(foreign_keys=[sport_id], overlaps="real_teams")
+    players: Mapped[list["Player"]] = relationship(back_populates="real_team_ref")
+
+    __table_args__ = (
+        UniqueConstraint("sport_id", "name", name="uq_real_team_sport_name"),
+        UniqueConstraint("sport_id", "external_api_id", name="uq_real_team_sport_external"),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 2. Player
 # ═══════════════════════════════════════════════════════════════════════════════
 #
 # Q1: real_team — String vs FK to a teams/clubs table?
@@ -85,6 +125,13 @@ class Player(Base):
     # See Q1 above — String for v1, FK to a clubs table later.
     real_team: Mapped[str] = mapped_column(String(100), nullable=False)
 
+    real_team_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("real_teams.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+
     # Current market cost — fluctuates over the season
     cost: Mapped[Decimal] = mapped_column(
         Numeric(precision=10, scale=2), nullable=False
@@ -104,6 +151,10 @@ class Player(Base):
     # Relationships
     sport: Mapped["Sport"] = relationship(
         foreign_keys=[sport_id], overlaps="players"
+    )
+    real_team_ref: Mapped["RealTeam | None"] = relationship(
+        back_populates="players",
+        foreign_keys=[real_team_id],
     )
     gameweek_stats: Mapped[list["PlayerGameweekStat"]] = relationship(
         back_populates="player",

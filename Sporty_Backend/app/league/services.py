@@ -2136,9 +2136,6 @@ def get_active_sports(db: Session) -> list[Sport]:
     )
 
 
-    return team
-
-
 def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) -> dict:
     """Fetch the user's lineup for the current active transfer window."""
     team = _require_fantasy_team(db, league_id, user_id)
@@ -2182,6 +2179,7 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
             "created_at": created_at_by_player_id.get(row.player_id, fallback_created_at),
         }
         for row in starting_lineup_entries
+        if row.player  # Skip entries where player was deleted
     ]
 
     return {
@@ -2336,6 +2334,11 @@ def update_lineup(
 
         starter_counts_by_sport_id: dict[uuid.UUID, int] = {}
         for player in starters:
+            if not player.sport_id:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Player {player.name} is missing sport assignment",
+                )
             starter_counts_by_sport_id[player.sport_id] = (
                 starter_counts_by_sport_id.get(player.sport_id, 0) + 1
             )
@@ -2363,6 +2366,11 @@ def update_lineup(
 
     starter_counts: dict[tuple[uuid.UUID, str], int] = {}
     for player in starters:
+        if not player.sport_id or not player.position:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Player {player.name} is missing required sport or position data",
+            )
         slot_key = (player.sport_id, player.position.strip().upper())
         starter_counts[slot_key] = starter_counts.get(slot_key, 0) + 1
 
@@ -2548,10 +2556,11 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
     """Public wrapper to fetch the current active transfer window."""
     league = _require_league(db, league_id)
     window = _current_transfer_window(db, league)
-    
+
     # Season context for total windows
     season = league.season
-    
+    total_windows = len(season.transfer_windows) if season and season.transfer_windows else 0
+
     # derive status
     from datetime import timezone, datetime as _dt
     now = _dt.now(timezone.utc)
@@ -2566,7 +2575,7 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
         "id": window.id,
         "season_id": window.season_id,
         "number": window.number,
-        "total_number": len(season.transfer_windows),
+        "total_number": total_windows,
         "start_at": window.start_at,
         "end_at": window.end_at,
         "transfer_deadline_at": window.transfer_deadline_at,
@@ -2587,16 +2596,18 @@ def get_dashboard_stats(
     team = _require_fantasy_team(db, league_id, user_id)
 
     now = datetime.now(timezone.utc)
-    active_window = (
-        db.query(TransferWindow)
-        .filter(
-            TransferWindow.season_id == league.season_id,
-            TransferWindow.start_at <= now,
-            TransferWindow.end_at >= now,
+    active_window = None
+    if league.season_id:
+        active_window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.start_at <= now,
+                TransferWindow.end_at >= now,
+            )
+            .order_by(TransferWindow.number.desc())
+            .first()
         )
-        .order_by(TransferWindow.number.desc())
-        .first()
-    )
 
     gameweek_points: Decimal | None = None
     rank: int | None = None

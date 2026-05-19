@@ -1,7 +1,11 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 
 class Settings(BaseSettings):
+    # ── Environment ───────────────────────────────────────────
+    ENVIRONMENT: str = "development"  # "development", "staging", "production"
+
     # ── Database ──────────────────────────────────────────────
     DATABASE_URL: str
 
@@ -11,6 +15,41 @@ class Settings(BaseSettings):
     # ── Celery (Redis broker/result backend) ───────────────────
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
+
+    # ── CORS Configuration ─────────────────────────────────────
+    # Comma-separated list of allowed origins per environment
+    CORS_PRODUCTION_ORIGINS: str = ""
+    CORS_STAGING_ORIGINS: str = ""
+    CORS_LOCAL_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
+
+    # ── Cookie Security Configuration ──────────────────────────
+    # secure=True in production (HTTPS), False in development (HTTP)
+    COOKIE_SECURE: bool = False  # Override to True in production
+    # SameSite policy:
+    #   - "none" + Secure=True: Required for cross-origin SPA cookie auth (production)
+    #   - "lax" + Secure=False: Development only; requires Next.js rewrites for POST cookie auth
+    COOKIE_SAME_SITE: str = "lax"  # "lax", "strict", or "none"
+    COOKIE_DOMAIN: str = ""  # Empty = current domain; set to ".sporty.com" for subdomains
+
+    # ── Rate Limiting ──────────────────────────────────────────
+    RATE_LIMIT_ENABLED: bool = True
+    # Global rate limit (requests per minute per IP)
+    RATE_LIMIT_GLOBAL_RPM: int = 120
+    # Auth-specific rate limits (stricter)
+    RATE_LIMIT_LOGIN_RPM: int = 10
+    RATE_LIMIT_REGISTER_RPM: int = 5
+    RATE_LIMIT_REFRESH_RPM: int = 20
+    RATE_LIMIT_FORGOT_PASSWORD_RPM: int = 3
+    RATE_LIMIT_RESET_PASSWORD_RPM: int = 5
+    # Window size in seconds for rate limit tracking
+    RATE_LIMIT_WINDOW_SECONDS: int = 60
+
+    # ── CSRF Protection ────────────────────────────────────────
+    CSRF_ENABLED: bool = True
+    CSRF_COOKIE_NAME: str = "csrf_token"
+    CSRF_HEADER_NAME: str = "X-CSRF-Token"
+    # Paths exempt from CSRF (safe endpoints, health checks, etc.)
+    CSRF_EXEMPT_PATHS: str = "/health,/metrics,/docs,/redoc,/openapi.json"
 
     # ── Realtime Event Pipeline ────────────────────────────────
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
@@ -60,8 +99,9 @@ class Settings(BaseSettings):
     RAPIDAPI_NBA_KEY: str = ""
     CRICKET_API_KEY: str = ""
 
-    RAPIDAPI_FOOTBALL_HOST: str = "api-football-v1.p.rapidapi.com"
-    RAPIDAPI_NBA_HOST: str = "api-nba-v1.p.rapidapi.com"
+    # Fixed hosts - these are the actual working endpoints
+    RAPIDAPI_FOOTBALL_HOST: str = "v3.football.api-sports.io"
+    RAPIDAPI_NBA_HOST: str = "api-basketball-nba.p.rapidapi.com"
     RAPIDAPI_CRICKET_HOST: str = "cricbuzz-cricket.p.rapidapi.com"
 
     # BallDontLie (Basketball - Free API)
@@ -72,7 +112,7 @@ class Settings(BaseSettings):
     FROM_EMAIL: str = ""
     FRONTEND_BASE_URL: str = "http://localhost:3000"
 
-    # Forgot-password abuse protection
+    # Forgot-password abuse protection (legacy - superseded by rate limiter)
     FORGOT_PASSWORD_RATE_LIMIT_WINDOW_SECONDS: int = 300
     FORGOT_PASSWORD_RATE_LIMIT_MAX_REQUESTS: int = 5
 
@@ -83,6 +123,59 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
     }
+
+    def get_cors_origins(self) -> list[str]:
+        """Get allowed CORS origins based on environment."""
+        if self.ENVIRONMENT == "production":
+            if not self.CORS_PRODUCTION_ORIGINS:
+                raise ValueError(
+                    "CORS_PRODUCTION_ORIGINS must be set in production environment"
+                )
+            return [o.strip() for o in self.CORS_PRODUCTION_ORIGINS.split(",") if o.strip()]
+        elif self.ENVIRONMENT == "staging":
+            if self.CORS_STAGING_ORIGINS:
+                return [o.strip() for o in self.CORS_STAGING_ORIGINS.split(",") if o.strip()]
+            return [o.strip() for o in self.CORS_LOCAL_ORIGINS.split(",") if o.strip()]
+        else:
+            return [o.strip() for o in self.CORS_LOCAL_ORIGINS.split(",") if o.strip()]
+
+    def get_csrf_exempt_paths(self) -> list[str]:
+        """Get list of paths exempt from CSRF protection."""
+        return [p.strip() for p in self.CSRF_EXEMPT_PATHS.split(",") if p.strip()]
+
+    def validate_production(self) -> None:
+        """Validate required settings for production environment. Fails fast if missing."""
+        errors = []
+
+        if self.ENVIRONMENT == "production":
+            if not self.CORS_PRODUCTION_ORIGINS:
+                errors.append("CORS_PRODUCTION_ORIGINS is required in production")
+            if not self.COOKIE_SECURE:
+                errors.append("COOKIE_SECURE must be True in production (HTTPS required)")
+            if self.COOKIE_SAME_SITE.lower() != "none":
+                errors.append(
+                    "COOKIE_SAME_SITE must be 'none' in production for cross-origin SPA cookie auth"
+                )
+            if self.JWT_SECRET_KEY == "your-secret-key-here-min-32-chars":
+                errors.append("JWT_SECRET_KEY must be changed from default value")
+            if not self.DATABASE_URL or "localhost" in self.DATABASE_URL:
+                errors.append("DATABASE_URL should not point to localhost in production")
+
+        # SameSite=None requires Secure=True (browsers reject None without Secure)
+        if self.COOKIE_SAME_SITE.lower() == "none" and not self.COOKIE_SECURE:
+            errors.append(
+                "COOKIE_SAME_SITE='none' requires COOKIE_SECURE=True (browsers reject SameSite=None without Secure)"
+            )
+
+        # Validate JWT secret minimum length
+        if len(self.JWT_SECRET_KEY) < 32:
+            errors.append("JWT_SECRET_KEY must be at least 32 characters")
+
+        if errors:
+            raise ValueError(
+                f"Configuration validation failed for {self.ENVIRONMENT} environment:\n"
+                + "\n".join(f"  - {e}" for e in errors)
+            )
 
 
 # Single instance used everywhere

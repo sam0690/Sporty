@@ -1,0 +1,1 @@
+"""Sport data ingestion package."""

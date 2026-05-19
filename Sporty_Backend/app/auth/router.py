@@ -1,3 +1,23 @@
+"""
+Auth Router
+───────────
+Authentication endpoints with secure httpOnly cookie management.
+
+Security design:
+  - Access tokens and refresh tokens are set as httpOnly cookies
+  - Tokens are NEVER exposed to JavaScript (prevents XSS token theft)
+  - Refresh tokens use rotation (old token revoked on each refresh)
+  - Logout revokes the refresh token server-side
+  - Cookie attributes are environment-aware (secure=True in production)
+
+Cookie configuration:
+  - httpOnly: True - JavaScript cannot read the cookie
+  - secure: True in production (HTTPS), False in development (HTTP)
+  - sameSite: "lax" - protects against CSRF while allowing navigation
+  - path: "/" - cookie sent with all requests
+  - domain: Optional - set for cross-subdomain auth
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
@@ -28,40 +48,72 @@ REFRESH_TOKEN_COOKIE = "refresh_token"
 
 
 def _set_auth_cookies(response: Response, access_token: str, refresh_token: str) -> None:
+    """
+    Set authentication cookies with secure attributes.
+
+    Security properties:
+    - httpOnly=True: Prevents JavaScript access (XSS protection)
+    - secure=True in production: Requires HTTPS (prevents MITM)
+    - sameSite="lax": CSRF protection while allowing navigation
+    - path="/": Sent with all requests to the domain
+
+    Cookie expiration:
+    - Access token: Short-lived (default 30 minutes)
+    - Refresh token: Long-lived (default 7 days)
+    """
+    # Secure cookie: True in production (HTTPS), False in development (HTTP)
+    secure = settings.COOKIE_SECURE
+    same_site = settings.COOKIE_SAME_SITE
+    domain = settings.COOKIE_DOMAIN or None
+
     response.set_cookie(
         key=ACCESS_TOKEN_COOKIE,
         value=access_token,
         httponly=True,
-        secure=True,
-        samesite="lax",
+        secure=secure,
+        samesite=same_site,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/",
+        domain=domain,
     )
     response.set_cookie(
         key=REFRESH_TOKEN_COOKIE,
         value=refresh_token,
         httponly=True,
-        secure=True,
-        samesite="lax",
+        secure=secure,
+        samesite=same_site,
         max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         path="/",
+        domain=domain,
     )
 
 
 def _clear_auth_cookies(response: Response) -> None:
+    """
+    Clear authentication cookies on logout.
+
+    Important: Cookie deletion requires matching the exact attributes
+    used when setting the cookie (path, domain, secure, samesite).
+    """
+    secure = settings.COOKIE_SECURE
+    same_site = settings.COOKIE_SAME_SITE
+    domain = settings.COOKIE_DOMAIN or None
+
     response.delete_cookie(
         key=ACCESS_TOKEN_COOKIE,
         path="/",
-        secure=True,
+        secure=secure,
         httponly=True,
-        samesite="lax",
+        samesite=same_site,
+        domain=domain,
     )
     response.delete_cookie(
         key=REFRESH_TOKEN_COOKIE,
         path="/",
-        secure=True,
+        secure=secure,
         httponly=True,
-        samesite="lax",
+        samesite=same_site,
+        domain=domain,
     )
 
 
@@ -78,6 +130,13 @@ def register(data: RegisterRequest, response: Response, db: Session = Depends(ge
 
 @router.post("/login", status_code=200)
 def login(data: LoginRequest, response: Response, db: Session = Depends(get_db)):
+    """
+    Authenticate with username/email + password.
+
+    On success, sets httpOnly cookies for access and refresh tokens.
+    The frontend should NOT read these cookies - they are sent automatically
+    by the browser with subsequent requests (credentials: true).
+    """
     tokens = services.login(db, data)
     _set_auth_cookies(response, tokens.access_token, tokens.refresh_token)
     return {"detail": "Login successful"}
@@ -85,6 +144,7 @@ def login(data: LoginRequest, response: Response, db: Session = Depends(get_db))
 
 @router.post("/google", response_model=TokenResponse)
 def google_auth(data: GoogleAuthRequest, response: Response, db: Session = Depends(get_db)):
+    """Sign in or register via Google ID token. Sets httpOnly auth cookies."""
     result = services.google_auth(db, data)
     _set_auth_cookies(response, result.access_token, result.refresh_token)
     return result
@@ -97,6 +157,13 @@ def refresh_token(
     data: RefreshTokenRequest | None = None,
     db: Session = Depends(get_db),
 ):
+    """
+    Rotate refresh token and issue new token pair.
+
+    The old refresh token is revoked (token rotation).
+    New tokens are set as httpOnly cookies.
+    Supports both cookie-based and body-based refresh token submission.
+    """
     refresh_token_value = data.refresh_token if data is not None else request.cookies.get(REFRESH_TOKEN_COOKIE)
     if not refresh_token_value:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token missing")
@@ -108,6 +175,7 @@ def refresh_token(
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse, status_code=200)
 def forgot_password(data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
+    """Request password reset email. Rate-limited by IP + email."""
     client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
     if not client_ip:
         client_ip = request.client.host if request.client else "unknown"
@@ -116,6 +184,7 @@ def forgot_password(data: ForgotPasswordRequest, request: Request, db: Session =
 
 @router.post("/reset-password", status_code=200)
 def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Reset password using reset token. Revokes all sessions on success."""
     services.reset_password(db, data.token, data.new_password)
     return {"detail": "Password reset successful"}
 
@@ -130,6 +199,12 @@ def logout(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    """
+    Log out from current session.
+
+    Revokes the refresh token server-side and clears auth cookies.
+    The access token remains valid until expiry, but cannot be refreshed.
+    """
     refresh_token_value = data.refresh_token if data is not None else request.cookies.get(REFRESH_TOKEN_COOKIE)
     if refresh_token_value:
         services.logout(db, refresh_token_value)
@@ -143,6 +218,12 @@ def logout_all(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    """
+    Log out from ALL devices/sessions.
+
+    Revokes all active refresh tokens for the user.
+    Useful after password change or suspected account compromise.
+    """
     count = services.logout_all_devices(db, current_user.id)
     _clear_auth_cookies(response)
     return {"detail": f"Revoked {count} active session(s)"}
@@ -154,12 +235,14 @@ def link_google(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    """Link a Google account to the current user. Requires password verification."""
     services.link_google_account(db, current_user.id, data)
     return {"detail": "Google account linked successfully"}
 
 
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_active_user)):
+    """Get current authenticated user profile."""
     return current_user
 
 
@@ -169,5 +252,11 @@ def change_password(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    """
+    Change password for current user.
+
+    Requires current password verification.
+    Revokes all sessions on success (forces re-authentication).
+    """
     services.change_password(db, current_user.id, data.current_password, data.new_password)
     return {"detail": "Password changed successfully"}

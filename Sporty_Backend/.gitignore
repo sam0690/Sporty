@@ -1,17 +1,31 @@
-# Environment variables (IMPORTANT: Keep your API keys safe!)
+# ============================================
+# Environment variables (CRITICAL: Never commit secrets)
+# ============================================
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
+.env.development
 .env.example.apis
+!/.env.example
 
+# ============================================
 # Python
+# ============================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+*.egg-info/
+.eggs/
+dist/
+build/
 
+# ============================================
 # Virtual environments
+# ============================================
 venv/
 env/
 ENV/
@@ -19,55 +33,53 @@ env.bak/
 venv.bak/
 .venv/
 
-# IDEs
+# ============================================
+# IDEs & Editors
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-.DS_Store
+.project
+.settings/
 
-# Pytest
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+Thumbs.db
+*.log
+
+# ============================================
+# Testing & Coverage
+# ============================================
 .pytest_cache/
 .coverage
 htmlcov/
 *.cover
+.coverage.*
+coverage.xml
+.nyc_output/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-
+# ============================================
 # Database
+# ============================================
 *.db
 *.sqlite
 *.sqlite3
 
-# Logs
-*.log
-logs/
+# ============================================
+# Docker
+# ============================================
+docker-compose.override.yml
 
-# Alembic
-# Keep alembic.ini but you may want to review it for sensitive data
-
-# Distribution / packaging
-build/
-dist/
-*.egg-info/
-.eggs/
-
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre
-.pyre/
-
-# pytype
-.pytype/
-
-# OS
-Thumbs.db
-.DS_Store
-
-#docs
+# ============================================
+# Documentation (auto-generated)
+# ============================================
 docs/
+
+# ============================================
+# Node modules (if any)
+# ============================================
+node_modules/

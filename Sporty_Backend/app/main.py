@@ -5,75 +5,18 @@ This file wires together routers, middleware, and lifecycle hooks.
 It does NOT contain business logic or route handlers — those live
 in their respective module routers (auth, league, player, scoring).
 
-─────────────────────────────────────────────────────────────────────────────
-Q1: What does include_router() do?
-    Why not define all routes in main.py directly?
-─────────────────────────────────────────────────────────────────────────────
-include_router() merges a router's endpoints into the FastAPI app
-at registration time.  It copies each route's path, method, handler,
-dependencies, and tags into the app's route table — as if the routes
-were defined here, but without coupling main.py to every handler.
+Security architecture:
+  1. Security headers (CSP, HSTS, X-Frame-Options, etc.)
+  2. CORS (environment-driven allowed origins)
+  3. CSRF protection (double-submit cookie pattern)
+  4. Rate limiting (IP-based, endpoint-specific limits)
+  5. Authentication (httpOnly cookie-based JWT)
 
-Why not define routes directly in main.py?
-  - Separation of concerns: main.py is the WIRING layer, not the
-    business logic layer.  auth/ owns auth routes, league/ owns
-    league routes.  main.py just plugs them together.
-  - Scalability: with 30+ endpoints across 4 modules, a monolithic
-    main.py becomes unreadable.  Routers split it into focused files.
-  - Team workflow: two developers can edit league/router.py and
-    scoring/router.py simultaneously with zero merge conflicts in
-    main.py.
-  - Testing: you can mount a single router in a TestClient without
-    booting the full app.
-
-─────────────────────────────────────────────────────────────────────────────
-Q2: Should we add a global /api/v1 prefix?
-─────────────────────────────────────────────────────────────────────────────
-Yes.  Every router is mounted under prefix="/api/v1".
-
-Why?
-  - Versioning: when a breaking change ships (v2), old mobile clients
-    still hit /api/v1 while new ones hit /api/v2.  Both coexist on
-    the same server.  Without a version prefix, you'd need a whole
-    new domain or header-based routing — harder to debug, cache, and
-    document.
-  - Reverse proxy clarity: Nginx/Caddy can route /api/* to the
-    backend and /* to the frontend SPA in one location block.
-  - No path collision: the frontend can own / and /about while the
-    API owns /api/v1/* — no ambiguity.
-
-Applied below via: app.include_router(router, prefix="/api/v1")
-
-─────────────────────────────────────────────────────────────────────────────
-Q3: What are CORS middleware and lifespan?
-    Why does every production FastAPI app need both?
-─────────────────────────────────────────────────────────────────────────────
-CORS (Cross-Origin Resource Sharing):
-  Browsers enforce the Same-Origin Policy — JavaScript on
-  https://sporty.app cannot call https://api.sporty.app unless the
-  API responds with Access-Control-Allow-Origin headers.
-  CORSMiddleware injects those headers on every response.
-  Without it, every fetch() from the frontend fails with a CORS error
-  before the request even reaches your route handler.
-
-  allow_origins=["*"] is a development shortcut.  In production,
-  lock this down to the actual frontend origin(s) to prevent
-  third-party sites from making authenticated requests on behalf
-  of your users (CSRF-adjacent risk when allow_credentials=True).
-
-Lifespan (asynccontextmanager):
-  FastAPI's lifespan hook replaces the deprecated on_event("startup")
-  / on_event("shutdown") pattern.  Code before `yield` runs once at
-  startup (verify DB connection, warm caches, start background tasks).
-  Code after `yield` runs once at shutdown (close connection pools,
-  flush logs, cancel background tasks).
-
-  Why needed in production:
-    - Startup: fail fast if the DB is unreachable — better to crash
-      immediately than accept requests and return 500s.
-    - Shutdown: close DB pools cleanly so PostgreSQL doesn't see
-      abrupt disconnects and fill pg_stat_activity with idle-in-
-      transaction sessions.
+Middleware order matters:
+  - Security headers: Applied first (outermost layer)
+  - CORS: Applied before rate limiting
+  - CSRF: Applied before rate limiting (for state-changing requests)
+  - Rate limiting: Applied last (innermost layer before routers)
 """
 
 from contextlib import asynccontextmanager
@@ -103,6 +46,7 @@ from app.player.models import (  # noqa: F401
   PlayerPriceHistory,
 )
 from app.player.models_nba import NBAStat  # noqa: F401
+from app.ingestion.models import IngestionPlayer, IngestionTeam  # noqa: F401
 from app.notification.models import Notification  # noqa: F401
 from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
 from app.database import SessionLocal
@@ -194,7 +138,14 @@ def _run_price_update_job() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── Startup ─────────────────────────────────────────────────────
-    # Future: verify DB connection, run Alembic check, warm caches.
+    # Validate environment configuration before accepting traffic
+    try:
+        settings.validate_production()
+        logger.info("Environment validation passed for %s", settings.ENVIRONMENT)
+    except ValueError as e:
+        logger.critical("Environment validation failed: %s", e)
+        raise
+
     scheduler = BackgroundScheduler(timezone="UTC")
     scheduler.add_job(
       _run_transfer_window_notification_job,
@@ -275,38 +226,180 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── OpenAPI 3.0.3 override for Swagger UI compatibility ─────────
+# FastAPI 0.129+ generates OpenAPI 3.1.0 by default, which uses
+# `anyOf: [..., null]` for optional fields (Python's `str | None`).
+# Swagger UI has a known rendering bug with this pattern that causes
+# blank pages. OpenAPI 3.0.3 uses `nullable: true` instead, which
+# Swagger UI handles correctly.
+#
+# We override app.openapi() to force 3.0.3 output AND convert
+# anyOf+null patterns to nullable: true.
+from fastapi.openapi.utils import get_openapi
+from typing import Any
+
+
+def _convert_anyof_null_to_nullable(obj: Any) -> Any:
+    """
+    Recursively convert OpenAPI 3.1 `anyOf: [..., {"type": "null"}]`
+    patterns to OpenAPI 3.0 `nullable: true` format.
+
+    Handles:
+      - 2-item: {"anyOf": [{"type": "string"}, {"type": "null"}]}
+        → {"type": "string", "nullable": true}
+      - 3-item: {"anyOf": [{"type": "number"}, {"type": "string"}, {"type": "null"}]}
+        → {"anyOf": [{"type": "number"}, {"type": "string"}], "nullable": true}
+
+    Leaves legitimate union types untouched (e.g., TokenResponse | UserResponse).
+    """
+    if isinstance(obj, dict):
+        anyof = obj.get("anyOf")
+        if isinstance(anyof, list) and len(anyof) >= 2:
+            null_indices = [
+                i for i, item in enumerate(anyof)
+                if isinstance(item, dict) and item.get("type") == "null"
+            ]
+
+            if len(null_indices) == 1:
+                non_null_items = [
+                    item for i, item in enumerate(anyof) if i not in null_indices
+                ]
+
+                if len(non_null_items) == 1:
+                    # Simple case: anyOf: [X, null] → X with nullable: true
+                    result = dict(non_null_items[0])
+                    result["nullable"] = True
+                    for key in obj:
+                        if key != "anyOf":
+                            result[key] = obj[key]
+                    return result
+
+                elif len(non_null_items) >= 2:
+                    # Multi-type case: anyOf: [A, B, null] → anyOf: [A, B] with nullable: true
+                    result = {"anyOf": non_null_items, "nullable": True}
+                    for key in obj:
+                        if key != "anyOf":
+                            result[key] = obj[key]
+                    return result
+
+        # Recurse into dict values
+        return {key: _convert_anyof_null_to_nullable(value) for key, value in obj.items()}
+
+    if isinstance(obj, list):
+        return [_convert_anyof_null_to_nullable(item) for item in obj]
+
+    return obj
+
+
+def _custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    app.openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        openapi_version="3.0.3",
+        description=app.description,
+        terms_of_service=app.terms_of_service,
+        contact=app.contact,
+        license_info=app.license_info,
+        routes=app.routes,
+        tags=app.openapi_tags,
+        servers=app.servers,
+    )
+    # Convert anyOf+null → nullable: true for Swagger UI compatibility
+    app.openapi_schema = _convert_anyof_null_to_nullable(app.openapi_schema)
+    return app.openapi_schema
+
+app.openapi = _custom_openapi
+
+# ── Prometheus metrics ────────────────────────────────────────────
 Instrumentator().instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Middleware
+# Middleware (order matters — outermost first)
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# 1. Security headers — applied to ALL responses
+# Adds CSP, HSTS, X-Frame-Options, X-Content-Type-Options, etc.
+from app.middleware.security_headers import SecurityHeadersMiddleware
+app.add_middleware(SecurityHeadersMiddleware)
 
-default_origins = (
-  "http://localhost:5173,"
-  "http://127.0.0.1:5173,"
-  "http://localhost:3000,"
-  "http://127.0.0.1:3000"
-)
-raw_origins = os.getenv("CORS_ALLOW_ORIGINS", default_origins)
-allow_origins = [origin.strip() for origin in raw_origins.split(",") if origin.strip()]
-if not allow_origins:
-    allow_origins = [origin.strip() for origin in default_origins.split(",")]
-
-default_origin_regex = r"https?://(localhost|127\.0\.0\.1|0\.0\.0\.0|192\.168\.\d+\.\d+)(:\d+)?"
-allow_origin_regex = (os.getenv("CORS_ALLOW_ORIGIN_REGEX") or "").strip() or default_origin_regex
+# 2. CORS — cross-origin resource sharing
+# Environment-driven allowed origins, no wildcards with credentials.
+# expose_headers is required so JavaScript can read custom response
+# headers (X-CSRF-Token, rate limit headers) in cross-origin requests.
+# max_age caches preflight (OPTIONS) responses to reduce latency.
+allow_origins = settings.get_cors_origins()
+logger.info(f"CORS origins configured for {settings.ENVIRONMENT} environment: {allow_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
-  # Helpful in local dev when frontend runs on a different localhost/LAN port.
-    allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
-    allow_methods=["*"],
-  # Includes Authorization so JWT-bearing requests are accepted.
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "Accept", "Cache-Control"],
+    expose_headers=["X-CSRF-Token", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+    max_age=600,  # Cache preflight for 10 minutes
 )
+
+# 3. CSRF protection — double-submit cookie pattern
+# Protects state-changing requests (POST, PUT, PATCH, DELETE)
+from app.middleware.csrf import CSRFMiddleware
+app.add_middleware(
+    CSRFMiddleware,
+    exempt_paths=settings.get_csrf_exempt_paths(),
+)
+
+# 4. Rate limiting — IP-based throttling
+# Different limits per endpoint category (auth endpoints are stricter)
+from app.middleware.rate_limiter import RateLimitMiddleware
+app.add_middleware(RateLimitMiddleware)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Global exception handlers — catch unhandled errors, log with context,
+# return safe responses (no stack traces or internals leaked).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+from fastapi.responses import JSONResponse
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    """Catch-all for unexpected errors. Logs full traceback with request
+    context, then returns a generic 500 so internals are never leaked."""
+    import traceback
+
+    logger.exception(
+        "Unhandled exception on %s %s (user_agent=%s)",
+        request.method,
+        request.url.path,
+        request.headers.get("user-agent", "unknown"),
+        exc_info=exc,
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "An internal server error occurred. Please try again later.",
+            "request_id": str(id(request)),
+        },
+    )
+
+
+@app.exception_handler(ValueError)
+async def value_error_handler(request, exc: ValueError):
+    """Handle value errors (bad input, validation failures) as 400."""
+    logger.warning(
+        "ValueError on %s %s: %s",
+        request.method,
+        request.url.path,
+        exc,
+    )
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc)},
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
