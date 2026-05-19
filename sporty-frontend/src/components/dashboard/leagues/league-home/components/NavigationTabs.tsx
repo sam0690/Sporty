@@ -8,7 +8,8 @@ type TabKey =
   | "leaderboard"
   | "members"
   | "invite"
-  | "settings";
+  | "settings"
+  | "roster";
 
 type NavigationTabsProps = {
   activeTab: TabKey;
@@ -23,6 +24,7 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "members", label: "Members" },
   { key: "invite", label: "Invite" },
   { key: "settings", label: "Settings" },
+  { key: "roster", label: "Roster" },
 ];
 
 export function NavigationTabs({

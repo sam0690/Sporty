@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
 import {

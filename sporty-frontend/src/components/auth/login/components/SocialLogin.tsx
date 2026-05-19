@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { useAuth } from "@/context/auth-context";
 import { useGoogleIdentity } from "@/hooks/auth/useGoogleIdentity";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 export function SocialLogin() {
   const router = useRouter();

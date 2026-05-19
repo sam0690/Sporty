@@ -5,7 +5,7 @@ import {
     getLocalStorage,
     setLocalStorage,
     removeLocalStorage,
-} from "@/libs/storage.local";
+} from "@/lib/storage.local";
 
 /**
  * React hook for reading / writing a value to localStorage.

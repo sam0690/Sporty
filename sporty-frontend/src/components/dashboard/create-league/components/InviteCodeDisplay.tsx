@@ -1,6 +1,6 @@
 "use client";
 
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 type InviteCodeDisplayProps = {
   inviteCode: string;

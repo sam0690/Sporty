@@ -17,7 +17,7 @@ import {
   useSports,
 } from "@/hooks/leagues/useLeagues";
 import { CreateLeagueSchema, type CreateLeagueValues } from "@/lib/validations";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { LeagueService } from "@/services/LeagueService";
 import { ScoringService } from "@/services/ScoringService";
 import type { TCompetitionType } from "@/types";

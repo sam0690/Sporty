@@ -30,7 +30,7 @@ import {
 } from "@/hooks/leagues/useLeagues";
 import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 const toSport = (value?: string): Exclude<Sport, "All"> => {
   if (value === "football" || value === "basketball" || value === "cricket") {
@@ -297,6 +297,10 @@ export function Transfers() {
     }
 
     try {
+      if (!activeWindow?.id) {
+        setToastState({ status: "error", message: "No active transfer window", token: Date.now() });
+        return;
+      }
       const staged = await stageOutMutation.mutateAsync({
         league_id: leagueId,
         gameweek_id: activeWindow.id,

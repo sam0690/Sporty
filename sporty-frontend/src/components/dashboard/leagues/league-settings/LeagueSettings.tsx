@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { DangerZone } from "@/components/dashboard/leagues/league-settings/components/DangerZone";
 import { DeleteLeagueModal } from "@/components/dashboard/leagues/league-settings/components/DeleteLeagueModal";
@@ -26,7 +26,7 @@ import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMo
 import {
   getLifecycleStatusesForLeague,
   getLifecycleStatusLabel,
-} from "@/libs/league-lifecycle";
+} from "@/lib/league-lifecycle";
 import {
   useDefaultScoringRules,
   useDeleteScoringOverride,

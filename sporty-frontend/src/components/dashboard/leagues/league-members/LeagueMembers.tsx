@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { KickMemberModal } from "@/components/dashboard/leagues/league-members/components/KickMemberModal";
 import { MemberList } from "@/components/dashboard/leagues/league-members/components/MemberList";

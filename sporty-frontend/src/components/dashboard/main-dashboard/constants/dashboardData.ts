@@ -21,31 +21,34 @@ export const OVERVIEW_STATS: OverviewStat[] = [
 ];
 
 export const TEAM_PREVIEW_PLAYERS: TeamPlayer[] = [
-  { id: 1, name: "Ederson", position: "GK", points: 6 },
-  { id: 2, name: "Saliba", position: "DEF", points: 7 },
-  { id: 3, name: "Trent", position: "DEF", points: 5 },
-  { id: 4, name: "Saka", position: "MID", points: 11 },
-  { id: 5, name: "Palmer", position: "MID", points: 8 },
-  { id: 6, name: "Haaland", position: "FWD", points: 12 },
+  { id: "1", name: "Ederson", position: "GK", points: 6 },
+  { id: "2", name: "Saliba", position: "DEF", points: 7 },
+  { id: "3", name: "Trent", position: "DEF", points: 5 },
+  { id: "4", name: "Saka", position: "MID", points: 11 },
+  { id: "5", name: "Palmer", position: "MID", points: 8 },
+  { id: "6", name: "Haaland", position: "FWD", points: 12 },
 ];
 
 export const RECENT_ACTIVITY: ActivityItem[] = [
   {
-    id: 1,
+    id: "1",
+    type: "points",
     title: "Match Updated",
     detail: "Manchester City vs Arsenal final points confirmed.",
-    time: "2 hours ago",
+    timestamp: "2 hours ago",
   },
   {
-    id: 2,
+    id: "2",
+    type: "transfer",
     title: "Transfer Success",
     detail: "You swapped Watkins for Haaland.",
-    time: "Yesterday",
+    timestamp: "Yesterday",
   },
   {
-    id: 3,
+    id: "3",
+    type: "rank",
     title: "League Position",
     detail: "You climbed to 3rd in Premier League Champions.",
-    time: "2 days ago",
+    timestamp: "2 days ago",
   },
 ];

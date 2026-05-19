@@ -19,7 +19,7 @@ import { AuthPageShell } from "@/components/auth/shared/AuthPageShell";
 import { PasswordStrengthIndicator } from "@/components/auth/shared/PasswordStrengthIndicator";
 import { useAuth } from "@/context/auth-context";
 import { RegisterSchema, type RegisterValues } from "@/lib/validations";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { Divider } from "@/components/auth/login/components/Divider";
 import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 

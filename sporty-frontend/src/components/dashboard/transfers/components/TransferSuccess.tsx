@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 type TransferSuccessProps = {
   status: "success" | "error" | null;

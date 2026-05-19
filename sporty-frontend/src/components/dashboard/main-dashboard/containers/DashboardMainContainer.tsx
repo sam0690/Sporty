@@ -9,7 +9,7 @@ import {
   useRecentActivity,
 } from "@/hooks/dashboard/useDashboardData";
 import { useLocalStorage } from "@/hooks/general/useLocalStorage";
-import { LocalStorageKeys } from "@/libs/storage.kyes";
+import { LocalStorageKeys } from "@/lib/storage.keys";
 import { Topbar } from "@/components/dashboard/main-dashboard/components/Topbar";
 import { OverviewCards } from "@/components/dashboard/main-dashboard/components/OverviewCards";
 import { TeamPreview } from "@/components/dashboard/main-dashboard/components/TeamPreview";

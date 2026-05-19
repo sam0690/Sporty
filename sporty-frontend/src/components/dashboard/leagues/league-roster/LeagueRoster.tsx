@@ -12,7 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { useParams } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { EmptyState } from "@/components/dashboard/leagues/league-roster/components/EmptyState";
 import { HybridPitch } from "@/components/dashboard/leagues/league-roster/components/HybridPitch";

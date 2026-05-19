@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 type CopyButtonProps = {
   value: string;

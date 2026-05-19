@@ -16,7 +16,7 @@ import {
 } from "@/components/ui";
 import { useAuth } from "@/context/auth-context";
 import { LoginSchema, type LoginValues } from "@/lib/validations";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { Divider } from "./components/Divider";
 import { SocialLogin } from "./components/SocialLogin";
 

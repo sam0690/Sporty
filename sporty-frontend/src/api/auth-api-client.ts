@@ -1,15 +1,21 @@
 import axios from "axios";
 import { API_PATHS } from "@/api/apiPath";
-import { formatError } from "@/libs/api-error";
-import { publicApi } from "@/api/public-api-client";
-import { emitAuthInvalidated } from "@/libs/auth-events";
+import { formatError } from "@/utils/api-Error";
+import { publicApi, getCsrfToken, setCsrfToken } from "@/api/public-api-client";
+import { emitAuthInvalidated } from "@/lib/auth-events";
 
 /**
- * Auth Axios instance — attaches JWT from memory on every request
+ * Auth Axios instance — uses httpOnly cookies for auth
  * and refreshes the session on 401.
+ * 
+ * API URL must be configured via NEXT_PUBLIC_API_URL environment variable.
+ * 
+ * Security: Tokens are stored in httpOnly cookies only.
+ * JavaScript cannot read access or refresh tokens.
+ * CSRF tokens are stored in memory (not localStorage).
  */
 const authApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
@@ -17,6 +23,21 @@ const authApi = axios.create({
   },
   timeout: 15_000,
 });
+
+// ── Request interceptor – attach CSRF token ────────────────────────
+authApi.interceptors.request.use(
+  (config) => {
+    // Attach CSRF token for state-changing requests
+    if (config.method && ["post", "put", "patch", "delete"].includes(config.method.toLowerCase())) {
+      const token = getCsrfToken();
+      if (token) {
+        config.headers["X-CSRF-Token"] = token;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(formatError(error)),
+);
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -41,16 +62,25 @@ export const refreshAccessToken = async (): Promise<boolean> => {
   return refreshPromise;
 };
 
-// ── Request interceptor – attach token ─────────────────────────────
-authApi.interceptors.request.use(
-  (config) => config,
-  (error) => Promise.reject(formatError(error)),
-);
-
-// ── Response interceptor – handle 401 ──────────────────────────────
+// ── Response interceptor – handle 401 & capture CSRF token ─────────
 authApi.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Capture CSRF token from response headers
+    const newToken = response.headers["x-csrf-token"];
+    if (newToken) {
+      setCsrfToken(newToken);
+    }
+    return response;
+  },
   async (error) => {
+    // Capture CSRF token from error response headers
+    if (axios.isAxiosError(error) && error.response) {
+      const newToken = error.response.headers["x-csrf-token"];
+      if (newToken) {
+        setCsrfToken(newToken);
+      }
+    }
+
     if (!axios.isAxiosError(error)) {
       return Promise.reject(formatError(error));
     }

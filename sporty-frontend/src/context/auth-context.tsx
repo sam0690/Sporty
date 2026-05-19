@@ -12,9 +12,8 @@ import {
 import { API_PATHS } from "@/api/apiPath";
 import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
-import { clearAuthTokens } from "@/libs/auth-tokens";
-import { subscribeAuthInvalidated } from "@/libs/auth-events";
-import { ROUTES } from "@/libs/route.config";
+import { subscribeAuthInvalidated } from "@/lib/auth-events";
+import { ROUTES } from "@/lib/route.config";
 import { useRouter } from "next/navigation";
 
 export interface User {
@@ -125,7 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(toUser(response.data));
         }
       } catch {
-        clearAuthTokens();
+        // Auth tokens are httpOnly cookies - handled by backend
+        // No client-side token cleanup needed
       } finally {
         if (isMounted) {
           setBootstrapping(false);
@@ -142,7 +142,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     return subscribeAuthInvalidated(() => {
-      clearAuthTokens();
+      // Auth tokens are httpOnly cookies - handled by backend
+      // Only clear user state client-side
       setUser(null);
       router.replace(ROUTES.LOGIN.path);
     });
@@ -224,12 +225,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async (): Promise<AuthResult> => {
     setLoading("logout", true);
     try {
+      // Backend clears httpOnly cookies via set_cookie with maxAge=0
       await authApi.post(API_PATHS.AUTH.LOGOUT);
-      clearAuthTokens();
       setUser(null);
       return { success: true };
     } catch (error) {
-      clearAuthTokens();
+      // Even if API fails, clear local state - cookies may be cleared by browser
       setUser(null);
       const message = error instanceof Error ? error.message : "Logout failed.";
       return { success: true, error: message };

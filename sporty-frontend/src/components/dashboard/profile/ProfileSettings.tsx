@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useMe } from "@/hooks/auth/useMe";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
 import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
 // import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";

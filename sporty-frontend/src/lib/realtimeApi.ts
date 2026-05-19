@@ -1,6 +1,8 @@
 import type { MatchSnapshot } from "@/types/events";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Realtime endpoints live under /api (not /api/v1), so use relative path
+// that goes through the Next.js rewrite proxy.
+const API_BASE = "";
 
 export async function fetchMatchSnapshot(
   matchId: string,

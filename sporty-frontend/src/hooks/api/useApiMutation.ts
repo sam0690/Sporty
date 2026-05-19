@@ -3,7 +3,7 @@ import {
     type UseMutationOptions,
     type UseMutationResult,
 } from "@tanstack/react-query";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 /**
  * Generic wrapper around TanStack Query's useMutation.
@@ -18,29 +18,30 @@ import { toastifier } from "@/libs/toastifier";
  * );
  * ```
  */
-export function useApiMutation<TData, TVariables>(
+export function useApiMutation<TData, TVariables, TContext = unknown>(
     mutationFn: (variables: TVariables) => Promise<TData>,
-    options?: Omit<UseMutationOptions<TData, Error, TVariables>, "mutationFn"> & {
+    options?: Omit<UseMutationOptions<TData, Error, TVariables, TContext>, "mutationFn"> & {
         successMessage?: string;
         errorMessage?: string;
         silent?: boolean;
     },
-): UseMutationResult<TData, Error, TVariables> {
-    const { successMessage, errorMessage, silent, ...rest } = options ?? {};
+): UseMutationResult<TData, Error, TVariables, TContext> {
+    const { successMessage, errorMessage, silent, onSuccess, onError, ...rest } = options ?? {};
 
-    return useMutation<TData, Error, TVariables>({
+    return useMutation<TData, Error, TVariables, TContext>({
         mutationFn,
-        onSuccess(data, variables, context) {
+        onSuccess: (data, variables, context) => {
             if (!silent && successMessage) {
                 toastifier.success(successMessage);
             }
-            rest.onSuccess?.(data, variables, context);
+            // TypeScript issue with TanStack Query v5 - callback expects 4 args but we pass 3
+            (onSuccess as ((data: TData, variables: TVariables, context: TContext | undefined) => void) | undefined)?.(data, variables, context);
         },
-        onError(error, variables, context) {
+        onError: (error, variables, context) => {
             if (!silent) {
                 toastifier.error(errorMessage ?? error.message);
             }
-            rest.onError?.(error, variables, context);
+            (onError as ((error: Error, variables: TVariables, context: TContext | undefined) => void) | undefined)?.(error, variables, context);
         },
         ...rest,
     });

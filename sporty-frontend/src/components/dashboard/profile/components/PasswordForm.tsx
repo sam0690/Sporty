@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 type PasswordFormProps = {
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;

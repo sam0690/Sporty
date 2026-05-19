@@ -15,7 +15,7 @@ import { AuthHeroImage } from "@/components/auth/shared/AuthHeroImage";
 import { AuthPageShell } from "@/components/auth/shared/AuthPageShell";
 import { PasswordStrengthIndicator } from "@/components/auth/shared/PasswordStrengthIndicator";
 import { useAuth } from "@/context/auth-context";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 type ResetErrors = {
   newPassword?: string;

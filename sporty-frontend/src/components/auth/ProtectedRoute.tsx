@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { ROUTES } from "@/libs/route.config";
+import { ROUTES } from "@/lib/route.config";
 
 type ProtectedRouteProps = {
   children: ReactNode;

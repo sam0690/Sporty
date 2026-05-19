@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { InviteCodeDisplay } from "@/components/dashboard/create-league/components/InviteCodeDisplay";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 type SuccessModalProps = {
   isOpen: boolean;

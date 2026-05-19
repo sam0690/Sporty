@@ -19,8 +19,8 @@ import {
   useLeagueLineupData,
   type LineupPlayerCardModel,
 } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
-import { toastifier } from "@/libs/toastifier";
-import { isApiError } from "@/libs/api-error";
+import { toastifier } from "@/lib/toastifier";
+import { isApiError } from "@/utils/api-Error";
 import { OptimizationService } from "@/services/OptimizationService";
 import { PlayerService } from "@/services/PlayerService";
 

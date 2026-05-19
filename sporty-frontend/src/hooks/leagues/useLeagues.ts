@@ -29,8 +29,8 @@ import {
   TDraftTurn,
   TDiscardPlayerResponse,
 } from "@/types";
-import { toastifier } from "@/libs/toastifier";
-import { isApiError } from "@/libs/api-error";
+import { toastifier } from "@/lib/toastifier";
+import { isApiError } from "@/utils/api-Error";
 
 /**
  * Hook to fetch all active seasons.

@@ -22,7 +22,7 @@ import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMo
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { CardSkeleton } from "@/components/ui/skeletons";
 import { CreateTeamSchema, type CreateTeamValues } from "@/lib/validations";
-import { toastifier } from "@/libs/toastifier";
+import { toastifier } from "@/lib/toastifier";
 
 const sportIconByName: Record<string, string> = {
   football: "⚽",

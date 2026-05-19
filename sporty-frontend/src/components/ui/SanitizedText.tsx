@@ -1,4 +1,4 @@
-import { sanitizeText } from "@/libs/sanitize";
+import { sanitizeText } from "@/lib/sanitize";
 
 interface SanitizedTextProps {
     value: string;
