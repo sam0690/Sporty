@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/create-team/components/EmptyState";
 import {
   PlayerCard,
@@ -24,6 +25,13 @@ type PlayerMarketProps = {
   onCostFilterChange: (value: "All" | "Under 5" | "5 - 8" | "Above 8") => void;
   canAddPlayers?: boolean;
   addDisabledReason?: string;
+  currentPage: number;
+  totalPages: number;
+  totalPlayers: number;
+  hasNext: boolean;
+  isLoadingPage?: boolean;
+  onPreviousPage: () => void;
+  onNextPage: () => void;
 };
 
 export function PlayerMarket({
@@ -43,20 +51,29 @@ export function PlayerMarket({
   onCostFilterChange,
   canAddPlayers = true,
   addDisabledReason = "Action unavailable",
+  currentPage,
+  totalPages,
+  totalPlayers,
+  hasNext,
+  isLoadingPage = false,
+  onPreviousPage,
+  onNextPage,
 }: PlayerMarketProps) {
-  const positions = useMemo(() => {
-    return [
+  const positions = useMemo(
+    () => [
       "All",
       ...Array.from(new Set(players.map((player) => player.position))),
-    ];
-  }, [players]);
+    ],
+    [players],
+  );
 
-  const sports = useMemo(() => {
-    return [
+  const sports = useMemo(
+    () => [
       "All",
       ...Array.from(new Set(players.map((player) => player.sport))),
-    ];
-  }, [players]);
+    ],
+    [players],
+  );
 
   const filteredPlayers = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -132,8 +149,49 @@ export function PlayerMarket({
         </div>
       ) : null}
 
+      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white/80 px-4 py-3 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-secondary">
+          <span className="font-semibold text-black">Page {currentPage}</span>
+          <span>/ {Math.max(totalPages, 1)}</span>
+          <span className="hidden sm:inline">•</span>
+          <span>{totalPlayers} players total</span>
+          {isLoadingPage ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Loading next page
+            </span>
+          ) : null}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onPreviousPage}
+            disabled={currentPage <= 1 || isLoadingPage}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[#F4F4F9] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={onNextPage}
+            disabled={!hasNext || isLoadingPage}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
       <div className="max-h-[60vh] space-y-3 overflow-y-auto p-1">
-        {filteredPlayers.length === 0 ? (
+        {isLoadingPage && filteredPlayers.length === 0 ? (
+          <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-border bg-white/70 text-sm text-secondary">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />
+            Loading players...
+          </div>
+        ) : filteredPlayers.length === 0 ? (
           <EmptyState message="No players found for the selected filters." />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

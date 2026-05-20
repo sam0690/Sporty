@@ -17,6 +17,7 @@ from decimal import Decimal
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from app.league.models import LeagueStatus
+from app.league.models import DEFAULT_TEAM_BUDGET
 from app.schemas.common import (
     TransferWindowBrief,
     PlayerBrief,
@@ -38,7 +39,7 @@ class LeagueCreate(BaseModel):
     is_public: bool = False
     max_teams: int = Field(default=10, ge=2, le=64)
     squad_size: int = Field(default=15, ge=1, le=30)
-    budget_per_team: Decimal = Field(default=Decimal("100.00"), gt=0, max_digits=12, decimal_places=2)
+    budget_per_team: Decimal = Field(default=DEFAULT_TEAM_BUDGET, gt=0, max_digits=12, decimal_places=2)
     draft_mode: bool = Field(default=False)
     allow_midseason_join: bool = Field(default=False)
     transfers_per_window: int = Field(default=4, ge=0, le=10)

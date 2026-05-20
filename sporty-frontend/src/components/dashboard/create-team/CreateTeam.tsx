@@ -34,6 +34,8 @@ const MULTISPORT_MIN_BY_SPORT = {
   basketball: 4,
 } as const;
 
+const PLAYER_PAGE_SIZE = 20;
+
 function normalizeLeagueSport(
   sports: Array<{ sport: { name: string } }> | undefined,
 ): "football" | "basketball" | "multisport" {
@@ -70,9 +72,12 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
   const leagueSport = normalizeLeagueSport(league?.sports);
   const isMultiSportLeague = leagueSport === "multisport";
   const { isDraftMode: isDraftLeague } = useLeagueCompetitionMode(league);
+  const [playersPage, setPlayersPage] = useState(1);
 
   const { data: playersData, isLoading: playersLoading } = usePlayers({
     league_id: leagueId || undefined,
+    page: playersPage,
+    page_size: PLAYER_PAGE_SIZE,
     ...(isDraftLeague || isMultiSportLeague
       ? {}
       : { sport_name: league?.sports?.[0]?.sport.name }),
@@ -147,6 +152,17 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     [selectedPlayers],
   );
 
+  const playersPageSize = playersData?.page_size ?? PLAYER_PAGE_SIZE;
+  const playersTotal = playersData?.total ?? 0;
+  const playersCurrentPage = playersData?.page ?? playersPage;
+  const playersTotalPages = Math.max(
+    1,
+    Math.ceil(playersTotal / Math.max(playersPageSize, 1)),
+  );
+  const isPlayersPageLoading =
+    playersLoading ||
+    (playersData?.page !== undefined && playersData.page !== playersPage);
+
   useEffect(() => {
     setValue("player_ids", selectedPlayerIds, {
       shouldDirty: true,
@@ -168,8 +184,8 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
     [selectedPlayers],
   );
 
-  const rawBudget = Number(league?.budget_per_team ?? 100);
-  const budget = Number.isFinite(rawBudget) ? rawBudget : 100;
+  const rawBudget = Number(league?.budget_per_team ?? 103);
+  const budget = Number.isFinite(rawBudget) ? rawBudget : 103;
   const rawSquadSize = Number(league?.squad_size ?? 15);
   const requiredPlayers = Number.isFinite(rawSquadSize) ? rawSquadSize : 15;
   const minPlayersRequired = isMultiSportLeague
@@ -273,6 +289,18 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
 
       return prev.slice(0, -1);
     });
+  };
+
+  const handlePreviousPlayersPage = () => {
+    setPlayersPage((current) => Math.max(1, current - 1));
+  };
+
+  const handleNextPlayersPage = () => {
+    if (!playersData?.has_next) {
+      return;
+    }
+
+    setPlayersPage((current) => current + 1);
   };
 
   const handleDiscardTeamPlayer = async (playerId: string) => {
@@ -464,6 +492,13 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
                 onCostFilterChange={setSelectedCostFilter}
                 canAddPlayers={isMyDraftTurn}
                 addDisabledReason="Waiting for your draft turn"
+                currentPage={playersCurrentPage}
+                totalPages={playersTotalPages}
+                totalPlayers={playersTotal}
+                hasNext={!!playersData?.has_next}
+                isLoadingPage={isPlayersPageLoading}
+                onPreviousPage={handlePreviousPlayersPage}
+                onNextPage={handleNextPlayersPage}
               />
             </div>
             <div className="lg:col-span-1">
@@ -481,9 +516,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
         {status === "active" || status === "completed" ? (
           draftedPlayers.length > 0 ? (
             <div className="space-y-4 rounded-lg border border-accent/20 bg-white p-6">
-              <h2 className="text-lg font-semibold text-black">
-                Final Team
-              </h2>
+              <h2 className="text-lg font-semibold text-black">Final Team</h2>
               <CurrentTeam
                 players={draftedPlayers}
                 onRemovePlayer={() => {}}
@@ -545,7 +578,7 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
           <button
             type="button"
             onClick={() => router.push(`/leagues/${league.id}`)}
-            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
+            className="rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-black hover:bg-primary-700"
           >
             Go to League
           </button>
@@ -651,6 +684,13 @@ export function CreateTeam({ leagueId: leagueIdProp }: CreateTeamProps = {}) {
                 onPositionChange={setSelectedPosition}
                 onSportChange={setSelectedSport}
                 onCostFilterChange={setSelectedCostFilter}
+                currentPage={playersCurrentPage}
+                totalPages={playersTotalPages}
+                totalPlayers={playersTotal}
+                hasNext={!!playersData?.has_next}
+                isLoadingPage={isPlayersPageLoading}
+                onPreviousPage={handlePreviousPlayersPage}
+                onNextPage={handleNextPlayersPage}
               />
             </div>
 

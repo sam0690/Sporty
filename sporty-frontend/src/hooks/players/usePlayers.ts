@@ -1,20 +1,27 @@
+import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../api/useApiQuery";
 import { PlayerService } from "@/services/PlayerService";
-import type { TPlayerFilter } from "@/types";
+import type { TPlayerFilter, TPlayerListResponse } from "@/types";
 
 type LeagueSportEntry = { sport?: { name?: string | null } | null };
 
 const SUPPORTED_TRANSFER_POOL_SPORTS = new Set(["football", "basketball"]);
 
 export const usePlayers = (filters: TPlayerFilter = {}) => {
-  return useApiQuery(["players", "list", JSON.stringify(filters)], () =>
-    PlayerService.getPlayers(filters),
+  return useApiQuery<TPlayerListResponse>(
+    ["players", "list", JSON.stringify(filters)],
+    () => PlayerService.getPlayers(filters),
+    {
+      placeholderData: keepPreviousData,
+    },
   );
 };
 
 export const useTransferPoolPlayers = (
   leagueId: string,
   leagueSports: LeagueSportEntry[] | undefined,
+  page = 1,
+  pageSize = 20,
 ) => {
   const normalizedSports = (leagueSports ?? [])
     .map((entry) => entry?.sport?.name?.trim().toLowerCase())
@@ -29,6 +36,8 @@ export const useTransferPoolPlayers = (
 
   const filters: TPlayerFilter = {
     league_id: leagueId || undefined,
+    page,
+    page_size: pageSize,
     ...(!isMultiSportLeague && primarySport
       ? { sport_name: primarySport }
       : {}),

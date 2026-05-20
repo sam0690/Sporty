@@ -24,6 +24,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
+DEFAULT_TEAM_BUDGET = Decimal("103.00")
+
 # NOTE: No import of player.models or auth.models here — would cause
 # circular imports. All cross-module relationships use string-based
 # targets ("Player", "User") which SQLAlchemy resolves lazily at
@@ -360,7 +362,7 @@ class League(Base):
     #     Python's Decimal type round-trips cleanly through SQLAlchemy.
     #     12 digits total, 2 after the decimal → up to 9,999,999,999.99.
     budget_per_team: Mapped[Decimal] = mapped_column(
-        Numeric(precision=12, scale=2), nullable=False, default=Decimal("100.00")
+        Numeric(precision=12, scale=2), nullable=False, default=DEFAULT_TEAM_BUDGET
     )
 
     squad_size: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=15)

@@ -78,7 +78,7 @@ export function CreateLeague() {
     defaultValues: {
       name: "",
       sport_ids: ["football"],
-      budget: 100,
+      budget: 103,
       squad_size: 10,
       draft_mode: true,
       is_public: true,

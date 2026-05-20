@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useMe } from "@/hooks/auth/useMe";
 import {
   CurrentRoster,
@@ -32,6 +33,8 @@ import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSy
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { toastifier } from "@/lib/toastifier";
 
+const TRANSFER_POOL_PAGE_SIZE = 20;
+
 const toSport = (value?: string): Exclude<Sport, "All"> => {
   if (value === "football" || value === "basketball" || value === "cricket") {
     return value;
@@ -54,6 +57,7 @@ export function Transfers() {
   const activeWindowQuery = useSmartActiveWindowSync(leagueId);
   const activeWindow = activeWindowQuery.data;
   const windowLoading = activeWindowQuery.isLoading;
+  const [playersPage, setPlayersPage] = useState(1);
   const leagueSports = useMemo(
     () =>
       Array.from(
@@ -69,8 +73,15 @@ export function Transfers() {
     [league?.sports],
   );
 
-  const { data: playersData, isLoading: playersLoading } =
-    useTransferPoolPlayers(leagueId, league?.sports);
+  const playersQuery = useTransferPoolPlayers(
+    leagueId,
+    league?.sports,
+    playersPage,
+    TRANSFER_POOL_PAGE_SIZE,
+  );
+  const playersData = playersQuery.data;
+  const playersLoading = playersQuery.isLoading;
+  const playersFetching = playersQuery.isFetching;
   const stageOutMutation = useStageOut(leagueId);
   const stageInMutation = useStageIn(leagueId);
   const confirmTransfersMutation = useConfirmTransfers(leagueId);
@@ -134,6 +145,15 @@ export function Transfers() {
         form: 0,
       }));
   }, [playersData, ownedPlayers, stagedInPlayers]);
+
+  const playersPageSize = playersData?.page_size ?? TRANSFER_POOL_PAGE_SIZE;
+  const playersTotal = playersData?.total ?? 0;
+  const playersCurrentPage = playersData?.page ?? playersPage;
+  const playersTotalPages = Math.max(
+    1,
+    Math.ceil(playersTotal / Math.max(playersPageSize, 1)),
+  );
+  const isPlayersPageLoading = playersLoading || playersFetching;
 
   const stagedOutIds = useMemo(
     () => new Set(stagedOutPlayers.map((player) => player.id.toString())),
@@ -202,22 +222,33 @@ export function Transfers() {
     return bySport;
   }, [availablePlayers, availableSportsForFilter]);
 
-  useEffect(() => {
-    if (
-      selectedSport !== "All" &&
-      !availableSportsForFilter.includes(selectedSport)
-    ) {
-      setSelectedSport("All");
-      setSelectedPosition("All");
-    }
-  }, [selectedSport, availableSportsForFilter]);
+  const handlePreviousPlayersPage = useCallback(() => {
+    setPlayersPage((current) => Math.max(1, current - 1));
+  }, []);
 
-  useEffect(() => {
-    const validPositions = positionOptionsBySport[selectedSport] ?? ["All"];
-    if (!validPositions.includes(selectedPosition)) {
-      setSelectedPosition("All");
+  const handleNextPlayersPage = useCallback(() => {
+    if (!playersData?.has_next) {
+      return;
     }
-  }, [selectedPosition, selectedSport, positionOptionsBySport]);
+
+    setPlayersPage((current) => current + 1);
+  }, [playersData?.has_next]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setPlayersPage(1);
+  }, []);
+
+  const handleSportChange = useCallback((sport: Sport) => {
+    setSelectedSport(sport);
+    setSelectedPosition("All");
+    setPlayersPage(1);
+  }, []);
+
+  const handlePositionChange = useCallback((position: string) => {
+    setSelectedPosition(position);
+    setPlayersPage(1);
+  }, []);
 
   const handleAddPlayer = async (id: string) => {
     if (!isMultiSportLeague && stagedOutPlayers.length === 0) {
@@ -298,7 +329,11 @@ export function Transfers() {
 
     try {
       if (!activeWindow?.id) {
-        setToastState({ status: "error", message: "No active transfer window", token: Date.now() });
+        setToastState({
+          status: "error",
+          message: "No active transfer window",
+          token: Date.now(),
+        });
         return;
       }
       const staged = await stageOutMutation.mutateAsync({
@@ -432,10 +467,7 @@ export function Transfers() {
                     Out
                   </p>
                   {stagedOutPlayers.map((player) => (
-                    <p
-                      key={player.id}
-                      className="truncate text-xs text-black"
-                    >
+                    <p key={player.id} className="truncate text-xs text-black">
                       {player.name}
                     </p>
                   ))}
@@ -445,10 +477,7 @@ export function Transfers() {
                     In
                   </p>
                   {stagedInPlayers.map((player) => (
-                    <p
-                      key={player.id}
-                      className="truncate text-xs text-black"
-                    >
+                    <p key={player.id} className="truncate text-xs text-black">
                       {player.name}
                     </p>
                   ))}
@@ -479,18 +508,61 @@ export function Transfers() {
               ) : null}
             </div>
           ) : null}
-          <SearchBar onSearch={setSearchQuery} resetToken={searchResetToken} />
+          <SearchBar
+            onSearch={handleSearchChange}
+            resetToken={searchResetToken}
+          />
+
           <FilterBar
             selectedSport={selectedSport}
             selectedPosition={selectedPosition}
             availableSports={availableSportsForFilter}
             positionOptionsBySport={positionOptionsBySport}
-            onSportChange={setSelectedSport}
-            onPositionChange={setSelectedPosition}
+            onSportChange={handleSportChange}
+            onPositionChange={handlePositionChange}
           />
 
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white/80 px-4 py-3 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-secondary">
+              <span className="font-semibold text-black">
+                Page {playersCurrentPage}
+              </span>
+              <span>/ {playersTotalPages}</span>
+              <span className="hidden sm:inline">•</span>
+              <span>{playersTotal} players total</span>
+              {isPlayersPageLoading ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Loading players...
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handlePreviousPlayersPage}
+                disabled={playersCurrentPage <= 1 || isPlayersPageLoading}
+                className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[#F4F4F9] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={handleNextPlayersPage}
+                disabled={!playersData?.has_next || isPlayersPageLoading}
+                className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
           <div className="space-y-3">
-            {isLoading ? (
+            {isLoading ||
+            (isPlayersPageLoading && availablePlayers.length === 0) ? (
               Array.from({ length: 5 }, (_, index) => (
                 <PlayerCardSkeleton key={index} />
               ))
