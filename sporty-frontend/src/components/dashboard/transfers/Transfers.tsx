@@ -17,7 +17,7 @@ import { SearchBar } from "@/components/dashboard/transfers/components/SearchBar
 import { TransferConfirmation } from "@/components/dashboard/transfers/components/TransferConfirmation";
 import { TransfersHeader } from "@/components/dashboard/transfers/components/TransfersHeader";
 import { TransferSuccess } from "@/components/dashboard/transfers/components/TransferSuccess";
-import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/components/UserTransferHistoryCarousel";
+import { UserTransferHistoryCarousel } from "./components/UserTransferHistoryCarousel";
 import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import {
@@ -415,15 +415,15 @@ export function Transfers() {
 
   if (!leagueId) {
     return (
-      <div className="mx-auto max-w-7xl px-6 py-8 text-black">
-        <div className="mb-6 text-sm text-secondary">
+      <div className="mx-auto max-w-7xl px-6 py-8 text-foreground">
+        <div className="mb-6 text-sm text-slate-400">
           Manager: {username || "Sporty User"}
         </div>
-        <div className="mb-6 rounded-md border border-border bg-white p-6 text-center">
-          <h2 className="text-xl font-semibold">
+        <div className="mb-6 rounded-3xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-xl">
+          <h2 className="text-xl font-semibold text-foreground">
             Select a league to manage transfers.
           </h2>
-          <p className="mt-2 text-sm text-secondary">
+          <p className="mt-2 text-sm text-slate-400">
             Your transfer history is still available below.
           </p>
         </div>
@@ -438,8 +438,8 @@ export function Transfers() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-black">
-      <div className="mb-6 text-sm text-secondary">
+    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
+      <div className="mb-6 text-sm text-slate-400">
         Manager: {username || "Sporty User"}
       </div>
 
@@ -451,33 +451,39 @@ export function Transfers() {
             currentWeek={activeWindow?.number || 0}
           />
           {transfersRemaining !== null ? (
-            <div className="rounded-md border border-blue-100 bg-primary/5 px-4 py-2 text-sm text-primary">
+            <div className="rounded-3xl border border-accent-primary/20 bg-accent-primary/10 px-4 py-2 text-sm text-accent-primary">
               Transfers remaining in session: {transfersRemaining}
             </div>
           ) : null}
           {stagedOutPlayers.length > 0 || stagedInPlayers.length > 0 ? (
-            <div className="rounded-md border border-border bg-white p-4 text-sm">
-              <p className="font-medium text-black">Staged Transfers</p>
-              <p className="mt-1 text-secondary">
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm backdrop-blur-xl">
+              <p className="font-medium text-foreground">Staged Transfers</p>
+              <p className="mt-1 text-slate-400">
                 Out: {stagedOutPlayers.length} | In: {stagedInPlayers.length}
               </p>
               <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-secondary">
+                  <p className="text-xs font-semibold uppercase text-slate-400">
                     Out
                   </p>
                   {stagedOutPlayers.map((player) => (
-                    <p key={player.id} className="truncate text-xs text-black">
+                    <p
+                      key={player.id}
+                      className="truncate text-xs text-foreground"
+                    >
                       {player.name}
                     </p>
                   ))}
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase text-secondary">
+                  <p className="text-xs font-semibold uppercase text-slate-400">
                     In
                   </p>
                   {stagedInPlayers.map((player) => (
-                    <p key={player.id} className="truncate text-xs text-black">
+                    <p
+                      key={player.id}
+                      className="truncate text-xs text-foreground"
+                    >
                       {player.name}
                     </p>
                   ))}
@@ -494,14 +500,14 @@ export function Transfers() {
                     stagedOutPlayers.length !== stagedInPlayers.length) ||
                   !isTransfersOpen
                 }
-                className="mt-3 w-full rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="mt-3 w-full rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50"
               >
                 {confirmTransfersMutation.isPending
                   ? "Confirming..."
                   : "Confirm All Staged Transfers"}
               </button>
               {isMultiSportLeague ? (
-                <p className="mt-2 text-xs text-secondary">
+                <p className="mt-2 text-xs text-slate-400">
                   Multisport: you can stage players in directly when budget and
                   roster limits allow.
                 </p>
@@ -522,16 +528,16 @@ export function Transfers() {
             onPositionChange={handlePositionChange}
           />
 
-          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white/80 px-4 py-3 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-secondary">
-              <span className="font-semibold text-black">
+          <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+              <span className="font-semibold text-foreground">
                 Page {playersCurrentPage}
               </span>
               <span>/ {playersTotalPages}</span>
               <span className="hidden sm:inline">•</span>
               <span>{playersTotal} players total</span>
               {isPlayersPageLoading ? (
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent-primary/10 px-2.5 py-1 text-xs font-medium text-accent-primary">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   Loading players...
                 </span>
@@ -543,7 +549,7 @@ export function Transfers() {
                 type="button"
                 onClick={handlePreviousPlayersPage}
                 disabled={playersCurrentPage <= 1 || isPlayersPageLoading}
-                className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[#F4F4F9] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Previous
@@ -552,7 +558,7 @@ export function Transfers() {
                 type="button"
                 onClick={handleNextPlayersPage}
                 disabled={!playersData?.has_next || isPlayersPageLoading}
-                className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
@@ -598,12 +604,14 @@ export function Transfers() {
             disabled={!isTransfersOpen}
           />
           {selectedOutPlayer && (
-            <div className="mt-4 p-4 bg-primary/10 rounded-md border border-primary/20 flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+            <div className="mt-4 flex items-center justify-between rounded-3xl border border-accent-primary/20 bg-accent-primary/10 p-4 animate-in fade-in slide-in-from-top-2">
               <div>
-                <p className="text-xs text-primary font-bold uppercase">
+                <p className="text-xs font-bold uppercase text-accent-primary">
                   Player to swap out
                 </p>
-                <p className="font-semibold">{selectedOutPlayer.name}</p>
+                <p className="font-semibold text-foreground">
+                  {selectedOutPlayer.name}
+                </p>
               </div>
               <button
                 onClick={async () => {
@@ -619,7 +627,7 @@ export function Transfers() {
                   setTransfersRemaining(null);
                   setShowConfirmModal(false);
                 }}
-                className="text-secondary/60 hover:text-secondary"
+                className="text-slate-400 hover:text-foreground"
               >
                 ✕
               </button>
@@ -654,7 +662,7 @@ export function Transfers() {
                   });
                 }
               }}
-              className="mt-3 w-full rounded-full border border-border px-4 py-2 text-sm font-medium text-black hover:bg-[#F4F4F9]"
+              className="mt-3 w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground hover:bg-white/8"
             >
               Cancel Staged Session
             </button>

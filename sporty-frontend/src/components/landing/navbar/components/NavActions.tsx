@@ -23,9 +23,7 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
         <Button
           variant="outline"
           size="md"
-          className={cn(
-            mobile && "w-full justify-center",
-          )}
+          className={cn(mobile && "w-full justify-center")}
         >
           Login
         </Button>
@@ -35,12 +33,7 @@ export function NavActions({ mobile = false, onNavigate }: NavActionsProps) {
         onClick={onNavigate}
         className={cn(mobile ? "w-full" : undefined, "hover:no-underline")}
       >
-        <Button
-          size="md"
-          className={cn(
-            mobile && "w-full justify-center",
-          )}
-        >
+        <Button size="md" className={cn(mobile && "w-full justify-center")}>
           Sign Up
         </Button>
       </Link>

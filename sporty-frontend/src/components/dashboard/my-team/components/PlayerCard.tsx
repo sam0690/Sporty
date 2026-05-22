@@ -36,27 +36,35 @@ export function PlayerCard({
         : "Cricket";
 
   return (
-    <article className="card-fade-in flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/20 bg-white px-5 py-4 transition-all duration-200 hover:border-border hover:shadow-sm">
+    <article className="card-fade-in flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-4 transition-all duration-200 hover:border-accent-primary/30 hover:bg-white/8">
       <div className="min-w-0">
-        <p className="truncate text-base font-semibold text-black">{name}</p>
-        <p className="mt-1 inline-flex items-center gap-1 text-sm text-secondary">
+        <p className="truncate text-base font-semibold text-foreground">
+          {name}
+        </p>
+        <p className="mt-1 inline-flex items-center gap-1 text-sm text-foreground/60">
           <span aria-hidden="true" className="text-sm">
             {sportIcons[sport]}
           </span>
-          <span className="rounded bg-accent/20 px-1.5 py-0.5 text-xs font-medium text-secondary">
+          <span className="rounded bg-accent-primary/10 px-1.5 py-0.5 text-xs font-medium text-accent-primary">
             {position}
           </span>
-          <span className="text-xs text-secondary/60">{sportLabel}</span>
+          <span className="text-xs text-foreground/50">{sportLabel}</span>
         </p>
         {realTeam ? (
-          <p className="mt-1 truncate text-xs text-secondary/60">{realTeam}</p>
+          <p className="mt-1 truncate text-xs text-foreground/50">{realTeam}</p>
         ) : null}
       </div>
 
       <div className="text-right">
-        <p className="text-lg font-semibold text-black">{totalPoints} pts</p>
-        <p className="text-xs text-secondary/60">({avgPoints.toFixed(1)} avg)</p>
-        {cost ? <p className="mt-1 text-xs text-secondary">${cost}M</p> : null}
+        <p className="text-lg font-semibold text-foreground">
+          {totalPoints} pts
+        </p>
+        <p className="text-xs text-foreground/50">
+          ({avgPoints.toFixed(1)} avg)
+        </p>
+        {cost ? (
+          <p className="mt-1 text-xs text-foreground/55">${cost}M</p>
+        ) : null}
       </div>
     </article>
   );

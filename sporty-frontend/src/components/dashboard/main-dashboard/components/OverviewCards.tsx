@@ -16,14 +16,14 @@ export function OverviewCards({
         {stats.map((stat) => (
           <Card
             key={stat.label}
-            className="rounded-lg border border-accent/20 bg-white shadow-card transition-all duration-200 hover:shadow-hover"
+            className="border-white/10 bg-surface/80 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/30 hover:shadow-[0_18px_50px_rgba(0,229,255,0.10)]"
           >
             <CardContent className="p-5">
-              <p className="text-sm text-secondary">{stat.label}</p>
-              <p className="mt-2 font-display text-3xl font-bold tracking-tight text-black">
+              <p className="text-sm text-slate-400">{stat.label}</p>
+              <p className="mt-2 font-display text-3xl font-bold tracking-tight text-foreground">
                 {isLoading ? "..." : stat.value}
               </p>
-              <p className="mt-2 text-xs font-semibold text-primary">
+              <p className="mt-2 text-xs font-semibold text-accent-primary">
                 {stat.change}
               </p>
             </CardContent>

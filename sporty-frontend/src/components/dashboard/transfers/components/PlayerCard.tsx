@@ -38,20 +38,22 @@ export function PlayerCard({
 
   return (
     <article
-      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-md border border-accent/20 bg-white p-4 transition-all duration-200 hover:border-border hover:shadow-sm"
+      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-surface/80 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/25 hover:shadow-[0_16px_40px_rgba(0,0,0,0.22)]"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-medium text-black">
+        <p className="truncate text-base font-medium text-foreground">
           👤 {name}
         </p>
-        <p className="mt-1 text-sm text-secondary">{sportLabel}</p>
+        <p className="mt-1 text-sm text-slate-400">{sportLabel}</p>
       </div>
 
       <div className="text-right sm:min-w-27.5">
-        <p className="text-sm font-semibold text-black">💰 ${price}M</p>
-        <p className="text-xs text-secondary/60">Proj: {avgPoints.toFixed(1)}</p>
-        {form ? <p className="text-xs text-secondary/60">Form: {form}/10</p> : null}
+        <p className="text-sm font-semibold text-foreground">💰 ${price}M</p>
+        <p className="text-xs text-slate-500">Proj: {avgPoints.toFixed(1)}</p>
+        {form ? (
+          <p className="text-xs text-slate-500">Form: {form}/10</p>
+        ) : null}
       </div>
 
       <div>
@@ -59,7 +61,7 @@ export function PlayerCard({
           type="button"
           disabled={disabled}
           onClick={() => onAdd(id)}
-          className="rounded-full border border-border px-3.5 py-1.5 text-sm text-secondary transition-colors hover:border-primary-500 hover:text-primary-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-sm font-medium text-slate-300 transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Add
         </button>

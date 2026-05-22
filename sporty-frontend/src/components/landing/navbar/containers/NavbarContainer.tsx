@@ -33,10 +33,11 @@ export function NavbarContainer() {
 
   return (
     <header
-      className={`sticky top-0 z-header transition-all duration-300 ${isScrolled
-          ? "border-b border-accent/20 bg-white/90 shadow-card backdrop-blur-sm"
+      className={`sticky top-0 z-header transition-all duration-300 ${
+        isScrolled
+          ? "border-b border-white/10 bg-background/80 shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
           : "border-b border-transparent bg-transparent"
-        }`}
+      }`}
     >
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-8">

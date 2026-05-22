@@ -22,22 +22,31 @@ function sportLabel(sport: LeagueRow["sport"]): string {
 
 export function LeagueHistory({ leagues }: LeagueHistoryProps) {
   return (
-    <section className="rounded-lg border border-accent/20 bg-white p-5">
-      <h3 className="text-base font-medium text-black">League History</h3>
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+      <h3 className="text-base font-medium text-foreground">League History</h3>
 
       <div className="mt-4 space-y-3">
         {leagues.map((league) => (
-          <article key={league.id} className="rounded-md border border-accent/20 bg-[#F4F4F9] p-3">
+          <article
+            key={league.id}
+            className="rounded-md border border-white/10 bg-white/5 p-3"
+          >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-medium text-black">{league.name}</p>
-                <p className="text-xs text-secondary">{sportLabel(league.sport)}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {league.name}
+                </p>
+                <p className="text-xs text-foreground/55">
+                  {sportLabel(league.sport)}
+                </p>
               </div>
-              <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+              <span className="rounded-full border border-accent-primary/20 bg-accent-primary/10 px-2.5 py-1 text-xs font-medium text-accent-primary">
                 Rank #{league.rank}
               </span>
             </div>
-            <p className="mt-2 text-sm text-black">{league.points} points</p>
+            <p className="mt-2 text-sm text-foreground">
+              {league.points} points
+            </p>
           </article>
         ))}
       </div>

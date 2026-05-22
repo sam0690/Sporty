@@ -16,17 +16,17 @@ export function LiveLeaderboard() {
   );
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="text-xs uppercase tracking-wider text-slate-500">
+    <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+      <div className="text-xs uppercase tracking-wider text-foreground/55">
         Leaderboard
       </div>
-      <div className="mt-3 space-y-2 text-sm text-slate-700">
+      <div className="mt-3 space-y-2 text-sm text-foreground/70">
         {rows.length === 0 && <p>No ranking data yet.</p>}
         {rows.map(([playerId, points], idx) => (
           <div key={playerId} className="flex items-center justify-between">
-            <span className="font-medium text-slate-500">#{idx + 1}</span>
+            <span className="font-medium text-foreground/55">#{idx + 1}</span>
             <span className="truncate px-3">{playerId}</span>
-            <span className="font-semibold text-slate-900">
+            <span className="font-semibold text-foreground">
               {points.toFixed(1)}
             </span>
           </div>

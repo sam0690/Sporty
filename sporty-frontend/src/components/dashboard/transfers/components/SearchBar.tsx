@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
 
 type SearchBarProps = {
@@ -9,32 +9,48 @@ type SearchBarProps = {
 };
 
 export function SearchBar({ onSearch, resetToken = 0 }: SearchBarProps) {
-  const [inputValue, setInputValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const timeoutRef = useRef<number | null>(null);
+
+  const scheduleSearch = useCallback(
+    (value: string) => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
+        onSearch(value);
+      }, 300);
+    },
+    [onSearch],
+  );
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      onSearch(inputValue);
-    }, 300);
-
     return () => {
-      window.clearTimeout(timeout);
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
     };
-  }, [inputValue, onSearch]);
+  }, [onSearch]);
 
   useEffect(() => {
-    setInputValue("");
-  }, [resetToken]);
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+    scheduleSearch("");
+  }, [resetToken, scheduleSearch]);
 
   return (
     <div className="relative group">
-      <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary/60" />
+      <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
 
       <input
+        ref={inputRef}
         type="search"
-        value={inputValue}
-        onChange={(event) => setInputValue(event.target.value)}
+        defaultValue=""
+        onChange={(event) => scheduleSearch(event.target.value)}
         placeholder="Search players..."
-        className="w-full rounded-full border border-border bg-white py-3 pl-12 pr-5 text-black outline-none transition-all duration-200 placeholder:text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/30"
+        className="w-full rounded-full border border-white/10 bg-surface/85 py-3 pl-12 pr-5 text-foreground outline-none transition-all duration-200 placeholder:text-slate-500 focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
       />
     </div>
   );

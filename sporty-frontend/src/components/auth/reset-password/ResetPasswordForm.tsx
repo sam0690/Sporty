@@ -92,7 +92,7 @@ export function ResetPasswordForm() {
         />
       }
     >
-      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-xl border border-accent/20 bg-white shadow-strong">
+      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-surface/90 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl">
         <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
           <div className="flex items-center gap-2 text-primary">
             <span className="text-lg" aria-hidden="true">
@@ -100,17 +100,17 @@ export function ResetPasswordForm() {
             </span>
             <span className="font-display text-base font-bold">Sporty</span>
           </div>
-          <CardTitle className="font-display text-3xl font-bold text-black sm:text-4xl">
+          <CardTitle className="font-display text-3xl font-bold text-foreground sm:text-4xl">
             Create new password
           </CardTitle>
-          <p className="text-sm text-secondary">
+          <p className="text-sm text-foreground/65">
             Your new password must be different from previous
           </p>
         </CardHeader>
 
         <CardContent className="space-y-5 p-8 pt-0 sm:p-10 sm:pt-0">
           {!token && (
-            <p className="rounded-md border border-warning/20 bg-warning/10 p-3 text-sm font-medium text-black">
+            <p className="rounded-md border border-warning/20 bg-warning/10 p-3 text-sm font-medium text-foreground">
               Invalid or missing reset token.
             </p>
           )}
@@ -119,12 +119,12 @@ export function ResetPasswordForm() {
             <div className="relative">
               <label
                 htmlFor="newPassword"
-                className="mb-1 block text-sm font-medium text-black"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 New Password
               </label>
               <div className="relative">
-                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                 <input
                   id="newPassword"
                   type={showPassword ? "text" : "password"}
@@ -132,12 +132,12 @@ export function ResetPasswordForm() {
                   onChange={(event) => setNewPassword(event.target.value)}
                   placeholder="Enter new password"
                   autoComplete="new-password"
-                  className="h-12 w-full rounded-md border border-border bg-white px-4 pl-10 pr-14 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200"
+                  className="h-12 w-full rounded-md border border-white/10 bg-white/5 px-4 pl-10 pr-14 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary transition-colors hover:text-primary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/40 transition-colors hover:text-accent-primary"
                   aria-label={
                     showPassword ? "Hide new password" : "Show new password"
                   }
@@ -160,12 +160,12 @@ export function ResetPasswordForm() {
             <div className="relative">
               <label
                 htmlFor="confirmPassword"
-                className="mb-1 block text-sm font-medium text-black"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 Confirm New Password
               </label>
               <div className="relative">
-                <CheckCircle2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
+                <CheckCircle2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
@@ -173,12 +173,12 @@ export function ResetPasswordForm() {
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="Confirm new password"
                   autoComplete="new-password"
-                  className="h-12 w-full rounded-md border border-border bg-white px-4 pl-10 pr-14 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200"
+                  className="h-12 w-full rounded-md border border-white/10 bg-white/5 px-4 pl-10 pr-14 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary transition-colors hover:text-primary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/40 transition-colors hover:text-accent-primary"
                   aria-label={
                     showConfirmPassword
                       ? "Hide confirm password"
@@ -215,10 +215,10 @@ export function ResetPasswordForm() {
             </Button>
           </form>
 
-          <p className="border-t border-accent/20 pt-4 text-center text-sm text-secondary">
+          <p className="border-t border-white/10 pt-4 text-center text-sm text-foreground/60">
             <Link
               href="/login"
-              className="font-semibold text-primary hover:text-[#035c3d] hover:underline"
+              className="font-semibold text-accent-primary hover:text-accent-secondary hover:underline"
             >
               Back to Login
             </Link>

@@ -7,7 +7,12 @@ import {
 
 export function LandingHeroContainer() {
   return (
-    <section className="bg-black" aria-labelledby="landing-hero-title" id="features">
+    <section
+      className="relative overflow-hidden bg-background"
+      aria-labelledby="landing-hero-title"
+      id="features"
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,229,255,0.12),_transparent_34%),radial-gradient(circle_at_right,_rgba(255,61,129,0.10),_transparent_28%)]" />
       <div className="mx-auto w-full max-w-7xl px-4 pb-14 pt-12 sm:px-6 md:pb-16 md:pt-16 lg:px-8 lg:pb-20 lg:pt-20">
         <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
           <div>

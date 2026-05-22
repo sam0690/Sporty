@@ -27,15 +27,17 @@ const sportBadgeStyles: Record<PublicLeague["sport"], string> = {
 export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
   return (
     <section className="mx-auto max-w-2xl space-y-3">
-      <h2 className="mb-4 text-md font-medium text-black">Public Leagues</h2>
+      <h2 className="mb-4 text-md font-medium text-foreground">
+        Public Leagues
+      </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {leagues.map((league) => (
           <article
             key={league.id}
-            className="rounded-md border border-accent/20 bg-white p-4 animate-[fade-soft_0.2s_ease]"
+            className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl animate-[fade-soft_0.2s_ease]"
           >
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-medium text-black">{league.name}</h3>
+              <h3 className="font-medium text-foreground">{league.name}</h3>
               <span
                 className="text-base"
                 aria-label={league.sport}
@@ -44,19 +46,21 @@ export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
                 {sportBadgeStyles[league.sport]}
               </span>
             </div>
-            <p className="mt-2 text-sm text-secondary">
+            <p className="mt-2 text-sm text-slate-400">
               Members: {league.memberCount}
             </p>
-            <p className="text-xs text-secondary">
+            <p className="text-xs text-slate-500">
               {league.requiresInviteCode
                 ? "Requires invite code"
                 : "Open for direct join"}
             </p>
             {league.joinMessage ? (
-              <p className="mt-1 text-xs text-secondary">{league.joinMessage}</p>
+              <p className="mt-1 text-xs text-slate-500">
+                {league.joinMessage}
+              </p>
             ) : null}
             {league.midseasonEntryWindowNumber ? (
-              <p className="mt-1 text-xs text-amber-700">
+              <p className="mt-1 text-xs text-amber-300">
                 Scoring starts from transfer window{" "}
                 {league.midseasonEntryWindowNumber}
               </p>

@@ -38,23 +38,26 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 bg-black font-sans md:block">
-      <div className="relative h-full">
-        <div className="p-6 border-b border-white/10">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-white/10 bg-gradient-to-b from-[#060816] via-[#050816] to-[#03040a] font-sans md:block">
+      <div className="relative flex h-full flex-col overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,229,255,0.14),_transparent_38%),radial-gradient(circle_at_bottom,_rgba(255,61,129,0.10),_transparent_34%)]" />
+        <div className="relative z-10 border-b border-white/10 p-6">
           <div className="flex items-center justify-between gap-2">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 font-display text-xl font-bold tracking-tight text-[#F4F4F9] transition-opacity hover:opacity-80 hover:no-underline"
+              className="inline-flex items-center gap-2 font-display text-xl font-bold tracking-[0.18em] text-foreground transition-opacity hover:opacity-80 hover:no-underline"
             >
-              <span aria-hidden="true">⚽🏀🏏</span>
+              <span aria-hidden="true" className="text-accent-primary">
+                ●
+              </span>
               <span>Sporty</span>
             </Link>
-            <NotificationBell className="text-[#F4F4F9]/70 hover:text-[#F4F4F9]" />
+            <NotificationBell className="text-slate-300 transition-colors hover:text-foreground" />
           </div>
         </div>
 
         <nav
-          className="flex flex-col gap-1 px-3 pt-4"
+          className="relative z-10 flex flex-1 flex-col gap-1 px-3 pt-4"
           aria-label="Dashboard Navigation"
         >
           {items.map((item) => {
@@ -66,27 +69,34 @@ export function Sidebar({ items }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-200 hover:no-underline",
+                  "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:no-underline",
                   active
-                    ? "bg-primary text-white font-semibold"
-                    : "text-[#F4F4F9]/70 hover:bg-white/10 hover:text-white",
+                    ? "border border-accent-primary/30 bg-white/8 text-foreground shadow-[0_0_24px_rgba(0,229,255,0.14)]"
+                    : "border border-transparent text-slate-300 hover:border-white/8 hover:bg-white/6 hover:text-foreground",
                 )}
                 aria-current={active ? "page" : undefined}
               >
-                <Icon className="h-5 w-5" />
+                <Icon
+                  className={cn(
+                    "h-5 w-5 transition-colors",
+                    active
+                      ? "text-accent-primary"
+                      : "text-slate-400 group-hover:text-accent-primary",
+                  )}
+                />
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-6">
+        <div className="relative z-10 border-t border-white/10 p-6">
           <div className="flex justify-end">
             <button
               type="button"
               onClick={handleLogout}
               disabled={actionLoading.logout}
-              className="inline-flex items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 text-sm text-[#F4F4F9]/70 transition-all duration-200 hover:bg-white/10 hover:text-white disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all duration-200 hover:border-accent-secondary/30 hover:bg-accent-secondary/10 hover:text-foreground disabled:opacity-50"
               aria-label="Log out"
             >
               <LogOut className="h-4 w-4" />
@@ -97,7 +107,7 @@ export function Sidebar({ items }: SidebarProps) {
           <button
             type="button"
             onClick={handleOpenSettings}
-            className="mt-3 flex w-full items-center gap-2 rounded-md border border-white/20 bg-transparent px-3 py-2 text-sm text-[#F4F4F9]/70 transition-all duration-200 hover:bg-white/10 hover:text-white"
+            className="mt-3 flex w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all duration-200 hover:border-accent-primary/30 hover:bg-accent-primary/10 hover:text-foreground"
           >
             <Settings className="h-4 w-4" />
             <span>Settings</span>

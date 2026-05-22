@@ -12,7 +12,7 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
     <div className="md:hidden">
       <button
         type="button"
-        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-white text-secondary transition-colors hover:bg-accent/20 hover:text-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-white/5 text-foreground transition-colors hover:bg-white/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
         aria-expanded={open}
         aria-controls="mobile-nav-menu"
         aria-label={open ? "Close navigation menu" : "Open navigation menu"}
@@ -52,19 +52,22 @@ export function MobileMenu({ open, onToggle, children }: MobileMenuProps) {
         id="mobile-nav-menu"
         className={cn(
           "fixed inset-0 z-40 transition-opacity duration-200",
-          open ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+          open
+            ? "pointer-events-auto opacity-100"
+            : "pointer-events-none opacity-0",
         )}
       >
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onToggle} />
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={onToggle}
+        />
         <div
           className={cn(
-            "absolute right-0 top-0 h-full w-[82%] max-w-sm bg-white p-5 shadow-strong transition-transform duration-300",
+            "absolute right-0 top-0 h-full w-[82%] max-w-sm border-l border-white/10 bg-surface/95 p-5 shadow-strong backdrop-blur-xl transition-transform duration-300",
             open ? "translate-x-0" : "translate-x-full",
           )}
         >
-          <div className="space-y-4">
-            {children}
-          </div>
+          <div className="space-y-4">{children}</div>
         </div>
       </div>
     </div>

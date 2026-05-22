@@ -65,7 +65,7 @@ export function NavigationTabs({
 
   return (
     <nav
-      className="mb-6 overflow-x-auto rounded-lg border border-accent/20 bg-white p-2"
+      className="mb-6 overflow-x-auto rounded-[1.5rem] border border-white/10 bg-surface/70 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
       aria-label="League Navigation Tabs"
     >
       <div className="flex min-w-max gap-2">
@@ -81,8 +81,8 @@ export function NavigationTabs({
                 onClick={() => goToTab(tab.key)}
                 className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
                   isActive
-                    ? "border-primary/30 bg-primary/10 text-primary-900 shadow-sm"
-                    : "border-border bg-white text-secondary hover:border-border hover:bg-[#F4F4F9] hover:text-black"
+                    ? "border-accent-primary/25 bg-white/10 text-foreground shadow-[0_0_0_1px_rgba(0,229,255,0.18)]"
+                    : "border-transparent bg-white/5 text-slate-300 hover:border-white/10 hover:bg-white/8 hover:text-foreground"
                 }`}
               >
                 {tab.label}

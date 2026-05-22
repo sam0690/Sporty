@@ -426,24 +426,24 @@ export function LeagueRoster() {
 
   if (teamError) {
     return (
-      <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
+      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
         <NavigationTabs
           activeTab="roster"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
 
-        <div className="rounded-lg border border-danger/20 bg-danger/5 p-5">
-          <h2 className="text-base font-semibold text-red-800">
+        <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-5">
+          <h2 className="text-base font-semibold text-red-200">
             Unable to load roster
           </h2>
-          <p className="mt-1 text-sm text-danger">
+          <p className="mt-1 text-sm text-red-200/80">
             {teamError.message || "Failed to fetch team players."}
           </p>
           <button
             type="button"
             onClick={() => void refetchTeam()}
-            className="mt-4 rounded-full border border-danger/30 bg-white px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10"
+            className="mt-4 rounded-full border border-red-500/20 bg-white/5 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-500/10"
           >
             Retry
           </button>
@@ -457,8 +457,8 @@ export function LeagueRoster() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system] text-black">
-      <p className="text-sm text-secondary">
+    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
+      <p className="text-sm text-slate-400">
         Manager: {username || "Sporty User"}
       </p>
 
@@ -523,11 +523,11 @@ export function LeagueRoster() {
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-md border border-primary/30 bg-white px-3 py-2 shadow-strong">
-              <p className="text-sm font-medium text-black">
+            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 shadow-[0_16px_50px_rgba(0,0,0,0.28)]">
+              <p className="text-sm font-medium text-foreground">
                 {playerById[activeDragPlayerId].name}
               </p>
-              <p className="text-xs text-secondary">
+              <p className="text-xs text-slate-400">
                 {playerById[activeDragPlayerId].position}
               </p>
             </div>
@@ -536,7 +536,7 @@ export function LeagueRoster() {
       </DndContext>
 
       {isMultiSport ? (
-        <div className="rounded-md border border-accent/20 bg-white p-3 text-sm text-black">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-3 text-sm text-foreground">
           Sport Limits: {activeSportSummary}
         </div>
       ) : null}
@@ -546,7 +546,7 @@ export function LeagueRoster() {
           type="button"
           onClick={handleSave}
           disabled={!isDirty || isSaving}
-          className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-accent/40"
+          className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-6 py-2.5 text-sm font-medium text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving..." : "Save Lineup"}
         </button>

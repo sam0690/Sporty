@@ -81,13 +81,13 @@ export function SignUpForm() {
         <div className="mb-4">
           <Link
             href="/"
-            className="text-sm font-medium text-secondary transition-colors hover:text-black"
+            className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
           >
             ← Back to Home
           </Link>
         </div>
 
-        <Card className="animate-fade-in w-full rounded-xl border border-accent/20 bg-white shadow-strong">
+        <Card className="animate-fade-in w-full rounded-3xl border border-white/10 bg-surface/90 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl">
           <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
             <div className="flex items-center gap-2 text-primary">
               <span className="text-lg" aria-hidden="true">
@@ -95,10 +95,10 @@ export function SignUpForm() {
               </span>
               <span className="font-display text-base font-bold">Sporty</span>
             </div>
-            <CardTitle className="font-display text-3xl font-bold text-black sm:text-4xl">
+            <CardTitle className="font-display text-3xl font-bold text-foreground sm:text-4xl">
               Create your account
             </CardTitle>
-            <p className="text-sm text-secondary">
+            <p className="text-sm text-foreground/65">
               Start your fantasy sports journey today
             </p>
           </CardHeader>
@@ -108,7 +108,7 @@ export function SignUpForm() {
               <div>
                 <label
                   htmlFor="username"
-                  className="mb-1 block text-sm font-medium text-black"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   Username
                 </label>
@@ -118,7 +118,7 @@ export function SignUpForm() {
                   placeholder="your-username"
                   autoComplete="username"
                   error={errors.username?.message}
-                  className="rounded-md border-border bg-white px-4 py-3 text-black placeholder:text-secondary/60 transition-all duration-200 focus:border-primary focus:ring-2 focus:ring-primary/40"
+                  className="rounded-md border-white/10 bg-white/5 px-4 py-3 text-foreground placeholder:text-foreground/40 transition-all duration-200 focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
                   {...registerField("username")}
                 />
               </div>
@@ -126,19 +126,19 @@ export function SignUpForm() {
               <div>
                 <label
                   htmlFor="email"
-                  className="mb-1 block text-sm font-medium text-black"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="name@example.com"
                     autoComplete="email"
                     error={errors.email?.message}
-                    className="h-12 rounded-md border border-border bg-white px-4 pl-10 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/40"
+                    className="h-12 rounded-md border border-white/10 bg-white/5 px-4 pl-10 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
                     {...registerField("email")}
                   />
                 </div>
@@ -147,24 +147,24 @@ export function SignUpForm() {
               <div className="relative">
                 <label
                   htmlFor="password"
-                  className="mb-1 block text-sm font-medium text-black"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a password"
                     autoComplete="new-password"
                     {...registerField("password")}
-                    className="h-12 w-full rounded-md border border-border bg-white px-4 pl-10 pr-14 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200"
+                    className="h-12 w-full rounded-md border border-white/10 bg-white/5 px-4 pl-10 pr-14 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary transition-colors hover:text-primary"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/40 transition-colors hover:text-accent-primary"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
@@ -187,24 +187,24 @@ export function SignUpForm() {
               <div className="relative">
                 <label
                   htmlFor="confirmPassword"
-                  className="mb-1 block text-sm font-medium text-black"
+                  className="mb-1 block text-sm font-medium text-foreground"
                 >
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <CheckCircle2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
+                  <CheckCircle2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                   <input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm your password"
                     autoComplete="new-password"
                     {...registerField("confirmPassword")}
-                    className="h-12 w-full rounded-md border border-border bg-white px-4 pl-10 pr-14 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all duration-200"
+                    className="h-12 w-full rounded-md border border-white/10 bg-white/5 px-4 pl-10 pr-14 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary transition-colors hover:text-primary"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-foreground/40 transition-colors hover:text-accent-primary"
                     aria-label={
                       showConfirmPassword
                         ? "Hide confirm password"
@@ -248,7 +248,7 @@ export function SignUpForm() {
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-primary hover:text-[#035c3d] hover:underline"
+                className="font-semibold text-accent-primary hover:text-accent-secondary hover:underline"
               >
                 Sign in →
               </Link>

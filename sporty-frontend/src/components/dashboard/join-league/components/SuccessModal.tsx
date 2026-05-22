@@ -28,16 +28,18 @@ export function SuccessModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="animate-fade-in-scale w-full max-w-md rounded-lg bg-white p-6 text-center shadow-strong">
-        <div className="mb-4 text-4xl text-primary" aria-hidden="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xl">
+      <div className="animate-fade-in-scale w-full max-w-md rounded-4xl border border-white/10 bg-surface/90 p-6 text-center shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl">
+        <div className="mb-4 text-4xl text-accent-primary" aria-hidden="true">
           ✅
         </div>
-        <h2 className="text-xl font-medium text-black">
+        <h2 className="text-xl font-medium text-foreground">
           Successfully Joined!
         </h2>
-        <p className="mt-2 font-medium text-primary">{leagueData.name}</p>
-        <p className="mt-1 text-sm text-secondary">
+        <p className="mt-2 font-medium text-accent-primary">
+          {leagueData.name}
+        </p>
+        <p className="mt-1 text-sm text-slate-400">
           Team: {leagueData.teamName ?? "Not assigned yet"}
         </p>
 
@@ -56,7 +58,7 @@ export function SuccessModal({
               }
               router.push(`/leagues`);
             }}
-            className="w-full rounded-full bg-primary px-6 py-2 font-medium text-white transition-colors hover:bg-primary-700"
+            className="w-full rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-6 py-2 font-medium text-slate-950 transition-colors hover:brightness-110"
           >
             Go to League
           </button>
@@ -70,7 +72,7 @@ export function SuccessModal({
               }
               router.push(`/leagues`);
             }}
-            className="w-full rounded-full border border-border bg-white px-6 py-2 font-semibold text-black transition-colors hover:border-primary-500"
+            className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-2 font-semibold text-foreground transition-colors hover:bg-white/8"
           >
             Set Lineup
           </button>
@@ -78,7 +80,7 @@ export function SuccessModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-full border border-border bg-white px-6 py-2 text-sm font-medium text-black transition-colors hover:border-primary-500 hover:text-primary"
+            className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/8"
           >
             Close
           </button>

@@ -11,18 +11,20 @@ export function InviteCodeDisplay({ inviteCode }: InviteCodeDisplayProps) {
     try {
       await navigator.clipboard.writeText(inviteCode);
       toastifier.success("Invite code copied");
-    } catch (error) {
+    } catch {
       toastifier.error("Unable to copy invite code");
     }
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-[#F4F4F9] p-3">
-      <span className="font-mono text-lg tracking-wider text-black">{inviteCode}</span>
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-white/10 bg-white/5 p-3">
+      <span className="font-mono text-lg tracking-wider text-foreground">
+        {inviteCode}
+      </span>
       <button
         type="button"
         onClick={handleCopy}
-        className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-black hover:border-primary-500"
+        className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground transition-colors hover:bg-white/10"
       >
         Copy
       </button>

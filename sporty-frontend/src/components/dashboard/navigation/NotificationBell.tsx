@@ -10,6 +10,7 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
+import { cn } from "@/utils/classUtils";
 import {
   fetchNotifications,
   markNotificationRead,
@@ -66,7 +67,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
       onChange={setOpened}
       width={340}
       position="bottom-end"
-      shadow="md"
+      shadow="xl"
       withinPortal
     >
       <Popover.Target>
@@ -77,10 +78,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
           size={16}
         >
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            variant="light"
+            color="cyan"
             aria-label="Notifications"
-            className={className}
+            className={cn(
+              "border border-white/10 bg-white/6 text-slate-100 transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10",
+              className,
+            )}
             onClick={() => setOpened((value) => !value)}
           >
             <Bell size={18} />
@@ -88,17 +92,17 @@ export function NotificationBell({ className }: NotificationBellProps) {
         </Indicator>
       </Popover.Target>
 
-      <Popover.Dropdown>
-        <Text fw={600} size="sm" mb="xs">
+      <Popover.Dropdown className="border border-white/10 bg-[#0b1120] text-foreground shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+        <Text fw={700} size="sm" mb="xs" className="text-foreground">
           Notifications
         </Text>
 
         {loading ? (
-          <Text size="sm" c="dimmed">
+          <Text size="sm" c="dimmed" className="text-slate-400">
             Loading notifications...
           </Text>
         ) : items.length === 0 ? (
-          <Text size="sm" c="dimmed">
+          <Text size="sm" c="dimmed" className="text-slate-400">
             No notifications yet.
           </Text>
         ) : (
@@ -109,13 +113,15 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   key={item.id}
                   type="button"
                   onClick={() => void onRead(item.id)}
-                  className={`w-full rounded-lg border px-3 py-2 text-left text-sm transition-colors ${item.is_read
-                      ? "border-accent/30 bg-white text-secondary"
-                      : "border-primary/20 bg-primary/5 text-black"
-                    }`}
+                  className={cn(
+                    "w-full rounded-xl border px-3 py-2 text-left text-sm transition-all hover:border-accent-primary/30 hover:bg-white/8",
+                    item.is_read
+                      ? "border-white/10 bg-white/5 text-slate-300"
+                      : "border-accent-primary/20 bg-accent-primary/10 text-foreground",
+                  )}
                 >
                   <p>{item.message}</p>
-                  <p className="mt-1 text-xs text-secondary/60">
+                  <p className="mt-1 text-xs text-slate-400">
                     {new Date(item.created_at).toLocaleString()}
                   </p>
                 </button>

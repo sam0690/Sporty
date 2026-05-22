@@ -45,26 +45,26 @@ export function LeagueGroup({ leagueName, players, sports }: LeagueGroupProps) {
 
   return (
     <section className="space-y-5">
-      <div className="relative h-24 overflow-hidden rounded-lg border border-accent/20 bg-linear-to-r from-slate-50 via-white to-slate-50">
+      <div className="relative h-24 overflow-hidden rounded-[1.5rem] border border-white/10 bg-linear-to-r from-slate-900 via-slate-800 to-slate-900">
         <Image
           src={sportImages[primarySport]}
           alt=""
           fill
-          className="object-cover opacity-20"
+          className="object-cover opacity-18 mix-blend-screen"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-linear-to-r from-white via-white/80 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-slate-950 via-slate-950/80 to-transparent" />
 
         <header className="relative z-10 flex h-full items-center justify-between gap-3 px-4 sm:px-5">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold text-black">
+            <h2 className="truncate text-lg font-semibold text-foreground">
               {leagueName}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               {sportCounts.map(({ sport, count }) => (
                 <span
                   key={sport}
-                  className="rounded-full border border-border bg-white/90 px-2 py-0.5 text-[11px] font-medium text-secondary"
+                  className="rounded-full border border-white/10 bg-white/8 px-2 py-0.5 text-[11px] font-medium text-slate-300"
                 >
                   {sportIcons[sport]} {count}
                 </span>
@@ -72,13 +72,13 @@ export function LeagueGroup({ leagueName, players, sports }: LeagueGroupProps) {
             </div>
           </div>
 
-          <span className="rounded-full border border-border bg-white/90 px-2.5 py-1 text-xs font-medium text-secondary">
+          <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-xs font-medium text-slate-300">
             {players.length} players
           </span>
         </header>
       </div>
 
-      <div className="mb-5 mt-1 border-b border-accent/20" />
+      <div className="mb-5 mt-1 border-b border-white/10" />
 
       <div className="space-y-3">
         {players.map((player) => (

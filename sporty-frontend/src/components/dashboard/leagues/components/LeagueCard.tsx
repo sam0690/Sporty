@@ -67,7 +67,7 @@ export function LeagueCard({
           router.push(`/leagues/${id}`);
         }
       }}
-      className="group cursor-pointer overflow-hidden rounded-lg border border-accent/20 bg-white opacity-0 transition-all duration-200 hover:shadow-md animate-fade-soft"
+      className="group cursor-pointer overflow-hidden rounded-[1.75rem] border border-white/10 bg-surface/80 opacity-0 transition-all duration-300 hover:-translate-y-1 hover:border-accent-primary/30 hover:shadow-[0_24px_60px_rgba(0,229,255,0.12)] animate-fade-soft"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       <div className="relative h-32 overflow-hidden">
@@ -78,31 +78,33 @@ export function LeagueCard({
           className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-b from-black/50 via-black/10 to-transparent" />
       </div>
 
       <div className="space-y-4 p-5">
         <div className="flex items-start justify-between gap-3">
-          <h3 className="text-md font-medium text-black">{name}</h3>
+          <h3 className="text-md font-semibold tracking-tight text-foreground">
+            {name}
+          </h3>
           <span
-            className="inline-flex items-center rounded-full border border-border px-2 py-1 text-xs"
+            className="inline-flex items-center rounded-full border border-white/10 bg-white/6 px-2 py-1 text-xs text-slate-200"
             aria-label={sport}
           >
             {sportIcons[sport]}
           </span>
         </div>
 
-        <div className="space-y-2 text-sm text-secondary">
+        <div className="space-y-2 text-sm text-slate-400">
           <p>👤 {teamName}</p>
           <p>👥 {memberCount} members</p>
         </div>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-secondary">
-            <span>{rankIcon(yourRank)}</span>
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <span className="text-accent-primary">{rankIcon(yourRank)}</span>
             <span>Rank #{yourRank}</span>
           </div>
-          <span className="text-sm text-secondary/60 transition-colors group-hover:text-primary-500">
+          <span className="text-sm text-accent-primary/70 transition-colors group-hover:text-accent-primary">
             View
           </span>
         </div>

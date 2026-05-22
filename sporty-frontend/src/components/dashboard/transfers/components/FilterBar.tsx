@@ -74,10 +74,10 @@ export function FilterBar({
                 onSportChange(sport);
                 onPositionChange("All");
               }}
-              className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all ${
+              className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                 isActive
-                  ? "border-primary-500 bg-primary/100 text-white"
-                  : "border-border bg-white text-secondary hover:border-border"
+                  ? "border-accent-primary/30 bg-white/10 text-foreground shadow-[0_0_0_1px_rgba(0,229,255,0.16)]"
+                  : "border-white/10 bg-white/5 text-slate-300 hover:border-accent-primary/20 hover:bg-white/8 hover:text-foreground"
               }`}
             >
               {sportLabels[sport]}
@@ -96,10 +96,10 @@ export function FilterBar({
                 key={position}
                 type="button"
                 onClick={() => onPositionChange(position)}
-                className={`whitespace-nowrap rounded-full border px-4 py-1.5 text-sm transition-all ${
+                className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all ${
                   isActive
-                    ? "border-primary-500 bg-primary/100 text-white"
-                    : "border-border bg-white text-secondary hover:border-border"
+                    ? "border-accent-primary/30 bg-white/10 text-foreground shadow-[0_0_0_1px_rgba(0,229,255,0.16)]"
+                    : "border-white/10 bg-white/5 text-slate-300 hover:border-accent-primary/20 hover:bg-white/8 hover:text-foreground"
                 }`}
               >
                 {position}

@@ -20,9 +20,17 @@ import {
   type StatsHighlights,
 } from "@/components/dashboard/leagues/league-leaderboard/components/StatsHighlight";
 import { UserRankCard } from "@/components/dashboard/leagues/league-leaderboard/components/UserRankCard";
-import { WeekSelector, type SelectedWeek } from "@/components/dashboard/leagues/league-leaderboard/components/WeekSelector";
+import {
+  WeekSelector,
+  type SelectedWeek,
+} from "@/components/dashboard/leagues/league-leaderboard/components/WeekSelector";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
-import { useLeaderboard, useLeague, useMyTeam, useActiveWindow } from "@/hooks/leagues/useLeagues";
+import {
+  useLeaderboard,
+  useLeague,
+  useMyTeam,
+  useActiveWindow,
+} from "@/hooks/leagues/useLeagues";
 import type { TLeaderboardEntry, TLeaderboardResponse } from "@/types";
 
 type LeaderboardData = {
@@ -45,14 +53,14 @@ type LeaderboardData = {
   standings: Standing[];
 };
 
-
 export function LeagueLeaderboard() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
 
   const { data: league, isLoading: isLeagueLoading } = useLeague(leagueId);
   const { data: myTeam, isLoading: isTeamLoading } = useMyTeam(leagueId);
-  const { data: activeWindow, isLoading: isWindowLoading } = useActiveWindow(leagueId);
+  const { data: activeWindow, isLoading: isWindowLoading } =
+    useActiveWindow(leagueId);
   const { username } = useMe();
 
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek>("overall");
@@ -60,7 +68,7 @@ export function LeagueLeaderboard() {
 
   const { data: leaderboard, isLoading: isLeaderboardLoading } = useLeaderboard(
     leagueId,
-    selectedWeek === "overall" ? undefined : selectedWeek.toString()
+    selectedWeek === "overall" ? undefined : selectedWeek.toString(),
   );
 
   const isCommissioner = league?.owner?.username === username;
@@ -68,7 +76,7 @@ export function LeagueLeaderboard() {
   const standings = useMemo<Standing[]>(() => {
     if (!leaderboard) return [];
 
-    return leaderboard.entries.map(entry => ({
+    return leaderboard.entries.map((entry) => ({
       rank: entry.rank ?? 0,
       teamId: entry.team_id,
       teamName: entry.team_name,
@@ -85,7 +93,7 @@ export function LeagueLeaderboard() {
 
   const userTeam = useMemo(() => {
     if (!myTeam || !standings.length) return null;
-    const teamInStandings = standings.find(s => s.teamId === myTeam.id);
+    const teamInStandings = standings.find((s) => s.teamId === myTeam.id);
     if (!teamInStandings) return null;
 
     const topPoints = standings[0].totalPoints;
@@ -96,11 +104,12 @@ export function LeagueLeaderboard() {
       totalPoints: teamInStandings.totalPoints,
       wins: 0,
       losses: 0,
-      pointsBehind: topPoints - teamInStandings.totalPoints
+      pointsBehind: topPoints - teamInStandings.totalPoints,
     };
   }, [myTeam, standings]);
 
-  const isLoading = isLeagueLoading || isTeamLoading || isLeaderboardLoading || isWindowLoading;
+  const isLoading =
+    isLeagueLoading || isTeamLoading || isLeaderboardLoading || isWindowLoading;
 
   if (isLoading) {
     return (
@@ -121,9 +130,9 @@ export function LeagueLeaderboard() {
   }
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 text-black [font-family:system-ui,-apple-system]">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-secondary">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 font-[system-ui,-apple-system] text-foreground">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-slate-400">
           Manager: {username || "Sporty User"}
         </p>
       </div>
@@ -136,12 +145,12 @@ export function LeagueLeaderboard() {
 
       <LeaderboardHeader
         leagueName={league.name}
-        sport={league.sports[0]?.sport.name as Sport || "football"}
+        sport={(league.sports[0]?.sport.name as Sport) || "football"}
         currentWeek={activeWindow?.number || 1}
         totalWeeks={activeWindow?.total_number || 16}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
         <WeekSelector
           currentWeek={activeWindow?.number || 1}
           totalWeeks={activeWindow?.total_number || 16}

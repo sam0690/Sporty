@@ -34,7 +34,7 @@ export function Leagues() {
   };
 
   return (
-    <section className="mx-auto max-w-7xl bg-white px-6 py-12 text-black [font-family:system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <section className="mx-auto max-w-7xl px-4 py-8 text-foreground sm:px-6 lg:px-8 lg:py-10">
       <LeaguesHeader userName={userName} />
 
       <div className="mt-8">
@@ -47,7 +47,7 @@ export function Leagues() {
 
       <div className="mt-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {Array.from({ length: 6 }, (_, index) => (
               <LeagueCardSkeleton key={index} />
             ))}
@@ -55,7 +55,7 @@ export function Leagues() {
         ) : leagues.length === 0 ? (
           <EmptyLeagues />
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {leagues.map((league, index) => (
               <LeagueCard
                 key={league.id}

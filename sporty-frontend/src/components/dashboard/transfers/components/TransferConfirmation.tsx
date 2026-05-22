@@ -22,9 +22,7 @@ type TransferConfirmationProps = {
   allowUnpaired?: boolean;
   stagedOutPlayers?: OwnedPlayer[];
   stagedInPlayers?: SelectedPlayer[];
-  // new: whether transfers are currently open; if false, confirm is disabled
   transfersOpen?: boolean;
-  // optional deadline (ISO string) for countdown display
   transferDeadlineAt?: string | null;
 };
 
@@ -45,21 +43,20 @@ export function TransferConfirmation({
     if (!transferDeadlineAt) {
       return;
     }
-    let mounted = true;
+
     const update = () => {
-      const deadline = new Date(transferDeadlineAt as string);
+      const deadline = new Date(transferDeadlineAt);
       const diff = Math.max(
         0,
         Math.floor((deadline.getTime() - Date.now()) / 1000),
       );
-      if (mounted) setSecondsLeft(diff);
+      setSecondsLeft(diff);
     };
+
     update();
-    const id = setInterval(update, 1000);
-    return () => {
-      mounted = false;
-      clearInterval(id);
-    };
+    const id = window.setInterval(update, 1000);
+
+    return () => window.clearInterval(id);
   }, [transferDeadlineAt]);
 
   if (!isOpen) {
@@ -78,53 +75,48 @@ export function TransferConfirmation({
     secondsLeft == null
       ? null
       : (() => {
-          const s = secondsLeft;
-          const h = Math.floor(s / 3600);
-          const m = Math.floor((s % 3600) / 60);
-          const sec = s % 60;
-          return `${h > 0 ? `${h}:` : ""}${h > 0 ? String(m).padStart(2, "0") : m}:${String(sec).padStart(2, "0")}`;
+          const totalSeconds = secondsLeft;
+          const hours = Math.floor(totalSeconds / 3600);
+          const minutes = Math.floor((totalSeconds % 3600) / 60);
+          const seconds = totalSeconds % 60;
+
+          return `${hours > 0 ? `${hours}:` : ""}${hours > 0 ? String(minutes).padStart(2, "0") : minutes}:${String(seconds).padStart(2, "0")}`;
         })();
 
   const confirmDisabled = isLoading || !isValidBatch || !transfersOpen;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="w-full max-w-md rounded-3xl border border-accent/20 bg-white p-8 shadow-strong animate-in zoom-in-95 duration-200">
-        <h3 className="text-2xl font-bold text-black">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xl animate-in fade-in">
+      <div className="w-full max-w-md rounded-4xl border border-white/10 bg-surface/90 p-8 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl animate-in zoom-in-95 duration-200">
+        <h3 className="text-2xl font-bold text-foreground">
           Confirm Staged Transfers
         </h3>
 
-        <p className="mt-4 text-sm text-secondary">
+        <p className="mt-4 text-sm text-slate-400">
           Out: {stagedOutPlayers.length} | In: {stagedInPlayers.length}
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-lg border border-red-100 bg-danger/5 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-danger">
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-red-300">
               Out
             </p>
             <div className="mt-2 space-y-1">
               {stagedOutPlayers.map((player) => (
-                <p
-                  key={player.id.toString()}
-                  className="truncate text-xs text-black"
-                >
+                <p key={player.id} className="truncate text-xs text-foreground">
                   {player.name}
                 </p>
               ))}
             </div>
           </div>
 
-          <div className="rounded-lg border border-green-100 bg-primary/5 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
               In
             </p>
             <div className="mt-2 space-y-1">
               {stagedInPlayers.map((player) => (
-                <p
-                  key={player.id.toString()}
-                  className="truncate text-xs text-black"
-                >
+                <p key={player.id} className="truncate text-xs text-foreground">
                   {player.name}
                 </p>
               ))}
@@ -132,13 +124,13 @@ export function TransferConfirmation({
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm leading-relaxed text-secondary">
+        <p className="mt-6 text-center text-sm leading-relaxed text-slate-400">
           Confirming will apply all staged transfers at once.
         </p>
 
         <div className="mt-8 flex flex-col gap-3">
-          {!transfersOpen && (
-            <div className="rounded-md border border-yellow-100 bg-yellow-50 p-3 text-sm text-yellow-800">
+          {!transfersOpen ? (
+            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-200">
               Transfers are closed for this window.
               {formattedCountdown ? (
                 <span className="ml-2 font-mono">
@@ -146,13 +138,13 @@ export function TransferConfirmation({
                 </span>
               ) : null}
             </div>
-          )}
+          ) : null}
 
           <button
             type="button"
             onClick={onConfirm}
             disabled={confirmDisabled}
-            className="w-full rounded-full bg-primary py-3.5 font-bold text-white transition-all hover:bg-primary-700 disabled:opacity-50 shadow-lg shadow-primary-200"
+            className="w-full rounded-full bg-linear-to-r from-accent-primary via-cyan-400 to-accent-secondary py-3.5 font-bold text-background shadow-[0_16px_40px_rgba(0,229,255,0.18)] transition-all hover:brightness-110 disabled:opacity-50"
           >
             {isLoading ? "Processing..." : "Confirm Transfers"}
           </button>
@@ -160,7 +152,7 @@ export function TransferConfirmation({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full rounded-full py-3 font-semibold text-secondary/60 hover:text-secondary transition-colors"
+            className="w-full rounded-full border border-white/10 py-3 font-semibold text-slate-400 transition-colors hover:text-foreground"
           >
             Cancel
           </button>

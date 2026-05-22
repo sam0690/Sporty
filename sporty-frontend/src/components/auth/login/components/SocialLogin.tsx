@@ -40,7 +40,7 @@ export function SocialLogin() {
       <Button
         type="button"
         variant="outline"
-        className="rounded-md border border-border bg-white px-4 py-3 text-black transition-all duration-200 hover:bg-accent/20"
+        className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-foreground transition-all duration-200 hover:bg-white/10"
         onClick={handleGoogleLogin}
         disabled={isSubmitting}
       >
@@ -50,7 +50,7 @@ export function SocialLogin() {
       <Button
         type="button"
         variant="outline"
-        className="rounded-md border border-border bg-white px-4 py-3 text-black transition-all duration-200 hover:bg-accent/20"
+        className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-foreground transition-all duration-200 hover:bg-white/10"
         disabled
       >
         <span className="mr-2 text-sm">GH</span>

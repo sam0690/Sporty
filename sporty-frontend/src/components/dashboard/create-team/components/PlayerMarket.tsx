@@ -89,14 +89,14 @@ export function PlayerMarket({
   }, [players, searchQuery, selectedPosition, selectedSport]);
 
   return (
-    <section className="space-y-4 rounded-lg bg-[#F4F4F9] p-4 shadow-card">
-      <h2 className="text-lg font-semibold text-black">Player Market</h2>
+    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+      <h2 className="text-lg font-semibold text-foreground">Player Market</h2>
 
       <input
         value={searchQuery}
         onChange={(event) => onSearchQueryChange(event.target.value)}
         placeholder="Search by player name..."
-        className="w-full rounded-lg border border-border px-4 py-2 text-sm text-black outline-none focus:ring-2 focus:ring-primary"
+        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
       />
 
       <div className="flex flex-wrap gap-2">
@@ -107,7 +107,7 @@ export function PlayerMarket({
               key={position}
               type="button"
               onClick={() => onPositionChange(position)}
-              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary/100 text-white" : "bg-white text-secondary hover:bg-white-200"}`}
+              className={`rounded-full px-3 py-1.5 text-xs ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
             >
               {position}
             </button>
@@ -123,7 +123,7 @@ export function PlayerMarket({
               key={costBand}
               type="button"
               onClick={() => onCostFilterChange(costBand)}
-              className={`rounded-md px-3 py-1.5 text-xs ${active ? "bg-primary/100 text-white" : "bg-white text-secondary hover:bg-white-200"}`}
+              className={`rounded-full px-3 py-1.5 text-xs ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
             >
               {costBand === "All" ? "All Costs" : `$${costBand}M`}
             </button>
@@ -140,7 +140,7 @@ export function PlayerMarket({
                 key={sportOption}
                 type="button"
                 onClick={() => onSportChange(sportOption)}
-                className={`rounded-md px-3 py-1.5 text-xs capitalize ${active ? "bg-primary/100 text-white" : "bg-white text-secondary hover:bg-white-200"}`}
+                className={`rounded-full px-3 py-1.5 text-xs capitalize ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
               >
                 {sportOption}
               </button>
@@ -149,14 +149,16 @@ export function PlayerMarket({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white/80 px-4 py-3 shadow-sm backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-secondary">
-          <span className="font-semibold text-black">Page {currentPage}</span>
+      <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
+          <span className="font-semibold text-foreground">
+            Page {currentPage}
+          </span>
           <span>/ {Math.max(totalPages, 1)}</span>
           <span className="hidden sm:inline">•</span>
           <span>{totalPlayers} players total</span>
           {isLoadingPage ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent-primary/10 px-2.5 py-1 text-xs font-medium text-accent-primary">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Loading next page
             </span>
@@ -168,7 +170,7 @@ export function PlayerMarket({
             type="button"
             onClick={onPreviousPage}
             disabled={currentPage <= 1 || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-full border border-border bg-white px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-[#F4F4F9] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
@@ -177,7 +179,7 @@ export function PlayerMarket({
             type="button"
             onClick={onNextPage}
             disabled={!hasNext || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" />
@@ -187,8 +189,8 @@ export function PlayerMarket({
 
       <div className="max-h-[60vh] space-y-3 overflow-y-auto p-1">
         {isLoadingPage && filteredPlayers.length === 0 ? (
-          <div className="flex min-h-40 items-center justify-center rounded-xl border border-dashed border-border bg-white/70 text-sm text-secondary">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" />
+          <div className="flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/5 text-sm text-slate-400">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-accent-primary" />
             Loading players...
           </div>
         ) : filteredPlayers.length === 0 ? (

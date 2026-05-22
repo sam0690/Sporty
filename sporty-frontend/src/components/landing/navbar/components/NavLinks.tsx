@@ -47,11 +47,11 @@ export function NavLinks({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary hover:text-black hover:no-underline",
+              "inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary hover:bg-white/6 hover:text-foreground hover:no-underline",
               mobile && "w-full",
               active
-                ? "bg-primary/10 text-primary font-semibold"
-                : "hover:bg-accent/20",
+                ? "border border-accent-primary/30 bg-white/8 text-foreground font-semibold"
+                : "border border-transparent",
             )}
           >
             {item.icon ? <span>{item.icon}</span> : null}

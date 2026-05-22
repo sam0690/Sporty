@@ -487,8 +487,8 @@ export function CreateLeague() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-black font-[system-ui,-apple-system]">
-      <p className="text-sm text-secondary">
+    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 font-[system-ui,-apple-system] text-foreground">
+      <p className="text-sm text-foreground/60">
         Manager: {username || "Sporty User"}
       </p>
 
@@ -504,7 +504,7 @@ export function CreateLeague() {
         </div>
       ) : null}
 
-      <div className="rounded-lg border border-accent/20 bg-white p-8 animate-[fade-soft_0.2s_ease]">
+      <div className="animate-[fade-soft_0.2s_ease] rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
         <div className="mt-2">
           {step === 1 ? (
             <LeagueBasicInfo
@@ -559,7 +559,7 @@ export function CreateLeague() {
               <button
                 type="button"
                 onClick={handlePreviousStep}
-                className="w-full rounded-full border border-border bg-white px-8 py-2.5 font-medium text-black hover:bg-[#F4F4F9] sm:w-auto"
+                className="w-full rounded-full border border-white/10 bg-white/5 px-8 py-2.5 font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
               >
                 Back
               </button>
@@ -569,7 +569,7 @@ export function CreateLeague() {
             <button
               type="button"
               onClick={handleNextStep}
-              className="w-full rounded-full bg-[#247BA0] px-8 py-2.5 font-semibold text-white shadow-sm hover:bg-[#1d6280] sm:w-auto"
+              className="w-full rounded-full bg-accent-primary px-8 py-2.5 font-semibold text-black shadow-sm transition-colors hover:bg-accent-secondary sm:w-auto"
             >
               Next
             </button>

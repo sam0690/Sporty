@@ -36,9 +36,9 @@ export function RecentActivity({
   const nowMs = useRelativeTime({ refreshIntervalMs: 60_000 });
 
   return (
-    <Card className="rounded-lg border border-accent/20 bg-white">
+    <Card className="border-white/10 bg-surface/80">
       <CardHeader className="pb-2">
-        <CardTitle className="font-display text-xl font-bold text-black">
+        <CardTitle className="font-display text-xl font-bold text-foreground">
           Recent Activity
         </CardTitle>
       </CardHeader>
@@ -48,16 +48,16 @@ export function RecentActivity({
             {Array.from({ length: 4 }, (_, index) => (
               <div
                 key={index}
-                className="h-16 animate-pulse rounded-md bg-accent/20"
+                className="h-16 animate-pulse rounded-xl bg-white/8"
               />
             ))}
           </div>
         ) : isError ? (
-          <div className="rounded-md border border-danger/20 bg-danger/5 p-4 text-sm text-danger">
+          <div className="rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-red-300">
             Failed to load recent activity.
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-md border border-accent/20 bg-[#F4F4F9] p-4 text-sm text-secondary">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
             There are no recent activities yet.
           </div>
         ) : (
@@ -65,26 +65,26 @@ export function RecentActivity({
             {items.map((item) => (
               <li
                 key={item.id}
-                className="rounded-md border border-accent/20 bg-white px-4 py-3 transition-colors hover:bg-[#F4F4F9]/50"
+                className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 transition-all hover:border-accent-primary/25 hover:bg-white/8"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs text-primary">
+                    <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-accent-primary/15 text-xs text-accent-primary">
                       {iconForActivity(item.type)}
                     </span>
                     <div>
-                      <p className="text-sm font-medium text-black">
+                      <p className="text-sm font-medium text-foreground">
                         {item.title}
                       </p>
-                      <p className="text-sm text-secondary">{item.detail}</p>
+                      <p className="text-sm text-slate-400">{item.detail}</p>
                       {item.leagueName ? (
-                        <p className="mt-1 text-xs text-secondary">
+                        <p className="mt-1 text-xs text-slate-500">
                           League: {item.leagueName}
                         </p>
                       ) : null}
                     </div>
                   </div>
-                  <span className="whitespace-nowrap text-xs text-secondary">
+                  <span className="whitespace-nowrap text-xs text-slate-500">
                     {formatRelativeTime(item.timestamp, nowMs)}
                   </span>
                 </div>

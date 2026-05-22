@@ -92,7 +92,7 @@ function PlayerChip({ player }: { player: TeamPlayer }) {
 
   return (
     <div className="relative flex flex-col items-center text-white">
-      <div className="relative flex h-14 w-14 items-center justify-center rounded-full bg-white text-xl shadow-md">
+      <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/95 text-xl shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
         <span>{sportIcon}</span>
         {player.isCaptain ? (
           <span className="absolute -left-1.5 -top-1.5 rounded-full border border-yellow-200 bg-yellow-300 px-1.5 py-0.5 text-[9px] font-bold leading-none text-yellow-900">
@@ -105,7 +105,7 @@ function PlayerChip({ player }: { player: TeamPlayer }) {
           </span>
         ) : null}
       </div>
-      <p className="mt-1 w-22 truncate text-center text-xs font-medium">
+      <p className="mt-1 w-22 truncate text-center text-xs font-medium text-foreground">
         {player.name}
       </p>
       <p className="text-[10px] text-white/75">{player.position}</p>
@@ -205,11 +205,12 @@ function PitchPreview({ players }: { players: TeamPlayer[] }) {
   const otherPlayers = formation.others;
 
   return (
-    <div className="relative mx-auto aspect-3/4 w-full max-w-155 overflow-hidden rounded-xl bg-linear-to-b from-[#04724D] to-[#035c3d] px-4 py-3 shadow-xl">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
-      <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
-      <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-18 w-18 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
+    <div className="relative mx-auto aspect-3/4 w-full max-w-155 overflow-hidden rounded-[1.75rem] border border-white/10 bg-linear-to-b from-emerald-700 via-emerald-800 to-slate-950 px-4 py-3 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_28%),radial-gradient(circle_at_bottom,rgba(0,229,255,0.10),transparent_30%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/18" />
+      <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/18" />
+      <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/18" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-18 w-18 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/18" />
 
       <FormationRow players={formation.forwards} yClass="top-[10%]" />
       <FormationRow players={formation.midfielders} yClass="top-[30%]" />
@@ -222,9 +223,9 @@ function PitchPreview({ players }: { players: TeamPlayer[] }) {
 
 function LoadingPitch() {
   return (
-    <div className="relative mx-auto aspect-3/4 w-full max-w-155 animate-pulse overflow-hidden rounded-xl bg-linear-to-b from-[#04724D] to-[#035c3d]">
-      <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-18 w-18 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20" />
+    <div className="relative mx-auto aspect-3/4 w-full max-w-155 animate-pulse overflow-hidden rounded-[1.75rem] border border-white/10 bg-linear-to-b from-emerald-700 via-emerald-800 to-slate-950">
+      <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/18" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-18 w-18 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/18" />
       {[
         "left-[25%] top-[10%]",
         "left-[75%] top-[10%]",
@@ -261,9 +262,9 @@ export function TeamPreview({
   );
 
   return (
-    <Card className="rounded-lg border border-accent/20 bg-white">
+    <Card className="border-white/10 bg-surface/80">
       <CardHeader className="pb-2">
-        <CardTitle className="font-display text-xl font-bold text-black">
+        <CardTitle className="font-display text-xl font-bold text-foreground">
           Team Preview
         </CardTitle>
       </CardHeader>
@@ -275,15 +276,15 @@ export function TeamPreview({
             ))}
           </div>
         ) : isError ? (
-          <div className="rounded-md border border-danger/20 bg-danger/5 p-4 text-sm text-danger">
+          <div className="rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-red-300">
             Failed to load team previews.
           </div>
         ) : !hasLeagues ? (
-          <div className="rounded-md border border-accent/20 bg-[#F4F4F9] p-4 text-sm text-secondary">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
             You have not joined a league yet.
           </div>
         ) : !activeSlide ? (
-          <div className="rounded-md border border-accent/20 bg-[#F4F4F9] p-4 text-sm text-secondary">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
             No lineup has been set yet.
           </div>
         ) : (
@@ -292,13 +293,13 @@ export function TeamPreview({
             onClick={() =>
               router.push(`/leagues/${activeSlide.leagueId}/lineup`)
             }
-            className="w-full rounded-md border border-accent/20 p-3 text-left transition-all duration-200 hover:border-primary/40 hover:shadow-card"
+            className="w-full rounded-2xl border border-white/10 p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/30 hover:shadow-[0_18px_50px_rgba(0,229,255,0.1)]"
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-black">
+              <p className="text-sm font-semibold text-foreground">
                 {activeSlide.leagueName}
               </p>
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+              <span className="rounded-full bg-accent-primary/15 px-2 py-0.5 text-xs font-semibold text-accent-primary">
                 {activeSlide.gameweek
                   ? `GW ${activeSlide.gameweek}`
                   : "Current GW"}

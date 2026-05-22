@@ -1,6 +1,9 @@
 "use client";
 
-import { PlayerSlot, type Player } from "@/components/dashboard/leagues/league-lineup/components/PlayerSlot";
+import {
+  PlayerSlot,
+  type Player,
+} from "@/components/dashboard/leagues/league-lineup/components/PlayerSlot";
 
 type PositionLimit = {
   max: number;
@@ -43,12 +46,14 @@ export function PositionGroup({
   const emptySlots = Math.max(0, limits.max - activeCount);
 
   return (
-    <section className="space-y-3 rounded-md border border-accent/20 p-4">
+    <section className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
       <header className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-medium text-black">
+        <h3 className="text-sm font-medium text-foreground">
           {positionIcon(position)} {position}
         </h3>
-        <p className={`text-sm ${activeCount >= limits.max ? "text-amber-600" : "text-secondary"}`}>
+        <p
+          className={`text-sm ${activeCount >= limits.max ? "text-amber-300" : "text-foreground/55"}`}
+        >
           {activeCount}/{limits.max}
         </p>
       </header>
@@ -68,7 +73,7 @@ export function PositionGroup({
         {Array.from({ length: emptySlots }).map((_, index) => (
           <div
             key={`${position}-empty-${index}`}
-            className="rounded-md border border-dashed border-border bg-[#F4F4F9]/50 p-4 text-center text-sm text-secondary/60 transition-all duration-150"
+            className="rounded-md border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55 transition-all duration-150"
           >
             Drop {position} here
           </div>

@@ -52,14 +52,14 @@ export function ForgotPasswordForm() {
       setSuccessMessage("");
       setSubmitError(
         result.error ??
-        "Unable to send reset email right now. Please try again.",
+          "Unable to send reset email right now. Please try again.",
       );
       return;
     }
 
     setSuccessMessage(
       result.message ??
-      "If an account exists with that email, you'll receive a reset link.",
+        "If an account exists with that email, you'll receive a reset link.",
     );
     setIsSubmitted(true);
   };
@@ -74,7 +74,7 @@ export function ForgotPasswordForm() {
         />
       }
     >
-      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-xl border border-accent/20 bg-white shadow-strong">
+      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-surface/90 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl">
         <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
           <div className="flex items-center gap-2 text-primary">
             <span className="text-lg" aria-hidden="true">
@@ -82,10 +82,10 @@ export function ForgotPasswordForm() {
             </span>
             <span className="font-display text-base font-bold">Sporty</span>
           </div>
-          <CardTitle className="font-display text-3xl font-bold text-black sm:text-4xl">
+          <CardTitle className="font-display text-3xl font-bold text-foreground sm:text-4xl">
             Forgot password?
           </CardTitle>
-          <p className="text-sm text-secondary">
+          <p className="text-sm text-foreground/65">
             No worries, we&apos;ll send you reset instructions
           </p>
         </CardHeader>
@@ -95,12 +95,12 @@ export function ForgotPasswordForm() {
             <div>
               <label
                 htmlFor="email"
-                className="mb-1 block text-sm font-medium text-black"
+                className="mb-1 block text-sm font-medium text-foreground"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary/60" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
                 <Input
                   id="email"
                   type="email"
@@ -109,7 +109,7 @@ export function ForgotPasswordForm() {
                   placeholder="name@example.com"
                   autoComplete="email"
                   error={emailError}
-                  className="h-12 rounded-md border border-border bg-white px-4 pl-10 text-base text-black placeholder:text-secondary/60 focus:border-primary focus:ring-2 focus:ring-primary/40"
+                  className="h-12 rounded-md border border-white/10 bg-white/5 px-4 pl-10 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
                 />
               </div>
             </div>
@@ -131,7 +131,7 @@ export function ForgotPasswordForm() {
           </form>
 
           {isSubmitted && (
-            <p className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm font-medium text-primary">
+            <p className="rounded-md border border-accent-primary/20 bg-accent-primary/10 p-3 text-sm font-medium text-accent-primary">
               {successMessage}
             </p>
           )}
@@ -142,10 +142,10 @@ export function ForgotPasswordForm() {
             </p>
           )}
 
-          <p className="border-t border-accent/20 pt-4 text-center text-sm text-secondary">
+          <p className="border-t border-white/10 pt-4 text-center text-sm text-foreground/60">
             <Link
               href="/login"
-              className="font-semibold text-primary hover:text-[#035c3d] hover:underline"
+              className="font-semibold text-accent-primary hover:text-accent-secondary hover:underline"
             >
               Back to Login
             </Link>

@@ -19,21 +19,21 @@ type SettingsFormProps = {
 
 export function SettingsForm({ data, onChange }: SettingsFormProps) {
   return (
-    <section className="space-y-6 rounded-lg border border-accent/20 bg-white p-5">
-      <h3 className="text-sm font-medium text-black">League Settings</h3>
+    <section className="space-y-6 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+      <h3 className="text-sm font-medium text-foreground">League Settings</h3>
 
       <div>
-        <label className="mb-1 block text-sm text-secondary">League Name</label>
+        <label className="mb-1 block text-sm text-slate-400">League Name</label>
         <input
           value={data.leagueName}
           maxLength={50}
           onChange={(event) => onChange({ leagueName: event.target.value })}
-          className="w-full rounded-md border border-border px-4 py-2.5 text-black outline-none focus:border-primary-400"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
         />
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-secondary">Sport</label>
+        <label className="mb-1 block text-sm text-slate-400">Sport</label>
         <select
           value={data.sport}
           disabled={data.matchesStarted}
@@ -42,7 +42,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
               sport: event.target.value as LeagueSettingsData["sport"],
             })
           }
-          className="w-full rounded-md border border-border px-4 py-2.5 text-black outline-none focus:border-primary-400 disabled:bg-accent/20"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20 disabled:bg-white/8"
         >
           <option value="football">Football</option>
           <option value="basketball">Basketball</option>
@@ -50,26 +50,26 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
           <option value="multisport">Multi-Sport</option>
         </select>
         {data.matchesStarted ? (
-          <p className="mt-1 text-xs text-amber-600">
+          <p className="mt-1 text-xs text-amber-300">
             Sport cannot be changed after matches start.
           </p>
         ) : null}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-secondary">League Type</label>
+        <label className="mb-1 block text-sm text-slate-400">League Type</label>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => onChange({ isPrivate: false })}
-            className={`rounded-full border px-4 py-2 text-sm ${!data.isPrivate ? "border-primary-500 bg-primary/10 text-primary" : "border-border text-secondary"}`}
+            className={`rounded-full border px-4 py-2 text-sm ${!data.isPrivate ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
           >
             Public
           </button>
           <button
             type="button"
             onClick={() => onChange({ isPrivate: true })}
-            className={`rounded-full border px-4 py-2 text-sm ${data.isPrivate ? "border-primary-500 bg-primary/10 text-primary" : "border-border text-secondary"}`}
+            className={`rounded-full border px-4 py-2 text-sm ${data.isPrivate ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
           >
             Private
           </button>
@@ -78,13 +78,13 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm text-secondary">Team Size</label>
+          <label className="mb-1 block text-sm text-slate-400">Team Size</label>
           <select
             value={data.teamSize}
             onChange={(event) =>
               onChange({ teamSize: Number(event.target.value) })
             }
-            className="w-full rounded-md border border-border px-4 py-2.5 text-black outline-none focus:border-primary-400"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
           >
             {[4, 6, 8, 10, 12, 14, 16].map((size) => (
               <option key={size} value={size}>
@@ -95,7 +95,9 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-secondary">Draft Type</label>
+          <label className="mb-1 block text-sm text-slate-400">
+            Draft Type
+          </label>
           <select
             value={data.draftType}
             onChange={(event) =>
@@ -104,7 +106,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
                   .value as LeagueSettingsData["draftType"],
               })
             }
-            className="w-full rounded-md border border-border px-4 py-2.5 text-black outline-none focus:border-primary-400"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
           >
             <option value="snake">Snake Draft</option>
             <option value="auction">Auction</option>
@@ -114,39 +116,39 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-secondary">
+        <label className="mb-1 block text-sm text-slate-400">
           Draft Date (optional)
         </label>
         <input
           type="date"
           value={data.draftDate}
           onChange={(event) => onChange({ draftDate: event.target.value })}
-          className="w-full rounded-md border border-border px-4 py-2.5 text-black outline-none focus:border-primary-400"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
         />
       </div>
 
       {data.showMidseasonJoinToggle ? (
         <div>
-          <label className="mb-1 block text-sm text-secondary">
+          <label className="mb-1 block text-sm text-slate-400">
             Mid-Season Joining
           </label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => onChange({ allowMidseasonJoin: true })}
-              className={`rounded-full border px-4 py-2 text-sm ${data.allowMidseasonJoin ? "border-primary-500 bg-primary/10 text-primary" : "border-border text-secondary"}`}
+              className={`rounded-full border px-4 py-2 text-sm ${data.allowMidseasonJoin ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
             >
               Enabled
             </button>
             <button
               type="button"
               onClick={() => onChange({ allowMidseasonJoin: false })}
-              className={`rounded-full border px-4 py-2 text-sm ${!data.allowMidseasonJoin ? "border-primary-500 bg-primary/10 text-primary" : "border-border text-secondary"}`}
+              className={`rounded-full border px-4 py-2 text-sm ${!data.allowMidseasonJoin ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
             >
               Disabled
             </button>
           </div>
-          <p className="mt-1 text-xs text-secondary">
+          <p className="mt-1 text-xs text-slate-400">
             When enabled, new users can join while the league is active and
             start scoring from the next transfer window.
           </p>

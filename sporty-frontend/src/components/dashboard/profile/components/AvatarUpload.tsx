@@ -11,7 +11,10 @@ type AvatarUploadProps = {
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
-export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProps) {
+export function AvatarUpload({
+  currentAvatar,
+  onAvatarChange,
+}: AvatarUploadProps) {
   const [preview, setPreview] = useState(currentAvatar);
   const [pendingAvatar, setPendingAvatar] = useState("");
   const [isUploading, setIsUploading] = useState(false);
@@ -58,11 +61,15 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
   };
 
   return (
-    <section className="card-fade-in rounded-lg border border-accent/20 bg-white p-4">
+    <section className="card-fade-in rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-accent/30 text-secondary">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-slate-400">
           {preview ? (
-            <img src={preview} alt="Avatar preview" className="h-full w-full object-cover" />
+            <img
+              src={preview}
+              alt="Avatar preview"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <span className="text-sm font-semibold">No Image</span>
           )}
@@ -79,7 +86,7 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="rounded-lg border border-border px-4 py-2 text-black transition-colors hover:bg-[#F4F4F9]"
+            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-foreground transition-colors hover:bg-white/8"
           >
             Upload New Avatar
           </button>
@@ -89,7 +96,7 @@ export function AvatarUpload({ currentAvatar, onAvatarChange }: AvatarUploadProp
               type="button"
               onClick={saveAvatar}
               disabled={isUploading}
-              className="rounded-lg bg-primary px-4 py-2 text-white transition-colors hover:bg-primary-700 disabled:opacity-70"
+              className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-4 py-2 text-slate-950 transition-colors hover:brightness-110 disabled:opacity-70"
             >
               {isUploading ? "Saving..." : "Save"}
             </button>

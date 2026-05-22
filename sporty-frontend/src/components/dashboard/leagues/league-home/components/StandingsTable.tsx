@@ -16,18 +16,18 @@ type StandingsTableProps = {
 
 function rankClass(rank: number): string {
   if (rank === 1) {
-    return "text-[#C3B299]";
+    return "text-yellow-300";
   }
 
   if (rank === 2) {
-    return "text-[#CBD4C2]";
+    return "text-slate-300";
   }
 
   if (rank === 3) {
-    return "text-[#50514F]";
+    return "text-slate-400";
   }
 
-  return "text-black";
+  return "text-foreground";
 }
 
 function rankLabel(rank: number): string {
@@ -48,19 +48,27 @@ function rankLabel(rank: number): string {
 
 export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-lg border border-accent/20 bg-white [animation:fade-soft_0.2s_ease]">
-      <h2 className="p-5 pb-0 text-md font-medium text-black">
+    <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-surface/75 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl [animation:fade-soft_0.2s_ease]">
+      <h2 className="p-5 pb-0 text-md font-semibold text-foreground">
         Standings
       </h2>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-[#F4F4F9]">
+          <thead className="bg-white/5">
             <tr>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Rank</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Team</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">Points</th>
-              <th className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-secondary">W-L</th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Rank
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Team
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                Points
+              </th>
+              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                W-L
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -70,14 +78,18 @@ export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
               return (
                 <tr
                   key={team.teamId}
-                  className={`border-b border-accent/20 text-sm transition-colors hover:bg-[#F4F4F9] ${isUser ? "bg-[#F4F4F9]/50" : ""}`}
+                  className={`border-b border-white/8 text-sm transition-colors hover:bg-white/5 ${isUser ? "bg-accent-primary/10" : ""}`}
                 >
-                  <td className={`px-5 py-3 font-medium ${rankClass(team.rank)}`}>
+                  <td
+                    className={`px-5 py-3 font-medium ${rankClass(team.rank)}`}
+                  >
                     {rankLabel(team.rank)}
                   </td>
-                  <td className="px-5 py-3 text-black">{team.teamName}</td>
-                  <td className="px-5 py-3 text-black">{team.points}</td>
-                  <td className="px-5 py-3 text-secondary">{team.wins}-{team.losses}</td>
+                  <td className="px-5 py-3 text-foreground">{team.teamName}</td>
+                  <td className="px-5 py-3 text-foreground">{team.points}</td>
+                  <td className="px-5 py-3 text-slate-400">
+                    {team.wins}-{team.losses}
+                  </td>
                 </tr>
               );
             })}

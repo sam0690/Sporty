@@ -1,9 +1,11 @@
 import axios from "axios";
 import { formatError } from "@/utils/api-Error";
 
+axios.defaults.withCredentials = true;
+
 /**
  * In-memory CSRF token store.
- * 
+ *
  * The token is read from X-CSRF-Token response headers on GET requests.
  * It is NEVER stored in localStorage (XSS protection).
  * It is sent in X-CSRF-Token header on state-changing requests.
@@ -25,7 +27,7 @@ export function setCsrfToken(token: string | null): void {
  * - Base URL must be set via NEXT_PUBLIC_API_URL environment variable.
  * - A response interceptor normalises errors into ApiError instances.
  * - CSRF token is automatically attached to state-changing requests.
- * 
+ *
  * Production Note: API_URL must be defined in environment variables.
  */
 const publicApi = axios.create({
@@ -42,7 +44,10 @@ const publicApi = axios.create({
 publicApi.interceptors.request.use(
   (config) => {
     // Attach CSRF token for state-changing requests
-    if (config.method && ["post", "put", "patch", "delete"].includes(config.method.toLowerCase())) {
+    if (
+      config.method &&
+      ["post", "put", "patch", "delete"].includes(config.method.toLowerCase())
+    ) {
       const token = getCsrfToken();
       if (token) {
         config.headers["X-CSRF-Token"] = token;

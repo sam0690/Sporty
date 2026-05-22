@@ -76,49 +76,49 @@ function ActivityCard({ activity }: { activity: TUserActivityItem }) {
       : null;
 
   return (
-    <li className="rounded-lg border border-slate-200 bg-linear-to-br from-white to-slate-50 p-4 shadow-sm">
+    <li className="rounded-2xl border border-white/10 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-foreground/70">
             <ActivityIcon type={activity.type} />
           </span>
           <div>
-            <p className="text-sm font-semibold text-slate-900">
+            <p className="text-sm font-semibold text-foreground">
               {activity.title}
             </p>
-            <p className="text-xs text-slate-500">{activity.league.name}</p>
+            <p className="text-xs text-foreground/50">{activity.league.name}</p>
           </div>
         </div>
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-foreground/45">
           {formatDateTime(activity.timestamp)}
         </span>
       </div>
 
-      <p className="mt-3 text-sm text-slate-700">{activity.description}</p>
+      <p className="mt-3 text-sm text-foreground/65">{activity.description}</p>
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-full bg-slate-100 px-2 py-1 font-medium text-slate-700">
+        <span className="rounded-full bg-white/8 px-2 py-1 font-medium text-foreground/70">
           {activity.type}
         </span>
         {windowNumber !== null && (
-          <span className="rounded-full bg-emerald-50 px-2 py-1 font-medium text-emerald-700">
+          <span className="rounded-full bg-emerald-500/10 px-2 py-1 font-medium text-emerald-300">
             Window {windowNumber}
           </span>
         )}
         {activity.type === "transfer" && playerIn && playerOut && (
-          <span className="rounded-full bg-amber-50 px-2 py-1 font-medium text-amber-700">
+          <span className="rounded-full bg-amber-500/10 px-2 py-1 font-medium text-amber-300">
             {playerOut}
             {" -> "}
             {playerIn}
           </span>
         )}
         {activity.type === "points" && points !== null && (
-          <span className="rounded-full bg-sky-50 px-2 py-1 font-medium text-sky-700">
+          <span className="rounded-full bg-sky-500/10 px-2 py-1 font-medium text-sky-300">
             {points.toFixed(1)} pts
           </span>
         )}
         {activity.type === "rank" && rank !== null && (
-          <span className="rounded-full bg-violet-50 px-2 py-1 font-medium text-violet-700">
+          <span className="rounded-full bg-violet-500/10 px-2 py-1 font-medium text-violet-300">
             Rank #{rank}
           </span>
         )}
@@ -142,9 +142,11 @@ export function RecentActivity({
   }, [activeFilter, recentActivity]);
 
   return (
-    <section className="rounded-lg border border-accent/20 bg-white p-5">
+    <section className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base font-medium text-black">Recent Activity</h3>
+        <h3 className="text-base font-medium text-foreground">
+          Recent Activity
+        </h3>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((filter) => (
             <button
@@ -153,8 +155,8 @@ export function RecentActivity({
               onClick={() => setActiveFilter(filter.value)}
               className={`rounded-full px-3 py-1 text-xs font-medium transition ${
                 activeFilter === filter.value
-                  ? "bg-slate-900 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  ? "bg-accent-primary text-black"
+                  : "bg-white/8 text-foreground/60 hover:bg-white/12"
               }`}
             >
               {filter.label}
@@ -164,19 +166,19 @@ export function RecentActivity({
       </div>
 
       {isLoading && (
-        <div className="mt-4 rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="mt-4 rounded-md border border-dashed border-white/10 bg-white/5 p-4 text-sm text-foreground/55">
           Loading activity feed...
         </div>
       )}
 
       {!isLoading && errorMessage && (
-        <div className="mt-4 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+        <div className="mt-4 rounded-md border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
           {errorMessage}
         </div>
       )}
 
       {!isLoading && !errorMessage && filtered.length === 0 && (
-        <div className="mt-4 rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+        <div className="mt-4 rounded-md border border-dashed border-white/10 bg-white/5 p-4 text-sm text-foreground/55">
           No activity found for this filter.
         </div>
       )}

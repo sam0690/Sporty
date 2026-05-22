@@ -6,7 +6,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="landing-shell min-h-screen bg-[#F4F4F9]">
+    <div className="landing-shell min-h-screen bg-background text-foreground">
       <Navbar />
       <main>{children}</main>
     </div>

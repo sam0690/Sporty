@@ -21,23 +21,19 @@ export function LeagueHeader({
   totalWeeks,
 }: LeagueHeaderProps) {
   return (
-    <header
-      className="relative overflow-hidden rounded-lg border border-accent/20 bg-white px-5 py-4"
-      style={{
-        backgroundImage: "url('/images/landing/hero-stadium.svg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      <div className="absolute inset-0 bg-white/90" aria-hidden="true" />
+    <header className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-surface/80 px-5 py-5 shadow-[0_20px_60px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+      <div
+        className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(0,229,255,0.15),transparent_34%),radial-gradient(circle_at_right,rgba(255,61,129,0.10),transparent_32%)]"
+        aria-hidden="true"
+      />
 
       <div className="relative flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-black">
+          <h1 className="font-display text-3xl font-bold tracking-[0.04em] text-foreground uppercase">
             {leagueName}
           </h1>
           <span
-            className="text-lg leading-none"
+            className="text-lg leading-none text-accent-primary"
             aria-label={sport}
             title={sport}
           >
@@ -45,7 +41,7 @@ export function LeagueHeader({
           </span>
         </div>
 
-        <p className="rounded-full border border-accent/20 bg-white px-3 py-1 text-sm text-secondary">
+        <p className="rounded-full border border-white/10 bg-white/6 px-3 py-1 text-sm font-medium text-slate-300">
           Week {currentWeek} of {totalWeeks}
         </p>
       </div>

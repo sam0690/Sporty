@@ -25,39 +25,42 @@ export function LeagueSettings({
   return (
     <div className="space-y-6">
       <div>
-        <p className="mb-2 text-sm text-secondary">League Type</p>
+        <p className="mb-2 text-sm text-slate-400">League Type</p>
         <div className="space-y-3">
-          <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-4">
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:border-accent-primary/20 hover:bg-white/8">
             <input
               type="radio"
               name="league-type"
               checked={!isPrivate}
               onChange={() => onSettingsChange({ isPrivate: false })}
-              className="mt-0.5 h-4 w-4 border-border text-primary"
+              className="mt-0.5 h-4 w-4 border-white/10 text-accent-primary"
             />
             <span>
-              <p className="text-sm font-medium text-black">Public</p>
-              <p className="mt-1 text-xs text-secondary">Anyone can join.</p>
+              <p className="text-sm font-medium text-foreground">Public</p>
+              <p className="mt-1 text-xs text-slate-400">Anyone can join.</p>
             </span>
           </label>
-          <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-4">
+          <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 transition-all hover:border-accent-primary/20 hover:bg-white/8">
             <input
               type="radio"
               name="league-type"
               checked={isPrivate}
               onChange={() => onSettingsChange({ isPrivate: true })}
-              className="mt-0.5 h-4 w-4 border-border text-primary"
+              className="mt-0.5 h-4 w-4 border-white/10 text-accent-primary"
             />
             <span>
-              <p className="text-sm font-medium text-black">Private</p>
-              <p className="mt-1 text-xs text-secondary">Invite code only.</p>
+              <p className="text-sm font-medium text-foreground">Private</p>
+              <p className="mt-1 text-xs text-slate-400">Invite code only.</p>
             </span>
           </label>
         </div>
       </div>
 
       <div>
-        <label htmlFor="team-size" className="mb-2 block text-sm text-secondary">
+        <label
+          htmlFor="team-size"
+          className="mb-2 block text-sm text-slate-400"
+        >
           Team Size
         </label>
         <select
@@ -66,7 +69,7 @@ export function LeagueSettings({
           onChange={(event) =>
             onSettingsChange({ teamSize: Number(event.target.value) })
           }
-          className="w-full rounded-md border border-border px-4 py-3 text-black outline-none transition focus:border-primary-400"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
         >
           {teamSizes.map((size) => (
             <option key={size} value={size}>
@@ -79,7 +82,7 @@ export function LeagueSettings({
       <div>
         <label
           htmlFor="competition-type"
-          className="mb-2 block text-sm text-secondary"
+          className="mb-2 block text-sm text-slate-400"
         >
           Competition Type
         </label>
@@ -91,7 +94,7 @@ export function LeagueSettings({
               competitionType: event.target.value as "draft" | "budget",
             })
           }
-          className="w-full rounded-md border border-border px-4 py-3 text-black outline-none transition focus:border-primary-400"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
         >
           <option value="draft">Draft Mode</option>
           <option value="budget">Budget Mode (Auto Assign)</option>
@@ -101,7 +104,7 @@ export function LeagueSettings({
       <div>
         <label
           htmlFor="draft-date"
-          className="mb-2 block text-sm text-secondary"
+          className="mb-2 block text-sm text-slate-400"
         >
           Draft Date (optional)
         </label>
@@ -112,7 +115,7 @@ export function LeagueSettings({
           onChange={(event) =>
             onSettingsChange({ draftDate: event.target.value })
           }
-          className="w-full rounded-md border border-border px-4 py-3 text-black outline-none transition focus:border-primary-400"
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
         />
       </div>
     </div>

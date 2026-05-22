@@ -6,22 +6,26 @@ export function EmptyState() {
   const router = useRouter();
 
   return (
-    <section className="rounded-lg border border-accent/20 py-14 text-center">
-      <div className="mx-auto mb-3 text-4xl text-secondary/60" aria-hidden="true">🏆</div>
-      <h2 className="text-lg font-medium text-secondary">No leagues yet</h2>
-      <p className="mt-2 text-sm text-secondary">Join a league to start playing</p>
+    <section className="rounded-3xl border border-white/10 bg-white/5 py-14 text-center backdrop-blur-xl">
+      <div className="mx-auto mb-3 text-4xl text-slate-400" aria-hidden="true">
+        🏆
+      </div>
+      <h2 className="text-lg font-medium text-foreground">No leagues yet</h2>
+      <p className="mt-2 text-sm text-slate-400">
+        Join a league to start playing
+      </p>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => router.push("/join-league")}
-          className="rounded-md border border-border px-4 py-2 text-sm text-black transition-colors hover:border-primary-500 hover:text-primary-500"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-white/8"
         >
           Join League
         </button>
         <button
           type="button"
           onClick={() => router.push("/create-league")}
-          className="rounded-md border border-border px-4 py-2 text-sm text-black transition-colors hover:border-primary-500 hover:text-primary-500"
+          className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-foreground transition-colors hover:bg-white/8"
         >
           Create League
         </button>
