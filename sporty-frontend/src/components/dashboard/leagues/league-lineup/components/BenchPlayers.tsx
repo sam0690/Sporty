@@ -1,6 +1,9 @@
 "use client";
 
-import { PlayerSlot, type Player } from "@/components/dashboard/leagues/league-lineup/components/PlayerSlot";
+import {
+  PlayerSlot,
+  type Player,
+} from "@/components/dashboard/leagues/league-lineup/components/PlayerSlot";
 
 type BenchPlayersProps = {
   benchPlayers: Player[];
@@ -14,12 +17,14 @@ export function BenchPlayers({
   disabled = false,
 }: BenchPlayersProps) {
   return (
-    <section className="space-y-3 rounded-lg border border-accent/20 bg-white p-5 [animation:fade-soft_0.2s_ease]">
-      <h2 className="text-md font-medium text-black">Bench ({benchPlayers.length})</h2>
+    <section className="space-y-3 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl [animation:fade-soft_0.2s_ease]">
+      <h2 className="text-md font-medium text-foreground">
+        Bench ({benchPlayers.length})
+      </h2>
 
       <div className="space-y-2">
         {benchPlayers.length === 0 ? (
-          <div className="rounded-md border border-dashed border-border bg-[#F4F4F9]/50 p-4 text-center text-sm text-secondary/60">
+          <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55">
             No bench players available
           </div>
         ) : (

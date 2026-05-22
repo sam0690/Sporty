@@ -59,7 +59,7 @@ export function MemberCard({
           <button
             type="button"
             onClick={() => onKick(member)}
-            className="rounded-full border border-danger/20 px-3 py-1 text-xs text-danger transition-colors hover:bg-danger/10"
+            className="rounded-full border border-red-400/20 bg-red-500/10 px-3 py-1 text-xs text-red-100 transition-colors hover:bg-red-500/15"
           >
             Kick
           </button>

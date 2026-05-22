@@ -33,13 +33,13 @@ export function StartingLineup({
     Object.values(positionLimits).reduce((sum, limit) => sum + limit.max, 0);
 
   return (
-    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl [animation:fade-soft_0.2s_ease]">
+    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl animate-[fade-soft_0.2s_ease]">
       <h2 className="text-md font-medium text-foreground">
         Starting Lineup ({activePlayers.length}/{maxStarters})
       </h2>
 
       {activePlayers.length === 0 ? (
-        <div className="rounded-md border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55">
+        <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55">
           No active players selected
         </div>
       ) : (

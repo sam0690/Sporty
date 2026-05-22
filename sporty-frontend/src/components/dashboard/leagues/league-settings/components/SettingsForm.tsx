@@ -23,7 +23,9 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
       <h3 className="text-sm font-medium text-foreground">League Settings</h3>
 
       <div>
-        <label className="mb-1 block text-sm text-slate-400">League Name</label>
+        <label className="mb-1 block text-sm text-foreground/60">
+          League Name
+        </label>
         <input
           value={data.leagueName}
           maxLength={50}
@@ -33,7 +35,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-slate-400">Sport</label>
+        <label className="mb-1 block text-sm text-foreground/60">Sport</label>
         <select
           value={data.sport}
           disabled={data.matchesStarted}
@@ -50,26 +52,28 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
           <option value="multisport">Multi-Sport</option>
         </select>
         {data.matchesStarted ? (
-          <p className="mt-1 text-xs text-amber-300">
+          <p className="mt-1 text-xs text-amber-100">
             Sport cannot be changed after matches start.
           </p>
         ) : null}
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-slate-400">League Type</label>
+        <label className="mb-1 block text-sm text-foreground/60">
+          League Type
+        </label>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => onChange({ isPrivate: false })}
-            className={`rounded-full border px-4 py-2 text-sm ${!data.isPrivate ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
+            className={`rounded-full border px-4 py-2 text-sm ${!data.isPrivate ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-foreground/70"}`}
           >
             Public
           </button>
           <button
             type="button"
             onClick={() => onChange({ isPrivate: true })}
-            className={`rounded-full border px-4 py-2 text-sm ${data.isPrivate ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
+            className={`rounded-full border px-4 py-2 text-sm ${data.isPrivate ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-foreground/70"}`}
           >
             Private
           </button>
@@ -78,7 +82,9 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm text-slate-400">Team Size</label>
+          <label className="mb-1 block text-sm text-foreground/60">
+            Team Size
+          </label>
           <select
             value={data.teamSize}
             onChange={(event) =>
@@ -95,7 +101,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-slate-400">
+          <label className="mb-1 block text-sm text-foreground/60">
             Draft Type
           </label>
           <select
@@ -116,7 +122,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-slate-400">
+        <label className="mb-1 block text-sm text-foreground/60">
           Draft Date (optional)
         </label>
         <input
@@ -129,26 +135,26 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
 
       {data.showMidseasonJoinToggle ? (
         <div>
-          <label className="mb-1 block text-sm text-slate-400">
+          <label className="mb-1 block text-sm text-foreground/60">
             Mid-Season Joining
           </label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => onChange({ allowMidseasonJoin: true })}
-              className={`rounded-full border px-4 py-2 text-sm ${data.allowMidseasonJoin ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
+              className={`rounded-full border px-4 py-2 text-sm ${data.allowMidseasonJoin ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-foreground/70"}`}
             >
               Enabled
             </button>
             <button
               type="button"
               onClick={() => onChange({ allowMidseasonJoin: false })}
-              className={`rounded-full border px-4 py-2 text-sm ${!data.allowMidseasonJoin ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
+              className={`rounded-full border px-4 py-2 text-sm ${!data.allowMidseasonJoin ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-foreground/70"}`}
             >
               Disabled
             </button>
           </div>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-foreground/50">
             When enabled, new users can join while the league is active and
             start scoring from the next transfer window.
           </p>

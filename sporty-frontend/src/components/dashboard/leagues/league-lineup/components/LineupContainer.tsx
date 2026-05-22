@@ -26,19 +26,21 @@ export function LineupContainer({
   const benchSports = Object.entries(benchGroupedBySport);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-black">Starting XI</h2>
+        <h2 className="text-xl font-semibold text-foreground">Starting XI</h2>
         {starterSports.length === 0 ? (
-          <p className="text-sm text-secondary">No starters selected yet.</p>
+          <p className="text-sm text-foreground/60">
+            No starters selected yet.
+          </p>
         ) : (
           starterSports.map(([sportDisplayName, players]) => (
             <section key={`starter-${sportDisplayName}`} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-black">
+                <h3 className="text-lg font-medium text-foreground">
                   {sportDisplayName}
                 </h3>
-                <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-secondary">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground/65">
                   {players.length} players
                 </span>
               </div>
@@ -64,17 +66,17 @@ export function LineupContainer({
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-semibold text-black">Bench</h2>
+        <h2 className="text-xl font-semibold text-foreground">Bench</h2>
         {benchSports.length === 0 ? (
-          <p className="text-sm text-secondary">No bench players.</p>
+          <p className="text-sm text-foreground/60">No bench players.</p>
         ) : (
           benchSports.map(([sportDisplayName, players]) => (
             <section key={`bench-${sportDisplayName}`} className="space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-medium text-black">
+                <h3 className="text-lg font-medium text-foreground">
                   {sportDisplayName}
                 </h3>
-                <span className="rounded-full border border-border bg-white px-3 py-1 text-xs font-medium text-secondary">
+                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground/65">
                   {players.length} players
                 </span>
               </div>

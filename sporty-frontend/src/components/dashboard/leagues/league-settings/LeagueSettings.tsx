@@ -234,7 +234,7 @@ export function LeagueSettings() {
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-400 backdrop-blur-xl">
+        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-foreground/60 backdrop-blur-xl">
           Only the league commissioner can access settings.
         </div>
       </section>
@@ -242,7 +242,7 @@ export function LeagueSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
       <NavigationTabs
         activeTab="settings"
         leagueId={leagueId}
@@ -272,7 +272,7 @@ export function LeagueSettings() {
               key={status}
               type="button"
               onClick={() => handleStatusChange(status)}
-              className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-slate-300"}`}
+              className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-foreground/70"}`}
             >
               {getLifecycleStatusLabel(status, league)}
             </button>

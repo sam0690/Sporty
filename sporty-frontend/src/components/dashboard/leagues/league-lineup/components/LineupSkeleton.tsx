@@ -2,21 +2,21 @@
 
 export function LineupSkeleton() {
   return (
-    <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="h-10 w-full rounded-lg bg-accent/30 animate-pulse" />
-      <div className="h-24 w-full rounded-lg bg-accent/30 animate-pulse" />
+    <section className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="h-10 w-full animate-pulse rounded-2xl bg-white/10" />
+      <div className="h-24 w-full animate-pulse rounded-3xl bg-white/10" />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <div className="space-y-3">
-          <div className="h-6 w-32 rounded bg-accent/30 animate-pulse" />
-          <div className="h-20 rounded-lg bg-accent/30 animate-pulse" />
-          <div className="h-20 rounded-lg bg-accent/30 animate-pulse" />
+          <div className="h-6 w-32 animate-pulse rounded bg-white/10" />
+          <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
+          <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
         </div>
         <div className="space-y-3">
-          <div className="h-6 w-32 rounded bg-accent/30 animate-pulse" />
-          <div className="h-20 rounded-lg bg-accent/30 animate-pulse" />
+          <div className="h-6 w-32 animate-pulse rounded bg-white/10" />
+          <div className="h-20 animate-pulse rounded-2xl bg-white/10" />
         </div>
       </div>
-      <div className="h-10 w-32 rounded bg-accent/30 animate-pulse" />
+      <div className="h-10 w-32 animate-pulse rounded-full bg-white/10" />
     </section>
   );
 }

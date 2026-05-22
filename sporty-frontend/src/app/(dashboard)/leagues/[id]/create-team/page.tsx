@@ -1,10 +1,13 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import { useParams } from "next/navigation";
-import { CreateTeam } from "@/components/dashboard/create-team";
+type LeagueCreateTeamPageProps = {
+  params: {
+    id: string;
+  };
+};
 
-export default function LeagueCreateTeamPage() {
-  const params = useParams<{ id: string }>();
-
-  return <CreateTeam leagueId={params?.id ?? ""} />;
+export default function LeagueCreateTeamPage({
+  params,
+}: LeagueCreateTeamPageProps) {
+  redirect(`/create-team?leagueId=${params.id}`);
 }

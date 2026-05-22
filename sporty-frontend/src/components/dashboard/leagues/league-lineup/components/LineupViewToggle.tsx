@@ -13,8 +13,8 @@ export function LineupViewToggle({ value, onChange }: LineupViewToggleProps) {
         onClick={() => onChange("list")}
         className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
           value === "list"
-            ? "bg-primary text-white"
-            : "border border-border bg-white text-black hover:bg-[#F4F4F9]"
+            ? "border border-accent-primary/30 bg-accent-primary/10 text-accent-primary"
+            : "border border-white/10 bg-white/5 text-foreground/75 hover:bg-white/8"
         }`}
       >
         List View
@@ -24,8 +24,8 @@ export function LineupViewToggle({ value, onChange }: LineupViewToggleProps) {
         onClick={() => onChange("pitch")}
         className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
           value === "pitch"
-            ? "bg-primary text-white"
-            : "border border-border bg-white text-black hover:bg-[#F4F4F9]"
+            ? "border border-accent-primary/30 bg-accent-primary/10 text-accent-primary"
+            : "border border-white/10 bg-white/5 text-foreground/75 hover:bg-white/8"
         }`}
       >
         Pitch View

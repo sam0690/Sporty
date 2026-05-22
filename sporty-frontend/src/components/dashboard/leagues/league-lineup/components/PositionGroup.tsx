@@ -73,7 +73,7 @@ export function PositionGroup({
         {Array.from({ length: emptySlots }).map((_, index) => (
           <div
             key={`${position}-empty-${index}`}
-            className="rounded-md border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55 transition-all duration-150"
+            className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55 transition-all duration-150"
           >
             Drop {position} here
           </div>

@@ -49,14 +49,14 @@ export function LineupHeader({
   const countdown = formatCountdown(deadline);
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4">
+    <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
       <div className="flex items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-black">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
             {leagueName}
           </h1>
           {teamName ? (
-            <p className="text-sm text-secondary">Team: {teamName}</p>
+            <p className="text-sm text-foreground/60">Team: {teamName}</p>
           ) : null}
         </div>
         <span className="text-lg" aria-label={sport} title={sport}>
@@ -65,14 +65,14 @@ export function LineupHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <p className="text-sm text-secondary">
+        <p className="text-sm text-foreground/60">
           Week {currentWeek} of {totalWeeks}
         </p>
         <p
           className={`rounded-full border px-4 py-1.5 text-sm ${
             countdown.locked
-              ? "border-danger/20 bg-danger/5 text-danger"
-              : "border-accent/20 bg-white text-secondary"
+              ? "border-red-400/20 bg-red-500/10 text-red-100"
+              : "border-white/10 bg-white/5 text-foreground/75"
           }`}
         >
           {countdown.locked ? "Lineup Locked" : countdown.label}

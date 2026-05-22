@@ -29,15 +29,15 @@ export function SaveLineupButton({
           type="button"
           onClick={onSave}
           disabled={isDisabled}
-          className={`rounded-full px-8 py-2.5 font-medium text-white transition-colors ${
+          className={`rounded-full px-8 py-2.5 font-medium text-slate-950 transition-colors ${
             isDisabled
-              ? "cursor-not-allowed bg-accent-primary/30 text-black"
-              : `bg-accent-primary text-black hover:bg-accent-secondary ${isDirty ? "animate-pulse" : ""}`
+              ? "cursor-not-allowed bg-white/10 text-slate-400"
+              : `bg-accent-primary text-slate-950 hover:bg-accent-secondary ${isDirty ? "animate-pulse" : ""}`
           }`}
         >
           {isLoading ? (
             <span className="inline-flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/30 border-t-slate-950" />
               Saving...
             </span>
           ) : (

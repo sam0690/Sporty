@@ -235,7 +235,7 @@ export function LeagueHome() {
                   router.push(
                     hasMyTeam
                       ? `/leagues/${league.id}/lineup`
-                      : `/leagues/${league.id}/create-team`,
+                      : `/create-team?leagueId=${league.id}`,
                   )
                 }
                 className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-5 py-2 text-sm font-semibold text-slate-950 hover:brightness-110"
@@ -247,7 +247,9 @@ export function LeagueHome() {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => router.push(`/leagues/${league.id}/create-team`)}
+                onClick={() =>
+                  router.push(`/create-team?leagueId=${league.id}`)
+                }
                 className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-5 py-2 text-sm font-semibold text-slate-950 hover:brightness-110"
               >
                 Open Draft Screen

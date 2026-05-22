@@ -8,28 +8,48 @@ type StatsHighlights = {
 
 type StatsHighlightProps = StatsHighlights;
 
-export function StatsHighlight({ topScorer, highestWeeklyScore, closestMatch }: StatsHighlightProps) {
+export function StatsHighlight({
+  topScorer,
+  highestWeeklyScore,
+  closestMatch,
+}: StatsHighlightProps) {
   return (
     <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <article className="rounded-lg border border-accent/20 bg-white p-4 [animation:fade-soft_0.2s_ease]">
+      <article className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl animate-[fade-soft_0.2s_ease]">
         <p className="mb-2 text-xl">🏆</p>
-        <p className="text-xs uppercase tracking-wider text-secondary">Top Scorer</p>
-        <p className="mt-1 text-sm font-medium text-black">{topScorer.name} · {topScorer.points} pts</p>
-        <p className="text-sm text-secondary">{topScorer.team}</p>
+        <p className="text-xs uppercase tracking-wider text-foreground/55">
+          Top Scorer
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {topScorer.name} · {topScorer.points} pts
+        </p>
+        <p className="text-sm text-foreground/60">{topScorer.team}</p>
       </article>
 
-      <article className="rounded-lg border border-accent/20 bg-white p-4 [animation:fade-soft_0.2s_ease]">
+      <article className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl animate-[fade-soft_0.2s_ease]">
         <p className="mb-2 text-xl">🔥</p>
-        <p className="text-xs uppercase tracking-wider text-secondary">Highest Weekly Score</p>
-        <p className="mt-1 text-sm font-medium text-black">{highestWeeklyScore.team} · {highestWeeklyScore.score}</p>
-        <p className="text-sm text-secondary">Week {highestWeeklyScore.week}</p>
+        <p className="text-xs uppercase tracking-wider text-foreground/55">
+          Highest Weekly Score
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {highestWeeklyScore.team} · {highestWeeklyScore.score}
+        </p>
+        <p className="text-sm text-foreground/60">
+          Week {highestWeeklyScore.week}
+        </p>
       </article>
 
-      <article className="rounded-lg border border-accent/20 bg-white p-4 [animation:fade-soft_0.2s_ease]">
+      <article className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl animate-[fade-soft_0.2s_ease]">
         <p className="mb-2 text-xl">⚖️</p>
-        <p className="text-xs uppercase tracking-wider text-secondary">Closest Match</p>
-        <p className="mt-1 text-sm font-medium text-black">{closestMatch.matchup}</p>
-        <p className="text-sm text-secondary">{closestMatch.difference} pts difference</p>
+        <p className="text-xs uppercase tracking-wider text-foreground/55">
+          Closest Match
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {closestMatch.matchup}
+        </p>
+        <p className="text-sm text-foreground/60">
+          {closestMatch.difference} pts difference
+        </p>
       </article>
     </section>
   );

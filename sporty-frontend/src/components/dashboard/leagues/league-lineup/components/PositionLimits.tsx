@@ -13,7 +13,13 @@ type PositionLimitsProps = {
 
 const SPORT_POSITION_GROUPS = {
   football: ["Forward", "Midfielder", "Defender", "Goalkeeper"],
-  basketball: ["PointGuard", "ShootingGuard", "SmallForward", "PowerForward", "Center"],
+  basketball: [
+    "PointGuard",
+    "ShootingGuard",
+    "SmallForward",
+    "PowerForward",
+    "Center",
+  ],
   cricket: ["Batsman", "Bowler", "AllRounder", "WicketKeeper"],
 } as const;
 
@@ -35,7 +41,11 @@ const SPORT_META = {
   },
 } as const;
 
-export function PositionLimits({ limits, currentCounts, isMultiSport = false }: PositionLimitsProps) {
+export function PositionLimits({
+  limits,
+  currentCounts,
+  isMultiSport = false,
+}: PositionLimitsProps) {
   const positions = Object.keys(limits);
 
   const orderedPositions = isMultiSport
@@ -53,7 +63,11 @@ export function PositionLimits({ limits, currentCounts, isMultiSport = false }: 
           const max = limits[position].max;
           const current = currentCounts[position] ?? 0;
           const atLimit = current >= max;
-          const sportKey = (Object.keys(SPORT_POSITION_GROUPS) as Array<keyof typeof SPORT_POSITION_GROUPS>).find((key) =>
+          const sportKey = (
+            Object.keys(SPORT_POSITION_GROUPS) as Array<
+              keyof typeof SPORT_POSITION_GROUPS
+            >
+          ).find((key) =>
             SPORT_POSITION_GROUPS[key].includes(position as never),
           );
           const sportIcon = sportKey ? `${SPORT_META[sportKey].icon} ` : "";
@@ -61,11 +75,13 @@ export function PositionLimits({ limits, currentCounts, isMultiSport = false }: 
           return (
             <div
               key={position}
-              className="rounded-full border border-accent/20 bg-white px-4 py-1.5 text-sm text-secondary"
+              className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-foreground/70"
             >
-              <span className="mr-1 text-secondary">{sportIcon}</span>
+              <span className="mr-1 text-foreground/60">{sportIcon}</span>
               <span>{position}</span>
-              <span className={`ml-2 font-medium ${atLimit ? "text-amber-600" : "text-black"}`}>
+              <span
+                className={`ml-2 font-medium ${atLimit ? "text-amber-100" : "text-foreground"}`}
+              >
                 {current}/{max}
               </span>
             </div>

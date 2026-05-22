@@ -27,9 +27,9 @@ export function DeleteLeagueModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-slate-950 p-6 text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-surface/95 p-6 text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
         <h3 className="text-lg font-medium text-foreground">Delete League</h3>
-        <p className="mt-2 text-sm text-slate-400">
+        <p className="mt-2 text-sm text-foreground/60">
           Type <span className="font-medium text-foreground">{leagueName}</span>{" "}
           to confirm permanent deletion.
         </p>

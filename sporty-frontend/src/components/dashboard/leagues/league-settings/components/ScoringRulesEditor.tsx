@@ -15,7 +15,9 @@ export function ScoringRulesEditor({
       <div className="grid grid-cols-2 gap-4">
         {Object.entries(scoringRules).map(([rule, value]) => (
           <div key={rule}>
-            <label className="mb-1 block text-sm text-slate-400">{rule}</label>
+            <label className="mb-1 block text-sm text-foreground/60">
+              {rule}
+            </label>
             <input
               type="number"
               min={0}

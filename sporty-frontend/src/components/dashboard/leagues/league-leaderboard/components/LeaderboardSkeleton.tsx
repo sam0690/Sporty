@@ -2,21 +2,24 @@
 
 export function LeaderboardSkeleton() {
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      <div className="h-12 rounded-lg bg-accent/30 animate-pulse" />
-      <div className="h-10 w-48 rounded-lg bg-accent/30 animate-pulse" />
+    <section className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+      <div className="h-12 animate-pulse rounded-2xl bg-white/10" />
+      <div className="h-10 w-48 animate-pulse rounded-2xl bg-white/10" />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="h-24 rounded-lg bg-accent/30 animate-pulse" />
-        <div className="h-24 rounded-lg bg-accent/30 animate-pulse" />
-        <div className="h-24 rounded-lg bg-accent/30 animate-pulse" />
+        <div className="h-24 animate-pulse rounded-3xl bg-white/10" />
+        <div className="h-24 animate-pulse rounded-3xl bg-white/10" />
+        <div className="h-24 animate-pulse rounded-3xl bg-white/10" />
       </div>
 
-      <div className="h-20 rounded-lg bg-accent/30 animate-pulse" />
+      <div className="h-20 animate-pulse rounded-3xl bg-white/10" />
 
       <div className="space-y-2">
         {Array.from({ length: 5 }, (_, index) => (
-          <div key={index} className="h-12 rounded-lg bg-accent/30 animate-pulse" />
+          <div
+            key={index}
+            className="h-12 animate-pulse rounded-2xl bg-white/10"
+          />
         ))}
       </div>
     </section>

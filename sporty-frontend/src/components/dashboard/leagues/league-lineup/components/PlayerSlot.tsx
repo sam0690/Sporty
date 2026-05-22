@@ -60,7 +60,7 @@ export function PlayerSlot({
           onToggle(player.id);
         }
       }}
-      className={`group flex items-center justify-between rounded-md border p-3 transition-all duration-150 [animation:fade-soft_0.2s_ease] ${
+      className={`group flex items-center justify-between rounded-2xl border p-3 transition-all duration-150 ${
         isActive ? "border-white/10 bg-white/5" : "border-white/10 bg-white/5"
       } ${
         variant === "bench"
@@ -75,7 +75,7 @@ export function PlayerSlot({
         </div>
         <div className="mt-1 flex items-center gap-2 text-sm text-foreground/60">
           <span
-            className={`rounded px-2 py-0.5 text-xs capitalize ${sportBadgeStyles[player.sport]}`}
+            className={`rounded-full px-2 py-0.5 text-xs capitalize ${sportBadgeStyles[player.sport]}`}
           >
             {sportIcons[player.sport]}
           </span>
@@ -99,7 +99,7 @@ export function PlayerSlot({
               onToggle(player.id);
             }
           }}
-          className="rounded-full p-1 text-foreground/45 transition-colors hover:text-danger disabled:opacity-60"
+          className="rounded-full p-1 text-foreground/45 transition-colors hover:text-red-200 disabled:opacity-60"
           aria-label={isActive ? "Remove from lineup" : "Add to lineup"}
         >
           {isActive ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}

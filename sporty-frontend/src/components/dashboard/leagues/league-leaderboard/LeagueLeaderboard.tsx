@@ -113,8 +113,8 @@ export function LeagueLeaderboard() {
 
   if (isLoading) {
     return (
-      <section className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-        <div className="h-10 w-64 animate-pulse rounded-lg bg-accent/20" />
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8">
+        <div className="h-10 w-64 animate-pulse rounded-2xl bg-white/10" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <CardSkeleton />
           <CardSkeleton />
@@ -130,9 +130,9 @@ export function LeagueLeaderboard() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 font-[system-ui,-apple-system] text-foreground">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-foreground/60">
           Manager: {username || "Sporty User"}
         </p>
       </div>
