@@ -326,19 +326,19 @@ from app.middleware.security_headers import SecurityHeadersMiddleware
 app.add_middleware(SecurityHeadersMiddleware)
 
 # 2. CORS — cross-origin resource sharing
-# Environment-driven allowed origins, no wildcards with credentials.
+# Explicit frontend origin for local SPA + deployed HTTPS backend.
 # expose_headers is required so JavaScript can read custom response
 # headers (X-CSRF-Token, rate limit headers) in cross-origin requests.
 # max_age caches preflight (OPTIONS) responses to reduce latency.
-allow_origins = settings.get_cors_origins()
-logger.info(f"CORS origins configured for {settings.ENVIRONMENT} environment: {allow_origins}")
+allow_origins = ["http://localhost:3000"]
+logger.info("CORS origins configured for cross-origin cookie auth: %s", allow_origins)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "X-CSRF-Token", "Accept", "Cache-Control"],
+  allow_methods=["*"],
+  allow_headers=["*"],
     expose_headers=["X-CSRF-Token", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
     max_age=600,  # Cache preflight for 10 minutes
 )

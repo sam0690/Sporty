@@ -61,9 +61,8 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     - Access token: Short-lived (default 30 minutes)
     - Refresh token: Long-lived (default 7 days)
     """
-    # Secure cookie: True in production (HTTPS), False in development (HTTP)
-    secure = settings.COOKIE_SECURE
-    same_site = settings.COOKIE_SAME_SITE
+    secure = True
+    same_site = "none"
     domain = settings.COOKIE_DOMAIN or None
 
     response.set_cookie(
@@ -95,8 +94,8 @@ def _clear_auth_cookies(response: Response) -> None:
     Important: Cookie deletion requires matching the exact attributes
     used when setting the cookie (path, domain, secure, samesite).
     """
-    secure = settings.COOKIE_SECURE
-    same_site = settings.COOKIE_SAME_SITE
+    secure = True
+    same_site = "none"
     domain = settings.COOKIE_DOMAIN or None
 
     response.delete_cookie(
