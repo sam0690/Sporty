@@ -18,7 +18,8 @@ class Settings(BaseSettings):
 
     # ── CORS Configuration ─────────────────────────────────────
     # Comma-separated list of allowed origins per environment
-    CORS_PRODUCTION_ORIGINS: str = ""
+    # Add your deployed frontend domain here (comma-separated if multiple)
+    CORS_PRODUCTION_ORIGINS: str = "https://sporty-woad.vercel.app"
     CORS_STAGING_ORIGINS: str = ""
     CORS_LOCAL_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
 
@@ -110,7 +111,8 @@ class Settings(BaseSettings):
     # ── Email / notifications ───────────────────────────────────
     RESEND_API_KEY: str = ""
     FROM_EMAIL: str = ""
-    FRONTEND_BASE_URL: str = "http://localhost:3000"
+    # Default frontend base; override via env in non-local environments
+    FRONTEND_BASE_URL: str = "https://sporty-woad.vercel.app"
 
     # Forgot-password abuse protection (legacy - superseded by rate limiter)
     FORGOT_PASSWORD_RATE_LIMIT_WINDOW_SECONDS: int = 300
