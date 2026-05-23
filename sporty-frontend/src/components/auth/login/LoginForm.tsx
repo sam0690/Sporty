@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
   Card,
@@ -14,41 +10,13 @@ import {
   CardTitle,
   Input,
 } from "@/components/ui";
-import { useAuth } from "@/context/auth-context";
-import { LoginSchema, type LoginValues } from "@/lib/validations";
-import { toastifier } from "@/lib/toastifier";
+import { useLoginFormState } from "@/features/auth";
 import { Divider } from "./components/Divider";
 import { SocialLogin } from "./components/SocialLogin";
 
 export function LoginForm() {
-  const router = useRouter();
-  const { login, actionLoading } = useAuth();
-
-  const [showPassword, setShowPassword] = useState(false);
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginValues>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: {
-      identifier: "",
-      password: "",
-    },
-    mode: "onSubmit",
-  });
-
-  const isSubmitting = actionLoading.login;
-
-  const onSubmit = handleSubmit(async (values) => {
-    const result = await login(values.identifier, values.password);
-    if (!result.success) {
-      toastifier.error(result.error ?? "Unable to sign in.");
-      return;
-    }
-
-    router.replace("/dashboard");
-  });
+  const { register, formState, showPassword, setShowPassword, isSubmitting, onSubmit } =
+    useLoginFormState();
 
   return (
     <div className="relative mx-auto w-full max-w-md">
@@ -97,7 +65,7 @@ export function LoginForm() {
                   type="text"
                   placeholder="Email or username"
                   autoComplete="username"
-                  error={errors.identifier?.message}
+                  error={formState.errors.identifier?.message}
                   className="h-12 rounded-xl border border-white/10 bg-surface-strong px-4 text-base text-foreground placeholder:text-slate-500 focus:border-accent-primary/50 focus:ring-2 focus:ring-accent-primary/30"
                   {...register("identifier")}
                 />
@@ -139,9 +107,9 @@ export function LoginForm() {
                   )}
                 </button>
               </div>
-              {errors.password?.message && (
+              {formState.errors.password?.message && (
                 <span className="mt-1 block text-xs text-red-400">
-                  {errors.password.message}
+                  {formState.errors.password.message}
                 </span>
               )}
             </div>

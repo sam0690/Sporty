@@ -74,7 +74,7 @@ export const useLeague = (id: string) => {
 export function useMyTeam(id: string) {
   return useApiQuery<TFantasyTeam>(
     ["leagues", id, "my-team"],
-    () => LeagueService.getMyTeam(id),
+    ({ signal }) => LeagueService.getMyTeam(id, signal),
     {
       enabled: !!id,
     },
@@ -85,7 +85,7 @@ export function useMyTeamsForLeagues(leagueIds: string[]) {
   return useQueries({
     queries: leagueIds.map((leagueId) => ({
       queryKey: ["leagues", leagueId, "my-team"],
-      queryFn: () => LeagueService.getMyTeam(leagueId),
+      queryFn: ({ signal }) => LeagueService.getMyTeam(leagueId, signal),
       enabled: !!leagueId,
     })),
   });

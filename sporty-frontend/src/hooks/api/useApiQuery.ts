@@ -1,8 +1,8 @@
 import {
-    useQuery,
-    type UseQueryOptions,
-    type UseQueryResult,
-    type QueryKey,
+  useQuery,
+  type UseQueryOptions,
+  type UseQueryResult,
+  type QueryKey,
 } from "@tanstack/react-query";
 
 /**
@@ -19,13 +19,13 @@ import {
  * ```
  */
 export function useApiQuery<TData>(
-    queryKey: QueryKey,
-    queryFn: () => Promise<TData>,
-    options?: Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn">,
+  queryKey: QueryKey,
+  queryFn: (context: { signal: AbortSignal }) => Promise<TData>,
+  options?: Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn">,
 ): UseQueryResult<TData, Error> {
-    return useQuery<TData, Error>({
-        queryKey,
-        queryFn,
-        ...options,
-    });
+  return useQuery<TData, Error>({
+    queryKey,
+    queryFn: ({ signal }) => queryFn({ signal }),
+    ...options,
+  });
 }

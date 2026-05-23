@@ -1,0 +1,475 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMe } from "@/hooks/auth/useMe";
+import type { MarketPlayer } from "@/components/dashboard/create-team/components/PlayerCard";
+import {
+  useLeague,
+  useBuildTeam,
+  useDiscardTeamPlayer,
+  useDraftTurn,
+  useMakeDraftPick,
+  useMyTeam,
+} from "@/hooks/leagues/useLeagues";
+import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
+import { usePlayers } from "@/hooks/players/usePlayers";
+import { CreateTeamSchema, type CreateTeamValues } from "@/lib/validations";
+import { toastifier } from "@/lib/toastifier";
+
+const sportIconByName: Record<string, string> = {
+  football: "⚽",
+  basketball: "🏀",
+};
+
+export const MULTISPORT_MIN_BY_SPORT = {
+  football: 5,
+  basketball: 4,
+} as const;
+
+const PLAYER_PAGE_SIZE = 20;
+
+function normalizeLeagueSport(
+  sports: Array<{ sport: { name: string } }> | undefined,
+): "football" | "basketball" | "multisport" {
+  if (!sports || sports.length === 0) {
+    return "multisport";
+  }
+  if (sports.length > 1) {
+    return "multisport";
+  }
+
+  const name = sports[0]?.sport?.name;
+  if (name === "football" || name === "basketball") {
+    return name;
+  }
+  return "multisport";
+}
+
+type BudgetCostFilter = "All" | "Under 5" | "5 - 8" | "Above 8";
+
+export function useCreateTeamDashboard() {
+  const searchParams = useSearchParams();
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const { username, data: me } = useMe();
+  const leagueId = params?.id || searchParams.get("leagueId") || "";
+
+  const { data: league, isLoading: leagueLoading } = useLeague(leagueId || "");
+  const { data: myTeam } = useMyTeam(leagueId || "");
+
+  const leagueSport = normalizeLeagueSport(league?.sports);
+  const isMultiSportLeague = leagueSport === "multisport";
+  const { isDraftMode: isDraftLeague } = useLeagueCompetitionMode(league);
+  const [playersPage, setPlayersPage] = useState(1);
+
+  const { data: playersData, isLoading: playersLoading } = usePlayers({
+    league_id: leagueId || undefined,
+    page: playersPage,
+    page_size: PLAYER_PAGE_SIZE,
+    ...(isDraftLeague || isMultiSportLeague
+      ? {}
+      : { sport_name: league?.sports?.[0]?.sport.name }),
+  });
+
+  const buildTeamMutation = useBuildTeam();
+  const makeDraftPickMutation = useMakeDraftPick(leagueId || "");
+  const discardTeamPlayerMutation = useDiscardTeamPlayer(leagueId || "");
+  const { data: draftTurn } = useDraftTurn(
+    leagueId || "",
+    !!leagueId && isDraftLeague && league?.status === "drafting",
+  );
+
+  const [step, setStep] = useState(1);
+  const [selectedPlayers, setSelectedPlayers] = useState<MarketPlayer[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("All");
+  const [selectedSport, setSelectedSport] = useState("All");
+  const [selectedCostFilter, setSelectedCostFilter] =
+    useState<BudgetCostFilter>("All");
+  const [error, setError] = useState<string | null>(null);
+  const [pickHistory, setPickHistory] = useState<string[]>([]);
+
+  const {
+    control,
+    setValue,
+    trigger,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateTeamValues>({
+    resolver: zodResolver(CreateTeamSchema),
+    defaultValues: {
+      player_ids: [],
+      team_name: "",
+    },
+    mode: "onSubmit",
+  });
+
+  const teamName = useWatch({ control, name: "team_name" }) ?? "";
+
+  const marketPlayers: MarketPlayer[] = useMemo(() => {
+    if (!playersData?.items) return [];
+    return playersData.items.map((p) => ({
+      id: p.id,
+      name: p.display_name,
+      sport: p.sport.name as "football" | "basketball",
+      icon: sportIconByName[p.sport.name] ?? "🏅",
+      position: p.position,
+      price: Number(p.current_cost),
+      projected: 0,
+    }));
+  }, [playersData]);
+
+  const draftedPlayers: MarketPlayer[] = useMemo(() => {
+    const rows = myTeam?.team_players ?? myTeam?.players ?? [];
+    return rows.map((row) => {
+      const player = row.player;
+      return {
+        id: player.id,
+        name: player.name,
+        sport: player.sport.name as "football" | "basketball",
+        icon: sportIconByName[player.sport.name] ?? "🏅",
+        position: player.position,
+        price: Number(player.cost),
+        projected: 0,
+      };
+    });
+  }, [myTeam]);
+
+  const selectedPlayerIds = useMemo(
+    () => selectedPlayers.map((player) => player.id),
+    [selectedPlayers],
+  );
+
+  const playersPageSize = playersData?.page_size ?? PLAYER_PAGE_SIZE;
+  const playersTotal = playersData?.total ?? 0;
+  const playersCurrentPage = playersData?.page ?? playersPage;
+  const playersTotalPages = Math.max(
+    1,
+    Math.ceil(playersTotal / Math.max(playersPageSize, 1)),
+  );
+  const isPlayersPageLoading =
+    playersLoading ||
+    (playersData?.page !== undefined && playersData.page !== playersPage);
+
+  useEffect(() => {
+    setValue("player_ids", selectedPlayerIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [selectedPlayerIds, setValue]);
+
+  const selectedCountsBySport = useMemo(
+    () =>
+      selectedPlayers.reduce<Record<string, number>>((acc, player) => {
+        acc[player.sport] = (acc[player.sport] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [selectedPlayers],
+  );
+
+  const totalCost = useMemo(
+    () => selectedPlayers.reduce((sum, player) => sum + player.price, 0),
+    [selectedPlayers],
+  );
+
+  const rawBudget = Number(league?.budget_per_team ?? 103);
+  const budget = Number.isFinite(rawBudget) ? rawBudget : 103;
+  const rawSquadSize = Number(league?.squad_size ?? 15);
+  const requiredPlayers = Number.isFinite(rawSquadSize) ? rawSquadSize : 15;
+  const minPlayersRequired = isMultiSportLeague
+    ? 13
+    : leagueSport === "football" || leagueSport === "basketball"
+      ? 12
+      : requiredPlayers;
+  const maxPlayersAllowed = isMultiSportLeague
+    ? 15
+    : leagueSport === "football" || leagueSport === "basketball"
+      ? 15
+      : requiredPlayers;
+  const remainingBudget = budget - totalCost;
+  const budgetUsed = Math.max(0, budget - remainingBudget);
+  const budgetProgress =
+    budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
+
+  const filteredMarketPlayers = useMemo(() => {
+    return marketPlayers.filter((player) => {
+      if (selectedCostFilter === "Under 5") {
+        return player.price < 5;
+      }
+
+      if (selectedCostFilter === "5 - 8") {
+        return player.price >= 5 && player.price <= 8;
+      }
+
+      if (selectedCostFilter === "Above 8") {
+        return player.price > 8;
+      }
+
+      return true;
+    });
+  }, [marketPlayers, selectedCostFilter]);
+
+  const isMyDraftTurn =
+    isDraftLeague &&
+    league?.status === "drafting" &&
+    !!draftTurn?.current_turn_user_id &&
+    !!me?.id &&
+    String(draftTurn.current_turn_user_id) === String(me.id);
+
+  const handleAddPlayer = (player: MarketPlayer) => {
+    setError(null);
+
+    if (!isMultiSportLeague && player.sport !== leagueSport) {
+      setError(`Only ${leagueSport} players are allowed in this league.`);
+      return;
+    }
+
+    if (selectedPlayerIds.includes(player.id)) {
+      setError("Cannot add the same player twice.");
+      return;
+    }
+    if (selectedPlayers.length >= maxPlayersAllowed) {
+      const message =
+        minPlayersRequired === maxPlayersAllowed
+          ? `You must select exactly ${requiredPlayers} players.`
+          : `You can select up to ${maxPlayersAllowed} players.`;
+      setError(message);
+      return;
+    }
+    setSelectedPlayers((prev) => [...prev, player]);
+    setPickHistory((prev) => [...prev, player.id]);
+  };
+
+  const handleRemovePlayer = (playerId: string) => {
+    setError(null);
+    setSelectedPlayers((prev) =>
+      prev.filter((player) => player.id !== playerId),
+    );
+  };
+
+  const handleDraftPick = async (player: MarketPlayer) => {
+    if (!leagueId) return;
+    setError(null);
+    if (!isMyDraftTurn) {
+      setError("It is not your turn to pick yet.");
+      return;
+    }
+    try {
+      await makeDraftPickMutation.mutateAsync(String(player.id));
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Unable to submit draft pick",
+      );
+    }
+  };
+
+  const handleUndoLastPick = () => {
+    setError(null);
+    setPickHistory((prev) => {
+      if (prev.length === 0) {
+        return prev;
+      }
+
+      const lastPickedId = prev[prev.length - 1];
+      setSelectedPlayers((current) =>
+        current.filter((player) => player.id !== lastPickedId),
+      );
+
+      return prev.slice(0, -1);
+    });
+  };
+
+  const handlePreviousPlayersPage = () => {
+    setPlayersPage((current) => Math.max(1, current - 1));
+  };
+
+  const handleNextPlayersPage = () => {
+    if (!playersData?.has_next) {
+      return;
+    }
+
+    setPlayersPage((current) => current + 1);
+  };
+
+  const handleDiscardTeamPlayer = async (playerId: string) => {
+    if (!leagueId) return;
+    setError(null);
+    try {
+      const result = await discardTeamPlayerMutation.mutateAsync(playerId);
+      toastifier.success(
+        `Discarded player. Refunded $${result.refund.toFixed(2)} after $${result.penalty_applied.toFixed(2)} penalty.`,
+      );
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Unable to discard player";
+      setError(message);
+      toastifier.error(message);
+    }
+  };
+
+  const handleNextStep = async () => {
+    setError(null);
+
+    const selectionValid = await trigger("player_ids");
+    if (!selectionValid) {
+      setError("Select at least one player.");
+      return;
+    }
+
+    if (
+      selectedPlayers.length < minPlayersRequired ||
+      selectedPlayers.length > maxPlayersAllowed
+    ) {
+      const message =
+        minPlayersRequired === maxPlayersAllowed
+          ? `Complete your team first: select ${requiredPlayers} players.`
+          : `Complete your team first: select between ${minPlayersRequired} and ${maxPlayersAllowed} players.`;
+      setError(message);
+      toastifier.info(message);
+      return;
+    }
+
+    if (isMultiSportLeague) {
+      const footballCount = selectedCountsBySport.football ?? 0;
+      const basketballCount = selectedCountsBySport.basketball ?? 0;
+
+      if (
+        footballCount < MULTISPORT_MIN_BY_SPORT.football ||
+        basketballCount < MULTISPORT_MIN_BY_SPORT.basketball
+      ) {
+        const message = `Multisport squads must include at least ${MULTISPORT_MIN_BY_SPORT.football} football and ${MULTISPORT_MIN_BY_SPORT.basketball} basketball players.`;
+        setError(message);
+        toastifier.info(message);
+        return;
+      }
+    }
+
+    setStep(2);
+  };
+
+  const handleCreateTeam = handleSubmit(async (values) => {
+    if (!leagueId) return;
+
+    try {
+      if (
+        selectedPlayers.length < minPlayersRequired ||
+        selectedPlayers.length > maxPlayersAllowed
+      ) {
+        const message =
+          minPlayersRequired === maxPlayersAllowed
+            ? `Complete your team first: select ${requiredPlayers} players.`
+            : `Complete your team first: select between ${minPlayersRequired} and ${maxPlayersAllowed} players.`;
+        setError(message);
+        toastifier.info(message);
+        setStep(1);
+        return;
+      }
+
+      if (isMultiSportLeague) {
+        const footballCount = selectedCountsBySport.football ?? 0;
+        const basketballCount = selectedCountsBySport.basketball ?? 0;
+        if (
+          footballCount < MULTISPORT_MIN_BY_SPORT.football ||
+          basketballCount < MULTISPORT_MIN_BY_SPORT.basketball
+        ) {
+          const message = `Multisport squads must include at least ${MULTISPORT_MIN_BY_SPORT.football} football and ${MULTISPORT_MIN_BY_SPORT.basketball} basketball players.`;
+          setError(message);
+          toastifier.info(message);
+          setStep(1);
+          return;
+        }
+      }
+
+      await buildTeamMutation.mutateAsync({
+        id: leagueId,
+        payload: {
+          team_name: values.team_name.trim(),
+          player_ids: values.player_ids.map((id) => id.toString()),
+        },
+      });
+
+      router.push(`/leagues/${leagueId}`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to create team");
+      setStep(2);
+    }
+  });
+
+  return {
+    // basic context
+    username,
+    router,
+    league,
+    leagueLoading,
+    myTeam,
+    leagueSport,
+    isMultiSportLeague,
+    isDraftLeague,
+    playersPage,
+    setPlayersPage,
+    // players
+    playersData,
+    playersLoading,
+    playersPageSize,
+    playersTotal,
+    playersCurrentPage,
+    playersTotalPages,
+    isPlayersPageLoading,
+    marketPlayers,
+    draftedPlayers,
+    // form
+    control,
+    setValue,
+    trigger,
+    handleSubmit,
+    errors,
+    teamName,
+    // selection state
+    step,
+    setStep,
+    selectedPlayers,
+    setSelectedPlayers,
+    selectedPlayerIds,
+    searchQuery,
+    setSearchQuery,
+    selectedPosition,
+    setSelectedPosition,
+    selectedSport,
+    setSelectedSport,
+    selectedCostFilter,
+    setSelectedCostFilter,
+    error,
+    setError,
+    pickHistory,
+    setPickHistory,
+    selectedCountsBySport,
+    totalCost,
+    budget,
+    requiredPlayers,
+    minPlayersRequired,
+    maxPlayersAllowed,
+    remainingBudget,
+    budgetUsed,
+    budgetProgress,
+    filteredMarketPlayers,
+    isMyDraftTurn,
+    // handlers
+    handleAddPlayer,
+    handleRemovePlayer,
+    handleDraftPick,
+    handleUndoLastPick,
+    handlePreviousPlayersPage,
+    handleNextPlayersPage,
+    handleDiscardTeamPlayer,
+    handleNextStep,
+    handleCreateTeam,
+    // mutations (exposed for view-level controls)
+    buildTeamMutation,
+    makeDraftPickMutation,
+    discardTeamPlayerMutation,
+    draftTurn,
+  } as const;
+}

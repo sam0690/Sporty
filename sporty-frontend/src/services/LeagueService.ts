@@ -61,8 +61,8 @@ export const LeagueService = {
   },
 
   /** Get the current user's fantasy team in a league */
-  async getMyTeam(id: string): Promise<TFantasyTeam> {
-    const res = await authApi.get(API_PATHS.LEAGUES.MY_TEAM(id));
+  async getMyTeam(id: string, signal?: AbortSignal): Promise<TFantasyTeam> {
+    const res = await authApi.get(API_PATHS.LEAGUES.MY_TEAM(id), { signal });
     return res.data;
   },
 

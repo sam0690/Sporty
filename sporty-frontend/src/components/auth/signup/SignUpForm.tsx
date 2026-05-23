@@ -1,11 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { CheckCircle2, Eye, EyeOff, Lock, Mail } from "lucide-react";
-import { useForm, useWatch } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
   Card,
@@ -17,51 +13,22 @@ import {
 import { AuthHeroImage } from "@/components/auth/shared/AuthHeroImage";
 import { AuthPageShell } from "@/components/auth/shared/AuthPageShell";
 import { PasswordStrengthIndicator } from "@/components/auth/shared/PasswordStrengthIndicator";
-import { useAuth } from "@/context/auth-context";
-import { RegisterSchema, type RegisterValues } from "@/lib/validations";
-import { toastifier } from "@/lib/toastifier";
+import { useSignUpFormState } from "@/features/auth";
 import { Divider } from "@/components/auth/login/components/Divider";
 import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 
 export function SignUpForm() {
-  const router = useRouter();
-  const { register, actionLoading } = useAuth();
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
-    control,
     register: registerField,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterValues>({
-    resolver: zodResolver(RegisterSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-    mode: "onSubmit",
-  });
-
-  const isSubmitting = actionLoading.register;
-  const password = useWatch({ control, name: "password" }) ?? "";
-
-  const onSubmit = handleSubmit(async (values) => {
-    const result = await register(
-      values.username,
-      values.email,
-      values.password,
-    );
-    if (!result.success) {
-      toastifier.error(result.error ?? "Unable to create account.");
-      return;
-    }
-
-    toastifier.success("Account created! Welcome to Sporty.");
-    router.replace("/dashboard");
-  });
+    formState,
+    password,
+    showPassword,
+    setShowPassword,
+    showConfirmPassword,
+    setShowConfirmPassword,
+    isSubmitting,
+    onSubmit,
+  } = useSignUpFormState();
 
   return (
     <AuthPageShell
@@ -117,7 +84,7 @@ export function SignUpForm() {
                   type="text"
                   placeholder="your-username"
                   autoComplete="username"
-                  error={errors.username?.message}
+                    error={formState.errors.username?.message}
                   className="rounded-md border-white/10 bg-white/5 px-4 py-3 text-foreground placeholder:text-foreground/40 transition-all duration-200 focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
                   {...registerField("username")}
                 />
@@ -137,7 +104,7 @@ export function SignUpForm() {
                     type="email"
                     placeholder="name@example.com"
                     autoComplete="email"
-                    error={errors.email?.message}
+                    error={formState.errors.email?.message}
                     className="h-12 rounded-md border border-white/10 bg-white/5 px-4 pl-10 text-base text-foreground placeholder:text-foreground/40 focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
                     {...registerField("email")}
                   />
@@ -176,9 +143,9 @@ export function SignUpForm() {
                     )}
                   </button>
                 </div>
-                {errors.password?.message && (
+                {formState.errors.password?.message && (
                   <span className="mt-1 block text-xs text-danger">
-                    {errors.password.message}
+                    {formState.errors.password.message}
                   </span>
                 )}
                 <PasswordStrengthIndicator password={password ?? ""} />
@@ -218,9 +185,9 @@ export function SignUpForm() {
                     )}
                   </button>
                 </div>
-                {errors.confirmPassword?.message && (
+                {formState.errors.confirmPassword?.message && (
                   <span className="mt-1 block text-xs text-danger">
-                    {errors.confirmPassword.message}
+                    {formState.errors.confirmPassword.message}
                   </span>
                 )}
               </div>
