@@ -13,7 +13,6 @@ import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 import type { OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
-import type { TransferConfirmation as TransferConfirmationType } from "@/components/dashboard/transfers/components/TransferConfirmation";
 
 type Props = ReturnType<typeof import("../hooks/useTransfersDashboard").useTransfersDashboard>;
 
@@ -37,14 +36,16 @@ export function TransfersView(props: Props) {
     stagedInPlayers,
     selectedOutPlayer,
     visibleOwnedPlayers,
-    filteredPlayers,
+    availablePlayers,
     availableSportsForFilter,
     positionOptionsBySport,
     isTransfersOpen,
     isMultiSportLeague,
     selectedSport,
     selectedPosition,
-    searchResetToken,
+    searchQuery,
+    minCostInput,
+    maxCostInput,
     showConfirmModal,
     setShowConfirmModal,
     handlePreviousPlayersPage,
@@ -52,6 +53,8 @@ export function TransfersView(props: Props) {
     handleSearchChange,
     handleSportChange,
     handlePositionChange,
+    handleMinCostChange,
+    handleMaxCostChange,
     handleAddPlayer,
     handleStageOut,
     confirmAllTransfers,
@@ -109,9 +112,20 @@ export function TransfersView(props: Props) {
               {isMultiSportLeague ? <p className="mt-2 text-xs text-slate-400">Multisport: you can stage players in directly when budget and roster limits allow.</p> : null}
             </div>
           ) : null}
-          <SearchBar onSearch={handleSearchChange} resetToken={searchResetToken} />
+          <SearchBar value={searchQuery} onSearch={handleSearchChange} />
 
-          <FilterBar selectedSport={selectedSport} selectedPosition={selectedPosition} availableSports={availableSportsForFilter} positionOptionsBySport={positionOptionsBySport} onSportChange={handleSportChange} onPositionChange={handlePositionChange} />
+          <FilterBar
+            selectedSport={selectedSport as Sport}
+            selectedPosition={selectedPosition}
+            minCost={minCostInput}
+            maxCost={maxCostInput}
+            availableSports={availableSportsForFilter}
+            positionOptionsBySport={positionOptionsBySport}
+            onSportChange={handleSportChange}
+            onPositionChange={handlePositionChange}
+            onMinCostChange={handleMinCostChange}
+            onMaxCostChange={handleMaxCostChange}
+          />
 
           <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
@@ -133,10 +147,10 @@ export function TransfersView(props: Props) {
           <div className="space-y-3">
             {isLoading || (isPlayersPageLoading && visibleOwnedPlayers.length === 0) ? (
               Array.from({ length: 5 }, (_, index) => <PlayerCardSkeleton key={index} />)
-            ) : filteredPlayers.length === 0 ? (
+            ) : availablePlayers.length === 0 ? (
               <EmptyTransfers onClearFilters={clearAllFilters} />
             ) : (
-              filteredPlayers.map((player, index) => (
+              availablePlayers.map((player, index) => (
                 <PlayerCard key={player.id} id={player.id} name={player.name} sport={player.sport} position={player.position} price={player.price} avgPoints={player.avgPoints} form={player.form} onAdd={handleAddPlayer} animationDelay={index * 60} disabled={!isTransfersOpen} />
               ))
             )}
@@ -155,7 +169,7 @@ export function TransfersView(props: Props) {
             </div>
           )}
           {selectedOutPlayer ? (
-            <button type="button" onClick={async () => { try { await cancelTransfersMutation.mutateAsync(); setShowConfirmModal(false); } catch (err: unknown) { } }} className="mt-3 w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground hover:bg-white/8">Cancel Staged Session</button>
+            <button type="button" onClick={async () => { try { await cancelTransfersMutation.mutateAsync(); setShowConfirmModal(false); } catch { } }} className="mt-3 w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground hover:bg-white/8">Cancel Staged Session</button>
           ) : null}
         </div>
       </div>

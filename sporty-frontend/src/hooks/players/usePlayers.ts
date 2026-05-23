@@ -20,6 +20,7 @@ export const usePlayers = (filters: TPlayerFilter = {}) => {
 export const useTransferPoolPlayers = (
   leagueId: string,
   leagueSports: LeagueSportEntry[] | undefined,
+  playerFilters: TPlayerFilter = {},
   page = 1,
   pageSize = 20,
 ) => {
@@ -34,16 +35,17 @@ export const useTransferPoolPlayers = (
   const isMultiSportLeague = uniqueSports.length > 1;
   const primarySport = uniqueSports[0];
 
-  const filters: TPlayerFilter = {
+  const requestFilters: TPlayerFilter = {
     league_id: leagueId || undefined,
     page,
     page_size: pageSize,
+    ...playerFilters,
     ...(!isMultiSportLeague && primarySport
       ? { sport_name: primarySport }
       : {}),
   };
 
-  return usePlayers(filters);
+  return usePlayers(requestFilters);
 };
 
 export const usePlayer = (id: string) => {

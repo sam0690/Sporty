@@ -14,6 +14,7 @@ import {
 } from "@/hooks/leagues/useLeagues";
 import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
+import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { toastifier } from "@/lib/toastifier";
 import type { OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
@@ -43,6 +44,22 @@ export function useTransfersDashboard() {
   const activeWindow = activeWindowQuery.data;
   const windowLoading = activeWindowQuery.isLoading;
   const [playersPage, setPlayersPage] = useState(1);
+  const initialSportName = league?.sports?.length === 1 ? toSport(league.sports[0]?.sport?.name) : undefined;
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedSport,
+    setSelectedSport,
+    selectedPosition,
+    setSelectedPosition,
+    minCostInput,
+    setMinCostInput,
+    maxCostInput,
+    setMaxCostInput,
+    filters: playerFilters,
+    clearFilters,
+  } = usePlayerFilters(initialSportName);
+
   const leagueSports = useMemo(
     () =>
       Array.from(
@@ -61,6 +78,7 @@ export function useTransfersDashboard() {
   const playersQuery = useTransferPoolPlayers(
     leagueId,
     league?.sports,
+    playerFilters,
     playersPage,
     TRANSFER_POOL_PAGE_SIZE,
   );
@@ -71,11 +89,6 @@ export function useTransfersDashboard() {
   const stageInMutation = useStageIn(leagueId);
   const confirmTransfersMutation = useConfirmTransfers(leagueId);
   const cancelTransfersMutation = useCancelTransfers(leagueId);
-
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResetToken, setSearchResetToken] = useState(0);
-  const [selectedSport, setSelectedSport] = useState<Sport>("All");
-  const [selectedPosition, setSelectedPosition] = useState("All");
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [selectedOutPlayer, setSelectedOutPlayer] = useState<OwnedPlayer | null>(null);
@@ -140,16 +153,6 @@ export function useTransfersDashboard() {
     [ownedPlayers, stagedOutIds],
   );
 
-  const filteredPlayers = useMemo(() => {
-    return availablePlayers.filter((player) => {
-      const matchesSearch = player.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
-      const matchesSport = selectedSport === "All" || player.sport === selectedSport;
-      const matchesPosition = selectedPosition === "All" || player.position === selectedPosition;
-
-      return matchesSearch && matchesSport && matchesPosition;
-    });
-  }, [availablePlayers, searchQuery, selectedSport, selectedPosition]);
-
   const availableSportsForFilter = useMemo(
     () =>
       leagueSports.length > 0
@@ -184,21 +187,31 @@ export function useTransfersDashboard() {
     setPlayersPage((current) => current + 1);
   }, [playersData?.has_next]);
 
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchQuery(value);
-    setPlayersPage(1);
-  }, []);
-
   const handleSportChange = useCallback((sport: Sport) => {
     setSelectedSport(sport);
     setSelectedPosition("All");
     setPlayersPage(1);
-  }, []);
+  }, [setSelectedPosition, setSelectedSport]);
 
   const handlePositionChange = useCallback((position: string) => {
     setSelectedPosition(position);
     setPlayersPage(1);
-  }, []);
+  }, [setSelectedPosition]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setPlayersPage(1);
+  }, [setSearchQuery]);
+
+  const handleMinCostChange = useCallback((value: string) => {
+    setMinCostInput(value);
+    setPlayersPage(1);
+  }, [setMinCostInput]);
+
+  const handleMaxCostChange = useCallback((value: string) => {
+    setMaxCostInput(value);
+    setPlayersPage(1);
+  }, [setMaxCostInput]);
 
   const handleAddPlayer = useCallback(async (id: string) => {
     if (!isMultiSportLeague && stagedOutPlayers.length === 0) {
@@ -312,11 +325,9 @@ export function useTransfersDashboard() {
   }, [leagueId, activeWindow, stagedOutPlayers, stagedInPlayers, isMultiSportLeague, confirmTransfersMutation]);
 
   const clearAllFilters = useCallback(() => {
-    setSearchQuery("");
-    setSelectedSport("All");
-    setSelectedPosition("All");
-    setSearchResetToken((prev) => prev + 1);
-  }, []);
+    clearFilters();
+    setPlayersPage(1);
+  }, [clearFilters]);
 
   const isLoading = leagueLoading || teamLoading || playersLoading || windowLoading;
   const normalizedBudget = Number(myTeam?.current_budget ?? 0);
@@ -342,14 +353,16 @@ export function useTransfersDashboard() {
     stagedInPlayers,
     selectedOutPlayer,
     visibleOwnedPlayers,
-    filteredPlayers,
+    availablePlayers,
     availableSportsForFilter,
     positionOptionsBySport,
     isTransfersOpen,
     isMultiSportLeague,
     selectedSport,
     selectedPosition,
-    searchResetToken,
+    searchQuery,
+    minCostInput,
+    maxCostInput,
     showConfirmModal,
     setShowConfirmModal,
     handlePreviousPlayersPage,
@@ -357,6 +370,8 @@ export function useTransfersDashboard() {
     handleSearchChange,
     handleSportChange,
     handlePositionChange,
+    handleMinCostChange,
+    handleMaxCostChange,
     handleAddPlayer,
     handleStageOut,
     confirmAllTransfers,

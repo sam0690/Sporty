@@ -5,10 +5,14 @@ type Sport = "All" | "football" | "basketball" | "cricket";
 type FilterBarProps = {
   selectedSport: Sport;
   selectedPosition: string;
+  minCost: string;
+  maxCost: string;
   availableSports?: Exclude<Sport, "All">[];
   positionOptionsBySport?: Partial<Record<Sport, string[]>>;
   onSportChange: (sport: Sport) => void;
   onPositionChange: (position: string) => void;
+  onMinCostChange: (value: string) => void;
+  onMaxCostChange: (value: string) => void;
 };
 
 const defaultSports: Exclude<Sport, "All">[] = [
@@ -33,10 +37,14 @@ const positionMap: Record<Exclude<Sport, "All">, string[]> = {
 export function FilterBar({
   selectedSport,
   selectedPosition,
+  minCost,
+  maxCost,
   availableSports,
   positionOptionsBySport,
   onSportChange,
   onPositionChange,
+  onMinCostChange,
+  onMaxCostChange,
 }: FilterBarProps) {
   const leagueSports =
     availableSports && availableSports.length > 0
@@ -108,6 +116,34 @@ export function FilterBar({
           })}
         </div>
       ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span>Min cost</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={minCost}
+            onChange={(event) => onMinCostChange(event.target.value)}
+            placeholder="0"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          />
+        </label>
+
+        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span>Max cost</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={maxCost}
+            onChange={(event) => onMaxCostChange(event.target.value)}
+            placeholder="Any"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          />
+        </label>
+      </div>
     </section>
   );
 }

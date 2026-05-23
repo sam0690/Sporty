@@ -48,8 +48,10 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
     setSelectedPosition,
     selectedSport,
     setSelectedSport,
-    selectedCostFilter,
-    setSelectedCostFilter,
+    minCostInput,
+    setMinCostInput,
+    maxCostInput,
+    setMaxCostInput,
     error,
     setError,
     pickHistory,
@@ -63,7 +65,7 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
     remainingBudget,
     budgetUsed,
     budgetProgress,
-    filteredMarketPlayers,
+    marketPlayers,
     isMyDraftTurn,
     handleAddPlayer,
     handleRemovePlayer,
@@ -150,11 +152,13 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
                 searchQuery={searchQuery}
                 selectedPosition={selectedPosition}
                 selectedSport={selectedSport}
-                selectedCostFilter={selectedCostFilter}
+                minCost={minCostInput}
+                maxCost={maxCostInput}
                 onSearchQueryChange={setSearchQuery}
                 onPositionChange={setSelectedPosition}
                 onSportChange={setSelectedSport}
-                onCostFilterChange={setSelectedCostFilter}
+                onMinCostChange={setMinCostInput}
+                onMaxCostChange={setMaxCostInput}
                 canAddPlayers={isMyDraftTurn}
                 addDisabledReason="Waiting for your draft turn"
                 currentPage={playersCurrentPage}
@@ -335,7 +339,7 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <PlayerMarket
-                players={filteredMarketPlayers}
+                players={marketPlayers}
                 onAddPlayer={handleAddPlayer}
                 onRemovePlayer={handleRemovePlayer}
                 selectedPlayerIds={selectedPlayerIds}
@@ -344,11 +348,13 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
                 searchQuery={searchQuery}
                 selectedPosition={selectedPosition}
                 selectedSport={selectedSport}
-                selectedCostFilter={selectedCostFilter}
+                minCost={minCostInput}
+                maxCost={maxCostInput}
                 onSearchQueryChange={setSearchQuery}
                 onPositionChange={setSelectedPosition}
                 onSportChange={setSelectedSport}
-                onCostFilterChange={setSelectedCostFilter}
+                onMinCostChange={setMinCostInput}
+                onMaxCostChange={setMaxCostInput}
                 currentPage={playersCurrentPage}
                 totalPages={playersTotalPages}
                 totalPlayers={playersTotal}

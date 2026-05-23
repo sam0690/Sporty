@@ -14,7 +14,7 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from app.schemas.common import TransferWindowBrief, PlayerBrief, SportBrief  # noqa: F401 — re-export
 
@@ -102,35 +102,44 @@ class PlayerFilter(BaseModel):
     """
     league_id: uuid.UUID | None = Field(
         default=None,
-        description="Exclude players already owned in this league"
+        description="Exclude players already owned in this league",
     )
     sport_name: str | None = Field(
-        default=None, max_length=50,
-        description="Filter by sport slug, e.g. 'football'"
+        default=None,
+        max_length=50,
+        description="Filter by sport slug, e.g. 'football'",
     )
     position: str | None = Field(
-        default=None, max_length=20,
-        description="Filter by position code, e.g. 'FWD'"
+        default=None,
+        max_length=20,
+        description="Filter by position code, e.g. 'FWD'",
     )
     real_team: str | None = Field(
-        default=None, max_length=100,
-        description="Filter by real-world team name"
+        default=None,
+        max_length=100,
+        description="Filter by real-world team name",
     )
     is_available: bool | None = Field(
         default=None,
-        description="Filter by availability status"
+        description="Filter by availability status",
     )
-    min_cost: Decimal | None = Field(
-        default=None, ge=0,
-        description="Minimum player cost"
+    minCost: Decimal | None = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices("minCost", "min_cost"),
+        description="Minimum player cost",
     )
-    max_cost: Decimal | None = Field(
-        default=None, ge=0,
-        description="Maximum player cost"
+    maxCost: Decimal | None = Field(
+        default=None,
+        ge=0,
+        validation_alias=AliasChoices("maxCost", "max_cost"),
+        description="Maximum player cost",
     )
-    search: str | None = Field(
-        default=None, max_length=150,
-        description="Search player name (case-insensitive LIKE)"
+    name: str | None = Field(
+        default=None,
+        max_length=150,
+        validation_alias=AliasChoices("name", "search"),
+        description="Search player name (case-insensitive partial match)",
     )
 
     # Pagination
@@ -147,13 +156,20 @@ class PlayerFilter(BaseModel):
     def sport_name_lowercase(cls, v: str | None) -> str | None:
         return v.strip().lower() if v else v
 
-    @field_validator("max_cost")
+    @field_validator("name")
+    @classmethod
+    def name_trimmed(cls, v: str | None) -> str | None:
+        return v.strip() if v else v
+
+    @field_validator("maxCost")
     @classmethod
     def max_gte_min(cls, v: Decimal | None, info) -> Decimal | None:
-        min_cost = info.data.get("min_cost")
+        min_cost = info.data.get("minCost")
         if v is not None and min_cost is not None and v < min_cost:
-            raise ValueError("max_cost must be >= min_cost")
+            raise ValueError("maxCost must be >= minCost")
         return v
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

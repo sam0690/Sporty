@@ -16,6 +16,7 @@ import {
 } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 import { usePlayers } from "@/hooks/players/usePlayers";
+import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { CreateTeamSchema, type CreateTeamValues } from "@/lib/validations";
 import { toastifier } from "@/lib/toastifier";
 
@@ -64,14 +65,43 @@ export function useCreateTeamDashboard() {
   const isMultiSportLeague = leagueSport === "multisport";
   const { isDraftMode: isDraftLeague } = useLeagueCompetitionMode(league);
   const [playersPage, setPlayersPage] = useState(1);
+  const initialSportName =
+    !isDraftLeague && !isMultiSportLeague
+      ? league?.sports?.[0]?.sport.name
+      : undefined;
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedPosition,
+    setSelectedPosition,
+    selectedSport,
+    setSelectedSport,
+    minCostInput,
+    setMinCostInput,
+    maxCostInput,
+    setMaxCostInput,
+    filters: playerFilters,
+  } = usePlayerFilters(initialSportName);
+
+  useEffect(() => {
+    setPlayersPage(1);
+  }, [
+    playerFilters.name,
+    playerFilters.position,
+    playerFilters.sport_name,
+    playerFilters.minCost,
+    playerFilters.maxCost,
+    leagueId,
+  ]);
 
   const { data: playersData, isLoading: playersLoading } = usePlayers({
     league_id: leagueId || undefined,
     page: playersPage,
     page_size: PLAYER_PAGE_SIZE,
+    ...playerFilters,
     ...(isDraftLeague || isMultiSportLeague
       ? {}
-      : { sport_name: league?.sports?.[0]?.sport.name }),
+      : { sport_name: initialSportName }),
   });
 
   const buildTeamMutation = useBuildTeam();
@@ -84,11 +114,6 @@ export function useCreateTeamDashboard() {
 
   const [step, setStep] = useState(1);
   const [selectedPlayers, setSelectedPlayers] = useState<MarketPlayer[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState("All");
-  const [selectedSport, setSelectedSport] = useState("All");
-  const [selectedCostFilter, setSelectedCostFilter] =
-    useState<BudgetCostFilter>("All");
   const [error, setError] = useState<string | null>(null);
   const [pickHistory, setPickHistory] = useState<string[]>([]);
 
@@ -193,24 +218,6 @@ export function useCreateTeamDashboard() {
   const budgetUsed = Math.max(0, budget - remainingBudget);
   const budgetProgress =
     budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
-
-  const filteredMarketPlayers = useMemo(() => {
-    return marketPlayers.filter((player) => {
-      if (selectedCostFilter === "Under 5") {
-        return player.price < 5;
-      }
-
-      if (selectedCostFilter === "5 - 8") {
-        return player.price >= 5 && player.price <= 8;
-      }
-
-      if (selectedCostFilter === "Above 8") {
-        return player.price > 8;
-      }
-
-      return true;
-    });
-  }, [marketPlayers, selectedCostFilter]);
 
   const isMyDraftTurn =
     isDraftLeague &&
@@ -439,8 +446,10 @@ export function useCreateTeamDashboard() {
     setSelectedPosition,
     selectedSport,
     setSelectedSport,
-    selectedCostFilter,
-    setSelectedCostFilter,
+    minCostInput,
+    setMinCostInput,
+    maxCostInput,
+    setMaxCostInput,
     error,
     setError,
     pickHistory,
@@ -454,7 +463,7 @@ export function useCreateTeamDashboard() {
     remainingBudget,
     budgetUsed,
     budgetProgress,
-    filteredMarketPlayers,
+    marketPlayers,
     isMyDraftTurn,
     // handlers
     handleAddPlayer,

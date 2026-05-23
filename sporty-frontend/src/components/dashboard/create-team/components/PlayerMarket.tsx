@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
 import { EmptyState } from "@/components/dashboard/create-team/components/EmptyState";
 import {
   PlayerCard,
@@ -18,11 +18,13 @@ type PlayerMarketProps = {
   searchQuery: string;
   selectedPosition: string;
   selectedSport: string;
-  selectedCostFilter: "All" | "Under 5" | "5 - 8" | "Above 8";
+  minCost: string;
+  maxCost: string;
   onSearchQueryChange: (value: string) => void;
   onPositionChange: (value: string) => void;
   onSportChange: (value: string) => void;
-  onCostFilterChange: (value: "All" | "Under 5" | "5 - 8" | "Above 8") => void;
+  onMinCostChange: (value: string) => void;
+  onMaxCostChange: (value: string) => void;
   canAddPlayers?: boolean;
   addDisabledReason?: string;
   currentPage: number;
@@ -44,11 +46,13 @@ export function PlayerMarket({
   searchQuery,
   selectedPosition,
   selectedSport,
-  selectedCostFilter,
+  minCost,
+  maxCost,
   onSearchQueryChange,
   onPositionChange,
   onSportChange,
-  onCostFilterChange,
+  onMinCostChange,
+  onMaxCostChange,
   canAddPlayers = true,
   addDisabledReason = "Action unavailable",
   currentPage,
@@ -75,64 +79,66 @@ export function PlayerMarket({
     [players],
   );
 
-  const filteredPlayers = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    return players.filter((player) => {
-      const searchOk =
-        query.length === 0 || player.name.toLowerCase().includes(query);
-      const positionOk =
-        selectedPosition === "All" || player.position === selectedPosition;
-      const sportOk = selectedSport === "All" || player.sport === selectedSport;
-      return searchOk && positionOk && sportOk;
-    });
-  }, [players, searchQuery, selectedPosition, selectedSport]);
-
   return (
     <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur-xl">
       <h2 className="text-lg font-semibold text-foreground">Player Market</h2>
 
-      <input
-        value={searchQuery}
-        onChange={(event) => onSearchQueryChange(event.target.value)}
-        placeholder="Search by player name..."
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
-      />
+      <label className="relative block">
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <input
+          value={searchQuery}
+          onChange={(event) => onSearchQueryChange(event.target.value)}
+          placeholder="Search by player name..."
+          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 pl-11 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+        />
+      </label>
 
-      <div className="flex flex-wrap gap-2">
-        {positions.map((position) => {
-          const active = position === selectedPosition;
-          return (
-            <button
-              key={position}
-              type="button"
-              onClick={() => onPositionChange(position)}
-              className={`rounded-full px-3 py-1.5 text-xs ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
-            >
-              {position}
-            </button>
-          );
-        })}
-      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span>Position</span>
+          <select
+            value={selectedPosition}
+            onChange={(event) => onPositionChange(event.target.value)}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          >
+            {positions.map((position) => (
+              <option key={position} value={position}>
+                {position}
+              </option>
+            ))}
+          </select>
+        </label>
 
-      <div className="flex flex-wrap gap-2">
-        {(["All", "Under 5", "5 - 8", "Above 8"] as const).map((costBand) => {
-          const active = costBand === selectedCostFilter;
-          return (
-            <button
-              key={costBand}
-              type="button"
-              onClick={() => onCostFilterChange(costBand)}
-              className={`rounded-full px-3 py-1.5 text-xs ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
-            >
-              {costBand === "All" ? "All Costs" : `$${costBand}M`}
-            </button>
-          );
-        })}
+        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span>Min cost</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={minCost}
+            onChange={(event) => onMinCostChange(event.target.value)}
+            placeholder="0"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          />
+        </label>
+
+        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+          <span>Max cost</span>
+          <input
+            type="number"
+            min="0"
+            step="0.1"
+            value={maxCost}
+            onChange={(event) => onMaxCostChange(event.target.value)}
+            placeholder="Any"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          />
+        </label>
       </div>
 
       {sport === "multisport" ? (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+          <span className="uppercase tracking-wider text-slate-500">Sport</span>
           {sports.map((sportOption) => {
             const active = sportOption === selectedSport;
             return (
@@ -140,7 +146,7 @@ export function PlayerMarket({
                 key={sportOption}
                 type="button"
                 onClick={() => onSportChange(sportOption)}
-                className={`rounded-full px-3 py-1.5 text-xs capitalize ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
+                className={`rounded-full px-3 py-1.5 capitalize ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
               >
                 {sportOption}
               </button>
@@ -188,16 +194,16 @@ export function PlayerMarket({
       </div>
 
       <div className="max-h-[60vh] space-y-3 overflow-y-auto p-1">
-        {isLoadingPage && filteredPlayers.length === 0 ? (
+        {isLoadingPage && players.length === 0 ? (
           <div className="flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/5 text-sm text-slate-400">
             <Loader2 className="mr-2 h-4 w-4 animate-spin text-accent-primary" />
             Loading players...
           </div>
-        ) : filteredPlayers.length === 0 ? (
+        ) : players.length === 0 ? (
           <EmptyState message="No players found for the selected filters." />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {filteredPlayers.map((player) => {
+            {players.map((player) => {
               const isSelected = selectedPlayerIds.includes(player.id);
               const canAfford = isSelected || remainingBudget >= player.price;
 

@@ -34,13 +34,16 @@ export type TPlayerListResponse = {
 };
 
 export type TPlayerFilter = {
+  name?: string;
   sport_name?: string;
   position?: string;
   real_team?: string;
-  min_cost?: number;
-  max_cost?: number;
-  search?: string;
+  minCost?: number;
+  maxCost?: number;
   league_id?: string;
   page?: number;
   page_size?: number;
+  search?: string;
+  min_cost?: number;
+  max_cost?: number;
 };

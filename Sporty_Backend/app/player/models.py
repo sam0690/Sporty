@@ -48,7 +48,7 @@ class RealTeam(Base):
         String(100), nullable=True, index=True
     )
 
-    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    name: Mapped[str] = mapped_column(String(150), nullable=False, index=True)
     abbreviation: Mapped[str | None] = mapped_column(String(20), nullable=True)
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     conference: Mapped[str | None] = mapped_column(String(50), nullable=True)
@@ -120,7 +120,7 @@ class Player(Base):
     # Position code validated at the app layer, not DB Enum.
     # Football: "GKP", "DEF", "MID", "FWD"
     # Cricket:  "BAT", "BOWL", "AR", "WK"
-    position: Mapped[str] = mapped_column(String(20), nullable=False)
+    position: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
 
     # See Q1 above — String for v1, FK to a clubs table later.
     real_team: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -134,7 +134,7 @@ class Player(Base):
 
     # Current market cost — fluctuates over the season
     cost: Mapped[Decimal] = mapped_column(
-        Numeric(precision=10, scale=2), nullable=False
+        Numeric(precision=10, scale=2), nullable=False, index=True
     )
 
     # Can this player be picked / transferred in?

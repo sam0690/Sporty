@@ -63,7 +63,19 @@ const mapBackendPlayer = (player: BackendPlayer): TPlayer => ({
 export const PlayerService = {
   /** List players with optional filters */
   async getPlayers(filters: TPlayerFilter = {}): Promise<TPlayerListResponse> {
-    const res = await authApi.get(API_PATHS.PLAYERS.LIST, { params: filters });
+    const params: TPlayerFilter = {
+      league_id: filters.league_id,
+      sport_name: filters.sport_name,
+      position: filters.position,
+      real_team: filters.real_team,
+      page: filters.page,
+      page_size: filters.page_size,
+      name: filters.name ?? filters.search,
+      minCost: filters.minCost ?? filters.min_cost,
+      maxCost: filters.maxCost ?? filters.max_cost,
+    };
+
+    const res = await authApi.get(API_PATHS.PLAYERS.LIST, { params });
     return {
       ...res.data,
       items: (res.data.items as BackendPlayer[]).map(mapBackendPlayer),

@@ -10,7 +10,7 @@ import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import false
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.league.models import FantasyTeam, LeagueSport, Sport, TeamPlayer
@@ -52,15 +52,17 @@ def _apply_filters(query, filters: PlayerFilter):
         query = query.filter(Player.is_available == filters.is_available)
 
     # ── Cost range ──────────────────────────────────────────────────
-    if filters.min_cost is not None:
-        query = query.filter(Player.cost >= filters.min_cost)
+    if filters.minCost is not None:
+        query = query.filter(Player.cost >= filters.minCost)
 
-    if filters.max_cost is not None:
-        query = query.filter(Player.cost <= filters.max_cost)
+    if filters.maxCost is not None:
+        query = query.filter(Player.cost <= filters.maxCost)
 
     # ── Text search (case-insensitive LIKE) ─────────────────────────
-    if filters.search:
-        query = query.filter(Player.name.ilike(f"%{filters.search}%"))
+    if filters.name:
+        query = query.filter(
+            func.lower(Player.name).like(f"%{filters.name.lower()}%")
+        )
 
     return query
 
