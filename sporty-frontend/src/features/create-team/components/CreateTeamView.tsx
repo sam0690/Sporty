@@ -9,8 +9,13 @@ import { MULTISPORT_MIN_BY_SPORT } from "../hooks/useCreateTeamDashboard";
 import { CardSkeleton } from "@/components/ui/skeletons";
 
 type CreateTeamProps = Record<string, unknown> & { leagueId?: string };
+type CreateTeamViewModel = ReturnType<
+  typeof import("../hooks/useCreateTeamDashboard").useCreateTeamDashboard
+>;
 
-export function CreateTeamView(props: CreateTeamProps = {}) {
+export function CreateTeamView(
+  props: CreateTeamProps & Partial<CreateTeamViewModel> = {},
+) {
   const {
     username,
     router,
@@ -43,15 +48,15 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
     setSelectedPlayers,
     selectedPlayerIds,
     searchQuery,
-    setSearchQuery,
     selectedPosition,
-    setSelectedPosition,
     selectedSport,
-    setSelectedSport,
     minCostInput,
-    setMinCostInput,
     maxCostInput,
-    setMaxCostInput,
+    handleSearchQueryChange,
+    handlePositionChange,
+    handleSportChange,
+    handleMinCostChange,
+    handleMaxCostChange,
     error,
     setError,
     pickHistory,
@@ -65,7 +70,6 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
     remainingBudget,
     budgetUsed,
     budgetProgress,
-    marketPlayers,
     isMyDraftTurn,
     handleAddPlayer,
     handleRemovePlayer,
@@ -80,7 +84,15 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
     makeDraftPickMutation,
     discardTeamPlayerMutation,
     draftTurn,
-  } = props as any;
+  } = props as CreateTeamViewModel;
+
+  if (leagueLoading || !league) {
+    return (
+      <section className="mx-auto max-w-7xl px-6 py-8 text-sm text-slate-400">
+        Loading team setup...
+      </section>
+    );
+  }
 
   if (isDraftLeague) {
     const status = league.status;
@@ -154,11 +166,11 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
                 selectedSport={selectedSport}
                 minCost={minCostInput}
                 maxCost={maxCostInput}
-                onSearchQueryChange={setSearchQuery}
-                onPositionChange={setSelectedPosition}
-                onSportChange={setSelectedSport}
-                onMinCostChange={setMinCostInput}
-                onMaxCostChange={setMaxCostInput}
+                onSearchQueryChange={handleSearchQueryChange}
+                onPositionChange={handlePositionChange}
+                onSportChange={handleSportChange}
+                onMinCostChange={handleMinCostChange}
+                onMaxCostChange={handleMaxCostChange}
                 canAddPlayers={isMyDraftTurn}
                 addDisabledReason="Waiting for your draft turn"
                 currentPage={playersCurrentPage}
@@ -350,11 +362,11 @@ export function CreateTeamView(props: CreateTeamProps = {}) {
                 selectedSport={selectedSport}
                 minCost={minCostInput}
                 maxCost={maxCostInput}
-                onSearchQueryChange={setSearchQuery}
-                onPositionChange={setSelectedPosition}
-                onSportChange={setSelectedSport}
-                onMinCostChange={setMinCostInput}
-                onMaxCostChange={setMaxCostInput}
+                onSearchQueryChange={handleSearchQueryChange}
+                onPositionChange={handlePositionChange}
+                onSportChange={handleSportChange}
+                onMinCostChange={handleMinCostChange}
+                onMaxCostChange={handleMaxCostChange}
                 currentPage={playersCurrentPage}
                 totalPages={playersTotalPages}
                 totalPlayers={playersTotal}

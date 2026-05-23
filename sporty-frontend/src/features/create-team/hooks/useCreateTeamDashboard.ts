@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,8 +49,6 @@ function normalizeLeagueSport(
   return "multisport";
 }
 
-type BudgetCostFilter = "All" | "Under 5" | "5 - 8" | "Above 8";
-
 export function useCreateTeamDashboard() {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
@@ -82,17 +80,6 @@ export function useCreateTeamDashboard() {
     setMaxCostInput,
     filters: playerFilters,
   } = usePlayerFilters(initialSportName);
-
-  useEffect(() => {
-    setPlayersPage(1);
-  }, [
-    playerFilters.name,
-    playerFilters.position,
-    playerFilters.sport_name,
-    playerFilters.minCost,
-    playerFilters.maxCost,
-    leagueId,
-  ]);
 
   const { data: playersData, isLoading: playersLoading } = usePlayers({
     league_id: leagueId || undefined,
@@ -218,6 +205,46 @@ export function useCreateTeamDashboard() {
   const budgetUsed = Math.max(0, budget - remainingBudget);
   const budgetProgress =
     budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
+
+  const handleSearchQueryChange = useCallback(
+    (value: string) => {
+      setSearchQuery(value);
+      setPlayersPage(1);
+    },
+    [setSearchQuery],
+  );
+
+  const handlePositionChange = useCallback(
+    (position: string) => {
+      setSelectedPosition(position);
+      setPlayersPage(1);
+    },
+    [setSelectedPosition],
+  );
+
+  const handleSportChange = useCallback(
+    (sport: string) => {
+      setSelectedSport(sport);
+      setPlayersPage(1);
+    },
+    [setSelectedSport],
+  );
+
+  const handleMinCostChange = useCallback(
+    (value: string) => {
+      setMinCostInput(value);
+      setPlayersPage(1);
+    },
+    [setMinCostInput],
+  );
+
+  const handleMaxCostChange = useCallback(
+    (value: string) => {
+      setMaxCostInput(value);
+      setPlayersPage(1);
+    },
+    [setMaxCostInput],
+  );
 
   const isMyDraftTurn =
     isDraftLeague &&
@@ -441,15 +468,15 @@ export function useCreateTeamDashboard() {
     setSelectedPlayers,
     selectedPlayerIds,
     searchQuery,
-    setSearchQuery,
     selectedPosition,
-    setSelectedPosition,
     selectedSport,
-    setSelectedSport,
     minCostInput,
-    setMinCostInput,
     maxCostInput,
-    setMaxCostInput,
+    handleSearchQueryChange,
+    handlePositionChange,
+    handleSportChange,
+    handleMinCostChange,
+    handleMaxCostChange,
     error,
     setError,
     pickHistory,
@@ -463,7 +490,6 @@ export function useCreateTeamDashboard() {
     remainingBudget,
     budgetUsed,
     budgetProgress,
-    marketPlayers,
     isMyDraftTurn,
     // handlers
     handleAddPlayer,
