@@ -339,9 +339,23 @@ app.add_middleware(
     allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
+  # Accept Vercel preview subdomains (and the main vercel.app host)
+  allow_origin_regex=r"^https://([\w-]+\.)?vercel\.app$",
     expose_headers=["X-CSRF-Token", "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
     max_age=600,  # Cache preflight for 10 minutes
 )
+
+
+# Debug middleware: logs incoming Origin and resulting Access-Control-Allow-Origin header.
+# Useful to verify which Origin was seen and whether the CORS middleware added the header.
+@app.middleware("http")
+async def _cors_diagnostics_middleware(request, call_next):
+  origin = request.headers.get("origin")
+  logger.info("[CORS-DIAG] incoming Origin=%s method=%s path=%s", origin, request.method, request.url.path)
+  response = await call_next(request)
+  acao = response.headers.get("access-control-allow-origin")
+  logger.info("[CORS-DIAG] response Access-Control-Allow-Origin=%s status=%s path=%s", acao, response.status_code, request.url.path)
+  return response
 
 # 3. CSRF protection — double-submit cookie pattern
 # Protects state-changing requests (POST, PUT, PATCH, DELETE)
