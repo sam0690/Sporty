@@ -33,6 +33,11 @@ export const ROUTES: Record<string, RouteMeta> = {
     name: "Register",
     protection: "guest-only",
   },
+  RESET_PASSWORD: {
+    path: "/reset-password",
+    name: "Reset Password",
+    protection: "public",
+  },
   DASHBOARD: {
     path: "/dashboard",
     name: "Dashboard",

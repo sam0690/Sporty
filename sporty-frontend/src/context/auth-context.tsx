@@ -14,7 +14,9 @@ import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
 import { subscribeAuthInvalidated } from "@/lib/auth-events";
 import { ROUTES } from "@/lib/route.config";
+import { isProtectedRoute } from "@/lib/route.utils";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { isApiError } from "@/utils/api-Error";
 
 export interface User {
@@ -132,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [bootstrapping, setBootstrapping] = useState(true);
   const [actionLoading, setActionLoading] = useState(initialActionLoading);
   const router = useRouter();
+  const pathname = usePathname();
 
   const setLoading = useCallback(
     (action: AuthAction, loading: boolean): void => {
@@ -173,9 +176,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Auth tokens are httpOnly cookies - handled by backend
       // Only clear user state client-side
       setUser(null);
-      router.replace(ROUTES.LOGIN.path);
+
+      if (pathname && isProtectedRoute(pathname)) {
+        router.replace(ROUTES.LOGIN.path);
+      }
     });
-  }, [router]);
+  }, [pathname, router]);
 
   const login = useCallback(
     async (identifier: string, password: string): Promise<AuthResult> => {
