@@ -50,8 +50,8 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
       return [];
     }
 
-    const players: DashboardPitchPlayer[] = lineupQuery.data.starting_lineup
-      .map((entry) => ({
+    const players: DashboardPitchPlayer[] =
+      lineupQuery.data.starting_lineup.map((entry) => ({
         id: entry.player.id,
         name: entry.player.name,
         position: entry.player.position,
@@ -59,20 +59,7 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
         points: null,
         isCaptain: entry.is_captain,
         isViceCaptain: entry.is_vice_captain,
-      }))
-      .sort((a, b) => {
-        const priority = (position: string) => {
-          const upper = position.toUpperCase();
-          if (upper.includes("GK") || upper === "G") return 0;
-          if (upper.includes("DEF") || upper === "D") return 1;
-          if (upper.includes("MID") || upper === "M") return 2;
-          if (upper.includes("FWD") || upper.includes("ATT") || upper === "F")
-            return 3;
-          return 4;
-        };
-
-        return priority(a.position) - priority(b.position);
-      });
+      }));
 
     return [
       {

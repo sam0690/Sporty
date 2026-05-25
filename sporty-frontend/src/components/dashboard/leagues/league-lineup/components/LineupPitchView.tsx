@@ -15,6 +15,12 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
+import { PitchSurface } from "@/components/dashboard/shared/pitch/PitchSurface";
+import {
+  detectPitchMode as detectSharedPitchMode,
+  getPitchSlots,
+  type PitchSlotConfig,
+} from "@/components/dashboard/shared/pitch/pitchLayout";
 import { toastifier } from "@/lib/toastifier";
 
 type LineupPitchViewProps = {
@@ -39,57 +45,15 @@ type PitchPlayer = {
   isStarter: boolean;
 };
 
-type PitchMode = "football" | "basketball" | "multisport";
-
 const MULTISPORT_STARTER_REQUIREMENTS = {
   football: 5,
   basketball: 4,
 } as const;
 
-type SlotConfig = {
-  id: number;
-  label: string;
-  className: string;
-};
-
 const SPORT_ALLOWED_SLOTS: Record<PitchPlayer["sport"], number[]> = {
   football: [5, 6, 7, 8, 9],
   basketball: [1, 2, 3, 4],
   cricket: [],
-};
-
-const SLOT_CONFIGS: Record<PitchMode, SlotConfig[]> = {
-  football: [
-    { id: 1, label: "ST", className: "left-[35%] top-[10%]" },
-    { id: 2, label: "ST", className: "right-[35%] top-[10%]" },
-    { id: 3, label: "LM", className: "left-[15%] top-[30%]" },
-    { id: 4, label: "CM", className: "left-[35%] top-[30%]" },
-    { id: 5, label: "CM", className: "right-[35%] top-[30%]" },
-    { id: 6, label: "RM", className: "right-[15%] top-[30%]" },
-    { id: 7, label: "LB", className: "left-[12%] top-[55%]" },
-    { id: 8, label: "CB", className: "left-[30%] top-[55%]" },
-    { id: 9, label: "CB", className: "right-[30%] top-[55%]" },
-    { id: 10, label: "RB", className: "right-[12%] top-[55%]" },
-    { id: 11, label: "GK", className: "left-1/2 top-[80%] -translate-x-1/2" },
-  ],
-  basketball: [
-    { id: 1, label: "PG", className: "left-1/2 top-[15%] -translate-x-1/2" },
-    { id: 2, label: "SG", className: "left-[25%] top-[30%]" },
-    { id: 3, label: "SF", className: "right-[25%] top-[30%]" },
-    { id: 4, label: "PF", className: "left-[30%] top-[55%]" },
-    { id: 5, label: "C", className: "right-[30%] top-[55%]" },
-  ],
-  multisport: [
-    { id: 1, label: "B1", className: "left-[20%] top-[14%]" },
-    { id: 2, label: "B2", className: "right-[20%] top-[14%]" },
-    { id: 3, label: "B3", className: "left-[30%] top-[30%]" },
-    { id: 4, label: "B4", className: "right-[30%] top-[30%]" },
-    { id: 5, label: "F1", className: "left-[15%] top-[52%]" },
-    { id: 6, label: "F2", className: "right-[15%] top-[52%]" },
-    { id: 7, label: "F3", className: "left-[28%] top-[68%]" },
-    { id: 8, label: "F4", className: "right-[28%] top-[68%]" },
-    { id: 9, label: "F5", className: "left-1/2 top-[84%] -translate-x-1/2" },
-  ],
 };
 
 function normalizeSport(value: string): PitchPlayer["sport"] {
@@ -111,21 +75,8 @@ const sportAccentClasses: Record<PitchPlayer["sport"], string> = {
   cricket: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
 };
 
-function detectPitchMode(players: LineupPlayerCardModel[]): PitchMode {
-  const sportSet = new Set(players.map((player) => player.sportName));
-  if (sportSet.size > 1) {
-    return "multisport";
-  }
-
-  const sport = Array.from(sportSet)[0];
-  if (sport === "basketball") {
-    return "basketball";
-  }
-  return "football";
-}
-
 type PitchSlotMarkerProps = {
-  slot: SlotConfig;
+  slot: PitchSlotConfig;
   player: PitchPlayer | null;
   isSelected: boolean;
   isDropDisabled: boolean;
@@ -299,8 +250,11 @@ export function LineupPitchView({
   starterLimitReached,
   disabled = false,
 }: LineupPitchViewProps) {
-  const pitchMode = useMemo(() => detectPitchMode(allPlayers), [allPlayers]);
-  const pitchSlots = useMemo(() => SLOT_CONFIGS[pitchMode], [pitchMode]);
+  const pitchMode = useMemo(
+    () => detectSharedPitchMode(allPlayers),
+    [allPlayers],
+  );
+  const pitchSlots = useMemo(() => getPitchSlots(pitchMode), [pitchMode]);
   const allSlotIds = useMemo(
     () => pitchSlots.map((slot) => slot.id),
     [pitchSlots],
@@ -673,12 +627,7 @@ export function LineupPitchView({
                 </span>
               </div>
             ) : null}
-            <div className="relative mx-auto aspect-3/4 w-full overflow-hidden rounded-3xl border border-white/10 bg-linear-to-b from-[#1a4d2e] to-[#0f3a22] shadow-[0_28px_80px_rgba(0,0,0,0.35)]">
-              <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
-              <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
-              <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
-              <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/20 sm:h-24 sm:w-24" />
-
+            <PitchSurface>
               {pitchSlots.map((slot) => {
                 const player = slotAssignments[slot.id] ?? null;
                 const lineupPlayer = player
@@ -702,7 +651,7 @@ export function LineupPitchView({
                   </div>
                 );
               })}
-            </div>
+            </PitchSurface>
           </section>
         </div>
 
