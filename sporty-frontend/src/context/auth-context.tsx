@@ -48,31 +48,6 @@ type PendingGoogleLink = {
 
 const PENDING_GOOGLE_LINK_KEY = "sporty.pending_google_link";
 
-const readPendingGoogleLink = (): PendingGoogleLink | null => {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const raw = window.sessionStorage.getItem(PENDING_GOOGLE_LINK_KEY);
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as Partial<PendingGoogleLink>;
-    if (typeof parsed.linkToken === "string" && parsed.linkToken) {
-      return {
-        email: typeof parsed.email === "string" ? parsed.email : undefined,
-        linkToken: parsed.linkToken,
-      };
-    }
-  } catch {
-    // Ignore malformed session storage.
-  }
-
-  return null;
-};
-
 const writePendingGoogleLink = (value: PendingGoogleLink): void => {
   if (typeof window === "undefined") {
     return;
@@ -213,21 +188,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
         setUser(toUser(meResponse.data));
 
-        const pendingGoogleLink = readPendingGoogleLink();
-        if (pendingGoogleLink) {
-          try {
-            await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, {
-              link_token: pendingGoogleLink.linkToken,
-            });
-            const linkedMeResponse = await authApi.get(API_PATHS.AUTH.ME);
-            setUser(toUser(linkedMeResponse.data));
-          } catch {
-            // Keep the original login session even if linking fails.
-          } finally {
-            clearPendingGoogleLink();
-          }
-        }
-
         return { success: true };
       } catch (error) {
         const message =
@@ -284,6 +244,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         clearPendingGoogleLink();
         return { success: true };
       } catch (error) {
+        if (isApiError(error) && error.statusCode === 422) {
+          const details =
+            typeof error.details === "object" && error.details !== null
+              ? (error.details as Record<string, unknown>)
+              : {};
+          const backendMessage =
+            typeof details.detail === "string"
+              ? details.detail
+              : typeof details.message === "string"
+                ? details.message
+                : typeof details.error === "string"
+                  ? details.error
+                  : "";
+
+          const normalized = backendMessage.toLowerCase();
+          const message =
+            normalized.includes("expired") || normalized.includes("invalid")
+              ? "Invalid or expired link token."
+              : "Linking failed. Please try again.";
+
+          return { success: false, error: message };
+        }
+
         const message =
           error instanceof Error ? error.message : "Google linking failed.";
         return { success: false, error: message };
@@ -325,10 +308,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               ? details.googleLinkToken
               : "";
 
-          if (user && linkToken) {
-            return linkGoogle(linkToken);
-          }
-
           if (linkToken) {
             writePendingGoogleLink({
               email,
@@ -355,7 +334,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading("google", false);
       }
     },
-    [linkGoogle, setLoading, user],
+    [setLoading],
   );
 
   const logout = useCallback(async (): Promise<AuthResult> => {

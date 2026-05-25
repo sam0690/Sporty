@@ -3,14 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
+import { GoogleAccountLinkModal } from "@/components/auth/google-link/components/GoogleAccountLinkModal";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/lib/toastifier";
 
 export function GoogleAuthCallbackClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { loginWithGoogle, isLoading } = useAuth();
+  const { login, loginWithGoogle, linkGoogle, isLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [pendingLinkToken, setPendingLinkToken] = useState("");
+  const [pendingEmail, setPendingEmail] = useState<string | undefined>();
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
+  const [linkError, setLinkError] = useState<string | undefined>();
   const hasStarted = useRef(false);
 
   useEffect(() => {
@@ -41,8 +47,16 @@ export function GoogleAuthCallbackClient() {
       }
 
       if (result.code === "account_exists_link_required") {
-        toastifier.info(
-          "Account exists with a different login method. Sign in with your original account to finish linking Google.",
+        if (result.linkToken) {
+          setPendingLinkToken(result.linkToken);
+          setPendingEmail(result.email);
+          setLinkError(undefined);
+          setIsLinkModalOpen(true);
+          return;
+        }
+
+        toastifier.error(
+          "Linking is required, but the link token is missing. Please try again.",
         );
         router.replace("/login");
         return;
@@ -63,6 +77,57 @@ export function GoogleAuthCallbackClient() {
     };
   }, [isLoading, loginWithGoogle, router, searchParams]);
 
+  const closeLinkModal = () => {
+    if (isReauthenticating) {
+      return;
+    }
+
+    setIsLinkModalOpen(false);
+    setPendingLinkToken("");
+    setPendingEmail(undefined);
+    setLinkError(undefined);
+    router.replace("/login");
+  };
+
+  const confirmLinkAccount = async (password: string) => {
+    if (!pendingLinkToken || isReauthenticating) {
+      return;
+    }
+
+    const email = pendingEmail?.trim();
+    if (!email) {
+      setLinkError(
+        "Missing account email. Please restart the Google sign-in flow.",
+      );
+      return;
+    }
+
+    setIsReauthenticating(true);
+    setLinkError(undefined);
+
+    const reauthResult = await login(email, password);
+
+    if (!reauthResult.success) {
+      setLinkError(reauthResult.error ?? "Invalid password. Please try again.");
+      setIsReauthenticating(false);
+      return;
+    }
+
+    const result = await linkGoogle(pendingLinkToken);
+
+    if (result.success) {
+      setIsLinkModalOpen(false);
+      setPendingLinkToken("");
+      setPendingEmail(undefined);
+      setLinkError(undefined);
+      router.replace("/dashboard");
+      return;
+    }
+
+    setLinkError(result.error ?? "Linking failed. Please try again.");
+    setIsReauthenticating(false);
+  };
+
   return (
     <div className="mx-auto flex max-w-md flex-col items-center rounded-3xl border border-white/10 bg-surface/90 px-8 py-10 text-center shadow-[0_24px_70px_rgba(0,0,0,0.34)]">
       <div className="h-12 w-12 animate-spin rounded-full border-2 border-white/20 border-t-accent-primary" />
@@ -77,10 +142,19 @@ export function GoogleAuthCallbackClient() {
         variant="outline"
         className="mt-6 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-foreground transition-all duration-200 hover:bg-white/10"
         onClick={() => router.replace("/login")}
-        disabled={isProcessing}
+        disabled={isProcessing || isReauthenticating}
       >
         Return to login
       </Button>
+
+      <GoogleAccountLinkModal
+        isOpen={isLinkModalOpen}
+        email={pendingEmail}
+        isLoading={isReauthenticating}
+        onClose={closeLinkModal}
+        onConfirm={confirmLinkAccount}
+        errorMessage={linkError}
+      />
     </div>
   );
 }
