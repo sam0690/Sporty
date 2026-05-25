@@ -26,10 +26,12 @@ from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.auth.schemas import (
     ChangePasswordRequest,
+    GoogleAccountLinkRequiredResponse,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     GoogleAuthRequest,
     GoogleLinkRequest,
+    GoogleLinkSuccessResponse,
     RefreshTokenRequest,
     ResetPasswordRequest,
     RegisterRequest,
@@ -141,10 +143,16 @@ def login(data: LoginRequest, response: Response, db: Session = Depends(get_db))
     return {"detail": "Login successful"}
 
 
-@router.post("/google", response_model=TokenResponse)
+@router.post(
+    "/google",
+    response_model=TokenResponse,
+    responses={409: {"model": GoogleAccountLinkRequiredResponse}},
+)
 def google_auth(data: GoogleAuthRequest, response: Response, db: Session = Depends(get_db)):
     """Sign in or register via Google ID token. Sets httpOnly auth cookies."""
     result = services.google_auth(db, data)
+    if isinstance(result, Response):
+        return result
     _set_auth_cookies(response, result.access_token, result.refresh_token)
     return result
 
@@ -228,15 +236,17 @@ def logout_all(
     return {"detail": f"Revoked {count} active session(s)"}
 
 
-@router.post("/google/link", status_code=200)
+@router.post("/google/link", response_model=GoogleLinkSuccessResponse, status_code=200)
 def link_google(
+    response: Response,
     data: GoogleLinkRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Link a Google account to the current user. Requires password verification."""
-    services.link_google_account(db, current_user.id, data)
-    return {"detail": "Google account linked successfully"}
+    """Link a Google account to the current user."""
+    result = services.link_google_account(db, current_user.id, data)
+    _set_auth_cookies(response, result.access_token, result.refresh_token)
+    return result
 
 
 @router.get("/me", response_model=UserResponse)

@@ -5,17 +5,21 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import quote_plus
 
 from fastapi import HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.auth.models import AuthProvider, RefreshToken, User
 from app.auth.schemas import (
+    GoogleAccountLinkRequiredResponse,
     GoogleAuthRequest,
     GoogleLinkRequest,
+    GoogleLinkSuccessResponse,
     LoginRequest,
     RefreshTokenRequest,
     RegisterRequest,
     TokenResponse,
+    UserResponse,
 )
 from app.core.security import (
     create_password_reset_token,
@@ -151,7 +155,7 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
     return response
 
 
-def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse:
+def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONResponse:
     """Sign in (or register) via a Google ID token from the frontend."""
 
     payload = verify_google_id_token(data.id_token)
@@ -169,10 +173,14 @@ def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse:
         # 2. Try to find by email (maybe they registered with password first)
         user = db.query(User).filter(User.email == email).first()
         if user:
-            # Don't auto-link — require explicit linking via /auth/google/link
-            raise HTTPException(
+            payload = GoogleAccountLinkRequiredResponse(
+                message="Account exists with different login method",
+                email=email,
+                googleIdToken=data.id_token,
+            )
+            return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="account_exists_link_required",
+                content=payload.model_dump(),
             )
         else:
             # 3. Brand-new Google user → create account (no password)
@@ -250,17 +258,18 @@ def link_google_account(
     db: Session,
     user_id: uuid.UUID,
     data: GoogleLinkRequest,
-) -> None:
+) -> GoogleLinkSuccessResponse:
     """
     Link a Google account to an existing (logged-in) user.
-    Requires password verification for local accounts to prevent
-    unauthorized account takeover.
+    The authenticated session is the proof of ownership; the Google
+    email must match the current account exactly.
     """
     payload = verify_google_id_token(data.id_token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
 
     google_id = payload.sub
+    email = payload.email
 
     # Make sure this Google account isn't already linked to someone else
     existing = db.query(User).filter(User.google_id == google_id).first()
@@ -271,18 +280,28 @@ def link_google_account(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    # Local users must verify their password before linking
-    if user.auth_provider == AuthProvider.LOCAL:
-        if not data.password:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password required to link Google account")
-        if not verify_password(data.password, user.password_hash):
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password")
+    if user.email != email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google email must match the existing account email",
+        )
 
     user.google_id = google_id
+    user.auth_provider = AuthProvider.GOOGLE
     avatar_url = payload.picture
     if avatar_url:
         user.avatar_url = avatar_url
+    db.flush()
+
+    tokens = _build_tokens(db, user)
     db.commit()
+    db.refresh(user)
+    return GoogleLinkSuccessResponse(
+        user=UserResponse.model_validate(user),
+        access_token=tokens.access_token,
+        refresh_token=tokens.refresh_token,
+        token_type=tokens.token_type,
+    )
 
 
 def forgot_password(db: Session, email: str, client_ip: str) -> dict:

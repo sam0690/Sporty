@@ -25,7 +25,7 @@ class GoogleAuthRequest(BaseModel):
 
 class GoogleLinkRequest(BaseModel):
     id_token: str
-    password: Optional[str] = None  # Required for LOCAL auth_provider users
+    password: Optional[str] = None
 
 
 class RefreshTokenRequest(BaseModel):
@@ -69,6 +69,20 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class GoogleAccountLinkRequiredResponse(BaseModel):
+    error: str = "account_exists_link_required"
+    message: str
+    email: str
+    googleIdToken: str
+
+
+class GoogleLinkSuccessResponse(BaseModel):
+    user: UserResponse
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
 
 
 # Union type for register endpoint (returns tokens OR user object)

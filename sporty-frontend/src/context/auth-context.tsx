@@ -15,6 +15,7 @@ import { publicApi } from "@/api/public-api-client";
 import { subscribeAuthInvalidated } from "@/lib/auth-events";
 import { ROUTES } from "@/lib/route.config";
 import { useRouter } from "next/navigation";
+import { isApiError } from "@/utils/api-Error";
 
 export interface User {
   id: string;
@@ -35,6 +36,57 @@ type AuthResult = {
   success: boolean;
   error?: string;
   message?: string;
+  code?: string;
+  email?: string;
+  googleIdToken?: string;
+};
+
+type PendingGoogleLink = {
+  email?: string;
+  googleIdToken: string;
+};
+
+const PENDING_GOOGLE_LINK_KEY = "sporty.pending_google_link";
+
+const readPendingGoogleLink = (): PendingGoogleLink | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = window.sessionStorage.getItem(PENDING_GOOGLE_LINK_KEY);
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<PendingGoogleLink>;
+    if (typeof parsed.googleIdToken === "string" && parsed.googleIdToken) {
+      return {
+        email: typeof parsed.email === "string" ? parsed.email : undefined,
+        googleIdToken: parsed.googleIdToken,
+      };
+    }
+  } catch {
+    // Ignore malformed session storage.
+  }
+
+  return null;
+};
+
+const writePendingGoogleLink = (value: PendingGoogleLink): void => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.setItem(PENDING_GOOGLE_LINK_KEY, JSON.stringify(value));
+};
+
+const clearPendingGoogleLink = (): void => {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  window.sessionStorage.removeItem(PENDING_GOOGLE_LINK_KEY);
 };
 
 /* ── Types ────────────────────────────────────────────────────────── */
@@ -50,6 +102,7 @@ export interface AuthContextType {
     password: string,
   ) => Promise<AuthResult>;
   loginWithGoogle: (idToken: string) => Promise<AuthResult>;
+  linkGoogle: (idToken: string) => Promise<AuthResult>;
   logout: () => Promise<AuthResult>;
   forgotPassword: (email: string) => Promise<AuthResult>;
   resetPassword: (token: string, newPassword: string) => Promise<AuthResult>;
@@ -159,6 +212,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
         setUser(toUser(meResponse.data));
+
+        const pendingGoogleLink = readPendingGoogleLink();
+        if (pendingGoogleLink) {
+          try {
+            await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, {
+              id_token: pendingGoogleLink.googleIdToken,
+            });
+            const linkedMeResponse = await authApi.get(API_PATHS.AUTH.ME);
+            setUser(toUser(linkedMeResponse.data));
+          } catch {
+            // Keep the original login session even if linking fails.
+          } finally {
+            clearPendingGoogleLink();
+          }
+        }
+
         return { success: true };
       } catch (error) {
         const message =
@@ -201,6 +270,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [setLoading],
   );
 
+  const linkGoogle = useCallback(
+    async (idToken: string): Promise<AuthResult> => {
+      setLoading("google", true);
+      try {
+        const response = await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, {
+          id_token: idToken,
+        });
+        const linkedUser = response.data?.user;
+        if (linkedUser) {
+          setUser(toUser(linkedUser));
+        }
+        clearPendingGoogleLink();
+        return { success: true };
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Google linking failed.";
+        return { success: false, error: message };
+      } finally {
+        setLoading("google", false);
+      }
+    },
+    [setLoading],
+  );
+
   const loginWithGoogle = useCallback(
     async (idToken: string): Promise<AuthResult> => {
       setLoading("google", true);
@@ -212,6 +305,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(toUser(meResponse.data));
         return { success: true };
       } catch (error) {
+        if (
+          isApiError(error) &&
+          error.code === "account_exists_link_required"
+        ) {
+          const details =
+            error.details && typeof error.details === "object"
+              ? (error.details as Record<string, unknown>)
+              : {};
+          const email =
+            typeof details.email === "string" ? details.email : undefined;
+          const googleIdToken =
+            typeof details.googleIdToken === "string"
+              ? details.googleIdToken
+              : idToken;
+
+          if (user) {
+            return linkGoogle(googleIdToken);
+          }
+
+          writePendingGoogleLink({
+            email,
+            googleIdToken,
+          });
+
+          return {
+            success: false,
+            code: error.code,
+            email,
+            googleIdToken,
+            error:
+              error.message || "Account exists with different login method.",
+          };
+        }
+
         const message =
           error instanceof Error ? error.message : "Google login failed.";
         return { success: false, error: message };
@@ -219,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading("google", false);
       }
     },
-    [setLoading],
+    [linkGoogle, setLoading, user],
   );
 
   const logout = useCallback(async (): Promise<AuthResult> => {
@@ -296,6 +423,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       loginWithGoogle,
+      linkGoogle,
       logout,
       forgotPassword,
       resetPassword,
@@ -307,6 +435,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       register,
       loginWithGoogle,
+      linkGoogle,
       logout,
       forgotPassword,
       resetPassword,
