@@ -15,12 +15,16 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
-import { PitchSurface } from "@/components/dashboard/shared/pitch/PitchSurface";
+import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import {
-  detectPitchMode as detectSharedPitchMode,
-  getPitchSlots,
-  type PitchSlotConfig,
-} from "@/components/dashboard/shared/pitch/pitchLayout";
+  buildTeamLayout,
+  type FormationSlot,
+} from "@/components/dashboard/shared/formation/formationEngine";
+import {
+  getSportAccentClass,
+  getSportIcon,
+  getSportShortName,
+} from "@/components/dashboard/shared/formation/sportRegistry";
 import { toastifier } from "@/lib/toastifier";
 
 type LineupPitchViewProps = {
@@ -33,15 +37,15 @@ type LineupPitchViewProps = {
 };
 
 type PitchPlayer = {
-  id: number;
+  id: string;
   playerId: string;
   name: string;
   sport: "football" | "basketball" | "cricket";
   position: string;
   realTeam: string;
   cost: string;
-  totalPoints: number;
-  avgPoints: number;
+  team: string;
+  points: number | null;
   isStarter: boolean;
 };
 
@@ -50,40 +54,15 @@ const MULTISPORT_STARTER_REQUIREMENTS = {
   basketball: 4,
 } as const;
 
-const SPORT_ALLOWED_SLOTS: Record<PitchPlayer["sport"], number[]> = {
-  football: [5, 6, 7, 8, 9],
-  basketball: [1, 2, 3, 4],
-  cricket: [],
-};
-
-function normalizeSport(value: string): PitchPlayer["sport"] {
-  if (value === "football" || value === "basketball" || value === "cricket") {
-    return value;
-  }
-  return "football";
-}
-
-const sportIcons: Record<PitchPlayer["sport"], string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
-};
-
-const sportAccentClasses: Record<PitchPlayer["sport"], string> = {
-  football: "border-cyan-400/20 bg-cyan-500/10 text-cyan-100",
-  basketball: "border-orange-400/20 bg-orange-500/10 text-orange-100",
-  cricket: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
-};
-
 type PitchSlotMarkerProps = {
-  slot: PitchSlotConfig;
+  slot: FormationSlot<PitchPlayer>;
   player: PitchPlayer | null;
   isSelected: boolean;
   isDropDisabled: boolean;
   isCaptain: boolean;
   isViceCaptain: boolean;
-  onRemove: (slotId: number) => void;
-  onSelectPlayer: (playerId: number) => void;
+  onRemove: (slotId: string) => void;
+  onSelectPlayer: (playerId: string) => void;
 };
 
 function PitchSlotMarker({
@@ -142,22 +121,22 @@ function PitchSlotMarker({
         {player ? (
           <>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-sm text-white sm:h-10 sm:w-10">
-              {sportIcons[player.sport]}
+              {getSportIcon(player.sport)}
             </div>
             <span
-              className={`absolute -bottom-1 -right-1 rounded-full border px-1 py-0.5 text-[9px] font-semibold leading-none ${sportAccentClasses[player.sport]}`}
+              className={`absolute -bottom-1 -right-1 rounded-full border px-1 py-0.5 text-[9px] font-semibold leading-none ${getSportAccentClass(player.sport)}`}
             >
-              {player.sport === "football"
-                ? "F"
-                : player.sport === "basketball"
-                  ? "B"
-                  : "C"}
+              {getSportShortName(player.sport)}
             </span>
             <div className="pointer-events-none absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 text-center">
               <p className="w-20 truncate text-xs font-medium text-white/90">
                 {player.name}
               </p>
-              <p className="text-[10px] text-white/70">0 pts</p>
+              <p className="text-[10px] text-white/70">
+                {typeof player.points === "number"
+                  ? `${player.points} pts`
+                  : "0 pts"}
+              </p>
             </div>
 
             {isCaptain ? (
@@ -228,7 +207,7 @@ function DraggableBenchPlayerCard({ player }: DraggableBenchPlayerCardProps) {
           {player.name}
         </p>
         <span className="text-base" aria-label={player.sport}>
-          {sportIcons[player.sport]}
+          {getSportIcon(player.sport)}
         </span>
       </div>
       <p className="mt-1 text-xs text-foreground/60">{player.position}</p>
@@ -250,19 +229,47 @@ export function LineupPitchView({
   starterLimitReached,
   disabled = false,
 }: LineupPitchViewProps) {
-  const pitchMode = useMemo(
-    () => detectSharedPitchMode(allPlayers),
+  const pitchPlayers = useMemo<PitchPlayer[]>(
+    () =>
+      allPlayers.map((player) => ({
+        id: player.playerId,
+        playerId: player.playerId,
+        name: player.name,
+        sport: player.sport,
+        position: player.position,
+        realTeam: player.realTeam,
+        cost: player.cost,
+        team: player.realTeam,
+        points: null,
+        isStarter: player.isStarter,
+      })),
     [allPlayers],
   );
-  const pitchSlots = useMemo(() => getPitchSlots(pitchMode), [pitchMode]);
-  const allSlotIds = useMemo(
-    () => pitchSlots.map((slot) => slot.id),
-    [pitchSlots],
+
+  const layout = useMemo(
+    () => buildTeamLayout(pitchPlayers, { activeOnly: true }),
+    [pitchPlayers],
   );
+
+  const slotMetaById = useMemo(
+    () =>
+      layout.sections.reduce<Record<string, FormationSlot<PitchPlayer>>>(
+        (acc, section) => {
+          section.slots.forEach((slot) => {
+            acc[slot.id] = slot;
+          });
+          return acc;
+        },
+        {},
+      ),
+    [layout],
+  );
+
+  const allSlotIds = useMemo(() => Object.keys(slotMetaById), [slotMetaById]);
 
   const emptySlots = useMemo(
     () =>
-      allSlotIds.reduce<Record<number, number | null>>((acc, id) => {
+      allSlotIds.reduce<Record<string, string | null>>((acc, id) => {
         acc[id] = null;
         return acc;
       }, {}),
@@ -273,35 +280,18 @@ export function LineupPitchView({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
   const [slotToPlayer, setSlotToPlayer] = useState<
-    Record<number, number | null>
+    Record<string, string | null>
   >({});
-  const [activeDragPlayerId, setActiveDragPlayerId] = useState<number | null>(
+  const [activeDragPlayerId, setActiveDragPlayerId] = useState<string | null>(
     null,
   );
   const [selectedPitchPlayerId, setSelectedPitchPlayerId] = useState<
-    number | null
+    string | null
   >(null);
-
-  const pitchPlayers = useMemo<PitchPlayer[]>(
-    () =>
-      allPlayers.map((player, index) => ({
-        id: index + 1,
-        playerId: player.playerId,
-        name: player.name,
-        sport: normalizeSport(player.sportName),
-        position: player.position,
-        realTeam: player.realTeam,
-        cost: player.cost,
-        totalPoints: 0,
-        avgPoints: 0,
-        isStarter: player.isStarter,
-      })),
-    [allPlayers],
-  );
 
   const playerById = useMemo(
     () =>
-      pitchPlayers.reduce<Record<number, PitchPlayer>>((acc, player) => {
+      pitchPlayers.reduce<Record<string, PitchPlayer>>((acc, player) => {
         acc[player.id] = player;
         return acc;
       }, {}),
@@ -320,53 +310,23 @@ export function LineupPitchView({
     [allPlayers],
   );
 
-  const isMultiSport = useMemo(
-    () => new Set(pitchPlayers.map((player) => player.sport)).size > 1,
-    [pitchPlayers],
-  );
+  const isMultiSport = layout.mode === "mixed";
 
   useEffect(() => {
-    const nextSlots: Record<number, number | null> = { ...emptySlots };
+    const nextSlots: Record<string, string | null> = { ...emptySlots };
 
-    if (isMultiSport) {
-      const footballPlayers = pitchPlayers
-        .filter((player) => player.isStarter && player.sport === "football")
-        .slice(0, MULTISPORT_STARTER_REQUIREMENTS.football);
-      const basketballPlayers = pitchPlayers
-        .filter((player) => player.isStarter && player.sport === "basketball")
-        .slice(0, MULTISPORT_STARTER_REQUIREMENTS.basketball);
-
-      const preset: Array<{ slot: number; player: PitchPlayer | undefined }> = [
-        { slot: 1, player: basketballPlayers[0] },
-        { slot: 2, player: basketballPlayers[1] },
-        { slot: 3, player: basketballPlayers[2] },
-        { slot: 4, player: basketballPlayers[3] },
-        { slot: 5, player: footballPlayers[0] },
-        { slot: 6, player: footballPlayers[1] },
-        { slot: 7, player: footballPlayers[2] },
-        { slot: 8, player: footballPlayers[3] },
-        { slot: 9, player: footballPlayers[4] },
-      ];
-
-      preset.forEach((item) => {
-        nextSlots[item.slot] = item.player ? item.player.id : null;
+    layout.sections.forEach((section) => {
+      section.slots.forEach((slot) => {
+        nextSlots[slot.id] = slot.player ? slot.player.id : null;
       });
-    } else {
-      const startersList = pitchPlayers.filter((player) => player.isStarter);
-      startersList.forEach((player, index) => {
-        const targetSlot = allSlotIds[index];
-        if (targetSlot) {
-          nextSlots[targetSlot] = player.id;
-        }
-      });
-    }
+    });
 
     const frame = window.requestAnimationFrame(() => {
       setSlotToPlayer(nextSlots);
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [pitchPlayers, isMultiSport, emptySlots, allSlotIds]);
+  }, [layout, emptySlots]);
 
   const benchPlayers = useMemo(
     () =>
@@ -377,23 +337,32 @@ export function LineupPitchView({
     [pitchPlayers, lineupPlayerById],
   );
 
-  const slotAssignments = useMemo(() => {
-    return allSlotIds.reduce<Record<number, PitchPlayer | null>>(
-      (acc, slotId) => {
-        const playerId = slotToPlayer[slotId];
-        acc[slotId] = playerId ? playerById[playerId] : null;
-        return acc;
-      },
-      {},
-    );
-  }, [slotToPlayer, playerById, allSlotIds]);
+  const renderedLayout = useMemo(
+    () => ({
+      ...layout,
+      sections: layout.sections.map((section) => ({
+        ...section,
+        slots: section.slots.map((slot) => ({
+          ...slot,
+          player: (() => {
+            const assignedPlayerId = slotToPlayer[slot.id];
+            return assignedPlayerId
+              ? (playerById[assignedPlayerId] ?? null)
+              : null;
+          })(),
+        })),
+      })),
+    }),
+    [layout, slotToPlayer, playerById],
+  );
 
   const activePlayers = useMemo(
     () =>
-      Object.values(slotAssignments).filter(
-        (player): player is PitchPlayer => player !== null,
-      ),
-    [slotAssignments],
+      renderedLayout.sections
+        .flatMap((section) => section.slots)
+        .map((slot) => slot.player)
+        .filter((player): player is PitchPlayer => player !== null),
+    [renderedLayout],
   );
 
   const activeSportCounts = useMemo(
@@ -419,23 +388,19 @@ export function LineupPitchView({
     return lineupPlayerById[selectedPitchPlayer.playerId] ?? null;
   }, [lineupPlayerById, selectedPitchPlayer]);
 
-  const findCurrentSlotOfPlayer = (playerId: number): number | null => {
+  const findCurrentSlotOfPlayer = (playerId: string): string | null => {
     const entry = Object.entries(slotToPlayer).find(
       ([, assignedPlayerId]) => assignedPlayerId === playerId,
     );
-    return entry ? Number(entry[0]) : null;
+    return entry ? entry[0] : null;
   };
 
-  const canPlaceInSlot = (player: PitchPlayer, slotId: number): boolean => {
-    if (!isMultiSport) {
-      return allSlotIds.includes(slotId);
-    }
-
-    const allowed = SPORT_ALLOWED_SLOTS[player.sport];
-    return allowed?.includes(slotId) ?? false;
+  const canPlaceInSlot = (player: PitchPlayer, slotId: string): boolean => {
+    const slot = slotMetaById[slotId];
+    return Boolean(slot && slot.sport === player.sport);
   };
 
-  const canDropToSlot = (slotId: number): boolean => {
+  const canDropToSlot = (slotId: string): boolean => {
     if (activeDragPlayerId === null) {
       return true;
     }
@@ -480,7 +445,7 @@ export function LineupPitchView({
     return countInSport < sportLimit;
   };
 
-  const handleRemoveFromSlot = (slotId: number) => {
+  const handleRemoveFromSlot = (slotId: string) => {
     const playerId = slotToPlayer[slotId];
     if (playerId) {
       const removedPlayer = playerById[playerId];
@@ -501,7 +466,7 @@ export function LineupPitchView({
       return;
     }
 
-    const playerId = Number(dragData.playerId);
+    const playerId = String(dragData.playerId);
     const player = playerById[playerId];
     if (!player) {
       return;
@@ -530,8 +495,8 @@ export function LineupPitchView({
       return;
     }
 
-    const targetSlot = Number(overId.replace("slot-", ""));
-    if (!allSlotIds.includes(targetSlot)) {
+    const targetSlot = overId.replace("slot-", "");
+    if (!slotMetaById[targetSlot]) {
       return;
     }
 
@@ -581,7 +546,7 @@ export function LineupPitchView({
         onDragStart={(event) => {
           const dragData = event.active.data.current;
           if (dragData?.type === "player") {
-            setActiveDragPlayerId(Number(dragData.playerId));
+            setActiveDragPlayerId(String(dragData.playerId));
           }
         }}
         onDragEnd={(event) => {
@@ -627,31 +592,29 @@ export function LineupPitchView({
                 </span>
               </div>
             ) : null}
-            <PitchSurface>
-              {pitchSlots.map((slot) => {
-                const player = slotAssignments[slot.id] ?? null;
+            <FormationRenderer
+              layout={renderedLayout}
+              showSectionLabels={isMultiSport}
+              renderSlot={({ slot }) => {
+                const player = slot.player ?? null;
                 const lineupPlayer = player
                   ? lineupPlayerById[player.playerId]
                   : null;
 
                 return (
-                  <div key={slot.id} className={`absolute ${slot.className}`}>
-                    <PitchSlotMarker
-                      slot={slot}
-                      player={player}
-                      isDropDisabled={!canDropToSlot(slot.id)}
-                      isSelected={
-                        !!player && selectedPitchPlayerId === player.id
-                      }
-                      isCaptain={!!lineupPlayer?.isCaptain}
-                      isViceCaptain={!!lineupPlayer?.isViceCaptain}
-                      onRemove={handleRemoveFromSlot}
-                      onSelectPlayer={setSelectedPitchPlayerId}
-                    />
-                  </div>
+                  <PitchSlotMarker
+                    slot={slot}
+                    player={player}
+                    isDropDisabled={!canDropToSlot(slot.id)}
+                    isSelected={!!player && selectedPitchPlayerId === player.id}
+                    isCaptain={!!lineupPlayer?.isCaptain}
+                    isViceCaptain={!!lineupPlayer?.isViceCaptain}
+                    onRemove={handleRemoveFromSlot}
+                    onSelectPlayer={setSelectedPitchPlayerId}
+                  />
                 );
-              })}
-            </PitchSurface>
+              }}
+            />
           </section>
         </div>
 

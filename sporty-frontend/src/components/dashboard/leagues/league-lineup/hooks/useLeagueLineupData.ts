@@ -10,6 +10,8 @@ export type LineupPlayerCardModel = {
   position: string;
   realTeam: string;
   cost: string;
+  team?: string;
+  sport: "football" | "basketball" | "cricket";
   sportName: string;
   sportDisplayName: string;
   isStarter: boolean;
@@ -62,6 +64,8 @@ export function useLeagueLineupData(leagueId: string) {
         position: player.position,
         realTeam: player.real_team,
         cost: player.cost,
+        team: player.real_team,
+        sport: player.sport.name,
         sportName: player.sport.name,
         sportDisplayName: player.sport.display_name,
         isStarter: starterIds.has(player.id),

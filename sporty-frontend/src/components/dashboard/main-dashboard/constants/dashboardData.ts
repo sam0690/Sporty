@@ -21,12 +21,12 @@ export const OVERVIEW_STATS: OverviewStat[] = [
 ];
 
 export const TEAM_PREVIEW_PLAYERS: TeamPlayer[] = [
-  { id: "1", name: "Ederson", position: "GK", points: 6 },
-  { id: "2", name: "Saliba", position: "DEF", points: 7 },
-  { id: "3", name: "Trent", position: "DEF", points: 5 },
-  { id: "4", name: "Saka", position: "MID", points: 11 },
-  { id: "5", name: "Palmer", position: "MID", points: 8 },
-  { id: "6", name: "Haaland", position: "FWD", points: 12 },
+  { id: "1", name: "Ederson", position: "GK", sport: "football", points: 6 },
+  { id: "2", name: "Saliba", position: "DEF", sport: "football", points: 7 },
+  { id: "3", name: "Trent", position: "DEF", sport: "football", points: 5 },
+  { id: "4", name: "Saka", position: "MID", sport: "football", points: 11 },
+  { id: "5", name: "Palmer", position: "MID", sport: "football", points: 8 },
+  { id: "6", name: "Haaland", position: "FWD", sport: "football", points: 12 },
 ];
 
 export const RECENT_ACTIVITY: ActivityItem[] = [

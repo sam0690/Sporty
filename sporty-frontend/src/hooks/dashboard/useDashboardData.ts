@@ -3,13 +3,16 @@ import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { LeagueService } from "@/services/LeagueService";
 import { UserService, type TUserActivityItem } from "@/services/UserService";
+import { normalizeSport } from "@/components/dashboard/shared/formation/sportRegistry";
 
 export type DashboardPitchPlayer = {
   id: string;
   name: string;
   position: string;
-  sportName: string;
+  sport: "football" | "basketball" | "cricket";
+  team?: string;
   points: number | null;
+  isStarter: boolean;
   isCaptain: boolean;
   isViceCaptain: boolean;
 };
@@ -55,8 +58,13 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
         id: entry.player.id,
         name: entry.player.name,
         position: entry.player.position,
-        sportName: entry.player.sport.name,
+        sport: ((): "football" | "basketball" | "cricket" => {
+          const sport = normalizeSport(entry.player.sport.name);
+          return sport === "unknown" ? "football" : sport;
+        })(),
+        team: entry.player.real_team ?? undefined,
         points: null,
+        isStarter: true,
         isCaptain: entry.is_captain,
         isViceCaptain: entry.is_vice_captain,
       }));

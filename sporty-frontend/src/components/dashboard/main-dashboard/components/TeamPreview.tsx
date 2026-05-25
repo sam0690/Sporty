@@ -1,12 +1,9 @@
-import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
-import { PitchSurface } from "@/components/dashboard/shared/pitch/PitchSurface";
-import { buildPitchLayout } from "@/components/dashboard/shared/pitch/pitchLayout";
-import type {
-  TeamPlayer,
-  TeamPreviewSlide,
-} from "@/components/dashboard/main-dashboard/types";
+import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
+import { buildTeamLayout } from "@/components/dashboard/shared/formation/formationEngine";
+import { PlayerMarker } from "@/components/dashboard/shared/formation/PlayerMarker";
+import type { TeamPreviewSlide } from "@/components/dashboard/main-dashboard/types";
 
 type TeamPreviewProps = {
   slides: TeamPreviewSlide[];
@@ -15,79 +12,9 @@ type TeamPreviewProps = {
   hasLeagues: boolean;
 };
 
-function inferSportName(player: TeamPlayer): "football" | "basketball" {
-  const explicit = player.sportName?.toLowerCase();
-  if (explicit === "basketball") {
-    return "basketball";
-  }
-  if (explicit === "football") {
-    return "football";
-  }
-
-  const upper = player.position.toUpperCase();
-  if (
-    upper.includes("PG") ||
-    upper.includes("SG") ||
-    upper.includes("SF") ||
-    upper.includes("PF") ||
-    upper === "C" ||
-    upper.includes("GUARD") ||
-    upper.includes("CENTER")
-  ) {
-    return "basketball";
-  }
-
-  return "football";
-}
-
-function PlayerChip({ player }: { player: TeamPlayer }) {
-  const sportIcon = inferSportName(player) === "basketball" ? "🏀" : "⚽";
-
-  return (
-    <div className="relative flex flex-col items-center text-white">
-      <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/95 text-xl shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
-        <span>{sportIcon}</span>
-        {player.isCaptain ? (
-          <span className="absolute -left-1.5 -top-1.5 rounded-full border border-yellow-200 bg-yellow-300 px-1.5 py-0.5 text-[9px] font-bold leading-none text-yellow-900">
-            C
-          </span>
-        ) : null}
-        {player.isViceCaptain ? (
-          <span className="absolute -right-1.5 -top-1.5 rounded-full border border-sky-200 bg-sky-300 px-1.5 py-0.5 text-[9px] font-bold leading-none text-sky-900">
-            VC
-          </span>
-        ) : null}
-      </div>
-      <p className="mt-1 w-22 truncate text-center text-xs font-medium text-foreground">
-        {player.name}
-      </p>
-      <p className="text-[10px] text-white/75">{player.position}</p>
-      <p className="text-[10px] text-white/75">
-        {typeof player.points === "number" ? `${player.points} pts` : "0 pts"}
-      </p>
-    </div>
-  );
-}
-
-function PitchPreview({ players }: { players: TeamPlayer[] }) {
-  const { items } = buildPitchLayout(players);
-
-  return (
-    <PitchSurface>
-      {items.map(({ slot, player }) =>
-        player ? (
-          <div key={player.id} className={`absolute ${slot.className}`}>
-            <PlayerChip player={player} />
-          </div>
-        ) : null,
-      )}
-    </PitchSurface>
-  );
-}
-
 function LoadingPitch() {
   return (
-    <PitchSurface className="animate-pulse">
+    <div className="relative mx-auto aspect-3/4 animate-pulse overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_28px_80px_rgba(0,0,0,0.22)]">
       {[
         "left-[35%] top-[10%]",
         "right-[35%] top-[10%]",
@@ -106,7 +33,7 @@ function LoadingPitch() {
           className={`absolute ${slot} h-10 w-10 rounded-full bg-white/80 sm:h-14 sm:w-14`}
         />
       ))}
-    </PitchSurface>
+    </div>
   );
 }
 
@@ -118,11 +45,9 @@ export function TeamPreview({
 }: TeamPreviewProps) {
   const router = useRouter();
   const activeSlide = slides[0] ?? null;
-
-  const loadingBlocks = useMemo(
-    () => Array.from({ length: 2 }, (_, i) => i),
-    [],
-  );
+  const layout = activeSlide
+    ? buildTeamLayout(activeSlide.players, { activeOnly: true })
+    : null;
 
   return (
     <Card className="border-white/10 bg-surface/80">
@@ -134,9 +59,7 @@ export function TeamPreview({
       <CardContent className="pt-2">
         {isLoading ? (
           <div className="space-y-4">
-            {loadingBlocks.map((index) => (
-              <LoadingPitch key={index} />
-            ))}
+            <LoadingPitch />
           </div>
         ) : isError ? (
           <div className="rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-red-300">
@@ -169,7 +92,31 @@ export function TeamPreview({
               </span>
             </div>
 
-            <PitchPreview players={activeSlide.players} />
+            {layout ? (
+              <FormationRenderer
+                layout={layout}
+                showSectionLabels={false}
+                renderSlot={({ slot }) => {
+                  if (!slot.player) {
+                    return (
+                      <div className="h-10 w-10 rounded-full border border-dashed border-white/15 bg-white/10 sm:h-14 sm:w-14" />
+                    );
+                  }
+
+                  return (
+                    <PlayerMarker
+                      name={slot.player.name}
+                      position={slot.player.position}
+                      sport={slot.player.sport}
+                      team={slot.player.team ?? null}
+                      points={slot.player.points}
+                      isCaptain={slot.player.isCaptain}
+                      isViceCaptain={slot.player.isViceCaptain}
+                    />
+                  );
+                }}
+              />
+            ) : null}
           </button>
         )}
       </CardContent>

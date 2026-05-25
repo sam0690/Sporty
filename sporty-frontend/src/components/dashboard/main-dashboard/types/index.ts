@@ -13,8 +13,10 @@ export type TeamPlayer = {
   id: string;
   name: string;
   position: string;
-  sportName?: string;
+  sport: "football" | "basketball" | "cricket";
+  team?: string;
   points: number | null;
+  isStarter?: boolean;
   isCaptain?: boolean;
   isViceCaptain?: boolean;
 };
