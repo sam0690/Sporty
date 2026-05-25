@@ -15,8 +15,16 @@ type TeamPreviewProps = {
   hasLeagues: boolean;
 };
 
-function inferSportIcon(position: string): string {
-  const upper = position.toUpperCase();
+function inferSportName(player: TeamPlayer): "football" | "basketball" {
+  const explicit = player.sportName?.toLowerCase();
+  if (explicit === "basketball") {
+    return "basketball";
+  }
+  if (explicit === "football") {
+    return "football";
+  }
+
+  const upper = player.position.toUpperCase();
   if (
     upper.includes("PG") ||
     upper.includes("SG") ||
@@ -26,13 +34,14 @@ function inferSportIcon(position: string): string {
     upper.includes("GUARD") ||
     upper.includes("CENTER")
   ) {
-    return "🏀";
+    return "basketball";
   }
-  return "⚽";
+
+  return "football";
 }
 
 function PlayerChip({ player }: { player: TeamPlayer }) {
-  const sportIcon = inferSportIcon(player.position);
+  const sportIcon = inferSportName(player) === "basketball" ? "🏀" : "⚽";
 
   return (
     <div className="relative flex flex-col items-center text-white">
