@@ -18,47 +18,58 @@ export function PlayerMarker({
   name,
   position,
   sport,
-  team,
   points,
   isCaptain = false,
   isViceCaptain = false,
   className = "",
-}: PlayerMarkerProps) {
+}: Omit<PlayerMarkerProps, "team">) {
   return (
-    <div className={`flex flex-col items-center text-white ${className}`}>
-      <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/95 text-xl shadow-[0_10px_24px_rgba(0,0,0,0.18)] sm:h-16 sm:w-16">
-        <span aria-hidden="true">{getSportIcon(sport)}</span>
+    <div
+      className={`group flex flex-col items-center justify-center transition-all duration-300 ease-out ${className}`}
+    >
+      <div className="relative">
+        {/* Main Circle Marker */}
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.15)] transition-transform duration-200 group-hover:scale-105 sm:h-12 sm:w-12">
+          <span className="text-lg sm:text-xl" aria-hidden="true">
+            {getSportIcon(sport)}
+          </span>
+        </div>
+
+        {/* Small Floating Overlays (C/VC) - Top left */}
         {isCaptain ? (
-          <span className="absolute -left-1.5 -top-1.5 rounded-full border border-yellow-200 bg-yellow-300 px-1.5 py-0.5 text-[9px] font-bold leading-none text-yellow-900">
+          <div className="absolute -left-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-yellow-200 bg-yellow-400 font-bold text-yellow-950 shadow-sm ring-1 ring-white/10 text-[8px] sm:h-5 sm:w-5 sm:text-[10px]">
             C
-          </span>
-        ) : null}
-        {isViceCaptain ? (
-          <span className="absolute -right-1.5 -top-1.5 rounded-full border border-sky-200 bg-sky-300 px-1.5 py-0.5 text-[9px] font-bold leading-none text-sky-900">
+          </div>
+        ) : isViceCaptain ? (
+          <div className="absolute -left-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full border border-sky-300 bg-sky-400 font-bold text-sky-950 shadow-sm ring-1 ring-white/10 text-[8px] sm:h-5 sm:w-5 sm:text-[10px]">
             VC
-          </span>
+          </div>
         ) : null}
+
+        {/* Points - Top right */}
+        {/* Points - Top right */}
+        {typeof points === "number" && (
+          <div
+            className={`absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-full border shadow-sm ring-1 ring-white/10 text-[8px] font-bold sm:h-5 sm:w-5 sm:text-[9px] ${getSportAccentClass(
+              sport,
+            )}`}
+          >
+            {points}
+          </div>
+        )}
       </div>
 
-      <p className="mt-1 w-24 truncate text-center text-xs font-semibold text-foreground sm:w-28">
-        {name}
-      </p>
-      <p className="text-[10px] uppercase tracking-wide text-white/70">
-        {position}
-      </p>
-      {team ? (
-        <p className="w-24 truncate text-center text-[10px] text-white/70 sm:w-28">
-          {team}
-        </p>
-      ) : null}
-      <p className="text-[10px] text-white/70">
-        {typeof points === "number" ? `${points} pts` : "0 pts"}
-      </p>
-      <span
-        className={`mt-1 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${getSportAccentClass(sport)}`}
-      >
-        {sport || "mixed"}
-      </span>
+      {/* Name Label */}
+      <div className="relative mt-1.5 flex w-full flex-col items-center">
+        <div className="flex w-16 flex-col items-center sm:w-20">
+          <p className="w-full truncate rounded-sm bg-black/60 px-1 py-0.5 text-center text-[9px] font-bold text-white backdrop-blur-[2px] sm:text-[10px]">
+            {name}
+          </p>
+          <p className="mt-0.5 text-[8px] font-semibold uppercase tracking-tight text-white/90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] sm:text-[9px]">
+            {position}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

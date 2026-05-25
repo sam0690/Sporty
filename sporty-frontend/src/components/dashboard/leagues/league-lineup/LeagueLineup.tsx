@@ -23,6 +23,7 @@ import { toastifier } from "@/lib/toastifier";
 import { isApiError } from "@/utils/api-Error";
 import { OptimizationService } from "@/services/OptimizationService";
 import { PlayerService } from "@/services/PlayerService";
+import { isFootballGoalkeeper } from "@/components/dashboard/shared/formation/formationEngine";
 
 type HeaderSport = "football" | "basketball" | "cricket" | "multisport";
 const FALLBACK_DEADLINE = "2099-01-01T00:00:00.000Z";
@@ -149,6 +150,7 @@ export function LeagueLineup() {
     Map<string, PlayerProjectionCacheEntry>
   >(new Map());
   const cacheWindowIdRef = useRef<string | null>(null);
+  const lastServerFingerprintRef = useRef("");
 
   useEffect(() => {
     if (!activeWindow?.id) {
@@ -171,7 +173,11 @@ export function LeagueLineup() {
   }, [activeWindow?.id]);
 
   useEffect(() => {
-    setEditablePlayers(players);
+    const serverFingerprint = lineupFingerprint(players);
+    if (serverFingerprint !== lastServerFingerprintRef.current) {
+      setEditablePlayers(players);
+      lastServerFingerprintRef.current = serverFingerprint;
+    }
   }, [players]);
 
   const starters = useMemo(
@@ -236,6 +242,19 @@ export function LeagueLineup() {
     captain.isStarter &&
     viceCaptain.isStarter;
 
+  const hasGoalkeeper = useMemo(() => {
+    // We only enforce GK for football or multisport (which includes football)
+    if (lineupSport !== "football" && lineupSport !== "multisport") {
+      return true;
+    }
+
+    return starters.some((p) => {
+      // Must be a football player to be a football GK
+      if (p.sportName !== "football") return false;
+      return isFootballGoalkeeper(p.position);
+    });
+  }, [starters, lineupSport]);
+
   const starterCountsBySport = useMemo(
     () =>
       starters.reduce<Record<string, number>>((acc, player) => {
@@ -278,6 +297,10 @@ export function LeagueLineup() {
       }
     }
 
+    if (!hasGoalkeeper) {
+      return "Your starting lineup must include at least one Football Goalkeeper.";
+    }
+
     if (!leadershipValid) {
       return "Assign both captain and vice-captain from the starting lineup.";
     }
@@ -291,6 +314,7 @@ export function LeagueLineup() {
     lineupSport,
     startersCount,
     multisportStarterMixValid,
+    hasGoalkeeper,
   ]);
 
   const canSave =
@@ -299,7 +323,9 @@ export function LeagueLineup() {
         editablePlayers.length <= MULTISPORT_SQUAD_MAX &&
         startersCount === lineupRules.starters &&
         multisportStarterMixValid
-      : lineupCountValid) && leadershipValid;
+      : lineupCountValid) &&
+    leadershipValid &&
+    hasGoalkeeper;
 
   const isLineupOpen =
     Boolean(activeWindow?.id) && !activeWindow?.lineup_locked;
@@ -619,9 +645,9 @@ export function LeagueLineup() {
       setIsOptimizing(false);
     }
   }, [
-    activeWindow?.id,
+    activeWindow,
     editablePlayers,
-    league?.lineup_slots,
+    league,
     lineupRules.starters,
     lineupSport,
   ]);

@@ -108,7 +108,6 @@ export function TeamPreview({
                       name={slot.player.name}
                       position={slot.player.position}
                       sport={slot.player.sport}
-                      team={slot.player.team ?? null}
                       points={slot.player.points}
                       isCaptain={slot.player.isCaptain}
                       isViceCaptain={slot.player.isViceCaptain}

@@ -65,7 +65,11 @@ export function FormationRenderer<TPlayer extends FormationPlayerLike>({
               <div
                 key={slot.id}
                 className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${slot.x * 100}%`, top: `${slot.y * 100}%` }}
+                style={{
+                  left: `${slot.x * 100}%`,
+                  top: `${slot.y * 100}%`,
+                  zIndex: Math.round(slot.y * 100),
+                }}
               >
                 {renderSlot({ section, slot })}
               </div>

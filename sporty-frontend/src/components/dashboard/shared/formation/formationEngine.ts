@@ -74,17 +74,23 @@ function distributeAcrossWidth(count: number, start: number, end: number) {
     return [(start + end) / 2];
   }
 
-  const step = (end - start) / (count - 1);
-  return Array.from({ length: count }, (_, index) => start + index * step).map(
-    (value) => clamp(Number(value.toFixed(3)), 0.08, 0.92),
-  );
+  // Use a slightly narrower range if there are many players in a row to minimize edge clipping
+  const margin = count > 3 ? 0.12 : 0.08;
+  const effectiveStart = Math.max(start, margin);
+  const effectiveEnd = Math.min(end, 1 - margin);
+
+  const step = (effectiveEnd - effectiveStart) / (count - 1);
+  return Array.from(
+    { length: count },
+    (_, index) => effectiveStart + index * step,
+  ).map((value) => clamp(Number(value.toFixed(3)), 0.08, 0.92));
 }
 
 function normalizePosition(value: string): string {
   return value.trim().toUpperCase().replace(/\s+/g, " ");
 }
 
-function isFootballGoalkeeper(position: string) {
+export function isFootballGoalkeeper(position: string) {
   const normalized = normalizePosition(position);
   return (
     normalized === "GK" ||
@@ -178,7 +184,67 @@ function basketballPositionWeight(position: string) {
   if (normalized.includes("SF") || normalized.includes("SMALL")) return 2;
   if (normalized.includes("PF") || normalized.includes("POWER")) return 3;
   if (normalized === "C" || normalized.includes("CENTER")) return 4;
-  return 2;
+  if (normalized === "UNK" || normalized === "UNKNOWN" || normalized === "NONE")
+    return -1;
+  return -1; // Default to unknown for any unmapped basketball position
+}
+
+function buildBasketballFallbackRows<TPlayer extends FormationPlayerLike>(
+  players: TPlayer[],
+) {
+  const count = players.length;
+  if (count === 0) return [];
+
+  // Spread players across 3 region rows for basketball
+  const topTier = players.slice(0, Math.ceil(count / 3));
+  const midTier = players.slice(
+    Math.ceil(count / 3),
+    Math.ceil((2 * count) / 3),
+  );
+  const botTier = players.slice(Math.ceil((2 * count) / 3));
+
+  const rows: RowBlueprint<TPlayer>[] = [];
+
+  if (topTier.length > 0) {
+    rows.push({
+      id: "basketball:fallback-top",
+      label: "B",
+      role: "fallback",
+      y: 0.2,
+      xStart: 0.2,
+      xEnd: 0.8,
+      capacity: topTier.length,
+      players: topTier,
+    });
+  }
+
+  if (midTier.length > 0) {
+    rows.push({
+      id: "basketball:fallback-mid",
+      label: "B",
+      role: "fallback",
+      y: 0.45,
+      xStart: 0.15,
+      xEnd: 0.85,
+      capacity: midTier.length,
+      players: midTier,
+    });
+  }
+
+  if (botTier.length > 0) {
+    rows.push({
+      id: "basketball:fallback-bot",
+      label: "B",
+      role: "fallback",
+      y: 0.7,
+      xStart: 0.25,
+      xEnd: 0.75,
+      capacity: botTier.length,
+      players: botTier,
+    });
+  }
+
+  return rows;
 }
 
 function sortPlayersByWeight<TPlayer extends FormationPlayerLike>(
@@ -358,6 +424,34 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
 ) {
   const sortedPlayers = sortPlayersByWeight(players, basketballPositionWeight);
+
+  const pgPlayers = sortedPlayers.filter(
+    (player) => basketballPositionWeight(player.position) === 0,
+  );
+  const sgPlayers = sortedPlayers.filter(
+    (player) => basketballPositionWeight(player.position) === 1,
+  );
+  const sfPlayers = sortedPlayers.filter(
+    (player) => basketballPositionWeight(player.position) === 2,
+  );
+  const pfPlayers = sortedPlayers.filter(
+    (player) => basketballPositionWeight(player.position) === 3,
+  );
+  const cPlayers = sortedPlayers.filter(
+    (player) => basketballPositionWeight(player.position) === 4,
+  );
+  const unknownPlayers = sortedPlayers.filter(
+    (player) => basketballPositionWeight(player.position) === -1,
+  );
+
+  // If most players are unknown, use the fallback spread layout
+  if (unknownPlayers.length > sortedPlayers.length / 2) {
+    return {
+      formationLabel: "Balanced Spread",
+      rows: buildBasketballFallbackRows(sortedPlayers),
+    };
+  }
+
   const rows: RowBlueprint<TPlayer>[] = [
     {
       id: "basketball:point-guard",
@@ -367,9 +461,7 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
       xStart: 0.5,
       xEnd: 0.5,
       capacity: 1,
-      players: sortedPlayers.filter(
-        (player) => basketballPositionWeight(player.position) === 0,
-      ),
+      players: pgPlayers,
     },
     {
       id: "basketball:wing-guard-left",
@@ -379,9 +471,7 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
       xStart: 0.24,
       xEnd: 0.24,
       capacity: 1,
-      players: sortedPlayers.filter(
-        (player) => basketballPositionWeight(player.position) === 1,
-      ),
+      players: sgPlayers,
     },
     {
       id: "basketball:wing-forward-right",
@@ -391,9 +481,7 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
       xStart: 0.76,
       xEnd: 0.76,
       capacity: 1,
-      players: sortedPlayers.filter(
-        (player) => basketballPositionWeight(player.position) === 2,
-      ),
+      players: sfPlayers,
     },
     {
       id: "basketball:power-forward",
@@ -403,9 +491,7 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
       xStart: 0.34,
       xEnd: 0.34,
       capacity: 1,
-      players: sortedPlayers.filter(
-        (player) => basketballPositionWeight(player.position) === 3,
-      ),
+      players: pfPlayers,
     },
     {
       id: "basketball:center",
@@ -415,14 +501,12 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
       xStart: 0.66,
       xEnd: 0.66,
       capacity: 1,
-      players: sortedPlayers.filter(
-        (player) => basketballPositionWeight(player.position) === 4,
-      ),
+      players: cPlayers,
     },
   ];
 
   return {
-    formationLabel: "Half Court",
+    formationLabel: "Half court",
     rows,
   };
 }
@@ -451,6 +535,42 @@ function buildBasketballLayout<TPlayer extends FormationPlayerLike>(
     formationLabel,
     slots: generateCoordinates(rows),
   };
+}
+
+function buildMixedLayout<TPlayer extends FormationPlayerLike>(
+  players: TPlayer[],
+): FormationSlot<TPlayer>[] {
+  const grouped = assignByAvailableSports(players);
+  const footballPlayers = (grouped["football"] ?? []) as TPlayer[];
+  const basketballPlayers = (grouped["basketball"] ?? []) as TPlayer[];
+
+  // If there are other sports in mixed mode, we merge them into the closest category
+  // for visual representation, or just list them.
+  const others = Object.entries(grouped)
+    .filter(([s]) => s !== "football" && s !== "basketball" && s !== "unknown")
+    .flatMap(([, p]) => p) as TPlayer[];
+
+  const bbPool = [...basketballPlayers, ...others];
+
+  // Basketball (and others) at the TOP (scaled to top 40% of pitch)
+  const bbRows = buildBasketballRows(bbPool).rows;
+  const basketballSlots = generateCoordinates(
+    bbRows.map((row) => ({
+      ...row,
+      y: Number((row.y * 0.5 + 0.08).toFixed(3)),
+    })),
+  );
+
+  // Football at the BOTTOM (scaled to bottom 50% of pitch)
+  const fbRows = buildFootballRows(footballPlayers).rows;
+  const footballSlots = generateCoordinates(
+    fbRows.map((row) => ({
+      ...row,
+      y: Number((row.y * 0.45 + 0.52).toFixed(3)),
+    })),
+  );
+
+  return [...basketballSlots, ...footballSlots];
 }
 
 function assignByAvailableSports<TPlayer extends FormationPlayerLike>(
@@ -543,27 +663,46 @@ export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
   const visibleSports = sportKeys.filter(
     (sport) => (grouped[sport] ?? []).length > 0,
   );
-  const sections: FormationSection<TPlayer>[] =
-    visibleSports.length <= 1
-      ? [
-          sectionForSport(
-            visibleSports[0] ??
-              normalizeSport(
-                activePlayers[0]?.sport ?? activePlayers[0]?.sportName,
-              ),
-            grouped[visibleSports[0] ?? "unknown"] ?? activePlayers,
-          ),
-        ]
-      : visibleSports.map((sport) =>
-          sectionForSport(sport, grouped[sport] ?? []),
-        );
 
+  let sections: FormationSection<TPlayer>[] = [];
   const mode =
     visibleSports.length > 1
       ? "mixed"
       : visibleSports[0] === "basketball"
         ? "basketball"
         : "football";
+
+  if (mode === "mixed") {
+    // Single Unified Pitch for Multisport
+    const footballCount = (grouped["football"] ?? []).length;
+    const basketballCount = (grouped["basketball"] ?? []).length;
+
+    sections = [
+      {
+        id: "mixed-section",
+        sport: "football", // Unified indicator
+        surface: "pitch",
+        title: "Multisport Pitch",
+        formationLabel: `${footballCount} FB + ${basketballCount} BB`,
+        slots: buildMixedLayout(activePlayers),
+      },
+    ];
+  } else {
+    sections =
+      visibleSports.length <= 1
+        ? [
+            sectionForSport(
+              visibleSports[0] ??
+                normalizeSport(
+                  activePlayers[0]?.sport ?? activePlayers[0]?.sportName,
+                ),
+              grouped[visibleSports[0] ?? "unknown"] ?? activePlayers,
+            ),
+          ]
+        : visibleSports.map((sport) =>
+            sectionForSport(sport, grouped[sport] ?? []),
+          );
+  }
 
   const sportSummary = Object.entries(grouped).reduce<Record<string, number>>(
     (acc, [sport, sportPlayers]) => {
