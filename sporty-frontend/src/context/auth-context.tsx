@@ -38,12 +38,12 @@ type AuthResult = {
   message?: string;
   code?: string;
   email?: string;
-  googleIdToken?: string;
+  linkToken?: string;
 };
 
 type PendingGoogleLink = {
   email?: string;
-  googleIdToken: string;
+  linkToken: string;
 };
 
 const PENDING_GOOGLE_LINK_KEY = "sporty.pending_google_link";
@@ -60,10 +60,10 @@ const readPendingGoogleLink = (): PendingGoogleLink | null => {
 
   try {
     const parsed = JSON.parse(raw) as Partial<PendingGoogleLink>;
-    if (typeof parsed.googleIdToken === "string" && parsed.googleIdToken) {
+    if (typeof parsed.linkToken === "string" && parsed.linkToken) {
       return {
         email: typeof parsed.email === "string" ? parsed.email : undefined,
-        googleIdToken: parsed.googleIdToken,
+        linkToken: parsed.linkToken,
       };
     }
   } catch {
@@ -101,8 +101,8 @@ export interface AuthContextType {
     email: string,
     password: string,
   ) => Promise<AuthResult>;
-  loginWithGoogle: (idToken: string) => Promise<AuthResult>;
-  linkGoogle: (idToken: string) => Promise<AuthResult>;
+  loginWithGoogle: (code: string) => Promise<AuthResult>;
+  linkGoogle: (linkToken: string) => Promise<AuthResult>;
   logout: () => Promise<AuthResult>;
   forgotPassword: (email: string) => Promise<AuthResult>;
   resetPassword: (token: string, newPassword: string) => Promise<AuthResult>;
@@ -217,7 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (pendingGoogleLink) {
           try {
             await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, {
-              id_token: pendingGoogleLink.googleIdToken,
+              link_token: pendingGoogleLink.linkToken,
             });
             const linkedMeResponse = await authApi.get(API_PATHS.AUTH.ME);
             setUser(toUser(linkedMeResponse.data));
@@ -271,11 +271,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const linkGoogle = useCallback(
-    async (idToken: string): Promise<AuthResult> => {
+    async (linkToken: string): Promise<AuthResult> => {
       setLoading("google", true);
       try {
         const response = await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, {
-          id_token: idToken,
+          link_token: linkToken,
         });
         const linkedUser = response.data?.user;
         if (linkedUser) {
@@ -295,47 +295,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const loginWithGoogle = useCallback(
-    async (idToken: string): Promise<AuthResult> => {
+    async (code: string): Promise<AuthResult> => {
       setLoading("google", true);
       try {
         await publicApi.post(API_PATHS.AUTH.GOOGLE, {
-          id_token: idToken,
+          code,
         });
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
         setUser(toUser(meResponse.data));
         return { success: true };
       } catch (error) {
-        if (
-          isApiError(error) &&
-          error.code === "account_exists_link_required"
-        ) {
+        if (isApiError(error) && error.statusCode === 409) {
           const details =
             error.details && typeof error.details === "object"
               ? (error.details as Record<string, unknown>)
               : {};
-          const email =
-            typeof details.email === "string" ? details.email : undefined;
-          const googleIdToken =
-            typeof details.googleIdToken === "string"
-              ? details.googleIdToken
-              : idToken;
-
-          if (user) {
-            return linkGoogle(googleIdToken);
+          const backendError =
+            typeof details.error === "string" ? details.error : "";
+          if (backendError !== "account_exists_link_required") {
+            const message =
+              error instanceof Error ? error.message : "Google login failed.";
+            return { success: false, error: message };
           }
 
-          writePendingGoogleLink({
-            email,
-            googleIdToken,
-          });
+          const email =
+            typeof details.email === "string" ? details.email : undefined;
+          const linkToken =
+            typeof details.googleLinkToken === "string"
+              ? details.googleLinkToken
+              : "";
+
+          if (user && linkToken) {
+            return linkGoogle(linkToken);
+          }
+
+          if (linkToken) {
+            writePendingGoogleLink({
+              email,
+              linkToken,
+            });
+          }
 
           return {
             success: false,
-            code: error.code,
+            code: backendError,
             email,
-            googleIdToken,
+            linkToken: linkToken || undefined,
             error:
-              error.message || "Account exists with different login method.",
+              typeof details.message === "string"
+                ? details.message
+                : "Account exists with different login method.",
           };
         }
 

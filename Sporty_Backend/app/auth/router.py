@@ -149,7 +149,7 @@ def login(data: LoginRequest, response: Response, db: Session = Depends(get_db))
     responses={409: {"model": GoogleAccountLinkRequiredResponse}},
 )
 def google_auth(data: GoogleAuthRequest, response: Response, db: Session = Depends(get_db)):
-    """Sign in or register via Google ID token. Sets httpOnly auth cookies."""
+    """Sign in or register via Google authorization code. Sets httpOnly auth cookies."""
     result = services.google_auth(db, data)
     if isinstance(result, Response):
         return result

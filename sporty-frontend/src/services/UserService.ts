@@ -103,21 +103,17 @@ export const UserService = {
     return unwrapResponseData(res.data);
   },
 
-  async loginWithGoogle(idToken: string): Promise<{ detail: string }> {
+  async loginWithGoogle(code: string): Promise<{ detail: string }> {
     const res = await publicApi.post(API_PATHS.AUTH.GOOGLE, {
-      id_token: idToken,
+      code,
     });
     return unwrapResponseData(res.data);
   },
 
-  async linkGoogle(
-    idToken: string,
-    password?: string,
-  ): Promise<{ detail: string }> {
-    const payload = password
-      ? { id_token: idToken, password }
-      : { id_token: idToken };
-    const res = await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, payload);
+  async linkGoogle(linkToken: string): Promise<{ detail: string }> {
+    const res = await authApi.post(API_PATHS.AUTH.GOOGLE_LINK, {
+      link_token: linkToken,
+    });
     return unwrapResponseData(res.data);
   },
 

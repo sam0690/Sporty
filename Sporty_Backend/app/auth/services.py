@@ -6,8 +6,10 @@ from urllib.parse import quote_plus
 
 from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
+from jose import JWTError, jwt
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+import requests
 
 from app.auth.models import AuthProvider, RefreshToken, User
 from app.auth.schemas import (
@@ -34,6 +36,9 @@ from app.core.redis import get_redis
 from app.services.email_service import send_password_reset_email
 
 logger = logging.getLogger(__name__)
+GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+GOOGLE_LINK_TOKEN_EXPIRE_MINUTES = 15
+GOOGLE_LINK_TOKEN_TYPE = "google_link"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -69,6 +74,98 @@ def _generate_unique_username(db: Session, base: str) -> str:
 
 def _hash_password_reset_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+def _exchange_google_authorization_code(code: str) -> str:
+    """Exchange a Google authorization code for an ID token."""
+    try:
+        response = requests.post(
+            GOOGLE_TOKEN_ENDPOINT,
+            data={
+                "code": code,
+                "client_id": settings.GOOGLE_CLIENT_ID,
+                "client_secret": settings.GOOGLE_CLIENT_SECRET,
+                "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+                "grant_type": "authorization_code",
+            },
+            timeout=15,
+        )
+    except requests.RequestException:
+        logger.exception("Google authorization code exchange failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google authorization code",
+        )
+
+    if response.status_code != 200:
+        logger.warning(
+            "Google token exchange failed: status=%s body=%s",
+            response.status_code,
+            response.text,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google authorization code",
+        )
+
+    token_data = response.json()
+    id_token = token_data.get("id_token")
+    if not isinstance(id_token, str) or not id_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Google token exchange did not return an ID token",
+        )
+
+    return id_token
+
+
+def _create_google_link_token(*, sub: str, email: str, name: str | None, picture: str | None) -> str:
+    now = datetime.now(timezone.utc)
+    payload = {
+        "type": GOOGLE_LINK_TOKEN_TYPE,
+        "sub": sub,
+        "email": email,
+        "name": name,
+        "picture": picture,
+        "iat": int(now.timestamp()),
+        "exp": int((now + timedelta(minutes=GOOGLE_LINK_TOKEN_EXPIRE_MINUTES)).timestamp()),
+    }
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def _decode_google_link_token(token: str) -> dict[str, str | None]:
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google link token",
+        )
+
+    if payload.get("type") != GOOGLE_LINK_TOKEN_TYPE:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google link token",
+        )
+
+    email = payload.get("email")
+    sub = payload.get("sub")
+    if not isinstance(email, str) or not email or not isinstance(sub, str) or not sub:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Google link token",
+        )
+
+    return {
+        "sub": sub,
+        "email": email,
+        "name": payload.get("name") if isinstance(payload.get("name"), str) else None,
+        "picture": payload.get("picture") if isinstance(payload.get("picture"), str) else None,
+    }
 
 
 def _is_forgot_password_rate_limited(client_ip: str, email: str) -> bool:
@@ -156,9 +253,10 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
 
 
 def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONResponse:
-    """Sign in (or register) via a Google ID token from the frontend."""
+    """Sign in (or register) via a Google authorization code from the frontend."""
 
-    payload = verify_google_id_token(data.id_token)
+    id_token = _exchange_google_authorization_code(data.code)
+    payload = verify_google_id_token(id_token)
     if not payload:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
 
@@ -173,10 +271,24 @@ def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONRes
         # 2. Try to find by email (maybe they registered with password first)
         user = db.query(User).filter(User.email == email).first()
         if user:
+            if user.auth_provider == AuthProvider.GOOGLE:
+                user.google_id = google_id
+                if avatar_url:
+                    user.avatar_url = avatar_url
+                response = _build_tokens(db, user)
+                db.commit()
+                return response
+
+            link_token = _create_google_link_token(
+                sub=google_id,
+                email=email,
+                name=payload.name,
+                picture=avatar_url,
+            )
             payload = GoogleAccountLinkRequiredResponse(
                 message="Account exists with different login method",
                 email=email,
-                googleIdToken=data.id_token,
+                googleLinkToken=link_token,
             )
             return JSONResponse(
                 status_code=status.HTTP_409_CONFLICT,
@@ -264,12 +376,9 @@ def link_google_account(
     The authenticated session is the proof of ownership; the Google
     email must match the current account exactly.
     """
-    payload = verify_google_id_token(data.id_token)
-    if not payload:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
-
-    google_id = payload.sub
-    email = payload.email
+    payload = _decode_google_link_token(data.link_token)
+    google_id = payload["sub"]
+    email = payload["email"]
 
     # Make sure this Google account isn't already linked to someone else
     existing = db.query(User).filter(User.google_id == google_id).first()
@@ -288,7 +397,7 @@ def link_google_account(
 
     user.google_id = google_id
     user.auth_provider = AuthProvider.GOOGLE
-    avatar_url = payload.picture
+    avatar_url = payload["picture"]
     if avatar_url:
         user.avatar_url = avatar_url
     db.flush()

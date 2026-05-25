@@ -94,6 +94,8 @@ class Settings(BaseSettings):
 
     # ── Google OAuth ──────────────────────────────────────────
     GOOGLE_CLIENT_ID: str
+    GOOGLE_CLIENT_SECRET: str
+    GOOGLE_REDIRECT_URI: str = "https://sporty-woad.vercel.app/auth/google/callback"
 
     # ── External APIs ─────────────────────────────────────────
     RAPIDAPI_FOOTBALL_KEY: str = ""

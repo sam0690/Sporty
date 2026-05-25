@@ -20,12 +20,11 @@ class LoginRequest(BaseModel):
 
 
 class GoogleAuthRequest(BaseModel):
-    id_token: str
+    code: str
 
 
 class GoogleLinkRequest(BaseModel):
-    id_token: str
-    password: Optional[str] = None
+    link_token: str
 
 
 class RefreshTokenRequest(BaseModel):
@@ -75,7 +74,7 @@ class GoogleAccountLinkRequiredResponse(BaseModel):
     error: str = "account_exists_link_required"
     message: str
     email: str
-    googleIdToken: str
+    googleLinkToken: str
 
 
 class GoogleLinkSuccessResponse(BaseModel):
