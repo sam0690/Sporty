@@ -78,6 +78,12 @@ def _hash_password_reset_token(token: str) -> str:
 
 def _exchange_google_authorization_code(code: str) -> str:
     """Exchange a Google authorization code for an ID token."""
+    if not settings.GOOGLE_CLIENT_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google OAuth client secret is not configured",
+        )
+
     try:
         response = requests.post(
             GOOGLE_TOKEN_ENDPOINT,
