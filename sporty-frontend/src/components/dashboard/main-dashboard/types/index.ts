@@ -1,3 +1,5 @@
+import { SportKind } from "@/components/dashboard/shared/formation/sportRegistry";
+
 export type DashboardNavItem = {
   label: string;
   href: string;
@@ -13,7 +15,7 @@ export type TeamPlayer = {
   id: string;
   name: string;
   position: string;
-  sport: "football" | "basketball" | "cricket";
+  sport: SportKind;
   team?: string;
   points: number | null;
   isStarter?: boolean;

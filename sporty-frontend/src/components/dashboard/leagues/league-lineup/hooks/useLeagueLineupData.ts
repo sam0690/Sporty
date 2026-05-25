@@ -2,6 +2,10 @@
 
 import { useMemo } from "react";
 import { useLineup } from "@/hooks/leagues/useLeagues";
+import {
+  normalizeSport,
+  type SportKind,
+} from "@/components/dashboard/shared/formation/sportRegistry";
 
 export type LineupPlayerCardModel = {
   id: string;
@@ -11,7 +15,7 @@ export type LineupPlayerCardModel = {
   realTeam: string;
   cost: string;
   team?: string;
-  sport: "football" | "basketball" | "cricket";
+  sport: SportKind;
   sportName: string;
   sportDisplayName: string;
   isStarter: boolean;
@@ -65,7 +69,7 @@ export function useLeagueLineupData(leagueId: string) {
         realTeam: player.real_team,
         cost: player.cost,
         team: player.real_team,
-        sport: player.sport.name,
+        sport: normalizeSport(player.sport.name),
         sportName: player.sport.name,
         sportDisplayName: player.sport.display_name,
         isStarter: starterIds.has(player.id),

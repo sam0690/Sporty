@@ -24,6 +24,7 @@ import {
   getSportAccentClass,
   getSportIcon,
   getSportShortName,
+  type SportKind,
 } from "@/components/dashboard/shared/formation/sportRegistry";
 import { toastifier } from "@/lib/toastifier";
 
@@ -40,7 +41,7 @@ type PitchPlayer = {
   id: string;
   playerId: string;
   name: string;
-  sport: "football" | "basketball" | "cricket";
+  sport: SportKind;
   position: string;
   realTeam: string;
   cost: string;
