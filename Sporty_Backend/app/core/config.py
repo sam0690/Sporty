@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from urllib.parse import urlparse
 
 
 class Settings(BaseSettings):
@@ -130,18 +131,40 @@ class Settings(BaseSettings):
 
     def get_cors_origins(self) -> list[str]:
         """Get allowed CORS origins based on environment."""
+        origins: list[str] = []
+
         if self.ENVIRONMENT == "production":
             if not self.CORS_PRODUCTION_ORIGINS:
                 raise ValueError(
                     "CORS_PRODUCTION_ORIGINS must be set in production environment"
                 )
-            return [o.strip() for o in self.CORS_PRODUCTION_ORIGINS.split(",") if o.strip()]
+            origins.extend(
+                [o.strip() for o in self.CORS_PRODUCTION_ORIGINS.split(",") if o.strip()]
+            )
         elif self.ENVIRONMENT == "staging":
             if self.CORS_STAGING_ORIGINS:
-                return [o.strip() for o in self.CORS_STAGING_ORIGINS.split(",") if o.strip()]
-            return [o.strip() for o in self.CORS_LOCAL_ORIGINS.split(",") if o.strip()]
+                origins.extend(
+                    [o.strip() for o in self.CORS_STAGING_ORIGINS.split(",") if o.strip()]
+                )
+            else:
+                origins.extend(
+                    [o.strip() for o in self.CORS_LOCAL_ORIGINS.split(",") if o.strip()]
+                )
         else:
-            return [o.strip() for o in self.CORS_LOCAL_ORIGINS.split(",") if o.strip()]
+            origins.extend([o.strip() for o in self.CORS_LOCAL_ORIGINS.split(",") if o.strip()])
+
+        frontend_origin = self.get_frontend_origin()
+        if frontend_origin and frontend_origin not in origins:
+            origins.append(frontend_origin)
+
+        return origins
+
+    def get_frontend_origin(self) -> str:
+        """Get the frontend origin used for cross-origin browser requests."""
+        parsed = urlparse(self.FRONTEND_BASE_URL.strip())
+        if not parsed.scheme or not parsed.netloc:
+            return ""
+        return f"{parsed.scheme}://{parsed.netloc}"
 
     def get_csrf_exempt_paths(self) -> list[str]:
         """Get list of paths exempt from CSRF protection."""
