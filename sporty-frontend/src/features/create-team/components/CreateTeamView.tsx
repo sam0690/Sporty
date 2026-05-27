@@ -70,10 +70,12 @@ export function CreateTeamView(
     remainingBudget,
     budgetUsed,
     budgetProgress,
+    isAutoPicking,
     isMyDraftTurn,
     handleAddPlayer,
     handleRemovePlayer,
     handleDraftPick,
+    handleAutoPickSquad,
     handleUndoLastPick,
     handlePreviousPlayersPage,
     handleNextPlayersPage,
@@ -187,7 +189,10 @@ export function CreateTeamView(
                 players={draftedPlayers}
                 onRemovePlayer={() => {}}
                 budget={budget}
-                totalCost={(draftedPlayers as { price: number }[]).reduce((sum, p) => sum + p.price, 0)}
+                totalCost={(draftedPlayers as { price: number }[]).reduce(
+                  (sum, p) => sum + p.price,
+                  0,
+                )}
                 requiredPlayers={requiredPlayers}
               />
             </div>
@@ -202,7 +207,10 @@ export function CreateTeamView(
                 players={draftedPlayers}
                 onRemovePlayer={() => {}}
                 budget={budget}
-                totalCost={(draftedPlayers as { price: number }[]).reduce((sum, p) => sum + p.price, 0)}
+                totalCost={(draftedPlayers as { price: number }[]).reduce(
+                  (sum, p) => sum + p.price,
+                  0,
+                )}
                 requiredPlayers={requiredPlayers}
               />
             </div>
@@ -251,7 +259,10 @@ export function CreateTeamView(
             canDiscardInSetup ? handleDiscardTeamPlayer : () => {}
           }
           budget={budget}
-              totalCost={(draftedPlayers as { price: number }[]).reduce((sum, p) => sum + p.price, 0)}
+          totalCost={(draftedPlayers as { price: number }[]).reduce(
+            (sum, p) => sum + p.price,
+            0,
+          )}
           requiredPlayers={requiredPlayers}
         />
 
@@ -335,11 +346,19 @@ export function CreateTeamView(
         ) : null}
       </section>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-3">
+        <button
+          type="button"
+          onClick={handleAutoPickSquad}
+          disabled={isAutoPicking}
+          className="rounded-full border border-accent-primary/20 bg-accent-primary/10 px-4 py-2 text-sm font-semibold text-accent-primary hover:bg-accent-primary/15 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isAutoPicking ? "Auto Picking..." : "Auto Pick Squad"}
+        </button>
         <button
           type="button"
           onClick={handleUndoLastPick}
-          disabled={pickHistory.length === 0}
+          disabled={pickHistory.length === 0 || isAutoPicking}
           className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Undo Last Pick
