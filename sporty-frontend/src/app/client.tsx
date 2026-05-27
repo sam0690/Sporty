@@ -13,7 +13,7 @@ import { AuthProvider } from "@/context/auth-context";
  */
 export function ClientProviders({ children }: { children: ReactNode }) {
   return (
-    <MantineProvider>
+    <MantineProvider defaultColorScheme="dark">
       <QueryProvider>
         <AuthProvider>{children}</AuthProvider>
       </QueryProvider>

@@ -42,11 +42,16 @@ export function NotificationBell({ className }: NotificationBellProps) {
   };
 
   useEffect(() => {
-    void loadNotifications();
+    const initialLoadId = window.setTimeout(() => {
+      void loadNotifications();
+    }, 0);
     const id = window.setInterval(() => {
       void loadNotifications();
     }, 60_000);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(initialLoadId);
+    };
   }, []);
 
   const onRead = async (id: string) => {
@@ -78,11 +83,11 @@ export function NotificationBell({ className }: NotificationBellProps) {
           size={16}
         >
           <ActionIcon
-            variant="light"
+            variant="filled"
             color="cyan"
             aria-label="Notifications"
             className={cn(
-              "border border-white/10 bg-white/6 text-slate-100 transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10",
+              "border border-white/10 bg-surface text-foreground transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10",
               className,
             )}
             onClick={() => setOpened((value) => !value)}
