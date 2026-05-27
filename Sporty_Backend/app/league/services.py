@@ -1016,12 +1016,17 @@ def make_transfer(
       2. Current transfer window exists and transfers are NOT locked.
       3. User has a fantasy team in this league.
       4. player_out is currently on the user's team.
-      5. player_in exists, is available, plays a sport attached
-         to this league, and is not owned by any team in this league.
+      5. player_in exists, is available, and plays a sport attached
+         to this league.
       6. Team can afford player_in after refunding player_out.
       7. player_out != player_in (enforced by DB, but checked early
          for a better error message).
       8. Team has not exceeded transfers_per_window limit for this window.
+
+    Budget-mode transfers intentionally mirror budget-mode initial squad
+    creation: player ownership is scoped to the fantasy team, not the
+    league. The only uniqueness enforced here is the active roster rule
+    for the current team.
 
     Does NOT commit — caller owns the transaction.
     """
@@ -1107,23 +1112,6 @@ def make_transfer(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="player_in's sport is not part of this league",
-        )
-
-    # player_in must not be owned by any team in this league
-    owned_in_league = (
-        db.query(TeamPlayer)
-        .join(FantasyTeam, TeamPlayer.fantasy_team_id == FantasyTeam.id)
-        .filter(
-            FantasyTeam.league_id == league_id,
-            TeamPlayer.player_id == player_in_id,
-            TeamPlayer.released_window_id.is_(None),
-        )
-        .first()
-    )
-    if owned_in_league:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="player_in is already owned by a team in this league",
         )
 
     # ── Budget check ────────────────────────────────────────────────
@@ -1720,6 +1708,10 @@ def build_initial_team(
     
     Allows users to select their starting squad within budget constraints.
     Used for budget-mode leagues where there's no draft.
+
+        Budget-mode ownership is shared across the league: another fantasy team
+        can also own the same real-world player. The only ownership rule here is
+        that a single fantasy team cannot include the same player twice.
     
     Guards:
       1. League must be budget-mode (draft_mode=False).
