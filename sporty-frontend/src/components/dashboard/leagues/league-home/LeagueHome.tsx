@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
@@ -40,48 +41,31 @@ export function LeagueHome() {
   } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: windowLoading } =
     useActiveWindow(leagueId);
+  const { data: transferWindowStatus, isLoading: transferWindowLoading } =
+    useApiQuery(
+      ["leagues", leagueId, "transfer-window", "status"],
+      () => fetchTransferWindowStatus(leagueId),
+      {
+        enabled: !!leagueId,
+      },
+    );
   const leaveLeague = useLeaveLeague();
   const { username } = useMe();
 
-  const [currentWeek, setCurrentWeek] = useState(1);
-  const [windowStatusLoading, setWindowStatusLoading] = useState(false);
-  const [isTransferWindowActive, setIsTransferWindowActive] = useState(false);
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  useEffect(() => {
-    if (activeWindow) {
-      setCurrentWeek(activeWindow.number);
-    }
-  }, [activeWindow]);
-
-  useEffect(() => {
-    if (!leagueId) {
-      setIsTransferWindowActive(false);
-      return;
-    }
-
-    const run = async () => {
-      setWindowStatusLoading(true);
-      try {
-        const status = await fetchTransferWindowStatus(leagueId);
-        setIsTransferWindowActive(status.is_active);
-      } catch {
-        setIsTransferWindowActive(false);
-      } finally {
-        setWindowStatusLoading(false);
-      }
-    };
-
-    void run();
-  }, [leagueId]);
+  const currentWeek = selectedWeek ?? activeWindow?.number ?? 1;
+  const isTransferWindowActive = transferWindowStatus?.is_active ?? false;
 
   const isCommissioner = league?.owner?.username === username;
   const { isDraftMode } = useLeagueCompetitionMode(league);
   const isBudgetMode = !isDraftMode;
   const hasMyTeam = Boolean(league?.my_team?.id || myTeam?.id);
   const leagueStatus = league?.status;
-  const isLoading = leagueLoading || teamLoading || windowLoading;
+  const isLoading =
+    leagueLoading || teamLoading || windowLoading || transferWindowLoading;
   const leagueSport: Sport =
     league?.sports?.[0]?.sport.name === "basketball"
       ? league.sports[0].sport.name
@@ -145,7 +129,7 @@ export function LeagueHome() {
             return;
           }
 
-          setCurrentWeek(week);
+          setSelectedWeek(week);
         }}
       />
 
@@ -155,7 +139,7 @@ export function LeagueHome() {
         isCommissioner={isCommissioner}
       />
 
-      {windowStatusLoading ? (
+      {transferWindowLoading ? (
         <div className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400 backdrop-blur-xl">
           Checking transfer window status...
         </div>
