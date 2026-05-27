@@ -154,6 +154,8 @@ export function CreateLeagueView() {
     return firstSportSeasonId || firstAnySeasonId || "";
   }, [seasons, selectedSports]);
 
+  const effectiveSeasonId = seasonId || defaultSeasonId;
+
   const leagueData = useMemo(
     () => ({
       leagueName,
@@ -161,7 +163,7 @@ export function CreateLeagueView() {
         selectedSports.length > 1
           ? ("multisport" as SportKey)
           : ((selectedSports[0] as SportKey) ?? "football"),
-      seasonId: seasonId || defaultSeasonId,
+      seasonId: effectiveSeasonId,
       leagueLogo,
       isPrivate: !isPublic,
       teamSize: squadSize,
@@ -176,8 +178,7 @@ export function CreateLeagueView() {
       isPublic,
       leagueName,
       leagueLogo,
-      defaultSeasonId,
-      seasonId,
+      effectiveSeasonId,
       selectedSports,
       squadSize,
     ],
@@ -274,7 +275,7 @@ export function CreateLeagueView() {
     }
 
     if (step === 1) {
-      if (!seasonId) {
+      if (!effectiveSeasonId) {
         setError(
           "No active season found for this sport. Please contact admin.",
         );
@@ -301,7 +302,7 @@ export function CreateLeagueView() {
       const competitionType = values.draft_mode ? "draft" : "budget";
       const result = await createMutation.mutateAsync({
         name: values.name,
-        season_id: seasonId,
+        season_id: effectiveSeasonId,
         sports: values.sport_ids,
         competitionType,
         is_public: values.is_public,
