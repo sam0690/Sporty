@@ -63,7 +63,7 @@ export function CurrentRoster({
             >
               <div className="min-w-0">
                 <p
-                  className={`truncate text-sm font-medium ${isSelected ? "text-primary-900" : "text-black"}`}
+                  className={`truncate text-sm font-medium ${isSelected ? "text-primary-900" : "text-white"}`}
                 >
                   {player.name}
                 </p>
