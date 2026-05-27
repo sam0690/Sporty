@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str
 
     # ── Redis ─────────────────────────────────────────────────
-    REDIS_URL: str = "redis://localhost:6379/0"
+    REDIS_URL: str 
 
     # ── Celery (Redis broker/result backend) ───────────────────
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
