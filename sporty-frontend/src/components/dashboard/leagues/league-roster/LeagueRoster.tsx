@@ -428,7 +428,7 @@ export function LeagueRoster() {
     return (
       <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
         <NavigationTabs
-          activeTab="roster"
+          activeTab="lineup"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
@@ -463,7 +463,7 @@ export function LeagueRoster() {
       </p>
 
       <NavigationTabs
-        activeTab="roster"
+        activeTab="lineup"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
