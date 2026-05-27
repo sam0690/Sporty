@@ -167,7 +167,7 @@ export function UserProfileView({ userId }: { userId?: string }) {
             isLoading={activityLoading}
             errorMessage={activityError?.message ?? null}
           />
-          <PlayerHighlights topPlayers={profile.topPlayers} />
+          {/* <PlayerHighlights topPlayers={profile.topPlayers} /> */}
         </div>
       </div>
     </section>

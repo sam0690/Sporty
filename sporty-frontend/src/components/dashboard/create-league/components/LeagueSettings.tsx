@@ -69,7 +69,8 @@ export function LeagueSettings({
           onChange={(event) =>
             onSettingsChange({ teamSize: Number(event.target.value) })
           }
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="w-full rounded-xl border border-white/10 bg-surface px-4 py-3 text-foreground outline-none transition-all scheme-dark focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          style={{ colorScheme: "dark" }}
         >
           {teamSizes.map((size) => (
             <option key={size} value={size}>
@@ -94,7 +95,8 @@ export function LeagueSettings({
               competitionType: event.target.value as "draft" | "budget",
             })
           }
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="w-full rounded-xl border border-white/10 bg-surface px-4 py-3 text-foreground outline-none transition-all scheme-dark focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          style={{ colorScheme: "dark" }}
         >
           <option value="draft">Draft Mode</option>
           <option value="budget">Budget Mode (Auto Assign)</option>

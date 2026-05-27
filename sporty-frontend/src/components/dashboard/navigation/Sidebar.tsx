@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { NotificationBell } from "@/components/dashboard/navigation/NotificationBell";
+import { LogoutConfirmationModal } from "@/components/dashboard/navigation/LogoutConfirmationModal";
 import { cn } from "@/utils/classUtils";
 
 export type DashboardNavItem = {
@@ -25,6 +27,7 @@ export function Sidebar({ items }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, actionLoading } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = async () => {
     const result = await logout();
@@ -38,9 +41,9 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-white/10 bg-gradient-to-b from-[#060816] via-[#050816] to-[#03040a] font-sans md:block">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-white/10 bg-linear-to-b from-[#060816] via-[#050816] to-[#03040a] font-sans md:block">
       <div className="relative flex h-full flex-col overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,229,255,0.14),_transparent_38%),radial-gradient(circle_at_bottom,_rgba(255,61,129,0.10),_transparent_34%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,229,255,0.14),transparent_38%),radial-gradient(circle_at_bottom,rgba(255,61,129,0.10),transparent_34%)]" />
         <div className="relative z-10 border-b border-white/10 p-6">
           <div className="flex items-center justify-between gap-2">
             <Link
@@ -94,7 +97,7 @@ export function Sidebar({ items }: SidebarProps) {
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={handleLogout}
+              onClick={() => setShowLogoutModal(true)}
               disabled={actionLoading.logout}
               className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all duration-200 hover:border-accent-secondary/30 hover:bg-accent-secondary/10 hover:text-foreground disabled:opacity-50"
               aria-label="Log out"
@@ -114,6 +117,13 @@ export function Sidebar({ items }: SidebarProps) {
           </button>
         </div>
       </div>
+
+      <LogoutConfirmationModal
+        isOpen={showLogoutModal}
+        isLoading={actionLoading.logout}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogout}
+      />
     </aside>
   );
 }

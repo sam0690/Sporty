@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMe } from "@/hooks/auth/useMe";
@@ -50,6 +50,22 @@ function formatRuleLabel(action: string): string {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+function normalizeScoringRules(
+  rules?: { action: string; description: string; points: number | string }[],
+): EditableScoringRule[] {
+  return (rules ?? []).map((rule) => {
+    const points = Number(rule.points);
+
+    return {
+      action: rule.action,
+      description: rule.description,
+      defaultPoints: points,
+      points,
+      enabled: false,
+    };
+  });
+}
+
 export function CreateLeagueView() {
   const { username } = useMe();
   const { data: seasons } = useSeasons();
@@ -92,13 +108,15 @@ export function CreateLeagueView() {
   const draftMode = useWatch({ control, name: "draft_mode" }) ?? true;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
-  const [scoringRulesBySport, setScoringRulesBySport] = useState<
-    Record<LeagueSportName, EditableScoringRule[]>
-  >({ football: [], basketball: [] });
   const [customScoringEnabledBySport, setCustomScoringEnabledBySport] =
     useState<Record<LeagueSportName, boolean>>({
       football: false,
       basketball: false,
+    });
+  const [editableScoringRulesBySport, setEditableScoringRulesBySport] =
+    useState<Record<LeagueSportName, EditableScoringRule[]>>({
+      football: [],
+      basketball: [],
     });
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -120,6 +138,22 @@ export function CreateLeagueView() {
           (currentSportIds[0] as SportKey) ?? "football",
         );
   }, [sportIds]);
+
+  const defaultSeasonId = useMemo(() => {
+    if (!seasons || seasons.length === 0) {
+      return "";
+    }
+
+    const sportSeasons = seasons.filter((s) => {
+      const name = s.name.toLowerCase();
+      return selectedSports.some((sport) => name.includes(sport));
+    });
+    const firstSportSeasonId = sportSeasons.find((season) => season.id)?.id;
+    const firstAnySeasonId = seasons.find((season) => season.id)?.id;
+
+    return firstSportSeasonId || firstAnySeasonId || "";
+  }, [seasons, selectedSports]);
+
   const leagueData = useMemo(
     () => ({
       leagueName,
@@ -127,7 +161,7 @@ export function CreateLeagueView() {
         selectedSports.length > 1
           ? ("multisport" as SportKey)
           : ((selectedSports[0] as SportKey) ?? "football"),
-      seasonId,
+      seasonId: seasonId || defaultSeasonId,
       leagueLogo,
       isPrivate: !isPublic,
       teamSize: squadSize,
@@ -142,81 +176,34 @@ export function CreateLeagueView() {
       isPublic,
       leagueName,
       leagueLogo,
+      defaultSeasonId,
       seasonId,
       selectedSports,
       squadSize,
     ],
   );
 
-  useEffect(() => {
-    if (!footballRules?.length) {
-      return;
-    }
+  const defaultScoringRulesBySport = useMemo(
+    () => ({
+      football: normalizeScoringRules(footballRules),
+      basketball: normalizeScoringRules(basketballRules),
+    }),
+    [basketballRules, footballRules],
+  );
 
-    setScoringRulesBySport((prev) => {
-      if (prev.football.length > 0) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        football: footballRules.map((rule) => {
-          const points = Number(rule.points);
-          return {
-            action: rule.action,
-            description: rule.description,
-            defaultPoints: points,
-            points,
-            enabled: false,
-          };
-        }),
-      };
-    });
-  }, [footballRules]);
-
-  useEffect(() => {
-    if (!basketballRules?.length) {
-      return;
-    }
-
-    setScoringRulesBySport((prev) => {
-      if (prev.basketball.length > 0) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        basketball: basketballRules.map((rule) => {
-          const points = Number(rule.points);
-          return {
-            action: rule.action,
-            description: rule.description,
-            defaultPoints: points,
-            points,
-            enabled: false,
-          };
-        }),
-      };
-    });
-  }, [basketballRules]);
-
-  // Auto-select first season for the chosen sport if not set
-  useEffect(() => {
-    if (seasons && seasons.length > 0) {
-      const sportSeasons = seasons.filter((s) => {
-        const name = s.name.toLowerCase();
-        return selectedSports.some((sport) => name.includes(sport));
-      });
-      const firstSportSeasonId = sportSeasons.find((season) => season.id)?.id;
-      const firstAnySeasonId = seasons.find((season) => season.id)?.id;
-
-      if (firstSportSeasonId && !seasonId) {
-        setSeasonId(firstSportSeasonId);
-      } else if (firstAnySeasonId && !seasonId) {
-        setSeasonId(firstAnySeasonId);
-      }
-    }
-  }, [seasonId, seasons, selectedSports]);
+  const scoringRulesBySport = useMemo(
+    () => ({
+      football:
+        editableScoringRulesBySport.football.length > 0
+          ? editableScoringRulesBySport.football
+          : defaultScoringRulesBySport.football,
+      basketball:
+        editableScoringRulesBySport.basketball.length > 0
+          ? editableScoringRulesBySport.basketball
+          : defaultScoringRulesBySport.basketball,
+    }),
+    [defaultScoringRulesBySport, editableScoringRulesBySport],
+  );
 
   const customScoringValidationError = useMemo(() => {
     for (const sport of selectedSports) {
@@ -424,7 +411,7 @@ export function CreateLeagueView() {
     action: string,
     enabled: boolean,
   ) => {
-    setScoringRulesBySport((prev) => ({
+    setEditableScoringRulesBySport((prev) => ({
       ...prev,
       [sport]: prev[sport].map((rule) =>
         rule.action === action
@@ -443,7 +430,7 @@ export function CreateLeagueView() {
     action: string,
     points: number,
   ) => {
-    setScoringRulesBySport((prev) => ({
+    setEditableScoringRulesBySport((prev) => ({
       ...prev,
       [sport]: prev[sport].map((rule) =>
         rule.action === action

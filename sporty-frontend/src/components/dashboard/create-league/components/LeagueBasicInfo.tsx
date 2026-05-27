@@ -89,7 +89,7 @@ export function LeagueBasicInfo({
         <p className="mt-2 text-xs text-slate-500">{helperText}</p>
       </div>
 
-      <div>
+      {/* <div>
         <p className="mb-2 text-sm text-slate-400">League Logo</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -131,7 +131,7 @@ export function LeagueBasicInfo({
         <p className="mt-2 text-xs text-slate-500">
           Optional: add an emoji or upload a badge.
         </p>
-      </div>
+      </div> */}
     </div>
   );
 }
