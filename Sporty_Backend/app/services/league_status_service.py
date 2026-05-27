@@ -3,7 +3,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.league.models import League, LeagueStatus
+from app.league.models import League, LeagueMembershipStatus, LeagueStatus
 from app.league.models import LeagueMembership
 from app.services.notification_service import notify_league_active, notify_league_completed
 from app.core.config import settings
@@ -50,6 +50,7 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
         member_count = (
             db.query(func.count(LeagueMembership.id))
             .filter(LeagueMembership.league_id == league.id)
+            .filter(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
             .scalar()
         )
         if member_count < settings.LEAGUE_MIN_MEMBERS_TO_ACTIVATE:

@@ -16,6 +16,7 @@ from decimal import Decimal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
+from app.league.models import LeagueMembershipStatus
 from app.league.models import LeagueStatus
 from app.league.models import DEFAULT_TEAM_BUDGET
 from app.schemas.common import (
@@ -212,6 +213,7 @@ class MembershipResponse(BaseModel):
     """
     id: uuid.UUID
     user: UserBrief
+    status: LeagueMembershipStatus
     draft_position: int | None = None
     joined_at: datetime
     eligible_from_window_id: uuid.UUID | None = None

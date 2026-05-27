@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, aliased
 
 from app.league.models import (
     FantasyTeam,
+    LeagueMembershipStatus,
     LeagueMembership,
     TeamGameweekLineup,
     TeamWeeklyScore,
@@ -63,6 +64,7 @@ def upsert_team_weekly_scores(
             LeagueMembership.eligible_from_window_id == eligibility_window.id,
         )
         .where(FantasyTeam.league_id == league_id)
+        .where(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
         .where(
             or_(
                 LeagueMembership.eligible_from_window_id.is_(None),

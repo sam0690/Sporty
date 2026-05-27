@@ -73,14 +73,15 @@ router = APIRouter(prefix="/leagues", tags=["Leagues"])
 )
 def get_league_leaderboard(
     window_id: UUID | None = None,
+    historical: bool = True,
     league: League = Depends(require_league_member),
     db: Session = Depends(get_db),
 ):
     """Return the leaderboard for a league.
     
-    If window_id is omitted, returns overall season standings.
+    historical=True preserves departed users in historical/final standings.
     """
-    return league_service.get_league_leaderboard(db, league.id, window_id)
+    return league_service.get_league_leaderboard(db, league.id, window_id, historical)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

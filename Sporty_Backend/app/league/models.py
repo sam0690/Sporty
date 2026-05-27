@@ -292,6 +292,16 @@ class LeagueStatus(str, enum.Enum):
     COMPLETED = "completed"
 
 
+class LeagueMembershipStatus(str, enum.Enum):
+    ACTIVE = "active"
+    LEFT = "left"
+
+
+class FantasyTeamStatus(str, enum.Enum):
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # 5. League
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -427,17 +437,26 @@ class League(Base):
 
     @property
     def member_count(self) -> int:
-        return len(self.memberships)
+        return sum(
+            1
+            for membership in self.memberships
+            if membership.status == LeagueMembershipStatus.ACTIVE
+        )
 
     @property
     def team_count(self) -> int:
-        return len(self.fantasy_teams)
+        return sum(
+            1
+            for team in self.fantasy_teams
+            if team.status == FantasyTeamStatus.ACTIVE
+        )
 
     @property
     def teams_detail(self) -> list[dict]:
         joined_at_by_user_id = {
             membership.user_id: membership.joined_at
             for membership in self.memberships
+            if membership.status == LeagueMembershipStatus.ACTIVE
         }
 
         return [
@@ -447,6 +466,7 @@ class League(Base):
                 "joined_at": joined_at_by_user_id.get(team.user_id, team.created_at),
             }
             for team in self.fantasy_teams
+            if team.status == FantasyTeamStatus.ACTIVE
         ]
 
     __table_args__ = (
@@ -588,6 +608,19 @@ class LeagueMembership(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    status: Mapped[LeagueMembershipStatus] = mapped_column(
+        SAEnum(
+            LeagueMembershipStatus,
+            name="league_membership_status_enum",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            native_enum=False,
+        ),
+        nullable=False,
+        default=LeagueMembershipStatus.ACTIVE,
+        server_default=text("'active'"),
+        index=True,
+    )
+
     # NULL = immediately eligible for scoring (setup/draft join).
     # Non-NULL = first transfer window where this member becomes eligible
     # for points (late join in active budget leagues).
@@ -653,6 +686,26 @@ class FantasyTeam(Base):
     # Decreases when acquiring players, increases when releasing them.
     current_budget: Mapped[Decimal] = mapped_column(
         Numeric(precision=10, scale=2), nullable=False
+    )
+
+    # Snapshot of the league settings that created this team.
+    # Used to decide whether an archived team can be safely restored later.
+    starting_budget: Mapped[Decimal] = mapped_column(
+        Numeric(precision=12, scale=2), nullable=False
+    )
+    starting_squad_size: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+
+    status: Mapped[FantasyTeamStatus] = mapped_column(
+        SAEnum(
+            FantasyTeamStatus,
+            name="fantasy_team_status_enum",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+            native_enum=False,
+        ),
+        nullable=False,
+        default=FantasyTeamStatus.ACTIVE,
+        server_default=text("'active'"),
+        index=True,
     )
 
     created_at: Mapped[datetime] = mapped_column(

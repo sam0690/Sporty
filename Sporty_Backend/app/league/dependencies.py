@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.database import get_db
-from app.league.models import League, LeagueMembership
+from app.league.models import League, LeagueMembership, LeagueMembershipStatus
 
 
 # ── internal helper ──────────────────────────────────────────────────────────
@@ -70,6 +70,7 @@ def require_league_member(
         .filter(
             LeagueMembership.league_id == league.id,
             LeagueMembership.user_id == current_user.id,
+            LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
         )
         .first()
     )

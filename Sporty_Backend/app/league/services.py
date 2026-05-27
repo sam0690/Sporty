@@ -27,10 +27,12 @@ from app.league.models import (
     BudgetTransaction,
     DraftPick,
     FantasyTeam,
+    FantasyTeamStatus,
     TeamGameweekLineup,
     TransferWindow,
     League,
     LeagueMembership,
+    LeagueMembershipStatus,
     LeagueStatus,
     LeagueSport,
     LineupSlot,
@@ -184,6 +186,7 @@ def _require_membership(
         .filter(
             LeagueMembership.league_id == league_id,
             LeagueMembership.user_id == user_id,
+            LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
         )
         .first()
     )
@@ -204,6 +207,7 @@ def _require_fantasy_team(
         .filter(
             FantasyTeam.league_id == league_id,
             FantasyTeam.user_id == user_id,
+            FantasyTeam.status == FantasyTeamStatus.ACTIVE,
         )
         .first()
     )
@@ -352,6 +356,7 @@ def get_leagues_for_user(db: Session, user_id: uuid.UUID) -> list[League]:
         db.query(League)
         .join(LeagueMembership)
         .filter(LeagueMembership.user_id == user_id)
+        .filter(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
         .options(*_LEAGUE_OPTIONS)
         .order_by(League.created_at.desc())
         .all()
@@ -416,6 +421,7 @@ def update_league_status(
         member_count = (
             db.query(func.count(LeagueMembership.id))
             .filter(LeagueMembership.league_id == league.id)
+            .filter(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
             .scalar()
         )
         if member_count < settings.LEAGUE_MIN_MEMBERS_TO_ACTIVATE:
@@ -501,6 +507,20 @@ def join_league(
             detail="Invalid invite code",
         )
 
+    # Lock the target league row so concurrent joins serialize before
+    # capacity is checked and the membership row is inserted/reactivated.
+    league = (
+        db.query(League)
+        .filter(League.id == league.id)
+        .with_for_update()
+        .first()
+    )
+    if not league:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="League not found",
+        )
+
     is_setup_join = league.status == LeagueStatus.SETUP
     is_midseason_budget_join = (
         league.status == LeagueStatus.ACTIVE
@@ -522,7 +542,7 @@ def join_league(
         )
         .first()
     )
-    if existing:
+    if existing and existing.status == LeagueMembershipStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="You are already a member of this league",
@@ -532,6 +552,7 @@ def join_league(
     member_count = (
         db.query(func.count(LeagueMembership.id))
         .filter(LeagueMembership.league_id == league.id)
+        .filter(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
         .scalar()
     )
     if member_count >= league.max_teams:
@@ -559,12 +580,49 @@ def join_league(
             )
         eligible_from_window_id = next_window.id
 
-    membership = LeagueMembership(
-        league_id=league.id,
-        user_id=user.id,
-        eligible_from_window_id=eligible_from_window_id,
+    if existing:
+        membership = existing
+        membership.status = LeagueMembershipStatus.ACTIVE
+        if eligible_from_window_id is not None:
+            membership.eligible_from_window_id = eligible_from_window_id
+    else:
+        membership = LeagueMembership(
+            league_id=league.id,
+            user_id=user.id,
+            eligible_from_window_id=eligible_from_window_id,
+        )
+        db.add(membership)
+
+    team = (
+        db.query(FantasyTeam)
+        .filter(
+            FantasyTeam.league_id == league.id,
+            FantasyTeam.user_id == user.id,
+        )
+        .first()
     )
-    db.add(membership)
+    if team and team.status == FantasyTeamStatus.ARCHIVED:
+        active_roster_size = (
+            db.query(func.count(TeamPlayer.id))
+            .filter(
+                TeamPlayer.fantasy_team_id == team.id,
+                TeamPlayer.released_window_id.is_(None),
+            )
+            .scalar()
+        )
+        if (
+            team.starting_budget != league.budget_per_team
+            or team.starting_squad_size != league.squad_size
+            or active_roster_size > league.squad_size
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Archived team no longer matches this league; rebuild required",
+            )
+
+    if team:
+        team.status = FantasyTeamStatus.ACTIVE
+
     db.flush()
 
     # Re-load with user relationship for MembershipResponse serialisation
@@ -620,8 +678,8 @@ def leave_league(
 ) -> None:
     """Leave a league for non-owner members.
 
-    Removes membership and the user's team (if present). Team-scoped rows such
-    as team players, transfers, lineups, and scores are cleaned up by cascade.
+    Marks membership as LEFT and archives the user's team (if present).
+    Team-scoped rows stay in place so the history can be restored on rejoin.
     """
     league = _require_league(db, league_id)
     membership = _require_membership(db, league_id, current_user.id)
@@ -641,9 +699,9 @@ def leave_league(
         .first()
     )
     if team:
-        db.delete(team)
+        team.status = FantasyTeamStatus.ARCHIVED
 
-    db.delete(membership)
+    membership.status = LeagueMembershipStatus.LEFT
     db.flush()
 
 
@@ -715,6 +773,7 @@ def start_draft(
     members: list[LeagueMembership] = (
         db.query(LeagueMembership)
         .filter(LeagueMembership.league_id == league_id)
+        .filter(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
         .all()
     )
 
@@ -766,6 +825,8 @@ def start_draft(
             user_id=member.user_id,
             name=team_name,
             current_budget=league.budget_per_team,
+            starting_budget=league.budget_per_team,
+            starting_squad_size=league.squad_size,
         )
         db.add(team)
 
@@ -1748,6 +1809,7 @@ def build_initial_team(
         .filter(
             FantasyTeam.league_id == league_id,
             FantasyTeam.user_id == current_user.id,
+            FantasyTeam.status == FantasyTeamStatus.ACTIVE,
         )
         .first()
     )
@@ -1931,6 +1993,8 @@ def build_initial_team(
         user_id=current_user.id,
         name=team_name,
         current_budget=league.budget_per_team - total_cost,
+        starting_budget=league.budget_per_team,
+        starting_squad_size=league.squad_size,
     )
     db.add(team)
     db.flush()
@@ -1970,6 +2034,7 @@ def get_current_draft_turn(db: Session, league_id: uuid.UUID) -> dict:
     members = (
         db.query(LeagueMembership)
         .filter(LeagueMembership.league_id == league_id)
+        .filter(LeagueMembership.status == LeagueMembershipStatus.ACTIVE)
         .order_by(LeagueMembership.draft_position)
         .all()
     )
@@ -2423,12 +2488,13 @@ def get_league_leaderboard(
     db: Session,
     league_id: uuid.UUID,
     window_id: uuid.UUID | None = None,
+    historical: bool = True,
 ) -> dict:
     """Return the leaderboard for a league.
     
-    If window_id is None, returns the sum of points across all windows
-    (total season standing). If window_id is provided, returns standing
-    for that specific window.
+    historical=True includes both ACTIVE and LEFT memberships so final and
+    historical standings preserve departed users.
+    historical=False returns the live leaderboard for active members only.
     """
     from app.league.models import FantasyTeam, TeamWeeklyScore
     from app.auth.models import User
@@ -2471,6 +2537,13 @@ def get_league_leaderboard(
                 LeagueMembership.eligible_from_window_id == eligibility_window.id,
             )
             .filter(FantasyTeam.league_id == league_id)
+            .filter(
+                LeagueMembership.status == LeagueMembershipStatus.ACTIVE
+                if not historical
+                else LeagueMembership.status.in_(
+                    [LeagueMembershipStatus.ACTIVE, LeagueMembershipStatus.LEFT]
+                )
+            )
             .filter(TeamWeeklyScore.transfer_window_id == window_id)
             .filter(
                 or_(
@@ -2507,6 +2580,13 @@ def get_league_leaderboard(
             .outerjoin(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
             .outerjoin(score_window, TeamWeeklyScore.transfer_window_id == score_window.id)
             .filter(FantasyTeam.league_id == league_id)
+            .filter(
+                LeagueMembership.status == LeagueMembershipStatus.ACTIVE
+                if not historical
+                else LeagueMembership.status.in_(
+                    [LeagueMembershipStatus.ACTIVE, LeagueMembershipStatus.LEFT]
+                )
+            )
             .filter(
                 or_(
                     LeagueMembership.eligible_from_window_id.is_(None),
