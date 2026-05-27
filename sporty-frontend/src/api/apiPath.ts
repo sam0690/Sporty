@@ -58,8 +58,13 @@ export const API_PATHS = {
     GENERATE_WINDOWS: (id: string) =>
       `/leagues/${id}/transfer-windows/generate`,
     TRANSFERS: (id: string) => `/leagues/${id}/transfers`,
-    LEADERBOARD: (id: string, windowId?: string) =>
-      `/leagues/${id}/leaderboard${windowId ? `?window_id=${windowId}` : ""}`,
+    LEADERBOARD: (id: string, windowId?: string, historical = true) => {
+      const params = new URLSearchParams();
+      if (windowId) params.set("window_id", windowId);
+      if (!historical) params.set("historical", "false");
+      const query = params.toString();
+      return `/leagues/${id}/leaderboard${query ? `?${query}` : ""}`;
+    },
     ACTIVE_WINDOW: (id: string) => `/leagues/${id}/active-window`,
     DASHBOARD_STATS: (id: string) => `/leagues/${id}/dashboard/stats`,
   },

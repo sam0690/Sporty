@@ -259,12 +259,12 @@ export const LeagueService = {
   async getLeaderboard(
     leagueId: string,
     windowId?: string,
+    historical = true,
   ): Promise<TLeaderboardResponse> {
-    return (
-      await authApi.get<TLeaderboardResponse>(
-        API_PATHS.LEAGUES.LEADERBOARD(leagueId, windowId),
-      )
-    ).data;
+    const res = await authApi.get<TLeaderboardResponse>(
+      API_PATHS.LEAGUES.LEADERBOARD(leagueId, windowId, historical),
+    );
+    return res.data;
   },
 
   async getActiveWindow(leagueId: string): Promise<TTransferWindow> {

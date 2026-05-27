@@ -27,7 +27,9 @@ export function MemberList({
           key={member.id}
           member={member}
           isCommissionerMember={member.id === commissionerId}
-          canKick={isCommissioner && member.id !== selfId}
+          canKick={
+            isCommissioner && member.id !== selfId && member.status === "active"
+          }
           onKick={onKick}
         />
       ))}

@@ -19,10 +19,14 @@ export function LeagueMembers() {
 
   const isCommissioner = league?.owner?.username === username;
   const selfId =
-    memberships?.find((m) => m.user.username === username)?.id ?? "";
+    memberships?.find(
+      (m) => m.user.username === username && m.status === "active",
+    )?.id ?? "";
   const commissionerId =
-    memberships?.find((m) => m.user.username === league?.owner?.username)?.id ??
-    "";
+    memberships?.find(
+      (m) =>
+        m.user.username === league?.owner?.username && m.status === "active",
+    )?.id ?? "";
 
   const [query, setQuery] = useState("");
   const [isKicking, setIsKicking] = useState(false);
@@ -33,6 +37,7 @@ export function LeagueMembers() {
       (memberships ?? []).map((membership) => ({
         id: membership.id,
         name: membership.user.username,
+        status: membership.status,
         teamName: membership.draft_position
           ? `Draft Position #${membership.draft_position}`
           : "Team pending",

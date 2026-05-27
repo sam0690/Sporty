@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
@@ -13,12 +13,7 @@ import {
 import {
   StandingsTable,
   type Standing,
-  type WeeklyStanding,
 } from "@/components/dashboard/leagues/league-leaderboard/components/StandingsTable";
-import {
-  StatsHighlight,
-  type StatsHighlights,
-} from "@/components/dashboard/leagues/league-leaderboard/components/StatsHighlight";
 import { UserRankCard } from "@/components/dashboard/leagues/league-leaderboard/components/UserRankCard";
 import {
   WeekSelector,
@@ -31,28 +26,6 @@ import {
   useMyTeam,
   useActiveWindow,
 } from "@/hooks/leagues/useLeagues";
-import type { TLeaderboardEntry, TLeaderboardResponse } from "@/types";
-
-type LeaderboardData = {
-  leagueId: string;
-  leagueName: string;
-  sport: Sport;
-  currentWeek: number;
-  totalWeeks: number;
-  userTeamId: string;
-  userTeam: {
-    rank: number;
-    teamName: string;
-    totalPoints: number;
-    wins: number;
-    losses: number;
-    pointsBehind: number;
-  };
-  statsHighlights: StatsHighlights;
-  groups: string[];
-  standings: Standing[];
-};
-
 export function LeagueLeaderboard() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
@@ -65,10 +38,12 @@ export function LeagueLeaderboard() {
 
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek>("overall");
   const [selectedGroup, setSelectedGroup] = useState("Overall");
+  const [historical, setHistorical] = useState(true);
 
   const { data: leaderboard, isLoading: isLeaderboardLoading } = useLeaderboard(
     leagueId,
     selectedWeek === "overall" ? undefined : selectedWeek.toString(),
+    historical,
   );
 
   const isCommissioner = league?.owner?.username === username;
@@ -146,23 +121,47 @@ export function LeagueLeaderboard() {
       <LeaderboardHeader
         leagueName={league.name}
         sport={(league.sports[0]?.sport.name as Sport) || "football"}
+        seasonName={league.season?.name}
         currentWeek={activeWindow?.number || 1}
         totalWeeks={activeWindow?.total_number || 16}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-        <WeekSelector
-          currentWeek={activeWindow?.number || 1}
-          totalWeeks={activeWindow?.total_number || 16}
-          selectedWeek={selectedWeek}
-          onWeekChange={setSelectedWeek}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <WeekSelector
+            currentWeek={activeWindow?.number || 1}
+            totalWeeks={activeWindow?.total_number || 16}
+            selectedWeek={selectedWeek}
+            onWeekChange={setSelectedWeek}
+          />
 
-        <LeaderboardFilters
-          selectedGroup={selectedGroup}
-          groups={["Overall"]}
-          onGroupChange={setSelectedGroup}
-        />
+          <LeaderboardFilters
+            selectedGroup={selectedGroup}
+            groups={["Overall"]}
+            onGroupChange={setSelectedGroup}
+          />
+        </div>
+
+        <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs font-medium text-foreground">
+          <button
+            type="button"
+            onClick={() => setHistorical(true)}
+            className={`rounded-full px-3 py-1.5 transition-colors ${
+              historical ? "bg-white/12 text-foreground" : "text-foreground/60"
+            }`}
+          >
+            Historical
+          </button>
+          <button
+            type="button"
+            onClick={() => setHistorical(false)}
+            className={`rounded-full px-3 py-1.5 transition-colors ${
+              !historical ? "bg-white/12 text-foreground" : "text-foreground/60"
+            }`}
+          >
+            Live
+          </button>
+        </div>
       </div>
 
       {/* StatsHighlight hidden for now as we don't have this data yet */}

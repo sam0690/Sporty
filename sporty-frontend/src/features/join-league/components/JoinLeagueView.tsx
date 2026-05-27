@@ -73,7 +73,7 @@ export function JoinLeagueView() {
         (l.sports?.[0]?.sport.name as PublicLeague["sport"]) || "multisport",
       memberCount: l.member_count ?? 0,
       requiresInviteCode: !l.is_public,
-      joinableNow: l.joinable_now ?? true,
+      joinableNow: l.joinable_now,
       joinMessage: l.midseason_join_message ?? undefined,
       midseasonEntryWindowNumber: l.midseason_entry_window_number ?? null,
       inviteCode: l.invite_code,

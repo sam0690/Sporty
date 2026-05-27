@@ -5,6 +5,7 @@ type Sport = "football" | "basketball" | "cricket" | "multisport";
 type LeaderboardHeaderProps = {
   leagueName: string;
   sport: Sport;
+  seasonName?: string;
   currentWeek: number;
   totalWeeks: number;
 };
@@ -19,6 +20,7 @@ const sportIcons: Record<Sport, string> = {
 export function LeaderboardHeader({
   leagueName,
   sport,
+  seasonName,
 }: LeaderboardHeaderProps) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
@@ -32,7 +34,7 @@ export function LeaderboardHeader({
       </div>
 
       <p className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-foreground/70">
-        Season 2025
+        Season {seasonName || "Unknown"}
       </p>
     </header>
   );

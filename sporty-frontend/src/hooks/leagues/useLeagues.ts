@@ -483,10 +483,15 @@ export function useUpdateLineup(leagueId: string) {
   );
 }
 
-export function useLeaderboard(leagueId: string, windowId?: string) {
+export function useLeaderboard(
+  leagueId: string,
+  windowId?: string,
+  historical = true,
+) {
   return useApiQuery<TLeaderboardResponse>(
-    ["leagues", leagueId, "leaderboard", windowId],
-    () => LeagueService.getLeaderboard(leagueId, windowId ?? undefined),
+    ["leagues", leagueId, "leaderboard", windowId, historical],
+    () =>
+      LeagueService.getLeaderboard(leagueId, windowId ?? undefined, historical),
     { enabled: !!leagueId },
   );
 }

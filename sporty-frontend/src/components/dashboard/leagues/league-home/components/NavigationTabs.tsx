@@ -8,8 +8,7 @@ type TabKey =
   | "leaderboard"
   | "members"
   | "invite"
-  | "settings"
-  | "roster";
+  | "settings";
 
 type NavigationTabsProps = {
   activeTab: TabKey;
@@ -24,7 +23,6 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "members", label: "Members" },
   { key: "invite", label: "Invite" },
   { key: "settings", label: "Settings" },
-  { key: "roster", label: "Roster" },
 ];
 
 export function NavigationTabs({
@@ -65,7 +63,7 @@ export function NavigationTabs({
 
   return (
     <nav
-      className="mb-6 overflow-x-auto rounded-[1.5rem] border border-white/10 bg-surface/70 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+      className="mb-6 overflow-x-auto rounded-3xl border border-white/10 bg-surface/70 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
       aria-label="League Navigation Tabs"
     >
       <div className="flex min-w-max gap-2">

@@ -115,6 +115,7 @@ export type TLeaderboardResponse = {
 export type TMembership = {
   id: string;
   user: TUser;
+  status: "active" | "left";
   draft_position: number | null;
   joined_at: string;
   eligible_from_window_id?: string | null;
