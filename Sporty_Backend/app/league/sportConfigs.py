@@ -9,38 +9,30 @@ SPORT_CONFIG_REGISTRY: dict[str, dict[str, dict[str, Any]]] = {
     "football": {
         "single": {
             "position_minimums": {
-                "GK": 1,
-                "DEF": 3,
-                "MID": 2,
-                "FWD": 1,
+                "GKP": 1,
+                "DEF": 6,
+                "MID": 5,
+                "FWD": 3,
             },
         },
         "mixed": {
             "position_minimums": {
-                "GK": 1,
+                "GKP": 1,
                 "DEF": 2,
-                "MID": 2,
-                "FWD": 1,
+                "MID": 3,
+                "FWD": 2,
             },
         },
     },
     "basketball": {
         "single": {
             "position_minimums": {
-                "PG": 1,
-                "SG": 1,
-                "SF": 1,
-                "PF": 1,
-                "C": 1,
+                "UNK": 15,
             },
         },
         "mixed": {
             "position_minimums": {
-                "PG": 1,
-                "SG": 1,
-                "SF": 1,
-                "PF": 1,
-                "C": 1,
+                "UNK": 7,
             },
         },
     },

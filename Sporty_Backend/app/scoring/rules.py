@@ -9,7 +9,7 @@ RuleFunc = Callable[[NormalizedEvent], float]
 
 POINTS_RULES: dict[SportType, dict[EventType, RuleFunc]] = {
     SportType.FOOTBALL: {
-        EventType.GOAL: lambda e: 6.0 if e.meta.get("position") == "GK" else 4.0,
+        EventType.GOAL: lambda e: 6.0 if e.meta.get("position") in {"GK", "GKP"} else 4.0,
         EventType.CARD: lambda e: -3.0 if e.meta.get("card_color") == "red" else -1.0,
         EventType.STAT: lambda e: 3.0 if e.meta.get("stat_type") == "ASSIST" else 0.0,
     },

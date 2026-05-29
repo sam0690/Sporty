@@ -142,7 +142,7 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
     db.flush()
 
     player_ids: list[uuid.UUID] = []
-    football_positions = ["GK", "DEF", "DEF", "MID", "MID", "FWD", "FWD", "DEF"]
+    football_positions = ["GKP", "DEF", "DEF", "MID", "MID", "FWD", "FWD", "DEF"]
     football_clubs = ["ClubA", "ClubB", "ClubC", "ClubD", "ClubA", "ClubB", "ClubC", "ClubD"]
     for index, position in enumerate(football_positions, start=1):
         player = app.player.models.Player(  # type: ignore[attr-defined]
@@ -157,7 +157,7 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
         db.flush()
         player_ids.append(player.id)
 
-    basketball_positions = ["PG", "SG", "SF", "PF", "C", "PG", "SG"]
+    basketball_positions = ["UNK", "UNK", "UNK", "UNK", "UNK", "UNK", "UNK"]
     basketball_clubs = ["TeamX", "TeamY", "TeamZ", "TeamX", "TeamY", "TeamZ", "TeamX"]
     for index, position in enumerate(basketball_positions, start=1):
         player = app.player.models.Player(  # type: ignore[attr-defined]
