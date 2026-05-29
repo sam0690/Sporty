@@ -9,8 +9,8 @@ SPORT_CONFIG_REGISTRY: dict[str, dict[str, dict[str, Any]]] = {
     "football": {
         "single": {
             "position_minimums": {
-                "GKP": 1,
-                "DEF": 6,
+                "GKP": 2,
+                "DEF": 5,
                 "MID": 5,
                 "FWD": 3,
             },
@@ -66,11 +66,30 @@ def build_auto_pick_sport_config(
             },
         ]
     else:
+        # For single sport, we use "single" config but scaling position minimums 
+        # if the squad_size is different from 15 (FPL standard).
+        config = SPORT_CONFIG_REGISTRY[sport_type]["single"]
+        pos_mins = config["position_minimums"].copy()
+        
+        # Simple safety: if squad_size < sum(min_positions), we must reduce them.
+        # This prevents "infeasible" ILP results for custom leagues with small squads.
+        sum_mins = sum(pos_mins.values())
+        if squad_size < sum_mins:
+            # Fallback to 1 per position if possible, otherwise scale down.
+            for pos in pos_mins:
+                pos_mins[pos] = 1
+            
+            # Re-check if still too high
+            sum_mins = sum(pos_mins.values())
+            if squad_size < sum_mins:
+                for pos in pos_mins:
+                    pos_mins[pos] = 0 # Extreme fallback
+
         sports = [
             {
                 "type": sport_type,
                 "quota": int(squad_size),
-                "position_minimums": SPORT_CONFIG_REGISTRY[sport_type]["single"]["position_minimums"],
+                "position_minimums": pos_mins,
             }
         ]
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import random
 import uuid
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -32,6 +33,9 @@ from app.league.sportConfigs import (
 from app.player.models import Player, PlayerGameweekStat
 
 logger = logging.getLogger(__name__)
+
+# Controlled randomness for auto-pick selection diversity
+AUTO_PICK_JITTER_STRENGTH = 0.15
 
 
 @dataclass(frozen=True)
@@ -294,9 +298,13 @@ def auto_pick_ilp(
     max_per_club = int(sport_config.get("maxPerClub", DEFAULT_MAX_PER_CLUB))
     sport_lookup = _sport_lookup(sport_config)
 
+    # Filter pool to only available players at the start of ILP
+    full_pool = player_pool
+    player_pool = [p for p in full_pool if p.is_available]
+
     # BREAKDOWN LOGS
-    available_count = sum(1 for p in player_pool if p.is_available)
-    unavailable_count = len(player_pool) - available_count
+    available_count = len(player_pool)
+    unavailable_count = len(full_pool) - available_count
     sport_counts = Counter(p.sport_type for p in player_pool if p.is_available)
     position_counts = Counter(p.position for p in player_pool if p.is_available)
 
@@ -306,18 +314,31 @@ def auto_pick_ilp(
 
     logger.info(f"[auto_pick] ILP solve START poolSize={len(player_pool)}")
 
+    # Apply controlled randomness jitter to selection objective
+    random.seed()
+    jitter_strength = AUTO_PICK_JITTER_STRENGTH
+    jittered_values = {}
+    for player in player_pool:
+        jitter = 1 + random.uniform(-jitter_strength, jitter_strength)
+        jittered_values[player.id] = float(player.value) * jitter
+
+    logger.info(f"[auto_pick] jitter applied strength={jitter_strength}")
+
     model = pulp.LpProblem("auto_pick", pulp.LpMaximize)
     variables = {
         player.id: pulp.LpVariable(_player_var_name(player.id), cat=pulp.LpBinary)
         for player in player_pool
     }
 
-    model += pulp.lpSum(float(player.value) * variables[player.id] for player in player_pool)
+    # Objective: maximize jittered value
+    model += pulp.lpSum(jittered_values[player.id] * variables[player.id] for player in player_pool)
 
     for locked_id in locked_ids:
-        model += variables[locked_id] == 1
+        if locked_id in variables:
+            model += variables[locked_id] == 1
 
-    model += pulp.lpSum(float(player.cost) * variables[player.id] for player in player_pool) <= float(budget)
+    # Budget constraint with a small epsilon for floating-point safety
+    model += pulp.lpSum(float(player.cost) * variables[player.id] for player in player_pool) <= float(budget) + 1e-8
 
     for sport in sport_config["sports"]:
         sport_type = sport["type"]
