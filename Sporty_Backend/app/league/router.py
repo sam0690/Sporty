@@ -16,7 +16,7 @@ Transaction convention:
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Response, status, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
@@ -25,9 +25,12 @@ from app.core.redis import cache_get, cache_set, get_redis
 from app.database import get_db
 from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
+from app.league.auto_pick_service import auto_pick_team
 from app.league.models import FantasyTeam, League, TeamWeeklyScore
 from app.services import transfer_service
 from app.league.schemas import (
+    AutoPickRequest,
+    AutoPickSquadResponse,
     BudgetDiscardResponse,
     DraftPickCreate,
     DraftPickResponse,
@@ -612,6 +615,37 @@ def build_team(
     )
     db.commit()
     return {"message": "Team created successfully", "team_id": team.id}
+
+
+@router.post(
+    "/{league_id}/auto-pick",
+    response_model=AutoPickSquadResponse,
+    summary="Auto-pick and persist a squad",
+)
+def auto_pick_team_endpoint(
+    data: AutoPickRequest,
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    redis = get_redis()
+    lock_key = f"autopick:lock:{current_user.id}:{league.id}"
+    acquired = redis.set(lock_key, "1", ex=10, nx=True)
+    if not acquired:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Auto-pick is already running")
+
+    try:
+        result = auto_pick_team(db, league.id, current_user, data.locked_player_ids)
+        db.commit()
+        return result
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        try:
+            redis.delete(lock_key)
+        except Exception:
+            pass
 
 
 @router.delete(

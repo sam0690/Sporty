@@ -19,6 +19,7 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from app.core.redis import cache_delete
 from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
 from app.league.models import Sport
@@ -229,6 +230,7 @@ async def sync_football_players(
     print(
         f"✅ Football players synced! Added: {total_added}, Updated: {total_updated}"
     )
+    cache_delete("players:football")
 
 
 async def sync_basketball_players(db: Session, season: int | str | None = None):
@@ -333,6 +335,7 @@ async def sync_basketball_players(db: Session, season: int | str | None = None):
         print(
             f"✅ Basketball ingest complete! Inserted/updated {total_teams} teams and {total_players} players"
         )
+        cache_delete("players:basketball")
 
     except Exception as e:
         print(f"❌ Error syncing basketball players and teams: {e}")

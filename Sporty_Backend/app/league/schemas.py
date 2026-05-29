@@ -487,6 +487,37 @@ class TeamBuildRequest(BaseModel):
         return v
 
 
+class AutoPickRequest(BaseModel):
+    """POST /leagues/{id}/auto-pick — generate and persist an auto-picked squad."""
+
+    locked_player_ids: list[uuid.UUID] = Field(default_factory=list, alias="lockedPlayerIds")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    @field_validator("locked_player_ids")
+    @classmethod
+    def no_duplicate_locked_players(cls, value: list[uuid.UUID]) -> list[uuid.UUID]:
+        if len(value) != len(set(value)):
+            raise ValueError("Duplicate locked players not allowed")
+        return value
+
+
+class AutoPickPlayerResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    sport_type: str
+    position: str
+    cost: Decimal
+
+
+class AutoPickSquadResponse(BaseModel):
+    players: list[AutoPickPlayerResponse]
+    total_cost: Decimal = Field(alias="totalCost")
+    budget_remaining: Decimal = Field(alias="budgetRemaining")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class BudgetDiscardResponse(BaseModel):
     message: str
     refund: Decimal

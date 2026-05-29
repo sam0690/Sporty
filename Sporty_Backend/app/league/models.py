@@ -768,6 +768,10 @@ class TeamPlayer(Base):
         nullable=False, index=True,
     )
 
+    # Snapshot of the player's sport at acquisition time.
+    # This avoids repeated Player -> Sport joins when filtering or auditing rosters.
+    sport_type: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+
     # When was the player acquired? (draft pick or transfer in)
     acquired_window_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
