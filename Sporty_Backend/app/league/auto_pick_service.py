@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from collections import Counter, defaultdict
 from dataclasses import dataclass
@@ -23,6 +24,9 @@ from app.league.models import (
     TransferWindow,
 )
 from app.player.models import Player, PlayerGameweekStat
+
+
+logger = logging.getLogger(__name__)
 
 
 SUPPORTED_SPORT_TYPES = {"football", "basketball"}
@@ -389,6 +393,46 @@ def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> Non
             )
 
 
+def _auto_pick_debug_snapshot(
+    pool: list[PoolPlayer],
+    selected: list[PoolPlayer],
+    sport_config: dict[str, Any],
+) -> dict[str, Any]:
+    sport_lookup = _sport_lookup(sport_config)
+    selected_by_sport = Counter(player.sport_type for player in selected)
+    pool_by_sport = Counter(player.sport_type for player in pool)
+    available_by_sport = Counter(
+        player.sport_type for player in pool if player.is_available
+    )
+
+    return {
+        "sportType": sport_config.get("sportType"),
+        "totalBudget": str(sport_config.get("totalBudget")),
+        "sports": [
+            {
+                "type": sport_type,
+                "quota": sport["quota"],
+                "selected": selected_by_sport.get(sport_type, 0),
+                "pool": pool_by_sport.get(sport_type, 0),
+                "available": available_by_sport.get(sport_type, 0),
+            }
+            for sport_type, sport in sport_lookup.items()
+        ],
+        "selectedPlayers": [
+            {
+                "id": str(player.id),
+                "name": player.name,
+                "sportType": player.sport_type,
+                "position": player.position,
+                "cost": str(player.cost),
+                "realTeam": player.real_team,
+                "isAvailable": player.is_available,
+            }
+            for player in selected
+        ],
+    }
+
+
 def autoPickSquad(
     playerPool: list[PoolPlayer],
     sportConfig: dict[str, Any],
@@ -487,7 +531,16 @@ def autoPickSquad(
         if not picked:
             break
 
-    validate_squad(selected, sportConfig)
+    try:
+        validate_squad(selected, sportConfig)
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT:
+            logger.warning(
+                "Auto-pick validation failed: %s | debug=%s",
+                exc.detail,
+                _auto_pick_debug_snapshot(playerPool, selected, sportConfig),
+            )
+        raise
     total_cost = sum((player.cost for player in selected), Decimal("0"))
     budget_remaining = Decimal(str(sportConfig["totalBudget"])) - total_cost
     return selected, total_cost, budget_remaining
