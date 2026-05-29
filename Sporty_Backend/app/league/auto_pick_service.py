@@ -390,6 +390,14 @@ def _candidate_rejection_reason(
     post_pick_remaining_budget = Decimal(str(sport_config["totalBudget"])) - sum(
         (existing.cost for existing in post_pick_selected), Decimal("0")
     )
+
+    if remaining_slots_after_pick > 0:
+        average_budget_per_remaining_slot = post_pick_remaining_budget / Decimal(
+            str(remaining_slots_after_pick)
+        )
+        if player.cost > average_budget_per_remaining_slot:
+            return "budget_average"
+
     post_pick_reserve = sum(
         _reservation_by_sport([candidate for candidate in sport_players if candidate.id not in {player.id}], sport_config, post_pick_selected).values(),
         Decimal("0"),
