@@ -355,6 +355,7 @@ def _reservation_by_sport(
 
 def _candidate_rejection_reason(
     player: PoolPlayer,
+    playerPool: list[PoolPlayer],
     sport_lookup: dict[str, dict[str, Any]],
     selected: list[PoolPlayer],
     selected_counts: dict[str, int],
@@ -376,36 +377,91 @@ def _candidate_rejection_reason(
     if club_count[_club_key(player)] >= int(sport["maxPerClub"]):
         return "club_limit"
 
-    missing_positions = [
-        position
-        for position in sport["positions"]
-        if position not in {existing.position for existing in sport_players}
-    ]
-    remaining_slots_after_pick = int(sport["quota"]) - len(sport_players) - 1
-    missing_after_pick = len(missing_positions) - (1 if player.position in missing_positions else 0)
-    if remaining_slots_after_pick < missing_after_pick:
-        return "position_coverage"
-
     post_pick_selected = selected + [player]
     post_pick_remaining_budget = Decimal(str(sport_config["totalBudget"])) - sum(
         (existing.cost for existing in post_pick_selected), Decimal("0")
     )
-
-    if remaining_slots_after_pick > 0:
-        average_budget_per_remaining_slot = post_pick_remaining_budget / Decimal(
-            str(remaining_slots_after_pick)
-        )
-        if player.cost > average_budget_per_remaining_slot:
-            return "budget_average"
-
-    post_pick_reserve = sum(
-        _reservation_by_sport([candidate for candidate in sport_players if candidate.id not in {player.id}], sport_config, post_pick_selected).values(),
-        Decimal("0"),
+    post_pick_completion_cost = _minimum_completion_cost(
+        playerPool=playerPool,
+        sport_config=sport_config,
+        selected=post_pick_selected,
     )
-    if post_pick_remaining_budget < post_pick_reserve:
+    if post_pick_completion_cost is None:
+        return "completion_impossible"
+    if post_pick_remaining_budget < post_pick_completion_cost:
         return "budget_reserve"
 
     return None
+
+
+def _minimum_completion_cost(
+    playerPool: list[PoolPlayer],
+    sport_config: dict[str, Any],
+    selected: list[PoolPlayer],
+) -> Decimal | None:
+    """Return the cheapest estimated cost to complete the squad.
+
+    This is a lower bound: it reserves the cheapest players needed to
+    satisfy each sport's remaining quota and required positions. If any
+    required position or quota slot cannot be filled from the remaining
+    pool, returns None.
+    """
+    selected_ids = {player.id for player in selected}
+    selected_counts = _selected_counts(selected)
+    selected_positions = _selected_positions(selected)
+    total = Decimal("0")
+
+    for sport in sport_config["sports"]:
+        sport_type = sport["type"]
+        remaining_quota = int(sport["quota"]) - selected_counts.get(sport_type, 0)
+        if remaining_quota <= 0:
+            continue
+
+        available = [
+            player
+            for player in playerPool
+            if player.sport_type == sport_type
+            and player.is_available
+            and player.id not in selected_ids
+        ]
+        if len(available) < remaining_quota:
+            return None
+
+        reserved_ids: set[uuid.UUID] = set()
+        missing_positions = [
+            position
+            for position in sport["positions"]
+            if position not in selected_positions.get(sport_type, set())
+        ]
+
+        for position in missing_positions:
+            candidates = [
+                player
+                for player in available
+                if player.position == position and player.id not in reserved_ids
+            ]
+            if not candidates:
+                return None
+            chosen = min(candidates, key=lambda candidate: candidate.cost)
+            total += chosen.cost
+            reserved_ids.add(chosen.id)
+
+        fillers_needed = remaining_quota - len(missing_positions)
+        if fillers_needed > 0:
+            filler_candidates = [
+                player
+                for player in available
+                if player.id not in reserved_ids
+            ]
+            if len(filler_candidates) < fillers_needed:
+                return None
+            filler_candidates.sort(key=lambda candidate: candidate.cost)
+            total += sum(
+                (player.cost for player in filler_candidates[:fillers_needed]),
+                Decimal("0"),
+            )
+
+    return total
 
 
 def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> None:
@@ -548,6 +604,7 @@ def autoPickSquad(
             sport_players = [existing for existing in selected if existing.sport_type == player.sport_type]
             reason = _candidate_rejection_reason(
                 player=player,
+                playerPool=playerPool,
                 sport_lookup=sport_lookup,
                 selected=selected,
                 selected_counts=selected_counts,
