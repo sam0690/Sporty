@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
+import pulp
 from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
@@ -23,19 +24,14 @@ from app.league.models import (
     TeamPlayer,
     TransferWindow,
 )
+from app.league.sportConfigs import (
+    DEFAULT_MAX_PER_CLUB,
+    SUPPORTED_SPORT_TYPES,
+    build_auto_pick_sport_config,
+)
 from app.player.models import Player, PlayerGameweekStat
 
-
 logger = logging.getLogger(__name__)
-
-
-SUPPORTED_SPORT_TYPES = {"football", "basketball"}
-DEFAULT_MAX_PER_CLUB = 3
-MIXED_QUOTAS = {"football": 8, "basketball": 7}
-DEFAULT_POSITIONS: dict[str, list[str]] = {
-    "football": ["GK", "DEF", "MID", "FWD"],
-    "basketball": ["PG", "SG", "SF", "PF", "C"],
-}
 
 
 @dataclass(frozen=True)
@@ -87,38 +83,11 @@ def _league_sport_type(league: League) -> str:
 
 def _sport_config_for_league(league: League) -> dict[str, Any]:
     sport_type = _league_sport_type(league)
-    total_budget = Decimal(str(league.budget_per_team))
-
-    if sport_type == "mixed":
-        sports = [
-            {
-                "type": "football",
-                "quota": MIXED_QUOTAS["football"],
-                "positions": DEFAULT_POSITIONS["football"],
-                "maxPerClub": DEFAULT_MAX_PER_CLUB,
-            },
-            {
-                "type": "basketball",
-                "quota": MIXED_QUOTAS["basketball"],
-                "positions": DEFAULT_POSITIONS["basketball"],
-                "maxPerClub": DEFAULT_MAX_PER_CLUB,
-            },
-        ]
-    else:
-        sports = [
-            {
-                "type": sport_type,
-                "quota": int(league.squad_size),
-                "positions": DEFAULT_POSITIONS[sport_type],
-                "maxPerClub": DEFAULT_MAX_PER_CLUB,
-            }
-        ]
-
-    return {
-        "sportType": sport_type,
-        "totalBudget": total_budget,
-        "sports": sports,
-    }
+    return build_auto_pick_sport_config(
+        sport_type,
+        total_budget=Decimal(str(league.budget_per_team)),
+        squad_size=int(league.squad_size),
+    )
 
 
 def _require_team_free(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) -> None:
@@ -212,6 +181,7 @@ def _cache_key_for_sport_type(sport_type: str) -> str:
 
 
 def _fetch_player_pool(db: Session, league: League, sport_type: str) -> list[PoolPlayer]:
+    logger.info(f"[auto_pick] player pool CACHE MISS sportType={sport_type} — fetching from DB")
     allowed_sport_ids = [league_sport.sport_id for league_sport in league.sports]
     if not allowed_sport_ids:
         raise HTTPException(
@@ -232,19 +202,22 @@ def _fetch_player_pool(db: Session, league: League, sport_type: str) -> list[Poo
     pool: list[PoolPlayer] = []
     for player in rows:
         sport_name = player.sport.name if player.sport and player.sport.name else sport_type
+        projected_points = value_map.get(player.id, Decimal("0"))
+        player_cost = Decimal(str(player.cost))
         pool.append(
             PoolPlayer(
                 id=player.id,
                 name=player.name,
                 sport_type=_normalize_sport_name(sport_name),
                 position=player.position.strip().upper(),
-                cost=Decimal(str(player.cost)),
+                cost=player_cost,
                 real_team=player.real_team,
                 real_team_id=str(player.real_team_id) if player.real_team_id else None,
-                value=value_map.get(player.id, Decimal("0")),
+                value=(projected_points / player_cost) if player_cost > 0 else Decimal("0"),
                 is_available=bool(player.is_available),
             )
         )
+    logger.info(f"[auto_pick] player pool loaded from DB playerCount={len(pool)} sportType={sport_type}")
     return pool
 
 
@@ -263,12 +236,17 @@ def _load_player_pool(db: Session, league: League, sport_type: str, *, day_seven
                     .all()
                 )
                 live_map = {player_id: bool(is_available) for player_id, is_available in live_rows}
-                return [
+                player_pool = [
                     player
                     for player in cached_players
                     if live_map.get(player.id, False)
                 ]
-            return cached_players
+                logger.info(f"[auto_pick] player pool CACHE HIT sportType={sport_type} playerCount={len(player_pool)}")
+                return player_pool
+            
+            player_pool = cached_players
+            logger.info(f"[auto_pick] player pool CACHE HIT sportType={sport_type} playerCount={len(player_pool)}")
+            return player_pool
 
     pool = _fetch_player_pool(db, league, sport_type)
     if not day_seven:
@@ -288,182 +266,112 @@ def _club_key(player: PoolPlayer) -> str:
     return player.real_team_id or player.real_team or str(player.id)
 
 
-def _selected_counts(selected: list[PoolPlayer]) -> dict[str, int]:
-    counts: dict[str, int] = defaultdict(int)
-    for player in selected:
-        counts[player.sport_type] += 1
-    return counts
+def _player_var_name(player_id: uuid.UUID) -> str:
+    return f"x_{str(player_id).replace('-', '_')}"
 
 
-def _selected_positions(selected: list[PoolPlayer]) -> dict[str, set[str]]:
-    positions: dict[str, set[str]] = defaultdict(set)
-    for player in selected:
-        positions[player.sport_type].add(player.position)
-    return positions
-
-
-def _candidate_score(
-    player: PoolPlayer,
-    selected_counts: dict[str, int],
-    sport_lookup: dict[str, dict[str, Any]],
-) -> tuple[Decimal, Decimal, Decimal]:
-    sport = sport_lookup.get(player.sport_type)
-    if not sport:
-        return (Decimal("0"), Decimal("0"), Decimal("0"))
-
-    quota = Decimal(str(sport["quota"]))
-    remaining_quota = max(Decimal(str(sport["quota"])) - Decimal(str(selected_counts.get(player.sport_type, 0))), Decimal("0"))
-    pressure = remaining_quota / quota if quota > 0 else Decimal("0")
-    # Prefer lower-cost players while still biasing toward the sport that has
-    # the most quota pressure left. This keeps the squad affordable enough to
-    # finish before the budget runs out.
-    return (pressure, -player.cost, player.value_per_cost)
-
-
-def _reservation_by_sport(
-    pool: list[PoolPlayer],
+def auto_pick_ilp(
+    player_pool: list[PoolPlayer],
     sport_config: dict[str, Any],
-    selected: list[PoolPlayer],
-) -> dict[str, Decimal]:
-    if sport_config["sportType"] != "mixed":
-        return {sport["type"]: Decimal("0") for sport in sport_config["sports"]}
+    locked_player_ids: list[uuid.UUID] | None = None,
+    total_budget: Decimal | float | int | None = None,
+) -> list[PoolPlayer]:
+    locked_ids = [uuid.UUID(str(player_id)) for player_id in (locked_player_ids or [])]
+    if len(set(locked_ids)) != len(locked_ids):
+        raise ValueError("Duplicate locked players are not allowed")
 
-    selected_positions = _selected_positions(selected)
-    selected_ids = {player.id for player in selected}
-    reservations: dict[str, Decimal] = {}
-    for sport in sport_config["sports"]:
-        sport_type = sport["type"]
-        needed_positions = [
-            position
-            for position in sport["positions"]
-            if position not in selected_positions.get(sport_type, set())
-        ]
-        reserve = Decimal("0")
-        for position in needed_positions:
-            candidates = [
-                player
-                for player in pool
-                if player.sport_type == sport_type
-                and player.position == position
-                and player.id not in selected_ids
-                and player.is_available
-            ]
-            if not candidates:
-                continue
-            reserve += min(player.cost for player in candidates)
-        reservations[sport_type] = reserve
-    return reservations
+    pool_by_id = {player.id: player for player in player_pool}
+    selected_locked: list[PoolPlayer] = []
+    for locked_id in locked_ids:
+        player = pool_by_id.get(locked_id)
+        if not player:
+            raise ValueError(f"Locked player {locked_id} is not available in the current pool")
+        if not player.is_available:
+            raise ValueError(f"Locked player {player.name} is not available")
+        selected_locked.append(player)
 
+    budget = Decimal(str(total_budget if total_budget is not None else sport_config["totalBudget"]))
+    max_per_club = int(sport_config.get("maxPerClub", DEFAULT_MAX_PER_CLUB))
+    sport_lookup = _sport_lookup(sport_config)
 
-def _candidate_rejection_reason(
-    player: PoolPlayer,
-    playerPool: list[PoolPlayer],
-    sport_lookup: dict[str, dict[str, Any]],
-    selected: list[PoolPlayer],
-    selected_counts: dict[str, int],
-    sport_players: list[PoolPlayer],
-    sport: dict[str, Any] | None,
-    sport_config: dict[str, Any],
-    selected_ids: set[uuid.UUID],
-) -> str | None:
-    if player.id in selected_ids:
-        return "already_selected"
-    if not sport:
-        return "unsupported_sport"
-    if selected_counts.get(player.sport_type, 0) >= int(sport["quota"]):
-        return "sport_quota_filled"
-    if player.position not in sport["positions"]:
-        return "position_not_allowed"
+    # BREAKDOWN LOGS
+    available_count = sum(1 for p in player_pool if p.is_available)
+    unavailable_count = len(player_pool) - available_count
+    sport_counts = Counter(p.sport_type for p in player_pool if p.is_available)
+    position_counts = Counter(p.position for p in player_pool if p.is_available)
 
-    club_count = Counter(_club_key(existing) for existing in sport_players)
-    if club_count[_club_key(player)] >= int(sport["maxPerClub"]):
-        return "club_limit"
+    logger.info(f"[auto_pick] pool breakdown — available={available_count} unavailable={unavailable_count}")
+    logger.info(f"[auto_pick] pool by sport — {dict(sport_counts)}")
+    logger.info(f"[auto_pick] pool by position — {dict(position_counts)}")
 
-    post_pick_selected = selected + [player]
-    post_pick_remaining_budget = Decimal(str(sport_config["totalBudget"])) - sum(
-        (existing.cost for existing in post_pick_selected), Decimal("0")
-    )
-    post_pick_completion_cost = _minimum_completion_cost(
-        playerPool=playerPool,
-        sport_config=sport_config,
-        selected=post_pick_selected,
-    )
-    if post_pick_completion_cost is None:
-        return "completion_impossible"
-    if post_pick_remaining_budget < post_pick_completion_cost:
-        return "budget_reserve"
+    logger.info(f"[auto_pick] ILP solve START poolSize={len(player_pool)}")
 
-    return None
+    model = pulp.LpProblem("auto_pick", pulp.LpMaximize)
+    variables = {
+        player.id: pulp.LpVariable(_player_var_name(player.id), cat=pulp.LpBinary)
+        for player in player_pool
+    }
 
+    model += pulp.lpSum(float(player.value) * variables[player.id] for player in player_pool)
 
-def _minimum_completion_cost(
-    playerPool: list[PoolPlayer],
-    sport_config: dict[str, Any],
-    selected: list[PoolPlayer],
-) -> Decimal | None:
-    """Return the cheapest estimated cost to complete the squad.
+    for locked_id in locked_ids:
+        model += variables[locked_id] == 1
 
-    This is a lower bound: it reserves the cheapest players needed to
-    satisfy each sport's remaining quota and required positions. If any
-    required position or quota slot cannot be filled from the remaining
-    pool, returns None.
-    """
-    selected_ids = {player.id for player in selected}
-    selected_counts = _selected_counts(selected)
-    selected_positions = _selected_positions(selected)
-    total = Decimal("0")
+    model += pulp.lpSum(float(player.cost) * variables[player.id] for player in player_pool) <= float(budget)
 
     for sport in sport_config["sports"]:
         sport_type = sport["type"]
-        remaining_quota = int(sport["quota"]) - selected_counts.get(sport_type, 0)
-        if remaining_quota <= 0:
-            continue
-
-        available = [
-            player
-            for player in playerPool
-            if player.sport_type == sport_type
-            and player.is_available
-            and player.id not in selected_ids
-        ]
-        if len(available) < remaining_quota:
-            return None
-
-        reserved_ids: set[uuid.UUID] = set()
-        missing_positions = [
-            position
-            for position in sport["positions"]
-            if position not in selected_positions.get(sport_type, set())
-        ]
-
-        for position in missing_positions:
-            candidates = [
-                player
-                for player in available
-                if player.position == position and player.id not in reserved_ids
-            ]
-            if not candidates:
-                return None
-            chosen = min(candidates, key=lambda candidate: candidate.cost)
-            total += chosen.cost
-            reserved_ids.add(chosen.id)
-
-        fillers_needed = remaining_quota - len(missing_positions)
-        if fillers_needed > 0:
-            filler_candidates = [
-                player
-                for player in available
-                if player.id not in reserved_ids
-            ]
-            if len(filler_candidates) < fillers_needed:
-                return None
-            filler_candidates.sort(key=lambda candidate: candidate.cost)
-            total += sum(
-                (player.cost for player in filler_candidates[:fillers_needed]),
-                Decimal("0"),
+        sport_players = [player for player in player_pool if player.sport_type == sport_type]
+        if len(sport_players) < int(sport["quota"]):
+            raise ValueError(
+                f"{sport_type.title()} quota not met: expected {sport['quota']}, got {len(sport_players)}"
             )
 
-    return total
+        model += pulp.lpSum(variables[player.id] for player in sport_players) == int(sport["quota"])
+
+        position_minimums = sport.get("position_minimums") or {
+            position: 1 for position in sport.get("positions", [])
+        }
+        for position, minimum in position_minimums.items():
+            pos_players = [player for player in sport_players if player.position == position]
+            if len(pos_players) < int(minimum):
+                raise ValueError(
+                    f"{sport_type.title()} squad cannot satisfy required position {position}"
+                )
+            model += pulp.lpSum(variables[player.id] for player in pos_players) >= int(minimum)
+
+    clubs = sorted({_club_key(player) for player in player_pool})
+    for club in clubs:
+        club_players = [player for player in player_pool if _club_key(player) == club]
+        model += pulp.lpSum(variables[player.id] for player in club_players) <= max_per_club
+
+    status_code = model.solve(pulp.PULP_CBC_CMD(msg=0))
+    status_name = pulp.LpStatus.get(status_code, "Unknown")
+    
+    if status_name != "Optimal":
+        logger.error(f"[auto_pick] ILP solve FAILED status={status_name}")
+        logger.error(f"[auto_pick] constraints at failure — budget={budget} sports={sport_config['sports']} maxPerClub={max_per_club}")
+        logger.error(f"[auto_pick] pool at failure — total={len(player_pool)} by_sport={dict(sport_counts)} by_position={dict(position_counts)}")
+        raise ValueError(
+            "No valid squad exists within the given constraints. "
+            "Check budget, available players, and position coverage."
+        )
+
+    selected = [player for player in player_pool if pulp.value(variables[player.id]) >= 0.5]
+    if len(selected) != sum(int(sport["quota"]) for sport in sport_config["sports"]):
+        raise ValueError("ILP did not return a complete squad")
+
+    total_cost = sum(p.cost for p in selected)
+    budget_remaining = budget - total_cost
+
+    selected_by_sport = Counter(p.sport_type for p in selected)
+    selected_by_position = Counter(p.position for p in selected)
+
+    logger.info(f"[auto_pick] ILP solve SUCCESS status={status_name} selectedCount={len(selected)} totalCost={total_cost} budgetRemaining={budget_remaining}")
+    logger.info(f"[auto_pick] selected by sport — {dict(selected_by_sport)}")
+    logger.info(f"[auto_pick] selected by position — {dict(selected_by_position)}")
+
+    return selected
 
 
 def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> None:
@@ -487,8 +395,15 @@ def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> Non
                 detail=f"{sport_type.title()} quota not met: expected {sport['quota']}, got {len(players)}",
             )
 
-        selected_positions = {player.position for player in players}
-        missing_positions = [position for position in sport["positions"] if position not in selected_positions]
+        position_counts = Counter(player.position for player in players)
+        position_minimums = sport.get("position_minimums") or {
+            position: 1 for position in sport.get("positions", [])
+        }
+        missing_positions = [
+            position
+            for position, minimum in position_minimums.items()
+            if position_counts.get(position, 0) < int(minimum)
+        ]
         if missing_positions:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -498,7 +413,7 @@ def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> Non
         club_counts: dict[str, int] = defaultdict(int)
         for player in players:
             club_counts[_club_key(player)] += 1
-        over_limit = [club for club, count in club_counts.items() if count > int(sport["maxPerClub"])]
+        over_limit = [club for club, count in club_counts.items() if count > int(sport_config.get("maxPerClub", DEFAULT_MAX_PER_CLUB))]
         if over_limit:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -506,153 +421,17 @@ def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> Non
             )
 
 
-def _auto_pick_debug_snapshot(
-    pool: list[PoolPlayer],
-    selected: list[PoolPlayer],
-    sport_config: dict[str, Any],
-) -> dict[str, Any]:
-    sport_lookup = _sport_lookup(sport_config)
-    selected_by_sport = Counter(player.sport_type for player in selected)
-    pool_by_sport = Counter(player.sport_type for player in pool)
-    available_by_sport = Counter(
-        player.sport_type for player in pool if player.is_available
-    )
-
-    return {
-        "sportType": sport_config.get("sportType"),
-        "totalBudget": str(sport_config.get("totalBudget")),
-        "sports": [
-            {
-                "type": sport_type,
-                "quota": sport["quota"],
-                "selected": selected_by_sport.get(sport_type, 0),
-                "pool": pool_by_sport.get(sport_type, 0),
-                "available": available_by_sport.get(sport_type, 0),
-            }
-            for sport_type, sport in sport_lookup.items()
-        ],
-        "selectedPlayers": [
-            {
-                "id": str(player.id),
-                "name": player.name,
-                "sportType": player.sport_type,
-                "position": player.position,
-                "cost": str(player.cost),
-                "realTeam": player.real_team,
-                "isAvailable": player.is_available,
-            }
-            for player in selected
-        ],
-    }
-
-
 def autoPickSquad(
     playerPool: list[PoolPlayer],
     sportConfig: dict[str, Any],
     lockedPlayerIds: list[uuid.UUID] | None = None,
 ) -> tuple[list[PoolPlayer], Decimal, Decimal]:
-    locked_ids = {uuid.UUID(str(player_id)) for player_id in (lockedPlayerIds or [])}
-    pool_by_id = {player.id: player for player in playerPool}
-    selected: list[PoolPlayer] = []
-
-    for locked_id in locked_ids:
-        player = pool_by_id.get(locked_id)
-        if not player:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Locked player {locked_id} is not available in the current pool",
-            )
-        if not player.is_available:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Locked player {player.name} is not available",
-            )
-        selected.append(player)
-
-    if len({player.id for player in selected}) != len(selected):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Duplicate locked players are not allowed",
-        )
-
-    sport_lookup = _sport_lookup(sportConfig)
-    selected_ids = {player.id for player in selected}
-    selected_counts = _selected_counts(selected)
-
-    candidate_pool = [
-        player
-        for player in playerPool
-        if player.id not in selected_ids and player.is_available
-    ]
-
-    while True:
-        unfilled_sports = {
-            sport_type
-            for sport_type, sport in sport_lookup.items()
-            if selected_counts.get(sport_type, 0) < int(sport["quota"])
-        }
-        if not unfilled_sports:
-            break
-
-        candidate_pool.sort(
-            key=lambda player: _candidate_score(player, selected_counts, sport_lookup),
-            reverse=True,
-        )
-
-        picked = False
-        rejection_counts: Counter[str] = Counter()
-        for player in candidate_pool:
-            sport = sport_lookup.get(player.sport_type)
-            sport_players = [existing for existing in selected if existing.sport_type == player.sport_type]
-            reason = _candidate_rejection_reason(
-                player=player,
-                playerPool=playerPool,
-                sport_lookup=sport_lookup,
-                selected=selected,
-                selected_counts=selected_counts,
-                sport_players=sport_players,
-                sport=sport,
-                sport_config=sportConfig,
-                selected_ids=selected_ids,
-            )
-            if reason:
-                rejection_counts[reason] += 1
-                continue
-
-            selected.append(player)
-            selected_ids.add(player.id)
-            selected_counts[player.sport_type] += 1
-            picked = True
-            break
-
-        if not picked:
-            logger.warning(
-                "Auto-pick stalled before validation: selected_counts=%s rejection_counts=%s selected=%s",
-                dict(selected_counts),
-                dict(rejection_counts),
-                [
-                    {
-                        "id": str(player.id),
-                        "sportType": player.sport_type,
-                        "position": player.position,
-                        "cost": str(player.cost),
-                        "realTeam": player.real_team,
-                    }
-                    for player in selected
-                ],
-            )
-            break
-
-    try:
-        validate_squad(selected, sportConfig)
-    except HTTPException as exc:
-        if exc.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT:
-            logger.warning(
-                "Auto-pick validation failed: %s | debug=%s",
-                exc.detail,
-                _auto_pick_debug_snapshot(playerPool, selected, sportConfig),
-            )
-        raise
+    selected = auto_pick_ilp(
+        playerPool,
+        sportConfig,
+        locked_player_ids=lockedPlayerIds,
+        total_budget=sportConfig["totalBudget"],
+    )
     total_cost = sum((player.cost for player in selected), Decimal("0"))
     budget_remaining = Decimal(str(sportConfig["totalBudget"])) - total_cost
     return selected, total_cost, budget_remaining
@@ -690,7 +469,14 @@ def auto_pick_team(
     sport_config = _sport_config_for_league(league)
     sport_type = sport_config["sportType"]
     pool = _load_player_pool(db, league, sport_type, day_seven=False)
-    selected, total_cost, budget_remaining = autoPickSquad(pool, sport_config, locked_player_ids)
+    try:
+        selected, total_cost, budget_remaining = autoPickSquad(
+            pool,
+            sport_config,
+            locked_player_ids,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
 
     first_window = (
         db.query(TransferWindow)

@@ -13,6 +13,8 @@ Transaction convention:
   - All reads:     call service → return directly (no commit)
 """
 
+import logging
+import time
 import uuid
 from uuid import UUID
 
@@ -62,6 +64,7 @@ from app.league.schemas import (
 )
 
 router = APIRouter(prefix="/leagues", tags=["Leagues"])
+logger = logging.getLogger(__name__)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -628,24 +631,34 @@ def auto_pick_team_endpoint(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
+    start_time = time.time()
+    logger.info(f"[auto_pick] START leagueId={league.id} userId={current_user.id} lockedPlayers={data.locked_player_ids}")
+
     redis = get_redis()
     lock_key = f"autopick:lock:{current_user.id}:{league.id}"
     acquired = redis.set(lock_key, "1", ex=10, nx=True)
     if not acquired:
+        logger.warning(f"[auto_pick] LOCK conflict — job already running leagueId={league.id} userId={current_user.id}")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Auto-pick is already running")
+
+    logger.info(f"[auto_pick] LOCK acquired leagueId={league.id} userId={current_user.id}")
 
     try:
         result = auto_pick_team(db, league.id, current_user, data.locked_player_ids)
         db.commit()
         return result
-    except Exception:
+    except Exception as e:
+        logger.error(f"[auto_pick] FAILED leagueId={league.id} userId={current_user.id} error={str(e)}")
         db.rollback()
         raise
     finally:
         try:
             redis.delete(lock_key)
+            logger.info(f"[auto_pick] LOCK released leagueId={league.id} userId={current_user.id}")
         except Exception:
             pass
+        elapsed_ms = round((time.time() - start_time) * 1000)
+        logger.info(f"[auto_pick] COMPLETE leagueId={league.id} userId={current_user.id} duration={elapsed_ms}ms")
 
 
 @router.delete(
