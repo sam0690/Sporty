@@ -314,8 +314,10 @@ def _candidate_score(
     quota = Decimal(str(sport["quota"]))
     remaining_quota = max(Decimal(str(sport["quota"])) - Decimal(str(selected_counts.get(player.sport_type, 0))), Decimal("0"))
     pressure = remaining_quota / quota if quota > 0 else Decimal("0")
-    weighted_value = player.value_per_cost * (Decimal("1") + pressure)
-    return (weighted_value, player.value, -player.cost)
+    # Prefer lower-cost players while still biasing toward the sport that has
+    # the most quota pressure left. This keeps the squad affordable enough to
+    # finish before the budget runs out.
+    return (pressure, -player.cost, player.value_per_cost)
 
 
 def _reservation_by_sport(
