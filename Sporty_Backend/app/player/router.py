@@ -82,6 +82,26 @@ def get_players(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# GET /players/stats — bulk gameweek stats by sport
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/stats",
+    response_model=list[PlayerGameweekStatResponse],
+    summary="Get all player stats for a gameweek and sport",
+)
+def get_player_stats_for_gameweek(
+    gameweek_id: uuid.UUID,
+    sport: str,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Return all stats rows for a single gameweek and sport."""
+    return player_service.get_player_stats_for_gameweek(db, gameweek_id, sport)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # GET /players/{player_id} — single player detail
 # ═══════════════════════════════════════════════════════════════════════════════
 

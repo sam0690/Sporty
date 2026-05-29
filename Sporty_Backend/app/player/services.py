@@ -310,6 +310,39 @@ def get_player_stats(
     )
 
 
+def get_player_stats_for_gameweek(
+    db: Session,
+    gameweek_id: uuid.UUID,
+    sport_name: str,
+) -> list[PlayerGameweekStat]:
+    """Return all player stats for a sport in a single gameweek.
+
+    The bulk query is the lineups/optimization path's read model.
+    It avoids repeated per-player lookups and returns the same
+    eagerly loaded response shape as the single-player route.
+    """
+    normalized_sport = sport_name.strip().lower()
+    if not normalized_sport:
+        return []
+
+    return (
+        db.query(PlayerGameweekStat)
+        .join(PlayerGameweekStat.player)
+        .join(Player.sport)
+        .options(
+            joinedload(PlayerGameweekStat.player).joinedload(Player.sport),
+            joinedload(PlayerGameweekStat.transfer_window),
+            joinedload(PlayerGameweekStat.football_stat),
+            joinedload(PlayerGameweekStat.cricket_stat),
+        )
+        .filter(
+            PlayerGameweekStat.transfer_window_id == gameweek_id,
+            Sport.name == normalized_sport,
+        )
+        .all()
+    )
+
+
 def get_player_price_history(
     db: Session,
     player_id: uuid.UUID,
