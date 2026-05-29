@@ -353,6 +353,47 @@ def _reservation_by_sport(
     return reservations
 
 
+def _candidate_rejection_reason(
+    player: PoolPlayer,
+    sport_lookup: dict[str, dict[str, Any]],
+    selected: list[PoolPlayer],
+    selected_counts: dict[str, int],
+    sport_players: list[PoolPlayer],
+    sport: dict[str, Any] | None,
+    sport_config: dict[str, Any],
+    selected_ids: set[uuid.UUID],
+) -> str | None:
+    if player.id in selected_ids:
+        return "already_selected"
+    if not sport:
+        return "unsupported_sport"
+    if selected_counts.get(player.sport_type, 0) >= int(sport["quota"]):
+        return "sport_quota_filled"
+    if player.position not in sport["positions"]:
+        return "position_not_allowed"
+
+    club_count = Counter(_club_key(existing) for existing in sport_players)
+    if club_count[_club_key(player)] >= int(sport["maxPerClub"]):
+        return "club_limit"
+
+    remaining_positions = set(sport["positions"]) - {existing.position for existing in sport_players}
+    if remaining_positions and player.position not in remaining_positions:
+        return "position_balance"
+
+    post_pick_selected = selected + [player]
+    post_pick_remaining_budget = Decimal(str(sport_config["totalBudget"])) - sum(
+        (existing.cost for existing in post_pick_selected), Decimal("0")
+    )
+    post_pick_reserve = sum(
+        _reservation_by_sport([candidate for candidate in sport_players if candidate.id not in {player.id}], sport_config, post_pick_selected).values(),
+        Decimal("0"),
+    )
+    if post_pick_remaining_budget < post_pick_reserve:
+        return "budget_reserve"
+
+    return None
+
+
 def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> None:
     sport_lookup = _sport_lookup(sport_config)
     selected_by_sport: dict[str, list[PoolPlayer]] = defaultdict(list)
@@ -473,7 +514,6 @@ def autoPickSquad(
     ]
 
     while True:
-        reservations = _reservation_by_sport(playerPool, sportConfig, selected)
         unfilled_sports = {
             sport_type
             for sport_type, sport in sport_lookup.items()
@@ -488,38 +528,22 @@ def autoPickSquad(
         )
 
         picked = False
+        rejection_counts: Counter[str] = Counter()
         for player in candidate_pool:
-            if player.id in selected_ids:
-                continue
-
             sport = sport_lookup.get(player.sport_type)
-            if not sport:
-                continue
-            if selected_counts.get(player.sport_type, 0) >= int(sport["quota"]):
-                continue
-            if player.position not in sport["positions"]:
-                continue
-
             sport_players = [existing for existing in selected if existing.sport_type == player.sport_type]
-            club_count = Counter(_club_key(existing) for existing in sport_players)
-            if club_count[_club_key(player)] >= int(sport["maxPerClub"]):
-                continue
-
-            remaining_positions = set(sport["positions"]) - {existing.position for existing in sport_players}
-            if remaining_positions and player.position not in remaining_positions:
-                continue
-
-            post_pick_selected = selected + [player]
-            post_pick_counts = _selected_counts(post_pick_selected)
-            post_pick_remaining_budget = Decimal(str(sportConfig["totalBudget"])) - sum(
-                (existing.cost for existing in post_pick_selected), Decimal("0")
+            reason = _candidate_rejection_reason(
+                player=player,
+                sport_lookup=sport_lookup,
+                selected=selected,
+                selected_counts=selected_counts,
+                sport_players=sport_players,
+                sport=sport,
+                sport_config=sportConfig,
+                selected_ids=selected_ids,
             )
-            post_pick_reserve = sum(
-                _reservation_by_sport(playerPool, sportConfig, post_pick_selected).values(),
-                Decimal("0"),
-            )
-
-            if post_pick_remaining_budget < post_pick_reserve:
+            if reason:
+                rejection_counts[reason] += 1
                 continue
 
             selected.append(player)
@@ -529,6 +553,21 @@ def autoPickSquad(
             break
 
         if not picked:
+            logger.warning(
+                "Auto-pick stalled before validation: selected_counts=%s rejection_counts=%s selected=%s",
+                dict(selected_counts),
+                dict(rejection_counts),
+                [
+                    {
+                        "id": str(player.id),
+                        "sportType": player.sport_type,
+                        "position": player.position,
+                        "cost": str(player.cost),
+                        "realTeam": player.real_team,
+                    }
+                    for player in selected
+                ],
+            )
             break
 
     try:
