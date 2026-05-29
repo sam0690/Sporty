@@ -35,7 +35,7 @@ from app.player.models import Player, PlayerGameweekStat
 logger = logging.getLogger(__name__)
 
 # Controlled randomness for auto-pick selection diversity
-AUTO_PICK_JITTER_STRENGTH = 0.15
+AUTO_PICK_JITTER_STRENGTH = 0.55
 
 
 @dataclass(frozen=True)
