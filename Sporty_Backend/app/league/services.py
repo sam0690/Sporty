@@ -900,7 +900,12 @@ def make_draft_pick(
     total_picks_possible = int(turn["total_picks_possible"])
 
     # Validate player
-    player = db.query(Player).filter(Player.id == player_id).first()
+    player = (
+        db.query(Player)
+        .options(selectinload(Player.sport))
+        .filter(Player.id == player_id)
+        .first()
+    )
     if not player:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1000,6 +1005,7 @@ def make_draft_pick(
     team_player = TeamPlayer(
         fantasy_team_id=team.id,
         player_id=player_id,
+        sport_type=player.sport.name,
         acquired_window_id=first_window.id,
         cost_at_acquisition=player.cost,
     )
@@ -1147,7 +1153,12 @@ def make_transfer(
         )
 
     # ── Validate player_in ──────────────────────────────────────────
-    player_in = db.query(Player).filter(Player.id == player_in_id).first()
+    player_in = (
+        db.query(Player)
+        .options(selectinload(Player.sport))
+        .filter(Player.id == player_in_id)
+        .first()
+    )
     if not player_in:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -1198,6 +1209,7 @@ def make_transfer(
     team_player_in = TeamPlayer(
         fantasy_team_id=team.id,
         player_id=player_in_id,
+        sport_type=player_in.sport.name,
         acquired_window_id=window.id,
         cost_at_acquisition=player_in.cost,
     )
@@ -1867,7 +1879,12 @@ def build_initial_team(
         )
     
     # Fetch and validate all players
-    players = db.query(Player).filter(Player.id.in_(player_ids)).all()
+    players = (
+        db.query(Player)
+        .options(selectinload(Player.sport))
+        .filter(Player.id.in_(player_ids))
+        .all()
+    )
     
     if len(players) != len(player_ids):
         raise HTTPException(
@@ -2013,6 +2030,7 @@ def build_initial_team(
         team_player = TeamPlayer(
             fantasy_team_id=team.id,
             player_id=player.id,
+            sport_type=player.sport.name,
             acquired_window_id=first_window.id,
             cost_at_acquisition=player.cost,
         )

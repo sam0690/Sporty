@@ -6,7 +6,7 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from redis import Redis
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.auth.models import User
 from app.league.models import (
@@ -430,6 +430,15 @@ def confirm_transfers(
     )
     price_map = {pid: cost for pid, cost in price_rows}
 
+    # Fetch sports for incoming players to satisfy TeamPlayer snapshot
+    incoming_players = (
+        db.query(Player)
+        .options(selectinload(Player.sport))
+        .filter(Player.id.in_(pending_in_ids))
+        .all()
+    )
+    sport_map = {p.id: p.sport.name for p in incoming_players}
+
     active_rows = (
         db.query(TeamPlayer)
         .filter(
@@ -519,6 +528,7 @@ def confirm_transfers(
             TeamPlayer(
                 fantasy_team_id=team.id,
                 player_id=pid_in,
+                sport_type=sport_map.get(pid_in),
                 acquired_window_id=window_id,
                 cost_at_acquisition=price_map.get(pid_in, Decimal("0")),
             )
