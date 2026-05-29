@@ -13,18 +13,13 @@ import {
   useDraftTurn,
   useMakeDraftPick,
   useMyTeam,
-  useActiveWindow,
 } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { CreateTeamSchema, type CreateTeamValues } from "@/lib/validations";
 import { toastifier } from "@/lib/toastifier";
-import { PlayerService } from "@/services/PlayerService";
-import {
-  autoPickSquad,
-  type AutoPickConstraints,
-} from "../utils/autoPickSquad";
+import { LeagueService } from "@/services/LeagueService";
 
 const sportIconByName: Record<string, string> = {
   football: "⚽",
@@ -64,9 +59,6 @@ export function useCreateTeamDashboard() {
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId || "");
   const { data: myTeam } = useMyTeam(leagueId || "");
-  const { data: activeWindow } = useActiveWindow(leagueId || "", {
-    enabled: !!leagueId,
-  });
 
   const leagueSport = normalizeLeagueSport(league?.sports);
   const isMultiSportLeague = leagueSport === "multisport";
@@ -216,145 +208,6 @@ export function useCreateTeamDashboard() {
   const budgetProgress =
     budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
 
-  const loadAutoPickCandidates = useCallback(async () => {
-    const pageSize = 100;
-    const baseFilters = {
-      league_id: leagueId || undefined,
-      page_size: pageSize,
-      ...(isDraftLeague || isMultiSportLeague
-        ? {}
-        : { sport_name: initialSportName }),
-    };
-
-    const players: MarketPlayer[] = [];
-    let page = 1;
-    let hasNext = true;
-
-    while (hasNext) {
-      const response = await PlayerService.getPlayers({
-        ...baseFilters,
-        page,
-      });
-
-      const projectedByPlayerId = activeWindow?.id
-        ? new Map(
-            await Promise.all(
-              response.items.map(async (player) => {
-                try {
-                  const stats = await PlayerService.getPlayerStats(
-                    player.id,
-                    activeWindow.id,
-                  );
-                  return [
-                    player.id,
-                    Number(stats?.fantasy_points ?? 0),
-                  ] as const;
-                } catch {
-                  return [player.id, 0] as const;
-                }
-              }),
-            ),
-          )
-        : new Map<string, number>();
-
-      players.push(
-        ...response.items.map((player) => ({
-          id: player.id,
-          name: player.display_name,
-          sport: player.sport.name as "football" | "basketball",
-          icon: sportIconByName[player.sport.name] ?? "🏅",
-          position: player.position,
-          price: Number(player.current_cost),
-          projected: projectedByPlayerId.get(player.id) ?? 0,
-        })),
-      );
-
-      hasNext = response.has_next;
-      page += 1;
-    }
-
-    return players;
-  }, [
-    activeWindow,
-    initialSportName,
-    isDraftLeague,
-    isMultiSportLeague,
-    leagueId,
-  ]);
-
-  const autoPickConstraints = useMemo<AutoPickConstraints>(() => {
-    const positions = (league?.lineup_slots ?? []).reduce<
-      Record<string, { min?: number; max?: number; exact?: number }>
-    >((acc, slot) => {
-      const sportName = slot.sport?.name?.trim().toLowerCase();
-      const positionName = slot.position.trim().toLowerCase();
-      const key =
-        isMultiSportLeague && sportName
-          ? `${sportName}:${positionName}`
-          : positionName;
-
-      const nextMin = (acc[key]?.min ?? 0) + (slot.min_count ?? 0);
-      const nextMax = (acc[key]?.max ?? 0) + (slot.max_count ?? 0);
-      const exact = nextMin > 0 && nextMin === nextMax ? nextMin : undefined;
-
-      acc[key] = {
-        min: nextMin > 0 ? nextMin : undefined,
-        max: nextMax > 0 ? nextMax : undefined,
-        exact,
-      };
-      return acc;
-    }, {});
-
-    const sports = isMultiSportLeague
-      ? (league?.lineup_slots ?? []).reduce<
-          Record<string, { min?: number; max?: number; exact?: number }>
-        >((acc, slot) => {
-          const sportName = slot.sport?.name?.trim().toLowerCase();
-          if (!sportName) {
-            return acc;
-          }
-
-          const nextMin = (acc[sportName]?.min ?? 0) + (slot.min_count ?? 0);
-          const nextMax = (acc[sportName]?.max ?? 0) + (slot.max_count ?? 0);
-          const exact =
-            nextMin > 0 && nextMin === nextMax ? nextMin : undefined;
-
-          acc[sportName] = {
-            min: nextMin > 0 ? nextMin : undefined,
-            max: nextMax > 0 ? nextMax : undefined,
-            exact,
-          };
-          return acc;
-        }, {})
-      : initialSportName
-        ? {
-            [initialSportName]: {
-              exact: requiredPlayers,
-            },
-          }
-        : {};
-
-    return {
-      squadSize: requiredPlayers,
-      positions,
-      sports:
-        Object.keys(sports).length > 0
-          ? sports
-          : isMultiSportLeague
-            ? {
-                football: { exact: MULTISPORT_MIN_BY_SPORT.football },
-                basketball: { exact: MULTISPORT_MIN_BY_SPORT.basketball },
-              }
-            : {},
-      maxPerClub: Math.max(2, Math.ceil(requiredPlayers / 2)),
-    };
-  }, [
-    initialSportName,
-    isMultiSportLeague,
-    league?.lineup_slots,
-    requiredPlayers,
-  ]);
-
   const handleSearchQueryChange = useCallback(
     (value: string) => {
       setSearchQuery(value);
@@ -470,36 +323,29 @@ export function useCreateTeamDashboard() {
     setIsAutoPicking(true);
 
     try {
-      const candidates = await loadAutoPickCandidates();
-
-      if (candidates.length === 0) {
-        setError("No players are available for auto-pick.");
-        toastifier.error("No players are available for auto-pick.");
+      if (!leagueId) {
         return;
       }
 
-      const nextSelection = autoPickSquad(
-        candidates,
-        autoPickConstraints,
-        budget,
-        selectedPlayers,
-      );
+      const result = await LeagueService.autoPickTeam(leagueId, {
+        lockedPlayerIds: selectedPlayers.map((player) => player.id),
+      });
 
-      if (nextSelection.length === 0) {
-        const message = "Unable to build a valid squad with the current pool.";
-        setError(message);
-        toastifier.error(message);
-        return;
-      }
+      const nextSelection: MarketPlayer[] = result.players.map((player) => ({
+        id: player.id,
+        name: player.name,
+        sport: player.sport_type as "football" | "basketball",
+        icon: sportIconByName[player.sport_type] ?? "🏅",
+        position: player.position,
+        price: Number(player.cost),
+        projected: 0,
+      }));
 
       setSelectedPlayers(nextSelection);
       setPickHistory(nextSelection.map((player) => player.id));
-      setStep(1);
 
-      const message = isMultiSportLeague
-        ? "Auto-picked a multisport squad. You can still edit it manually."
-        : "Auto-picked your squad. You can still edit it manually.";
-      toastifier.success(message);
+      toastifier.success("Auto-picked and saved your squad.");
+      router.push(`/leagues/${leagueId}`);
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Unable to auto-pick squad";
@@ -508,13 +354,7 @@ export function useCreateTeamDashboard() {
     } finally {
       setIsAutoPicking(false);
     }
-  }, [
-    autoPickConstraints,
-    budget,
-    isMultiSportLeague,
-    loadAutoPickCandidates,
-    selectedPlayers,
-  ]);
+  }, [leagueId, router, selectedPlayers]);
 
   const handlePreviousPlayersPage = () => {
     setPlayersPage((current) => Math.max(1, current - 1));

@@ -20,7 +20,6 @@ import {
   type LineupPlayerCardModel,
 } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
 import { toastifier } from "@/lib/toastifier";
-import { isApiError } from "@/utils/api-Error";
 import { OptimizationService } from "@/services/OptimizationService";
 import { PlayerService } from "@/services/PlayerService";
 import { isFootballGoalkeeper } from "@/components/dashboard/shared/formation/formationEngine";
@@ -504,62 +503,79 @@ export function LeagueLineup() {
         positionBaselineProjection(player.position) +
         parseNumericCost(player.cost) * 0.08;
 
-      const projectedByPlayerId = await Promise.all(
-        editablePlayers.map(async (player) => {
-          const cacheKey = getProjectionCacheKey(
-            player.playerId,
-            activeWindow.id,
-          );
-          const nowMs = Date.now();
-          const cached = playerProjectionCacheRef.current.get(cacheKey);
+      const nowMs = Date.now();
+      const sportsToFetch = Array.from(
+        new Set(editablePlayers.map((player) => player.sportName)),
+      );
 
-          if (cached && cached.expiresAtMs > nowMs) {
-            if (cached.isKnownMissing) {
-              // No-stats fast path: skip API calls for known 404 players in this window.
-              return [player.playerId, cached.projectedPoints] as const;
-            }
-            return [player.playerId, cached.projectedPoints] as const;
-          }
-
-          if (cached) {
-            playerProjectionCacheRef.current.delete(cacheKey);
-          }
-
+      const statsBySport = new Map<string, Map<string, number>>();
+      await Promise.all(
+        sportsToFetch.map(async (sportName) => {
           try {
-            const stats = await PlayerService.getPlayerStats(
-              player.playerId,
+            const stats = await PlayerService.getPlayerStatsBulk(
               activeWindow.id,
+              sportName,
             );
-            const projected = Number(stats?.fantasy_points ?? 0);
-            if (Number.isFinite(projected) && projected > 0) {
-              playerProjectionCacheRef.current.set(cacheKey, {
-                projectedPoints: projected,
-                isKnownMissing: false,
-                expiresAtMs: nowMs + PLAYER_STATS_CACHE_TTL_MS,
-              });
-              return [player.playerId, projected] as const;
-            }
-            const heuristicProjection = getHeuristicProjection(player);
-            playerProjectionCacheRef.current.set(cacheKey, {
-              projectedPoints: heuristicProjection,
-              isKnownMissing: false,
-              expiresAtMs: nowMs + PLAYER_STATS_CACHE_TTL_MS,
-            });
-            return [player.playerId, heuristicProjection] as const;
-          } catch (error) {
-            // Cache not-found players for this window to skip repeated 404 fetches.
-            const heuristicProjection = getHeuristicProjection(player);
-            if (isApiError(error) && error.statusCode === 404) {
-              playerProjectionCacheRef.current.set(cacheKey, {
-                projectedPoints: heuristicProjection,
-                isKnownMissing: true,
-                expiresAtMs: nowMs + PLAYER_STATS_CACHE_TTL_MS,
-              });
-            }
-            return [player.playerId, heuristicProjection] as const;
+            statsBySport.set(
+              sportName,
+              new Map(
+                stats.map((stat) => [
+                  stat.player.id,
+                  Number(stat.fantasy_points ?? 0),
+                ]),
+              ),
+            );
+          } catch {
+            statsBySport.set(sportName, new Map());
           }
         }),
       );
+
+      const projectedByPlayerId = editablePlayers.map((player) => {
+        const cacheKey = getProjectionCacheKey(
+          player.playerId,
+          activeWindow.id,
+        );
+        const cached = playerProjectionCacheRef.current.get(cacheKey);
+
+        if (cached && cached.expiresAtMs > nowMs) {
+          return [player.playerId, cached.projectedPoints] as const;
+        }
+
+        if (cached) {
+          playerProjectionCacheRef.current.delete(cacheKey);
+        }
+
+        const sportStats = statsBySport.get(player.sportName);
+        const rawProjection = sportStats?.get(player.playerId);
+
+        if (rawProjection !== undefined) {
+          if (Number.isFinite(rawProjection) && rawProjection > 0) {
+            playerProjectionCacheRef.current.set(cacheKey, {
+              projectedPoints: rawProjection,
+              isKnownMissing: false,
+              expiresAtMs: nowMs + PLAYER_STATS_CACHE_TTL_MS,
+            });
+            return [player.playerId, rawProjection] as const;
+          }
+
+          const heuristicProjection = getHeuristicProjection(player);
+          playerProjectionCacheRef.current.set(cacheKey, {
+            projectedPoints: heuristicProjection,
+            isKnownMissing: false,
+            expiresAtMs: nowMs + PLAYER_STATS_CACHE_TTL_MS,
+          });
+          return [player.playerId, heuristicProjection] as const;
+        }
+
+        const heuristicProjection = getHeuristicProjection(player);
+        playerProjectionCacheRef.current.set(cacheKey, {
+          projectedPoints: heuristicProjection,
+          isKnownMissing: true,
+          expiresAtMs: nowMs + PLAYER_STATS_CACHE_TTL_MS,
+        });
+        return [player.playerId, heuristicProjection] as const;
+      });
 
       const projectionMap = new Map(projectedByPlayerId);
       const estimatedBudget = editablePlayers.reduce(

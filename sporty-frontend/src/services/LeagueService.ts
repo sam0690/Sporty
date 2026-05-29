@@ -169,6 +169,28 @@ export const LeagueService = {
     return res.data;
   },
 
+  /** Auto-pick and persist a squad for a league. */
+  async autoPickTeam(
+    id: string,
+    payload: { lockedPlayerIds?: string[] } = {},
+  ): Promise<{
+    players: Array<{
+      id: string;
+      name: string;
+      sport_type: string;
+      position: string;
+      cost: string | number;
+    }>;
+    totalCost: string | number;
+    budgetRemaining: string | number;
+  }> {
+    const res = await authApi.post(
+      API_PATHS.LEAGUES.AUTO_PICK_TEAM(id),
+      payload,
+    );
+    return res.data;
+  },
+
   /** Discard a player in budget-mode setup squad */
   async discardTeamPlayer(
     id: string,

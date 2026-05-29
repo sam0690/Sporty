@@ -53,6 +53,7 @@ export const API_PATHS = {
     DRAFT_PICK: (id: string) => `/leagues/${id}/draft/pick`,
     DRAFT_TURN: (id: string) => `/leagues/${id}/draft/turn`,
     BUILD_TEAM: (id: string) => `/leagues/${id}/teams/build`,
+    AUTO_PICK_TEAM: (id: string) => `/leagues/${id}/auto-pick`,
     DISCARD_TEAM_PLAYER: (id: string, playerId: string) =>
       `/leagues/${id}/teams/players/${playerId}`,
     GENERATE_WINDOWS: (id: string) =>
@@ -72,7 +73,8 @@ export const API_PATHS = {
   PLAYERS: {
     LIST: "/players",
     DETAIL: (id: string) => `/players/${id}`,
-    STATS: (id: string, mwId: string) => `/players/${id}/stats/${mwId}`,
+    STATS: "/players/stats",
+    STAT_DETAIL: (id: string, mwId: string) => `/players/${id}/stats/${mwId}`,
   },
 
   SCORING: {

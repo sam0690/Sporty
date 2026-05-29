@@ -93,7 +93,21 @@ export const PlayerService = {
     id: string,
     windowId: string,
   ): Promise<TPlayerStatsResponse> {
-    const res = await authApi.get(API_PATHS.PLAYERS.STATS(id, windowId));
+    const res = await authApi.get(API_PATHS.PLAYERS.STAT_DETAIL(id, windowId));
     return res.data;
+  },
+
+  /** Get all player stats for a gameweek and sport in one request */
+  async getPlayerStatsBulk(
+    gameweekId: string,
+    sport: string,
+  ): Promise<TPlayerStatsResponse[]> {
+    const res = await authApi.get(API_PATHS.PLAYERS.STATS, {
+      params: {
+        gameweek_id: gameweekId,
+        sport,
+      },
+    });
+    return res.data as TPlayerStatsResponse[];
   },
 };
