@@ -376,10 +376,6 @@ def _candidate_rejection_reason(
     if club_count[_club_key(player)] >= int(sport["maxPerClub"]):
         return "club_limit"
 
-    remaining_positions = set(sport["positions"]) - {existing.position for existing in sport_players}
-    if remaining_positions and player.position not in remaining_positions:
-        return "position_balance"
-
     post_pick_selected = selected + [player]
     post_pick_remaining_budget = Decimal(str(sport_config["totalBudget"])) - sum(
         (existing.cost for existing in post_pick_selected), Decimal("0")
