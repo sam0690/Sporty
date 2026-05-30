@@ -453,6 +453,7 @@ def autoPickSquad(
         locked_player_ids=lockedPlayerIds,
         total_budget=sportConfig["totalBudget"],
     )
+    validate_squad(selected, sportConfig)
     total_cost = sum((player.cost for player in selected), Decimal("0"))
     budget_remaining = Decimal(str(sportConfig["totalBudget"])) - total_cost
     return selected, total_cost, budget_remaining
@@ -478,8 +479,6 @@ def auto_pick_team(
             detail="Auto-pick is only available for setup or active leagues",
         )
 
-    _require_team_free(db, league_id, current_user.id)
-
     window = _active_transfer_window(db, league)
     if _day_seven_locked(window):
         raise HTTPException(
@@ -498,51 +497,6 @@ def auto_pick_team(
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=str(exc)) from exc
-
-    first_window = (
-        db.query(TransferWindow)
-        .filter(TransferWindow.season_id == league.season_id)
-        .order_by(TransferWindow.number.asc())
-        .first()
-    )
-    if not first_window:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="No transfer windows exist for this season",
-        )
-
-    team = FantasyTeam(
-        league_id=league.id,
-        user_id=current_user.id,
-        name=current_user.username or "Auto Pick Team",
-        current_budget=budget_remaining,
-        starting_budget=Decimal(str(league.budget_per_team)),
-        starting_squad_size=len(selected),
-    )
-    db.add(team)
-    db.flush()
-
-    for player in selected:
-        db.add(
-            BudgetTransaction(
-                fantasy_team_id=team.id,
-                player_id=player.id,
-                transaction_type="purchase",
-                amount=player.cost,
-                penalty_applied=Decimal("0.00"),
-            )
-        )
-        db.add(
-            TeamPlayer(
-                fantasy_team_id=team.id,
-                player_id=player.id,
-                sport_type=player.sport_type,
-                acquired_window_id=first_window.id,
-                cost_at_acquisition=player.cost,
-            )
-        )
-
-    db.flush()
 
     return {
         "players": [

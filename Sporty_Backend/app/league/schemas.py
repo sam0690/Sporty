@@ -488,7 +488,7 @@ class TeamBuildRequest(BaseModel):
 
 
 class AutoPickRequest(BaseModel):
-    """POST /leagues/{id}/auto-pick — generate and persist an auto-picked squad."""
+    """POST /leagues/{id}/auto-pick — generate auto-picked squad suggestions."""
 
     locked_player_ids: list[uuid.UUID] = Field(default_factory=list, alias="lockedPlayerIds")
 

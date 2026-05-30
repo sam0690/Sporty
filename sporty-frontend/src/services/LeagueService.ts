@@ -169,7 +169,7 @@ export const LeagueService = {
     return res.data;
   },
 
-  /** Auto-pick and persist a squad for a league. */
+  /** Generate auto-pick squad suggestions for a league. */
   async autoPickTeam(
     id: string,
     payload: { lockedPlayerIds?: string[] } = {},

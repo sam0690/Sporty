@@ -35,7 +35,7 @@ import app.player.models_nba  # noqa: F401
 from app.league import dependencies as league_dependencies
 from app.league import router as league_router
 from app.league import services as league_service
-from app.league.models import League, LeagueSport, Season, Sport, TransferWindow, TeamPlayer
+from app.league.models import FantasyTeam, League, LeagueSport, Season, Sport, TransferWindow, TeamPlayer
 from app.league.schemas import AutoPickRequest, LeagueCreate
 
 ENGINE = create_engine(os.environ["DATABASE_URL"])
@@ -177,7 +177,7 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
     return league, player_ids, window
 
 
-def test_auto_pick_endpoint_persists_roster_and_snapshots_sport_type() -> None:
+def test_auto_pick_endpoint_returns_suggestions_but_does_not_persist() -> None:
     with session_scope() as db:
         owner = _create_user(db, "owner")
         league, player_ids, _window = _create_mixed_league_with_players(db, owner)
@@ -197,9 +197,11 @@ def test_auto_pick_endpoint_persists_roster_and_snapshots_sport_type() -> None:
         assert Decimal(str(payload["budgetRemaining"])) >= Decimal("0")
         assert fake_redis.deleted == [f"autopick:lock:{owner.id}:{league.id}"]
 
-        roster = db.query(TeamPlayer).filter(TeamPlayer.fantasy_team_id.isnot(None)).all()
-        assert len(roster) == 15
-        assert {row.sport_type for row in roster} == {"football", "basketball"}
+        # Ensure NO persist happened
+        roster_count = db.query(TeamPlayer).count()
+        assert roster_count == 0
+        team_count = db.query(FantasyTeam).count()
+        assert team_count == 0
 
 
 def test_auto_pick_endpoint_rejects_when_lock_is_held() -> None:

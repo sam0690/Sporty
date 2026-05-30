@@ -623,7 +623,7 @@ def build_team(
 @router.post(
     "/{league_id}/auto-pick",
     response_model=AutoPickSquadResponse,
-    summary="Auto-pick and persist a squad",
+    summary="Generate auto-pick squad suggestions",
 )
 def auto_pick_team_endpoint(
     data: AutoPickRequest,
@@ -645,7 +645,7 @@ def auto_pick_team_endpoint(
 
     try:
         result = auto_pick_team(db, league.id, current_user, data.locked_player_ids)
-        db.commit()
+        # No db.commit() here anymore as we only suggest, not persist
         return result
     except Exception as e:
         logger.error(f"[auto_pick] FAILED leagueId={league.id} userId={current_user.id} error={str(e)}")

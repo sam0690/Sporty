@@ -344,8 +344,9 @@ export function useCreateTeamDashboard() {
       setSelectedPlayers(nextSelection);
       setPickHistory(nextSelection.map((player) => player.id));
 
-      toastifier.success("Auto-picked and saved your squad.");
-      router.push(`/leagues/${leagueId}`);
+      toastifier.success(
+        "Auto-picked a squad suggestion. Review and click Save to confirm.",
+      );
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "Unable to auto-pick squad";
