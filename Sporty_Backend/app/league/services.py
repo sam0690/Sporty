@@ -266,6 +266,17 @@ def create_league(
 
     Does NOT commit — caller owns the transaction.
     """
+    # Check for duplicate name in same season
+    existing = db.query(League).filter(
+        League.season_id == data.season_id,
+        League.name == data.name
+    ).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"A league with the name '{data.name}' already exists for this season",
+        )
+
     invite_code = _generate_invite_code(db)
 
     season = db.query(Season).filter(Season.id == data.season_id).first()
