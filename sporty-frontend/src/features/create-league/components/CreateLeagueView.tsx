@@ -303,7 +303,7 @@ export function CreateLeagueView() {
       const result = await createMutation.mutateAsync({
         name: values.name,
         season_id: effectiveSeasonId,
-        sports: values.sport_ids,
+        sports: selectedSports,
         competitionType,
         is_public: values.is_public,
         max_teams: values.squad_size,
@@ -315,18 +315,8 @@ export function CreateLeagueView() {
         transfer_day: 1,
       });
 
-      try {
-        const attachedSportNames = new Set(
-          (result.sports ?? []).map((leagueSport) => leagueSport.sport.name),
-        );
-
-        for (const sportName of selectedSports) {
-          if (!attachedSportNames.has(sportName)) {
-            await LeagueService.addSport(result.id, sportName);
-          }
-        }
-
-        if (customOverrides.length > 0) {
+      if (customOverrides.length > 0) {
+        try {
           const sportIdByName = new Map(
             (sports ?? []).map((sport) => [sport.name, sport.id]),
           );
@@ -352,11 +342,11 @@ export function CreateLeagueView() {
               points: override.points,
             });
           }
+        } catch {
+          toastifier.error(
+            "League created, but some sport/scoring customizations could not be applied.",
+          );
         }
-      } catch {
-        toastifier.error(
-          "League created, but some sport/scoring customizations could not be applied.",
-        );
       }
 
       setCreatedLeagueInfo({

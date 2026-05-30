@@ -314,23 +314,35 @@ def create_league(
         end_date=league_end,
     )
     db.add(league)
-    db.flush()  # populate league.id for the membership FK
 
-    # Auto-attach the season's sport so league.sports is populated immediately.
-    db.add(
-        LeagueSport(
-            league_id=league.id,
-            sport_id=season.sport_id,
+    # 2. Attach sports from payload
+    # (Bug fix: removed default sport fallback and added strict validation)
+    requested_sports = getattr(data, "sports", [])
+    if not requested_sports:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one sport must be specified in the creation payload",
         )
-    )
-    db.flush()
 
-    # Auto-enrol owner
+    # Resolve sport names to IDs
+    sport_records = db.query(Sport).filter(Sport.name.in_(requested_sports)).all()
+    found_names = {s.name for s in sport_records}
+    for sport_name in requested_sports:
+        if sport_name not in found_names:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Sport '{sport_name}' not found",
+            )
+    
+    for s in sport_records:
+        league.sports.append(LeagueSport(sport_id=s.id))
+
+    # 3. Auto-enrol owner
     membership = LeagueMembership(
-        league_id=league.id,
         user_id=owner.id,
     )
-    db.add(membership)
+    league.memberships.append(membership)
+
     db.flush()
 
     # Re-load with eager options so the caller can serialise to LeagueResponse

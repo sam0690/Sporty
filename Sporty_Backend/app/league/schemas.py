@@ -47,6 +47,7 @@ class LeagueCreate(BaseModel):
     transfer_day: int = Field(default=1, ge=1, le=7)
     start_date: date | None = None
     end_date: date | None = None
+    sports: list[str] = Field(default_factory=list)
 
     @field_validator("name")
     @classmethod

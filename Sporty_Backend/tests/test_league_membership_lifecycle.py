@@ -95,6 +95,7 @@ def _create_league(db, owner: User, *, draft_mode: bool = True) -> League:
             name=f"League-{uuid.uuid4().hex[:8]}",
             season_id=season.id,
             draft_mode=draft_mode,
+            sports=["football"],
         ),
         owner,
     )

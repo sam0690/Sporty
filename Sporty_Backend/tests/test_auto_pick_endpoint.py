@@ -122,10 +122,10 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
             budget_per_team=Decimal("150"),
             squad_size=15,
             draft_mode=False,
+            sports=["football", "basketball"],
         ),
         owner,
     )
-    league_service.add_sport(db, league.id, "basketball")
 
     now = datetime.now(timezone.utc)
     window = TransferWindow(
