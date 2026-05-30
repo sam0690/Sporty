@@ -27,8 +27,10 @@ from app.league.models import (
 )
 from app.league.sportConfigs import (
     DEFAULT_MAX_PER_CLUB,
+    SPORT_CONFIGS,
     SUPPORTED_SPORT_TYPES,
     build_auto_pick_sport_config,
+    derive_sport_type,
 )
 from app.player.models import Player, PlayerGameweekStat
 
@@ -61,37 +63,20 @@ def _normalize_sport_name(value: str) -> str:
     return value.strip().lower()
 
 
-def _league_sport_names(league: League) -> list[str]:
-    sport_names: list[str] = []
-    for league_sport in league.sports:
-        sport = league_sport.sport
-        if not sport or not sport.name:
-            continue
-        sport_name = _normalize_sport_name(sport.name)
-        if sport_name in SUPPORTED_SPORT_TYPES:
-            sport_names.append(sport_name)
-    return sport_names
-
-
 def _league_sport_type(league: League) -> str:
-    sport_names = _league_sport_names(league)
-    if not sport_names:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="League has no supported sports configured",
-        )
-    if len(set(sport_names)) > 1:
-        return "mixed"
-    return sport_names[0]
+    return derive_sport_type(league.sports)
 
 
 def _sport_config_for_league(league: League) -> dict[str, Any]:
-    sport_type = _league_sport_type(league)
-    return build_auto_pick_sport_config(
+    sport_type = derive_sport_type(league.sports)
+    squad_size = SPORT_CONFIGS[sport_type]["squad_size"]
+    config = build_auto_pick_sport_config(
         sport_type,
         total_budget=Decimal(str(league.budget_per_team)),
-        squad_size=int(league.squad_size),
+        squad_size=squad_size,
     )
+    config["squad_size"] = squad_size
+    return config
 
 
 def _require_team_free(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) -> None:
@@ -312,6 +297,8 @@ def auto_pick_ilp(
     logger.info(f"[auto_pick] pool by sport — {dict(sport_counts)}")
     logger.info(f"[auto_pick] pool by position — {dict(position_counts)}")
 
+    sport_type = sport_config.get("sportType", "unknown")
+    logger.info(f"[auto_pick] squad_size={sport_config['squad_size']} sportType={sport_type}")
     logger.info(f"[auto_pick] ILP solve START poolSize={len(player_pool)}")
 
     # Apply controlled randomness jitter to selection objective
@@ -332,6 +319,9 @@ def auto_pick_ilp(
 
     # Objective: maximize jittered value
     model += pulp.lpSum(jittered_values[player.id] * variables[player.id] for player in player_pool)
+
+    # Total squad size constraint
+    model += pulp.lpSum(variables[player.id] for player in player_pool) == int(sport_config["squad_size"])
 
     for locked_id in locked_ids:
         if locked_id in variables:
@@ -396,6 +386,12 @@ def auto_pick_ilp(
 
 
 def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> None:
+    if len(squad) != int(sport_config["squad_size"]):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Squad must have exactly {sport_config['squad_size']} players, got {len(squad)}",
+        )
+
     sport_lookup = _sport_lookup(sport_config)
     selected_by_sport: dict[str, list[PoolPlayer]] = defaultdict(list)
     for player in squad:

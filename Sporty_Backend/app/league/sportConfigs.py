@@ -5,6 +5,26 @@ from typing import Any
 
 DEFAULT_MAX_PER_CLUB = 3
 
+SPORT_CONFIGS = {
+    'football': {
+        'squad_size': 15,
+        'quota': 15,
+        'maxPerClub': 3,
+        'position_minimums': { 'GK': 1, 'DEF': 3, 'MID': 2, 'FWD': 1 }
+    },
+    'basketball': {
+        'squad_size': 13,
+        'quota': 13,
+        'maxPerClub': None,
+        'position_minimums': { 'UNK': 15 }
+    },
+    'mixed': {
+        'squad_size': 15,
+        'football_quota': 8,
+        'basketball_quota': 7
+    }
+}
+
 SPORT_CONFIG_REGISTRY: dict[str, dict[str, dict[str, Any]]] = {
     "football": {
         "single": {
@@ -46,56 +66,71 @@ MIXED_SPORT_QUOTAS = {
 SUPPORTED_SPORT_TYPES = set(SPORT_CONFIG_REGISTRY)
 
 
+def derive_sport_type(sports: Any) -> str:
+    """Derive sport type string from a list of sport names or objects."""
+    if not sports:
+        return "football"
+
+    names = []
+    for s in sports:
+        if isinstance(s, str):
+            names.append(s.lower())
+        elif hasattr(s, "sport") and s.sport:
+            names.append(s.sport.name.lower())
+        elif hasattr(s, "name"):
+            names.append(s.name.lower())
+        elif isinstance(s, dict) and "name" in s:
+            names.append(s["name"].lower())
+
+    unique = set(names)
+    if len(unique) > 1:
+        return "mixed"
+    return list(unique)[0] if unique else "football"
+
+
 def build_auto_pick_sport_config(
     sport_type: str,
     *,
     total_budget: Decimal,
     squad_size: int,
 ) -> dict[str, Any]:
+    config = SPORT_CONFIGS.get(sport_type)
+    if not config:
+        # Fallback if unknown sport
+        return {
+            "sportType": sport_type,
+            "totalBudget": total_budget,
+            "maxPerClub": DEFAULT_MAX_PER_CLUB,
+            "sports": [{"type": sport_type, "quota": squad_size}],
+            "squad_size": squad_size,
+        }
+
     if sport_type == "mixed":
         sports = [
             {
                 "type": "football",
-                "quota": MIXED_SPORT_QUOTAS["football"],
-                "position_minimums": SPORT_CONFIG_REGISTRY["football"]["mixed"]["position_minimums"],
+                "quota": config.get("football_quota", 8),
+                "position_minimums": SPORT_CONFIGS["football"]["position_minimums"],
             },
             {
                 "type": "basketball",
-                "quota": MIXED_SPORT_QUOTAS["basketball"],
-                "position_minimums": SPORT_CONFIG_REGISTRY["basketball"]["mixed"]["position_minimums"],
+                "quota": config.get("basketball_quota", 7),
+                "position_minimums": SPORT_CONFIGS["basketball"]["position_minimums"],
             },
         ]
     else:
-        # For single sport, we use "single" config but scaling position minimums 
-        # if the squad_size is different from 15 (FPL standard).
-        config = SPORT_CONFIG_REGISTRY[sport_type]["single"]
-        pos_mins = config["position_minimums"].copy()
-        
-        # Simple safety: if squad_size < sum(min_positions), we must reduce them.
-        # This prevents "infeasible" ILP results for custom leagues with small squads.
-        sum_mins = sum(pos_mins.values())
-        if squad_size < sum_mins:
-            # Fallback to 1 per position if possible, otherwise scale down.
-            for pos in pos_mins:
-                pos_mins[pos] = 1
-            
-            # Re-check if still too high
-            sum_mins = sum(pos_mins.values())
-            if squad_size < sum_mins:
-                for pos in pos_mins:
-                    pos_mins[pos] = 0 # Extreme fallback
-
         sports = [
             {
                 "type": sport_type,
-                "quota": int(squad_size),
-                "position_minimums": pos_mins,
+                "quota": config["quota"],
+                "position_minimums": config["position_minimums"],
             }
         ]
 
     return {
         "sportType": sport_type,
         "totalBudget": total_budget,
-        "maxPerClub": DEFAULT_MAX_PER_CLUB,
+        "maxPerClub": config.get("maxPerClub", DEFAULT_MAX_PER_CLUB),
         "sports": sports,
+        "squad_size": config["squad_size"],
     }

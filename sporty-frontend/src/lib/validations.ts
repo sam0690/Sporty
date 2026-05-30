@@ -43,6 +43,11 @@ export const CreateLeagueSchema = z.object({
     .number()
     .int("Budget must be a whole number.")
     .positive("Budget must be greater than zero."),
+  max_teams: z.coerce
+    .number()
+    .int("League size must be a whole number.")
+    .min(2, "League size must be at least 2.")
+    .max(64, "League size must be 64 or fewer."),
   squad_size: z.coerce
     .number()
     .int("Squad size must be a whole number.")

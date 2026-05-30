@@ -27,8 +27,8 @@ const sportIconByName: Record<string, string> = {
 };
 
 export const MULTISPORT_MIN_BY_SPORT = {
-  football: 5,
-  basketball: 4,
+  football: 8,
+  basketball: 7,
 } as const;
 
 const PLAYER_PAGE_SIZE = 20;
@@ -191,18 +191,15 @@ export function useCreateTeamDashboard() {
 
   const rawBudget = Number(league?.budget_per_team ?? 103);
   const budget = Number.isFinite(rawBudget) ? rawBudget : 103;
-  const rawSquadSize = Number(league?.squad_size ?? 15);
-  const requiredPlayers = Number.isFinite(rawSquadSize) ? rawSquadSize : 15;
-  const minPlayersRequired = isMultiSportLeague
-    ? 13
-    : leagueSport === "football" || leagueSport === "basketball"
-      ? 12
-      : requiredPlayers;
-  const maxPlayersAllowed = isMultiSportLeague
-    ? 15
-    : leagueSport === "football" || leagueSport === "basketball"
-      ? 15
-      : requiredPlayers;
+
+  const SQUAD_SIZES: Record<string, number> = {
+    football: 15,
+    basketball: 13,
+    multisport: 15,
+  };
+  const requiredPlayers = SQUAD_SIZES[leagueSport];
+  const minPlayersRequired = requiredPlayers;
+  const maxPlayersAllowed = requiredPlayers;
   const remainingBudget = budget - totalCost;
   const budgetUsed = Math.max(0, budget - remainingBudget);
   const budgetProgress =
@@ -331,6 +328,20 @@ export function useCreateTeamDashboard() {
         lockedPlayerIds: selectedPlayers.map((player) => player.id),
       });
 
+      const SQUAD_SIZES: Record<string, number> = {
+        football: 15,
+        basketball: 13,
+        multisport: 15,
+      };
+      const expected = SQUAD_SIZES[leagueSport];
+
+      if (result.players.length !== expected) {
+        toastifier.error(
+          `Expected ${expected} players, received ${result.players.length}`,
+        );
+        return;
+      }
+
       const nextSelection: MarketPlayer[] = result.players.map((player) => ({
         id: player.id,
         name: player.name,
@@ -394,14 +405,8 @@ export function useCreateTeamDashboard() {
       return;
     }
 
-    if (
-      selectedPlayers.length < minPlayersRequired ||
-      selectedPlayers.length > maxPlayersAllowed
-    ) {
-      const message =
-        minPlayersRequired === maxPlayersAllowed
-          ? `Complete your team first: select ${requiredPlayers} players.`
-          : `Complete your team first: select between ${minPlayersRequired} and ${maxPlayersAllowed} players.`;
+    if (selectedPlayers.length !== requiredPlayers) {
+      const message = `You need exactly ${requiredPlayers} players for a ${leagueSport} league.`;
       setError(message);
       toastifier.info(message);
       return;

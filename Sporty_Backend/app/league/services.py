@@ -43,6 +43,7 @@ from app.league.models import (
     TeamWeeklyScore,
 )
 from app.league.schemas import LeagueCreate, LineupSlotCreate
+from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
 from app.core.config import settings
@@ -97,19 +98,15 @@ VALID_TRANSITIONS: dict[str, list[str]] = {
 
 SUPPORTED_LEAGUE_SPORTS = {"football", "basketball"}
 FLEXIBLE_TEAM_SPORTS = {"football", "basketball"}
-FLEXIBLE_TEAM_MIN_PLAYERS = 12
-FLEXIBLE_TEAM_MAX_PLAYERS = 15
-MULTISPORT_TEAM_MIN_PLAYERS = 13
-MULTISPORT_TEAM_MAX_PLAYERS = 15
 MULTISPORT_STARTERS_REQUIRED = 9
 MULTISPORT_STARTER_SPORT_REQUIREMENTS: dict[str, int] = {
-    "football": 5,
-    "basketball": 4,
+    "football": 8,
+    "basketball": 7,
 }
 
 LINEUP_SIZE_RULES: dict[str, dict[str, int]] = {
     "football": {"starting": 11, "bench": 4, "total": 15},
-    "basketball": {"starting": 5, "bench": 10, "total": 15},
+    "basketball": {"starting": 5, "bench": 8, "total": 13},
     "multisport": {"starting": MULTISPORT_STARTERS_REQUIRED, "bench": 6, "total": 15},
 }
 
@@ -334,6 +331,11 @@ def create_league(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="At least one sport must be specified in the creation payload",
         )
+
+    # Derive squad size from sport type
+    sport_type = derive_sport_type(requested_sports)
+    squad_size = SPORT_CONFIGS[sport_type]["squad_size"]
+    league.squad_size = squad_size
 
     # Resolve sport names to IDs
     sport_records = db.query(Sport).filter(Sport.name.in_(requested_sports)).all()
@@ -1855,43 +1857,14 @@ def build_initial_team(
         )
     
     # Validate squad size
-    league_sport_names = {
-        sport.name
-        for sport in (
-            db.query(Sport)
-            .join(LeagueSport, LeagueSport.sport_id == Sport.id)
-            .filter(LeagueSport.league_id == league_id)
-            .all()
-        )
-    }
-    flexible_sports_in_league = league_sport_names & FLEXIBLE_TEAM_SPORTS
-    uses_flexible_team_size = bool(flexible_sports_in_league)
-    is_multisport_league = len(flexible_sports_in_league) > 1
+    sport_type = derive_sport_type(league.sports)
+    expected_size = SPORT_CONFIGS[sport_type]["squad_size"]
+    is_multisport_league = sport_type == "mixed"
 
-    if uses_flexible_team_size:
-        min_players = (
-            MULTISPORT_TEAM_MIN_PLAYERS
-            if is_multisport_league
-            else FLEXIBLE_TEAM_MIN_PLAYERS
-        )
-        max_players = (
-            MULTISPORT_TEAM_MAX_PLAYERS
-            if is_multisport_league
-            else FLEXIBLE_TEAM_MAX_PLAYERS
-        )
-
-        if not (min_players <= len(player_ids) <= max_players):
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Must select between {min_players} "
-                    f"and {max_players} players"
-                ),
-            )
-    elif len(player_ids) != league.squad_size:
+    if len(player_ids) != expected_size:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Must select exactly {league.squad_size} players",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Squad must contain exactly {expected_size} players for a {sport_type} league",
         )
     
     # Check for duplicates
@@ -2345,23 +2318,15 @@ def update_lineup(
     bench_players = total_squad_players - starting_players
 
     if team_sport == "multisport":
-        if not (
-            MULTISPORT_TEAM_MIN_PLAYERS
-            <= total_squad_players
-            <= MULTISPORT_TEAM_MAX_PLAYERS
-        ):
+        if total_squad_players != 15:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail={
-                    "error": (
-                        "Multisport squad must have between "
-                        f"{MULTISPORT_TEAM_MIN_PLAYERS} and "
-                        f"{MULTISPORT_TEAM_MAX_PLAYERS} players."
-                    )
+                    "error": "Multisport squad must have exactly 15 players."
                 },
             )
 
-        expected_bench = total_squad_players - MULTISPORT_STARTERS_REQUIRED
+        expected_bench = 15 - MULTISPORT_STARTERS_REQUIRED
         if starting_players != MULTISPORT_STARTERS_REQUIRED:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -2369,7 +2334,7 @@ def update_lineup(
                     "error": (
                         "Multisport lineup must have exactly "
                         f"{MULTISPORT_STARTERS_REQUIRED} starters "
-                        f"(5 football + 4 basketball) and {expected_bench} bench players."
+                        f"and {expected_bench} bench players."
                     )
                 },
             )

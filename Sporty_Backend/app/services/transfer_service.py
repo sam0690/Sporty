@@ -6,7 +6,7 @@ from decimal import Decimal
 from fastapi import HTTPException, status
 from redis import Redis
 from sqlalchemy import func
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.auth.models import User
 from app.league.models import (
@@ -20,6 +20,7 @@ from app.league.models import (
     Transfer,
     TransferWindow,
 )
+from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
 from app.services.transfer_session_service import clear_session, get_session, save_session
@@ -188,12 +189,17 @@ def _transfer_rules(db: Session, redis: Redis, sport_name: str, league: League) 
         except Exception:
             logger.exception("Invalid transfer rules JSON for sport=%s", sport_name)
 
+    # Resolve platform-wide squad size from the league's sports
+    sport_ids = db.query(LeagueSport.sport_id).filter(LeagueSport.league_id == league.id).all()
+    sport_ids_list = [row[0] for row in sport_ids]
+    sport_type = derive_sport_type(sport_ids_list, db)
+    sport_config = SPORT_CONFIGS.get(sport_type, {"squad_size": 15})
+    squad_size = int(sport_config["squad_size"])
+
     # DB fallback: use league-level setting and defaults.
     return {
         "transfers_per_window": int(league.transfers_per_window),
-        "max_total": 15,
-        "max_starters": 9,
-        "max_bench": 6,
+        "max_total": squad_size,
     }
 
 
@@ -441,6 +447,7 @@ def confirm_transfers(
 
     active_rows = (
         db.query(TeamPlayer)
+        .options(joinedload(TeamPlayer.player).joinedload(Player.sport))
         .filter(
             TeamPlayer.fantasy_team_id == team.id,
             TeamPlayer.released_window_id.is_(None),
@@ -457,25 +464,28 @@ def confirm_transfers(
     final_player_ids -= {str(pid) for pid in pending_out_ids}
     final_player_ids |= {str(pid) for pid in pending_in_ids}
 
-    if is_multisport_league:
-        max_total = int(_transfer_rules(db, redis, "football", league).get("max_total", 15))
-        if len(final_player_ids) > max_total:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=(
-                    f"Final squad would exceed max size ({max_total}). "
-                    "Stage out additional players before confirming."
-                ),
-            )
+    # Use first sport key from session or default to football for rules lookup
+    sport_name_for_rules = "football"
+    if active_rows:
+        sport_name_for_rules = active_rows[0].player.sport.name.strip().lower()
 
+    max_total = int(_transfer_rules(db, redis, sport_name_for_rules, league).get("max_total", 15))
+    
+    if len(final_player_ids) != max_total:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Final squad must have exactly {max_total} players (got {len(final_player_ids)}).",
+        )
+
+    if is_multisport_league:
         final_counts_by_sport = _sport_counts_for_player_ids(db, final_player_ids)
         for sport_name, sport_cap in MULTISPORT_MAX_PLAYERS_BY_SPORT.items():
-            if final_counts_by_sport.get(sport_name, 0) > sport_cap:
+            if final_counts_by_sport.get(sport_name, 0) != sport_cap:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=(
-                        f"Final multisport roster would exceed the {sport_name} cap ({sport_cap}). "
-                        "Adjust staged moves before confirming."
+                        f"Final multisport roster must have exactly {sport_cap} {sport_name} players "
+                        f"(got {final_counts_by_sport.get(sport_name, 0)})."
                     ),
                 )
 

@@ -411,6 +411,7 @@ export function CreateTeamView(
             <button
               type="button"
               onClick={handleNextStep}
+              disabled={selectedPlayers.length !== requiredPlayers}
               className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-10 py-3 font-semibold text-slate-950 shadow-lg transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Review Team & Name

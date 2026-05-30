@@ -95,7 +95,8 @@ export function CreateLeagueView() {
       name: "",
       sport_ids: ["football"],
       budget: 103,
-      squad_size: 10,
+      max_teams: 10,
+      squad_size: 15,
       draft_mode: true,
       is_public: true,
     },
@@ -104,7 +105,8 @@ export function CreateLeagueView() {
 
   const leagueName = useWatch({ control, name: "name" }) ?? "";
   const sportIds = useWatch({ control, name: "sport_ids" });
-  const squadSize = useWatch({ control, name: "squad_size" }) ?? 10;
+  const maxTeams = useWatch({ control, name: "max_teams" }) ?? 10;
+  const squadSize = useWatch({ control, name: "squad_size" }) ?? 15;
   const draftMode = useWatch({ control, name: "draft_mode" }) ?? true;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
@@ -166,7 +168,7 @@ export function CreateLeagueView() {
       seasonId: effectiveSeasonId,
       leagueLogo,
       isPrivate: !isPublic,
-      teamSize: squadSize,
+      teamSize: maxTeams,
       competitionType: draftMode
         ? ("draft" as TCompetitionType)
         : ("budget" as TCompetitionType),
@@ -180,7 +182,7 @@ export function CreateLeagueView() {
       leagueLogo,
       effectiveSeasonId,
       selectedSports,
-      squadSize,
+      maxTeams,
     ],
   );
 
@@ -306,7 +308,7 @@ export function CreateLeagueView() {
         sports: selectedSports,
         competitionType,
         is_public: values.is_public,
-        max_teams: values.squad_size,
+        max_teams: values.max_teams,
         squad_size: values.squad_size,
         budget_per_team: values.budget,
         draft_mode: values.draft_mode,
@@ -383,10 +385,25 @@ export function CreateLeagueView() {
 
   const handleSportChange = (value: string) => {
     const sport = value as SportKey;
-    setValue("sport_ids", mapSportSelectionToPayload(sport), {
+    const sportPayload = mapSportSelectionToPayload(sport);
+    setValue("sport_ids", sportPayload, {
       shouldDirty: true,
       shouldValidate: true,
     });
+
+    // Auto-update squad size based on sport
+    let newSquadSize = 15;
+    if (sport === "basketball") {
+      newSquadSize = 13;
+    } else if (sport === "football" || sport === "multisport") {
+      newSquadSize = 15;
+    }
+
+    setValue("squad_size", newSquadSize, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+
     setSeasonId("");
   };
 
@@ -448,7 +465,7 @@ export function CreateLeagueView() {
       });
     }
     if (typeof next.teamSize === "number") {
-      setValue("squad_size", next.teamSize, {
+      setValue("max_teams", next.teamSize, {
         shouldDirty: true,
         shouldValidate: true,
       });
