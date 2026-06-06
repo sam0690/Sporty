@@ -122,13 +122,13 @@ class Player(Base):
     # Cricket:  "BAT", "BOWL", "AR", "WK"
     position: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
 
-    # See Q1 above — String for v1, FK to a clubs table later.
+    # DEPRECATED: use real_team_id
     real_team: Mapped[str] = mapped_column(String(100), nullable=False)
 
-    real_team_id: Mapped[uuid.UUID | None] = mapped_column(
+    real_team_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("real_teams.id", ondelete="SET NULL"),
-        nullable=True,
+        ForeignKey("real_teams.id", ondelete="RESTRICT"),
+        nullable=False,
         index=True,
     )
 
@@ -152,7 +152,7 @@ class Player(Base):
     sport: Mapped["Sport"] = relationship(
         foreign_keys=[sport_id], overlaps="players"
     )
-    real_team_ref: Mapped["RealTeam | None"] = relationship(
+    real_team_ref: Mapped["RealTeam"] = relationship(
         back_populates="players",
         foreign_keys=[real_team_id],
     )

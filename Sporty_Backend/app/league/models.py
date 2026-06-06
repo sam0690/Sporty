@@ -19,7 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -107,8 +107,8 @@ class Sport(Base):
 #      - UniqueConstraint: (sport_id, name) — no duplicate names
 #      - Full overlap prevention at the service layer
 #        (query for conflicting date ranges before INSERT).
-#    TODO: Enable btree_gist extension and add ExcludeConstraint
-#          for bulletproof DB-level overlap prevention.
+#    DB-level enforcement: ExcludeConstraint excl_season_sport_no_overlap
+#    (migration b2c3d4e5f6a7).  Service-layer check kept as a second layer.
 
 
 class Season(Base):
@@ -160,6 +160,12 @@ class Season(Base):
         CheckConstraint("start_date < end_date", name="ck_season_dates"),
         UniqueConstraint("sport_id", "start_date", name="uq_season_sport_start"),
         UniqueConstraint("sport_id", "name", name="uq_season_sport_name"),
+        ExcludeConstraint(
+            (text("daterange(start_date, end_date, '[]')"), "&&"),
+            (text("sport_id"), "="),
+            using="gist",
+            name="excl_season_sport_no_overlap",
+        ),
     )
 
 
@@ -201,8 +207,8 @@ class Season(Base):
 #      - CheckConstraint: start_at < end_at (basic sanity)
 #      - UniqueConstraint: (season_id, number) — no duplicate numbers
 #      - Full time-range overlap prevention at the service layer.
-#    TODO: Enable btree_gist and add ExcludeConstraint for
-#          tstzrange(start_at, end_at) overlap prevention.
+#    DB-level enforcement: ExcludeConstraint excl_transfer_window_season_no_overlap
+#    (migration b2c3d4e5f6a7).  Service-layer check kept as a second layer.
 
 
 class TransferWindow(Base):
@@ -270,7 +276,12 @@ class TransferWindow(Base):
         ),
         CheckConstraint("number > 0", name="ck_transfer_window_number_positive"),
         UniqueConstraint("season_id", "number", name="uq_transfer_window_season_number"),
-        # Prevent overlapping windows: exclusion constraint enforced in DB migration (gist exclusion)
+        ExcludeConstraint(
+            (text("tstzrange(start_at, end_at, '[]')"), "&&"),
+            (text("season_id"), "="),
+            using="gist",
+            name="excl_transfer_window_season_no_overlap",
+        ),
     )
 
 

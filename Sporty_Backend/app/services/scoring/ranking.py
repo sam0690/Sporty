@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from decimal import Decimal
 
@@ -7,6 +8,8 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.league.models import FantasyTeam, TeamWeeklyScore
+
+logger = logging.getLogger(__name__)
 
 
 def compute_rank_map(points_rows: list[tuple[uuid.UUID, Decimal]]) -> dict[uuid.UUID, int]:
@@ -51,3 +54,39 @@ def apply_rankings_for_league_window(
     )
     result = db.execute(stmt)
     return int(result.rowcount or 0)
+
+
+def compute_and_store_rankings(window_id: uuid.UUID, db: Session) -> None:
+    """Compute and persist rank_in_league for every team in the given transfer window.
+
+    Finds all leagues that have TeamWeeklyScore rows for window_id, then issues
+    a single bulk UPDATE per league via apply_rankings_for_league_window.
+    Idempotent — safe to re-run for the same window.  No-op if no scores exist.
+    """
+    league_ids = (
+        db.execute(
+            select(FantasyTeam.league_id)
+            .join(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
+            .where(TeamWeeklyScore.transfer_window_id == window_id)
+            .distinct()
+        )
+        .scalars()
+        .all()
+    )
+
+    if not league_ids:
+        logger.info("compute_and_store_rankings: no scores found for window %s, skipping", window_id)
+        return
+
+    total_updated = 0
+    for league_id in league_ids:
+        total_updated += apply_rankings_for_league_window(
+            db, league_id=league_id, transfer_window_id=window_id
+        )
+
+    logger.info(
+        "compute_and_store_rankings: window=%s leagues=%d rows_updated=%d",
+        window_id,
+        len(league_ids),
+        total_updated,
+    )

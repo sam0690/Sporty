@@ -144,6 +144,7 @@ def _serialize_pool_player(player: PoolPlayer) -> dict[str, Any]:
         "sport_type": player.sport_type,
         "position": player.position,
         "cost": str(player.cost),
+        # TODO: switch to player.real_team_fk.name after FK migration
         "real_team": player.real_team,
         "real_team_id": player.real_team_id,
         "value": str(player.value),
@@ -158,6 +159,7 @@ def _deserialize_pool_player(raw: dict[str, Any]) -> PoolPlayer:
         sport_type=_normalize_sport_name(str(raw["sport_type"])),
         position=str(raw["position"]),
         cost=Decimal(str(raw["cost"])),
+        # TODO: switch to player.real_team_fk.name after FK migration
         real_team=str(raw.get("real_team") or "Unknown"),
         real_team_id=str(raw.get("real_team_id")) if raw.get("real_team_id") else None,
         value=Decimal(str(raw.get("value") or "0")),
@@ -200,6 +202,7 @@ def _fetch_player_pool(db: Session, league: League, sport_type: str) -> list[Poo
                 sport_type=_normalize_sport_name(sport_name),
                 position=player.position.strip().upper(),
                 cost=player_cost,
+                # TODO: switch to player.real_team_fk.name after FK migration
                 real_team=player.real_team,
                 real_team_id=str(player.real_team_id) if player.real_team_id else None,
                 value=(projected_points / player_cost) if player_cost > 0 else Decimal("0"),
@@ -252,6 +255,7 @@ def _sport_lookup(sport_config: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 
 def _club_key(player: PoolPlayer) -> str:
+    # TODO: switch to player.real_team_fk.name after FK migration
     return player.real_team_id or player.real_team or str(player.id)
 
 

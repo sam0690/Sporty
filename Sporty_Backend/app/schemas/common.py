@@ -60,6 +60,7 @@ class PlayerBrief(BaseModel):
     id: uuid.UUID
     name: str
     position: str
+    # TODO: switch to player.real_team_fk.name after FK migration
     real_team: str
     cost: Decimal
     sport: SportBrief

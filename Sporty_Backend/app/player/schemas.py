@@ -36,6 +36,7 @@ class PlayerResponse(BaseModel):
     id: uuid.UUID
     name: str
     position: str
+    # TODO: switch to player.real_team_fk.name after FK migration
     real_team: str
     cost: Decimal
     is_available: bool
@@ -114,6 +115,7 @@ class PlayerFilter(BaseModel):
         max_length=20,
         description="Filter by position code, e.g. 'FWD'",
     )
+    # TODO: switch to player.real_team_fk.name after FK migration
     real_team: str | None = Field(
         default=None,
         max_length=100,

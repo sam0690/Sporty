@@ -56,6 +56,7 @@ from app.services.league_status_service import auto_update_league_statuses
 from app.services.cache_warming_service import warm_cache
 from app.services.notification_service import check_and_notify_open_windows
 from app.services.price_update_service import update_player_prices
+from app.services.scoring.ranking import compute_and_store_rankings
 
 # Import routers AFTER models are registered
 from app.auth.router import router as auth_router
@@ -113,6 +114,29 @@ def _run_cache_warming_job() -> None:
     logger.info("Cache warming job completed: %s", stats)
   except Exception:
     logger.exception("Cache warming job failed")
+  finally:
+    db.close()
+
+
+def _run_gameweek_ranking_job() -> None:
+  from datetime import datetime, timezone
+  db = SessionLocal()
+  try:
+    now = datetime.now(timezone.utc)
+    window = (
+      db.query(TransferWindow)
+      .filter(TransferWindow.start_at <= now, TransferWindow.end_at >= now)
+      .first()
+    )
+    if window is None:
+      logger.info("Gameweek ranking job: no active transfer window, skipping")
+      return
+    compute_and_store_rankings(window.id, db)
+    db.commit()
+    logger.info("Gameweek ranking job completed for window %s", window.id)
+  except Exception:
+    db.rollback()
+    logger.exception("Gameweek ranking job failed")
   finally:
     db.close()
 
@@ -179,8 +203,16 @@ async def lifespan(app: FastAPI):
       id="price_update_every_4h",
       replace_existing=True,
     )
+    scheduler.add_job(
+      _run_gameweek_ranking_job,
+      trigger="cron",
+      hour=2,
+      minute=0,
+      id="gameweek_ranking_update",
+      replace_existing=True,
+    )
     scheduler.start()
-    logger.info("APScheduler started with transfer, lifecycle, cache warming, and price-update jobs")
+    logger.info("APScheduler started with transfer, lifecycle, cache warming, price-update, and ranking jobs")
 
     realtime_started = False
     if settings.REALTIME_PIPELINE_ENABLED:

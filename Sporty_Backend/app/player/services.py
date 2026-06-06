@@ -46,6 +46,7 @@ def _apply_filters(query, filters: PlayerFilter):
         query = query.filter(Player.position == filters.position)
 
     if filters.real_team:
+        # TODO: switch to player.real_team_fk.name after FK migration
         query = query.filter(Player.real_team == filters.real_team)
 
     if filters.is_available is not None:

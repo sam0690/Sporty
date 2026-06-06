@@ -47,6 +47,11 @@ from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
 from app.core.config import settings
+from app.squad.services import (
+    validate_lineup_for_league_type,
+    validate_position_slots,
+    validate_squad_size,
+)
 
 
 # ── Reusable eager-loading option sets ──────────────────────────────
@@ -97,28 +102,6 @@ VALID_TRANSITIONS: dict[str, list[str]] = {
 }
 
 SUPPORTED_LEAGUE_SPORTS = {"football", "basketball"}
-FLEXIBLE_TEAM_SPORTS = {"football", "basketball"}
-MULTISPORT_STARTERS_REQUIRED = 9
-MULTISPORT_STARTER_SPORT_REQUIREMENTS: dict[str, int] = {
-    "football": 8,
-    "basketball": 7,
-}
-
-LINEUP_SIZE_RULES: dict[str, dict[str, int]] = {
-    "football": {"starting": 11, "bench": 4, "total": 15},
-    "basketball": {"starting": 5, "bench": 8, "total": 13},
-    "multisport": {"starting": MULTISPORT_STARTERS_REQUIRED, "bench": 6, "total": 15},
-}
-
-
-def _detect_team_sport_name(sport_names: set[str]) -> str:
-    if len(sport_names) > 1:
-        return "multisport"
-
-    only_sport = next(iter(sport_names), "multisport")
-    if only_sport in {"football", "basketball"}:
-        return only_sport
-    return "multisport"
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1856,129 +1839,75 @@ def build_initial_team(
             detail="You already have a team in this league",
         )
     
-    # Validate squad size
+    # Derive sport type (needed for is_multisport_league flag used in team creation)
     sport_type = derive_sport_type(league.sports)
-    expected_size = SPORT_CONFIGS[sport_type]["squad_size"]
     is_multisport_league = sport_type == "mixed"
 
-    if len(player_ids) != expected_size:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Squad must contain exactly {expected_size} players for a {sport_type} league",
-        )
-    
-    # Check for duplicates
-    if len(player_ids) != len(set(player_ids)):
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Duplicate players not allowed",
-        )
-    
-    # Fetch and validate all players
+    # Fetch and validate all players exist
     players = (
         db.query(Player)
         .options(selectinload(Player.sport))
         .filter(Player.id.in_(player_ids))
         .all()
     )
-    
+
     if len(players) != len(player_ids):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="One or more players not found",
         )
-    
+
     # Get league sports
-    league_sport_ids = {
-        ls.sport_id
-        for ls in db.query(LeagueSport).filter(LeagueSport.league_id == league_id).all()
-    }
-    
+    league_sport_records = db.query(Sport).join(
+        LeagueSport, LeagueSport.sport_id == Sport.id
+    ).filter(LeagueSport.league_id == league_id).all()
+    league_sport_ids = {s.id for s in league_sport_records}
+
     if not league_sport_ids:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="League has no sports attached",
         )
-    
-    # Validate each player
+
+    # Validate each player's availability and sport membership
     total_cost = Decimal("0.00")
-    picked_counts: dict[tuple[uuid.UUID, str], int] = {}
-    selected_counts_by_sport_id: dict[uuid.UUID, int] = {}
     for player in players:
         if not player.is_available:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Player {player.name} is not available",
             )
-        
+
         if player.sport_id not in league_sport_ids:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Player {player.name}'s sport is not part of this league",
             )
 
-        key = (player.sport_id, player.position.strip().upper())
-        picked_counts[key] = picked_counts.get(key, 0) + 1
-        selected_counts_by_sport_id[player.sport_id] = (
-            selected_counts_by_sport_id.get(player.sport_id, 0) + 1
-        )
-        
         total_cost += player.cost
 
-    if is_multisport_league:
-        league_sports = (
-            db.query(Sport)
-            .filter(Sport.id.in_(league_sport_ids))
-            .all()
+    # ── Squad size, duplicate, and mixed-sport quota validation ─────────────
+    try:
+        validate_squad_size(players, league, sports=league_sport_records)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
         )
-        sport_id_by_name = {sport.name.strip().lower(): sport.id for sport in league_sports}
 
-        for sport_name, required_count in MULTISPORT_STARTER_SPORT_REQUIREMENTS.items():
-            sport_id = sport_id_by_name.get(sport_name)
-            if not sport_id:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Multisport league is missing required sport '{sport_name}'",
-                )
-
-            selected_count = selected_counts_by_sport_id.get(sport_id, 0)
-            if selected_count < required_count:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Multisport team must include at least {required_count} "
-                        f"{sport_name} players in the squad"
-                    ),
-                )
-
-    # Enforce position constraints only when lineup slots are configured.
+    # ── Position-slot validation (only when lineup slots are configured) ─────
     lineup_slots = (
         db.query(LineupSlot)
         .filter(LineupSlot.league_id == league_id)
         .all()
     )
-    if lineup_slots:
-        for slot in lineup_slots:
-            slot_key = (slot.sport_id, slot.position.strip().upper())
-            count = picked_counts.get(slot_key, 0)
-
-            if count < slot.min_count:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Position constraint not met for {slot.position}: "
-                        f"minimum {slot.min_count}, selected {count}"
-                    ),
-                )
-
-            if count > slot.max_count:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=(
-                        f"Position constraint exceeded for {slot.position}: "
-                        f"maximum {slot.max_count}, selected {count}"
-                    ),
-                )
+    try:
+        validate_position_slots(players, lineup_slots)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
     
     # Budget check
     if total_cost > league.budget_per_team:
@@ -2305,62 +2234,35 @@ def update_lineup(
             detail="One or more players are not in your squad",
         )
 
-    sport_names = {
-        tp.player.sport.name.strip().lower()
-        for tp in squad_players
-        if tp.player and tp.player.sport and tp.player.sport.name
-    }
-    team_sport = _detect_team_sport_name(sport_names)
-    rules = LINEUP_SIZE_RULES[team_sport]
+    # Fetch the league's Sport objects (needed for sport-type detection and
+    # mixed-league per-sport starter validation inside validate_lineup_for_league_type).
+    league_sports = (
+        db.query(Sport)
+        .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+        .filter(LeagueSport.league_id == league.id)
+        .all()
+    )
 
-    total_squad_players = len(owned_player_ids)
-    starting_players = len(player_ids)
-    bench_players = total_squad_players - starting_players
+    # Fetch the actual Player objects for the proposed starters.
+    starters = (
+        db.query(Player)
+        .filter(Player.id.in_(player_ids))
+        .all()
+    )
+    if len(starters) != len(player_ids):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="One or more selected lineup players were not found",
+        )
 
-    if team_sport == "multisport":
-        if total_squad_players != 15:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={
-                    "error": "Multisport squad must have exactly 15 players."
-                },
-            )
-
-        expected_bench = 15 - MULTISPORT_STARTERS_REQUIRED
-        if starting_players != MULTISPORT_STARTERS_REQUIRED:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={
-                    "error": (
-                        "Multisport lineup must have exactly "
-                        f"{MULTISPORT_STARTERS_REQUIRED} starters "
-                        f"and {expected_bench} bench players."
-                    )
-                },
-            )
-    else:
-        if total_squad_players != rules["total"]:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={
-                    "error": (
-                        f"{team_sport.title()} team must have exactly "
-                        f"{rules['total']} squad players."
-                    )
-                },
-            )
-
-        if starting_players != rules["starting"] or bench_players != rules["bench"]:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail={
-                    "error": (
-                        f"{team_sport.title()} lineup must have exactly "
-                        f"{rules['starting']} starting players and "
-                        f"{rules['bench']} bench players."
-                    )
-                },
-            )
+    # ── Lineup structure validation (starters/bench/total + mixed sport) ─────
+    try:
+        validate_lineup_for_league_type(starters, league, league_sports)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"error": str(exc)},
+        )
 
     # 2. Verify captain/vice are in the lineup
     if captain_id not in player_ids or vice_captain_id not in player_ids:
@@ -2375,94 +2277,19 @@ def update_lineup(
             detail="Captain and vice-captain must be different players",
         )
 
-    starters = (
-        db.query(Player)
-        .filter(Player.id.in_(player_ids))
-        .all()
-    )
-    if len(starters) != len(player_ids):
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="One or more selected lineup players were not found",
-        )
-
-    if team_sport == "multisport":
-        league_sports = (
-            db.query(Sport)
-            .join(LeagueSport, LeagueSport.sport_id == Sport.id)
-            .filter(LeagueSport.league_id == league.id)
-            .all()
-        )
-        sport_id_by_name = {sport.name.strip().lower(): sport.id for sport in league_sports}
-
-        starter_counts_by_sport_id: dict[uuid.UUID, int] = {}
-        for player in starters:
-            if not player.sport_id:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Player {player.name} is missing sport assignment",
-                )
-            starter_counts_by_sport_id[player.sport_id] = (
-                starter_counts_by_sport_id.get(player.sport_id, 0) + 1
-            )
-
-        for sport_name, required_count in MULTISPORT_STARTER_SPORT_REQUIREMENTS.items():
-            sport_id = sport_id_by_name.get(sport_name)
-            if not sport_id:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Multisport league is missing required sport '{sport_name}'",
-                )
-
-            starter_count = starter_counts_by_sport_id.get(sport_id, 0)
-            if starter_count != required_count:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail={
-                        "error": (
-                            "Multisport starting lineup must include exactly "
-                            f"{MULTISPORT_STARTER_SPORT_REQUIREMENTS['football']} football "
-                            f"and {MULTISPORT_STARTER_SPORT_REQUIREMENTS['basketball']} basketball players."
-                        )
-                    },
-                )
-
-    starter_counts: dict[tuple[uuid.UUID, str], int] = {}
-    for player in starters:
-        if not player.sport_id or not player.position:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Player {player.name} is missing required sport or position data",
-            )
-        slot_key = (player.sport_id, player.position.strip().upper())
-        starter_counts[slot_key] = starter_counts.get(slot_key, 0) + 1
-
+    # ── Position-slot validation for the starting lineup ────────────────────
     lineup_slots = (
         db.query(LineupSlot)
         .filter(LineupSlot.league_id == league.id)
         .all()
     )
-    for slot in lineup_slots:
-        slot_key = (slot.sport_id, slot.position.strip().upper())
-        count = starter_counts.get(slot_key, 0)
-
-        if count < slot.min_count:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Starting lineup constraint not met for {slot.position}: "
-                    f"minimum {slot.min_count}, selected {count}"
-                ),
-            )
-
-        if count > slot.max_count:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"Starting lineup constraint exceeded for {slot.position}: "
-                    f"maximum {slot.max_count}, selected {count}"
-                ),
-            )
+    try:
+        validate_position_slots(starters, lineup_slots)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        )
 
     # 3. Clear existing lineup for this window
     db.query(TeamGameweekLineup).filter(
