@@ -199,16 +199,12 @@ def _require_fantasy_team(
     return team
 
 
-def _current_transfer_window(db: Session, league: League) -> TransferWindow:
-    """Find the current (in-progress) transfer window for the league's season.
-
-    Raises 409 if no transfer window is active — transfers/lineups can't
-    happen outside of a transfer window.
-    """
+def _find_transfer_window(db: Session, league: League) -> TransferWindow | None:
+    """Return the current active transfer window, or None if none exists."""
     from datetime import datetime, timezone
 
     now = datetime.now(timezone.utc)
-    window = (
+    return (
         db.query(TransferWindow)
         .filter(
             TransferWindow.season_id == league.season_id,
@@ -217,6 +213,15 @@ def _current_transfer_window(db: Session, league: League) -> TransferWindow:
         )
         .first()
     )
+
+
+def _current_transfer_window(db: Session, league: League) -> TransferWindow:
+    """Find the current (in-progress) transfer window for the league's season.
+
+    Raises 409 if no transfer window is active — transfers/lineups can't
+    happen outside of a transfer window.
+    """
+    window = _find_transfer_window(db, league)
     if not window:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -2137,10 +2142,11 @@ def get_active_sports(db: Session) -> list[Sport]:
 
 
 def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) -> dict:
-    """Fetch the user's lineup for the current active transfer window."""
+    """Fetch the user's lineup. Squad is always returned; starting_lineup is
+    window-scoped and will be empty when no transfer window is active."""
     team = _require_fantasy_team(db, league_id, user_id)
     league = _require_league(db, league_id)
-    window = _current_transfer_window(db, league)
+    window = _find_transfer_window(db, league)
 
     starting_lineup_entries = (
         db.query(TeamGameweekLineup)
@@ -2151,7 +2157,7 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
         .options(joinedload(TeamGameweekLineup.player).joinedload(Player.sport))
         .order_by(TeamGameweekLineup.id.asc())
         .all()
-    )
+    ) if window else []
 
     squad_players = (
         db.query(TeamPlayer)
@@ -2185,7 +2191,7 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
     return {
         "fantasy_team_id": team.id,
         "team_name": team.name,
-        "transfer_window_id": window.id,
+        "transfer_window_id": window.id if window else None,
         "starting_lineup": starting_lineup,
         "squad_players": squad_players,
     }

@@ -479,12 +479,15 @@ def auto_pick_team(
             detail="Auto-pick is only available for setup or active leagues",
         )
 
-    window = _active_transfer_window(db, league)
-    if _day_seven_locked(window):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Auto-pick is disabled during the transfer window",
-        )
+    # Transfer window is only relevant for in-season auto-pick (ACTIVE leagues).
+    # During SETUP the user is building their initial squad — no window needed.
+    if league.status == LeagueStatus.ACTIVE:
+        window = _active_transfer_window(db, league)
+        if _day_seven_locked(window):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Auto-pick is disabled during the transfer window",
+            )
 
     sport_config = _sport_config_for_league(league)
     sport_type = sport_config["sportType"]
