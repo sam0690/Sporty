@@ -284,7 +284,7 @@ def auto_pick_ilp(
         selected_locked.append(player)
 
     budget = Decimal(str(total_budget if total_budget is not None else sport_config["totalBudget"]))
-    max_per_club = int(sport_config.get("maxPerClub", DEFAULT_MAX_PER_CLUB))
+    max_per_club = int(sport_config.get("maxPerClub") or DEFAULT_MAX_PER_CLUB)
     sport_lookup = _sport_lookup(sport_config)
 
     # Filter pool to only available players at the start of ILP
@@ -434,7 +434,7 @@ def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> Non
         club_counts: dict[str, int] = defaultdict(int)
         for player in players:
             club_counts[_club_key(player)] += 1
-        over_limit = [club for club, count in club_counts.items() if count > int(sport_config.get("maxPerClub", DEFAULT_MAX_PER_CLUB))]
+        over_limit = [club for club, count in club_counts.items() if count > int(sport_config.get("maxPerClub") or DEFAULT_MAX_PER_CLUB)]
         if over_limit:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
