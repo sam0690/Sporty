@@ -27,18 +27,18 @@ export function ProfileHeader({
   avatarUrl,
 }: ProfileHeaderProps) {
   return (
-    <header className="space-y-5 rounded-4xl border border-white/10 bg-surface/75 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+    <header className="space-y-5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5  ">
       <div>
-        <h1 className="font-display text-3xl font-bold tracking-[0.04em] text-foreground uppercase">
+        <h1 className="font-bebas tracking-[3px] text-[#f0f0f0]">
           Profile
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[#555560]">
           Manage your account settings
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6 border-b border-white/10 pb-6">
-        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-accent-primary/15 text-xl font-semibold text-accent-primary">
+      <div className="flex flex-wrap items-center gap-6 border-b border-[rgba(255,255,255,0.08)] pb-6">
+        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[rgba(232,251,37,0.1)] text-xl font-600 text-[#e8fb25]">
           {avatarUrl ? (
             <Image
               src={avatarUrl}
@@ -53,12 +53,12 @@ export function ProfileHeader({
         </div>
 
         <div>
-          <p className="text-sm font-medium text-foreground">{userName}</p>
-          <p className="text-sm text-slate-400">{userEmail}</p>
+          <p className="text-sm text-[#f0f0f0]">{userName}</p>
+          <p className="text-sm text-[#555560]">{userEmail}</p>
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="mt-2 text-sm font-medium text-accent-primary transition-colors hover:text-cyan-300 hover:underline"
+            className="mt-2 text-sm text-[#e8fb25] transition-colors hover:text-cyan-300 hover:underline"
           >
             Change Avatar
           </button>

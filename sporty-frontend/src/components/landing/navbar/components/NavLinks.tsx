@@ -47,10 +47,10 @@ export function NavLinks({
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm font-medium text-slate-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary hover:bg-white/6 hover:text-foreground hover:no-underline",
+              "inline-flex items-center gap-2 rounded-[3px] px-3 py-2 text-sm text-[#f0f0f0] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary hover:bg-[#1d1d26] hover:text-[#f0f0f0] hover:no-underline",
               mobile && "w-full",
               active
-                ? "border border-accent-primary/30 bg-white/8 text-foreground font-semibold"
+                ? "border border-[rgba(232,251,37,0.3)] bg-[#1d1d26] text-[#f0f0f0] font-600"
                 : "border border-transparent",
             )}
           >

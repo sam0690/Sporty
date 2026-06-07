@@ -11,10 +11,10 @@ export function LineupViewToggle({ value, onChange }: LineupViewToggleProps) {
       <button
         type="button"
         onClick={() => onChange("list")}
-        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+        className={`rounded-[3px] px-4 py-2 text-sm transition-colors ${
           value === "list"
-            ? "border border-accent-primary/30 bg-accent-primary/10 text-accent-primary"
-            : "border border-white/10 bg-white/5 text-foreground/75 hover:bg-white/8"
+            ? "border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
+            : "border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#f0f0f0]/75 hover:bg-[#1d1d26]"
         }`}
       >
         List View
@@ -22,10 +22,10 @@ export function LineupViewToggle({ value, onChange }: LineupViewToggleProps) {
       <button
         type="button"
         onClick={() => onChange("pitch")}
-        className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+        className={`rounded-[3px] px-4 py-2 text-sm transition-colors ${
           value === "pitch"
-            ? "border border-accent-primary/30 bg-accent-primary/10 text-accent-primary"
-            : "border border-white/10 bg-white/5 text-foreground/75 hover:bg-white/8"
+            ? "border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
+            : "border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#f0f0f0]/75 hover:bg-[#1d1d26]"
         }`}
       >
         Pitch View

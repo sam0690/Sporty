@@ -8,10 +8,10 @@ type ShareLinksProps = {
 
 export function ShareLinks({ shareUrl }: ShareLinksProps) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-      <p className="text-sm text-foreground/60">Share Link</p>
-      <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-white/10 bg-white/5 px-4 py-3">
-        <span className="truncate text-sm text-foreground">{shareUrl}</span>
+    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+      <p className="text-sm text-[#555560]">Share Link</p>
+      <div className="mt-2 flex items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3">
+        <span className="truncate text-sm text-[#f0f0f0]">{shareUrl}</span>
         <CopyButton value={shareUrl} label="Share link" />
       </div>
 
@@ -20,7 +20,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
           href={`https://wa.me/?text=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-white/10 px-4 py-2 text-center text-sm text-foreground transition-colors hover:bg-white/10"
+          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] px-4 py-2 text-center text-sm text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
         >
           Share on WhatsApp
         </a>
@@ -28,7 +28,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
           href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}`}
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-white/10 px-4 py-2 text-center text-sm text-foreground transition-colors hover:bg-white/10"
+          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] px-4 py-2 text-center text-sm text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
         >
           Share on Telegram
         </a>

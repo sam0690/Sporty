@@ -48,20 +48,20 @@ function DraggablePlayerCard({ player }: DraggablePlayerCardProps) {
       style={style}
       {...listeners}
       {...attributes}
-      className="cursor-grab rounded-2xl border border-white/10 bg-white/5 p-3 shadow-[0_14px_40px_rgba(0,0,0,0.18)] transition hover:-translate-y-0.5 hover:border-accent-primary/20 hover:bg-white/8"
+      className="cursor-grab rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 transition hover:border-[rgba(232,251,37,0.2)] hover:bg-[#1d1d26]"
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-foreground">
+        <p className="truncate text-sm font-600 text-[#f0f0f0]">
           {player.name}
         </p>
         <span className="text-base" aria-label={player.sport}>
           {sportIcons[player.sport]}
         </span>
       </div>
-      <p className="mt-1 text-xs text-slate-400">{player.position}</p>
-      <p className="mt-1 truncate text-xs text-slate-400">{player.realTeam}</p>
-      <p className="mt-1 text-xs font-medium text-accent-primary">
+      <p className="mt-1 text-xs text-[#555560]">{player.position}</p>
+      <p className="mt-1 truncate text-xs text-[#555560]">{player.realTeam}</p>
+      <p className="mt-1 text-xs text-[#e8fb25]">
         Cost {player.cost}
       </p>
     </article>
@@ -107,28 +107,28 @@ export function PlayerList({
   return (
     <DropZone
       id="bench-drop"
-      className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl"
-      activeClassName="border-accent-primary/20 bg-accent-primary/10"
+      className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 "
+      activeClassName="border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.1)]"
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-foreground">
+        <h3 className="text-base font-600 text-[#f0f0f0]">
           Available Players
         </h3>
-        <p className="text-xs text-slate-400">Drop here to bench</p>
+        <p className="text-xs text-[#555560]">Drop here to bench</p>
       </div>
 
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search by name..."
-        className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none"
+        className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none"
       />
 
       <div className="grid grid-cols-2 gap-2">
         <select
           value={selectedSport}
           onChange={(event) => onSportChange(event.target.value)}
-          className="rounded-xl border border-white/10 bg-white/5 px-2 py-2 text-xs text-foreground outline-none"
+          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-2 text-xs text-[#f0f0f0] outline-none"
         >
           {sports.map((sport) => (
             <option key={sport} value={sport}>
@@ -139,7 +139,7 @@ export function PlayerList({
         <select
           value={selectedPosition}
           onChange={(event) => onPositionChange(event.target.value)}
-          className="rounded-xl border border-white/10 bg-white/5 px-2 py-2 text-xs text-foreground outline-none"
+          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-2 text-xs text-[#f0f0f0] outline-none"
         >
           {positions.map((position) => (
             <option key={position} value={position}>
@@ -153,14 +153,14 @@ export function PlayerList({
         <button
           type="button"
           onClick={() => setGroupBy("sport")}
-          className={`rounded-full px-2 py-1 text-xs ${groupBy === "sport" ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300"}`}
+          className={`rounded-[3px] px-2 py-1 text-xs ${groupBy === "sport" ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "bg-[#1d1d26] text-[#f0f0f0]"}`}
         >
           Group: Sport
         </button>
         <button
           type="button"
           onClick={() => setGroupBy("position")}
-          className={`rounded-full px-2 py-1 text-xs ${groupBy === "position" ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300"}`}
+          className={`rounded-[3px] px-2 py-1 text-xs ${groupBy === "position" ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "bg-[#1d1d26] text-[#f0f0f0]"}`}
         >
           Group: Position
         </button>
@@ -168,13 +168,13 @@ export function PlayerList({
 
       <div className="max-h-155 space-y-4 overflow-y-auto pr-1">
         {Object.keys(groupedPlayers).length === 0 ? (
-          <p className="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-slate-400">
+          <p className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-sm text-[#555560]">
             No players found.
           </p>
         ) : (
           Object.entries(groupedPlayers).map(([group, groupPlayers]) => (
             <section key={group} className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <p className="text-xs font-600 uppercase tracking-wide text-[#555560]">
                 {group}
               </p>
               <div className="space-y-2">

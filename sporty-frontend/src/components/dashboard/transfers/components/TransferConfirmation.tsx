@@ -86,37 +86,37 @@ export function TransferConfirmation({
   const confirmDisabled = isLoading || !isValidBatch || !transfersOpen;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xl animate-in fade-in">
-      <div className="w-full max-w-md rounded-4xl border border-white/10 bg-surface/90 p-8 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl animate-in zoom-in-95 duration-200">
-        <h3 className="text-2xl font-bold text-foreground">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4  animate-in fade-in">
+      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8   animate-in zoom-in-95 duration-200">
+        <h3 className="text-2xl font-700 text-[#f0f0f0]">
           Confirm Staged Transfers
         </h3>
 
-        <p className="mt-4 text-sm text-slate-400">
+        <p className="mt-4 text-sm text-[#555560]">
           Out: {stagedOutPlayers.length} | In: {stagedInPlayers.length}
         </p>
 
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-red-300">
+          <div className="rounded-[3px] border border-red-500/20 bg-red-500/10 p-4">
+            <p className="text-[10px] font-700 uppercase tracking-wider text-red-300">
               Out
             </p>
             <div className="mt-2 space-y-1">
               {stagedOutPlayers.map((player) => (
-                <p key={player.id} className="truncate text-xs text-foreground">
+                <p key={player.id} className="truncate text-xs text-[#f0f0f0]">
                   {player.name}
                 </p>
               ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">
+          <div className="rounded-[3px] border border-emerald-400/20 bg-emerald-400/10 p-4">
+            <p className="text-[10px] font-700 uppercase tracking-wider text-emerald-300">
               In
             </p>
             <div className="mt-2 space-y-1">
               {stagedInPlayers.map((player) => (
-                <p key={player.id} className="truncate text-xs text-foreground">
+                <p key={player.id} className="truncate text-xs text-[#f0f0f0]">
                   {player.name}
                 </p>
               ))}
@@ -124,13 +124,13 @@ export function TransferConfirmation({
           </div>
         </div>
 
-        <p className="mt-6 text-center text-sm leading-relaxed text-slate-400">
+        <p className="mt-6 text-center text-sm leading-relaxed text-[#555560]">
           Confirming will apply all staged transfers at once.
         </p>
 
         <div className="mt-8 flex flex-col gap-3">
           {!transfersOpen ? (
-            <div className="rounded-2xl border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-200">
+            <div className="rounded-[3px] border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-200">
               Transfers are closed for this window.
               {formattedCountdown ? (
                 <span className="ml-2 font-mono">
@@ -144,7 +144,7 @@ export function TransferConfirmation({
             type="button"
             onClick={onConfirm}
             disabled={confirmDisabled}
-            className="w-full rounded-full bg-linear-to-r from-accent-primary via-cyan-400 to-accent-secondary py-3.5 font-bold text-background shadow-[0_16px_40px_rgba(0,229,255,0.18)] transition-all hover:brightness-110 disabled:opacity-50"
+            className="w-full rounded-[3px] bg-linear-to-r [#e8fb25] py-3.5 font-700 text-background  transition-all hover:brightness-110 disabled:opacity-50"
           >
             {isLoading ? "Processing..." : "Confirm Transfers"}
           </button>
@@ -152,7 +152,7 @@ export function TransferConfirmation({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full rounded-full border border-white/10 py-3 font-semibold text-slate-400 transition-colors hover:text-foreground"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] py-3 font-600 text-[#555560] transition-colors hover:text-[#f0f0f0]"
           >
             Cancel
           </button>

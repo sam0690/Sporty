@@ -82,10 +82,10 @@ export function FilterBar({
                 onSportChange(sport);
                 onPositionChange("All");
               }}
-              className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+              className={`whitespace-nowrap rounded-[3px] border px-4 py-2 text-sm transition-all ${
                 isActive
-                  ? "border-accent-primary/30 bg-white/10 text-foreground shadow-[0_0_0_1px_rgba(0,229,255,0.16)]"
-                  : "border-white/10 bg-white/5 text-slate-300 hover:border-accent-primary/20 hover:bg-white/8 hover:text-foreground"
+                  ? "border-[rgba(232,251,37,0.3)] bg-[#1d1d26] text-[#f0f0f0]"
+                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#f0f0f0] hover:border-[rgba(232,251,37,0.2)] hover:bg-[#1d1d26] hover:text-[#f0f0f0]"
               }`}
             >
               {sportLabels[sport]}
@@ -104,10 +104,10 @@ export function FilterBar({
                 key={position}
                 type="button"
                 onClick={() => onPositionChange(position)}
-                className={`whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-all ${
+                className={`whitespace-nowrap rounded-[3px] border px-4 py-2 text-sm transition-all ${
                   isActive
-                    ? "border-accent-primary/30 bg-white/10 text-foreground shadow-[0_0_0_1px_rgba(0,229,255,0.16)]"
-                    : "border-white/10 bg-white/5 text-slate-300 hover:border-accent-primary/20 hover:bg-white/8 hover:text-foreground"
+                    ? "border-[rgba(232,251,37,0.3)] bg-[#1d1d26] text-[#f0f0f0]"
+                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#f0f0f0] hover:border-[rgba(232,251,37,0.2)] hover:bg-[#1d1d26] hover:text-[#f0f0f0]"
                 }`}
               >
                 {position}
@@ -118,7 +118,7 @@ export function FilterBar({
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-xs uppercase tracking-wide text-[#555560]">
           <span>Min cost</span>
           <input
             type="number"
@@ -127,11 +127,11 @@ export function FilterBar({
             value={minCost}
             onChange={(event) => onMinCostChange(event.target.value)}
             placeholder="0"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           />
         </label>
 
-        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-xs uppercase tracking-wide text-[#555560]">
           <span>Max cost</span>
           <input
             type="number"
@@ -140,7 +140,7 @@ export function FilterBar({
             value={maxCost}
             onChange={(event) => onMaxCostChange(event.target.value)}
             placeholder="Any"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           />
         </label>
       </div>

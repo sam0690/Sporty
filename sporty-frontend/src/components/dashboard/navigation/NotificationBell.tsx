@@ -61,7 +61,6 @@ export function NotificationBell({ className }: NotificationBellProps) {
     try {
       await markNotificationRead(id);
     } catch {
-      // silent rollback fetch to sync state
       void loadNotifications();
     }
   };
@@ -81,33 +80,49 @@ export function NotificationBell({ className }: NotificationBellProps) {
           label={unreadCount > 9 ? "9+" : unreadCount}
           disabled={unreadCount === 0}
           size={16}
+          color="#e8fb25"
         >
           <ActionIcon
-            variant="filled"
-            color="cyan"
+            variant="transparent"
             aria-label="Notifications"
             className={cn(
-              "border border-white/10 bg-surface text-foreground transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10",
+              "border border-[rgba(255,255,255,0.08)] bg-transparent text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0]",
               className,
             )}
             onClick={() => setOpened((value) => !value)}
           >
-            <Bell size={18} />
+            <Bell size={16} />
           </ActionIcon>
         </Indicator>
       </Popover.Target>
 
-      <Popover.Dropdown className="border border-white/10 bg-[#0b1120] text-foreground shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
-        <Text fw={700} size="sm" mb="xs" className="text-foreground">
+      <Popover.Dropdown
+        style={{
+          background: "#111117",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: "3px",
+        }}
+      >
+        <Text
+          fw={700}
+          size="xs"
+          mb="xs"
+          style={{
+            fontFamily: "var(--font-barlow-condensed)",
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+            color: "#f0f0f0",
+          }}
+        >
           Notifications
         </Text>
 
         {loading ? (
-          <Text size="sm" c="dimmed" className="text-slate-400">
+          <Text size="sm" style={{ color: "#555560" }}>
             Loading notifications...
           </Text>
         ) : items.length === 0 ? (
-          <Text size="sm" c="dimmed" className="text-slate-400">
+          <Text size="sm" style={{ color: "#555560" }}>
             No notifications yet.
           </Text>
         ) : (
@@ -119,14 +134,14 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   type="button"
                   onClick={() => void onRead(item.id)}
                   className={cn(
-                    "w-full rounded-xl border px-3 py-2 text-left text-sm transition-all hover:border-accent-primary/30 hover:bg-white/8",
+                    "w-full rounded-[3px] border px-3 py-2 text-left text-sm transition-colors",
                     item.is_read
-                      ? "border-white/10 bg-white/5 text-slate-300"
-                      : "border-accent-primary/20 bg-accent-primary/10 text-foreground",
+                      ? "border-[rgba(255,255,255,0.08)] bg-transparent text-[#555560] hover:border-white/15 hover:text-[#f0f0f0]"
+                      : "border-[rgba(232,251,37,0.2)] bg-[#1a1a10] text-[#f0f0f0] hover:border-[rgba(232,251,37,0.4)]",
                   )}
                 >
                   <p>{item.message}</p>
-                  <p className="mt-1 text-xs text-slate-400">
+                  <p className="mt-1 text-xs text-[#555560]">
                     {new Date(item.created_at).toLocaleString()}
                   </p>
                 </button>

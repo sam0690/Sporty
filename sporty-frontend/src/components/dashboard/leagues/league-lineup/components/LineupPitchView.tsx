@@ -115,8 +115,8 @@ function PitchSlotMarker({
         }}
         className={`relative flex flex-col items-center justify-center transition-all duration-200 ${
           player
-            ? `cursor-grab p-1 ${isSelected ? "rounded-xl ring-2 ring-white/40 ring-offset-2 ring-offset-green-900/40" : ""}`
-            : "h-12 w-12 rounded-full border border-dashed border-white/20 bg-white/5 backdrop-blur-[2px] hover:bg-white/10"
+            ? `cursor-grab p-1 ${isSelected ? "rounded-[3px] ring-2 ring-white/40 ring-offset-2 ring-offset-green-900/40" : ""}`
+            : "h-12 w-12 rounded-[3px] border border-dashed border-white/20 bg-[#1d1d26] backdrop-blur-[2px] hover:bg-[#1d1d26]"
         } ${draggable.isDragging ? "shadow-2xl" : ""}`}
       >
         {player ? (
@@ -124,25 +124,25 @@ function PitchSlotMarker({
             {/* Player Container */}
             <div className="relative">
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full border border-white/25 bg-white shadow-lg sm:h-14 sm:w-14 ${isSelected ? "ring-2 ring-accent-primary" : ""}`}
+                className={`flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/25 bg-white shadow-lg sm:h-14 sm:w-14 ${isSelected ? "ring-2 ring-accent-primary" : ""}`}
               >
                 <span className="text-xl">{getSportIcon(player.sport)}</span>
               </div>
 
               {/* Status Badges */}
               {isCaptain ? (
-                <div className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-yellow-400 text-[10px] font-bold text-yellow-950 shadow-sm ring-2 ring-white/10">
+                <div className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-[3px] bg-yellow-400 text-[10px] font-700 text-yellow-950 shadow-sm ring-2 ring-white/10">
                   C
                 </div>
               ) : isViceCaptain ? (
-                <div className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-sky-400 text-[10px] font-bold text-sky-950 shadow-sm ring-2 ring-white/10">
+                <div className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-[3px] bg-sky-400 text-[10px] font-700 text-sky-950 shadow-sm ring-2 ring-white/10">
                   VC
                 </div>
               ) : null}
 
               {/* Points/Sport Overlay */}
               <div
-                className={`absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full border text-[9px] font-bold shadow-sm ring-2 ring-white/10 ${getSportAccentClass(player.sport)}`}
+                className={`absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-[3px] border text-[9px] font-700 shadow-sm ring-2 ring-white/10 ${getSportAccentClass(player.sport)}`}
               >
                 {typeof player.points === "number" ? player.points : "0"}
               </div>
@@ -155,7 +155,7 @@ function PitchSlotMarker({
                 event.stopPropagation();
                 onRemove(slot.id);
               }}
-              className="absolute -right-3 bottom-8 flex h-5 w-5 translate-y-1/2 items-center justify-center rounded-full bg-red-500/90 text-[10px] text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 hover:bg-red-600"
+              className="absolute -right-3 bottom-8 flex h-5 w-5 translate-y-1/2 items-center justify-center rounded-[3px] bg-red-500/90 text-[10px] text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 hover:bg-red-600"
               aria-label={`Remove ${player.name}`}
             >
               ×
@@ -163,17 +163,17 @@ function PitchSlotMarker({
 
             {/* Name/Label */}
             <div className="absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 text-center">
-              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 text-[10px] font-bold text-white backdrop-blur-xs">
+              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 text-[10px] font-700 text-white backdrop-blur-xs">
                 {player.name}
               </p>
-              <p className="mt-0.5 text-[9px] font-medium uppercase tracking-tighter text-white/80">
+              <p className="mt-0.5 text-[9px] uppercase tracking-[2px]er text-white/80">
                 {player.position}
               </p>
             </div>
           </div>
         ) : (
           <div className="pointer-events-none flex flex-col items-center">
-            <span className="text-[9px] font-bold uppercase text-white/40">
+            <span className="text-[9px] font-700 uppercase text-white/40">
               {slot.label}
             </span>
           </div>
@@ -208,22 +208,22 @@ function DraggableBenchPlayerCard({ player }: DraggableBenchPlayerCardProps) {
       style={style}
       {...draggable.listeners}
       {...draggable.attributes}
-      className="cursor-grab rounded-2xl border border-white/10 bg-white/5 p-3 shadow-[0_12px_36px_rgba(0,0,0,0.2)] transition hover:bg-white/8 hover:shadow-[0_16px_44px_rgba(0,0,0,0.28)]"
+      className="cursor-grab rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 transition hover:bg-[#1d1d26] hover:shadow-[0_16px_44px_rgba(0,0,0,0.28)]"
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-semibold text-foreground">
+        <p className="truncate text-sm font-600 text-[#f0f0f0]">
           {player.name}
         </p>
         <span className="text-base" aria-label={player.sport}>
           {getSportIcon(player.sport)}
         </span>
       </div>
-      <p className="mt-1 text-xs text-foreground/60">{player.position}</p>
-      <p className="mt-1 truncate text-xs text-foreground/60">
+      <p className="mt-1 text-xs text-[#555560]">{player.position}</p>
+      <p className="mt-1 truncate text-xs text-[#555560]">
         {player.realTeam}
       </p>
-      <p className="mt-1 text-xs font-medium text-accent-primary">
+      <p className="mt-1 text-xs text-[#e8fb25]">
         Cost {player.cost}
       </p>
     </article>
@@ -512,17 +512,17 @@ export function LineupPitchView({
         }}
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
-          <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+          <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-semibold text-foreground">
+              <h3 className="text-base font-600 text-[#f0f0f0]">
                 Bench Players
               </h3>
-              <p className="text-xs text-foreground/55">Drag to pitch</p>
+              <p className="text-xs text-[#555560]">Drag to pitch</p>
             </div>
 
             <div className="max-h-155 space-y-2 overflow-y-auto pr-1">
               {benchPlayers.length === 0 ? (
-                <p className="rounded-2xl border border-white/10 bg-white/5 p-3 text-sm text-foreground/55">
+                <p className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-sm text-[#555560]">
                   No bench players.
                 </p>
               ) : (
@@ -535,12 +535,12 @@ export function LineupPitchView({
 
           <section className="mx-auto w-full max-w-2xl animate-[fade-soft_0.2s_ease]">
             {isMultiSport ? (
-              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-foreground/75">
-                <span className="rounded-full border border-orange-400/20 bg-orange-500/10 px-3 py-1 font-medium text-orange-100">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#f0f0f0]/75">
+                <span className="rounded-[3px] border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-orange-100">
                   🏀 Basketball: {activeSportCounts.basketball ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.basketball}
                 </span>
-                <span className="rounded-full border border-accent-primary/30 bg-accent-primary/10 px-3 py-1 font-medium text-accent-primary">
+                <span className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 text-[#e8fb25]">
                   ⚽ Football: {activeSportCounts.football ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.football}
                 </span>
@@ -574,11 +574,11 @@ export function LineupPitchView({
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-2xl border border-white/10 bg-surface/95 px-3 py-2 shadow-[0_18px_48px_rgba(0,0,0,0.35)]">
-              <p className="text-sm font-medium text-foreground">
+            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-3 py-2">
+              <p className="text-sm text-[#f0f0f0]">
                 {playerById[activeDragPlayerId].name}
               </p>
-              <p className="text-xs text-foreground/60">
+              <p className="text-xs text-[#555560]">
                 {playerById[activeDragPlayerId].position}
               </p>
             </div>
@@ -586,31 +586,31 @@ export function LineupPitchView({
         </DragOverlay>
       </DndContext>
 
-      <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-foreground">
+          <h3 className="text-lg font-600 text-[#f0f0f0]">
             Captain Assignment
           </h3>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground/60">
+          <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#555560]">
             Click a player on the pitch to assign C/VC
           </span>
         </div>
 
         {!selectedLineupPlayer ? (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 p-4 text-center text-sm text-foreground/55">
+          <div className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-center text-sm text-[#555560]">
             Select a starter on the pitch to assign captain or vice-captain.
           </div>
         ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <p className="text-sm font-semibold text-foreground">
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4">
+            <p className="text-sm font-600 text-[#f0f0f0]">
               {selectedLineupPlayer.name}
             </p>
-            <p className="mt-1 text-xs text-foreground/60">
+            <p className="mt-1 text-xs text-[#555560]">
               {selectedLineupPlayer.position} • {selectedLineupPlayer.realTeam}
             </p>
 
             <div className="mt-4 space-y-3">
-              <label className="flex items-center gap-2 text-sm text-foreground">
+              <label className="flex items-center gap-2 text-sm text-[#f0f0f0]">
                 <input
                   type="checkbox"
                   checked={selectedLineupPlayer.isCaptain}
@@ -621,7 +621,7 @@ export function LineupPitchView({
                 Make Captain
               </label>
 
-              <label className="flex items-center gap-2 text-sm text-foreground">
+              <label className="flex items-center gap-2 text-sm text-[#f0f0f0]">
                 <input
                   type="checkbox"
                   checked={selectedLineupPlayer.isViceCaptain}

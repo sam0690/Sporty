@@ -482,8 +482,8 @@ export function CreateLeagueView() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 font-[system-ui,-apple-system] text-foreground">
-      <p className="text-sm text-foreground/60">
+    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 font-[system-ui,-apple-system] text-[#f0f0f0]">
+      <p className="text-sm text-[#f0f0f0]/60">
         Manager: {username || "Sporty User"}
       </p>
 
@@ -494,12 +494,12 @@ export function CreateLeagueView() {
       />
 
       {displayError ? (
-        <div className="rounded-md border border-danger/20 bg-danger/5 px-4 py-2 text-sm text-danger">
+        <div className="rounded-[3px] border border-danger/20 bg-danger/5 px-4 py-2 text-sm text-danger">
           {displayError}
         </div>
       ) : null}
 
-      <div className="animate-[fade-soft_0.2s_ease] rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+      <div className="animate-[fade-soft_0.2s_ease] rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-8 ">
         <div className="mt-2">
           {step === 1 ? (
             <LeagueBasicInfo
@@ -554,7 +554,7 @@ export function CreateLeagueView() {
               <button
                 type="button"
                 onClick={handlePreviousStep}
-                className="w-full rounded-full border border-white/10 bg-white/5 px-8 py-2.5 font-medium text-foreground transition-colors hover:bg-white/10 sm:w-auto"
+                className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 font-medium text-[#f0f0f0] transition-colors hover:bg-white/10 sm:w-auto"
               >
                 Back
               </button>
@@ -564,7 +564,7 @@ export function CreateLeagueView() {
             <button
               type="button"
               onClick={handleNextStep}
-              className="w-full rounded-full bg-accent-primary px-8 py-2.5 font-semibold text-black shadow-sm transition-colors hover:bg-accent-secondary sm:w-auto"
+              className="w-full rounded-full bg-accent-primary px-8 py-2.5 font-600 text-black shadow-sm transition-colors hover:bg-accent-secondary sm:w-auto"
             >
               Next
             </button>

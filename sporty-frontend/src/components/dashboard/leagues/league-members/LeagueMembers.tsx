@@ -75,25 +75,25 @@ export function LeagueMembers() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
       <NavigationTabs
         activeTab="members"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-        <h2 className="text-lg font-medium text-foreground">League Members</h2>
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+        <h2 className="text-lg text-[#f0f0f0]">League Members</h2>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by member or team name"
-          className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
         />
       </div>
 
       {isLoading ? (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-foreground/60 backdrop-blur-xl">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 text-sm text-[#555560] ">
           Loading members...
         </div>
       ) : null}

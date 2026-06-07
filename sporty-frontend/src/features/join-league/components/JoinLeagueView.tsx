@@ -83,12 +83,12 @@ export function JoinLeagueView() {
   const isLoading = discoverLoading || joinMutation.isPending;
 
   return (
-    <section className="mx-auto max-w-4xl space-y-8 px-6 py-12 text-foreground font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
+    <section className="mx-auto max-w-4xl space-y-8 px-6 py-12 text-[#f0f0f0] font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif]">
       <header className="mb-10 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+        <h1 className="text-3xl font-700 tracking-tight text-[#f0f0f0]">
           Join a League
         </h1>
-        <p className="mt-2 text-slate-400">
+        <p className="mt-2 text-[#555560]">
           Enter an invite code to join an existing league
         </p>
       </header>
@@ -98,9 +98,9 @@ export function JoinLeagueView() {
       ) : null}
 
       {isLoading ? (
-        <div className="mx-auto max-w-md space-y-3 rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
+        <div className="mx-auto max-w-md space-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-8 ">
           <CardSkeleton />
-          <div className="h-10 animate-pulse rounded-full bg-white/8" />
+          <div className="h-10 animate-pulse rounded-full bg-[#1d1d26]" />
         </div>
       ) : (
         <JoinForm
@@ -126,7 +126,7 @@ export function JoinLeagueView() {
       <div className="text-center text-sm">
         <Link
           href="/create-league"
-          className="text-slate-400 transition-colors hover:text-accent-primary"
+          className="text-[#555560] transition-colors hover:text-[#e8fb25]"
         >
           Don&apos;t have a league? Create one →
         </Link>

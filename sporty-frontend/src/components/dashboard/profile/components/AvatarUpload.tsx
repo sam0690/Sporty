@@ -61,9 +61,9 @@ export function AvatarUpload({
   };
 
   return (
-    <section className="card-fade-in rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
+    <section className="card-fade-in rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
       <div className="flex flex-wrap items-center gap-4">
-        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full bg-white/10 text-slate-400">
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-[3px] bg-[#1d1d26] text-[#555560]">
           {preview ? (
             <img
               src={preview}
@@ -71,7 +71,7 @@ export function AvatarUpload({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="text-sm font-semibold">No Image</span>
+            <span className="text-sm font-600">No Image</span>
           )}
         </div>
 
@@ -86,7 +86,7 @@ export function AvatarUpload({
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-foreground transition-colors hover:bg-white/8"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
           >
             Upload New Avatar
           </button>
@@ -96,7 +96,7 @@ export function AvatarUpload({
               type="button"
               onClick={saveAvatar}
               disabled={isUploading}
-              className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-4 py-2 text-slate-950 transition-colors hover:brightness-110 disabled:opacity-70"
+              className="rounded-[3px] bg-linear-to-r [#e8fb25] px-4 py-2 text-slate-950 transition-colors hover:brightness-110 disabled:opacity-70"
             >
               {isUploading ? "Saving..." : "Save"}
             </button>

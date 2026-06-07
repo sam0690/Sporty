@@ -12,13 +12,13 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center rounded-full border border-accent-primary/30 bg-accent-primary/10 px-3 py-1 text-[11px] font-semibold tracking-[0.08em] text-accent-primary">
+      <span className="inline-flex items-center rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 text-[11px] font-600 tracking-[0.08em] text-[#e8fb25]">
         {content.badge}
       </span>
 
       <h1
         id="landing-hero-title"
-        className="mt-6 font-display text-4xl font-bold tracking-tight text-foreground md:text-5xl"
+        className="mt-6 font-bebas text-6xl tracking-[4px] text-[#f0f0f0] md:text-8xl"
       >
         {titleLines.map((line) => (
           <span key={line} className="block">
@@ -27,7 +27,7 @@ export function LeftContent({ content }: LeftContentProps) {
         ))}
       </h1>
 
-      <p className="mt-5 max-w-xl text-base leading-7 text-foreground/70 md:text-lg">
+      <p className="mt-5 max-w-xl text-base leading-7 text-[#555560] md:text-lg">
         {content.description}
       </p>
 
@@ -45,9 +45,9 @@ export function LeftContent({ content }: LeftContentProps) {
                 variant={isPrimary ? "primary" : "outline"}
                 size="lg"
                 className={cn(
-                  "h-11 min-w-36 rounded-full px-6 text-sm font-semibold",
+                  "h-11 min-w-36 rounded-[3px] px-6 text-sm font-600",
                   !isPrimary &&
-                    "!border-white/20 !text-foreground hover:!bg-white/10 hover:!text-foreground",
+                    "!border-white/20 !text-[#f0f0f0] hover:!bg-[#1d1d26] hover:!text-[#f0f0f0]",
                 )}
               >
                 {!isPrimary ? (
@@ -72,16 +72,16 @@ export function LeftContent({ content }: LeftContentProps) {
         })}
       </div>
 
-      <p className="mt-5 text-sm text-foreground/50">
+      <p className="mt-5 text-sm text-[#555560]">
         Football | Basketball | Cricket - All in one place
       </p>
 
-      <div className="mt-8 flex items-center gap-4 text-sm text-foreground/60">
+      <div className="mt-8 flex items-center gap-4 text-sm text-[#555560]">
         <div className="flex -space-x-2" aria-hidden="true">
           {content.stat.avatars.map((avatar) => (
             <span
               key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-accent-primary/20 text-[10px] font-semibold text-foreground"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-background bg-[rgba(232,251,37,0.2)] text-[10px] font-600 text-[#f0f0f0]"
             >
               {avatar}
             </span>

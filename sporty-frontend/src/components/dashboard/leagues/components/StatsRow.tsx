@@ -12,18 +12,19 @@ export function StatsRow({
   totalPoints,
 }: StatsRowProps) {
   return (
-    <section className="flex flex-wrap items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-xs font-semibold text-slate-300 shadow-[0_10px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
-      <span className="rounded-full bg-white/6 px-3 py-1">
-        {totalLeagues} leagues
-      </span>
-      <span className="text-white/20">•</span>
-      <span className="rounded-full bg-white/6 px-3 py-1">
-        Best rank #{highestRank || "-"}
-      </span>
-      <span className="text-white/20">•</span>
-      <span className="rounded-full bg-white/6 px-3 py-1">
-        {totalPoints} points
-      </span>
+    <section className="flex flex-wrap items-center gap-0 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] divide-x divide-[rgba(255,255,255,0.08)]">
+      {[
+        { label: "Leagues", value: totalLeagues },
+        { label: "Best Rank", value: highestRank ? `#${highestRank}` : "—" },
+        { label: "Total Pts", value: totalPoints },
+      ].map(({ label, value }) => (
+        <div key={label} className="flex-1 px-5 py-4 text-center">
+          <p className="font-bebas text-3xl tracking-[2px] text-[#e8fb25]">
+            {value}
+          </p>
+          <p className="section-label mt-1">{label}</p>
+        </div>
+      ))}
     </section>
   );
 }

@@ -26,7 +26,7 @@ export function ProfileHeader({
   const initial = name.slice(0, 1).toUpperCase();
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
       <div className="flex items-center gap-4">
         {avatar ? (
           <Image
@@ -37,20 +37,20 @@ export function ProfileHeader({
             className="h-16 w-16 rounded-full object-cover"
           />
         ) : (
-          <span className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-accent-primary/20 text-xl font-semibold text-foreground">
+          <span className="inline-flex h-16 w-16 items-center justify-center rounded-[3px] bg-[rgba(232,251,37,0.2)] text-xl font-600 text-[#f0f0f0]">
             {initial}
           </span>
         )}
 
         <div>
-          <h2 className="text-xl font-medium text-foreground">{name}</h2>
-          <p className="text-sm text-foreground/60">
+          <h2 className="font-bebas text-3xl tracking-[2px] text-[#f0f0f0]">{name}</h2>
+          <p className="text-sm text-[#555560]">
             Joined {formatDate(joinDate)}
           </p>
         </div>
       </div>
 
-      <p className="mt-4 text-sm text-foreground/65">{bio}</p>
+      <p className="mt-4 text-sm text-[#555560]">{bio}</p>
     </section>
   );
 }

@@ -14,7 +14,7 @@ type TeamPreviewProps = {
 
 function LoadingPitch() {
   return (
-    <div className="relative mx-auto aspect-3/4 animate-pulse overflow-hidden rounded-3xl border border-white/10 bg-white/5 shadow-[0_28px_80px_rgba(0,0,0,0.22)]">
+    <div className="relative mx-auto aspect-3/4 animate-pulse overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26]">
       {[
         "left-[35%] top-[10%]",
         "right-[35%] top-[10%]",
@@ -30,7 +30,7 @@ function LoadingPitch() {
       ].map((slot) => (
         <div
           key={slot}
-          className={`absolute ${slot} h-10 w-10 rounded-full bg-white/80 sm:h-14 sm:w-14`}
+          className={`absolute ${slot} h-10 w-10 rounded-[3px] bg-[#333340] sm:h-14 sm:w-14`}
         />
       ))}
     </div>
@@ -50,27 +50,23 @@ export function TeamPreview({
     : null;
 
   return (
-    <Card className="border-white/10 bg-surface/80">
+    <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="font-display text-xl font-bold text-foreground">
-          Team Preview
-        </CardTitle>
+        <CardTitle>Team Preview</CardTitle>
       </CardHeader>
       <CardContent className="pt-2">
         {isLoading ? (
-          <div className="space-y-4">
-            <LoadingPitch />
-          </div>
+          <LoadingPitch />
         ) : isError ? (
-          <div className="rounded-xl border border-danger/20 bg-danger/10 p-4 text-sm text-red-300">
+          <div className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[#2a1010] p-4 text-sm text-[#ff3b30]">
             Failed to load team previews.
           </div>
         ) : !hasLeagues ? (
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
             You have not joined a league yet.
           </div>
         ) : !activeSlide ? (
-          <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400">
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
             No lineup has been set yet.
           </div>
         ) : (
@@ -79,16 +75,14 @@ export function TeamPreview({
             onClick={() =>
               router.push(`/leagues/${activeSlide.leagueId}/lineup`)
             }
-            className="w-full rounded-2xl border border-white/10 p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/30 hover:shadow-[0_18px_50px_rgba(0,229,255,0.1)]"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] p-3 text-left transition-colors hover:border-[rgba(232,251,37,0.3)]"
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-foreground">
+              <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
                 {activeSlide.leagueName}
               </p>
-              <span className="rounded-full bg-accent-primary/15 px-2 py-0.5 text-xs font-semibold text-accent-primary">
-                {activeSlide.gameweek
-                  ? `GW ${activeSlide.gameweek}`
-                  : "Current GW"}
+              <span className="rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[#1a1a10] px-2 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#c8d85a]">
+                {activeSlide.gameweek ? `GW ${activeSlide.gameweek}` : "Current GW"}
               </span>
             </div>
 
@@ -99,10 +93,9 @@ export function TeamPreview({
                 renderSlot={({ slot }) => {
                   if (!slot.player) {
                     return (
-                      <div className="h-10 w-10 rounded-full border border-dashed border-white/15 bg-white/10 sm:h-14 sm:w-14" />
+                      <div className="h-10 w-10 rounded-[3px] border border-dashed border-[rgba(255,255,255,0.15)] bg-[#1d1d26] sm:h-14 sm:w-14" />
                     );
                   }
-
                   return (
                     <PlayerMarker
                       name={slot.player.name}

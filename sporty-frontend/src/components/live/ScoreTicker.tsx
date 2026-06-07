@@ -7,18 +7,14 @@ export function ScoreTicker() {
   const status = useMatchStore((s) => s.status);
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_14px_40px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-      <div className="text-xs uppercase tracking-wider text-foreground/55">
-        Live Score
+    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
+      <div className="flex items-center gap-2">
+        <span className="live-badge">Live Score</span>
       </div>
-      <div className="mt-2 flex items-center justify-between">
-        <div className="text-3xl font-semibold text-foreground">
-          {score.home}
-        </div>
-        <div className="text-sm font-medium text-foreground/55">{status}</div>
-        <div className="text-3xl font-semibold text-foreground">
-          {score.away}
-        </div>
+      <div className="mt-3 flex items-center justify-between">
+        <span className="font-bebas text-5xl tracking-[3px] text-[#e8fb25]">{score.home}</span>
+        <span className="section-label">{status}</span>
+        <span className="font-bebas text-5xl tracking-[3px] text-[#e8fb25]">{score.away}</span>
       </div>
     </div>
   );

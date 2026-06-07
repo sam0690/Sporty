@@ -14,80 +14,56 @@ type StandingsTableProps = {
   userTeamId: string;
 };
 
-function rankClass(rank: number): string {
-  if (rank === 1) {
-    return "text-yellow-300";
-  }
-
-  if (rank === 2) {
-    return "text-slate-300";
-  }
-
-  if (rank === 3) {
-    return "text-slate-400";
-  }
-
-  return "text-foreground";
-}
-
-function rankLabel(rank: number): string {
-  if (rank === 1) {
-    return "🥇";
-  }
-
-  if (rank === 2) {
-    return "🥈";
-  }
-
-  if (rank === 3) {
-    return "🥉";
-  }
-
-  return String(rank);
+function rankDisplay(rank: number): { text: string; className: string } {
+  if (rank === 1) return { text: String(rank), className: "text-[#e8fb25]" };
+  return { text: String(rank), className: "text-[#f0f0f0]" };
 }
 
 export function StandingsTable({ standings, userTeamId }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-surface/75 shadow-[0_18px_50px_rgba(0,0,0,0.24)] backdrop-blur-xl [animation:fade-soft_0.2s_ease]">
-      <h2 className="p-5 pb-0 text-md font-semibold text-foreground">
-        Standings
-      </h2>
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] animate-fade-soft">
+      <div className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+        <h2 className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-[#666]">
+          Standings
+        </h2>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-white/5">
+          <thead className="bg-[#1d1d26]">
             <tr>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Rank
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Team
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                Points
-              </th>
-              <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                W-L
-              </th>
+              {["Rank", "Team", "Points", "W-L"].map((col) => (
+                <th
+                  key={col}
+                  className="px-5 py-3 text-left font-barlow-condensed text-[10px] font-700 uppercase tracking-[3px] text-[#666]"
+                >
+                  {col}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
             {standings.map((team) => {
               const isUser = team.teamId === userTeamId;
+              const { text, className } = rankDisplay(team.rank);
 
               return (
                 <tr
                   key={team.teamId}
-                  className={`border-b border-white/8 text-sm transition-colors hover:bg-white/5 ${isUser ? "bg-accent-primary/10" : ""}`}
+                  className={`text-sm transition-colors hover:bg-[#1d1d26] ${isUser ? "bg-[rgba(232,251,37,0.05)]" : ""}`}
                 >
-                  <td
-                    className={`px-5 py-3 font-medium ${rankClass(team.rank)}`}
-                  >
-                    {rankLabel(team.rank)}
+                  <td className="px-5 py-3">
+                    <span className={`font-bebas text-xl tracking-[2px] ${className}`}>
+                      {text}
+                    </span>
                   </td>
-                  <td className="px-5 py-3 text-foreground">{team.teamName}</td>
-                  <td className="px-5 py-3 text-foreground">{team.points}</td>
-                  <td className="px-5 py-3 text-slate-400">
+                  <td className="px-5 py-3 text-[#f0f0f0]">{team.teamName}</td>
+                  <td className="px-5 py-3">
+                    <span className="font-bebas text-xl tracking-[1px] text-[#e8fb25]">
+                      {team.points}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3 text-[#555560]">
                     {team.wins}-{team.losses}
                   </td>
                 </tr>

@@ -228,13 +228,13 @@ export function LeagueSettings() {
 
   if (!isCommissioner) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
         <NavigationTabs
           activeTab="settings"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-foreground/60 backdrop-blur-xl">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 text-sm text-[#555560] ">
           Only the league commissioner can access settings.
         </div>
       </section>
@@ -242,7 +242,7 @@ export function LeagueSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
       <NavigationTabs
         activeTab="settings"
         leagueId={leagueId}
@@ -262,8 +262,8 @@ export function LeagueSettings() {
         }}
       />
 
-      <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-        <h3 className="text-sm font-medium text-foreground">
+      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+        <h3 className="text-sm text-[#f0f0f0]">
           League Lifecycle
         </h3>
         <div className="flex flex-wrap gap-2">
@@ -272,7 +272,7 @@ export function LeagueSettings() {
               key={status}
               type="button"
               onClick={() => handleStatusChange(status)}
-              className={`rounded-full border px-4 py-2 text-sm ${league?.status === status ? "border-accent-primary/30 bg-accent-primary/10 text-accent-primary" : "border-white/10 bg-white/5 text-foreground/70"}`}
+              className={`rounded-[3px] border px-4 py-2 text-sm ${league?.status === status ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"}`}
             >
               {getLifecycleStatusLabel(status, league)}
             </button>
@@ -283,22 +283,22 @@ export function LeagueSettings() {
           <button
             type="button"
             onClick={handleGenerateWindows}
-            className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-foreground hover:bg-white/8"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-sm text-[#f0f0f0] hover:bg-[#1d1d26]"
           >
             Generate Transfer Windows
           </button>
         ) : null}
       </section>
 
-      <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-        <h3 className="text-sm font-medium text-foreground">League Sports</h3>
+      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+        <h3 className="text-sm text-[#f0f0f0]">League Sports</h3>
         <div className="flex flex-wrap gap-2">
           {(league?.sports ?? []).map((leagueSport) => (
             <button
               key={leagueSport.sport.name}
               type="button"
               onClick={() => removeSport.mutateAsync(leagueSport.sport.name)}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-foreground hover:bg-white/8"
+              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-sm text-[#f0f0f0] hover:bg-[#1d1d26]"
             >
               {leagueSport.sport.display_name} x
             </button>
@@ -315,7 +315,7 @@ export function LeagueSettings() {
                 key={sport.name}
                 type="button"
                 onClick={() => addSport.mutateAsync(sport.name)}
-                className="rounded-full border border-accent-primary/20 px-4 py-2 text-sm text-accent-primary hover:bg-accent-primary/10"
+                className="rounded-[3px] border border-[rgba(232,251,37,0.2)] px-4 py-2 text-sm text-[#e8fb25] hover:bg-[rgba(232,251,37,0.1)]"
               >
                 + {sport.display_name}
               </button>
@@ -333,7 +333,7 @@ export function LeagueSettings() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-6 py-2.5 font-semibold text-slate-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-linear-to-r [#e8fb25] px-6 py-2.5 font-600 text-slate-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving..." : "Save Changes"}
         </button>

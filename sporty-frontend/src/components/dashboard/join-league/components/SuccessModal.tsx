@@ -28,18 +28,18 @@ export function SuccessModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xl">
-      <div className="animate-fade-in-scale w-full max-w-md rounded-4xl border border-white/10 bg-surface/90 p-6 text-center shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl">
-        <div className="mb-4 text-4xl text-accent-primary" aria-hidden="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 ">
+      <div className="animate-fade-in-scale w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-center  ">
+        <div className="mb-4 text-4xl text-[#e8fb25]" aria-hidden="true">
           ✅
         </div>
-        <h2 className="text-xl font-medium text-foreground">
+        <h2 className="text-xl text-[#f0f0f0]">
           Successfully Joined!
         </h2>
-        <p className="mt-2 font-medium text-accent-primary">
+        <p className="mt-2 text-[#e8fb25]">
           {leagueData.name}
         </p>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[#555560]">
           Team: {leagueData.teamName ?? "Not assigned yet"}
         </p>
 
@@ -58,7 +58,7 @@ export function SuccessModal({
               }
               router.push(`/leagues`);
             }}
-            className="w-full rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-6 py-2 font-medium text-slate-950 transition-colors hover:brightness-110"
+            className="w-full rounded-[3px] bg-linear-to-r [#e8fb25] px-6 py-2 text-slate-950 transition-colors hover:brightness-110"
           >
             Go to League
           </button>
@@ -72,7 +72,7 @@ export function SuccessModal({
               }
               router.push(`/leagues`);
             }}
-            className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-2 font-semibold text-foreground transition-colors hover:bg-white/8"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2 font-600 text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
           >
             Set Lineup
           </button>
@@ -80,7 +80,7 @@ export function SuccessModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-full border border-white/10 bg-white/5 px-6 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/8"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2 text-sm text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
           >
             Close
           </button>

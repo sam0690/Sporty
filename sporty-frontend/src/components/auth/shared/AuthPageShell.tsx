@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-import { FloatingSportsIcons } from "@/components/auth/shared/FloatingSportsIcons";
 
 type AuthPageShellProps = {
   children: ReactNode;
@@ -10,11 +9,8 @@ type AuthPageShellProps = {
 
 export function AuthPageShell({ children, hero }: AuthPageShellProps) {
   return (
-    <section className="relative w-full overflow-hidden bg-background px-4 py-8 text-foreground sm:px-6 sm:py-10">
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-25 auth-dot-pattern" />
-      <div className="pointer-events-none absolute -top-24 -left-24 -z-10 h-64 w-64 rounded-full bg-accent-primary/18 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-32 -z-10 h-72 w-72 rounded-full bg-accent-secondary/16 blur-3xl" />
-      <FloatingSportsIcons />
+    <section className="relative w-full min-h-screen overflow-hidden bg-[#0a0a0f] px-4 py-8 text-[#f0f0f0] sm:px-6 sm:py-10">
+      <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 auth-dot-pattern" />
 
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-8 md:grid-cols-2">
         <div className="w-full">{children}</div>

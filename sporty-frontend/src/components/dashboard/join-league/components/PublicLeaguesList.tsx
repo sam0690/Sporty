@@ -27,17 +27,17 @@ const sportBadgeStyles: Record<PublicLeague["sport"], string> = {
 export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
   return (
     <section className="mx-auto max-w-2xl space-y-3">
-      <h2 className="mb-4 text-md font-medium text-foreground">
+      <h2 className="mb-4 text-md text-[#f0f0f0]">
         Public Leagues
       </h2>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {leagues.map((league) => (
           <article
             key={league.id}
-            className="rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_20px_60px_rgba(0,0,0,0.16)] backdrop-blur-xl animate-[fade-soft_0.2s_ease]"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4   animate-[fade-soft_0.2s_ease]"
           >
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-medium text-foreground">{league.name}</h3>
+              <h3 className="font-medium text-[#f0f0f0]">{league.name}</h3>
               <span
                 className="text-base"
                 aria-label={league.sport}
@@ -46,16 +46,16 @@ export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
                 {sportBadgeStyles[league.sport]}
               </span>
             </div>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[#555560]">
               Members: {league.memberCount}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-[#555560]">
               {league.requiresInviteCode
                 ? "Requires invite code"
                 : "Open for direct join"}
             </p>
             {league.joinMessage ? (
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-[#555560]">
                 {league.joinMessage}
               </p>
             ) : null}
@@ -72,7 +72,7 @@ export function PublicLeaguesList({ leagues, onJoin }: PublicLeaguesListProps) {
                 league.requiresInviteCode || league.joinableNow === false
               }
               onClick={() => onJoin(league)}
-              className="mt-3 rounded-full border border-border bg-white px-4 py-1.5 text-sm font-medium text-black transition-colors hover:border-primary-500 disabled:cursor-not-allowed disabled:border-border disabled:bg-accent/20 disabled:text-secondary/60"
+              className="mt-3 rounded-[3px] border border-border bg-white px-4 py-1.5 text-sm text-black transition-colors hover:border-primary-500 disabled:cursor-not-allowed disabled:border-border disabled:bg-accent/20 disabled:text-secondary/60"
             >
               Join
             </button>

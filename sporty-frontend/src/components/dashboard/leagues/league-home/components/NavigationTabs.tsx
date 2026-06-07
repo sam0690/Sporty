@@ -33,40 +33,23 @@ export function NavigationTabs({
   const router = useRouter();
 
   const goToTab = (tab: TabKey) => {
-    if (tab === "overview") {
-      router.push(`/leagues/${leagueId}`);
-      return;
-    }
-
-    if (tab === "lineup") {
-      router.push(`/leagues/${leagueId}/lineup`);
-      return;
-    }
-
-    if (tab === "leaderboard") {
-      router.push(`/leagues/${leagueId}/leaderboard`);
-      return;
-    }
-
-    if (tab === "members") {
-      router.push(`/leagues/${leagueId}/members`);
-      return;
-    }
-
-    if (tab === "invite") {
-      router.push(`/leagues/${leagueId}/invite`);
-      return;
-    }
-
-    router.push(`/leagues/${leagueId}/settings`);
+    const routes: Record<TabKey, string> = {
+      overview:    `/leagues/${leagueId}`,
+      lineup:      `/leagues/${leagueId}/lineup`,
+      leaderboard: `/leagues/${leagueId}/leaderboard`,
+      members:     `/leagues/${leagueId}/members`,
+      invite:      `/leagues/${leagueId}/invite`,
+      settings:    `/leagues/${leagueId}/settings`,
+    };
+    router.push(routes[tab]);
   };
 
   return (
     <nav
-      className="mb-6 overflow-x-auto rounded-3xl border border-white/10 bg-surface/70 p-2 shadow-[0_16px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+      className="mb-6 overflow-x-auto rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1"
       aria-label="League Navigation Tabs"
     >
-      <div className="flex min-w-max gap-2">
+      <div className="flex min-w-max gap-1">
         {tabs
           .filter((tab) => tab.key !== "settings" || isCommissioner)
           .map((tab) => {
@@ -77,10 +60,10 @@ export function NavigationTabs({
                 key={tab.key}
                 type="button"
                 onClick={() => goToTab(tab.key)}
-                className={`rounded-lg border px-4 py-2 text-sm font-medium transition-all ${
+                className={`rounded-[3px] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
                   isActive
-                    ? "border-accent-primary/25 bg-white/10 text-foreground shadow-[0_0_0_1px_rgba(0,229,255,0.18)]"
-                    : "border-transparent bg-white/5 text-slate-300 hover:border-white/10 hover:bg-white/8 hover:text-foreground"
+                    ? "bg-[#e8fb25] text-[#0a0a0f]"
+                    : "bg-transparent text-[#555560] hover:bg-[#1d1d26] hover:text-[#f0f0f0]"
                 }`}
               >
                 {tab.label}

@@ -9,14 +9,11 @@ export function Logo({ onClick }: LogoProps) {
     <Link
       href="/"
       onClick={onClick}
-      className="inline-flex items-center gap-2 rounded-full px-2 py-1 text-foreground transition-colors hover:text-accent-primary hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary"
+      className="inline-flex items-center hover:no-underline focus-visible:outline-none"
       aria-label="Sporty home"
     >
-      <span className="text-base text-accent-primary" aria-hidden="true">
-        ●
-      </span>
-      <span className="font-display text-xl font-bold tracking-[0.14em] uppercase">
-        Sporty
+      <span className="font-bebas text-2xl tracking-[3px] text-[#e8fb25]">
+        SPORTY
       </span>
     </Link>
   );

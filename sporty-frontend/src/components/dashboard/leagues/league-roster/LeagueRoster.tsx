@@ -404,13 +404,13 @@ export function LeagueRoster() {
   if (isLoading || !roster) {
     return (
       <section className="max-w-7xl mx-auto px-6 py-8 space-y-6">
-        <div className="h-10 w-56 animate-pulse rounded-lg bg-accent/20" />
-        <div className="mx-auto aspect-3/4 w-full max-w-2xl rounded-lg bg-accent/20 p-6">
+        <div className="h-10 w-56 animate-pulse rounded-[3px] bg-accent/20" />
+        <div className="mx-auto aspect-3/4 w-full max-w-2xl rounded-[3px] bg-accent/20 p-6">
           <div className="grid grid-cols-3 gap-4">
             {Array.from({ length: 9 }, (_, index) => (
               <div
                 key={index}
-                className="h-12 w-12 animate-pulse rounded-full bg-accent/30"
+                className="h-12 w-12 animate-pulse rounded-[3px] bg-accent/30"
               />
             ))}
           </div>
@@ -426,15 +426,15 @@ export function LeagueRoster() {
 
   if (teamError) {
     return (
-      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
+      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
         <NavigationTabs
           activeTab="lineup"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
 
-        <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-5">
-          <h2 className="text-base font-semibold text-red-200">
+        <div className="rounded-[3px] border border-red-500/20 bg-red-500/10 p-5">
+          <h2 className="text-base font-600 text-red-200">
             Unable to load roster
           </h2>
           <p className="mt-1 text-sm text-red-200/80">
@@ -443,7 +443,7 @@ export function LeagueRoster() {
           <button
             type="button"
             onClick={() => void refetchTeam()}
-            className="mt-4 rounded-full border border-red-500/20 bg-white/5 px-4 py-2 text-sm font-medium text-red-200 hover:bg-red-500/10"
+            className="mt-4 rounded-[3px] border border-red-500/20 bg-[#1d1d26] px-4 py-2 text-sm text-red-200 hover:bg-red-500/10"
           >
             Retry
           </button>
@@ -457,8 +457,8 @@ export function LeagueRoster() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
-      <p className="text-sm text-slate-400">
+    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
+      <p className="text-sm text-[#555560]">
         Manager: {username || "Sporty User"}
       </p>
 
@@ -523,11 +523,11 @@ export function LeagueRoster() {
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 shadow-[0_16px_50px_rgba(0,0,0,0.28)]">
-              <p className="text-sm font-medium text-foreground">
+            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2">
+              <p className="text-sm text-[#f0f0f0]">
                 {playerById[activeDragPlayerId].name}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#555560]">
                 {playerById[activeDragPlayerId].position}
               </p>
             </div>
@@ -536,7 +536,7 @@ export function LeagueRoster() {
       </DndContext>
 
       {isMultiSport ? (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-3 text-sm text-foreground">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-sm text-[#f0f0f0]">
           Sport Limits: {activeSportSummary}
         </div>
       ) : null}
@@ -546,7 +546,7 @@ export function LeagueRoster() {
           type="button"
           onClick={handleSave}
           disabled={!isDirty || isSaving}
-          className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-6 py-2.5 text-sm font-medium text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-linear-to-r [#e8fb25] px-6 py-2.5 text-sm text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving..." : "Save Lineup"}
         </button>

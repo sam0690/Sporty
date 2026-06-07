@@ -1,191 +1,142 @@
 @import "tailwindcss";
 
+/* ── Design Tokens ──────────────────────────────────────────────── */
+
 :root {
-  --background: #050816;
-  --foreground: #f8fafc;
-  --border-light: rgba(255, 255, 255, 0.12);
-  --surface-light: #0c1224;
-  --surface-strong: #11192f;
-  --surface-glow: rgba(45, 212, 191, 0.14);
-  --accent-primary: #00e5ff;
-  --accent-secondary: #ff3d81;
-  --accent-tertiary: #fbbf24;
-  --accent-success: #22c55e;
-  --accent-danger: #ef4444;
+  --background: #0a0a0f;
+  --foreground: #f0f0f0;
+  --foreground-muted: #555560;
+  --surface: #111117;
+  --surface-elevated: #1d1d26;
+  --border: rgba(255, 255, 255, 0.08);
+  --border-input: rgba(255, 255, 255, 0.12);
+
+  /* Accents */
+  --volt: #e8fb25;
+  --volt-dim: rgba(232, 251, 37, 0.25);
+  --live: #ff3b30;
+  --accent-cricket: #00d4ff;
+  --accent-basketball: #ff6b00;
+  --accent-football: #4caf50;
+  --accent-rugby: #e040fb;
+
+  /* Legacy aliases (keep components working) */
+  --accent-primary: #e8fb25;
+  --accent-secondary: #ff3b30;
+  --accent-tertiary: #ff6b00;
+  --accent-success: #4caf50;
+  --accent-danger: #ff3b30;
+  --surface-light: #111117;
+  --surface-strong: #1d1d26;
+  --border-light: rgba(255, 255, 255, 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-surface: var(--surface-light);
-  --color-surface-strong: var(--surface-strong);
-  --color-accent-primary: var(--accent-primary);
-  --color-accent-secondary: var(--accent-secondary);
-  --color-accent-tertiary: var(--accent-tertiary);
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-display: "Montserrat", "Inter", sans-serif;
+  --color-foreground-muted: var(--foreground-muted);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-elevated);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-volt: var(--volt);
+  --color-live: var(--live);
+  --color-accent-primary: var(--volt);
+  --color-accent-secondary: var(--live);
+  --color-accent-tertiary: var(--accent-basketball);
+  --color-accent-success: var(--accent-football);
+  --color-accent-danger: var(--live);
+  --color-border: var(--border);
+  --font-sans: "Barlow", system-ui, sans-serif;
+  --font-display: "Barlow Condensed", system-ui, sans-serif;
+  --font-bebas: "Bebas Neue", sans-serif;
+  --font-barlow-condensed: "Barlow Condensed", sans-serif;
 }
 
+/* ── Base ──────────────────────────────────────────────────────── */
+
 html {
-  background:
-    radial-gradient(circle at top left, rgba(0, 229, 255, 0.16), transparent 32%),
-    radial-gradient(circle at top right, rgba(255, 61, 129, 0.14), transparent 30%),
-    linear-gradient(180deg, #050816 0%, #070b19 48%, #04050d 100%);
+  background: var(--background);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Barlow", system-ui, sans-serif;
   min-height: 100vh;
-  background-attachment: fixed;
 }
 
-/* ── Animations ─────────────────────────────────────────────── */
+/* ── Animations ─────────────────────────────────────────────────── */
 
 @keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in-scale {
-  animation: fadeInScale 0.4s ease-out forwards;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.5s ease-out forwards;
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-soft {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.animate-fade-soft {
-  animation: fade-soft 0.4s ease-out forwards;
-}
-
-.card-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 @keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animate-float-delay-1 {
-  animation: float 7s ease-in-out infinite 1s;
-}
-
-.animate-float-delay-2 {
-  animation: float 8s ease-in-out infinite 2s;
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.6s ease-out forwards;
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.35; }
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.btn-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.animate-fade-in-scale  { animation: fadeInScale 0.3s ease-out forwards; }
+.animate-fade-in        { animation: fade-in 0.4s ease-out forwards; }
+.animate-fade-soft      { animation: fade-soft 0.3s ease-out forwards; }
+.card-fade-in           { animation: fade-in 0.25s ease-out forwards; }
+.animate-slide-in-left  { animation: slide-in-left 0.4s ease-out forwards; }
+.animate-live-pulse     { animation: live-pulse 1.2s ease-in-out infinite; }
+
+/* ── Sport badge system ─────────────────────────────────────────── */
+
+.sport-badge-football   { background: #1a2a1a; color: #4caf50; }
+.sport-badge-cricket    { background: #1a1a2a; color: #00d4ff; }
+.sport-badge-basketball { background: #2a1a1a; color: #ff6b00; }
+.sport-badge-rugby      { background: #2a1a2a; color: #e040fb; }
+.sport-badge-multisport { background: #1a1a26; color: #e8fb25; }
+
+/* ── LIVE indicator ─────────────────────────────────────────────── */
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Barlow Condensed", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #ff3b30;
 }
 
-@keyframes ripple {
-  0% {
-    transform: scale(0);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(4);
-    opacity: 0;
-  }
-}
-
-.ripple-effect {
-  position: relative;
-  overflow: hidden;
-}
-
-.ripple-effect::after {
+.live-badge::before {
   content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
+  display: block;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: rgba(0, 229, 255, 0.24);
-  transform: translate(-50%, -50%);
-  transition: width 0.3s, height 0.3s;
+  background: #ff3b30;
+  animation: live-pulse 1.2s ease-in-out infinite;
 }
 
-.auth-dot-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
-  background-size: 16px 16px;
-}
-
-.ripple-effect:active::after {
-  width: 220px;
-  height: 220px;
-}
-
-.auth-shell input:focus {
-  transform: translateY(-2px);
-}
-
-/* ── Toast Notifications ─────────────────────────────────────── */
+/* ── Toast Notifications ─────────────────────────────────────────── */
 
 .sporty-toast-root {
   position: fixed;
@@ -204,33 +155,23 @@ body {
   gap: 0.625rem;
   min-width: 260px;
   max-width: 340px;
-  border-radius: 0.75rem;
+  border-radius: 3px;
   padding: 0.75rem 1rem;
-  color: #f8fafc;
+  color: #f0f0f0;
+  font-family: "Barlow Condensed", sans-serif;
   font-size: 0.875rem;
-  font-weight: 600;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   opacity: 0;
   transform: translateY(-6px);
   animation: fadeInScale 0.18s ease-out forwards;
 }
 
-.sporty-toast-success {
-  background: linear-gradient(135deg, #16a34a, #22c55e);
-}
-
-.sporty-toast-error {
-  background: linear-gradient(135deg, #ef4444, #f97316);
-}
-
-.sporty-toast-info {
-  background: linear-gradient(135deg, #2563eb, #00e5ff);
-}
-
-.sporty-toast-warning {
-  background: linear-gradient(135deg, #f59e0b, #fbbf24);
-  color: #050816;
-}
+.sporty-toast-success { background: #1a2a1a; border: 1px solid #4caf50; color: #4caf50; }
+.sporty-toast-error   { background: #2a1010; border: 1px solid #ff3b30; color: #ff3b30; }
+.sporty-toast-info    { background: #1a1a2a; border: 1px solid #00d4ff; color: #00d4ff; }
+.sporty-toast-warning { background: #1a1a10; border: 1px solid var(--volt-dim); color: #c8d85a; }
 
 .sporty-toast-icon {
   display: inline-flex;
@@ -238,79 +179,92 @@ body {
   justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
-  border-radius: 9999px;
-  background-color: rgba(244, 244, 249, 0.24);
+  border-radius: 3px;
   font-size: 0.75rem;
   font-weight: 700;
 }
 
-/* ── Scrollbar ────────────────────────────────────────────────── */
+/* ── Alert / deadline bars ───────────────────────────────────────── */
 
-::-webkit-scrollbar {
-  width: 6px;
+.alert-deadline {
+  background: #1a1a10;
+  border: 1px solid rgba(232, 251, 37, 0.25);
+  color: #c8d85a;
+  border-radius: 3px;
+  padding: 0.75rem 1rem;
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
 }
 
-::-webkit-scrollbar-track {
-  background: #070b19;
-  border-radius: 10px;
+/* ── Stat boxes ─────────────────────────────────────────────────── */
+
+.stat-box-number {
+  font-family: "Bebas Neue", sans-serif;
+  color: #e8fb25;
 }
 
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #00e5ff, #ff3d81);
-  border-radius: 10px;
+.stat-box-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #666;
+  text-transform: uppercase;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #22d3ee, #fb7185);
+/* ── Section labels ─────────────────────────────────────────────── */
+
+.section-label {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #666;
+  text-transform: uppercase;
 }
 
-::selection {
-  background: rgba(0, 229, 255, 0.3);
-  color: #f8fafc;
-}
+/* ── Scrollbar ────────────────────────────────────────────────────── */
 
-/* ── Base element transitions ─────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: #0a0a0f; }
+::-webkit-scrollbar-thumb { background: #333340; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #555560; }
+
+::selection { background: rgba(232, 251, 37, 0.25); color: #f0f0f0; }
+
+/* ── Base element transitions ─────────────────────────────────────── */
 
 button {
-  transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
-button:hover:not(:disabled) {
-  transform: scale(0.98);
+button:hover:not(:disabled) { opacity: 0.9; }
+button:active:not(:disabled) { transform: scale(0.98); }
+
+a { transition: color 0.15s ease; }
+a:hover { text-decoration: underline; }
+
+tr { transition: background-color 0.15s ease; }
+
+/* ── Auth dot pattern ───────────────────────────────────────────── */
+
+.auth-dot-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
-.glow-border {
-  box-shadow:
-    0 0 0 1px rgba(255, 255, 255, 0.08),
-    0 0 24px rgba(0, 229, 255, 0.12),
-    0 0 48px rgba(255, 61, 129, 0.08);
+/* ── Diagonal/angled dividers ────────────────────────────────────── */
+
+.angled-top {
+  clip-path: polygon(0 4%, 100% 0, 100% 100%, 0 100%);
 }
 
-.glass-panel {
-  background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(7, 11, 25, 0.88));
-  backdrop-filter: blur(18px);
+.angled-bottom {
+  clip-path: polygon(0 0, 100% 0, 100% 96%, 0 100%);
 }
 
-article {
-  transition: box-shadow 0.2s ease;
-}
+/* ── Leaderboard rank colors ─────────────────────────────────────── */
 
-article:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-}
-
-tr {
-  transition: background-color 0.2s ease;
-}
-
-tr:hover {
-  background-color: rgba(4, 114, 77, 0.05);
-}
-
-a {
-  transition: all 0.2s ease;
-}
-
-a:hover {
-  text-decoration: underline;
-}
+.rank-1 { color: #e8fb25; }
+.rank-2 { color: #f0f0f0; }
+.rank-3 { color: #f0f0f0; }
+.rank-rest { color: #333340; }

@@ -21,10 +21,10 @@ export function LeaderboardFilters({
             key={group}
             type="button"
             onClick={() => onGroupChange?.(group)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            className={`rounded-[3px] px-3 py-2 text-sm transition-colors ${
               isActive
-                ? "border border-accent-primary/30 bg-accent-primary/10 text-accent-primary"
-                : "border border-white/10 bg-white/5 text-foreground/70 hover:bg-white/8"
+                ? "border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
+                : "border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560] hover:bg-[#1d1d26]"
             }`}
           >
             {group}

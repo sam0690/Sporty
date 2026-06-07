@@ -45,9 +45,7 @@ export function LeagueHome() {
     useApiQuery(
       ["leagues", leagueId, "transfer-window", "status"],
       () => fetchTransferWindowStatus(leagueId),
-      {
-        enabled: !!leagueId,
-      },
+      { enabled: !!leagueId },
     );
   const leaveLeague = useLeaveLeague();
   const { username } = useMe();
@@ -74,12 +72,9 @@ export function LeagueHome() {
   const handleLeaveLeague = async () => {
     if (!league) return;
     if (isCommissioner) {
-      toastifier.error(
-        "✕ Transfer commissioner role before leaving this league",
-      );
+      toastifier.error("Transfer commissioner role before leaving this league");
       return;
     }
-
     setIsLeaving(true);
     try {
       await leaveLeague.mutateAsync(league.id);
@@ -92,14 +87,12 @@ export function LeagueHome() {
 
   if (isLoading) {
     return (
-      <section className="max-w-6xl mx-auto px-6 py-8 space-y-6 font-[system-ui,-apple-system]">
-        <div className="h-12 rounded-lg bg-accent/30 animate-pulse" />
-        <div className="h-10 w-40 rounded-lg bg-accent/30 animate-pulse" />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <TableSkeleton />
-          </div>
-          <div className="space-y-6 lg:col-span-1">
+      <section className="mx-auto max-w-6xl space-y-4 px-6 py-8">
+        <div className="h-12 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+        <div className="h-10 w-40 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2"><TableSkeleton /></div>
+          <div className="space-y-4 lg:col-span-1">
             <CardSkeleton />
             <CardSkeleton />
           </div>
@@ -109,10 +102,8 @@ export function LeagueHome() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
-      <div className="text-sm text-slate-400">
-        Manager: {username || "Sporty User"}
-      </div>
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+      <p className="section-label">Manager: {username || "Sporty User"}</p>
 
       <LeagueHeader
         leagueName={league?.name || ""}
@@ -125,10 +116,7 @@ export function LeagueHome() {
         currentWeek={currentWeek}
         totalWeeks={activeWindow?.total_number || 16}
         onWeekChange={(week) => {
-          if (week < 1 || (activeWindow && week > activeWindow.total_number)) {
-            return;
-          }
-
+          if (week < 1 || (activeWindow && week > activeWindow.total_number)) return;
           setSelectedWeek(week);
         }}
       />
@@ -140,13 +128,13 @@ export function LeagueHome() {
       />
 
       {transferWindowLoading ? (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400 backdrop-blur-xl">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 text-sm text-[#555560]">
           Checking transfer window status...
         </div>
       ) : isTransferWindowActive ? (
         <TransferFields leagueId={leagueId} />
       ) : (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 text-sm text-slate-400 backdrop-blur-xl">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 text-sm text-[#555560]">
           No transfer window is currently active for this league.
         </div>
       )}
@@ -158,55 +146,48 @@ export function LeagueHome() {
           disabled={isCommissioner || isLeaving}
           title={
             isCommissioner
-              ? "Commissioner cannot leave - delete league or transfer ownership"
+              ? "Commissioner cannot leave — delete league or transfer ownership"
               : "Leave this league"
           }
-          className="rounded-full border border-red-500/20 px-4 py-2 text-sm font-medium text-red-300 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#ff3b30] transition-colors hover:bg-[rgba(255,59,48,0.1)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Leave League
         </button>
       </div>
 
       {myTeam && league ? (
-        <>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="space-y-6 order-1 lg:order-2 lg:col-span-1">
-              <CurrentMatchup
-                yourTeamName={myTeam.name}
-                yourScore={0} // To be connected when scoring API is ready
-                opponentTeamName="TBD"
-                opponentScore={0}
-              />
-              <YourScoreCard yourScore={0} weeklyRank={0} pointsBehind={0} />
-            </div>
-
-            <div className="order-2 lg:order-1 lg:col-span-2">
-              <StandingsTable
-                standings={[]} // Will use Leaderboard API
-                userTeamId={myTeam.id}
-              />
-            </div>
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+          <div className="space-y-5 order-1 lg:order-2 lg:col-span-1">
+            <CurrentMatchup
+              yourTeamName={myTeam.name}
+              yourScore={0}
+              opponentTeamName="TBD"
+              opponentScore={0}
+            />
+            <YourScoreCard yourScore={0} weeklyRank={0} pointsBehind={0} />
           </div>
-        </>
+          <div className="order-2 lg:order-1 lg:col-span-2">
+            <StandingsTable standings={[]} userTeamId={myTeam.id} />
+          </div>
+        </div>
       ) : (
         <div className="space-y-4">
           {isDraftMode ? (
             leagueStatus === "setup" ? (
-              <div className="rounded-3xl border border-amber-400/20 bg-amber-400/10 p-5 text-sm text-amber-200">
-                Draft has not started yet. Team creation happens through the
-                draft only.
+              <div className="alert-deadline">
+                Draft has not started yet. Team creation happens through the draft only.
               </div>
             ) : leagueStatus === "drafting" ? (
-              <div className="rounded-3xl border border-accent-primary/20 bg-accent-primary/10 p-5 text-sm text-accent-primary">
+              <div className="rounded-[3px] border border-[rgba(0,212,255,0.3)] bg-[#1a1a2a] p-5 text-sm text-[#00d4ff]">
                 Draft is in progress. Make your picks from the draft screen.
               </div>
             ) : (
-              <div className="rounded-3xl border border-white/10 bg-white/5 p-5 text-sm text-slate-300 backdrop-blur-xl">
+              <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 text-sm text-[#555560]">
                 Draft is complete, but your team is not available yet.
               </div>
             )
           ) : (
-            <div className="rounded-3xl border border-emerald-400/20 bg-emerald-400/10 p-5 text-sm text-emerald-200">
+            <div className="rounded-[3px] border border-[rgba(76,175,80,0.3)] bg-[#1a2a1a] p-5 text-sm text-[#4caf50]">
               Build your team to start competing in this budget league.
             </div>
           )}
@@ -222,7 +203,7 @@ export function LeagueHome() {
                       : `/create-team?leagueId=${league.id}`,
                   )
                 }
-                className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-5 py-2 text-sm font-semibold text-slate-950 hover:brightness-110"
+                className="rounded-[3px] bg-[#e8fb25] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
               >
                 {hasMyTeam ? "View Team" : "Build Team"}
               </button>
@@ -231,10 +212,8 @@ export function LeagueHome() {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() =>
-                  router.push(`/create-team?leagueId=${league.id}`)
-                }
-                className="rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-5 py-2 text-sm font-semibold text-slate-950 hover:brightness-110"
+                onClick={() => router.push(`/create-team?leagueId=${league.id}`)}
+                className="rounded-[3px] bg-[#e8fb25] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
               >
                 Open Draft Screen
               </button>
@@ -246,22 +225,27 @@ export function LeagueHome() {
       )}
 
       {showLeaveModal ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xl">
-          <div className="w-full max-w-md rounded-4xl border border-white/10 bg-surface/90 p-6 shadow-[0_28px_80px_rgba(0,0,0,0.38)] backdrop-blur-xl">
-            <h3 className="text-lg font-medium text-foreground">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !isLeaving) setShowLeaveModal(false);
+          }}
+        >
+          <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
+            <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
               Leave League?
             </h3>
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[#555560]">
               {isCommissioner
                 ? "Commissioners cannot leave until they transfer league ownership."
                 : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
             </p>
-
             <div className="mt-6 flex gap-2">
               <button
                 type="button"
                 onClick={() => setShowLeaveModal(false)}
-                className="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-foreground hover:bg-white/8"
+                className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
               >
                 Cancel
               </button>
@@ -269,7 +253,7 @@ export function LeagueHome() {
                 type="button"
                 onClick={handleLeaveLeague}
                 disabled={isLeaving || isCommissioner}
-                className="flex-1 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2 font-medium text-red-200 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex-1 rounded-[3px] bg-[#ff3b30] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isLeaving ? "Leaving..." : "Confirm Leave"}
               </button>

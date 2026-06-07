@@ -27,10 +27,10 @@ export function DeleteLeagueModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-surface/95 p-6 text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-        <h3 className="text-lg font-medium text-foreground">Delete League</h3>
-        <p className="mt-2 text-sm text-foreground/60">
-          Type <span className="font-medium text-foreground">{leagueName}</span>{" "}
+      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0] ">
+        <h3 className="text-lg text-[#f0f0f0]">Delete League</h3>
+        <p className="mt-2 text-sm text-[#555560]">
+          Type <span className="font-medium text-[#f0f0f0]">{leagueName}</span>{" "}
           to confirm permanent deletion.
         </p>
 
@@ -38,14 +38,14 @@ export function DeleteLeagueModal({
           value={confirmText}
           onChange={(event) => onConfirmTextChange(event.target.value)}
           placeholder="League name"
-          className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none focus:border-red-400/30 focus:ring-2 focus:ring-red-400/20"
+          className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-red-400/30 focus:border-[#e8fb25]"
         />
 
         <div className="mt-6 flex gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-foreground hover:bg-white/8"
+            className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] hover:bg-[#1d1d26]"
           >
             Cancel
           </button>
@@ -53,7 +53,7 @@ export function DeleteLeagueModal({
             type="button"
             disabled={!canDelete || isDeleting}
             onClick={onConfirm}
-            className="flex-1 rounded-full border border-danger/30 bg-danger/5 px-4 py-2 font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-[3px] border border-danger/30 bg-danger/5 px-4 py-2 text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isDeleting ? "Deleting..." : "Delete League"}
           </button>

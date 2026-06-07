@@ -22,16 +22,10 @@ type PlayerSlotProps = {
   disabled?: boolean;
 };
 
-const sportBadgeStyles: Record<Sport, string> = {
-  football: "bg-accent-football/10 text-accent-football",
-  basketball: "bg-accent-basketball/10 text-accent-basketball",
-  cricket: "bg-accent-cricket/10 text-accent-cricket",
-};
-
-const sportIcons: Record<Sport, string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
+const sportAccentColor: Record<Sport, string> = {
+  football: "#4caf50",
+  basketball: "#ff6b00",
+  cricket: "#00d4ff",
 };
 
 export function PlayerSlot({
@@ -45,61 +39,44 @@ export function PlayerSlot({
     <article
       role="button"
       tabIndex={disabled ? -1 : 0}
-      onClick={() => {
-        if (!disabled) {
-          onToggle(player.id);
-        }
-      }}
+      onClick={() => { if (!disabled) onToggle(player.id); }}
       onKeyDown={(event) => {
-        if (disabled) {
-          return;
-        }
-
+        if (disabled) return;
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           onToggle(player.id);
         }
       }}
-      className={`group flex items-center justify-between rounded-2xl border p-3 transition-all duration-150 ${
-        isActive ? "border-white/10 bg-white/5" : "border-white/10 bg-white/5"
-      } ${
-        variant === "bench"
-          ? "cursor-grab active:cursor-grabbing hover:bg-white/10"
-          : "cursor-pointer"
-      } ${disabled ? "cursor-not-allowed opacity-60" : "active:rotate-1 active:opacity-50 active:shadow-lg"}`}
+      style={{ borderLeft: `3px solid ${sportAccentColor[player.sport]}` }}
+      className={`group flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-3 transition-colors ${
+        variant === "bench" ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
+      } ${disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[#1d1d26]"}`}
       aria-disabled={disabled}
     >
       <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-medium text-foreground">{player.name}</p>
-        </div>
-        <div className="mt-1 flex items-center gap-2 text-sm text-foreground/60">
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs capitalize ${sportBadgeStyles[player.sport]}`}
-          >
-            {sportIcons[player.sport]}
-          </span>
-          <span>{player.position}</span>
-        </div>
-        <p className="mt-1 text-sm text-foreground/60">
-          Projected: {player.projected.toFixed(1)}
+        <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          {player.name}
         </p>
+        <div className="mt-1 flex items-center gap-2">
+          <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+            {player.position}
+          </span>
+          <span className="section-label">Proj: {player.projected.toFixed(1)}</span>
+        </div>
       </div>
 
       <div className="ml-3 flex items-center gap-2">
         {variant === "bench" ? (
-          <GripVertical className="h-4 w-4 text-foreground/45" />
+          <GripVertical className="h-4 w-4 text-[#555560]" />
         ) : null}
         <button
           type="button"
           disabled={disabled}
           onClick={(event) => {
             event.stopPropagation();
-            if (!disabled) {
-              onToggle(player.id);
-            }
+            if (!disabled) onToggle(player.id);
           }}
-          className="rounded-full p-1 text-foreground/45 transition-colors hover:text-red-200 disabled:opacity-60"
+          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] p-1 text-[#555560] transition-colors hover:border-[rgba(255,59,48,0.3)] hover:text-[#ff3b30] disabled:opacity-60"
           aria-label={isActive ? "Remove from lineup" : "Add to lineup"}
         >
           {isActive ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}

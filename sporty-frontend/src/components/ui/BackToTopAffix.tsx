@@ -34,7 +34,7 @@ export default function BackToTopAffix({
             aria-label="Back to top"
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className={cn(
-                "fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white shadow-dropdown transition-transform hover:scale-110",
+                "fixed bottom-6 right-6 z-50 flex h-10 w-10 items-center justify-center rounded-[3px] bg-primary text-white shadow-dropdown transition-transform hover:scale-110",
                 className,
             )}
         >

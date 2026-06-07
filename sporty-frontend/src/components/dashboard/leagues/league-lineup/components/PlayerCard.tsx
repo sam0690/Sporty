@@ -11,10 +11,10 @@ type PlayerCardProps = {
   disabled?: boolean;
 };
 
-const sportAccentStyles: Record<string, string> = {
-  football: "border-cyan-400/20 bg-cyan-500/10 text-cyan-100",
-  basketball: "border-orange-400/20 bg-orange-500/10 text-orange-100",
-  cricket: "border-emerald-400/20 bg-emerald-500/10 text-emerald-100",
+const sportAccentColor: Record<string, string> = {
+  football: "#4caf50",
+  basketball: "#ff6b00",
+  cricket: "#00d4ff",
 };
 
 export function PlayerCard({
@@ -25,36 +25,34 @@ export function PlayerCard({
   starterToggleDisabled = false,
   disabled = false,
 }: PlayerCardProps) {
-  const captainStyle = player.isCaptain
-    ? "border-yellow-400/20 bg-yellow-500/10"
-    : player.isViceCaptain
-      ? "border-blue-400/20 bg-blue-500/10"
-      : "border-white/10 bg-white/5";
-
-  const sportAccent =
-    sportAccentStyles[player.sportName] ??
-    "border-white/10 bg-white/5 text-foreground/80";
+  const accentColor = sportAccentColor[player.sportName] ?? "#555560";
 
   return (
     <article
-      className={`rounded-2xl border p-4 shadow-[0_12px_36px_rgba(0,0,0,0.16)] transition-colors ${captainStyle}`}
+      style={{ borderLeft: `3px solid ${accentColor}` }}
+      className={`rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 transition-colors ${
+        player.isCaptain
+          ? "border-l-[#e8fb25]"
+          : player.isViceCaptain
+            ? "border-l-[#555560]"
+            : ""
+      }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-base font-semibold text-foreground">
+          <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
             {player.name}
           </p>
-          <p className="mt-1 text-sm text-foreground/60">{player.realTeam}</p>
+          <p className="mt-1 text-sm text-[#555560]">{player.realTeam}</p>
         </div>
-
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {player.isCaptain ? (
-            <span className="rounded-full border border-yellow-400/20 bg-yellow-500/10 px-2 py-0.5 text-xs font-semibold text-yellow-100">
+            <span className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-2 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#e8fb25]">
               C
             </span>
           ) : null}
           {player.isViceCaptain ? (
-            <span className="rounded-full border border-blue-400/20 bg-blue-500/10 px-2 py-0.5 text-xs font-semibold text-blue-100">
+            <span className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#1d1d26] px-2 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0]">
               VC
             </span>
           ) : null}
@@ -62,17 +60,18 @@ export function PlayerCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-foreground/75">
+        <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0]">
           {player.position}
         </span>
         <span
-          className={`rounded-full border px-2.5 py-1 text-xs font-medium ${sportAccent}`}
+          className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+          style={{ color: accentColor, background: `${accentColor}18` }}
         >
           {player.sportDisplayName}
         </span>
       </div>
 
-      <p className="mt-4 text-sm font-medium text-foreground">
+      <p className="mt-3 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
         Cost: {player.cost}
       </p>
 
@@ -81,11 +80,13 @@ export function PlayerCard({
           type="button"
           onClick={() => onToggleStarter?.(player.playerId)}
           disabled={disabled || starterToggleDisabled}
-          className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+          className={`rounded-[3px] border px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
             player.isStarter
-              ? "border-red-400/20 bg-red-500/10 text-red-100 hover:bg-red-500/15"
-              : "border-emerald-400/20 bg-emerald-500/10 text-emerald-100 hover:bg-emerald-500/15"
-          } disabled:cursor-not-allowed disabled:opacity-60`}
+              ? "border-[rgba(255,59,48,0.3)] bg-[#2a1010] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.2)]"
+              : starterToggleDisabled
+                ? "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"
+                : "border-[rgba(76,175,80,0.3)] bg-[#1a2a1a] text-[#4caf50] hover:bg-[rgba(76,175,80,0.2)]"
+          }`}
         >
           {player.isStarter
             ? "Move to Bench"
@@ -100,11 +101,7 @@ export function PlayerCard({
               type="button"
               onClick={() => onSetCaptain?.(player.playerId)}
               disabled={disabled}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                player.isCaptain
-                  ? "border-yellow-400/20 bg-yellow-500/10 text-yellow-100"
-                  : "border-yellow-400/20 bg-yellow-500/10 text-yellow-100 hover:bg-yellow-500/15"
-              } disabled:cursor-not-allowed disabled:opacity-60`}
+              className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Set Captain
             </button>
@@ -112,11 +109,7 @@ export function PlayerCard({
               type="button"
               onClick={() => onSetViceCaptain?.(player.playerId)}
               disabled={disabled}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-                player.isViceCaptain
-                  ? "border-blue-400/20 bg-blue-500/10 text-blue-100"
-                  : "border-blue-400/20 bg-blue-500/10 text-blue-100 hover:bg-blue-500/15"
-              } disabled:cursor-not-allowed disabled:opacity-60`}
+              className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#1d1d26] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#f0f0f0] transition-colors hover:bg-[rgba(255,255,255,0.1)] disabled:cursor-not-allowed disabled:opacity-60"
             >
               Set Vice-Captain
             </button>

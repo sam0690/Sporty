@@ -93,11 +93,11 @@ export function PitchSlot({
       >
         {player ? (
           <>
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-sm sm:h-10 sm:w-10">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-white text-sm sm:h-10 sm:w-10">
               {sportIcons[player.sport]}
             </div>
             <div className="pointer-events-none absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 text-center">
-              <p className="w-20 truncate text-xs font-medium text-white/90">
+              <p className="w-20 truncate text-xs text-white/90">
                 {player.name}
               </p>
               <p className="text-[10px] text-white/70">
@@ -111,7 +111,7 @@ export function PitchSlot({
                 event.stopPropagation();
                 onRemove(slot.id);
               }}
-              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] text-secondary shadow hover:text-danger"
+              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-[3px] bg-white text-[10px] text-secondary shadow hover:text-danger"
               aria-label={`Bench ${player.name}`}
             >
               x

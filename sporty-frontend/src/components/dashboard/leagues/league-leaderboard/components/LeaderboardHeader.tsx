@@ -10,11 +10,11 @@ type LeaderboardHeaderProps = {
   totalWeeks: number;
 };
 
-const sportIcons: Record<Sport, string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
-  multisport: "⚽🏀🏏",
+const sportBadgeClass: Record<Sport, string> = {
+  football: "sport-badge-football",
+  basketball: "sport-badge-basketball",
+  cricket: "sport-badge-cricket",
+  multisport: "sport-badge-multisport",
 };
 
 export function LeaderboardHeader({
@@ -23,19 +23,23 @@ export function LeaderboardHeader({
   seasonName,
 }: LeaderboardHeaderProps) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-5">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="font-bebas text-5xl tracking-[3px] text-[#f0f0f0]">
           {leagueName}
         </h1>
-        <span className="text-lg" aria-label={sport} title={sport}>
-          {sportIcons[sport]}
+        <span
+          className={`rounded-[3px] px-2 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+          aria-label={sport}
+          title={sport}
+        >
+          {sport}
         </span>
       </div>
 
-      <p className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-foreground/70">
+      <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560]">
         Season {seasonName || "Unknown"}
-      </p>
+      </span>
     </header>
   );
 }

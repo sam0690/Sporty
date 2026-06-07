@@ -10,12 +10,12 @@ export function ScoringRulesEditor({
   onChange,
 }: ScoringRulesEditorProps) {
   return (
-    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-      <h3 className="text-sm font-medium text-foreground">Scoring Rules</h3>
+    <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+      <h3 className="text-sm text-[#f0f0f0]">Scoring Rules</h3>
       <div className="grid grid-cols-2 gap-4">
         {Object.entries(scoringRules).map(([rule, value]) => (
           <div key={rule}>
-            <label className="mb-1 block text-sm text-foreground/60">
+            <label className="mb-1 block text-sm text-[#555560]">
               {rule}
             </label>
             <input
@@ -30,7 +30,7 @@ export function ScoringRulesEditor({
                   [rule]: Number.isNaN(next) ? 0 : next,
                 });
               }}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
             />
           </div>
         ))}

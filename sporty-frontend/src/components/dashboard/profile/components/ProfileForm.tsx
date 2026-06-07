@@ -53,10 +53,10 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   return (
     <form
       onSubmit={handleSave}
-      className="card-fade-in space-y-5 rounded-[1.75rem] border border-white/10 bg-surface/80 p-6 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+      className="card-fade-in space-y-5 rounded-[1.75rem] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 "
     >
       <div className="space-y-2">
-        <label htmlFor="display-name" className="text-sm text-slate-400">
+        <label htmlFor="display-name" className="text-sm text-[#555560]">
           Display Name
         </label>
         <input
@@ -65,13 +65,13 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           onChange={(event) =>
             setForm((prev) => ({ ...prev, name: event.target.value }))
           }
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none transition-all focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           required
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="email" className="text-sm text-slate-400">
+        <label htmlFor="email" className="text-sm text-[#555560]">
           Email
         </label>
         <input
@@ -81,14 +81,14 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           onChange={(event) =>
             setForm((prev) => ({ ...prev, email: event.target.value }))
           }
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none transition-all focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           required
           readOnly
         />
       </div>
 
       <div className="space-y-2">
-        <label htmlFor="bio" className="text-sm text-slate-400">
+        <label htmlFor="bio" className="text-sm text-[#555560]">
           Bio
         </label>
         <textarea
@@ -101,10 +101,10 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
               bio: event.target.value.slice(0, 160),
             }))
           }
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-foreground outline-none transition-all focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none transition-all focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           maxLength={160}
         />
-        <p className="text-right text-xs text-slate-500">
+        <p className="text-right text-xs text-[#555560]">
           {form.bio.length}/160
         </p>
       </div>
@@ -113,7 +113,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         <button
           type="submit"
           disabled={isSaving}
-          className="rounded-full bg-linear-to-r from-accent-primary via-cyan-400 to-accent-secondary px-6 py-2 text-sm font-semibold text-background transition-all hover:brightness-110 disabled:opacity-70"
+          className="rounded-[3px] bg-linear-to-r [#e8fb25] px-6 py-2 text-sm font-600 text-background transition-all hover:brightness-110 disabled:opacity-70"
         >
           {isSaving ? "Saving..." : "Save"}
         </button>
@@ -121,7 +121,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         <button
           type="button"
           onClick={() => setForm(user)}
-          className="rounded-full border border-white/10 bg-white/5 px-6 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-accent-primary/20 hover:bg-white/8 hover:text-foreground"
+          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2 text-sm font-600 text-[#f0f0f0] transition-colors hover:border-[rgba(232,251,37,0.2)] hover:bg-[#1d1d26] hover:text-[#f0f0f0]"
         >
           Cancel
         </button>

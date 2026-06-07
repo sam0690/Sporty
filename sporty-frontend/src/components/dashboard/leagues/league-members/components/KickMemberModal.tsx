@@ -21,9 +21,9 @@ export function KickMemberModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-3xl border border-white/10 bg-surface/95 p-6 text-foreground shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-        <h3 className="text-lg font-medium text-foreground">Kick Member?</h3>
-        <p className="mt-2 text-sm text-foreground/65">
+      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0] ">
+        <h3 className="text-lg text-[#f0f0f0]">Kick Member?</h3>
+        <p className="mt-2 text-sm text-[#f0f0f0]/65">
           Remove {memberName} from this league?
         </p>
 
@@ -31,7 +31,7 @@ export function KickMemberModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-foreground transition-colors hover:bg-white/10"
+            className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
           >
             Cancel
           </button>
@@ -39,7 +39,7 @@ export function KickMemberModal({
             type="button"
             onClick={onConfirm}
             disabled={isKicking}
-            className="flex-1 rounded-full border border-danger/30 bg-danger/5 px-4 py-2 font-medium text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-[3px] border border-danger/30 bg-danger/5 px-4 py-2 text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isKicking ? "Removing..." : "Kick Member"}
           </button>

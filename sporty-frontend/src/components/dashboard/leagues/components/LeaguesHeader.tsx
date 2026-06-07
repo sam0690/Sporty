@@ -10,13 +10,13 @@ export function LeaguesHeader({ userName }: LeaguesHeaderProps) {
   const router = useRouter();
 
   return (
-    <header className="flex flex-wrap items-end justify-between gap-4 rounded-[2rem] border border-white/10 bg-surface/70 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.24)] backdrop-blur-xl">
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
       <div>
-        <p className="text-sm text-slate-400">Welcome back, {userName}</p>
-        <h1 className="font-display text-3xl font-bold tracking-[0.04em] text-foreground uppercase sm:text-4xl">
+        <p className="section-label">Welcome back, {userName}</p>
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
           My Leagues
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[#555560]">
           Your fantasy leagues at a glance
         </p>
       </div>
@@ -25,14 +25,14 @@ export function LeaguesHeader({ userName }: LeaguesHeaderProps) {
         <button
           type="button"
           onClick={() => router.push("/join-league")}
-          className="rounded-full border border-white/10 bg-white/6 px-4 py-2 text-sm font-medium text-slate-200 transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10 hover:text-foreground"
+          className="rounded-[3px] border border-[rgba(232,251,37,0.4)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:bg-[#e8fb25]/10"
         >
           Join League
         </button>
         <button
           type="button"
           onClick={() => router.push("/create-league")}
-          className="rounded-full border border-accent-primary/30 bg-gradient-to-r from-accent-primary to-accent-secondary px-4 py-2 text-sm font-semibold text-background shadow-glow transition-all hover:-translate-y-0.5 hover:brightness-110"
+          className="rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
         >
           Create League
         </button>

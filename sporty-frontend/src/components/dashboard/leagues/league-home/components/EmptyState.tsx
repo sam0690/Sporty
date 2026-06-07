@@ -11,7 +11,7 @@ export function EmptyState({ message }: EmptyStateProps) {
       <p className="text-secondary">{message}</p>
       <button
         type="button"
-        className="mt-4 rounded-lg bg-primary/100 px-4 py-2 text-white transition-colors hover:bg-primary/90"
+        className="mt-4 rounded-[3px] bg-primary/100 px-4 py-2 text-white transition-colors hover:bg-primary/90"
       >
         Invite Friends
       </button>

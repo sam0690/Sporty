@@ -45,7 +45,7 @@ export function LeagueGroup({ leagueName, players, sports }: LeagueGroupProps) {
 
   return (
     <section className="space-y-5">
-      <div className="relative h-24 overflow-hidden rounded-[1.5rem] border border-white/10 bg-linear-to-r from-slate-900 via-slate-800 to-slate-900">
+      <div className="relative h-24 overflow-hidden rounded-[1.5rem] border border-[rgba(255,255,255,0.08)] bg-linear-to-r from-slate-900 via-slate-800 to-slate-900">
         <Image
           src={sportImages[primarySport]}
           alt=""
@@ -57,14 +57,14 @@ export function LeagueGroup({ leagueName, players, sports }: LeagueGroupProps) {
 
         <header className="relative z-10 flex h-full items-center justify-between gap-3 px-4 sm:px-5">
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold text-foreground">
+            <h2 className="truncate text-lg font-600 text-[#f0f0f0]">
               {leagueName}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               {sportCounts.map(({ sport, count }) => (
                 <span
                   key={sport}
-                  className="rounded-full border border-white/10 bg-white/8 px-2 py-0.5 text-[11px] font-medium text-slate-300"
+                  className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-0.5 text-[11px] text-[#f0f0f0]"
                 >
                   {sportIcons[sport]} {count}
                 </span>
@@ -72,13 +72,13 @@ export function LeagueGroup({ leagueName, players, sports }: LeagueGroupProps) {
             </div>
           </div>
 
-          <span className="rounded-full border border-white/10 bg-white/8 px-2.5 py-1 text-xs font-medium text-slate-300">
+          <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2.5 py-1 text-xs text-[#f0f0f0]">
             {players.length} players
           </span>
         </header>
       </div>
 
-      <div className="mb-5 mt-1 border-b border-white/10" />
+      <div className="mb-5 mt-1 border-b border-[rgba(255,255,255,0.08)]" />
 
       <div className="space-y-3">
         {players.map((player) => (

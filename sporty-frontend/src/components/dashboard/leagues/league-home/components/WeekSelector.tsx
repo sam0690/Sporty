@@ -13,51 +13,45 @@ export function WeekSelector({
   totalWeeks,
   onWeekChange,
 }: WeekSelectorProps) {
-  if (totalWeeks <= 1) {
-    return null;
-  }
+  if (totalWeeks <= 1) return null;
 
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-surface/80 px-2 py-1 shadow-[0_12px_28px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+    <div className="inline-flex items-center gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-2 py-1">
       <button
         type="button"
         onClick={() => onWeekChange(currentWeek - 1)}
         disabled={currentWeek <= 1}
-        className="rounded-full p-1 text-slate-500 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-[3px] p-1 text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
         aria-label="Previous week"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
-      <p className="px-1 text-sm font-medium text-foreground">
+
+      <span className="px-2 font-bebas text-xl tracking-[2px] text-[#e8fb25]">
         Week {currentWeek}
-      </p>
-      <label htmlFor="week-select" className="sr-only">
-        Select week
-      </label>
+      </span>
+
+      <label htmlFor="week-select" className="sr-only">Select week</label>
       <select
         id="week-select"
         value={currentWeek}
-        onChange={(event) => {
-          onWeekChange(Number(event.target.value));
-        }}
-        className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs font-medium text-foreground outline-none transition-colors hover:border-accent-primary/20 focus:border-accent-primary/30"
+        onChange={(event) => onWeekChange(Number(event.target.value))}
+        className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0] outline-none transition-colors hover:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
         aria-label="Select week"
       >
         {Array.from({ length: totalWeeks }, (_, index) => {
           const week = index + 1;
-
           return (
-            <option key={week} value={week}>
-              Week {week}
-            </option>
+            <option key={week} value={week}>Week {week}</option>
           );
         })}
       </select>
+
       <button
         type="button"
         onClick={() => onWeekChange(currentWeek + 1)}
         disabled={currentWeek >= totalWeeks}
-        className="rounded-full p-1 text-slate-500 transition-colors hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40"
+        className="rounded-[3px] p-1 text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
         aria-label="Next week"
       >
         <ChevronRight className="h-4 w-4" />

@@ -80,26 +80,26 @@ export function PlayerMarket({
   );
 
   return (
-    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.18)] backdrop-blur-xl">
-      <h2 className="text-lg font-semibold text-foreground">Player Market</h2>
+    <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
+      <h2 className="text-lg font-600 text-[#f0f0f0]">Player Market</h2>
 
       <label className="relative block">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#555560]" />
         <input
           value={searchQuery}
           onChange={(event) => onSearchQueryChange(event.target.value)}
           placeholder="Search by player name..."
-          className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 pl-11 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 pl-11 text-sm text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
         />
       </label>
 
       <div className="grid gap-3 md:grid-cols-3">
-        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-xs uppercase tracking-wide text-[#555560]">
           <span>Position</span>
           <select
             value={selectedPosition}
             onChange={(event) => onPositionChange(event.target.value)}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           >
             {positions.map((position) => (
               <option key={position} value={position}>
@@ -109,7 +109,7 @@ export function PlayerMarket({
           </select>
         </label>
 
-        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-xs uppercase tracking-wide text-[#555560]">
           <span>Min cost</span>
           <input
             type="number"
@@ -118,11 +118,11 @@ export function PlayerMarket({
             value={minCost}
             onChange={(event) => onMinCostChange(event.target.value)}
             placeholder="0"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           />
         </label>
 
-        <label className="space-y-1 text-xs font-medium uppercase tracking-wide text-slate-400">
+        <label className="space-y-1 text-xs uppercase tracking-wide text-[#555560]">
           <span>Max cost</span>
           <input
             type="number"
@@ -131,14 +131,14 @@ export function PlayerMarket({
             value={maxCost}
             onChange={(event) => onMaxCostChange(event.target.value)}
             placeholder="Any"
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
           />
         </label>
       </div>
 
       {sport === "multisport" ? (
-        <div className="flex flex-wrap gap-2 text-xs text-slate-400">
-          <span className="uppercase tracking-wider text-slate-500">Sport</span>
+        <div className="flex flex-wrap gap-2 text-xs text-[#555560]">
+          <span className="uppercase tracking-wider text-[#555560]">Sport</span>
           {sports.map((sportOption) => {
             const active = sportOption === selectedSport;
             return (
@@ -146,7 +146,7 @@ export function PlayerMarket({
                 key={sportOption}
                 type="button"
                 onClick={() => onSportChange(sportOption)}
-                className={`rounded-full px-3 py-1.5 capitalize ${active ? "bg-accent-primary/10 text-accent-primary" : "bg-white/5 text-slate-300 hover:bg-white/8"}`}
+                className={`rounded-[3px] px-3 py-1.5 capitalize ${active ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "bg-[#1d1d26] text-[#f0f0f0] hover:bg-[#1d1d26]"}`}
               >
                 {sportOption}
               </button>
@@ -155,16 +155,16 @@ export function PlayerMarket({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 rounded-3xl border border-white/10 bg-white/5 px-4 py-3 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-400">
-          <span className="font-semibold text-foreground">
+      <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-[#555560]">
+          <span className="font-600 text-[#f0f0f0]">
             Page {currentPage}
           </span>
           <span>/ {Math.max(totalPages, 1)}</span>
           <span className="hidden sm:inline">•</span>
           <span>{totalPlayers} players total</span>
           {isLoadingPage ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-accent-primary/10 px-2.5 py-1 text-xs font-medium text-accent-primary">
+            <span className="inline-flex items-center gap-1 rounded-[3px] bg-[rgba(232,251,37,0.1)] px-2.5 py-1 text-xs text-[#e8fb25]">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Loading next page
             </span>
@@ -176,7 +176,7 @@ export function PlayerMarket({
             type="button"
             onClick={onPreviousPage}
             disabled={currentPage <= 1 || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-white/8 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-sm text-[#f0f0f0] transition-colors hover:bg-[#1d1d26] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
             Previous
@@ -185,7 +185,7 @@ export function PlayerMarket({
             type="button"
             onClick={onNextPage}
             disabled={!hasNext || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-full bg-linear-to-r from-accent-primary to-accent-secondary px-4 py-2 text-sm font-semibold text-slate-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-[3px] bg-linear-to-r [#e8fb25] px-4 py-2 text-sm font-600 text-slate-950 transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
             <ChevronRight className="h-4 w-4" />
@@ -195,8 +195,8 @@ export function PlayerMarket({
 
       <div className="max-h-[60vh] space-y-3 overflow-y-auto p-1">
         {isLoadingPage && players.length === 0 ? (
-          <div className="flex min-h-40 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/5 text-sm text-slate-400">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin text-accent-primary" />
+          <div className="flex min-h-40 items-center justify-center rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-sm text-[#555560]">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#e8fb25]" />
             Loading players...
           </div>
         ) : players.length === 0 ? (

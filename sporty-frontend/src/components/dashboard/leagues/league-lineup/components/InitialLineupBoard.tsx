@@ -36,20 +36,20 @@ export function InitialLineupBoard({
         : "Starter Slots";
 
   return (
-    <section className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+    <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold text-foreground">
+        <h2 className="text-lg font-600 text-[#f0f0f0]">
           First-Time Lineup Setup: {sportLabel}
         </h2>
-        <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-foreground/75">
+        <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#f0f0f0]/75">
           {selectedStarterCount} / {requiredStarters} selected
         </span>
       </div>
 
       <div
-        className={`rounded-2xl border border-white/10 p-4 ${starterBackground}`}
+        className={`rounded-[3px] border border-[rgba(255,255,255,0.08)] p-4 ${starterBackground}`}
       >
-        <p className="mb-3 text-sm font-medium text-foreground">
+        <p className="mb-3 text-sm text-[#f0f0f0]">
           {starterLabel}
         </p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
@@ -58,10 +58,10 @@ export function InitialLineupBoard({
             return (
               <div
                 key={`starter-slot-${slot}`}
-                className={`rounded-lg border border-dashed p-3 text-center text-xs font-medium ${
+                className={`rounded-[3px] border border-dashed p-3 text-center text-xs ${
                   filled
                     ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-100"
-                    : "border-white/10 bg-white/5 text-foreground/55"
+                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"
                 }`}
               >
                 Starter Slot {slot}
@@ -71,13 +71,13 @@ export function InitialLineupBoard({
         </div>
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        <p className="mb-3 text-sm font-medium text-foreground">Bench Slots</p>
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4">
+        <p className="mb-3 text-sm text-[#f0f0f0]">Bench Slots</p>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
           {benchSlots.map((slot) => (
             <div
               key={`bench-slot-${slot}`}
-              className="rounded-lg border border-dashed border-white/10 bg-white/5 p-3 text-center text-xs font-medium text-foreground/55"
+              className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-center text-xs text-[#555560]"
             >
               Bench Slot {slot}
             </div>
@@ -85,7 +85,7 @@ export function InitialLineupBoard({
         </div>
       </div>
 
-      <p className="text-xs text-foreground/50">
+      <p className="text-xs text-[#f0f0f0]/50">
         Tap players below to fill starter slots. Drag-and-drop can be added
         later without changing this validation flow.
       </p>

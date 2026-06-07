@@ -26,6 +26,7 @@ import {
   useMyTeam,
   useActiveWindow,
 } from "@/hooks/leagues/useLeagues";
+
 export function LeagueLeaderboard() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
@@ -50,19 +51,18 @@ export function LeagueLeaderboard() {
 
   const standings = useMemo<Standing[]>(() => {
     if (!leaderboard) return [];
-
     return leaderboard.entries.map((entry) => ({
       rank: entry.rank ?? 0,
       teamId: entry.team_id,
       teamName: entry.team_name,
       manager: entry.owner_name,
       totalPoints: Number(entry.points),
-      weeklyAvg: 0, // Not available yet
+      weeklyAvg: 0,
       wins: 0,
       losses: 0,
       streak: "-",
       group: "Overall",
-      weeklyScores: {}, // Not fully supported yet
+      weeklyScores: {},
     }));
   }, [leaderboard]);
 
@@ -70,9 +70,7 @@ export function LeagueLeaderboard() {
     if (!myTeam || !standings.length) return null;
     const teamInStandings = standings.find((s) => s.teamId === myTeam.id);
     if (!teamInStandings) return null;
-
     const topPoints = standings[0].totalPoints;
-
     return {
       rank: teamInStandings.rank,
       teamName: teamInStandings.teamName,
@@ -88,8 +86,8 @@ export function LeagueLeaderboard() {
 
   if (isLoading) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8">
-        <div className="h-10 w-64 animate-pulse rounded-2xl bg-white/10" />
+      <section className="mx-auto max-w-6xl space-y-4 px-6 py-8">
+        <div className="h-10 w-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <CardSkeleton />
           <CardSkeleton />
@@ -105,12 +103,8 @@ export function LeagueLeaderboard() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-foreground/60">
-          Manager: {username || "Sporty User"}
-        </p>
-      </div>
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+      <p className="section-label">Manager: {username || "Sporty User"}</p>
 
       <NavigationTabs
         activeTab="leaderboard"
@@ -126,8 +120,9 @@ export function LeagueLeaderboard() {
         totalWeeks={activeWindow?.total_number || 16}
       />
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* Filters bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-3">
+        <div className="flex flex-wrap items-center gap-2">
           <WeekSelector
             currentWeek={activeWindow?.number || 1}
             totalWeeks={activeWindow?.total_number || 16}
@@ -142,29 +137,26 @@ export function LeagueLeaderboard() {
           />
         </div>
 
-        <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 text-xs font-medium text-foreground">
-          <button
-            type="button"
-            onClick={() => setHistorical(true)}
-            className={`rounded-full px-3 py-1.5 transition-colors ${
-              historical ? "bg-white/12 text-foreground" : "text-foreground/60"
-            }`}
-          >
-            Historical
-          </button>
-          <button
-            type="button"
-            onClick={() => setHistorical(false)}
-            className={`rounded-full px-3 py-1.5 transition-colors ${
-              !historical ? "bg-white/12 text-foreground" : "text-foreground/60"
-            }`}
-          >
-            Live
-          </button>
+        <div className="inline-flex rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-0.5">
+          {(["Historical", "Live"] as const).map((mode) => {
+            const isActive = mode === "Historical" ? historical : !historical;
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setHistorical(mode === "Historical")}
+                className={`rounded-[3px] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
+                  isActive
+                    ? "bg-[#e8fb25] text-[#0a0a0f]"
+                    : "text-[#555560] hover:text-[#f0f0f0]"
+                }`}
+              >
+                {mode}
+              </button>
+            );
+          })}
         </div>
       </div>
-
-      {/* StatsHighlight hidden for now as we don't have this data yet */}
 
       {userTeam && (
         <UserRankCard
@@ -184,7 +176,7 @@ export function LeagueLeaderboard() {
           standings={standings}
           userTeamId={myTeam?.id || ""}
           selectedWeek={selectedWeek}
-          weeklyStandings={[]} // Needs additional window data
+          weeklyStandings={[]}
         />
       )}
     </section>

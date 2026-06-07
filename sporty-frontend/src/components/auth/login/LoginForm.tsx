@@ -7,8 +7,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
-  Input,
 } from "@/components/ui";
 import { useLoginFormState } from "@/features/auth";
 import { Divider } from "./components/Divider";
@@ -20,95 +18,81 @@ export function LoginForm() {
 
   return (
     <div className="relative mx-auto w-full max-w-md">
-      <div className="mb-4">
+      <div className="mb-5">
         <Link
           href="/"
-          className="text-sm font-medium text-slate-400 transition-colors hover:text-foreground"
+          className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] hover:no-underline"
         >
           ← Back to Home
         </Link>
       </div>
 
-      <div className="pointer-events-none absolute -left-10 -top-10 h-24 w-24 rounded-full bg-accent-primary/20 blur-2xl" />
-      <div className="pointer-events-none absolute -bottom-12 -right-10 h-28 w-28 rounded-full bg-accent-secondary/20 blur-2xl" />
-
-      <Card className="animate-fade-in w-full rounded-3xl border-white/10 bg-surface/90 shadow-[0_24px_70px_rgba(0,0,0,0.34)]">
-        <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
-          <div className="flex items-center gap-2 text-accent-primary">
-            <span className="text-lg" aria-hidden="true">
-              ●
-            </span>
-            <span className="font-display text-base font-bold tracking-[0.18em] uppercase">
-              Sporty
+      <Card className="animate-fade-in w-full">
+        <CardHeader className="space-y-3 p-8 pb-4">
+          <div className="flex items-center gap-2">
+            <span className="font-bebas text-2xl tracking-[3px] text-[#e8fb25]">
+              SPORTY
             </span>
           </div>
-          <CardTitle className="font-display text-3xl font-bold text-foreground sm:text-4xl">
-            Sign in
-          </CardTitle>
-          <p className="text-sm text-slate-400">
+          <h1 className="font-bebas text-5xl tracking-[3px] text-[#f0f0f0]">
+            Sign In
+          </h1>
+          <p className="text-sm text-[#555560]">
             Sign in to your fantasy sports account
           </p>
         </CardHeader>
 
-        <CardContent className="space-y-5 p-8 pt-0 sm:p-10 sm:pt-0">
+        <CardContent className="space-y-5 p-8 pt-0">
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label
                 htmlFor="identifier"
-                className="mb-1 block text-sm font-medium text-slate-100"
+                className="mb-1 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#f0f0f0]"
               >
                 Email or Username
               </label>
-              <div className="relative">
-                <Input
-                  id="identifier"
-                  type="text"
-                  placeholder="Email or username"
-                  autoComplete="username"
-                  error={formState.errors.identifier?.message}
-                  className="h-12 rounded-xl border border-white/10 bg-surface-strong px-4 text-base text-foreground placeholder:text-slate-500 focus:border-accent-primary/50 focus:ring-2 focus:ring-accent-primary/30"
-                  {...register("identifier")}
-                />
-              </div>
+              <input
+                id="identifier"
+                type="text"
+                placeholder="Email or username"
+                autoComplete="username"
+                {...register("identifier")}
+                className="h-11 w-full rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[#111117] px-4 text-sm text-[#f0f0f0] placeholder:text-[#555560] transition-colors focus:border-[#e8fb25] focus:outline-none"
+              />
+              {formState.errors.identifier?.message && (
+                <span className="mt-1 block text-xs text-[#ff3b30]">
+                  {formState.errors.identifier.message}
+                </span>
+              )}
             </div>
 
-            <div className="relative">
+            <div>
               <label
                 htmlFor="password"
-                className="mb-1 block text-sm font-medium text-slate-100"
+                className="mb-1 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#f0f0f0]"
               >
                 Password
               </label>
               <div className="relative">
-                <span
-                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-500"
-                  aria-hidden="true"
-                >
-                  *
-                </span>
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   autoComplete="current-password"
                   {...register("password")}
-                  className="h-12 w-full rounded-xl border border-white/10 bg-surface-strong px-4 pl-10 pr-14 text-base text-foreground placeholder:text-slate-500 transition-all duration-200 focus:border-accent-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary/30"
+                  className="h-11 w-full rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[#111117] px-4 pr-12 text-sm text-[#f0f0f0] placeholder:text-[#555560] transition-colors focus:border-[#e8fb25] focus:outline-none"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-accent-primary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-[#555560] transition-colors hover:text-[#f0f0f0]"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               {formState.errors.password?.message && (
-                <span className="mt-1 block text-xs text-red-400">
+                <span className="mt-1 block text-xs text-[#ff3b30]">
                   {formState.errors.password.message}
                 </span>
               )}
@@ -117,7 +101,7 @@ export function LoginForm() {
             <div className="flex justify-end">
               <Link
                 href="/forgot-password"
-                className="text-sm font-medium text-accent-primary transition-colors hover:text-cyan-300 hover:underline"
+                className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:text-[#f0ff45] hover:no-underline"
               >
                 Forgot password?
               </Link>
@@ -125,16 +109,16 @@ export function LoginForm() {
 
             <Button
               type="submit"
-              className="h-12 w-full rounded-full text-base font-semibold transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
+              className="h-11 w-full"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                  <span className="h-4 w-4 animate-spin rounded-[3px] border-2 border-[#0a0a0f]/30 border-t-[#0a0a0f]" />
                   Please wait
                 </span>
               ) : (
-                "Sign in"
+                "Sign In"
               )}
             </Button>
           </form>
@@ -142,11 +126,11 @@ export function LoginForm() {
           <Divider />
           <SocialLogin />
 
-          <div className="border-t border-white/10 pt-4 text-center text-sm text-slate-400">
+          <div className="border-t border-[rgba(255,255,255,0.08)] pt-4 text-center text-sm text-[#555560]">
             Don&apos;t have an account?{" "}
             <Link
               href="/register"
-              className="font-semibold text-accent-primary hover:text-cyan-300 hover:underline"
+              className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] hover:text-[#f0ff45] hover:no-underline"
             >
               Create account
             </Link>

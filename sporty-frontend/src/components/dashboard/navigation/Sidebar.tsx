@@ -41,81 +41,75 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-white/10 bg-linear-to-b from-[#060816] via-[#050816] to-[#03040a] font-sans md:block">
-      <div className="relative flex h-full flex-col overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,229,255,0.14),transparent_38%),radial-gradient(circle_at_bottom,rgba(255,61,129,0.10),transparent_34%)]" />
-        <div className="relative z-10 border-b border-white/10 p-6">
-          <div className="flex items-center justify-between gap-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-2 font-display text-xl font-bold tracking-[0.18em] text-foreground transition-opacity hover:opacity-80 hover:no-underline"
-            >
-              <span aria-hidden="true" className="text-accent-primary">
-                ●
-              </span>
-              <span>Sporty</span>
-            </Link>
-            <NotificationBell className="text-slate-300 transition-colors hover:text-foreground" />
-          </div>
-        </div>
-
-        <nav
-          className="relative z-10 flex flex-1 flex-col gap-1 px-3 pt-4"
-          aria-label="Dashboard Navigation"
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-[rgba(255,255,255,0.08)] bg-[#0d0d14] md:flex md:flex-col">
+      {/* Logo */}
+      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-6 py-5">
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-2 hover:no-underline"
         >
-          {items.map((item) => {
-            const active = isActiveRoute(item.href, pathname);
-            const Icon = item.icon;
+          <span className="font-bebas text-2xl tracking-[3px] text-[#e8fb25]">
+            SPORTY
+          </span>
+        </Link>
+        <NotificationBell className="text-[#555560] transition-colors hover:text-[#f0f0f0]" />
+      </div>
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200 hover:-translate-y-0.5 hover:no-underline",
-                  active
-                    ? "border border-accent-primary/30 bg-white/8 text-foreground shadow-[0_0_24px_rgba(0,229,255,0.14)]"
-                    : "border border-transparent text-slate-300 hover:border-white/8 hover:bg-white/6 hover:text-foreground",
-                )}
-                aria-current={active ? "page" : undefined}
-              >
-                <Icon
-                  className={cn(
-                    "h-5 w-5 transition-colors",
-                    active
-                      ? "text-accent-primary"
-                      : "text-slate-400 group-hover:text-accent-primary",
-                  )}
-                />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
+      {/* Nav items */}
+      <nav
+        className="flex flex-1 flex-col gap-0.5 px-3 pt-4"
+        aria-label="Dashboard Navigation"
+      >
+        {items.map((item) => {
+          const active = isActiveRoute(item.href, pathname);
+          const Icon = item.icon;
 
-        <div className="relative z-10 border-t border-white/10 p-6">
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => setShowLogoutModal(true)}
-              disabled={actionLoading.logout}
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all duration-200 hover:border-accent-secondary/30 hover:bg-accent-secondary/10 hover:text-foreground disabled:opacity-50"
-              aria-label="Log out"
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "group flex items-center gap-3 px-3 py-2.5 text-sm transition-all duration-150 hover:no-underline",
+                active
+                  ? "border-l-2 border-[#e8fb25] bg-[#1d1d26] text-[#f0f0f0] pl-[10px]"
+                  : "border-l-2 border-transparent text-[#555560] hover:bg-[#1d1d26] hover:text-[#f0f0f0] pl-[10px]",
+              )}
+              aria-current={active ? "page" : undefined}
             >
-              <LogOut className="h-4 w-4" />
-              <span>Log out</span>
-            </button>
-          </div>
+              <Icon
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-colors",
+                  active ? "text-[#e8fb25]" : "text-[#555560] group-hover:text-[#f0f0f0]",
+                )}
+              />
+              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px]">
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
 
-          <button
-            type="button"
-            onClick={handleOpenSettings}
-            className="mt-3 flex w-full items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300 transition-all duration-200 hover:border-accent-primary/30 hover:bg-accent-primary/10 hover:text-foreground"
-          >
-            <Settings className="h-4 w-4" />
-            <span>Settings</span>
-          </button>
-        </div>
+      {/* Bottom actions */}
+      <div className="border-t border-[rgba(255,255,255,0.08)] p-4 space-y-2">
+        <button
+          type="button"
+          onClick={handleOpenSettings}
+          className="flex w-full items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-3 py-2 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0]"
+        >
+          <Settings className="h-3.5 w-3.5" />
+          Settings
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowLogoutModal(true)}
+          disabled={actionLoading.logout}
+          className="flex w-full items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-3 py-2 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-[#ff3b30]/40 hover:text-[#ff3b30] disabled:opacity-50"
+          aria-label="Log out"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Log out
+        </button>
       </div>
 
       <LogoutConfirmationModal

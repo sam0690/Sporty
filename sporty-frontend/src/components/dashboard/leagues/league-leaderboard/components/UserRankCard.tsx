@@ -9,13 +9,6 @@ type UserRankCardProps = {
   pointsBehind: number;
 };
 
-function rankMedal(rank: number): string {
-  if (rank === 1) return "🥇";
-  if (rank === 2) return "🥈";
-  if (rank === 3) return "🥉";
-  return `#${rank}`;
-}
-
 export function UserRankCard({
   rank,
   teamName,
@@ -25,22 +18,27 @@ export function UserRankCard({
   pointsBehind,
 }: UserRankCardProps) {
   return (
-    <section className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-accent-primary/20 bg-accent-primary/10 p-5 backdrop-blur-xl animate-[fade-soft_0.2s_ease]">
+    <section className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.04)] p-5 animate-fade-soft">
       <div>
-        <p className="text-sm font-medium text-accent-primary">Your Position</p>
-        <p className="mt-1 text-2xl font-bold text-foreground">
-          {rankMedal(rank)}
+        <p className="section-label">Your Position</p>
+        <p className="mt-1 font-bebas text-6xl tracking-[3px] text-[#e8fb25]">
+          #{rank}
         </p>
-        <p className="mt-1 text-lg font-medium text-foreground">{teamName}</p>
+        <p className="mt-1 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          {teamName}
+        </p>
       </div>
 
       <div className="text-right">
-        <p className="text-2xl font-bold text-foreground">{totalPoints}</p>
-        <p className="text-sm text-foreground/60">
+        <p className="font-bebas text-5xl tracking-[2px] text-[#e8fb25]">
+          {totalPoints}
+        </p>
+        <p className="section-label">Total Points</p>
+        <p className="mt-2 text-sm text-[#555560]">
           Record: {wins}-{losses}
         </p>
         {rank > 1 ? (
-          <p className="text-xs text-accent-primary">
+          <p className="mt-1 font-barlow-condensed text-xs font-600 uppercase tracking-[1px] text-[#555560]">
             {pointsBehind} pts behind leader
           </p>
         ) : null}

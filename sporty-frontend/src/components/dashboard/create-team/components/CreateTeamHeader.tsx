@@ -42,16 +42,16 @@ export function CreateTeamHeader({
   );
 
   return (
-    <header className="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+    <header className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            <h1 className="text-3xl font-600 tracking-[2px] text-[#f0f0f0]">
               {leagueName}
             </h1>
             {sport === "multisport" ? (
               <span
-                className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${sportBadgeStyles[sport]}`}
+                className={`inline-flex items-center gap-2 rounded-[3px] px-3 py-1 text-xs ${sportBadgeStyles[sport]}`}
               >
                 <span>⚽</span>
                 <span>🏀</span>
@@ -60,21 +60,21 @@ export function CreateTeamHeader({
               </span>
             ) : (
               <span
-                className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${sportBadgeStyles[sport]}`}
+                className={`rounded-[3px] px-3 py-1 text-xs capitalize ${sportBadgeStyles[sport]}`}
               >
                 {sport}
               </span>
             )}
           </div>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-[#555560]">
             Step {step} of {totalSteps}: {stepLabel(step)}
           </p>
         </div>
 
         <div className="text-right">
-          <p className="text-sm text-slate-400">Budget: ${budget}</p>
+          <p className="text-sm text-[#555560]">Budget: ${budget}</p>
           <p
-            className={`text-sm font-semibold ${remainingBudget >= 0 ? "text-accent-primary" : "text-red-400"}`}
+            className={`text-sm font-600 ${remainingBudget >= 0 ? "text-[#e8fb25]" : "text-red-400"}`}
           >
             ${remainingBudget} remaining
           </p>
@@ -82,13 +82,13 @@ export function CreateTeamHeader({
       </div>
 
       <div className="space-y-2">
-        <div className="h-2 rounded-full bg-white/8">
+        <div className="h-2 rounded-[3px] bg-[#1d1d26]">
           <div
-            className="h-2 rounded-full bg-linear-to-r from-accent-primary to-accent-secondary"
+            className="h-2 rounded-[3px] bg-linear-to-r [#e8fb25]"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-xs text-slate-400">
+        <p className="text-xs text-[#555560]">
           {selectedCount}/{requiredCount} players selected
         </p>
       </div>

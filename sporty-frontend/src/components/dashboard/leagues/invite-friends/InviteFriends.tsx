@@ -33,22 +33,22 @@ export function InviteFriends() {
   }, [inviteCode]);
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-foreground">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
       <NavigationTabs
         activeTab="invite"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
-        <h2 className="text-lg font-medium text-foreground">Invite Friends</h2>
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+        <h2 className="text-lg text-[#f0f0f0]">Invite Friends</h2>
         {isPublicLeague ? (
-          <p className="mt-1 text-sm text-foreground/60">
+          <p className="mt-1 text-sm text-[#555560]">
             This league is public - anyone can join. Share this link with
             friends.
           </p>
         ) : (
-          <p className="mt-1 text-sm text-foreground/60">
+          <p className="mt-1 text-sm text-[#555560]">
             Share this code or link to invite new members to your league.
           </p>
         )}

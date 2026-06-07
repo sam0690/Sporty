@@ -38,21 +38,21 @@ export function PlayerCard({
 
   return (
     <article
-      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/10 bg-surface/80 p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent-primary/25 hover:shadow-[0_16px_40px_rgba(0,0,0,0.22)]"
+      className="card-fade-in flex flex-wrap items-center justify-between gap-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 transition-colors hover:border-[rgba(255,255,255,0.15)]"
       style={{ animationDelay: `${animationDelay}ms` }}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-medium text-foreground">
+        <p className="truncate text-base text-[#f0f0f0]">
           👤 {name}
         </p>
-        <p className="mt-1 text-sm text-slate-400">{sportLabel}</p>
+        <p className="mt-1 text-sm text-[#555560]">{sportLabel}</p>
       </div>
 
       <div className="text-right sm:min-w-27.5">
-        <p className="text-sm font-semibold text-foreground">💰 ${price}M</p>
-        <p className="text-xs text-slate-500">Proj: {avgPoints.toFixed(1)}</p>
+        <p className="text-sm font-600 text-[#f0f0f0]">💰 ${price}M</p>
+        <p className="text-xs text-[#555560]">Proj: {avgPoints.toFixed(1)}</p>
         {form ? (
-          <p className="text-xs text-slate-500">Form: {form}/10</p>
+          <p className="text-xs text-[#555560]">Form: {form}/10</p>
         ) : null}
       </div>
 
@@ -61,7 +61,7 @@ export function PlayerCard({
           type="button"
           disabled={disabled}
           onClick={() => onAdd(id)}
-          className="rounded-full border border-white/10 bg-white/6 px-3.5 py-1.5 text-sm font-medium text-slate-300 transition-all hover:-translate-y-0.5 hover:border-accent-primary/30 hover:bg-accent-primary/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-[3px] border border-[rgba(232,251,37,0.4)] bg-transparent px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.1)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           + Add
         </button>

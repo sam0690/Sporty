@@ -49,65 +49,65 @@ export function SummaryStep({
 }: SummaryStepProps) {
   return (
     <div className="space-y-6">
-      <div className="rounded-3xl border border-white/10 bg-surface/75 p-1 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="text-sm text-slate-400">League Details</p>
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1 ">
+        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+          <p className="text-sm text-[#555560]">League Details</p>
           <button
             type="button"
             onClick={onBack}
-            className="text-xs font-medium text-accent-primary hover:underline"
+            className="text-xs text-[#e8fb25] hover:underline"
           >
             Edit
           </button>
         </div>
         <div className="space-y-0">
-          <div className="grid grid-cols-2 gap-2 border-b border-white/10 px-4 py-3">
-            <p className="text-sm text-slate-400">Name</p>
-            <p className="text-sm text-foreground">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+            <p className="text-sm text-[#555560]">Name</p>
+            <p className="text-sm text-[#f0f0f0]">
               {leagueData.leagueName || "-"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-white/10 px-4 py-3">
-            <p className="text-sm text-slate-400">Sport</p>
-            <p className="text-sm text-foreground">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+            <p className="text-sm text-[#555560]">Sport</p>
+            <p className="text-sm text-[#f0f0f0]">
               {selectedSports.map((sport) => sportLabels[sport]).join(", ") ||
                 "-"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-white/10 px-4 py-3">
-            <p className="text-sm text-slate-400">Type</p>
-            <p className="text-sm text-foreground">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+            <p className="text-sm text-[#555560]">Type</p>
+            <p className="text-sm text-[#f0f0f0]">
               {leagueData.isPrivate ? "Private" : "Public"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-white/10 px-4 py-3">
-            <p className="text-sm text-slate-400">Team Size</p>
-            <p className="text-sm text-foreground">{leagueData.teamSize}</p>
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+            <p className="text-sm text-[#555560]">Team Size</p>
+            <p className="text-sm text-[#f0f0f0]">{leagueData.teamSize}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-white/10 px-4 py-3">
-            <p className="text-sm text-slate-400">Competition Type</p>
-            <p className="text-sm text-foreground">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+            <p className="text-sm text-[#555560]">Competition Type</p>
+            <p className="text-sm text-[#f0f0f0]">
               {leagueData.competitionType === "draft"
                 ? "Draft Mode"
                 : "Budget Mode"}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 px-4 py-3">
-            <p className="text-sm text-slate-400">Draft Date</p>
-            <p className="text-sm text-foreground">
+            <p className="text-sm text-[#555560]">Draft Date</p>
+            <p className="text-sm text-[#f0f0f0]">
               {leagueData.draftDate || "Not set"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-white/10 bg-surface/75 p-1 shadow-[0_18px_50px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-          <p className="text-sm text-slate-400">Scoring Rules</p>
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1 ">
+        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+          <p className="text-sm text-[#555560]">Scoring Rules</p>
           <button
             type="button"
             onClick={onBack}
-            className="text-xs font-medium text-accent-primary hover:underline"
+            className="text-xs text-[#e8fb25] hover:underline"
           >
             Edit
           </button>
@@ -123,13 +123,13 @@ export function SummaryStep({
             return (
               <div
                 key={sport}
-                className="rounded-2xl border border-white/10 bg-white/5"
+                className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
               >
-                <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
-                  <p className="text-sm font-medium text-foreground">
+                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-3 py-2">
+                  <p className="text-sm text-[#f0f0f0]">
                     {sportLabels[sport]}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-[#555560]">
                     {isCustomEnabled
                       ? `${customRules.length} custom rule(s)`
                       : "Default scoring"}
@@ -139,12 +139,12 @@ export function SummaryStep({
                   {(isCustomEnabled ? customRules : rules).map((rule) => (
                     <div
                       key={`${sport}-${rule.action}`}
-                      className="grid grid-cols-2 border-b border-white/10 px-3 py-2 last:border-b-0"
+                      className="grid grid-cols-2 border-b border-[rgba(255,255,255,0.08)] px-3 py-2 last:border-b-0"
                     >
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-[#555560]">
                         {formatRuleLabel(rule.action)}
                       </p>
-                      <p className="text-sm text-foreground">
+                      <p className="text-sm text-[#f0f0f0]">
                         {isCustomEnabled && rule.enabled
                           ? `${rule.points} (default ${rule.defaultPoints})`
                           : rule.defaultPoints}
@@ -162,7 +162,7 @@ export function SummaryStep({
         <button
           type="button"
           onClick={onBack}
-          className="w-full rounded-full border border-white/10 bg-white/5 px-8 py-2.5 font-medium text-slate-300 hover:bg-white/8 hover:text-foreground sm:w-auto"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 text-[#f0f0f0] hover:bg-[#1d1d26] hover:text-[#f0f0f0] sm:w-auto"
         >
           Back
         </button>
@@ -170,7 +170,7 @@ export function SummaryStep({
           type="button"
           onClick={onCreate}
           disabled={isLoading}
-          className="w-full rounded-full bg-linear-to-r from-accent-primary via-cyan-400 to-accent-secondary px-8 py-2.5 font-semibold text-background shadow-[0_16px_40px_rgba(0,229,255,0.18)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="w-full rounded-[3px] bg-linear-to-r [#e8fb25] px-8 py-2.5 font-600 text-background  hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isLoading ? "Creating..." : "Create League"}
         </button>

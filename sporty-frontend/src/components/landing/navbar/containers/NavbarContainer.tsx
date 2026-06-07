@@ -35,8 +35,8 @@ export function NavbarContainer() {
     <header
       className={`sticky top-0 z-header transition-all duration-300 ${
         isScrolled
-          ? "border-b border-white/10 bg-background/80 shadow-[0_12px_40px_rgba(0,0,0,0.22)] backdrop-blur-xl"
-          : "border-b border-transparent bg-transparent"
+          ? "border-b border-[rgba(255,255,255,0.08)] bg-[#0d0d14]"
+          : "border-b border-transparent bg-[#0d0d14]"
       }`}
     >
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

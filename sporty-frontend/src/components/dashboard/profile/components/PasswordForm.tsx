@@ -83,12 +83,12 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
     strength === "Strong" ? "100%" : strength === "Medium" ? "66%" : "33%";
 
   return (
-    <section className="card-fade-in space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-      <h2 className="text-md font-medium text-foreground">Change Password</h2>
+    <section className="card-fade-in space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 ">
+      <h2 className="text-md text-[#f0f0f0]">Change Password</h2>
 
       <form onSubmit={submit} className="space-y-4">
         <div className="space-y-2">
-          <label htmlFor="current-password" className="text-sm text-slate-400">
+          <label htmlFor="current-password" className="text-sm text-[#555560]">
             Current Password
           </label>
           <div className="flex items-center gap-2">
@@ -97,14 +97,14 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
               type={show.current ? "text" : "password"}
               value={currentPassword}
               onChange={(event) => setCurrentPassword(event.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
             />
             <button
               type="button"
               onClick={() =>
                 setShow((prev) => ({ ...prev, current: !prev.current }))
               }
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300"
+              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0]"
             >
               {show.current ? "Hide" : "Show"}
             </button>
@@ -112,7 +112,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="new-password" className="text-sm text-slate-400">
+          <label htmlFor="new-password" className="text-sm text-[#555560]">
             New Password
           </label>
           <div className="flex items-center gap-2">
@@ -121,29 +121,29 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
               type={show.new ? "text" : "password"}
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
             />
             <button
               type="button"
               onClick={() => setShow((prev) => ({ ...prev, new: !prev.new }))}
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300"
+              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0]"
             >
               {show.new ? "Hide" : "Show"}
             </button>
           </div>
           <div className="space-y-1">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+            <div className="h-1.5 w-full overflow-hidden rounded-[3px] bg-[#1d1d26]">
               <div
                 className={`h-full ${strengthColor} transition-all duration-200`}
                 style={{ width: strengthWidth }}
               />
             </div>
-            <p className="text-xs text-slate-400">Strength: {strength}</p>
+            <p className="text-xs text-[#555560]">Strength: {strength}</p>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="confirm-password" className="text-sm text-slate-400">
+          <label htmlFor="confirm-password" className="text-sm text-[#555560]">
             Confirm New Password
           </label>
           <div className="flex items-center gap-2">
@@ -152,14 +152,14 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
               type={show.confirm ? "text" : "password"}
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-foreground outline-none focus:border-accent-primary/30 focus:ring-2 focus:ring-accent-primary/20"
+              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
             />
             <button
               type="button"
               onClick={() =>
                 setShow((prev) => ({ ...prev, confirm: !prev.confirm }))
               }
-              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-300"
+              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0]"
             >
               {show.confirm ? "Hide" : "Show"}
             </button>
@@ -170,7 +170,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
           <button
             type="submit"
             disabled={isSaving}
-            className="rounded-full border border-white/10 bg-white/5 px-6 py-2 text-foreground transition-colors hover:bg-white/8 disabled:opacity-70"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2 text-[#f0f0f0] transition-colors hover:bg-[#1d1d26] disabled:opacity-70"
           >
             {isSaving ? "Saving..." : "Update Password"}
           </button>

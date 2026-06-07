@@ -28,7 +28,7 @@ export function SocialLogin() {
       <Button
         type="button"
         variant="outline"
-        className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-foreground transition-all duration-200 hover:bg-white/10"
+        className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] transition-all duration-200 hover:bg-[#1d1d26]"
         onClick={loginWithGoogle}
       >
         <span className="mr-2 text-sm">G</span>
@@ -37,7 +37,7 @@ export function SocialLogin() {
       <Button
         type="button"
         variant="outline"
-        className="rounded-md border border-white/10 bg-white/5 px-4 py-3 text-foreground transition-all duration-200 hover:bg-white/10"
+        className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] transition-all duration-200 hover:bg-[#1d1d26]"
         disabled
       >
         <span className="mr-2 text-sm">GH</span>

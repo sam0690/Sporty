@@ -31,10 +31,10 @@ export function PlayerCard({ player, showSportIcon }: PlayerCardProps) {
     player.form === "hot" ? "🔥" : player.form === "cold" ? "❄️" : "";
 
   return (
-    <article className="rounded-lg border border-border bg-[#F4F4F9] p-4 transition hover:shadow-card-hover">
+    <article className="rounded-[3px] border border-border bg-[#F4F4F9] p-4 transition hover:shadow-card-hover">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <p className="font-semibold text-black">{player.name}</p>
+          <p className="font-600 text-black">{player.name}</p>
           {showSportIcon ? (
             <span className="text-sm" aria-label={player.sport}>
               {sportIcons[player.sport]}

@@ -22,7 +22,7 @@ export function ToastAlert() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white shadow-lg">
+    <div className="fixed bottom-4 right-4 rounded-[3px] bg-emerald-600 px-3 py-2 text-xs text-white shadow-lg">
       Live update received
     </div>
   );

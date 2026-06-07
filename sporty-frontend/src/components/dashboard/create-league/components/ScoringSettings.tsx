@@ -56,8 +56,8 @@ export function ScoringSettings({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-sm font-semibold text-foreground">Scoring Rules</h3>
-        <p className="text-xs text-slate-400">
+        <h3 className="text-sm font-600 text-[#f0f0f0]">Scoring Rules</h3>
+        <p className="text-xs text-[#555560]">
           Enable custom scoring per sport, then toggle and edit individual
           rules.
         </p>
@@ -71,19 +71,19 @@ export function ScoringSettings({
           <details
             key={sport}
             open={sportIndex === 0}
-            className="rounded-3xl border border-white/10 bg-white/5"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-              <span className="text-sm font-semibold text-foreground">
+              <span className="text-sm font-600 text-[#f0f0f0]">
                 {sportTitles[sport]}
               </span>
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-[#555560]">
                 {rules.length} rules
               </span>
             </summary>
 
-            <div className="space-y-4 border-t border-white/10 bg-surface/70 px-4 py-4 backdrop-blur-xl">
-              <label className="flex items-center justify-between gap-3 text-sm text-foreground">
+            <div className="space-y-4 border-t border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-4 ">
+              <label className="flex items-center justify-between gap-3 text-sm text-[#f0f0f0]">
                 <span>Enable custom scoring for {sport}</span>
                 <button
                   type="button"
@@ -92,14 +92,14 @@ export function ScoringSettings({
                   }
                   className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
                     allowCustom
-                      ? "bg-linear-to-r from-accent-primary to-accent-secondary"
-                      : "bg-white/10"
+                      ? "bg-linear-to-r [#e8fb25]"
+                      : "bg-[#1d1d26]"
                   }`}
                   aria-pressed={allowCustom}
                   aria-label={`Toggle ${sport} custom scoring`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    className={`inline-block h-4 w-4 transform rounded-[3px] bg-white transition-transform ${
                       allowCustom ? "translate-x-5" : "translate-x-1"
                     }`}
                   />
@@ -118,16 +118,16 @@ export function ScoringSettings({
                   return (
                     <div
                       key={`${sport}-${rule.action}`}
-                      className={`rounded-2xl border px-3 py-3 transition-colors ${
+                      className={`rounded-[3px] border px-3 py-3 transition-colors ${
                         isCustomized
                           ? "border-amber-400/20 bg-amber-400/10"
-                          : "border-white/10 bg-white/5"
+                          : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
                       }`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium text-foreground">
+                            <p className="text-sm text-[#f0f0f0]">
                               {formatRuleLabel(rule.action)}
                             </p>
                             {isCustomized ? (
@@ -136,16 +136,16 @@ export function ScoringSettings({
                               </span>
                             ) : null}
                           </div>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-[#555560]">
                             {rule.description}
                           </p>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-[#555560]">
                             Default: {rule.defaultPoints} pts
                           </p>
                         </div>
 
                         <div className="flex flex-col gap-2 sm:min-w-55">
-                          <label className="flex items-center justify-between text-xs text-slate-400">
+                          <label className="flex items-center justify-between text-xs text-[#555560]">
                             <span>Custom rule</span>
                             <input
                               type="checkbox"
@@ -158,7 +158,7 @@ export function ScoringSettings({
                                   event.target.checked,
                                 )
                               }
-                              className="h-4 w-4 rounded border-white/10 text-accent-primary disabled:cursor-not-allowed"
+                              className="h-4 w-4 rounded border-[rgba(255,255,255,0.08)] text-[#e8fb25] disabled:cursor-not-allowed"
                             />
                           </label>
 
@@ -179,8 +179,8 @@ export function ScoringSettings({
                                   : nextValue,
                               );
                             }}
-                            className={`w-full rounded-xl border px-3 py-2 text-foreground outline-none transition focus:border-accent-primary/30 disabled:bg-white/5 ${
-                              isInvalid ? "border-danger/30" : "border-white/10"
+                            className={`w-full rounded-[3px] border px-3 py-2 text-[#f0f0f0] outline-none transition focus:border-[rgba(232,251,37,0.3)] disabled:bg-[#1d1d26] ${
+                              isInvalid ? "border-danger/30" : "border-[rgba(255,255,255,0.08)]"
                             }`}
                           />
                           {isInvalid && allowCustom && rule.enabled ? (
@@ -199,7 +199,7 @@ export function ScoringSettings({
         );
       })}
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-[#555560]">
         Only changed rules are submitted as league scoring overrides.
       </p>
     </div>

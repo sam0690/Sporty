@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
 type LeagueCardProps = {
-  id: string; // Changed from number to string
+  id: string;
   name: string;
   sport: Sport;
   memberCount: number;
@@ -29,21 +29,19 @@ const sportImages: Record<Sport, string> = {
   multisport: "/images/leagues/multisport-card.svg",
 };
 
-function rankIcon(rank: number): string {
-  if (rank === 1) {
-    return "🥇";
-  }
+const sportBadgeClass: Record<Sport, string> = {
+  football: "sport-badge-football",
+  basketball: "sport-badge-basketball",
+  cricket: "sport-badge-cricket",
+  multisport: "sport-badge-multisport",
+};
 
-  if (rank === 2) {
-    return "🥈";
-  }
-
-  if (rank === 3) {
-    return "🥉";
-  }
-
-  return "📊";
-}
+const sportAccentColor: Record<Sport, string> = {
+  football: "#4caf50",
+  basketball: "#ff6b00",
+  cricket: "#00d4ff",
+  multisport: "#e8fb25",
+};
 
 export function LeagueCard({
   id,
@@ -67,45 +65,48 @@ export function LeagueCard({
           router.push(`/leagues/${id}`);
         }
       }}
-      className="group cursor-pointer overflow-hidden rounded-[1.75rem] border border-white/10 bg-surface/80 opacity-0 transition-all duration-300 hover:-translate-y-1 hover:border-accent-primary/30 hover:shadow-[0_24px_60px_rgba(0,229,255,0.12)] animate-fade-soft"
-      style={{ animationDelay: `${animationDelay}ms` }}
+      className="group cursor-pointer overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] opacity-0 transition-colors duration-150 hover:border-[rgba(255,255,255,0.15)] animate-fade-soft"
+      style={{
+        animationDelay: `${animationDelay}ms`,
+        borderLeft: `3px solid ${sportAccentColor[sport]}`,
+      }}
     >
-      <div className="relative h-32 overflow-hidden">
+      <div className="relative h-28 overflow-hidden">
         <Image
           src={sportImages[sport]}
           alt={`${sport} league`}
           fill
-          className="object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+          className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-linear-to-b from-black/50 via-black/10 to-transparent" />
+        <div className="absolute inset-0 bg-black/40" />
+        <span
+          className={`absolute right-3 top-3 rounded-[3px] px-2 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+          aria-label={sport}
+        >
+          {sport}
+        </span>
       </div>
 
-      <div className="space-y-4 p-5">
-        <div className="flex items-start justify-between gap-3">
-          <h3 className="text-md font-semibold tracking-tight text-foreground">
-            {name}
-          </h3>
-          <span
-            className="inline-flex items-center rounded-full border border-white/10 bg-white/6 px-2 py-1 text-xs text-slate-200"
-            aria-label={sport}
-          >
-            {sportIcons[sport]}
-          </span>
+      <div className="space-y-3 p-4">
+        <h3 className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          {name}
+        </h3>
+
+        <div className="space-y-1 text-sm text-[#555560]">
+          <p>{teamName}</p>
+          <p>{memberCount} members</p>
         </div>
 
-        <div className="space-y-2 text-sm text-slate-400">
-          <p>👤 {teamName}</p>
-          <p>👥 {memberCount} members</p>
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm text-slate-300">
-            <span className="text-accent-primary">{rankIcon(yourRank)}</span>
-            <span>Rank #{yourRank}</span>
+        <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.08)] pt-3">
+          <div className="flex items-center gap-2">
+            <span className="font-bebas text-2xl text-[#e8fb25]">
+              #{yourRank}
+            </span>
+            <span className="section-label">Rank</span>
           </div>
-          <span className="text-sm text-accent-primary/70 transition-colors group-hover:text-accent-primary">
-            View
+          <span className="section-label text-[#555560] transition-colors group-hover:text-[#f0f0f0]">
+            View →
           </span>
         </div>
       </div>

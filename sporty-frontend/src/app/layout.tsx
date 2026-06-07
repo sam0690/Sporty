@@ -1,19 +1,26 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Bebas_Neue, Barlow_Condensed, Barlow } from "next/font/google";
 import "@mantine/core/styles.css";
 import "@mantine/carousel/styles.css";
 import "./globals.css";
 import { ClientProviders } from "./client";
 
-const inter = Inter({
-  variable: "--font-inter",
+const bebasNeue = Bebas_Neue({
+  variable: "--font-bebas",
   subsets: ["latin"],
+  weight: "400",
 });
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const barlow = Barlow({
+  variable: "--font-barlow",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -29,9 +36,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${montserrat.variable} h-full antialiased`}
+      className={`${bebasNeue.variable} ${barlowCondensed.variable} ${barlow.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
+      <body className="min-h-full flex flex-col bg-background font-sans text-[#f0f0f0]">
         <ClientProviders>{children}</ClientProviders>
       </body>
     </html>

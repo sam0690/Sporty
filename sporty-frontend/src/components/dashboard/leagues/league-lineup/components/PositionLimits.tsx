@@ -75,12 +75,12 @@ export function PositionLimits({
           return (
             <div
               key={position}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-foreground/70"
+              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-1.5 text-sm text-[#555560]"
             >
-              <span className="mr-1 text-foreground/60">{sportIcon}</span>
+              <span className="mr-1 text-[#555560]">{sportIcon}</span>
               <span>{position}</span>
               <span
-                className={`ml-2 font-medium ${atLimit ? "text-amber-100" : "text-foreground"}`}
+                className={`ml-2 ${atLimit ? "text-amber-100" : "text-[#f0f0f0]"}`}
               >
                 {current}/{max}
               </span>

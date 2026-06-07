@@ -58,11 +58,11 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
 
   return (
     <main className="mx-auto max-w-4xl space-y-4 px-4 py-6">
-      <h1 className="text-2xl font-semibold text-slate-900">
+      <h1 className="text-2xl font-600 text-slate-900">
         Live Match {matchId}
       </h1>
       {loading && (
-        <p className="text-sm text-slate-500">Loading live state...</p>
+        <p className="text-sm text-[#555560]">Loading live state...</p>
       )}
       {error && <p className="text-sm text-red-600">{error}</p>}
       <ScoreTicker />

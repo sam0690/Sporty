@@ -7,9 +7,9 @@ type FooterBottomBarProps = {
 
 export function FooterBottomBar({ content }: FooterBottomBarProps) {
   return (
-    <div className="border-t border-white/10 bg-black">
+    <div className="border-t border-[rgba(255,255,255,0.08)] bg-black">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-6 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-        <div className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+        <div className="inline-flex items-center gap-2 text-sm font-600 text-primary">
           <span
             className="inline-flex h-4 w-4 items-center justify-center rounded-sm bg-primary text-[10px] text-[#F4F4F9]"
             aria-hidden="true"

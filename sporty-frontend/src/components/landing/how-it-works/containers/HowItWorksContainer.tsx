@@ -9,7 +9,6 @@ export function HowItWorksContainer() {
       aria-labelledby="how-it-works-title"
       id="how-it-works"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,229,255,0.08),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(255,61,129,0.08),_transparent_30%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-[0.04]">
         <div
           className="h-full w-full bg-cover bg-center"

@@ -6,11 +6,11 @@ type EmptyStateProps = {
 
 export function EmptyState({ message }: EmptyStateProps) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-white/5 py-12 text-center backdrop-blur-xl">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] py-12 text-center ">
       <div className="mx-auto mb-3 text-4xl" aria-hidden="true">
         🏆
       </div>
-      <p className="text-foreground/60">{message}</p>
+      <p className="text-[#555560]">{message}</p>
     </section>
   );
 }

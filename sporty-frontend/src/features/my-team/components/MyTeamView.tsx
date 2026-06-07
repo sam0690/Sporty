@@ -49,15 +49,15 @@ export function MyTeamView({
               key={league.id}
               type="button"
               onClick={() => onLeagueChange(league.id)}
-              className={`rounded-full border px-4 py-2 text-left text-sm transition-all duration-200 ${
+              className={`rounded-[3px] border px-4 py-2 text-left text-sm transition-all duration-200 ${
                 isActive
-                  ? "border-accent-primary/50 bg-accent-primary/15 text-foreground"
-                  : "border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10"
+                  ? "border-accent-primary/50 bg-accent-primary/15 text-[#f0f0f0]"
+                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#f0f0f0] hover:border-white/20 hover:bg-white/10"
               }`}
               aria-pressed={isActive}
             >
               <span className="block font-medium">{league.name}</span>
-              <span className="block text-xs text-slate-400">
+              <span className="block text-xs text-[#555560]">
                 {league.teamName ?? "No team yet"}
               </span>
             </button>
@@ -66,13 +66,13 @@ export function MyTeamView({
       </div>
     ) : (
       <label className="mt-6 block max-w-xl">
-        <span className="mb-1 block text-xs font-medium text-slate-400">
+        <span className="mb-1 block text-xs font-medium text-[#555560]">
           Select league
         </span>
         <select
           value={activeLeague?.id ?? ""}
           onChange={(event) => onLeagueChange(event.target.value)}
-          className="w-full rounded-2xl border border-white/10 bg-surface-strong px-4 py-3 text-sm text-foreground transition-all duration-200 focus:border-accent-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary/25"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-sm text-[#f0f0f0] transition-all duration-200 focus:border-accent-primary/50 focus:outline-none focus:ring-2 focus:ring-accent-primary/25"
           aria-label="Choose league"
         >
           {leagueOptions.map((league) => (
@@ -86,9 +86,9 @@ export function MyTeamView({
   ) : null;
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-foreground">
+    <section className="mx-auto max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
       <div className="mb-5">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-[#555560]">
           Manager: {username || "Sporty User"}
         </p>
       </div>
@@ -108,11 +108,11 @@ export function MyTeamView({
           ))}
         </div>
       ) : leaguesError || selectedTeamError ? (
-        <div className="mt-8 rounded-3xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="mt-8 rounded-[3px] border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
           Failed to load team data. Please try again.
         </div>
       ) : !hasLeagues ? (
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-6 text-sm text-slate-300">
+        <div className="mt-8 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 text-sm text-[#f0f0f0]">
           You are not part of any leagues yet.
         </div>
       ) : isEmptyTeam ? (
@@ -120,12 +120,12 @@ export function MyTeamView({
           <EmptyTeamState />
         </div>
       ) : teamLeague && teamLeague.players.length > 0 ? (
-        <div className="mt-8 rounded-3xl border border-white/10 bg-white/5 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-5">
+        <div className="mt-8 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 shadow-[0_24px_80px_rgba(0,0,0,0.28)] sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[#555560]">
               Team: {teamLeague.teamName}
             </p>
-            <span className="rounded-full border border-white/10 bg-white/6 px-2.5 py-1 text-xs font-medium text-slate-300">
+            <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2.5 py-1 text-xs font-medium text-[#f0f0f0]">
               League {teamLeague.leagueName}
             </span>
           </div>
