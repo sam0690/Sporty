@@ -42,6 +42,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   applyScoreUpdate: (update) =>
     set((state) => ({
       score: { ...state.score, home: update.home, away: update.away },
+      status: update.status ?? state.status,
       lastUpdatedTs: Date.now(),
     })),
 

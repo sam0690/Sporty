@@ -1,0 +1,220 @@
+"""
+Scoring bridge for feeder-simulated matches.
+
+The Kafka realtime pipeline is disabled and the gameweek engine only reads
+the stat tables, so feeder events would otherwise never touch fantasy
+scoring. This module closes both gaps without Kafka:
+
+  - apply_live_points: per-event fantasy deltas during a live simulation —
+    increments the same ``fantasy:match:{key}:player:{id}`` Redis hashes the
+    points engine would, and publishes FANTASY_POINTS_DELTA so the frontend
+    PointsCard updates live. Delta weights mirror the batch engine's default
+    scoring rules so live numbers agree with the final gameweek totals.
+
+  - persist_match_stats: on the live→finished transition, aggregates the
+    match's stored live_events per player into PlayerGameweekStat +
+    FootballStat/NBAStat for every transfer window covering the match date.
+    The gameweek engine (triggered right after) then computes fantasy points,
+    team weekly scores, and rankings exactly as it does for imported stats.
+"""
+
+from __future__ import annotations
+
+import logging
+import time
+import uuid
+from collections import Counter, defaultdict
+
+from sqlalchemy.orm import Session
+
+from app.match.models import Match
+from app.models.db.live_event import LiveEvent
+from app.models.schemas.events import WSMessage
+from app.player.models import FootballStat, Player, PlayerGameweekStat
+from app.player.models_nba import NBAStat
+from app.services.scoring.window_locator import find_transfer_window_ids_for_datetime
+
+logger = logging.getLogger(__name__)
+
+MATCH_MINUTES = {"football": 90, "basketball": 48}
+
+# Live per-event fantasy deltas, consistent with the batch defaults:
+# football_goal=5, football_assist=3, yellow=-1, red=-2 (FOOTBALL_ACTIONS);
+# NBA: (points/10)*3 + (assists/10)*2 + rebounds*1 + steals*2 + blocks*2.
+FOOTBALL_EVENT_POINTS: dict[str, float] = {
+    "goal": 5.0,
+    "assist": 3.0,
+    "yellow_card": -1.0,
+    "red_card": -2.0,
+}
+BASKETBALL_EVENT_POINTS: dict[str, float] = {
+    "point_2": 0.6,   # 2 game points * 3/10
+    "point_3": 0.9,   # 3 game points * 3/10
+    "free_throw": 0.3,
+    "assist": 0.2,    # 1 assist * 2/10
+    "rebound": 1.0,
+    "steal": 2.0,
+    "block": 2.0,
+}
+
+
+def fantasy_delta(sport: str, event_type: str) -> float:
+    table = BASKETBALL_EVENT_POINTS if sport == "basketball" else FOOTBALL_EVENT_POINTS
+    return table.get(event_type, 0.0)
+
+
+async def apply_live_points(redis, *, live_key: str, sport: str, events, channel: str) -> int:
+    """Accumulate per-player deltas for one minute batch, update the Redis
+    hashes the realtime endpoints read, and publish FANTASY_POINTS_DELTA
+    messages. Returns the number of players whose points changed."""
+    deltas: dict[str, float] = defaultdict(float)
+    for event in events:
+        player_id = event.sporty_player_id
+        if not player_id:
+            continue
+        delta = fantasy_delta(sport, event.event_type)
+        if delta:
+            deltas[player_id] += delta
+
+    ts = int(time.time())
+    for player_id, delta in deltas.items():
+        redis_key = f"fantasy:match:{live_key}:player:{player_id}"
+        total = await redis.hincrbyfloat(redis_key, "points", delta)
+        message = WSMessage(
+            event="FANTASY_POINTS_DELTA",
+            data={
+                "match_id": live_key,
+                "player_id": player_id,
+                "delta": delta,
+                "total_points": float(total),
+                "ts": ts,
+            },
+        )
+        await redis.publish(channel, message.model_dump_json())
+    return len(deltas)
+
+
+def _aggregate_match_events(db: Session, live_key: str) -> dict[uuid.UUID, Counter]:
+    """Per-player event-type counts from the stored live_events of a match,
+    keyed by Sporty player UUID. Events without a valid player id are skipped."""
+    rows = (
+        db.query(LiveEvent.player_id, LiveEvent.event_type)
+        .filter(LiveEvent.match_id == live_key)
+        .all()
+    )
+    per_player: dict[uuid.UUID, Counter] = defaultdict(Counter)
+    skipped = 0
+    for player_id, event_type in rows:
+        try:
+            player_uuid = uuid.UUID(player_id)
+        except (TypeError, ValueError):
+            skipped += 1
+            continue
+        per_player[player_uuid][event_type] += 1
+    if skipped:
+        logger.warning(
+            "Feed scoring for match %s: %s events skipped (no Sporty player id link)",
+            live_key,
+            skipped,
+        )
+    return per_player
+
+
+def _get_or_create_base_stat(db: Session, player_id: uuid.UUID, window_id: uuid.UUID) -> PlayerGameweekStat:
+    stat = (
+        db.query(PlayerGameweekStat)
+        .filter(
+            PlayerGameweekStat.player_id == player_id,
+            PlayerGameweekStat.transfer_window_id == window_id,
+        )
+        .first()
+    )
+    if stat is None:
+        stat = PlayerGameweekStat(player_id=player_id, transfer_window_id=window_id)
+        db.add(stat)
+        db.flush()
+    return stat
+
+
+def _apply_football_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
+    child = db.query(FootballStat).filter(FootballStat.base_stat_id == base_stat.id).first()
+    if child is None:
+        child = FootballStat(base_stat_id=base_stat.id)
+        db.add(child)
+        db.flush()
+    child.goals += counts.get("goal", 0)
+    child.assists += counts.get("assist", 0)
+    child.yellow_cards += counts.get("yellow_card", 0)
+    child.red_cards += counts.get("red_card", 0)
+
+
+def _apply_basketball_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
+    child = db.query(NBAStat).filter(NBAStat.base_stat_id == base_stat.id).first()
+    if child is None:
+        child = NBAStat(base_stat_id=base_stat.id)
+        db.add(child)
+        db.flush()
+    child.points += (
+        counts.get("point_2", 0) * 2 + counts.get("point_3", 0) * 3 + counts.get("free_throw", 0)
+    )
+    child.assists += counts.get("assist", 0)
+    child.rebounds += counts.get("rebound", 0)
+    child.steals += counts.get("steal", 0)
+    child.blocks += counts.get("block", 0)
+
+
+def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str) -> dict:
+    """Fold a finished simulated match's events into the gameweek stat tables.
+
+    Must only run on the live→finished transition (the caller guards this):
+    counts are accumulated, so re-running would double-book the match.
+    The caller owns the transaction (no commit here, repo convention).
+    """
+    per_player = _aggregate_match_events(db, live_key)
+    if not per_player:
+        logger.info("Feed scoring for match %s: no scorable events", live_key)
+        return {"players": 0, "windows": 0}
+
+    window_ids = find_transfer_window_ids_for_datetime(
+        db, match_date=match.match_date, sport_id=match.sport_id
+    )
+    if not window_ids:
+        logger.warning(
+            "Feed scoring for match %s: no transfer window covers %s; stats not booked",
+            live_key,
+            match.match_date,
+        )
+        return {"players": 0, "windows": 0}
+
+    # Only book stats for players that exist in this backend (defensive
+    # against stale entity links on the feeder side).
+    known_player_ids = {
+        player_id
+        for (player_id,) in db.query(Player.id).filter(Player.id.in_(per_player.keys())).all()
+    }
+    unknown = set(per_player) - known_player_ids
+    if unknown:
+        logger.warning(
+            "Feed scoring for match %s: %s linked player ids not found in players table",
+            live_key,
+            len(unknown),
+        )
+
+    match_minutes = MATCH_MINUTES.get(sport, 90)
+    apply_counts = _apply_basketball_counts if sport == "basketball" else _apply_football_counts
+
+    booked = 0
+    for window_id in window_ids:
+        for player_id in known_player_ids:
+            base_stat = _get_or_create_base_stat(db, player_id, window_id)
+            base_stat.minutes_played += match_minutes
+            apply_counts(db, base_stat, per_player[player_id])
+            booked += 1
+
+    logger.info(
+        "Feed scoring for match %s: booked stats for %s players across %s window(s)",
+        live_key,
+        len(known_player_ids),
+        len(window_ids),
+    )
+    return {"players": len(known_player_ids), "windows": len(window_ids), "stat_rows": booked}

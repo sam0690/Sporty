@@ -36,6 +36,32 @@ export type ScoreUpdate = {
   home: number;
   away: number;
   minute?: number;
+  // Present on feeder-driven updates ("live" | "finished").
+  status?: string;
+};
+
+export type MatchPrediction = {
+  sporty_match_id: string;
+  home_win_prob: number;
+  draw_prob: number;
+  away_win_prob: number;
+  model_version: string;
+};
+
+export type PlayerRating = {
+  sporty_player_id: string | null;
+  rating: number;
+  goals: number;
+  assists: number;
+  minutes_played: number;
+  events: string[];
+};
+
+export type MatchRatings = {
+  sporty_match_id: string;
+  sport: string;
+  man_of_match_sporty_player_id: string | null;
+  ratings: PlayerRating[];
 };
 
 export type LineupChange = {

@@ -10,13 +10,18 @@ SPORT_CONFIGS = {
         'squad_size': 15,
         'quota': 15,
         'maxPerClub': 3,
-        'position_minimums': { 'GK': 1, 'DEF': 3, 'MID': 2, 'FWD': 1 }
+        # Position codes must match Player.position ("GKP", not "GK") or the
+        # auto-pick ILP rejects every pool with "cannot satisfy required position".
+        'position_minimums': { 'GKP': 1, 'DEF': 3, 'MID': 2, 'FWD': 1 }
     },
     'basketball': {
         'squad_size': 13,
         'quota': 13,
         'maxPerClub': None,
-        'position_minimums': { 'UNK': 15 }
+        # Basketball players are all position "UNK"; the quota already fixes the
+        # count, and any UNK minimum above the mixed-league basketball quota (7)
+        # makes the ILP infeasible. No position constraints.
+        'position_minimums': {}
     },
     'mixed': {
         'squad_size': 15,
@@ -106,16 +111,19 @@ def build_auto_pick_sport_config(
         }
 
     if sport_type == "mixed":
+        # Mixed quotas are 8 + 7, so the per-sport minimums must come from the
+        # registry's "mixed" entries — the single-league minimums in
+        # SPORT_CONFIGS assume full 15/13-player squads and are infeasible here.
         sports = [
             {
                 "type": "football",
                 "quota": config.get("football_quota", 8),
-                "position_minimums": SPORT_CONFIGS["football"]["position_minimums"],
+                "position_minimums": SPORT_CONFIG_REGISTRY["football"]["mixed"]["position_minimums"],
             },
             {
                 "type": "basketball",
                 "quota": config.get("basketball_quota", 7),
-                "position_minimums": SPORT_CONFIGS["basketball"]["position_minimums"],
+                "position_minimums": SPORT_CONFIG_REGISTRY["basketball"]["mixed"]["position_minimums"],
             },
         ]
     else:

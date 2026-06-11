@@ -51,7 +51,14 @@ class Settings(BaseSettings):
     CSRF_COOKIE_NAME: str = "csrf_token"
     CSRF_HEADER_NAME: str = "X-CSRF-Token"
     # Paths exempt from CSRF (safe endpoints, health checks, etc.)
-    CSRF_EXEMPT_PATHS: str = "/health,/metrics,/docs,/redoc,/openapi.json"
+    # /api/v1/feed is server-to-server (Sporty Data Feeder) authenticated by
+    # X-Feeder-Secret — no browser session exists, so CSRF does not apply.
+    CSRF_EXEMPT_PATHS: str = "/health,/metrics,/docs,/redoc,/openapi.json,/api/v1/feed"
+
+    # ── Sporty Data Feeder ──────────────────────────────────────
+    # Shared secret for inbound /api/v1/feed/* pushes — must match the
+    # FEEDER_SECRET in the feeder's .env. Empty disables the feed endpoints (503).
+    FEEDER_SECRET: str = ""
 
     # ── Realtime Event Pipeline ────────────────────────────────
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"

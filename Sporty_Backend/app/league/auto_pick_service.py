@@ -254,6 +254,14 @@ def _sport_lookup(sport_config: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {sport["type"]: sport for sport in sport_config["sports"]}
 
 
+def _expected_squad_size(sport_config: dict[str, Any]) -> int:
+    # Configs from build_auto_pick_sport_config carry an explicit squad_size;
+    # otherwise the squad size is the sum of per-sport quotas.
+    if "squad_size" in sport_config:
+        return int(sport_config["squad_size"])
+    return sum(int(sport["quota"]) for sport in sport_config["sports"])
+
+
 def _club_key(player: PoolPlayer) -> str:
     # TODO: switch to player.real_team_fk.name after FK migration
     return player.real_team_id or player.real_team or str(player.id)
@@ -302,7 +310,7 @@ def auto_pick_ilp(
     logger.info(f"[auto_pick] pool by position — {dict(position_counts)}")
 
     sport_type = sport_config.get("sportType", "unknown")
-    logger.info(f"[auto_pick] squad_size={sport_config['squad_size']} sportType={sport_type}")
+    logger.info(f"[auto_pick] squad_size={_expected_squad_size(sport_config)} sportType={sport_type}")
     logger.info(f"[auto_pick] ILP solve START poolSize={len(player_pool)}")
 
     # Apply controlled randomness jitter to selection objective
@@ -325,7 +333,7 @@ def auto_pick_ilp(
     model += pulp.lpSum(jittered_values[player.id] * variables[player.id] for player in player_pool)
 
     # Total squad size constraint
-    model += pulp.lpSum(variables[player.id] for player in player_pool) == int(sport_config["squad_size"])
+    model += pulp.lpSum(variables[player.id] for player in player_pool) == _expected_squad_size(sport_config)
 
     for locked_id in locked_ids:
         if locked_id in variables:
@@ -390,10 +398,11 @@ def auto_pick_ilp(
 
 
 def validate_squad(squad: list[PoolPlayer], sport_config: dict[str, Any]) -> None:
-    if len(squad) != int(sport_config["squad_size"]):
+    expected_size = _expected_squad_size(sport_config)
+    if len(squad) != expected_size:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"Squad must have exactly {sport_config['squad_size']} players, got {len(squad)}",
+            detail=f"Squad must have exactly {expected_size} players, got {len(squad)}",
         )
 
     sport_lookup = _sport_lookup(sport_config)

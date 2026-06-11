@@ -67,6 +67,7 @@ from app.notification.router import router as notification_router
 from app.scoring.router import router as scoring_router
 from app.user.router import router as user_router
 from app.api.v1.transfers import router as transfers_router
+from app.api.v1.feed import router as feed_router
 from app.api.routes.match import router as realtime_match_router
 from app.api.routes.websocket import router as realtime_websocket_router
 from app.api.routes.sse import router as realtime_sse_router
@@ -461,6 +462,7 @@ app.include_router(notification_router, prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(transfers_router, prefix="/api/v1")
+app.include_router(feed_router, prefix="/api/v1")
 app.include_router(realtime_match_router, prefix="/api")
 app.include_router(realtime_websocket_router, prefix="/api")
 app.include_router(realtime_sse_router, prefix="/api")

@@ -35,7 +35,16 @@ import app.player.models_nba  # noqa: F401
 from app.league import dependencies as league_dependencies
 from app.league import router as league_router
 from app.league import services as league_service
-from app.league.models import FantasyTeam, League, LeagueSport, Season, Sport, TransferWindow, TeamPlayer
+from app.league.models import (
+    FantasyTeam,
+    League,
+    LeagueSport,
+    LeagueStatus,
+    Season,
+    Sport,
+    TransferWindow,
+    TeamPlayer,
+)
 from app.league.schemas import AutoPickRequest, LeagueCreate
 
 ENGINE = create_engine(os.environ["DATABASE_URL"])
@@ -141,6 +150,20 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
     db.add(window)
     db.flush()
 
+    real_team_cache: dict[tuple[uuid.UUID, str], uuid.UUID] = {}
+
+    def _real_team_id(sport_id: uuid.UUID, club: str) -> uuid.UUID:
+        key = (sport_id, club)
+        if key not in real_team_cache:
+            real_team = app.player.models.RealTeam(  # type: ignore[attr-defined]
+                sport_id=sport_id,
+                name=club,
+            )
+            db.add(real_team)
+            db.flush()
+            real_team_cache[key] = real_team.id
+        return real_team_cache[key]
+
     player_ids: list[uuid.UUID] = []
     football_positions = ["GKP", "DEF", "DEF", "MID", "MID", "MID", "FWD", "FWD"]
     football_clubs = ["ClubA", "ClubB", "ClubC", "ClubD", "ClubA", "ClubB", "ClubC", "ClubD"]
@@ -150,6 +173,7 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
             name=f"Football {index}",
             position=position,
             real_team=football_clubs[index - 1],
+            real_team_id=_real_team_id(football.id, football_clubs[index - 1]),
             cost=Decimal(str(5 + index)),
             is_available=True,
         )
@@ -165,6 +189,7 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
             name=f"Basketball {index}",
             position=position,
             real_team=basketball_clubs[index - 1],
+            real_team_id=_real_team_id(basketball.id, basketball_clubs[index - 1]),
             cost=Decimal(str(4 + index)),
             is_available=True,
         )
@@ -223,6 +248,9 @@ def test_auto_pick_endpoint_blocks_when_window_locked() -> None:
         owner = _create_user(db, "owner")
         league, _player_ids, window = _create_mixed_league_with_players(db, owner)
         window.transfers_locked = True
+        # The window-lock guard only applies to in-season auto-pick: SETUP
+        # leagues are deliberately exempt (initial squad building).
+        league.status = LeagueStatus.ACTIVE
         db.commit()
 
         fake_redis = _FakeRedis(allow_lock=True)
