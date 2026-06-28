@@ -108,7 +108,16 @@ export function useTransfersDashboard() {
   const [sessionBudget, setSessionBudget] = useState<number | null>(null);
   const [transfersRemaining, setTransfersRemaining] = useState<number | null>(null);
   const isMultiSportLeague = leagueSports.length > 1;
-  const isTransfersOpen = Boolean(activeWindow?.id) && !activeWindow?.transfers_locked;
+  // Mirror the backend transfer gate (validate_transfer_window_for_transfer):
+  // a window containing "now" is not enough — transfers close at
+  // transfer_deadline_at (2h before window end) and can be force-locked.
+  // Without the deadline check the UI shows transfers open in the final 2h of
+  // a window, then the API rejects them with 409.
+  const isTransfersOpen =
+    Boolean(activeWindow?.id) &&
+    !activeWindow?.transfers_locked &&
+    !!activeWindow?.transfer_deadline_at &&
+    Date.now() <= new Date(activeWindow.transfer_deadline_at).getTime();
 
   const ownedPlayers: OwnedPlayer[] = useMemo(() => {
     const rows = myTeam?.team_players ?? myTeam?.players ?? [];

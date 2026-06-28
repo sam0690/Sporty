@@ -2552,20 +2552,33 @@ def get_dashboard_stats(
 
 
 def is_transfer_window_active(db: Session, league_id: uuid.UUID) -> bool:
-    """Return whether any transfer window is open now for the league's season."""
+    """Return whether transfers can be made right now for the league's season.
+
+    A window merely *containing* `now` is not enough: transfers close at
+    `transfer_deadline_at` (2h before the window ends) and can be force-locked
+    via `transfers_locked`. Mirror exactly what `validate_transfer_window_for_
+    transfer` enforces so the status endpoint can never disagree with the
+    actual transfer gate. Because seeded windows tile the season contiguously,
+    checking only start/end containment would report active for the entire
+    season; the deadline/lock checks are what make this meaningful.
+    """
     from datetime import datetime, timezone
 
     league = _require_league(db, league_id)
     now = datetime.now(timezone.utc)
 
-    row = (
-        db.query(TransferWindow.id)
+    window = (
+        db.query(TransferWindow)
         .filter(
             TransferWindow.season_id == league.season_id,
             TransferWindow.start_at <= now,
             TransferWindow.end_at >= now,
         )
+        .order_by(TransferWindow.number.desc())
         .first()
     )
-    return row is not None
+    if window is None:
+        return False
+
+    return not window.transfers_locked and now <= window.transfer_deadline_at
 
