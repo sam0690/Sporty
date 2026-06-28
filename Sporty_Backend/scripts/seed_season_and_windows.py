@@ -38,7 +38,36 @@ sys.path.insert(0, str(project_root))
 
 load_dotenv()
 
-from app.league.models import Season, Sport, TransferWindow  # noqa: E402
+# Import ALL model modules so SQLAlchemy can resolve every relationship
+# (e.g. Sport -> RealTeam) before the first query configures the mappers.
+from app.auth.models import RefreshToken, User  # noqa: E402,F401
+from app.league.models import (  # noqa: E402,F401
+    FantasyTeam,
+    League,
+    LeagueMembership,
+    LeagueSport,
+    LineupSlot,
+    Season,
+    Sport,
+    TeamGameweekLineup,
+    TeamPlayer,
+    TeamWeeklyScore,
+    Transfer,
+    TransferWindow,
+)
+from app.match.models import Match  # noqa: E402,F401
+from app.player.models import (  # noqa: E402,F401
+    CricketStat,
+    FootballStat,
+    Player,
+    PlayerGameweekStat,
+    RealTeam,
+)
+from app.player.models_nba import NBAStat  # noqa: E402,F401
+from app.scoring.models import (  # noqa: E402,F401
+    DefaultScoringRule,
+    LeagueScoringOverride,
+)
 
 
 def _parse_date(s: str) -> date:
