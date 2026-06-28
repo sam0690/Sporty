@@ -1,142 +1,409 @@
 @import "tailwindcss";
 
-/* ── Design Tokens ──────────────────────────────────────────────── */
+/* ════════════════════════════════════════════════════════════════════
+   Design_System.md is the single source of truth for every value below.
+   §2 Color · §3 Typography · §4 Spacing & Shape · §5 Glass · §6 Motion
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── §2 Color Tokens ────────────────────────────────────────────────── */
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #f0f0f0;
-  --foreground-muted: #555560;
-  --surface: #111117;
-  --surface-elevated: #1d1d26;
-  --border: rgba(255, 255, 255, 0.08);
-  --border-input: rgba(255, 255, 255, 0.12);
+  /* Surface (oklch) */
+  --background: oklch(0.13 0.01 270);
+  --foreground: oklch(0.98 0.005 270);
+  --card: oklch(0.17 0.015 270);
+  --card-foreground: oklch(0.98 0.005 270);
+  --muted: oklch(0.22 0.02 270);
+  --muted-foreground: oklch(0.7 0.02 270);
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.15);
 
-  /* Accents */
-  --volt: #e8fb25;
-  --volt-dim: rgba(232, 251, 37, 0.25);
-  --live: #ff3b30;
-  --accent-cricket: #00d4ff;
-  --accent-basketball: #ff6b00;
-  --accent-football: #4caf50;
-  --accent-rugby: #e040fb;
+  /* Brand neons (exact hex — non-negotiable) */
+  --football: #00ff88;
+  --basketball: #ff6b35;
+  --playoff: #9b59b6;
+  --grass: #0e3d1f;
+  --court: #4a2510;
+  --gold: #ffd86b;
 
-  /* Legacy aliases (keep components working) */
-  --accent-primary: #e8fb25;
-  --accent-secondary: #ff3b30;
-  --accent-tertiary: #ff6b00;
-  --accent-success: #4caf50;
-  --accent-danger: #ff3b30;
-  --surface-light: #111117;
-  --surface-strong: #1d1d26;
-  --border-light: rgba(255, 255, 255, 0.08);
+  /* Gap-derived tokens — NOT in Design_System.md, see rewrite changelog:
+     Sporty also has Cricket/Rugby sports and needs a negative/danger red
+     (spec references "red" for `out` status and negative deltas but
+     defines no hex). Kept in the same neon family. */
+  --cricket: #00d4ff;
+  --rugby: #e040fb;
+  --danger: #ff3b5c;
+  --warning: var(--gold);
+
+  /* Gradients */
+  --gradient-football: linear-gradient(135deg, #00ff88 0%, #00b86b 100%);
+  --gradient-basketball: linear-gradient(135deg, #ff6b35 0%, #c8390f 100%);
+  --gradient-playoff: linear-gradient(135deg, #9b59b6 0%, #6a2c91 100%);
+  /* Reserved: #1 rank, trophy halo, CHAMPION headline only */
+  --gradient-champion: linear-gradient(135deg, #ffd86b 0%, #ff6b35 50%, #9b59b6 100%);
+
+  /* Neon glow shadows — active/hover states only, never idle surfaces */
+  --shadow-neon-green: 0 0 24px color-mix(in oklab, #00ff88 60%, transparent);
+  --shadow-neon-orange: 0 0 24px color-mix(in oklab, #ff6b35 60%, transparent);
+  --shadow-neon-purple: 0 0 24px color-mix(in oklab, #9b59b6 60%, transparent);
+  --shadow-neon-cyan: 0 0 24px color-mix(in oklab, #00d4ff 60%, transparent); /* gap-derived for cricket */
+
+  /* §4 Shape */
+  --radius: 0.875rem;
+
+  /* Focus ring — gap-derived (spec mandates a :focus-visible ring but no
+     value): default to the football accent; sport-themed surfaces may
+     override --ring locally. */
+  --ring: color-mix(in oklab, var(--football) 70%, transparent);
 }
 
 @theme inline {
+  /* Surfaces */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-foreground-muted: var(--foreground-muted);
-  --color-surface: var(--surface);
-  --color-surface-strong: var(--surface-elevated);
-  --color-surface-elevated: var(--surface-elevated);
-  --color-volt: var(--volt);
-  --color-live: var(--live);
-  --color-accent-primary: var(--volt);
-  --color-accent-secondary: var(--live);
-  --color-accent-tertiary: var(--accent-basketball);
-  --color-accent-success: var(--accent-football);
-  --color-accent-danger: var(--live);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
-  --font-sans: "Barlow", system-ui, sans-serif;
-  --font-display: "Barlow Condensed", system-ui, sans-serif;
-  --font-bebas: "Bebas Neue", sans-serif;
-  --font-barlow-condensed: "Barlow Condensed", sans-serif;
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand neons */
+  --color-football: var(--football);
+  --color-basketball: var(--basketball);
+  --color-playoff: var(--playoff);
+  --color-grass: var(--grass);
+  --color-court: var(--court);
+  --color-gold: var(--gold);
+  --color-cricket: var(--cricket);
+  --color-rugby: var(--rugby);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+
+  /* ── Legacy aliases (shims; deleted as each component is rewritten) ── */
+  --color-volt: var(--football);
+  --color-live: var(--danger);
+  --color-surface: var(--card);
+  --color-surface-strong: var(--muted);
+  --color-surface-elevated: var(--muted);
+  --color-foreground-muted: var(--muted-foreground);
+  --color-accent-primary: var(--football);
+  --color-accent-secondary: var(--danger);
+  --color-accent-tertiary: var(--basketball);
+  --color-accent-success: var(--football);
+  --color-accent-danger: var(--danger);
+
+  /* §3 Typography — Inter = display, DM Sans = body (loaded in layout.tsx) */
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Legacy font shims → display family until components are rewritten */
+  --font-bebas: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-barlow-condensed: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+
+  /* §4 Radius scale (rounded-sm … rounded-2xl) */
+  --radius-sm: calc(var(--radius) - 4px); /* inputs, badges */
+  --radius-md: calc(var(--radius) - 2px); /* small cards */
+  --radius-lg: var(--radius); /* standard cards */
+  --radius-xl: calc(var(--radius) + 4px); /* hero glass cards */
+  --radius-2xl: calc(var(--radius) + 8px); /* stat blocks, summary cards */
+
+  /* §2 Neon glow shadow utilities (shadow-neon-*) */
+  --shadow-neon-green: var(--shadow-neon-green);
+  --shadow-neon-orange: var(--shadow-neon-orange);
+  --shadow-neon-purple: var(--shadow-neon-purple);
+  --shadow-neon-cyan: var(--shadow-neon-cyan);
 }
 
-/* ── Base ──────────────────────────────────────────────────────── */
+/* ── Base ───────────────────────────────────────────────────────────── */
 
-html {
-  background: var(--background);
+@layer base {
+  html {
+    background: #0a0a0f;
+  }
+
+  /* Hard matte-black floor under all glass layers (DS §2) */
+  body {
+    background: #0a0a0f;
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+  }
+
+  /* §3 — display family on all headings */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  /* §11 — focus ring is never suppressed */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  /* §6 — default easing, 150–200ms interactive transitions */
+  button {
+    transition:
+      opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  button:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+  a {
+    transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  tr {
+    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--football) 30%, transparent);
+    color: var(--foreground);
+  }
+
+  ::-webkit-scrollbar {
+    width: 4px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0a0a0f;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 2px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Barlow", system-ui, sans-serif;
-  min-height: 100vh;
+/* ── §3 Tabular numbers — every score, rank, currency, countdown ───── */
+
+.num,
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
-/* ── Animations ─────────────────────────────────────────────────── */
+/* ── §5 Glassmorphism — two flavors only ────────────────────────────── */
+
+.glass {
+  background: color-mix(in oklab, #ffffff 4%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in oklab, #ffffff 10%, transparent);
+  border-radius: 0.875rem;
+}
+
+.glass-strong {
+  background: color-mix(in oklab, #ffffff 7%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
+}
+
+/* ── §2 Gradient surface utilities (accentMap classes, DS §9) ───────── */
+
+.gradient-football {
+  background: var(--gradient-football);
+}
+.gradient-basketball {
+  background: var(--gradient-basketball);
+}
+.gradient-playoff {
+  background: var(--gradient-playoff);
+}
+.gradient-champion {
+  background: var(--gradient-champion);
+}
+/* Gap-derived: cricket gradient in the same 135° two-stop family */
+.gradient-cricket {
+  background: linear-gradient(135deg, #00d4ff 0%, #0092b8 100%);
+}
+
+/* Champion text treatment — #1 rank / CHAMPION headline only */
+.text-champion {
+  background: var(--gradient-champion);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ── §3 Micro-label utility — "WEEK POINTS", "SCROLL UP", "LIVE" ────── */
+
+.micro-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+/* ── §6b / §10 Keyframes (ambient register) ─────────────────────────── */
+
+@keyframes glitch-rgb {
+  0%, 100% { text-shadow: 2px 0 #00ff88, -2px 0 #ff6b35; transform: translate(0); }
+  20%      { text-shadow: -2px 0 #00ff88, 2px 0 #ff6b35; transform: translate(-1px, 1px); }
+  40%      { text-shadow: 2px 2px #9b59b6, -2px -2px #00ff88; transform: translate(1px, -1px); }
+  60%      { text-shadow: -2px 2px #ff6b35, 2px -2px #9b59b6; transform: translate(-1px, 0); }
+  80%      { text-shadow: 2px -2px #00ff88, -2px 2px #ff6b35; transform: translate(1px, 1px); }
+}
+.glitch {
+  animation: glitch-rgb 2.8s infinite steps(1, end);
+}
+
+@keyframes neon-flicker {
+  0%, 100% { opacity: 1; }
+  45% { opacity: 0.95; }
+  47% { opacity: 0.55; }
+  48% { opacity: 1; }
+  60% { opacity: 0.85; }
+  62% { opacity: 0.6; }
+  64% { opacity: 1; }
+}
+.flicker {
+  animation: neon-flicker 3s infinite;
+}
+
+@keyframes lightning-flash {
+  0%, 92%, 100% { opacity: 0; }
+  93% { opacity: 1; }
+  95% { opacity: 0.2; }
+  96% { opacity: 1; }
+  98% { opacity: 0; }
+}
+.lightning {
+  animation: lightning-flash 4.5s infinite;
+}
+
+@keyframes float-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.float-up {
+  animation: float-up 0.6s ease-out both;
+}
+
+@keyframes spin-y {
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(360deg); }
+}
+.spin-y {
+  animation: spin-y 8s linear infinite;
+}
+
+@keyframes ball-roll {
+  from { transform: translateX(-10vw) rotate(0deg); }
+  to   { transform: translateX(110vw) rotate(720deg); }
+}
+.ball-roll {
+  animation: ball-roll 8s linear infinite;
+}
+
+@keyframes bball-bounce {
+  0%   { transform: translate(-10vw, 0) rotate(0deg); }
+  25%  { transform: translate(25vw, -60px) rotate(180deg); }
+  50%  { transform: translate(60vw, 0) rotate(360deg); }
+  75%  { transform: translate(80vw, -40px) rotate(540deg); }
+  100% { transform: translate(110vw, 0) rotate(720deg); }
+}
+.bball-bounce {
+  animation: bball-bounce 7s linear infinite;
+}
+
+@keyframes firework-up {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  60%  { transform: translateY(-60vh) scale(1); opacity: 1; }
+  100% { transform: translateY(-60vh) scale(8); opacity: 0; }
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+.animate-live-pulse {
+  animation: live-pulse 1.2s ease-in-out infinite;
+}
+
+/* §11 — reduced motion: same story, calmer */
+@media (prefers-reduced-motion: reduce) {
+  .glitch,
+  .flicker,
+  .lightning,
+  .spin-y,
+  .ball-roll,
+  .bball-bounce,
+  .float-up,
+  .animate-live-pulse {
+    animation: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   LEGACY SHIMS — classes still referenced by not-yet-rewritten
+   components, re-pointed at design-system tokens. Each block is deleted
+   when its consumer is rewritten in Steps 2–5.
+   ════════════════════════════════════════════════════════════════════ */
 
 @keyframes fadeInScale {
   from { opacity: 0; transform: scale(0.96); }
   to   { opacity: 1; transform: scale(1); }
 }
-
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 @keyframes fade-soft {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-
 @keyframes slide-in-left {
   from { opacity: 0; transform: translateX(-16px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.35; }
-}
-
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
-.animate-fade-in-scale  { animation: fadeInScale 0.3s ease-out forwards; }
-.animate-fade-in        { animation: fade-in 0.4s ease-out forwards; }
-.animate-fade-soft      { animation: fade-soft 0.3s ease-out forwards; }
-.card-fade-in           { animation: fade-in 0.25s ease-out forwards; }
-.animate-slide-in-left  { animation: slide-in-left 0.4s ease-out forwards; }
-.animate-live-pulse     { animation: live-pulse 1.2s ease-in-out infinite; }
+.animate-fade-in-scale { animation: fadeInScale 0.3s ease-out forwards; }
+.animate-fade-in       { animation: fade-in 0.4s ease-out forwards; }
+.animate-fade-soft     { animation: fade-soft 0.3s ease-out forwards; }
+.card-fade-in          { animation: fade-in 0.25s ease-out forwards; }
+.animate-slide-in-left { animation: slide-in-left 0.4s ease-out forwards; }
 
-/* ── Sport badge system ─────────────────────────────────────────── */
-
-.sport-badge-football   { background: #1a2a1a; color: #4caf50; }
-.sport-badge-cricket    { background: #1a1a2a; color: #00d4ff; }
-.sport-badge-basketball { background: #2a1a1a; color: #ff6b00; }
-.sport-badge-rugby      { background: #2a1a2a; color: #e040fb; }
-.sport-badge-multisport { background: #1a1a26; color: #e8fb25; }
-
-/* ── LIVE indicator ─────────────────────────────────────────────── */
+.sport-badge-football   { background: color-mix(in oklab, var(--football) 12%, transparent); color: var(--football); }
+.sport-badge-cricket    { background: color-mix(in oklab, var(--cricket) 12%, transparent); color: var(--cricket); }
+.sport-badge-basketball { background: color-mix(in oklab, var(--basketball) 12%, transparent); color: var(--basketball); }
+.sport-badge-rugby      { background: color-mix(in oklab, var(--rugby) 12%, transparent); color: var(--rugby); }
+.sport-badge-multisport { background: color-mix(in oklab, var(--playoff) 12%, transparent); color: var(--playoff); }
 
 .live-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: 11px;
-  letter-spacing: 2px;
+  font-size: 10px;
+  letter-spacing: 0.25em;
   text-transform: uppercase;
-  color: #ff3b30;
+  color: var(--danger);
 }
-
 .live-badge::before {
   content: "";
   display: block;
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #ff3b30;
+  background: var(--danger);
   animation: live-pulse 1.2s ease-in-out infinite;
 }
-
-/* ── Toast Notifications ─────────────────────────────────────────── */
 
 .sporty-toast-root {
   position: fixed;
@@ -148,123 +415,94 @@ body {
   gap: 0.75rem;
   pointer-events: none;
 }
-
 .sporty-toast {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   min-width: 260px;
   max-width: 340px;
-  border-radius: 3px;
+  border-radius: var(--radius);
   padding: 0.75rem 1rem;
-  color: #f0f0f0;
-  font-family: "Barlow Condensed", sans-serif;
+  background: color-mix(in oklab, #ffffff 7%, transparent);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
+  color: var(--foreground);
+  font-family: var(--font-sans);
   font-size: 0.875rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   opacity: 0;
   transform: translateY(-6px);
   animation: fadeInScale 0.18s ease-out forwards;
 }
-
-.sporty-toast-success { background: #1a2a1a; border: 1px solid #4caf50; color: #4caf50; }
-.sporty-toast-error   { background: #2a1010; border: 1px solid #ff3b30; color: #ff3b30; }
-.sporty-toast-info    { background: #1a1a2a; border: 1px solid #00d4ff; color: #00d4ff; }
-.sporty-toast-warning { background: #1a1a10; border: 1px solid var(--volt-dim); color: #c8d85a; }
-
+.sporty-toast-success { border-color: color-mix(in oklab, var(--football) 50%, transparent); color: var(--football); }
+.sporty-toast-error   { border-color: color-mix(in oklab, var(--danger) 50%, transparent); color: var(--danger); }
+.sporty-toast-info    { border-color: color-mix(in oklab, var(--cricket) 50%, transparent); color: var(--cricket); }
+.sporty-toast-warning { border-color: color-mix(in oklab, var(--gold) 50%, transparent); color: var(--gold); }
 .sporty-toast-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
-  border-radius: 3px;
+  border-radius: calc(var(--radius) - 4px);
   font-size: 0.75rem;
   font-weight: 700;
 }
 
-/* ── Alert / deadline bars ───────────────────────────────────────── */
-
 .alert-deadline {
-  background: #1a1a10;
-  border: 1px solid rgba(232, 251, 37, 0.25);
-  color: #c8d85a;
-  border-radius: 3px;
+  background: color-mix(in oklab, #ffffff 4%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid color-mix(in oklab, var(--gold) 35%, transparent);
+  color: var(--gold);
+  border-radius: var(--radius);
   padding: 0.75rem 1rem;
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: var(--font-sans);
   font-size: 0.875rem;
-  letter-spacing: 0.5px;
 }
-
-/* ── Stat boxes ─────────────────────────────────────────────────── */
 
 .stat-box-number {
-  font-family: "Bebas Neue", sans-serif;
-  color: #e8fb25;
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  color: var(--football);
 }
-
-.stat-box-label {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: #666;
-  text-transform: uppercase;
-}
-
-/* ── Section labels ─────────────────────────────────────────────── */
-
+.stat-box-label,
 .section-label {
-  font-family: "Barlow Condensed", sans-serif;
-  font-size: 11px;
-  letter-spacing: 3px;
-  color: #666;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
 }
-
-/* ── Scrollbar ────────────────────────────────────────────────────── */
-
-::-webkit-scrollbar       { width: 4px; }
-::-webkit-scrollbar-track { background: #0a0a0f; }
-::-webkit-scrollbar-thumb { background: #333340; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #555560; }
-
-::selection { background: rgba(232, 251, 37, 0.25); color: #f0f0f0; }
-
-/* ── Base element transitions ─────────────────────────────────────── */
-
-button {
-  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-button:hover:not(:disabled) { opacity: 0.9; }
-button:active:not(:disabled) { transform: scale(0.98); }
-
-a { transition: color 0.15s ease; }
-a:hover { text-decoration: underline; }
-
-tr { transition: background-color 0.15s ease; }
-
-/* ── Auth dot pattern ───────────────────────────────────────────── */
 
 .auth-dot-pattern {
   background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
-/* ── Diagonal/angled dividers ────────────────────────────────────── */
-
 .angled-top {
   clip-path: polygon(0 4%, 100% 0, 100% 100%, 0 100%);
 }
-
 .angled-bottom {
   clip-path: polygon(0 0, 100% 0, 100% 96%, 0 100%);
 }
 
-/* ── Leaderboard rank colors ─────────────────────────────────────── */
-
-.rank-1 { color: #e8fb25; }
-.rank-2 { color: #f0f0f0; }
-.rank-3 { color: #f0f0f0; }
-.rank-rest { color: #333340; }
+/* #1 rank wears the champion gradient (DS §2) */
+.rank-1 {
+  background: var(--gradient-champion);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.rank-2,
+.rank-3 {
+  color: var(--foreground);
+}
+.rank-rest {
+  color: var(--muted-foreground);
+}

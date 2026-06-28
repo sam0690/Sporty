@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 COPY app ./app
 COPY alembic.ini ./alembic.ini
 COPY alembic ./alembic
+COPY scripts ./scripts
 
 RUN chown -R app:app /app
 
@@ -24,4 +25,8 @@ USER app
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 10000"]
+# Migrations MUST succeed (hard gate). Baseline seeders are idempotent and
+# non-fatal — a seed hiccup should never keep the API from booting, so they run
+# in a subshell whose failure is swallowed. They only INSERT/upsert reference
+# rows (sports + default scoring rules), so re-running on every boot is safe.
+CMD ["sh", "-c", "alembic upgrade head && { python scripts/create_sports.py && python scripts/seed_default_scoring_rules.py || echo '[boot] seed step failed, continuing'; } && uvicorn app.main:app --host 0.0.0.0 --port 10000"]
