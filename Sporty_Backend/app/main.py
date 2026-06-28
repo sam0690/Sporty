@@ -65,6 +65,7 @@ from app.optimization.router import router as optimization_router
 from app.player.router import router as player_router
 from app.notification.router import router as notification_router
 from app.scoring.router import router as scoring_router
+from app.match.router import router as match_router
 from app.user.router import router as user_router
 from app.api.v1.transfers import router as transfers_router
 from app.api.v1.feed import router as feed_router
@@ -460,6 +461,7 @@ app.include_router(optimization_router, prefix="/api/v1")
 app.include_router(player_router,  prefix="/api/v1")
 app.include_router(notification_router, prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
+app.include_router(match_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(transfers_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")

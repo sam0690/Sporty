@@ -1,0 +1,16 @@
+import { authApi } from "@/api/auth-api-client";
+import { API_PATHS } from "@/api/apiPath";
+import type { TMatchFilter, TMatchListResponse } from "@/types/match";
+
+export const MatchService = {
+  /** List fixtures the user can view (scoped server-side to their leagues' sports). */
+  async getMatches(filters: TMatchFilter = {}): Promise<TMatchListResponse> {
+    const params: TMatchFilter = {
+      status: filters.status,
+      sport_name: filters.sport_name,
+      limit: filters.limit,
+    };
+    const res = await authApi.get(API_PATHS.MATCHES.LIST, { params });
+    return res.data as TMatchListResponse;
+  },
+};

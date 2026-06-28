@@ -37,7 +37,7 @@ export function RatingsCard({ ratings }: RatingsCardProps) {
               className="flex items-center justify-between gap-3"
             >
               <span className="truncate">
-                {row.sporty_player_id ?? "Unknown player"}
+                {row.name ?? row.sporty_player_id ?? "Unknown player"}
                 {isMotm && (
                   <span className="ml-2 text-[10px] uppercase tracking-wider text-[#e8fb25]">
                     MOTM

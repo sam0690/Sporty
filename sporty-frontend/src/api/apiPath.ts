@@ -94,4 +94,8 @@ export const API_PATHS = {
     CONFIRM: "/transfers/confirm",
     CANCEL: "/transfers/cancel",
   },
+
+  MATCHES: {
+    LIST: "/matches",
+  },
 } as const;

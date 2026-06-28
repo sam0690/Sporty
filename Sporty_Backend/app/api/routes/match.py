@@ -93,15 +93,65 @@ async def get_match_prediction(
     return prediction
 
 
+async def _resolve_player_names(db, sporty_player_ids: set[str]) -> dict[str, str]:
+    """Map feeder `sporty_player_id` values to display names.
+
+    The feeder's id may correspond to our Player UUID or to Player.external_api_id,
+    so match on both. Unmapped ids simply won't appear in the result and the
+    caller falls back to showing the raw id.
+    """
+    ids = [pid for pid in sporty_player_ids if pid]
+    if not ids:
+        return {}
+    rows = (
+        await db.execute(
+            text(
+                """
+                SELECT id::text AS id, external_api_id, name
+                FROM players
+                WHERE id::text = ANY(:ids) OR external_api_id = ANY(:ids)
+                """
+            ),
+            {"ids": ids},
+        )
+    ).mappings().all()
+    lookup: dict[str, str] = {}
+    for row in rows:
+        if row["id"]:
+            lookup[row["id"]] = row["name"]
+        if row["external_api_id"]:
+            lookup[row["external_api_id"]] = row["name"]
+    return lookup
+
+
 @router.get("/match/{match_id}/ratings")
 async def get_match_ratings(
     match_id: str,
     _match=Depends(require_match_access),
+    db=Depends(get_async_db),
     redis=Depends(get_async_redis_dep),
 ):
     """Post-match player ratings pushed by the Sporty Data Feeder
-    (cached 24h under ratings:match:{id})."""
+    (cached 24h under ratings:match:{id}).
+
+    Enriched server-side with player display names so the UI doesn't have to
+    resolve raw feeder ids. `name` is added per rating (null when unmapped) and
+    `man_of_match_name` alongside the existing MOTM id."""
     ratings = await _get_cached_match_json(redis, "ratings", _match)
     if ratings is None:
         raise HTTPException(status_code=404, detail="No ratings available for this match")
+
+    entries = ratings.get("ratings") or []
+    sporty_ids = {str(e["sporty_player_id"]) for e in entries if e.get("sporty_player_id")}
+    motm_id = ratings.get("man_of_match_sporty_player_id")
+    if motm_id:
+        sporty_ids.add(str(motm_id))
+
+    name_by_id = await _resolve_player_names(db, sporty_ids)
+
+    for entry in entries:
+        pid = entry.get("sporty_player_id")
+        entry["name"] = name_by_id.get(str(pid)) if pid else None
+    ratings["man_of_match_name"] = name_by_id.get(str(motm_id)) if motm_id else None
+
     return ratings

@@ -50,6 +50,8 @@ export type MatchPrediction = {
 
 export type PlayerRating = {
   sporty_player_id: string | null;
+  /** Display name resolved server-side; null when the feeder id is unmapped. */
+  name?: string | null;
   rating: number;
   goals: number;
   assists: number;
@@ -61,6 +63,8 @@ export type MatchRatings = {
   sporty_match_id: string;
   sport: string;
   man_of_match_sporty_player_id: string | null;
+  /** Display name for the MOTM; null when unmapped. */
+  man_of_match_name?: string | null;
   ratings: PlayerRating[];
 };
 

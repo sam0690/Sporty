@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { Home, Shield, Trophy, ArrowRightLeft, UserRound } from "lucide-react";
+import {
+  Home,
+  Shield,
+  Trophy,
+  ArrowRightLeft,
+  UserRound,
+  CalendarDays,
+} from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
 import {
   Sidebar,
@@ -22,6 +29,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       { label: "Overview", href: "/dashboard", icon: Home },
       { label: "My Team", href: "/my-team", icon: Shield },
       { label: "Leagues", href: "/leagues", icon: Trophy },
+      { label: "Matches", href: "/matches", icon: CalendarDays },
       { label: "Transfers", href: "/transfers", icon: ArrowRightLeft },
       { label: "Profile", href: `/user/${userId}`, icon: UserRound },
     ],
