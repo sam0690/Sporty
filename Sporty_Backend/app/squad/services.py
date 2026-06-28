@@ -32,13 +32,13 @@ _LINEUP_SIZE_RULES: dict[str, dict[str, int]] = {
 }
 
 # Exact per-sport starter requirements inside a mixed starting lineup.
-# Note: 8 + 7 = 15 (full squad size) — these are the SQUAD quotas reused for
-# the starting-lineup check in update_lineup.  The existing behaviour is
-# preserved verbatim; see the open TODO in PROJECT_CONTEXT.md about the
-# inconsistency between MULTISPORT_STARTERS_REQUIRED (9) and these values.
+# 5 + 4 = 9, matching _LINEUP_SIZE_RULES["mixed"]["starting"] and the frontend's
+# MULTISPORT_STARTER_REQUIREMENTS. (These are the STARTER split, not the squad
+# quotas — the squad is 8 football + 7 basketball = 15, of which 5 + 4 start and
+# 3 + 3 sit on the bench.)
 _MIXED_STARTER_REQUIREMENTS: dict[str, int] = {
-    "football":  8,
-    "basketball": 7,
+    "football":  5,
+    "basketball": 4,
 }
 
 
