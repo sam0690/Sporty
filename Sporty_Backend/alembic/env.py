@@ -31,7 +31,9 @@ config = context.config
 database_url = os.getenv("DATABASE_URL")
 if not database_url:
     raise ValueError("DATABASE_URL not found in environment variables")
-config.set_main_option("sqlalchemy.url", database_url)
+# Escape '%' so ConfigParser interpolation doesn't choke on URL-encoded
+# passwords (e.g. %23, %40) in DATABASE_URL.
+config.set_main_option("sqlalchemy.url", database_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging
 if config.config_file_name is not None:
