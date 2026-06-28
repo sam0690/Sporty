@@ -19,6 +19,7 @@ import {
   useLeagueLineupData,
   type LineupPlayerCardModel,
 } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
+import { useLineupPositions } from "@/components/dashboard/leagues/league-lineup/hooks/useLineupPositions";
 import { toastifier } from "@/lib/toastifier";
 import { OptimizationService } from "@/services/OptimizationService";
 import { PlayerService } from "@/services/PlayerService";
@@ -198,6 +199,22 @@ export function LeagueLineup() {
     () => groupPlayersBySport(bench),
     [bench],
   );
+
+  const lineupPlayerIds = useMemo(
+    () => editablePlayers.map((player) => player.playerId),
+    [editablePlayers],
+  );
+
+  const {
+    positions: pitchPositions,
+    setPosition: setPitchPosition,
+    clearPosition: clearPitchPosition,
+    resetPositions: resetPitchPositions,
+  } = useLineupPositions({
+    leagueId,
+    teamId: lineupData?.fantasy_team_id ?? null,
+    validPlayerIds: lineupPlayerIds,
+  });
 
   const lineupSport = useMemo(() => {
     const hasManySports = (league?.sports?.length ?? 0) > 1;
@@ -813,6 +830,10 @@ export function LeagueLineup() {
       ) : (
         <LineupPitchView
           allPlayers={editablePlayers}
+          positions={pitchPositions}
+          onSetPosition={setPitchPosition}
+          onClearPosition={clearPitchPosition}
+          onResetPositions={resetPitchPositions}
           onToggleStarter={toggleStarter}
           onSetCaptain={setCaptain}
           onSetViceCaptain={setViceCaptain}
