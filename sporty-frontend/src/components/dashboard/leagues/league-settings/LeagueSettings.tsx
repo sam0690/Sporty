@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
@@ -11,7 +11,6 @@ import {
   SettingsForm,
   type LeagueSettingsData,
 } from "@/components/dashboard/leagues/league-settings/components/SettingsForm";
-import type { TLeague } from "@/types";
 import {
   useAddLeagueSport,
   useDeleteLeague,
@@ -19,6 +18,7 @@ import {
   useLeague,
   useRemoveLeagueSport,
   useSports,
+  useUpdateLeague,
   useUpdateMidseasonJoin,
   useUpdateLeagueStatus,
 } from "@/hooks/leagues/useLeagues";
@@ -35,11 +35,6 @@ import {
 } from "@/hooks/scoring/useScoring";
 import { useMe } from "@/hooks/auth/useMe";
 
-type LeagueSettingsShape = TLeague & {
-  is_public?: boolean;
-  draft_mode?: boolean;
-};
-
 export function LeagueSettings() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -47,11 +42,10 @@ export function LeagueSettings() {
 
   const { username } = useMe();
   const { data: league } = useLeague(leagueId);
-  const leagueWithSettings = league as LeagueSettingsShape | undefined;
   const { data: sports } = useSports();
 
   const isCommissioner = league?.owner?.username === username;
-  const { competitionType, isBudgetMode } = useLeagueCompetitionMode(league);
+  const { isBudgetMode } = useLeagueCompetitionMode(league);
   const selectedSport = league?.sports?.[0]?.sport.name ?? "football";
 
   const { data: defaultRules } = useDefaultScoringRules(selectedSport);
@@ -59,6 +53,7 @@ export function LeagueSettings() {
   const upsertOverride = useUpsertScoringOverride(leagueId);
   const deleteOverride = useDeleteScoringOverride(leagueId);
   const updateStatus = useUpdateLeagueStatus(leagueId);
+  const updateLeague = useUpdateLeague(leagueId);
   const updateMidseasonJoin = useUpdateMidseasonJoin(leagueId);
   const generateWindows = useGenerateTransferWindows(leagueId);
   const addSport = useAddLeagueSport(leagueId);
@@ -69,119 +64,143 @@ export function LeagueSettings() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
-  const [data, setData] = useState<LeagueSettingsData>({
+  const [data, setData] = useState<LeagueSettingsData>(() => ({
     leagueName: league?.name ?? "",
-    sport: "football",
-    isPrivate: !leagueWithSettings?.is_public,
-    teamSize: league?.squad_size ?? 10,
-    draftType: competitionType === "draft" ? "snake" : "auto",
-    draftDate: "",
-    matchesStarted: league?.status !== "setup",
-    allowMidseasonJoin: Boolean(leagueWithSettings?.allow_midseason_join),
+    isPrivate: !league?.is_public,
+    allowMidseasonJoin: Boolean(league?.allow_midseason_join),
     showMidseasonJoinToggle: isBudgetMode,
-  });
+  }));
   const [scoringRules, setScoringRules] = useState<Record<string, number>>({});
 
-  const maxTeamSizeAllowed = useMemo(() => 16, []);
   const lifecycleStatuses = useMemo(
     () => getLifecycleStatusesForLeague(league),
     [league],
   );
 
-  useEffect(() => {
-    if (!league) {
-      return;
-    }
-
-    setData((prev) => ({
-      ...prev,
+  // Re-sync the editable form from server data when the underlying league
+  // values change (e.g. after a save invalidates + refetches). Adjusting state
+  // during render on a changed sync key is React's recommended alternative to a
+  // setState-in-effect; it only fires when an actual field value differs.
+  const leagueSyncKey = league
+    ? `${league.id}|${league.name}|${league.is_public}|${league.allow_midseason_join}|${isBudgetMode}`
+    : "";
+  const [lastLeagueSyncKey, setLastLeagueSyncKey] = useState(leagueSyncKey);
+  if (league && leagueSyncKey !== lastLeagueSyncKey) {
+    setLastLeagueSyncKey(leagueSyncKey);
+    setData({
       leagueName: league.name,
-      isPrivate: !leagueWithSettings?.is_public,
-      teamSize: league.squad_size,
-      draftType: competitionType === "draft" ? "snake" : "auto",
-      matchesStarted: league.status !== "setup",
-      allowMidseasonJoin: Boolean(leagueWithSettings?.allow_midseason_join),
+      isPrivate: !league.is_public,
+      allowMidseasonJoin: Boolean(league.allow_midseason_join),
       showMidseasonJoinToggle: isBudgetMode,
-    }));
-  }, [
-    competitionType,
-    isBudgetMode,
-    league,
-    leagueWithSettings?.allow_midseason_join,
-    leagueWithSettings?.is_public,
-  ]);
+    });
+  }
 
-  useEffect(() => {
+  // Merge default scoring rules with any league overrides into the editable
+  // map, re-syncing when either source changes. Same render-time pattern.
+  const scoringSyncKey = useMemo(() => {
     if (!defaultRules) {
-      return;
+      return null;
     }
-
+    const defaultPart = defaultRules
+      .map((rule) => `${rule.action}=${rule.points}`)
+      .join(",");
+    const overridePart = (overrides ?? [])
+      .map((override) => `${override.action}=${override.points}`)
+      .sort()
+      .join(",");
+    return `${defaultPart}::${overridePart}`;
+  }, [defaultRules, overrides]);
+  const [lastScoringSyncKey, setLastScoringSyncKey] = useState<string | null>(
+    null,
+  );
+  if (defaultRules && scoringSyncKey !== lastScoringSyncKey) {
+    setLastScoringSyncKey(scoringSyncKey);
     const overrideByAction = new Map(
       (overrides ?? []).map((override) => [
         override.action,
         Number(override.points),
       ]),
     );
-    const merged = Object.fromEntries(
-      defaultRules.map((rule) => [
-        rule.action,
-        overrideByAction.get(rule.action) ?? Number(rule.points),
-      ]),
+    setScoringRules(
+      Object.fromEntries(
+        defaultRules.map((rule) => [
+          rule.action,
+          overrideByAction.get(rule.action) ?? Number(rule.points),
+        ]),
+      ),
     );
-    setScoringRules(merged);
-  }, [defaultRules, overrides]);
+  }
 
   const handleSave = async () => {
-    if (!isCommissioner) {
+    if (!isCommissioner || !league) {
       return;
     }
 
-    if (data.teamSize > maxTeamSizeAllowed) {
-      toastifier.error("✕ Team size exceeds current league constraints");
-      return;
-    }
-
-    if (!league || !sports?.length || !defaultRules?.length) {
-      toastifier.error("Unable to save settings right now.");
-      return;
-    }
-
-    const sportObj = sports.find((sport) => sport.name === selectedSport);
-    if (!sportObj?.id) {
-      toastifier.error("Selected sport is not available.");
+    const trimmedName = data.leagueName.trim();
+    if (!trimmedName) {
+      toastifier.error("League name cannot be empty.");
       return;
     }
 
     setIsSaving(true);
     try {
-      for (const rule of defaultRules) {
-        const nextPoints = Number(scoringRules[rule.action]);
-        if (Number.isNaN(nextPoints)) {
-          continue;
-        }
+      let changed = false;
 
-        if (Number(nextPoints) === Number(rule.points)) {
-          const existingOverride = (overrides ?? []).find(
-            (override) => override.action === rule.action,
-          );
-          if (existingOverride) {
-            await deleteOverride.mutateAsync(existingOverride.id);
-          }
-          continue;
-        }
-
-        await upsertOverride.mutateAsync({
-          sport_id: sportObj.id,
-          action: rule.action,
-          points: nextPoints,
-        });
+      // 1. League name + public/private visibility — only send what changed.
+      const leaguePatch: { name?: string; is_public?: boolean } = {};
+      if (trimmedName !== league.name) {
+        leaguePatch.name = trimmedName;
+      }
+      const nextIsPublic = !data.isPrivate;
+      if (nextIsPublic !== Boolean(league.is_public)) {
+        leaguePatch.is_public = nextIsPublic;
+      }
+      if (Object.keys(leaguePatch).length > 0) {
+        await updateLeague.mutateAsync(leaguePatch);
+        changed = true;
       }
 
-      if (isBudgetMode) {
+      // 2. Mid-season joining (budget leagues only).
+      if (
+        isBudgetMode &&
+        data.allowMidseasonJoin !== Boolean(league.allow_midseason_join)
+      ) {
         await updateMidseasonJoin.mutateAsync(data.allowMidseasonJoin);
+        changed = true;
       }
 
-      toastifier.success("League scoring settings saved");
+      // 3. Scoring rule overrides — diff each rule against its default.
+      const sportObj = sports?.find((sport) => sport.name === selectedSport);
+      if (defaultRules?.length && sportObj?.id) {
+        for (const rule of defaultRules) {
+          const nextPoints = Number(scoringRules[rule.action]);
+          if (Number.isNaN(nextPoints)) {
+            continue;
+          }
+
+          if (Number(nextPoints) === Number(rule.points)) {
+            const existingOverride = (overrides ?? []).find(
+              (override) => override.action === rule.action,
+            );
+            if (existingOverride) {
+              await deleteOverride.mutateAsync(existingOverride.id);
+              changed = true;
+            }
+            continue;
+          }
+
+          await upsertOverride.mutateAsync({
+            sport_id: sportObj.id,
+            action: rule.action,
+            points: nextPoints,
+          });
+          changed = true;
+        }
+      }
+
+      if (!changed) {
+        toastifier.info("No changes to save.");
+      }
     } finally {
       setIsSaving(false);
     }
@@ -251,15 +270,7 @@ export function LeagueSettings() {
 
       <SettingsForm
         data={data}
-        onChange={(next) => {
-          setData((prev) => {
-            const merged = { ...prev, ...next };
-            if (next.sport && next.sport !== prev.sport) {
-              setScoringRules({});
-            }
-            return merged;
-          });
-        }}
+        onChange={(next) => setData((prev) => ({ ...prev, ...next }))}
       />
 
       <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">

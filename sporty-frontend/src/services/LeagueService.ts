@@ -104,6 +104,15 @@ export const LeagueService = {
     await authApi.delete(API_PATHS.LEAGUES.DELETE(id));
   },
 
+  /** Update a league's editable settings (owner only). Partial update. */
+  async updateLeague(
+    id: string,
+    payload: { name?: string; is_public?: boolean },
+  ): Promise<TLeague> {
+    const res = await authApi.patch(API_PATHS.LEAGUES.UPDATE(id), payload);
+    return res.data;
+  },
+
   /** Start the draft for a league */
   async startDraft(id: string): Promise<TLeague> {
     const res = await authApi.post(API_PATHS.LEAGUES.DRAFT_START(id));

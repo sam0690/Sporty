@@ -2,12 +2,7 @@
 
 type LeagueSettingsData = {
   leagueName: string;
-  sport: "football" | "basketball" | "cricket" | "multisport";
   isPrivate: boolean;
-  teamSize: number;
-  draftType: "snake" | "auction" | "auto";
-  draftDate: string;
-  matchesStarted: boolean;
   allowMidseasonJoin: boolean;
   showMidseasonJoinToggle?: boolean;
 };
@@ -35,30 +30,6 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
       </div>
 
       <div>
-        <label className="mb-1 block text-sm text-[#555560]">Sport</label>
-        <select
-          value={data.sport}
-          disabled={data.matchesStarted}
-          onChange={(event) =>
-            onChange({
-              sport: event.target.value as LeagueSettingsData["sport"],
-            })
-          }
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25] disabled:bg-[#1d1d26]"
-        >
-          <option value="football">Football</option>
-          <option value="basketball">Basketball</option>
-          <option value="cricket">Cricket</option>
-          <option value="multisport">Multi-Sport</option>
-        </select>
-        {data.matchesStarted ? (
-          <p className="mt-1 text-xs text-amber-100">
-            Sport cannot be changed after matches start.
-          </p>
-        ) : null}
-      </div>
-
-      <div>
         <label className="mb-1 block text-sm text-[#555560]">
           League Type
         </label>
@@ -78,59 +49,10 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
             Private
           </button>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="mb-1 block text-sm text-[#555560]">
-            Team Size
-          </label>
-          <select
-            value={data.teamSize}
-            onChange={(event) =>
-              onChange({ teamSize: Number(event.target.value) })
-            }
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
-          >
-            {[4, 6, 8, 10, 12, 14, 16].map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm text-[#555560]">
-            Draft Type
-          </label>
-          <select
-            value={data.draftType}
-            onChange={(event) =>
-              onChange({
-                draftType: event.target
-                  .value as LeagueSettingsData["draftType"],
-              })
-            }
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
-          >
-            <option value="snake">Snake Draft</option>
-            <option value="auction">Auction</option>
-            <option value="auto">Auto-assign</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm text-[#555560]">
-          Draft Date (optional)
-        </label>
-        <input
-          type="date"
-          value={data.draftDate}
-          onChange={(event) => onChange({ draftDate: event.target.value })}
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
-        />
+        <p className="mt-1 text-xs text-[#f0f0f0]/50">
+          Public leagues are discoverable by anyone; private leagues can only be
+          joined with an invite code.
+        </p>
       </div>
 
       {data.showMidseasonJoinToggle ? (

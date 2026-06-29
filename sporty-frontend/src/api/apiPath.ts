@@ -38,6 +38,7 @@ export const API_PATHS = {
     SPORTS: "/leagues/sports",
     DETAIL: (id: string) => `/leagues/${id}`,
     DELETE: (id: string) => `/leagues/${id}`,
+    UPDATE: (id: string) => `/leagues/${id}`,
     LEAVE: (id: string) => `/leagues/${id}/leave`,
     UPDATE_STATUS: (id: string) => `/leagues/${id}/status`,
     UPDATE_MIDSEASON_JOIN: (id: string) => `/leagues/${id}/midseason-join`,

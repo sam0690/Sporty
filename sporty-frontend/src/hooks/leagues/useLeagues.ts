@@ -184,6 +184,22 @@ export const useDeleteLeague = () => {
   });
 };
 
+export function useUpdateLeague(leagueId: string) {
+  const queryClient = useQueryClient();
+  return useApiMutation(
+    (payload: { name?: string; is_public?: boolean }) =>
+      LeagueService.updateLeague(leagueId, payload),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
+        queryClient.invalidateQueries({ queryKey: ["leagues", "me"] });
+        queryClient.invalidateQueries({ queryKey: ["leagues", "discover"] });
+      },
+      successMessage: "League settings saved",
+    },
+  );
+}
+
 export const useStartDraft = () => {
   const queryClient = useQueryClient();
   return useApiMutation((id: string) => LeagueService.startDraft(id), {
