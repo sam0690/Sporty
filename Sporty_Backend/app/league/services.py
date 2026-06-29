@@ -1654,6 +1654,30 @@ def update_midseason_join_setting(
     return _require_league(db, league_id, eager=True)
 
 
+def update_league_settings(
+    db: Session,
+    league_id: uuid.UUID,
+    *,
+    name: str | None = None,
+    is_public: bool | None = None,
+) -> League:
+    """Apply a partial update to a league's editable settings (name, visibility).
+
+    Owner authorization is enforced at the router via require_league_owner.
+    Only non-None fields are applied. Does NOT commit — caller owns the
+    transaction.
+    """
+    league = _require_league(db, league_id)
+
+    if name is not None:
+        league.name = name
+    if is_public is not None:
+        league.is_public = is_public
+
+    db.flush()
+    return _require_league(db, league_id, eager=True)
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Section 6 — Budget-mode specific functions
 # ═══════════════════════════════════════════════════════════════════════════════

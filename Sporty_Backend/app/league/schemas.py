@@ -373,6 +373,29 @@ class MidseasonJoinUpdate(BaseModel):
     allow_midseason_join: bool
 
 
+class LeagueSettingsUpdate(BaseModel):
+    """PATCH /leagues/{id} — update a league's editable settings.
+
+    Partial update: every field is optional and only the provided ones are
+    applied. Currently limited to the settings that map cleanly to the model —
+    name and public/private visibility. (Team size and draft type are fixed at
+    creation and intentionally not editable here.)
+    """
+
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    is_public: bool | None = None
+
+    @field_validator("name")
+    @classmethod
+    def _strip_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("League name cannot be empty")
+        return stripped
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Join league
 # ═══════════════════════════════════════════════════════════════════════════════

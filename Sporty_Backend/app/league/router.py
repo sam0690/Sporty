@@ -52,6 +52,7 @@ from app.league.schemas import (
     LineupSlotResponse,
     LineupUpdateRequest,
     MembershipResponse,
+    LeagueSettingsUpdate,
     MidseasonJoinUpdate,
     SeasonResponse,
     SportResponse,
@@ -263,6 +264,31 @@ def update_midseason_join_setting(
         league.id,
         data.allow_midseason_join,
         current_user,
+    )
+    db.commit()
+    return updated
+
+
+@router.patch(
+    "/{league_id}",
+    response_model=LeagueResponse,
+    summary="Update league settings",
+)
+def update_league_settings(
+    data: LeagueSettingsUpdate,
+    league: League = Depends(require_league_owner),
+    db: Session = Depends(get_db),
+):
+    """Update a league's editable settings (name, public/private visibility).
+
+    Owner-only (enforced by require_league_owner). Partial update — only the
+    fields present in the body are changed.
+    """
+    updated = league_service.update_league_settings(
+        db,
+        league.id,
+        name=data.name,
+        is_public=data.is_public,
     )
     db.commit()
     return updated
