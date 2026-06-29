@@ -10,7 +10,7 @@ import { toastifier } from "@/lib/toastifier";
 export function GoogleAuthCallbackClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, loginWithGoogle, linkGoogle, isLoading } = useAuth();
+  const { user, login, loginWithGoogle, linkGoogle, isLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [pendingLinkToken, setPendingLinkToken] = useState("");
@@ -18,6 +18,16 @@ export function GoogleAuthCallbackClient() {
   const [isReauthenticating, setIsReauthenticating] = useState(false);
   const [linkError, setLinkError] = useState<string | undefined>();
   const hasStarted = useRef(false);
+
+  useEffect(() => {
+    if (isLoading || isLinkModalOpen || isReauthenticating) {
+      return;
+    }
+
+    if (user) {
+      window.location.replace("/dashboard");
+    }
+  }, [isLoading, isLinkModalOpen, isReauthenticating, user]);
 
   useEffect(() => {
     if (isLoading || hasStarted.current) {
@@ -42,7 +52,7 @@ export function GoogleAuthCallbackClient() {
       }
 
       if (result.success) {
-        router.replace("/dashboard");
+        window.location.replace("/dashboard");
         return;
       }
 
