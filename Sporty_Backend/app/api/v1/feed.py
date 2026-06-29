@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import logging
 import secrets
+import unicodedata
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
@@ -32,6 +33,21 @@ from app.league.models import Sport
 from app.match.models import Match
 from app.models.db.live_event import LiveEvent
 from app.models.schemas.events import WSMessage
+from app.player.models import Player, RealTeam
+from app.services.feed_scoring import apply_live_points, persist_match_stats
+from app.auth.models import AuthProvider, User
+from app.core.security import hash_password
+from app.league.models import (
+    FantasyTeam,
+    FantasyTeamStatus,
+    League,
+    LeagueMembership,
+    LeagueMembershipStatus,
+    LeagueStatus,
+    Season,
+    TeamGameweekLineup,
+    TransferWindow,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -198,6 +214,147 @@ async def schedule_match(payload: ScheduleMatchPayload, db=Depends(get_db)):
     }
 
 
+# ── Register feeder players ──────────────────────────────────────────────────
+# Feeder simulations invent their own rosters; for fantasy scoring the backend
+# must hold a Player row per simulated player so live_events (carrying that
+# player's UUID) fold into player_gameweek_stats. The feeder posts its lineup
+# here (idempotent on external_ref) and gets back the UUIDs to use as
+# sporty_player_id in subsequent pushes.
+
+
+class RegisterPlayerEntry(BaseModel):
+    external_ref: str = Field(min_length=1, max_length=100)  # feeder's stable id
+    name: str = Field(min_length=1, max_length=150)
+    position: str = "MID"
+    real_team: str = Field(min_length=1, max_length=100)
+    cost: float = 5.0
+
+
+class RegisterPlayersPayload(BaseModel):
+    sport: str
+    players: list[RegisterPlayerEntry]
+
+
+def _get_or_create_real_team(db, sport_id, name: str) -> RealTeam:
+    team = (
+        db.query(RealTeam)
+        .filter(RealTeam.sport_id == sport_id, RealTeam.name == name)
+        .first()
+    )
+    if team is None:
+        team = RealTeam(
+            sport_id=sport_id,
+            name=name,
+            external_api_id=f"feeder:team:{sport_id}:{name}",
+        )
+        db.add(team)
+        db.flush()
+    return team
+
+
+@router.post("/register-players", dependencies=[Depends(verify_feeder_secret)])
+async def register_players(payload: RegisterPlayersPayload, db=Depends(get_db)):
+    sport = db.query(Sport).filter(Sport.name == payload.sport.strip().lower()).first()
+    if sport is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Unknown sport slug '{payload.sport}'",
+        )
+
+    mapping: dict[str, str] = {}
+    created = 0
+    for entry in payload.players:
+        player = (
+            db.query(Player).filter(Player.external_api_id == entry.external_ref).first()
+        )
+        if player is None:
+            team = _get_or_create_real_team(db, sport.id, entry.real_team.strip())
+            player = Player(
+                sport_id=sport.id,
+                external_api_id=entry.external_ref,
+                name=entry.name.strip(),
+                position=(entry.position.strip() or "MID"),
+                real_team=entry.real_team.strip(),
+                real_team_id=team.id,
+                cost=entry.cost,
+                is_available=True,
+            )
+            db.add(player)
+            db.flush()
+            created += 1
+        mapping[entry.external_ref] = str(player.id)
+    db.commit()
+    logger.info("Feeder registered %s players (%s new) for %s", len(mapping), created, payload.sport)
+    return {"status": "ok", "players": mapping, "created": created}
+
+
+# ── Resolve EXISTING players (real-league flow) ──────────────────────────────
+# Unlike register-players (which creates feeder-owned rows), this maps a feeder
+# lineup to the players that ALREADY exist in the backend — the ones real users
+# drafted — so a simulated match credits their actual fantasy teams. Matching is
+# by accent/diacritic-folded name, with real_team as a tiebreaker. No rows are
+# ever created; unmatched entries are simply absent from the response.
+
+
+def _fold_name(value: str) -> str:
+    decomposed = unicodedata.normalize("NFKD", value or "")
+    stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
+    lowered = stripped.lower()
+    for src, dst in (("ø", "o"), ("å", "a"), ("æ", "ae"), ("ß", "ss"), ("ł", "l"), ("đ", "d")):
+        lowered = lowered.replace(src, dst)
+    return " ".join(lowered.split())
+
+
+class ResolvePlayerEntry(BaseModel):
+    external_ref: str = Field(min_length=1, max_length=100)  # echoed back as the map key
+    name: str = Field(min_length=1, max_length=150)
+    real_team: str | None = Field(default=None, max_length=100)
+
+
+class ResolvePlayersPayload(BaseModel):
+    sport: str
+    players: list[ResolvePlayerEntry]
+
+
+@router.post("/resolve-players", dependencies=[Depends(verify_feeder_secret)])
+async def resolve_players(payload: ResolvePlayersPayload, db=Depends(get_db)):
+    sport = db.query(Sport).filter(Sport.name == payload.sport.strip().lower()).first()
+    if sport is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=f"Unknown sport slug '{payload.sport}'",
+        )
+
+    by_name: dict[str, list[Player]] = {}
+    for player in db.query(Player).filter(Player.sport_id == sport.id).all():
+        by_name.setdefault(_fold_name(player.name), []).append(player)
+
+    mapping: dict[str, str] = {}
+    details: list[dict] = []
+    for entry in payload.players:
+        candidates = by_name.get(_fold_name(entry.name), [])
+        if not candidates:
+            continue
+        chosen = candidates[0]
+        if entry.real_team and len(candidates) > 1:
+            wanted = _fold_name(entry.real_team)
+            for candidate in candidates:
+                have = _fold_name(candidate.real_team or "")
+                if have and (have == wanted or wanted in have or have in wanted):
+                    chosen = candidate
+                    break
+        mapping[entry.external_ref] = str(chosen.id)
+        details.append({
+            "external_ref": entry.external_ref,
+            "sporty_player_id": str(chosen.id),
+            "name": chosen.name,
+            "real_team": chosen.real_team,
+            "external_api_id": chosen.external_api_id,
+        })
+    logger.info("Feeder resolved %s/%s players for %s", len(mapping), len(payload.players), payload.sport)
+    return {"status": "ok", "players": mapping, "details": details, "matched": len(mapping)}
+
+
 # ── R-5.2: match result + events ────────────────────────────────────────────
 
 
@@ -265,16 +422,26 @@ async def ingest_match_result(
     )
     await redis.publish(channel, message.model_dump_json())
 
-    # R-5.5: a finished match triggers gameweek scoring immediately —
-    # don't wait for the daily cron.
+    # Live per-player fantasy deltas → Redis hashes + FANTASY_POINTS_DELTA so the
+    # frontend PointsCard ticks up during the match (needs linked player ids).
+    await apply_live_points(
+        redis, live_key=live_key, sport=payload.sport, events=payload.events, channel=channel
+    )
+
+    # R-5.5: a finished match folds its events into the gameweek stat tables and
+    # triggers scoring immediately — don't wait for the daily cron.
     scoring_enqueued = 0
+    stats_summary: dict = {}
     if finished_now:
+        stats_summary = persist_match_stats(db, match=match, live_key=live_key, sport=payload.sport)
+        db.commit()
         scoring_enqueued = _enqueue_scoring(
             db, match_date=match.match_date, sport_id=match.sport_id
         )
         logger.info(
-            "Feeder finished match %s: enqueued scoring for %s transfer window(s)",
+            "Feeder finished match %s: booked stats for %s player(s), enqueued scoring for %s window(s)",
             live_key,
+            stats_summary.get("players", 0),
             scoring_enqueued,
         )
 
@@ -284,6 +451,7 @@ async def ingest_match_result(
         "events_received": len(payload.events),
         "events_inserted": events_inserted,
         "scoring_enqueued": scoring_enqueued,
+        "stats_booked": stats_summary,
     }
 
 
@@ -321,4 +489,122 @@ async def ingest_player_ratings(
         "cached_key": key,
         "ttl_seconds": RATINGS_TTL_SECONDS,
         "ratings_received": len(payload.ratings),
+    }
+
+
+# ── Demo fantasy setup (local demos only) ────────────────────────────────────
+# Idempotently ensures a demo user + league + open transfer window + a fantasy
+# team whose lineup is the given players, so a finished simulated match credits
+# a *user's* fantasy total (not just per-player points). Safe to call repeatedly.
+
+DEMO_USER_EMAIL = "demo@sporty.local"
+DEMO_PASSWORD = "demo1234!"
+
+
+class DemoSetupPayload(BaseModel):
+    sport: str
+    sporty_match_id: str
+    player_uuids: list[str] = []
+    captain_uuid: str | None = None
+
+
+def _get_or_create(db, model, defaults: dict | None = None, **keys):
+    obj = db.query(model).filter_by(**keys).first()
+    if obj is None:
+        obj = model(**keys, **(defaults or {}))
+        db.add(obj)
+        db.flush()
+    return obj
+
+
+@router.post("/demo-setup", dependencies=[Depends(verify_feeder_secret)])
+async def demo_setup(payload: DemoSetupPayload, db=Depends(get_db)):
+    sport = db.query(Sport).filter(Sport.name == payload.sport.strip().lower()).first()
+    if sport is None:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"Unknown sport slug '{payload.sport}'")
+
+    match = find_match(db, payload.sporty_match_id)
+    if match is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    now = datetime.now(timezone.utc)
+    match_dt = match.match_date or now
+    if match_dt.tzinfo is None:
+        match_dt = match_dt.replace(tzinfo=timezone.utc)
+
+    # Demo user (LOCAL auth, known password for frontend login).
+    user = db.query(User).filter(User.email == DEMO_USER_EMAIL).first()
+    if user is None:
+        user = User(
+            username="demo", email=DEMO_USER_EMAIL, auth_provider=AuthProvider.LOCAL,
+            password_hash=hash_password(DEMO_PASSWORD), is_active=True,
+        )
+        db.add(user)
+        db.flush()
+
+    # Season + an open transfer window spanning both now and the match date.
+    season = _get_or_create(
+        db, Season, sport_id=sport.id, name="Feeder Demo Season",
+        defaults={"start_date": (min(now, match_dt) - timedelta(days=30)).date(),
+                  "end_date": (max(now, match_dt) + timedelta(days=120)).date(), "is_active": True},
+    )
+    win_start = min(now, match_dt) - timedelta(days=7)
+    win_end = max(now, match_dt) + timedelta(days=90)
+    window = (
+        db.query(TransferWindow)
+        .filter(TransferWindow.season_id == season.id,
+                TransferWindow.start_at <= match_dt, TransferWindow.end_at > match_dt)
+        .first()
+    )
+    if window is None:
+        window = TransferWindow(
+            season_id=season.id, number=99, start_at=win_start, end_at=win_end,
+            transfer_deadline_at=win_end - timedelta(hours=2),
+            lineup_deadline_at=win_end - timedelta(hours=1),
+        )
+        db.add(window)
+        db.flush()
+
+    # League + membership + fantasy team for the demo user.
+    league = _get_or_create(
+        db, League, season_id=season.id, name="Feeder Demo League",
+        defaults={"owner_id": user.id, "invite_code": "FEEDERDEMO01",
+                  "status": LeagueStatus.ACTIVE, "max_teams": 10,
+                  "budget_per_team": 100, "squad_size": 15},
+    )
+    _get_or_create(
+        db, LeagueMembership, league_id=league.id, user_id=user.id,
+        defaults={"status": LeagueMembershipStatus.ACTIVE},
+    )
+    team = _get_or_create(
+        db, FantasyTeam, league_id=league.id, user_id=user.id,
+        defaults={"name": "Demo XI", "current_budget": 100, "starting_budget": 100,
+                  "starting_squad_size": max(1, len(payload.player_uuids)),
+                  "status": FantasyTeamStatus.ACTIVE},
+    )
+
+    # Replace this window's lineup with the given (existing) players.
+    valid_ids = [
+        pid for (pid,) in db.query(Player.id).filter(
+            Player.id.in_([uuid.UUID(p) for p in payload.player_uuids])
+        ).all()
+    ]
+    db.query(TeamGameweekLineup).filter_by(
+        fantasy_team_id=team.id, transfer_window_id=window.id
+    ).delete()
+    captain = payload.captain_uuid
+    for index, pid in enumerate(valid_ids):
+        db.add(TeamGameweekLineup(
+            fantasy_team_id=team.id, transfer_window_id=window.id, player_id=pid,
+            is_captain=(str(pid) == captain) or (captain is None and index == 0),
+            is_vice_captain=(index == 1),
+        ))
+    db.commit()
+
+    return {
+        "status": "ok",
+        "demo_user": {"email": DEMO_USER_EMAIL, "password": DEMO_PASSWORD},
+        "league_id": str(league.id),
+        "fantasy_team_id": str(team.id),
+        "transfer_window_id": str(window.id),
+        "lineup_size": len(valid_ids),
     }
