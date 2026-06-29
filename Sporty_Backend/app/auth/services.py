@@ -213,6 +213,7 @@ def register(db: Session, data: RegisterRequest):
         email=data.email,
         auth_provider=AuthProvider.LOCAL,
         password_hash=hash_password(data.password),
+        is_active=True,
     )
     db.add(user)
     db.flush()  # assign user.id so we can reference it
@@ -308,8 +309,10 @@ def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONRes
                 auth_provider=AuthProvider.GOOGLE,
                 google_id=google_id,
                 avatar_url=avatar_url,
+                is_active=True,
             )
             db.add(user)
+            db.flush()  # assign user.id and persist defaults before token creation
 
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")

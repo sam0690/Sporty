@@ -1,0 +1,89 @@
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+from contextlib import contextmanager
+from pathlib import Path
+from types import SimpleNamespace
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+_temp_dir = tempfile.mkdtemp(prefix="sporty-auth-tests-")
+os.environ["DATABASE_URL"] = f"sqlite+pysqlite:///{Path(_temp_dir) / 'auth.db'}"
+os.environ["REDIS_URL"] = "redis://localhost:6379/0"
+os.environ["JWT_SECRET_KEY"] = "x" * 32
+os.environ["GOOGLE_CLIENT_ID"] = "test-client"
+
+_backend_root = Path(__file__).resolve().parents[1]
+os.chdir(_temp_dir)
+if str(_backend_root) not in sys.path:
+    sys.path.insert(0, str(_backend_root))
+
+from app.auth import services as auth_services
+from app.auth.models import AuthProvider, RefreshToken, User
+from app.auth.schemas import GoogleAuthRequest, RegisterRequest
+from app.database import Base
+
+ENGINE = create_engine(os.environ["DATABASE_URL"])
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
+
+
+@contextmanager
+def session_scope():
+    Base.metadata.drop_all(bind=ENGINE)
+    Base.metadata.create_all(bind=ENGINE)
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def test_google_auth_creates_active_user_and_tokens(monkeypatch):
+    with session_scope() as db:
+        monkeypatch.setattr(auth_services, "_exchange_google_authorization_code", lambda code: "id-token")
+        monkeypatch.setattr(
+            auth_services,
+            "verify_google_id_token",
+            lambda token: SimpleNamespace(
+                sub="google-sub-123",
+                email="new-user@example.com",
+                picture="https://example.com/avatar.png",
+                name="New User",
+            ),
+        )
+
+        result = auth_services.google_auth(db, GoogleAuthRequest(code="auth-code"))
+
+        assert result.access_token
+        assert result.refresh_token
+
+        user = db.query(User).one()
+        assert user.auth_provider == AuthProvider.GOOGLE
+        assert user.google_id == "google-sub-123"
+        assert user.is_active is True
+        assert user.id is not None
+
+        token = db.query(RefreshToken).one()
+        assert token.user_id == user.id
+
+
+def test_register_marks_new_local_user_active():
+    with session_scope() as db:
+        result = auth_services.register(
+            db,
+            RegisterRequest(
+                username="local-user",
+                email="local-user@example.com",
+                password="super-secret-password",
+                auto_login=False,
+            ),
+        )
+
+        assert result["is_active"] is True
+
+        user = db.query(User).one()
+        assert user.auth_provider == AuthProvider.LOCAL
+        assert user.is_active is True
