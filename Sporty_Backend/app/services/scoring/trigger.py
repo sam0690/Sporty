@@ -6,7 +6,6 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.core.celery_app import celery_app
 from app.core.redis import cache_delete, cache_pattern_delete, get_redis
 from app.services.scoring.window_locator import find_transfer_window_ids_for_datetime
 
@@ -23,6 +22,13 @@ def enqueue_scoring_for_finished_match(
     throttle_seconds: int = 300,
 ) -> int:
     # Algorithm: locate transfer windows containing match_date, enqueue score.transfer_window(window_id), and invalidate leaderboard cache keys for that window.
+    # celery_app is imported lazily: it pulls in the task modules (incl.
+    # match_sync, which imports this module at top level), so a module-level
+    # import here creates a circular import whenever `trigger` is the entry
+    # point (e.g. feed.py's finish handler). Importing it at call time lets
+    # `trigger` finish initializing first.
+    from app.core.celery_app import celery_app
+
     window_ids = find_transfer_window_ids_for_datetime(db, match_date=match_date, sport_id=sport_id)
     if not window_ids:
         return 0

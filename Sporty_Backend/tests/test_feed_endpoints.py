@@ -115,6 +115,20 @@ def harness(monkeypatch):
         lambda db, *, match_date, sport_id: scoring_calls.append((match_date, sport_id)) or 1,
     )
 
+    # The fantasy-scoring side effects (live per-player deltas + folding events
+    # into gameweek stats) have their own coverage and hit Redis/ORM details the
+    # fakes here don't model; stub them so these tests stay focused on the
+    # endpoint's orchestration (score update, publish, idempotency, scoring trigger).
+    async def _noop_live_points(*args, **kwargs):
+        return {}
+
+    monkeypatch.setattr(feed_module, "apply_live_points", _noop_live_points)
+    monkeypatch.setattr(
+        feed_module,
+        "persist_match_stats",
+        lambda db, *, match, live_key, sport: {"players": 0, "windows": 0, "stat_rows": 0},
+    )
+
     fake_db = _FakeDB(match=make_match())
     fake_redis = _FakeRedis()
 
