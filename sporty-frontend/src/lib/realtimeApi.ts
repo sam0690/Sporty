@@ -4,9 +4,21 @@ import type {
   MatchSnapshot,
 } from "@/types/events";
 
-// Realtime endpoints live under /api (not /api/v1), so use relative path
-// that goes through the Next.js rewrite proxy.
-const API_BASE = "";
+// Realtime endpoints live under /api (not /api/v1). They must hit the backend
+// ORIGIN directly (not the Next.js rewrite proxy): auth is an httpOnly
+// `access_token` cookie set on the backend domain by login, so a same-origin
+// proxy request (Vercel domain) would not carry that cookie and 401s. Deriving
+// the origin from NEXT_PUBLIC_API_URL (stripping /api/v1) mirrors socket.ts and
+// sends the cookie cross-origin to the backend (CORS already allows credentials).
+// Falls back to "" (same-origin proxy) for local dev where the var is unset.
+function deriveApiOrigin(apiBase?: string): string {
+  if (!apiBase) {
+    return "";
+  }
+  return apiBase.replace(/\/api\/v1\/?$/, "");
+}
+
+const API_BASE = deriveApiOrigin(process.env.NEXT_PUBLIC_API_URL);
 
 export async function fetchMatchSnapshot(
   matchId: string,
