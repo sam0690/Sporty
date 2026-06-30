@@ -47,7 +47,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
     }, 0);
     const id = window.setInterval(() => {
       void loadNotifications();
-    }, 60_000);
+    }, 300_000);
     return () => {
       window.clearInterval(id);
       window.clearTimeout(initialLoadId);
