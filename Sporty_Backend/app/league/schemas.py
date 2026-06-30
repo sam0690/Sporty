@@ -576,9 +576,15 @@ class TransferWindowResponse(BaseModel):
     total_number: int
     start_at: datetime
     end_at: datetime
+    # Transfers close at transfer_deadline_at (2h before the window ends) and
+    # can be force-locked via transfers_locked. The transfers UI gates the
+    # stage-in/out controls on these, so they MUST be serialized — without them
+    # the client reads `undefined` and treats transfers as permanently closed.
+    transfer_deadline_at: datetime
+    transfers_locked: bool
     lineup_deadline_at: datetime
     lineup_locked: bool
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
