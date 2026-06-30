@@ -12,10 +12,11 @@ const BARS: Array<{
     "home_win_prob" | "draw_prob" | "away_win_prob"
   >;
   label: string;
+  color: string;
 }> = [
-  { key: "home_win_prob", label: "Home" },
-  { key: "draw_prob", label: "Draw" },
-  { key: "away_win_prob", label: "Away" },
+  { key: "home_win_prob", label: "Home", color: "var(--football)" },
+  { key: "draw_prob", label: "Draw", color: "var(--muted-foreground)" },
+  { key: "away_win_prob", label: "Away", color: "var(--basketball)" },
 ];
 
 export function PredictionCard({ prediction }: PredictionCardProps) {
@@ -24,33 +25,32 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
   }
 
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
-      <div className="text-xs uppercase tracking-wider text-[#555560]">
-        Outcome Prediction
-      </div>
-      <div className="mt-3 space-y-2">
-        {BARS.map(({ key, label }) => {
-          const probability = prediction[key];
-          const percent = Math.round(probability * 100);
+    <section className="glass rounded-xl p-5">
+      <span className="section-label">Outcome Prediction</span>
+
+      <div className="mt-4 space-y-3">
+        {BARS.map(({ key, label, color }) => {
+          const percent = Math.round(prediction[key] * 100);
           return (
             <div key={key} className="flex items-center gap-3 text-sm">
-              <span className="w-12 text-[#555560]">{label}</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+              <span className="w-12 font-600 text-muted-foreground">{label}</span>
+              <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
                 <div
-                  className="h-full rounded-full bg-[#e8fb25]"
-                  style={{ width: `${percent}%` }}
+                  className="h-full rounded-full transition-[width] duration-500"
+                  style={{ width: `${percent}%`, background: color }}
                 />
               </div>
-              <span className="w-10 text-right font-600 text-[#f0f0f0]">
+              <span className="w-10 text-right font-700 tabular-nums text-foreground">
                 {percent}%
               </span>
             </div>
           );
         })}
       </div>
-      <div className="mt-3 text-right text-[10px] uppercase tracking-wider text-[#555560]">
+
+      <div className="mt-4 text-right text-[10px] uppercase tracking-wider text-muted-foreground">
         {prediction.model_version}
       </div>
-    </div>
+    </section>
   );
 }

@@ -100,21 +100,35 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   useMatchSocket(matchId);
 
   return (
-    <main className="mx-auto max-w-4xl space-y-4 px-4 py-6">
-      <h1 className="text-2xl font-600 text-slate-900">
-        {homeTeam && awayTeam ? `${homeTeam} vs ${awayTeam}` : "Live Match"}
-      </h1>
-      {loading && (
-        <p className="text-sm text-[#555560]">Loading live state...</p>
-      )}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <main className="mx-auto max-w-5xl px-4 py-8">
+      <header className="mb-6">
+        <span className="section-label">Match Centre</span>
+        <h1 className="mt-1 text-2xl font-700 text-foreground sm:text-3xl">
+          {homeTeam && awayTeam ? `${homeTeam} vs ${awayTeam}` : "Live Match"}
+        </h1>
+        {loading && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Loading live state…
+          </p>
+        )}
+        {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      </header>
+
       <ScoreTicker />
-      <PredictionCard prediction={prediction} />
-      <EventFeed />
-      <PointsCard />
-      <LiveLeaderboard />
-      <RatingsCard ratings={ratings} />
-      <LineupCard />
+
+      <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+        <div className="space-y-5">
+          <EventFeed />
+          <LineupCard />
+        </div>
+        <div className="space-y-5">
+          <PredictionCard prediction={prediction} />
+          <PointsCard />
+          <LiveLeaderboard />
+          <RatingsCard ratings={ratings} />
+        </div>
+      </div>
+
       <ToastAlert />
     </main>
   );

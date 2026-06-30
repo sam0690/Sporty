@@ -4,8 +4,16 @@ import { useMemo } from "react";
 
 import { useMatchStore } from "@/store/matchStore";
 
+// Podium tints for the top three ranks; the rest get a muted chip.
+const RANK_STYLES = [
+  "bg-gold/15 text-gold border-gold/30",
+  "bg-white/10 text-foreground border-border",
+  "bg-basketball/15 text-basketball border-basketball/30",
+];
+
 export function LiveLeaderboard() {
   const playerPoints = useMatchStore((s) => s.playerPoints);
+  const players = useMatchStore((s) => s.players);
 
   const rows = useMemo(
     () =>
@@ -16,22 +24,40 @@ export function LiveLeaderboard() {
   );
 
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
-      <div className="text-xs uppercase tracking-wider text-[#555560]">
-        Leaderboard
-      </div>
-      <div className="mt-3 space-y-2 text-sm text-[#555560]">
-        {rows.length === 0 && <p>No ranking data yet.</p>}
-        {rows.map(([playerId, points], idx) => (
-          <div key={playerId} className="flex items-center justify-between">
-            <span className="font-medium text-[#555560]">#{idx + 1}</span>
-            <span className="truncate px-3">{playerId}</span>
-            <span className="font-600 text-[#f0f0f0]">
-              {points.toFixed(1)}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
+    <section className="glass rounded-xl p-5">
+      <span className="section-label">Leaderboard</span>
+
+      {rows.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          No ranking data yet.
+        </p>
+      ) : (
+        <ol className="mt-3 space-y-1.5">
+          {rows.map(([playerId, points], idx) => {
+            const rankStyle =
+              RANK_STYLES[idx] ??
+              "bg-white/5 text-muted-foreground border-border";
+            return (
+              <li
+                key={playerId}
+                className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/5"
+              >
+                <span
+                  className={`grid size-7 shrink-0 place-items-center rounded-full border text-xs font-700 tabular-nums ${rankStyle}`}
+                >
+                  {idx + 1}
+                </span>
+                <span className="min-w-0 flex-1 truncate text-sm font-600 text-foreground">
+                  {players[playerId]?.name ?? playerId}
+                </span>
+                <span className="stat-box-number text-base">
+                  {points.toFixed(1)}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
   );
 }

@@ -16,24 +16,39 @@ export function PointsCard() {
     [playerPoints],
   );
 
+  const topScore = leaders[0]?.[1] ?? 0;
+
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
-      <div className="text-xs uppercase tracking-wider text-[#555560]">
-        Top Fantasy Points
-      </div>
-      <ul className="mt-3 space-y-2 text-sm text-[#555560]">
-        {leaders.length === 0 && <li>No live deltas yet.</li>}
-        {leaders.map(([playerId, points]) => (
-          <li key={playerId} className="flex items-center justify-between">
-            <span className="truncate">
-              {players[playerId]?.name ?? playerId}
-            </span>
-            <span className="font-600 text-[#f0f0f0]">
-              {points.toFixed(1)}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <section className="glass rounded-xl p-5">
+      <span className="section-label">Top Fantasy Points</span>
+
+      {leaders.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">No live deltas yet.</p>
+      ) : (
+        <ul className="mt-3 space-y-2.5">
+          {leaders.map(([playerId, points]) => {
+            const pct = topScore > 0 ? Math.max(6, (points / topScore) * 100) : 0;
+            return (
+              <li key={playerId} className="space-y-1">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="truncate font-600 text-foreground">
+                    {players[playerId]?.name ?? playerId}
+                  </span>
+                  <span className="stat-box-number text-sm">
+                    {points.toFixed(1)}
+                  </span>
+                </div>
+                <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full rounded-full bg-football"
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
   );
 }
