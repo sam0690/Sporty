@@ -13,14 +13,20 @@ import {
   PointerSensor,
   TouchSensor,
   closestCenter,
+  pointerWithin,
   useDraggable,
   useSensor,
   useSensors,
+  type Announcements,
+  type CollisionDetection,
   type DragEndEvent,
+  type DragOverEvent,
   type DragStartEvent,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { motion, useReducedMotion } from "framer-motion";
+import { ArrowDownToLine, Crown, Plus, RotateCcw, Shield, X } from "lucide-react";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
 import type {
@@ -29,6 +35,7 @@ import type {
 } from "@/components/dashboard/leagues/league-lineup/hooks/useLineupPositions";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import {
+  FOOTBALL_FORMATIONS,
   buildTeamLayout,
   type FormationSlot,
 } from "@/components/dashboard/shared/formation/formationEngine";
@@ -67,6 +74,13 @@ const MULTISPORT_STARTER_REQUIREMENTS = {
   football: 5,
   basketball: 4,
 } as const;
+
+const sportBadgeClass: Record<SportKind, string> = {
+  football: "sport-badge-football",
+  basketball: "sport-badge-basketball",
+  cricket: "sport-badge-cricket",
+  unknown: "sport-badge-multisport",
+};
 
 // Drops snap to exact slot coordinates, so a tight epsilon reliably matches a
 // stored coordinate back to its slot while tolerating float rounding.
@@ -130,13 +144,19 @@ type PitchSlotMarkerProps = {
   player: PitchPlayer | null;
   isSelected: boolean;
   isDropDisabled: boolean;
-  isValidTarget: boolean;
-  isDragActive: boolean;
+  /** A drag/tap interaction can legally land here → emphasize as a target. */
+  isEligible: boolean;
+  /** The slot directly under an active drag pointer. */
+  isHoveredTarget: boolean;
+  /** Drag in progress and this slot is not a legal target → fade it back. */
+  isDimmed: boolean;
+  /** Hovered target is occupied and the occupant would be displaced. */
+  isDisplaced: boolean;
   isShaking: boolean;
   isCaptain: boolean;
   isViceCaptain: boolean;
   onRemove: (slotId: string) => void;
-  onSelectPlayer: (playerId: string) => void;
+  onSlotTap: (slotId: string) => void;
 };
 
 const PitchSlotMarker = memo(function PitchSlotMarker({
@@ -144,13 +164,15 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
   player,
   isSelected,
   isDropDisabled,
-  isValidTarget,
-  isDragActive,
+  isEligible,
+  isHoveredTarget,
+  isDimmed,
+  isDisplaced,
   isShaking,
   isCaptain,
   isViceCaptain,
   onRemove,
-  onSelectPlayer,
+  onSlotTap,
 }: PitchSlotMarkerProps) {
   const prefersReducedMotion = useReducedMotion();
   const draggable = useDraggable({
@@ -167,13 +189,16 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
     ? { opacity: draggable.isDragging ? 0.4 : 1, touchAction: "none" as const }
     : undefined;
 
-  // Highlight valid / invalid targets across the whole pitch while dragging —
-  // not just the slot under the pointer.
-  const targetRing = isDragActive
-    ? isValidTarget
-      ? "ring-2 ring-emerald-400/70"
-      : "ring-2 ring-red-500/40"
-    : "";
+  // Target emphasis: the single hovered slot gets the strongest treatment, all
+  // other eligible slots a soft ring, and ineligible slots fade back during a
+  // drag rather than shouting red across the whole pitch.
+  const targetClass = isHoveredTarget
+    ? isEligible
+      ? "ring-2 ring-emerald-400 scale-110"
+      : "ring-2 ring-red-500/60 scale-105"
+    : isEligible
+      ? "ring-2 ring-emerald-400/45"
+      : "";
 
   const shakeAnimation =
     isShaking && !prefersReducedMotion ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 };
@@ -182,8 +207,10 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
     <DropZone
       id={`slot-${slot.id}`}
       disabled={isDropDisabled}
-      className={`group relative h-20 w-20 rounded-[3px] transition-transform sm:h-24 sm:w-24 ${targetRing}`}
-      activeClassName="scale-110 !z-30"
+      className={`group relative h-20 w-20 rounded-[3px] transition-all sm:h-24 sm:w-24 ${targetClass} ${
+        isDimmed ? "opacity-40" : ""
+      }`}
+      activeClassName="!z-30"
     >
       <motion.div
         ref={player ? draggable.setNodeRef : undefined}
@@ -192,19 +219,15 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
         {...(player ? draggable.attributes : undefined)}
         animate={shakeAnimation}
         transition={{ duration: 0.4 }}
-        onClick={() => {
-          if (player) {
-            onSelectPlayer(player.id);
-          }
-        }}
+        onClick={() => onSlotTap(slot.id)}
         className={`relative flex flex-col items-center justify-center ${
           player
-            ? `cursor-grab p-1 ${
+            ? `cursor-pointer p-1 ${
                 isSelected
                   ? "rounded-[3px] ring-2 ring-white/40 ring-offset-2 ring-offset-green-900/40"
                   : ""
               }`
-            : "h-12 w-12 rounded-[3px] border border-dashed border-white/20 bg-[#1d1d26] backdrop-blur-[2px]"
+            : "h-12 w-12 cursor-pointer rounded-[3px] border border-dashed border-white/20 bg-[#1d1d26] backdrop-blur-[2px]"
         }`}
       >
         {player ? (
@@ -216,7 +239,7 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
             initial={prefersReducedMotion ? false : { scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 520, damping: 34 }}
-            className="relative"
+            className={`relative transition-opacity ${isDisplaced ? "opacity-50" : ""}`}
           >
             <PlayerChip
               player={player}
@@ -239,7 +262,7 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
             </button>
 
             <div className="absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 text-center">
-              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 text-[10px] font-700 text-white backdrop-blur-xs">
+              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px] text-white backdrop-blur-xs">
                 {player.name}
               </p>
               <p className="mt-0.5 text-[9px] uppercase tracking-[2px] text-white/80">
@@ -261,10 +284,14 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
 
 type DraggableBenchPlayerCardProps = {
   player: PitchPlayer;
+  isSelected: boolean;
+  onTap: (playerId: string) => void;
 };
 
 const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
   player,
+  isSelected,
+  onTap,
 }: DraggableBenchPlayerCardProps) {
   const prefersReducedMotion = useReducedMotion();
   const draggable = useDraggable({
@@ -282,18 +309,33 @@ const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
       initial={prefersReducedMotion ? false : { opacity: 0, y: -6 }}
       animate={{ opacity: draggable.isDragging ? 0.45 : 1, y: 0 }}
       transition={{ duration: 0.18 }}
-      className="cursor-grab rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 transition-shadow hover:shadow-[0_16px_44px_rgba(0,0,0,0.28)]"
+      onClick={() => onTap(player.id)}
+      className={`cursor-pointer rounded-[3px] border p-3 transition-colors ${
+        isSelected
+          ? "border-[rgba(232,251,37,0.5)] bg-[rgba(232,251,37,0.06)]"
+          : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] hover:border-[rgba(232,251,37,0.3)]"
+      }`}
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-600 text-[#f0f0f0]">{player.name}</p>
+        <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          {player.name}
+        </p>
         <span className="text-base" aria-label={player.sport}>
           {getSportIcon(player.sport)}
         </span>
       </div>
-      <p className="mt-1 text-xs text-[#555560]">{player.position}</p>
+      <div className="mt-1.5 flex items-center gap-2">
+        <span
+          className={`rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
+        >
+          {player.position}
+        </span>
+        <span className="font-bebas text-base leading-none tracking-[1px] text-[#e8fb25] tabular-nums">
+          {player.cost}
+        </span>
+      </div>
       <p className="mt-1 truncate text-xs text-[#555560]">{player.realTeam}</p>
-      <p className="mt-1 text-xs text-[#e8fb25]">Cost {player.cost}</p>
     </motion.article>
   );
 });
@@ -325,9 +367,17 @@ export function LineupPitchView({
     [allPlayers],
   );
 
+  // Cosmetic formation preset (football only). null → engine auto-derives the
+  // shape from the starters present.
+  const [formationPreset, setFormationPreset] = useState<string | null>(null);
+
   const layout = useMemo(
-    () => buildTeamLayout(pitchPlayers, { activeOnly: true }),
-    [pitchPlayers],
+    () =>
+      buildTeamLayout(pitchPlayers, {
+        activeOnly: true,
+        formation: formationPreset ?? undefined,
+      }),
+    [pitchPlayers, formationPreset],
   );
 
   const playerById = useMemo(
@@ -360,13 +410,25 @@ export function LineupPitchView({
     }),
   );
 
+  // Prefer the slot under the pointer; fall back to nearest-center so a release
+  // just outside a tight slot still snaps to the obvious target.
+  const collisionDetection = useCallback<CollisionDetection>((args) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    return closestCenter(args);
+  }, []);
+
   const prefersReducedMotion = useReducedMotion();
   const [activeDragPlayerId, setActiveDragPlayerId] = useState<string | null>(
     null,
   );
-  const [selectedPitchPlayerId, setSelectedPitchPlayerId] = useState<
-    string | null
-  >(null);
+  // Unified selection: drives tap-to-place, the bench highlight, and the
+  // selected-player action bar. Works for both bench and pitch players.
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  // The slot currently under an active drag pointer (drag feedback only).
+  const [overSlotId, setOverSlotId] = useState<string | null>(null);
 
   // Brief shake feedback on an invalid drop, keyed by the rejected slot.
   const [shakeSlotId, setShakeSlotId] = useState<string | null>(null);
@@ -492,29 +554,29 @@ export function LineupPitchView({
     [pitchPlayers],
   );
 
-  const selectedLineupPlayer = useMemo(() => {
-    if (!selectedPitchPlayerId) {
-      return null;
-    }
-    const pitchPlayer = playerById[selectedPitchPlayerId];
-    return pitchPlayer ? lineupPlayerById[pitchPlayer.playerId] ?? null : null;
-  }, [lineupPlayerById, playerById, selectedPitchPlayerId]);
+  const selectedPitchPlayer = selectedPlayerId
+    ? playerById[selectedPlayerId] ?? null
+    : null;
+  const selectedLineupPlayer = selectedPitchPlayer
+    ? lineupPlayerById[selectedPitchPlayer.playerId] ?? null
+    : null;
 
-  // Can the active drag legally drop onto this slot? Drives target highlighting.
-  const canDropToSlot = useCallback(
-    (slotId: string): boolean => {
-      if (!activeDragPlayerId) {
-        return true;
+  // Can this player legally land in this slot? Drives both tap-to-place and the
+  // drag target highlighting, so it takes the player id explicitly.
+  const canPlaceInSlot = useCallback(
+    (playerId: string | null, slotId: string): boolean => {
+      if (!playerId) {
+        return false;
       }
-      const player = playerById[activeDragPlayerId];
+      const player = playerById[playerId];
       const slot = slotById[slotId];
       if (!player || !slot || slot.sport !== player.sport) {
         return false;
       }
 
       const occupantId = occupancyBySlot[slotId];
-      // Swap / substitution into an occupied slot is always allowed.
-      if (occupantId && occupantId !== player.id) {
+      // The player's own slot, or a swap/substitution into an occupied slot.
+      if (occupantId) {
         return true;
       }
       // Empty slot: only blocked when adding a bench player past the limit.
@@ -533,7 +595,6 @@ export function LineupPitchView({
       return true;
     },
     [
-      activeDragPlayerId,
       activeSportCounts,
       isMultiSport,
       occupancyBySlot,
@@ -543,79 +604,29 @@ export function LineupPitchView({
     ],
   );
 
-  const handleRemoveFromSlot = useCallback(
-    (slotId: string) => {
-      const playerId = occupancyBySlot[slotId];
-      if (!playerId) {
-        return;
-      }
-      const player = playerById[playerId];
-      if (player?.isStarter) {
-        onToggleStarter(player.playerId);
-      }
-      onClearPosition(playerId);
-      if (selectedPitchPlayerId === playerId) {
-        setSelectedPitchPlayerId(null);
-      }
-    },
-    [occupancyBySlot, onClearPosition, onToggleStarter, playerById, selectedPitchPlayerId],
-  );
-
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const dragData = event.active.data.current;
-    if (dragData?.type === "player") {
-      setActiveDragPlayerId(String(dragData.playerId));
-    }
-  }, []);
-
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setActiveDragPlayerId(null);
-
-      const dragData = event.active.data.current;
-      if (!dragData || dragData.type !== "player") {
-        return;
-      }
-      const dragged = playerById[String(dragData.playerId)];
-      if (!dragged) {
-        return;
-      }
-
-      const overId = event.over?.id;
-
-      // Drop onto the bench (or nowhere) → bench the player.
-      if (!overId || overId === "bench-drop") {
-        if (dragged.isStarter) {
-          onToggleStarter(dragged.playerId);
-          onClearPosition(dragged.playerId);
-          toastifier.info(`${dragged.name} moved to bench`);
-        }
-        setSelectedPitchPlayerId(null);
-        return;
-      }
-
-      if (typeof overId !== "string" || !overId.startsWith("slot-")) {
-        return;
-      }
-      const slot = slotById[overId.replace("slot-", "")];
-      if (!slot) {
-        return;
-      }
-
+  // The single source of placement truth, shared by drag-drop and tap-to-place.
+  // Returns whether the placement was applied.
+  const commitPlayerToSlot = useCallback(
+    (dragged: PitchPlayer, slot: FormationSlot<PitchPlayer>): boolean => {
       if (slot.sport !== dragged.sport) {
         triggerShake(slot.id);
         toastifier.error(`This is a ${slot.sport} slot.`);
-        return;
+        return false;
       }
 
       const slotCoord: SlotCoord = { x: slot.x, y: slot.y };
       const occupantId = occupancyBySlot[slot.id];
 
+      // No-op: dropped back onto the player's own slot.
+      if (occupantId === dragged.id) {
+        return true;
+      }
+
       // ── Occupied slot → swap (pitch↔pitch) or substitution (bench→pitch) ──
-      if (occupantId && occupantId !== dragged.id) {
+      if (occupantId) {
         const occupant = playerById[occupantId];
         if (!occupant) {
-          return;
+          return false;
         }
         if (dragged.isStarter) {
           // Swap two starters' positions.
@@ -634,8 +645,7 @@ export function LineupPitchView({
           onClearPosition(occupant.playerId);
           toastifier.info(`${dragged.name} ↔ ${occupant.name}`);
         }
-        setSelectedPitchPlayerId(dragged.id);
-        return;
+        return true;
       }
 
       // ── Empty slot ──
@@ -643,7 +653,7 @@ export function LineupPitchView({
         if (starterLimitReached) {
           triggerShake(slot.id);
           toastifier.error("Starter limit reached.");
-          return;
+          return false;
         }
         if (isMultiSport) {
           const limit =
@@ -653,13 +663,13 @@ export function LineupPitchView({
           if ((activeSportCounts[dragged.sport] ?? 0) >= limit) {
             triggerShake(slot.id);
             toastifier.error(`Limit: ${limit} ${dragged.sport} players.`);
-            return;
+            return false;
           }
         }
         onToggleStarter(dragged.playerId);
       }
       onSetPosition(dragged.playerId, slotCoord);
-      setSelectedPitchPlayerId(dragged.id);
+      return true;
     },
     [
       activeSportCounts,
@@ -670,10 +680,254 @@ export function LineupPitchView({
       onSetPosition,
       onToggleStarter,
       playerById,
-      slotById,
       starterLimitReached,
       triggerShake,
     ],
+  );
+
+  const benchPlayer = useCallback(
+    (playerId: string) => {
+      const player = playerById[playerId];
+      if (!player) {
+        return;
+      }
+      if (player.isStarter) {
+        onToggleStarter(player.playerId);
+        onClearPosition(player.playerId);
+        toastifier.info(`${player.name} moved to bench`);
+      }
+      setSelectedPlayerId(null);
+    },
+    [onClearPosition, onToggleStarter, playerById],
+  );
+
+  const handleRemoveFromSlot = useCallback(
+    (slotId: string) => {
+      const playerId = occupancyBySlot[slotId];
+      if (playerId) {
+        benchPlayer(playerId);
+      }
+    },
+    [benchPlayer, occupancyBySlot],
+  );
+
+  // Tap a slot: with a player selected, place/swap/substitute; otherwise select
+  // the slot's occupant. Tapping the selected player's own slot deselects.
+  const handleSlotTap = useCallback(
+    (slotId: string) => {
+      if (disabled) {
+        return;
+      }
+      const slot = slotById[slotId];
+      if (!slot) {
+        return;
+      }
+      const occupantId = occupancyBySlot[slotId];
+
+      if (!selectedPlayerId) {
+        if (occupantId) {
+          setSelectedPlayerId(occupantId);
+        }
+        return;
+      }
+
+      if (occupantId === selectedPlayerId) {
+        setSelectedPlayerId(null);
+        return;
+      }
+
+      const dragged = playerById[selectedPlayerId];
+      if (!dragged) {
+        setSelectedPlayerId(null);
+        return;
+      }
+      if (commitPlayerToSlot(dragged, slot)) {
+        setSelectedPlayerId(dragged.id);
+      }
+    },
+    [
+      commitPlayerToSlot,
+      disabled,
+      occupancyBySlot,
+      playerById,
+      selectedPlayerId,
+      slotById,
+    ],
+  );
+
+  const handlePlayerTap = useCallback(
+    (playerId: string) => {
+      if (disabled) {
+        return;
+      }
+      setSelectedPlayerId((prev) => (prev === playerId ? null : playerId));
+    },
+    [disabled],
+  );
+
+  // Drop a selected bench player into the first open eligible slot.
+  const handleAutoPlace = useCallback(
+    (playerId: string) => {
+      const player = playerById[playerId];
+      if (!player) {
+        return;
+      }
+      const target = slots.find(
+        (slot) =>
+          slot.sport === player.sport &&
+          !occupancyBySlot[slot.id] &&
+          canPlaceInSlot(playerId, slot.id),
+      );
+      if (!target) {
+        toastifier.info("No open slot — tap a player on the pitch to swap.");
+        return;
+      }
+      if (commitPlayerToSlot(player, target)) {
+        setSelectedPlayerId(player.id);
+      }
+    },
+    [canPlaceInSlot, commitPlayerToSlot, occupancyBySlot, playerById, slots],
+  );
+
+  // Applying a preset clears custom coordinates so the chosen shape is the
+  // authoritative layout; subsequent drags then store positions on top of it.
+  const handleSelectFormation = useCallback(
+    (formation: string | null) => {
+      if (disabled) {
+        return;
+      }
+      onResetPositions();
+      setSelectedPlayerId(null);
+      setFormationPreset(formation);
+    },
+    [disabled, onResetPositions],
+  );
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const dragData = event.active.data.current;
+    if (dragData?.type === "player") {
+      setActiveDragPlayerId(String(dragData.playerId));
+    }
+  }, []);
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const overId = event.over?.id;
+    setOverSlotId(
+      typeof overId === "string" && overId.startsWith("slot-")
+        ? overId.replace("slot-", "")
+        : null,
+    );
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveDragPlayerId(null);
+      setOverSlotId(null);
+
+      const dragData = event.active.data.current;
+      if (!dragData || dragData.type !== "player") {
+        return;
+      }
+      const dragged = playerById[String(dragData.playerId)];
+      if (!dragged) {
+        return;
+      }
+
+      const overId = event.over?.id;
+
+      // Explicit bench drop → bench the starter.
+      if (overId === "bench-drop") {
+        benchPlayer(dragged.id);
+        return;
+      }
+
+      // Dropped on nothing → cancel (never bench by accident).
+      if (typeof overId !== "string" || !overId.startsWith("slot-")) {
+        return;
+      }
+      const slot = slotById[overId.replace("slot-", "")];
+      if (!slot) {
+        return;
+      }
+      if (commitPlayerToSlot(dragged, slot)) {
+        setSelectedPlayerId(dragged.id);
+      }
+    },
+    [benchPlayer, commitPlayerToSlot, playerById, slotById],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    setActiveDragPlayerId(null);
+    setOverSlotId(null);
+  }, []);
+
+  // The player currently driving target highlighting (drag wins over tap).
+  const interactionPlayerId = activeDragPlayerId ?? selectedPlayerId;
+  const isDragging = activeDragPlayerId !== null;
+
+  // Formation presets only make sense for a standard 11-a-side football pitch.
+  const showFormationPicker =
+    layout.mode === "football" && (activeSportCounts.football ?? 0) === 11;
+
+  const playerFromDragId = useCallback(
+    (id: UniqueIdentifier | undefined): PitchPlayer | null => {
+      if (typeof id !== "string" || !id.startsWith("player-")) {
+        return null;
+      }
+      return playerById[id.replace("player-", "")] ?? null;
+    },
+    [playerById],
+  );
+
+  const announcements = useMemo<Announcements>(
+    () => ({
+      onDragStart({ active }) {
+        const player = playerFromDragId(active.id);
+        return player ? `Picked up ${player.name}.` : "Picked up player.";
+      },
+      onDragOver({ active, over }) {
+        const player = playerFromDragId(active.id);
+        if (!player) {
+          return undefined;
+        }
+        if (!over) {
+          return `${player.name} is not over a drop zone.`;
+        }
+        if (over.id === "bench-drop") {
+          return `${player.name} is over the bench.`;
+        }
+        if (typeof over.id === "string" && over.id.startsWith("slot-")) {
+          const slot = slotById[over.id.replace("slot-", "")];
+          if (slot) {
+            return `${player.name} is over the ${slot.label} slot.`;
+          }
+        }
+        return undefined;
+      },
+      onDragEnd({ active, over }) {
+        const player = playerFromDragId(active.id);
+        if (!player) {
+          return undefined;
+        }
+        if (over?.id === "bench-drop") {
+          return `${player.name} moved to the bench.`;
+        }
+        if (typeof over?.id === "string" && over.id.startsWith("slot-")) {
+          const slot = slotById[over.id.replace("slot-", "")];
+          if (slot) {
+            return `${player.name} placed in the ${slot.label} slot.`;
+          }
+        }
+        return `${player.name} was dropped.`;
+      },
+      onDragCancel({ active }) {
+        const player = playerFromDragId(active.id);
+        return player
+          ? `Movement cancelled. ${player.name} returned.`
+          : "Movement cancelled.";
+      },
+    }),
+    [playerFromDragId, slotById],
   );
 
   const activeDragPlayer = activeDragPlayerId
@@ -684,25 +938,26 @@ export function LineupPitchView({
     <div className="space-y-6">
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        accessibility={{ announcements }}
+        collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
-        onDragCancel={() => setActiveDragPlayerId(null)}
+        onDragCancel={handleDragCancel}
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
-          <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4">
+          <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="text-base font-600 text-[#f0f0f0]">
-                Bench Players
-              </h3>
+              <p className="section-label">Bench Players</p>
               <button
                 type="button"
                 onClick={onResetPositions}
                 disabled={disabled}
-                className="rounded-[3px] border border-[rgba(255,255,255,0.08)] px-2 py-1 text-[11px] text-[#555560] transition hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] px-2.5 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
                 title="Reset pitch positions to the auto formation"
               >
-                Reset formation
+                <RotateCcw size={12} />
+                Reset
               </button>
             </div>
 
@@ -712,12 +967,17 @@ export function LineupPitchView({
               activeClassName="ring-2 ring-emerald-400/50"
             >
               {benchPlayers.length === 0 ? (
-                <p className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-sm text-[#555560]">
+                <p className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-center text-xs text-[#555560]">
                   No bench players. Drag a player here to bench them.
                 </p>
               ) : (
                 benchPlayers.map((player) => (
-                  <DraggableBenchPlayerCard key={player.id} player={player} />
+                  <DraggableBenchPlayerCard
+                    key={player.id}
+                    player={player}
+                    isSelected={selectedPlayerId === player.id}
+                    onTap={handlePlayerTap}
+                  />
                 ))
               )}
             </DropZone>
@@ -725,17 +985,51 @@ export function LineupPitchView({
 
           <section className="mx-auto w-full max-w-2xl animate-[fade-soft_0.2s_ease]">
             {isMultiSport ? (
-              <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-[#f0f0f0]/75">
-                <span className="rounded-[3px] border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-orange-100">
-                  🏀 Basketball: {activeSportCounts.basketball ?? 0} /{" "}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="rounded-[3px] sport-badge-basketball px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] tabular-nums">
+                  Basketball {activeSportCounts.basketball ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.basketball}
                 </span>
-                <span className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 text-[#e8fb25]">
-                  ⚽ Football: {activeSportCounts.football ?? 0} /{" "}
+                <span className="rounded-[3px] sport-badge-football px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] tabular-nums">
+                  Football {activeSportCounts.football ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.football}
                 </span>
               </div>
             ) : null}
+
+            {showFormationPicker ? (
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="section-label mr-1">Formation</span>
+                <button
+                  type="button"
+                  onClick={() => handleSelectFormation(null)}
+                  disabled={disabled}
+                  className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                    formationPreset === null
+                      ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
+                      : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                  }`}
+                >
+                  Auto
+                </button>
+                {FOOTBALL_FORMATIONS.map((formation) => (
+                  <button
+                    key={formation.label}
+                    type="button"
+                    onClick={() => handleSelectFormation(formation.label)}
+                    disabled={disabled}
+                    className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                      formationPreset === formation.label
+                        ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
+                        : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                    }`}
+                  >
+                    {formation.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+
             <FormationRenderer
               layout={layout}
               showSectionLabels={isMultiSport}
@@ -745,20 +1039,34 @@ export function LineupPitchView({
                 const lineupPlayer = player
                   ? lineupPlayerById[player.playerId]
                   : null;
+                const isEligible =
+                  interactionPlayerId !== null &&
+                  canPlaceInSlot(interactionPlayerId, slot.id);
+                const isHoveredTarget = isDragging && overSlotId === slot.id;
 
                 return (
                   <PitchSlotMarker
                     slot={slot}
                     player={player}
-                    isDropDisabled={disabled || !canDropToSlot(slot.id)}
-                    isValidTarget={canDropToSlot(slot.id)}
-                    isDragActive={activeDragPlayerId !== null}
+                    isDropDisabled={
+                      disabled ||
+                      (isDragging && !canPlaceInSlot(activeDragPlayerId, slot.id))
+                    }
+                    isEligible={isEligible}
+                    isHoveredTarget={isHoveredTarget}
+                    isDimmed={isDragging && !isEligible}
+                    isDisplaced={
+                      isHoveredTarget &&
+                      isEligible &&
+                      !!player &&
+                      player.id !== activeDragPlayerId
+                    }
                     isShaking={shakeSlotId === slot.id}
-                    isSelected={!!player && selectedPitchPlayerId === player.id}
+                    isSelected={!!player && selectedPlayerId === player.id}
                     isCaptain={!!lineupPlayer?.isCaptain}
                     isViceCaptain={!!lineupPlayer?.isViceCaptain}
                     onRemove={handleRemoveFromSlot}
-                    onSelectPlayer={setSelectedPitchPlayerId}
+                    onSlotTap={handleSlotTap}
                   />
                 );
               }}
@@ -788,50 +1096,111 @@ export function LineupPitchView({
         </DragOverlay>
       </DndContext>
 
-      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-600 text-[#f0f0f0]">Captain Assignment</h3>
-          <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#555560]">
-            Click a player on the pitch to assign C/VC
-          </span>
+      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="section-label">Selected Player</p>
+          {selectedPitchPlayer ? (
+            <button
+              type="button"
+              onClick={() => setSelectedPlayerId(null)}
+              className="inline-flex items-center gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] px-2.5 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
+            >
+              <X size={12} />
+              Deselect
+            </button>
+          ) : (
+            <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#555560]">
+              Tap a player to move or assign C/VC
+            </span>
+          )}
         </div>
 
-        {!selectedLineupPlayer ? (
-          <div className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-center text-sm text-[#555560]">
-            Select a starter on the pitch to assign captain or vice-captain.
+        {!selectedPitchPlayer || !selectedLineupPlayer ? (
+          <div className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-6 text-center font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#555560]">
+            Tap a player on the pitch or bench, then tap a slot to move them — or
+            assign captain below.
           </div>
         ) : (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4">
-            <p className="text-sm font-600 text-[#f0f0f0]">
-              {selectedLineupPlayer.name}
-            </p>
-            <p className="mt-1 text-xs text-[#555560]">
-              {selectedLineupPlayer.position} • {selectedLineupPlayer.realTeam}
-            </p>
-
-            <div className="mt-4 space-y-3">
-              <label className="flex items-center gap-2 text-sm text-[#f0f0f0]">
-                <input
-                  type="checkbox"
-                  checked={selectedLineupPlayer.isCaptain}
-                  onChange={() => onSetCaptain(selectedLineupPlayer.playerId)}
-                  disabled={disabled || selectedLineupPlayer.isViceCaptain}
-                  className="h-4 w-4 rounded border-white/20 text-yellow-500 focus:ring-yellow-300"
-                />
-                Make Captain
-              </label>
-
-              <label className="flex items-center gap-2 text-sm text-[#f0f0f0]">
-                <input
-                  type="checkbox"
-                  checked={selectedLineupPlayer.isViceCaptain}
-                  onChange={() => onSetViceCaptain(selectedLineupPlayer.playerId)}
-                  disabled={disabled || selectedLineupPlayer.isCaptain}
-                  className="h-4 w-4 rounded border-white/20 text-blue-500 focus:ring-blue-300"
-                />
-                Make Vice-Captain
-              </label>
+          <div className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                  {selectedLineupPlayer.name}
+                </p>
+                <p className="mt-1 text-xs text-[#555560]">
+                  {selectedLineupPlayer.position} · {selectedLineupPlayer.realTeam}
+                </p>
+              </div>
+              <span
+                className={`shrink-0 rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${
+                  selectedPitchPlayer.isStarter
+                    ? "sport-badge-football"
+                    : "border border-[rgba(255,255,255,0.08)] text-[#555560]"
+                }`}
+              >
+                {selectedPitchPlayer.isStarter ? "Starting" : "Bench"}
+              </span>
             </div>
+
+            {selectedPitchPlayer.isStarter ? (
+              <>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onSetCaptain(selectedLineupPlayer.playerId)}
+                    disabled={disabled || selectedLineupPlayer.isViceCaptain}
+                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[3px] border px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      selectedLineupPlayer.isCaptain
+                        ? "border-yellow-400 bg-yellow-400 text-yellow-950"
+                        : "border-[rgba(255,255,255,0.08)] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                    }`}
+                  >
+                    <Crown size={14} />
+                    Captain
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onSetViceCaptain(selectedLineupPlayer.playerId)
+                    }
+                    disabled={disabled || selectedLineupPlayer.isCaptain}
+                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[3px] border px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                      selectedLineupPlayer.isViceCaptain
+                        ? "border-sky-400 bg-sky-400 text-sky-950"
+                        : "border-[rgba(255,255,255,0.08)] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                    }`}
+                  >
+                    <Shield size={14} />
+                    Vice
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => benchPlayer(selectedPitchPlayer.id)}
+                  disabled={disabled}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-[rgba(255,59,48,0.3)] px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#ff3b30] transition-colors hover:bg-[rgba(255,59,48,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <ArrowDownToLine size={14} />
+                  Move to Bench
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-[#555560]">
+                  On your bench. Tap a highlighted slot on the pitch to add them,
+                  or:
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleAutoPlace(selectedPitchPlayer.id)}
+                  disabled={disabled}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] bg-[#e8fb25] px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:bg-[#1d1d26] disabled:text-[#555560]"
+                >
+                  <Plus size={14} />
+                  Add to Lineup
+                </button>
+              </>
+            )}
           </div>
         )}
       </section>

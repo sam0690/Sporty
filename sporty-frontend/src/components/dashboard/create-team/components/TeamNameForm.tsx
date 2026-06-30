@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft, Check } from "lucide-react";
 import { Input } from "@/components/ui";
 
 type TeamNameFormProps = {
@@ -20,16 +21,16 @@ export function TeamNameForm({
   error,
 }: TeamNameFormProps) {
   return (
-    <section className="mx-auto max-w-md space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 ">
-      <h2 className="text-xl font-600 text-[#f0f0f0]">
-        Step 2: Name Your Team
-      </h2>
+    <section className="mx-auto max-w-md space-y-5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
+      <div>
+        <p className="section-label">Step 2</p>
+        <h2 className="mt-1 font-bebas text-3xl leading-none tracking-[2px] text-[#f0f0f0]">
+          Name Your Team
+        </h2>
+      </div>
 
       <div>
-        <label
-          htmlFor="team-name"
-          className="mb-1 block text-sm text-[#555560]"
-        >
+        <label htmlFor="team-name" className="section-label">
           Team Name
         </label>
         <Input
@@ -38,10 +39,10 @@ export function TeamNameForm({
           maxLength={30}
           onChange={(event) => onTeamNameChange(event.target.value)}
           placeholder="Enter your team name"
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
+          className="mt-2 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-3 text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
           error={error ?? undefined}
         />
-        <p className="mt-1 text-right text-xs text-[#555560]">
+        <p className="mt-1.5 text-right font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
           {teamName.length}/30
         </p>
       </div>
@@ -50,17 +51,19 @@ export function TeamNameForm({
         <button
           type="button"
           onClick={onBack}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 font-600 text-[#f0f0f0] hover:bg-[#1d1d26]"
+          className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-5 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
         >
+          <ArrowLeft size={15} />
           Back
         </button>
         <button
           type="button"
           onClick={onSubmit}
           disabled={isSaving}
-          className="rounded-[3px] bg-linear-to-r [#e8fb25] px-4 py-2 font-600 text-slate-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center gap-1.5 rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSaving ? "Saving..." : "Save Team"}
+          <Check size={15} />
+          {isSaving ? "Saving…" : "Save Team"}
         </button>
       </div>
     </section>

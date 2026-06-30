@@ -46,13 +46,15 @@ export function PositionGroup({
   const emptySlots = Math.max(0, limits.max - activeCount);
 
   return (
-    <section className="space-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
+    <section className="space-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4">
       <header className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm text-[#f0f0f0]">
+        <p className="section-label">
           {positionIcon(position)} {position}
-        </h3>
+        </p>
         <p
-          className={`text-sm ${activeCount >= limits.max ? "text-amber-300" : "text-[#555560]"}`}
+          className={`font-bebas text-base leading-none tracking-[1px] tabular-nums ${
+            activeCount >= limits.max ? "text-[#e8fb25]" : "text-[#555560]"
+          }`}
         >
           {activeCount}/{limits.max}
         </p>
@@ -73,7 +75,7 @@ export function PositionGroup({
         {Array.from({ length: emptySlots }).map((_, index) => (
           <div
             key={`${position}-empty-${index}`}
-            className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-center text-sm text-[#555560] transition-all duration-150"
+            className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560] transition-all duration-150"
           >
             Drop {position} here
           </div>

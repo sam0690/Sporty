@@ -12,12 +12,11 @@ type CreateTeamHeaderProps = {
   requiredCount: number;
 };
 
-const sportBadgeStyles: Record<Sport, string> = {
-  football: "bg-accent-football/15 text-accent-football",
-  basketball: "bg-accent-basketball/15 text-accent-basketball",
-  cricket: "bg-accent-cricket/15 text-accent-cricket",
-  multisport:
-    "bg-gradient-to-r from-accent-football/15 via-accent-basketball/15 to-accent-cricket/15 text-primary",
+const sportBadgeClass: Record<Sport, string> = {
+  football: "sport-badge-football",
+  basketball: "sport-badge-basketball",
+  cricket: "sport-badge-cricket",
+  multisport: "sport-badge-multisport",
 };
 
 function stepLabel(step: number): string {
@@ -40,55 +39,48 @@ export function CreateTeamHeader({
     100,
     Math.round((selectedCount / Math.max(requiredCount, 1)) * 100),
   );
+  const overBudget = remainingBudget < 0;
 
   return (
-    <header className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
+    <header className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-3xl font-600 tracking-[2px] text-[#f0f0f0]">
+            <h1 className="font-bebas text-4xl leading-none tracking-[2px] text-[#f0f0f0]">
               {leagueName}
             </h1>
-            {sport === "multisport" ? (
-              <span
-                className={`inline-flex items-center gap-2 rounded-[3px] px-3 py-1 text-xs ${sportBadgeStyles[sport]}`}
-              >
-                <span>⚽</span>
-                <span>🏀</span>
-                <span>🏏</span>
-                <span>Multi-Sport</span>
-              </span>
-            ) : (
-              <span
-                className={`rounded-[3px] px-3 py-1 text-xs capitalize ${sportBadgeStyles[sport]}`}
-              >
-                {sport}
-              </span>
-            )}
+            <span
+              className={`rounded-[3px] px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+              aria-label={sport}
+            >
+              {sport === "multisport" ? "Multi-Sport" : sport}
+            </span>
           </div>
-          <p className="text-sm text-[#555560]">
-            Step {step} of {totalSteps}: {stepLabel(step)}
+          <p className="section-label">
+            Step {step} of {totalSteps} · {stepLabel(step)}
           </p>
         </div>
 
         <div className="text-right">
-          <p className="text-sm text-[#555560]">Budget: ${budget}</p>
+          <p className="section-label">Budget ${budget}</p>
           <p
-            className={`text-sm font-600 ${remainingBudget >= 0 ? "text-[#e8fb25]" : "text-red-400"}`}
+            className={`mt-1 font-bebas text-2xl tracking-[1px] tabular-nums ${
+              overBudget ? "text-[#ff3b30]" : "text-[#e8fb25]"
+            }`}
           >
-            ${remainingBudget} remaining
+            ${remainingBudget} left
           </p>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className="h-2 rounded-[3px] bg-[#1d1d26]">
+        <div className="h-2 overflow-hidden rounded-[3px] bg-[#0d0d12]">
           <div
-            className="h-2 rounded-[3px] bg-linear-to-r [#e8fb25]"
+            className="h-2 rounded-[3px] bg-[#e8fb25] transition-[width] duration-300"
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="text-xs text-[#555560]">
+        <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
           {selectedCount}/{requiredCount} players selected
         </p>
       </div>

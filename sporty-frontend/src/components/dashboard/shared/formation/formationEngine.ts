@@ -517,10 +517,97 @@ export function generateCoordinates<TPlayer extends FormationPlayerLike>(
   return buildSlots(rows) as FormationSlot<TPlayer>[];
 }
 
+/**
+ * Selectable football shapes for the manual formation picker. These are purely
+ * cosmetic: pitch coordinates don't affect scoring, and slot roles aren't
+ * enforced, so a preset just redistributes the eleven starters across rows.
+ */
+export const FOOTBALL_FORMATIONS = [
+  { label: "4-4-2", def: 4, mid: 4, att: 2 },
+  { label: "4-3-3", def: 4, mid: 3, att: 3 },
+  { label: "3-5-2", def: 3, mid: 5, att: 2 },
+  { label: "5-3-2", def: 5, mid: 3, att: 2 },
+  { label: "4-5-1", def: 4, mid: 5, att: 1 },
+  { label: "3-4-3", def: 3, mid: 4, att: 3 },
+] as const;
+
+export type FootballFormation = (typeof FOOTBALL_FORMATIONS)[number]["label"];
+
+function footballRowsFromFormation<TPlayer extends FormationPlayerLike>(
+  players: TPlayer[],
+  formation: string,
+) {
+  const preset = FOOTBALL_FORMATIONS.find((entry) => entry.label === formation);
+  if (!preset) {
+    return null;
+  }
+
+  const sorted = sortPlayersByWeight(players, footballPositionWeight);
+  const goalkeeperPlayers = sorted.filter(
+    (player) => footballRoleBucket(player.position) === "goalkeeper",
+  );
+  const outfieldPlayers = sorted.filter(
+    (player) => footballRoleBucket(player.position) !== "goalkeeper",
+  );
+
+  const defenseEnd = preset.def;
+  const midfieldEnd = preset.def + preset.mid;
+  const attackEnd = midfieldEnd + preset.att;
+
+  const rows: RowBlueprint<TPlayer>[] = [
+    {
+      id: "football:goalkeeper",
+      label: "GK",
+      role: "goalkeeper",
+      y: 0.86,
+      xStart: 0.5,
+      xEnd: 0.5,
+      capacity: 1,
+      players: goalkeeperPlayers.slice(0, 1),
+    },
+    {
+      id: "football:defense",
+      label: "DEF",
+      role: "defense",
+      y: 0.68,
+      xStart: 0.12,
+      xEnd: 0.88,
+      capacity: preset.def,
+      players: outfieldPlayers.slice(0, defenseEnd),
+    },
+    {
+      id: "football:midfield-lower",
+      label: "MID",
+      role: "midfield",
+      y: 0.42,
+      xStart: 0.15,
+      xEnd: 0.85,
+      capacity: preset.mid,
+      players: outfieldPlayers.slice(defenseEnd, midfieldEnd),
+    },
+    {
+      id: "football:attack",
+      label: "ATT",
+      role: "attack",
+      y: 0.18,
+      xStart: 0.24,
+      xEnd: 0.76,
+      capacity: preset.att,
+      players: outfieldPlayers.slice(midfieldEnd, attackEnd),
+    },
+  ];
+
+  return { formationLabel: preset.label, rows };
+}
+
 function buildFootballFormation<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
+  formation?: string,
 ) {
-  const { formationLabel, rows } = buildFootballRows(players);
+  const preset = formation
+    ? footballRowsFromFormation(players, formation)
+    : null;
+  const { formationLabel, rows } = preset ?? buildFootballRows(players);
   return {
     formationLabel,
     slots: generateCoordinates(rows),
@@ -590,6 +677,7 @@ function assignByAvailableSports<TPlayer extends FormationPlayerLike>(
 function sectionForSport<TPlayer extends FormationPlayerLike>(
   sport: SportKind,
   players: TPlayer[],
+  formation?: string,
 ): FormationSection<TPlayer> {
   if (sport === "basketball") {
     const basketball = buildBasketballLayout(players);
@@ -604,7 +692,7 @@ function sectionForSport<TPlayer extends FormationPlayerLike>(
   }
 
   if (sport === "football") {
-    const football = buildFootballFormation(players);
+    const football = buildFootballFormation(players, formation);
     return {
       id: "football-section",
       sport,
@@ -646,7 +734,7 @@ export function groupPlayersBySport<TPlayer extends FormationPlayerLike>(
 
 export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
-  options: { activeOnly?: boolean } = {},
+  options: { activeOnly?: boolean; formation?: string } = {},
 ): TeamLayout<TPlayer> {
   const activePlayers = options.activeOnly
     ? players.filter((player) => player.isStarter !== false)
@@ -697,6 +785,7 @@ export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
                   activePlayers[0]?.sport ?? activePlayers[0]?.sportName,
                 ),
               grouped[visibleSports[0] ?? "unknown"] ?? activePlayers,
+              options.formation,
             ),
           ]
         : visibleSports.map((sport) =>
