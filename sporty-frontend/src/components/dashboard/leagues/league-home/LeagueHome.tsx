@@ -85,6 +85,7 @@ export function LeagueHome() {
       : 0;
     return {
       youAreLeader,
+      hasOpponent: !!opponent,
       opponentName: opponent?.team_name ?? "",
       yourScore,
       opponentScore,
@@ -212,6 +213,7 @@ export function LeagueHome() {
                 opponentTeamName={weekStanding.opponentName}
                 opponentScore={weekStanding.opponentScore}
                 youAreLeader={weekStanding.youAreLeader}
+                hasOpponent={weekStanding.hasOpponent}
               />
               <YourScoreCard
                 yourScore={weekStanding.yourScore}
