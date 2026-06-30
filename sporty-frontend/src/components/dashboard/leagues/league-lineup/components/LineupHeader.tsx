@@ -32,7 +32,7 @@ function formatCountdown(deadline: string): { label: string; locked: boolean } {
   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
   const minutes = totalMinutes % 60;
 
-  return { label: `Lock in: ${days}d ${hours}h ${minutes}m`, locked: false };
+  return { label: `Locks in: ${days}d ${hours}h ${minutes}m`, locked: false };
 }
 
 export function LineupHeader({
@@ -65,7 +65,8 @@ export function LineupHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-3 py-1.5">
+        <div className="flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-3 py-1.5">
+          <span className="section-label !text-[#e8fb25]">Editing ▸</span>
           <span className="font-bebas text-xl tracking-[2px] text-[#e8fb25]">{currentWeek}</span>
           <span className="section-label">/ {totalWeeks}</span>
         </div>
@@ -76,7 +77,7 @@ export function LineupHeader({
               : "alert-deadline"
           }`}
         >
-          {countdown.locked ? "Lineup Locked" : countdown.label}
+          {countdown.locked ? "Lineup Locked" : `GW${currentWeek} ${countdown.label}`}
         </span>
       </div>
     </header>

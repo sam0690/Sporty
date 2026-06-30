@@ -9,6 +9,7 @@ import { TransferConfirmation } from "@/components/dashboard/transfers/component
 import { TransfersHeader } from "@/components/dashboard/transfers/components/TransfersHeader";
 import { TransferSuccess } from "@/components/dashboard/transfers/components/TransferSuccess";
 import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/components/UserTransferHistoryCarousel";
+import { GameweekContextBar } from "@/components/dashboard/leagues/GameweekContextBar";
 import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
@@ -27,6 +28,7 @@ export function TransfersView(props: Props) {
     userTransfersLoading,
     userTransfersError,
     activeWindow,
+    liveWindow,
     playersCurrentPage,
     playersTotalPages,
     playersTotal,
@@ -101,6 +103,12 @@ export function TransfersView(props: Props) {
             budget={budget}
             leagueName={league?.name || "Loading..."}
             currentWeek={activeWindow?.number || 0}
+          />
+          <GameweekContextBar
+            leagueId={leagueId}
+            editableWindow={activeWindow}
+            activeWindow={liveWindow}
+            deadlineField="transfer_deadline_at"
           />
           {transfersRemaining !== null ? (
             <div className="rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.08)] px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">

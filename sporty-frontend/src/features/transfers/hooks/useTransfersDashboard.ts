@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import {
+  useActiveWindow,
   useCancelTransfers,
   useConfirmTransfers,
   useLeague,
@@ -43,6 +44,8 @@ export function useTransfersDashboard() {
   const activeWindowQuery = useSmartEditableWindowSync(leagueId);
   const activeWindow = activeWindowQuery.data;
   const windowLoading = activeWindowQuery.isLoading;
+  // The in-progress gameweek (playing now) — shown as live context only.
+  const liveWindow = useActiveWindow(leagueId).data;
   const [playersPage, setPlayersPage] = useState(1);
   const initialSportName = league?.sports?.length === 1 ? toSport(league.sports[0]?.sport?.name) : undefined;
   const {
@@ -351,6 +354,7 @@ export function useTransfersDashboard() {
     userTransfersLoading,
     userTransfersError,
     activeWindow,
+    liveWindow,
     playersCurrentPage,
     playersTotalPages,
     playersTotal,

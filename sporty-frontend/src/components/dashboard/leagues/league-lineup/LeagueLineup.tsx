@@ -13,7 +13,12 @@ import { InitialLineupBoard } from "@/components/dashboard/leagues/league-lineup
 import { LineupSkeleton } from "@/components/dashboard/leagues/league-lineup/components/LineupSkeleton";
 import { SaveLineupButton } from "@/components/dashboard/leagues/league-lineup/components/SaveLineupButton";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
-import { useLeague, useUpdateLineup } from "@/hooks/leagues/useLeagues";
+import { GameweekContextBar } from "@/components/dashboard/leagues/GameweekContextBar";
+import {
+  useActiveWindow,
+  useLeague,
+  useUpdateLineup,
+} from "@/hooks/leagues/useLeagues";
 import { useSmartEditableWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import {
   useLeagueLineupData,
@@ -163,6 +168,8 @@ export function LeagueLineup() {
     isLoading: isWindowLoading,
     error: windowError,
   } = useSmartEditableWindowSync(leagueId);
+  // The in-progress gameweek (the one playing now) — shown as live context only.
+  const { data: liveWindow } = useActiveWindow(leagueId);
   const {
     players,
     data: lineupData,
@@ -786,6 +793,13 @@ export function LeagueLineup() {
         currentWeek={selectedLeague.currentWeek}
         totalWeeks={selectedLeague.totalWeeks}
         deadline={selectedLeague.deadline}
+      />
+
+      <GameweekContextBar
+        leagueId={leagueId}
+        editableWindow={activeWindow}
+        activeWindow={liveWindow}
+        deadlineField="lineup_deadline_at"
       />
 
       <LineupViewToggle value={viewMode} onChange={setViewMode} />
