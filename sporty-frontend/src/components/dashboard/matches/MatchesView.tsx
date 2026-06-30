@@ -6,33 +6,36 @@ import { useMatches } from "@/hooks/matches/useMatches";
 import type { TMatch } from "@/types/match";
 import { MatchCard, sportConfig } from "./MatchCard";
 
-type StatusKey = "all" | "live" | "upcoming" | "finished";
+function keyOf(date: Date): string {
+  return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+}
 
-const STATUS_FILTERS: Array<{ key: StatusKey; label: string }> = [
-  { key: "all", label: "All" },
-  { key: "live", label: "Live" },
-  { key: "upcoming", label: "Upcoming" },
-  { key: "finished", label: "Finished" },
-];
+function startOfDay(date: Date): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
 
-const GROUPS: Array<{ key: Exclude<StatusKey, "all">; title: string; statuses: string[] }> = [
-  { key: "live", title: "Live Now", statuses: ["live"] },
-  { key: "upcoming", title: "Upcoming", statuses: ["scheduled"] },
-  {
-    key: "finished",
-    title: "Results",
-    statuses: ["finished", "postponed", "cancelled"],
-  },
-];
+function relativeDayLabel(date: Date): string {
+  const diff = Math.round(
+    (startOfDay(date).getTime() - startOfDay(new Date()).getTime()) / 86400000,
+  );
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
 
-function statusBucket(status: string): Exclude<StatusKey, "all"> | null {
-  const s = (status ?? "").toLowerCase();
-  for (const group of GROUPS) {
-    if (group.statuses.includes(s)) {
-      return group.key;
-    }
-  }
-  return null;
+function fullDayLabel(date: Date): string {
+  return date.toLocaleDateString(undefined, {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
 }
 
 function Chip({
@@ -59,84 +62,68 @@ function Chip({
   );
 }
 
-function StatBox({
-  value,
-  label,
-  accent,
-  pulse,
-}: {
-  value: number;
-  label: string;
-  accent: string;
-  pulse?: boolean;
-}) {
-  return (
-    <div className="flex-1 px-5 py-4 text-center">
-      <div className="flex items-center justify-center gap-2">
-        {pulse && value > 0 && (
-          <span className="size-2 rounded-full bg-[#ff3b5c] animate-live-pulse" />
-        )}
-        <p
-          className="font-bebas text-3xl leading-none tracking-[2px]"
-          style={{ color: accent }}
-        >
-          {value}
-        </p>
-      </div>
-      <p className="section-label mt-1.5">{label}</p>
-    </div>
-  );
-}
-
 export function MatchesView() {
   const { data, isLoading, isError } = useMatches();
   const [sportFilter, setSportFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusKey>("all");
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
 
   const items = useMemo(() => data?.items ?? [], [data]);
 
-  const counts = useMemo(() => {
-    let live = 0;
-    let upcoming = 0;
-    let finished = 0;
-    for (const m of items) {
-      const bucket = statusBucket(m.status);
-      if (bucket === "live") live += 1;
-      else if (bucket === "upcoming") upcoming += 1;
-      else if (bucket === "finished") finished += 1;
-    }
-    return { live, upcoming, finished };
-  }, [items]);
-
   const sports = useMemo(() => {
     const set = new Set<string>();
-    for (const m of items) {
-      if (m.sport) set.add(m.sport.toLowerCase());
-    }
+    for (const m of items) if (m.sport) set.add(m.sport.toLowerCase());
     return Array.from(set);
   }, [items]);
 
-  const filtered = useMemo(() => {
-    return items.filter((m) => {
-      const sportOk =
-        sportFilter === "all" || (m.sport ?? "").toLowerCase() === sportFilter;
-      const statusOk =
-        statusFilter === "all" || statusBucket(m.status) === statusFilter;
-      return sportOk && statusOk;
-    });
-  }, [items, sportFilter, statusFilter]);
+  const filtered = useMemo(
+    () =>
+      items.filter(
+        (m) =>
+          sportFilter === "all" || (m.sport ?? "").toLowerCase() === sportFilter,
+      ),
+    [items, sportFilter],
+  );
 
-  const grouped = useMemo(() => {
-    return GROUPS.map((group) => ({
-      ...group,
-      matches: filtered
-        .filter((m) => statusBucket(m.status) === group.key)
-        .sort(
-          (a: TMatch, b: TMatch) =>
+  // Group fixtures by calendar day, each sorted by kickoff time.
+  const days = useMemo(() => {
+    const map = new Map<string, { date: Date; matches: TMatch[] }>();
+    for (const m of filtered) {
+      const d = new Date(m.match_date);
+      if (Number.isNaN(d.getTime())) continue;
+      const key = keyOf(d);
+      if (!map.has(key)) map.set(key, { date: startOfDay(d), matches: [] });
+      map.get(key)!.matches.push(m);
+    }
+    return [...map.values()]
+      .map((v) => ({
+        key: keyOf(v.date),
+        date: v.date,
+        matches: v.matches.sort(
+          (a, b) =>
             new Date(a.match_date).getTime() - new Date(b.match_date).getTime(),
         ),
-    })).filter((group) => group.matches.length > 0);
+        liveCount: v.matches.filter(
+          (m) => (m.status ?? "").toLowerCase() === "live",
+        ).length,
+      }))
+      .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [filtered]);
+
+  // Default day: today if present, else nearest upcoming, else the latest.
+  const defaultDayKey = useMemo(() => {
+    if (!days.length) return null;
+    const todayKey = keyOf(new Date());
+    if (days.some((d) => d.key === todayKey)) return todayKey;
+    const today = startOfDay(new Date()).getTime();
+    const upcoming = days.find((d) => d.date.getTime() >= today);
+    return (upcoming ?? days[days.length - 1]).key;
+  }, [days]);
+
+  const activeDayKey =
+    selectedDayKey && days.some((d) => d.key === selectedDayKey)
+      ? selectedDayKey
+      : defaultDayKey;
+  const activeDay = days.find((d) => d.key === activeDayKey) ?? null;
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
@@ -146,100 +133,104 @@ export function MatchesView() {
           Matches
         </h1>
         <p className="mt-1 text-sm text-[#555560]">
-          Fixtures from your leagues&apos; sports. Open one for live scores,
-          predictions and player ratings.
+          Fixtures from your leagues&apos; sports, day by day.
         </p>
       </header>
 
-      <section className="flex flex-wrap items-center gap-0 divide-x divide-[rgba(255,255,255,0.08)] rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-        <StatBox value={counts.live} label="Live" accent="#ff3b5c" pulse />
-        <StatBox value={counts.upcoming} label="Upcoming" accent="#e8fb25" />
-        <StatBox value={counts.finished} label="Played" accent="#777783" />
-      </section>
-
       {sports.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip active={sportFilter === "all"} onClick={() => setSportFilter("all")}>
+            All Sports
+          </Chip>
+          {sports.map((sport) => (
             <Chip
-              active={sportFilter === "all"}
-              onClick={() => setSportFilter("all")}
+              key={sport}
+              active={sportFilter === sport}
+              onClick={() => setSportFilter(sport)}
             >
-              All Sports
+              {sportConfig(sport).emoji} {sportConfig(sport).label}
             </Chip>
-            {sports.map((sport) => (
-              <Chip
-                key={sport}
-                active={sportFilter === sport}
-                onClick={() => setSportFilter(sport)}
+          ))}
+        </div>
+      )}
+
+      {/* Day selector strip */}
+      {days.length > 0 && (
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {days.map((day) => {
+            const active = day.key === activeDayKey;
+            return (
+              <button
+                key={day.key}
+                type="button"
+                onClick={() => setSelectedDayKey(day.key)}
+                className={`shrink-0 rounded-[3px] border px-3.5 py-2 text-center transition-colors ${
+                  active
+                    ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)]"
+                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] hover:border-[rgba(255,255,255,0.18)]"
+                }`}
               >
-                {sportConfig(sport).emoji} {sportConfig(sport).label}
-              </Chip>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {STATUS_FILTERS.map(({ key, label }) => (
-              <Chip
-                key={key}
-                active={statusFilter === key}
-                onClick={() => setStatusFilter(key)}
-              >
-                {label}
-              </Chip>
-            ))}
-          </div>
+                <span
+                  className={`block font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${
+                    active ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                  }`}
+                >
+                  {relativeDayLabel(day.date)}
+                </span>
+                <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] text-[#555560]">
+                  {day.liveCount > 0 && (
+                    <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
+                  )}
+                  {day.matches.length} {day.matches.length === 1 ? "match" : "matches"}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
       {isLoading && (
-        <p className="text-sm text-[#555560]">Loading fixtures…</p>
+        <div className="space-y-2">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="h-16 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+          ))}
+        </div>
       )}
 
       {isError && (
-        <p className="text-sm text-[#ff3b5c]">
+        <p className="text-sm text-[#ff8a8a]">
           Couldn&apos;t load matches. Please try again.
         </p>
       )}
 
-      {!isLoading && !isError && grouped.length === 0 && (
+      {!isLoading && !isError && days.length === 0 && (
         <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
           <p className="text-3xl" aria-hidden>
             📅
           </p>
           <p className="mt-3 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-            No matches here
+            No fixtures
           </p>
           <p className="mt-1 text-sm text-[#555560]">
             {items.length === 0
               ? "Fixtures appear once they're scheduled for a sport in one of your leagues."
-              : "Try a different sport or status filter."}
+              : "No matches for this sport."}
           </p>
         </div>
       )}
 
-      {grouped.map((group) => (
-        <section key={group.key} className="space-y-3">
-          <div className="flex items-center gap-2">
-            {group.key === "live" && (
-              <span className="size-2 rounded-full bg-[#ff3b5c] animate-live-pulse" />
-            )}
-            <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#9a9aa5]">
-              {group.title}
-            </h2>
-            <span className="text-xs font-600 text-[#555560]">
-              {group.matches.length}
-            </span>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {group.matches.map((match, idx) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                animationDelay={idx * 40}
-              />
+      {activeDay && (
+        <section className="space-y-3">
+          <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+            {fullDayLabel(activeDay.date)}
+          </h2>
+          <div className="space-y-2">
+            {activeDay.matches.map((match, idx) => (
+              <MatchCard key={match.id} match={match} animationDelay={idx * 30} />
             ))}
           </div>
         </section>
-      ))}
+      )}
     </main>
   );
 }
