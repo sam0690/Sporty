@@ -53,15 +53,23 @@ export function LeagueHome() {
   const leaveLeague = useLeaveLeague();
   const { username } = useMe();
 
-  // Season standings (total points) and this-week board (active window points
-  // + rank) power the standings table, your-score card and the you-vs-leader
-  // matchup. The per-gameweek breakdown comes from the league dashboard stats.
+  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+
+  // The gameweek the cards reflect: the user's pick, else the active window.
+  const currentWeek = selectedWeek ?? activeWindow?.number ?? 1;
+
+  // Season standings (total points) and the selected-gameweek board (per-week
+  // points + rank) power the standings table, your-score card and the
+  // you-vs-leader matchup. The per-gameweek breakdown comes from the league
+  // dashboard stats. The week board follows the WeekSelector via `gameweek`,
+  // resolved to the season's transfer window server-side.
   const { data: seasonBoard, isLoading: seasonBoardLoading } =
     useLeaderboard(leagueId);
   const { data: weekBoard } = useLeaderboard(
     leagueId,
-    activeWindow?.id,
+    undefined,
     false,
+    currentWeek,
   );
   const { data: leagueStats, isLoading: leagueStatsLoading } =
     useDashboardLeagueStats(leagueId);
@@ -94,11 +102,9 @@ export function LeagueHome() {
     };
   }, [weekBoard, myTeam?.id]);
 
-  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  const currentWeek = selectedWeek ?? activeWindow?.number ?? 1;
   const isTransferWindowActive = transferWindowStatus?.is_active ?? false;
 
   const isCommissioner = league?.owner?.username === username;

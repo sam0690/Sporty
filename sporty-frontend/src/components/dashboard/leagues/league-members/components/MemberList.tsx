@@ -20,8 +20,24 @@ export function MemberList({
   isCommissioner,
   onKick,
 }: MemberListProps) {
+  if (members.length === 0) {
+    return (
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
+        <p className="text-2xl" aria-hidden>
+          👥
+        </p>
+        <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          No members found
+        </p>
+        <p className="mt-1 text-sm text-[#555560]">
+          Invite friends to fill out your league.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {members.map((member) => (
         <MemberCard
           key={member.id}

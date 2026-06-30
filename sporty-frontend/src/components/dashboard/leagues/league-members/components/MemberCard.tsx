@@ -35,61 +35,61 @@ export function MemberCard({
 
   return (
     <article
-      className={`rounded-[3px] border p-4  ${
+      className={`group rounded-[3px] border p-4 transition-colors animate-fade-soft ${
         isLeftMember
-          ? "border-white/5 bg-white/3 opacity-75"
-          : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
+          ? "border-white/5 bg-[#111117] opacity-70"
+          : "border-[rgba(255,255,255,0.08)] bg-[#111117] hover:border-[rgba(232,251,37,0.2)]"
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-[3px] bg-[rgba(232,251,37,0.2)] text-sm text-[#f0f0f0]">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] font-bebas text-lg tracking-[1px] ${
+              isCommissionerMember
+                ? "bg-[rgba(232,251,37,0.18)] text-[#e8fb25]"
+                : "bg-[rgba(255,255,255,0.06)] text-[#f0f0f0]"
+            }`}
+          >
             {initials(member.name)}
           </div>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm text-[#f0f0f0]">
-                {member.name}
-                {isCommissionerMember ? <span className="ml-1">👑</span> : null}
-              </p>
-              <span
-                className={`rounded-[3px] px-2 py-0.5 text-[11px] font-600 uppercase tracking-wide ${
-                  isLeftMember
-                    ? "border border-amber-400/20 bg-amber-400/10 text-amber-200"
-                    : "border border-emerald-400/20 bg-emerald-400/10 text-emerald-200"
-                }`}
-              >
-                {isLeftMember ? "Left the league" : "Active"}
+          <div className="min-w-0">
+            <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              {member.name}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-[#555560]">
+              {member.teamName}
+            </p>
+            {isCommissionerMember ? (
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-[3px] bg-[rgba(232,251,37,0.12)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+                👑 Commissioner
               </span>
-            </div>
-            <p className="text-xs text-[#555560]">{member.teamName}</p>
-            {isLeftMember ? (
-              <p className="mt-1 text-[11px] text-amber-200/80">
-                Historical member only; not eligible for live access.
-              </p>
             ) : null}
           </div>
         </div>
 
-        <div className="text-right">
-          <p className="text-sm text-[#f0f0f0]">
-            {member.totalPoints ?? 0} pts
-          </p>
-          <p className="text-xs text-[#555560]">Joined {member.joinDate}</p>
-        </div>
+        <span
+          className={`shrink-0 rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${
+            isLeftMember
+              ? "border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5]"
+              : "border border-[rgba(232,251,37,0.25)] bg-[rgba(232,251,37,0.08)] text-[#c8d85a]"
+          }`}
+        >
+          {isLeftMember ? "Left" : "Active"}
+        </span>
       </div>
 
-      {canKick ? (
-        <div className="mt-3 flex justify-end">
+      <div className="mt-3 flex items-center justify-between border-t border-[rgba(255,255,255,0.06)] pt-3">
+        <p className="section-label">Joined {member.joinDate}</p>
+        {canKick ? (
           <button
             type="button"
             onClick={() => onKick(member)}
-            className="rounded-[3px] border border-red-400/20 bg-red-500/10 px-3 py-1 text-xs text-red-100 transition-colors hover:bg-red-500/15"
+            className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-transparent px-3 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30] transition-colors hover:bg-[rgba(255,59,48,0.1)]"
           >
             Kick
           </button>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </article>
   );
 }

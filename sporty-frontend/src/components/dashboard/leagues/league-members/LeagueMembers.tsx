@@ -42,9 +42,13 @@ export function LeagueMembers() {
           ? `Draft Position #${membership.draft_position}`
           : "Team pending",
         joinDate: new Date(membership.joined_at).toLocaleDateString(),
-        totalPoints: 0,
       })),
     [memberships],
+  );
+
+  const activeCount = useMemo(
+    () => members.filter((m) => m.status === "active").length,
+    [members],
   );
 
   const filteredMembers = useMemo(() => {
@@ -82,29 +86,62 @@ export function LeagueMembers() {
         isCommissioner={isCommissioner}
       />
 
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-        <h2 className="text-lg text-[#f0f0f0]">League Members</h2>
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
+        <div>
+          <p className="section-label">{league?.name || "League"}</p>
+          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+            Members
+          </h1>
+          <p className="mt-1 text-sm text-[#555560]">
+            Everyone competing in this league
+          </p>
+        </div>
+        <div className="flex items-center gap-5">
+          <div className="text-right">
+            <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#e8fb25]">
+              {members.length}
+            </p>
+            <p className="section-label mt-1">Total</p>
+          </div>
+          <div className="text-right">
+            <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#f0f0f0]">
+              {activeCount}
+            </p>
+            <p className="section-label mt-1">Active</p>
+          </div>
+        </div>
+      </header>
+
+      <div className="relative">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#555560]">
+          ⌕
+        </span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by member or team name"
-          className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] py-2.5 pl-10 pr-4 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
         />
       </div>
 
       {isLoading ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 text-sm text-[#555560] ">
-          Loading members...
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div
+              key={i}
+              className="h-24 animate-pulse rounded-[3px] bg-[#1d1d26]"
+            />
+          ))}
         </div>
-      ) : null}
-
-      <MemberList
-        members={filteredMembers}
-        commissionerId={commissionerId}
-        selfId={selfId}
-        isCommissioner={isCommissioner}
-        onKick={setTargetMember}
-      />
+      ) : (
+        <MemberList
+          members={filteredMembers}
+          commissionerId={commissionerId}
+          selfId={selfId}
+          isCommissioner={isCommissioner}
+          onKick={setTargetMember}
+        />
+      )}
 
       <KickMemberModal
         isOpen={Boolean(targetMember)}

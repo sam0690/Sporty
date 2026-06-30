@@ -40,19 +40,17 @@ export function InviteFriends() {
         isCommissioner={isCommissioner}
       />
 
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-        <h2 className="text-lg text-[#f0f0f0]">Invite Friends</h2>
-        {isPublicLeague ? (
-          <p className="mt-1 text-sm text-[#555560]">
-            This league is public - anyone can join. Share this link with
-            friends.
-          </p>
-        ) : (
-          <p className="mt-1 text-sm text-[#555560]">
-            Share this code or link to invite new members to your league.
-          </p>
-        )}
-      </div>
+      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+        <p className="section-label">{league?.name || "League"}</p>
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+          Invite Friends
+        </h1>
+        <p className="mt-1 text-sm text-[#555560]">
+          {isPublicLeague
+            ? "This league is public — anyone with the link can join."
+            : "Share this code or link to invite new members to your league."}
+        </p>
+      </header>
 
       {!isPublicLeague && inviteCode ? (
         <InviteCodeDisplay inviteCode={inviteCode} />

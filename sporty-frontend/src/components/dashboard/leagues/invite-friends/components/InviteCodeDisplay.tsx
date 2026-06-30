@@ -8,10 +8,12 @@ type InviteCodeDisplayProps = {
 
 export function InviteCodeDisplay({ inviteCode }: InviteCodeDisplayProps) {
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-      <p className="text-sm text-[#555560]">Invite Code</p>
-      <div className="mt-2 flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3">
-        <span className="font-mono text-lg font-600 tracking-wide text-[#f0f0f0]">
+    <div className="overflow-hidden rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[#111117] animate-fade-soft">
+      <div className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+        <p className="section-label">Invite Code</p>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-4 p-5">
+        <span className="font-bebas text-4xl tracking-[8px] text-[#e8fb25] sm:text-5xl">
           {inviteCode}
         </span>
         <CopyButton value={inviteCode} label="Invite code" />
