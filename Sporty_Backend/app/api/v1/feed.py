@@ -586,10 +586,15 @@ async def demo_setup(payload: DemoSetupPayload, db=Depends(get_db)):
         db.add(window)
         db.flush()
 
-    # League + membership + fantasy team for the demo user.
+    # League + membership + fantasy team for the demo user. The demo league is
+    # per-sport (one season per sport), and League.invite_code is globally
+    # unique — so the code must be sport-scoped, otherwise the second sport's
+    # demo-setup collides on "FEEDERDEMO01" and 500s. "FEEDERDEMO-" (11) + 5 of
+    # the sport slug stays within String(16).
+    demo_invite_code = f"FEEDERDEMO-{sport.name[:5].upper()}"
     league = _get_or_create(
         db, League, season_id=season.id, name="Feeder Demo League",
-        defaults={"owner_id": user.id, "invite_code": "FEEDERDEMO01",
+        defaults={"owner_id": user.id, "invite_code": demo_invite_code,
                   "status": LeagueStatus.ACTIVE, "max_teams": 10,
                   "budget_per_team": 100, "squad_size": 15},
     )

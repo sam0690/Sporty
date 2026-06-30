@@ -78,6 +78,24 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   }, [hydrate, matchId]);
 
   useEffect(() => {
+    // The WebSocket drives live updates; this periodic re-hydrate is a fallback
+    // so the page self-heals if the socket drops or misses a beat. The snapshot
+    // is authoritative (reads live_events + points server-side). Stop once the
+    // match is finished — no more changes to pull.
+    if (status === "finished") {
+      return;
+    }
+    const intervalId = window.setInterval(() => {
+      fetchMatchSnapshot(matchId)
+        .then((snapshot) => hydrate(snapshot))
+        .catch(() => {
+          // Transient failure — the next tick (or the WS) recovers.
+        });
+    }, 15000);
+    return () => window.clearInterval(intervalId);
+  }, [status, matchId, hydrate]);
+
+  useEffect(() => {
     // Ratings only exist after the match finishes.
     if (status !== "finished" || ratings !== null) {
       return;
