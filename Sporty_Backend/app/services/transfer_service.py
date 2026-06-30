@@ -189,10 +189,17 @@ def _transfer_rules(db: Session, redis: Redis, sport_name: str, league: League) 
         except Exception:
             logger.exception("Invalid transfer rules JSON for sport=%s", sport_name)
 
-    # Resolve platform-wide squad size from the league's sports
-    sport_ids = db.query(LeagueSport.sport_id).filter(LeagueSport.league_id == league.id).all()
-    sport_ids_list = [row[0] for row in sport_ids]
-    sport_type = derive_sport_type(sport_ids_list, db)
+    # Resolve platform-wide squad size from the league's sports. derive_sport_type
+    # classifies from sport NAMES (not ids), so join through to Sport.name —
+    # passing raw sport_ids both crashed (extra db arg) and misclassified.
+    sport_names = (
+        db.query(Sport.name)
+        .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+        .filter(LeagueSport.league_id == league.id)
+        .all()
+    )
+    sport_names_list = [row[0] for row in sport_names]
+    sport_type = derive_sport_type(sport_names_list)
     sport_config = SPORT_CONFIGS.get(sport_type, {"squad_size": 15})
     squad_size = int(sport_config["squad_size"])
 
