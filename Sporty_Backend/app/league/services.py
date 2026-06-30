@@ -230,6 +230,38 @@ def _current_transfer_window(db: Session, league: League) -> TransferWindow:
     return window
 
 
+def _find_editable_transfer_window(db: Session, league: League) -> TransferWindow | None:
+    """The window you can currently SET UP — the soonest window whose lineup
+    deadline is still in the future. With start-anchored deadlines the
+    in-progress window is already locked the moment it begins, so editing
+    (transfers + lineups) targets the NEXT not-yet-locked gameweek while the
+    current one plays. Returns None when every window has locked (season over)."""
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    return (
+        db.query(TransferWindow)
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            TransferWindow.lineup_deadline_at > now,
+        )
+        .order_by(TransferWindow.start_at.asc())
+        .first()
+    )
+
+
+def _editable_transfer_window(db: Session, league: League) -> TransferWindow:
+    """Like _find_editable_transfer_window but raises 409 when nothing is open
+    for editing (so transfer/lineup writes fail clearly)."""
+    window = _find_editable_transfer_window(db, league)
+    if not window:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No upcoming gameweek is open to edit — its lineup has locked",
+        )
+    return window
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Section 1 — League lifecycle
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1118,7 +1150,9 @@ def make_transfer(
             detail="Transfers are only allowed when the league is ACTIVE",
         )
 
-    window = _current_transfer_window(db, league)
+    # Edit the next not-yet-locked gameweek (deadlines lock at gameweek start,
+    # so you set up the upcoming window while the current one plays).
+    window = _editable_transfer_window(db, league)
 
     # Enforce transfer deadline and explicit lock flag
     from app.services.transfer_window_service import validate_transfer_window_for_transfer
@@ -1772,9 +1806,11 @@ def generate_transfer_windows(
         start_at = datetime.combine(current_date, datetime.min.time()).replace(tzinfo=timezone.utc)
         end_at = start_at + timedelta(hours=23, minutes=59, seconds=59)
         
-        # Deadlines: transfers close 2 hours before end, lineups 1 hour before end
-        transfer_deadline = end_at - timedelta(hours=2)
-        lineup_deadline = end_at - timedelta(hours=1)
+        # Deadlines anchored to the START of the gameweek: transfers + lineup
+        # lock as the window opens, BEFORE its matches play, so no one can react
+        # to live results. (lineup is +1 min so transfer < lineup stays strict.)
+        transfer_deadline = start_at
+        lineup_deadline = start_at + timedelta(minutes=1)
         
         window = TransferWindow(
             season_id=season.id,
@@ -2170,7 +2206,8 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
     window-scoped and will be empty when no transfer window is active."""
     team = _require_fantasy_team(db, league_id, user_id)
     league = _require_league(db, league_id)
-    window = _find_transfer_window(db, league)
+    # Show the lineup for the gameweek you're setting up (next not-yet-locked).
+    window = _find_editable_transfer_window(db, league)
 
     starting_lineup_entries = (
         db.query(TeamGameweekLineup)
@@ -2239,7 +2276,8 @@ def update_lineup(
     """
     team = _require_fantasy_team(db, league_id, user_id)
     league = _require_league(db, league_id)
-    window = _current_transfer_window(db, league)
+    # Set the lineup for the gameweek you're setting up (next not-yet-locked).
+    window = _editable_transfer_window(db, league)
 
     # Enforce lineup deadline and explicit lock flag
     from app.services.transfer_window_service import validate_transfer_window_for_lineup
@@ -2512,17 +2550,9 @@ def get_league_leaderboard(
     }
 
 
-def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
-    """Public wrapper to fetch the current active transfer window."""
-    league = _require_league(db, league_id)
-    window = _current_transfer_window(db, league)
-
-    # Season context for total windows
-    season = league.season
-    total_windows = len(season.transfer_windows) if season and season.transfer_windows else 0
-
-    # derive status
+def _serialize_window(window: TransferWindow, total_windows: int) -> dict:
     from datetime import timezone, datetime as _dt
+
     now = _dt.now(timezone.utc)
     if now < window.start_at:
         status_str = "UPCOMING"
@@ -2544,6 +2574,27 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
         "lineup_locked": window.lineup_locked,
         "status": status_str,
     }
+
+
+def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
+    """The in-progress window (containing now) — drives the live/standings
+    display and scoring. For the window users EDIT, use the editable one."""
+    league = _require_league(db, league_id)
+    window = _current_transfer_window(db, league)
+    season = league.season
+    total_windows = len(season.transfer_windows) if season and season.transfer_windows else 0
+    return _serialize_window(window, total_windows)
+
+
+def get_editable_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
+    """The gameweek you can currently SET UP (the next not-yet-locked window) —
+    drives the lineup + transfers pages, which edit the upcoming gameweek while
+    the current one plays."""
+    league = _require_league(db, league_id)
+    window = _editable_transfer_window(db, league)
+    season = league.season
+    total_windows = len(season.transfer_windows) if season and season.transfer_windows else 0
+    return _serialize_window(window, total_windows)
 
 
 def get_dashboard_stats(
@@ -2620,36 +2671,4 @@ def get_dashboard_stats(
         "budget": team.current_budget,
         "gameweek_breakdown": gameweek_breakdown,
     }
-
-
-def is_transfer_window_active(db: Session, league_id: uuid.UUID) -> bool:
-    """Return whether transfers can be made right now for the league's season.
-
-    A window merely *containing* `now` is not enough: transfers close at
-    `transfer_deadline_at` (2h before the window ends) and can be force-locked
-    via `transfers_locked`. Mirror exactly what `validate_transfer_window_for_
-    transfer` enforces so the status endpoint can never disagree with the
-    actual transfer gate. Because seeded windows tile the season contiguously,
-    checking only start/end containment would report active for the entire
-    season; the deadline/lock checks are what make this meaningful.
-    """
-    from datetime import datetime, timezone
-
-    league = _require_league(db, league_id)
-    now = datetime.now(timezone.utc)
-
-    window = (
-        db.query(TransferWindow)
-        .filter(
-            TransferWindow.season_id == league.season_id,
-            TransferWindow.start_at <= now,
-            TransferWindow.end_at >= now,
-        )
-        .order_by(TransferWindow.number.desc())
-        .first()
-    )
-    if window is None:
-        return False
-
-    return not window.transfers_locked and now <= window.transfer_deadline_at
 

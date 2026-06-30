@@ -97,18 +97,18 @@ def _require_team_free(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
 
 
 def _active_transfer_window(db: Session, league: League) -> TransferWindow:
+    # The window you're setting up: the next gameweek whose lineup hasn't locked.
     window = (
         db.query(TransferWindow)
         .filter(TransferWindow.season_id == league.season_id)
-        .filter(TransferWindow.start_at <= func.now())
-        .filter(TransferWindow.end_at >= func.now())
-        .order_by(TransferWindow.number.desc())
+        .filter(TransferWindow.lineup_deadline_at > func.now())
+        .order_by(TransferWindow.start_at.asc())
         .first()
     )
     if not window:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="No active transfer window found for this league",
+            detail="No upcoming transfer window is open to edit",
         )
     return window
 

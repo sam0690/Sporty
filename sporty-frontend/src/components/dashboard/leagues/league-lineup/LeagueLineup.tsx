@@ -14,7 +14,7 @@ import { LineupSkeleton } from "@/components/dashboard/leagues/league-lineup/com
 import { SaveLineupButton } from "@/components/dashboard/leagues/league-lineup/components/SaveLineupButton";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { useLeague, useUpdateLineup } from "@/hooks/leagues/useLeagues";
-import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
+import { useSmartEditableWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import {
   useLeagueLineupData,
   type LineupPlayerCardModel,
@@ -162,7 +162,7 @@ export function LeagueLineup() {
     data: activeWindow,
     isLoading: isWindowLoading,
     error: windowError,
-  } = useSmartActiveWindowSync(leagueId);
+  } = useSmartEditableWindowSync(leagueId);
   const {
     players,
     data: lineupData,

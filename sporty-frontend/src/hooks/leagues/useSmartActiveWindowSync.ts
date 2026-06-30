@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useActiveWindow } from "@/hooks/leagues/useLeagues";
+import type { UseQueryResult } from "@tanstack/react-query";
+import {
+  useActiveWindow,
+  useEditableWindow,
+} from "@/hooks/leagues/useLeagues";
+import type { TTransferWindow } from "@/types/league";
 
 const SMART_POLL_LOOKAHEAD_MS = 10 * 60 * 1000;
 const SMART_POLL_INTERVAL_MS = 45 * 1000;
@@ -31,12 +36,14 @@ function getSoonestDeadlineMs(
   return Math.min(...deadlines);
 }
 
-export function useSmartActiveWindowSync(leagueId: string) {
-  const activeWindowQuery = useActiveWindow(leagueId, {
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
-  const { data: activeWindow, isFetching, refetch } = activeWindowQuery;
+// Shared deadline-aware polling: ramps up refetching as a window's soonest
+// deadline approaches, and resyncs on focus/visibility. Works for either the
+// in-progress (active) window or the editable (upcoming) one.
+function useSmartWindowSync(
+  leagueId: string,
+  windowQuery: UseQueryResult<TTransferWindow, Error>,
+) {
+  const { data: activeWindow, isFetching, refetch } = windowQuery;
   const pendingRefetchRef = useRef<Promise<unknown> | null>(null);
 
   useEffect(() => {
@@ -110,5 +117,23 @@ export function useSmartActiveWindowSync(leagueId: string) {
     refetch,
   ]);
 
-  return activeWindowQuery;
+  return windowQuery;
+}
+
+export function useSmartActiveWindowSync(leagueId: string) {
+  const activeWindowQuery = useActiveWindow(leagueId, {
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  return useSmartWindowSync(leagueId, activeWindowQuery);
+}
+
+// Same deadline-aware polling, but tracks the gameweek you're SETTING UP (the
+// next not-yet-locked window) — used by the lineup + transfers pages.
+export function useSmartEditableWindowSync(leagueId: string) {
+  const editableWindowQuery = useEditableWindow(leagueId, {
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+  });
+  return useSmartWindowSync(leagueId, editableWindowQuery);
 }

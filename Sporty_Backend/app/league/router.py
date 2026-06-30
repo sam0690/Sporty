@@ -757,18 +757,6 @@ def generate_windows(
     return {"message": f"Generated {len(windows)} transfer windows", "count": len(windows)}
 
 
-@router.get(
-    "/{league_id}/transfer-window/status",
-    response_model=dict,
-    summary="Get transfer window active status for a league",
-)
-def transfer_window_status(
-    league: League = Depends(require_league_member),
-    db: Session = Depends(get_db),
-):
-    return {"is_active": league_service.is_transfer_window_active(db, league.id)}
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # POST /leagues/{league_id}/transfers — make a transfer
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -883,6 +871,20 @@ def get_active_window(
 ):
     """Return the current active transfer window and its deadline."""
     return league_service.get_active_transfer_window(db, league.id)
+
+
+@router.get(
+    "/{league_id}/editable-window",
+    response_model=TransferWindowResponse,
+    summary="Get the gameweek currently open to edit (lineup + transfers)",
+)
+def get_editable_window(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    """Return the next not-yet-locked gameweek — the one users set up while the
+    current one plays. Drives the lineup and transfers pages."""
+    return league_service.get_editable_transfer_window(db, league.id)
 
 
 @router.get(

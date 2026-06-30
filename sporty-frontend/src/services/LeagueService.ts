@@ -307,6 +307,14 @@ export const LeagueService = {
     ).data;
   },
 
+  async getEditableWindow(leagueId: string): Promise<TTransferWindow> {
+    return (
+      await authApi.get<TTransferWindow>(
+        API_PATHS.LEAGUES.EDITABLE_WINDOW(leagueId),
+      )
+    ).data;
+  },
+
   async getDashboardStats(leagueId: string): Promise<TLeagueDashboardStats> {
     return (
       await authApi.get<TLeagueDashboardStats>(

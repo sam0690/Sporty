@@ -154,17 +154,19 @@ def _ensure_player_allowed_for_league_pool(
 
 
 def _current_window_id(db: Session, league: League) -> uuid.UUID:
+    # Transfers/lineups target the next not-yet-locked gameweek (the one you're
+    # setting up), not the in-progress one — its lineup deadline hasn't passed.
     row = (
         db.query(TransferWindow.id)
         .filter(
             TransferWindow.season_id == league.season_id,
-            TransferWindow.start_at <= func.now(),
-            TransferWindow.end_at >= func.now(),
+            TransferWindow.lineup_deadline_at > func.now(),
         )
+        .order_by(TransferWindow.start_at.asc())
         .first()
     )
     if not row:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No active transfer window")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="No upcoming transfer window is open to edit")
     return row[0]
 
 

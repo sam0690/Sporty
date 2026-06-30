@@ -534,3 +534,22 @@ export function useActiveWindow(
     },
   );
 }
+
+// The gameweek the user can currently SET UP (next not-yet-locked window).
+// Lineup + transfers edit this while the in-progress window plays.
+export function useEditableWindow(
+  leagueId: string,
+  options?: Omit<
+    UseQueryOptions<TTransferWindow, Error>,
+    "queryKey" | "queryFn"
+  >,
+) {
+  return useApiQuery<TTransferWindow>(
+    ["leagues", leagueId, "editable-window"],
+    () => LeagueService.getEditableWindow(leagueId),
+    {
+      enabled: !!leagueId,
+      ...options,
+    },
+  );
+}

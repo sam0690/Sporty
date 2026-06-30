@@ -75,6 +75,7 @@ export const API_PATHS = {
       return `/leagues/${id}/leaderboard${query ? `?${query}` : ""}`;
     },
     ACTIVE_WINDOW: (id: string) => `/leagues/${id}/active-window`,
+    EDITABLE_WINDOW: (id: string) => `/leagues/${id}/editable-window`,
     DASHBOARD_STATS: (id: string) => `/leagues/${id}/dashboard/stats`,
   },
 

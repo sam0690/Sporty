@@ -12,7 +12,7 @@ import {
   useStageOut,
   useUserTransfers,
 } from "@/hooks/leagues/useLeagues";
-import { useSmartActiveWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
+import { useSmartEditableWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { toastifier } from "@/lib/toastifier";
@@ -40,7 +40,7 @@ export function useTransfersDashboard() {
     isLoading: userTransfersLoading,
     error: userTransfersError,
   } = useUserTransfers();
-  const activeWindowQuery = useSmartActiveWindowSync(leagueId);
+  const activeWindowQuery = useSmartEditableWindowSync(leagueId);
   const activeWindow = activeWindowQuery.data;
   const windowLoading = activeWindowQuery.isLoading;
   const [playersPage, setPlayersPage] = useState(1);

@@ -11,9 +11,10 @@ Behavior:
 Notes:
 - Season.start_date/end_date are DATEs.
 - TransferWindow start/end are timezone-aware UTC datetimes.
-- Deadlines follow the existing convention used in league services:
-    transfer_deadline_at = end_at - 2h
-    lineup_deadline_at   = end_at - 1h
+- Deadlines lock at the START of the gameweek (before its matches play),
+  matching league services:
+    transfer_deadline_at = start_at
+    lineup_deadline_at   = start_at + 1min
 
 Requires:
 - DATABASE_URL in env or .env
@@ -140,9 +141,11 @@ def seed_season_and_windows(
                 start_at = _day_start_utc(current)
                 end_at = start_at + timedelta(days=window_days) - timedelta(seconds=1)
 
-                # Keep deadlines inside the window
-                transfer_deadline = end_at - timedelta(hours=2)
-                lineup_deadline = end_at - timedelta(hours=1)
+                # Lock at the START of the gameweek: transfers + lineup close as
+                # the window opens, before its matches play (lineup +1 min keeps
+                # transfer_deadline < lineup_deadline strict).
+                transfer_deadline = start_at
+                lineup_deadline = start_at + timedelta(minutes=1)
 
                 stmt = (
                     insert(tw_table)

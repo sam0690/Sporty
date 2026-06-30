@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
-import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
@@ -17,10 +16,10 @@ import { YourScoreCard } from "@/components/dashboard/leagues/league-home/compon
 import { TransferFields } from "@/components/dashboard/leagues/league-home/components/TransferFields";
 import { GameweekBreakdown } from "@/components/dashboard/main-dashboard/components/GameweekBreakdown";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
-import { fetchTransferWindowStatus } from "@/lib/api/notifications";
 
 import {
   useActiveWindow,
+  useEditableWindow,
   useLeaderboard,
   useLeague,
   useLeaveLeague,
@@ -43,12 +42,10 @@ export function LeagueHome() {
   } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: windowLoading } =
     useActiveWindow(leagueId);
-  const { data: transferWindowStatus, isLoading: transferWindowLoading } =
-    useApiQuery(
-      ["leagues", leagueId, "transfer-window", "status"],
-      () => fetchTransferWindowStatus(leagueId),
-      { enabled: !!leagueId },
-    );
+  // Transfers/lineups edit the next not-yet-locked gameweek; the quick-transfer
+  // widget is open while that window's transfer deadline hasn't passed.
+  const { data: editableWindow, isLoading: transferWindowLoading } =
+    useEditableWindow(leagueId);
   const leaveLeague = useLeaveLeague();
   const { username } = useMe();
 
@@ -103,7 +100,11 @@ export function LeagueHome() {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
 
-  const isTransferWindowActive = transferWindowStatus?.is_active ?? false;
+  const isTransferWindowActive = useMemo(() => {
+    if (!editableWindow?.transfer_deadline_at) return false;
+    if (editableWindow.transfers_locked) return false;
+    return Date.now() <= new Date(editableWindow.transfer_deadline_at).getTime();
+  }, [editableWindow]);
 
   const isCommissioner = league?.owner?.username === username;
   const { isDraftMode } = useLeagueCompetitionMode(league);
@@ -166,17 +167,12 @@ export function LeagueHome() {
         isCommissioner={isCommissioner}
       />
 
-      {transferWindowLoading ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 text-sm text-[#555560]">
-          Checking transfer window status...
-        </div>
-      ) : isTransferWindowActive ? (
-        <TransferFields leagueId={leagueId} />
-      ) : (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 text-sm text-[#555560]">
-          No transfer window is currently active for this league.
-        </div>
-      )}
+      <TransferFields
+        leagueId={leagueId}
+        isOpen={isTransferWindowActive}
+        isLoading={transferWindowLoading}
+        window={editableWindow}
+      />
 
       <div className="flex justify-end">
         <button
