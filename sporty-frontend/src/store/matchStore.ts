@@ -10,21 +10,26 @@ import type {
   ScoreUpdate,
 } from "@/types/events";
 
+export type SocketStatus = "connecting" | "live" | "reconnecting";
+
 type MatchStoreState = {
   matchId: string | null;
   homeTeam: string | null;
   awayTeam: string | null;
   score: Score;
+  minute: number | null;
   players: Record<string, PlayerInfo>;
   events: MatchEvent[];
   playerPoints: Record<string, number>;
   lineup: Record<string, unknown>;
   status: string;
+  socketStatus: SocketStatus;
   lastUpdatedTs: number | null;
   hydrate: (snapshot: MatchSnapshot) => void;
   applyScoreUpdate: (update: ScoreUpdate) => void;
   applyPointsDelta: (delta: FantasyPointsDelta) => void;
   applyLineupChange: (change: LineupChange) => void;
+  setSocketStatus: (status: SocketStatus) => void;
 };
 
 // Merge live SCORE_UPDATE events into the existing timeline, normalizing the
@@ -57,11 +62,13 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   homeTeam: null,
   awayTeam: null,
   score: { home: 0, away: 0 },
+  minute: null,
   players: {},
   events: [],
   playerPoints: {},
   lineup: {},
   status: "scheduled",
+  socketStatus: "connecting",
   lastUpdatedTs: null,
 
   hydrate: (snapshot) =>
@@ -82,9 +89,12 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
     set((state) => ({
       score: { ...state.score, home: update.home, away: update.away },
       status: update.status ?? state.status,
+      minute: update.minute ?? state.minute,
       events: mergeEvents(state.events, update),
       lastUpdatedTs: Date.now(),
     })),
+
+  setSocketStatus: (socketStatus) => set({ socketStatus }),
 
   applyPointsDelta: (delta) =>
     set((state) => ({

@@ -18,6 +18,7 @@ export function useMatchSocket(matchId: string) {
   const applyScoreUpdate = useMatchStore((s) => s.applyScoreUpdate);
   const applyPointsDelta = useMatchStore((s) => s.applyPointsDelta);
   const applyLineupChange = useMatchStore((s) => s.applyLineupChange);
+  const setSocketStatus = useMatchStore((s) => s.setSocketStatus);
 
   useEffect(() => {
     let closedByUser = false;
@@ -25,6 +26,8 @@ export function useMatchSocket(matchId: string) {
     const connect = () => {
       const socket = new WebSocket(buildMatchSocketUrl(matchId));
       wsRef.current = socket;
+
+      socket.onopen = () => setSocketStatus("live");
 
       socket.onmessage = (event) => {
         try {
@@ -51,10 +54,12 @@ export function useMatchSocket(matchId: string) {
         if (closedByUser) {
           return;
         }
+        setSocketStatus("reconnecting");
         reconnectTimer.current = window.setTimeout(connect, 2000);
       };
     };
 
+    setSocketStatus("connecting");
     connect();
 
     return () => {
@@ -65,5 +70,11 @@ export function useMatchSocket(matchId: string) {
       wsRef.current?.close();
       wsRef.current = null;
     };
-  }, [matchId, applyLineupChange, applyPointsDelta, applyScoreUpdate]);
+  }, [
+    matchId,
+    applyLineupChange,
+    applyPointsDelta,
+    applyScoreUpdate,
+    setSocketStatus,
+  ]);
 }

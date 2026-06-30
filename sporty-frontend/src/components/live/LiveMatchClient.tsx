@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { EventFeed } from "@/components/live/EventFeed";
-import { PointsCard } from "@/components/live/PointsCard";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
 import { ScoreTicker } from "@/components/live/ScoreTicker";
@@ -31,8 +30,8 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
 
   const hydrate = useMatchStore((s) => s.hydrate);
   const status = useMatchStore((s) => s.status);
-  const homeTeam = useMatchStore((s) => s.homeTeam);
-  const awayTeam = useMatchStore((s) => s.awayTeam);
+  const lineup = useMatchStore((s) => s.lineup);
+  const hasLineupChanges = Object.keys(lineup).length > 0;
 
   useEffect(() => {
     let mounted = true;
@@ -117,33 +116,59 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
 
   useMatchSocket(matchId);
 
+  const phase =
+    status === "finished" || status === "ft" || status === "completed"
+      ? "post"
+      : status === "live" || status === "in_progress" || status === "playing"
+        ? "live"
+        : "pre";
+
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-6 border-b border-[rgba(255,255,255,0.08)] pb-6">
-        <span className="section-label">Match Centre</span>
-        <h1 className="mt-2 font-bebas text-4xl tracking-[3px] text-[#f0f0f0] sm:text-5xl">
-          {homeTeam && awayTeam ? `${homeTeam} vs ${awayTeam}` : "Live Match"}
-        </h1>
-        {loading && (
-          <p className="mt-2 text-sm text-[#555560]">Loading live state…</p>
-        )}
-        {error && <p className="mt-2 text-sm text-[#ff3b5c]">{error}</p>}
-      </header>
+      <ScoreTicker loading={loading} />
 
-      <ScoreTicker />
+      {error && (
+        <p className="mt-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
+          {error}
+        </p>
+      )}
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
-        <div className="space-y-5">
-          <EventFeed />
-          <LineupCard />
-        </div>
-        <div className="space-y-5">
+      {/* Each phase emphasises different content:
+          pre  → the prediction (who'll win) leads; events wait.
+          live → events are the heartbeat (primary), board + odds in the rail.
+          post → final ratings/MOTM lead; events become a recap. */}
+      {phase === "pre" && (
+        <div className="mt-5 space-y-5">
           <PredictionCard prediction={prediction} />
-          <PointsCard />
-          <LiveLeaderboard />
-          <RatingsCard ratings={ratings} />
+          <EventFeed />
         </div>
-      </div>
+      )}
+
+      {phase === "live" && (
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+          <div className="space-y-5">
+            <EventFeed />
+            {hasLineupChanges && <LineupCard />}
+          </div>
+          <div className="space-y-5">
+            <LiveLeaderboard />
+            <PredictionCard prediction={prediction} />
+          </div>
+        </div>
+      )}
+
+      {phase === "post" && (
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+          <div className="space-y-5">
+            <RatingsCard ratings={ratings} />
+            <EventFeed />
+          </div>
+          <div className="space-y-5">
+            <LiveLeaderboard />
+            <PredictionCard prediction={prediction} />
+          </div>
+        </div>
+      )}
 
       <ToastAlert />
     </main>
