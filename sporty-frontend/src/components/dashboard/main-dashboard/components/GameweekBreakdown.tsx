@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import type { TGameweekPoints } from "@/types/league";
 
 type GameweekBreakdownProps = {
@@ -13,80 +14,99 @@ export function GameweekBreakdown({
   breakdown,
   isLoading,
 }: GameweekBreakdownProps) {
-  const { rows, maxPoints, total, best } = useMemo(() => {
+  const { rows, maxPoints, total, best, average } = useMemo(() => {
     const sorted = [...breakdown].sort((a, b) => a.gameweek - b.gameweek);
     const max = sorted.reduce((m, r) => Math.max(m, Number(r.points)), 0);
     const sum = sorted.reduce((s, r) => s + Number(r.points), 0);
     const bestGw = sorted.reduce<TGameweekPoints | null>(
-      (acc, r) => (acc === null || Number(r.points) > Number(acc.points) ? r : acc),
+      (acc, r) =>
+        acc === null || Number(r.points) > Number(acc.points) ? r : acc,
       null,
     );
-    return { rows: sorted, maxPoints: max, total: sum, best: bestGw };
+    const avg = sorted.length ? sum / sorted.length : 0;
+    return { rows: sorted, maxPoints: max, total: sum, best: bestGw, average: avg };
   }, [breakdown]);
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
-      <div className="flex items-end justify-between">
-        <div>
-          <p className="section-label">Gameweek Points</p>
-          <p className="mt-1 text-sm text-[#555560]">
-            Points your team scored each gameweek
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="font-bebas text-3xl leading-none tracking-[2px] text-[#e8fb25]">
-            {Math.round(total)}
-          </p>
-          <p className="section-label mt-1">Total</p>
-        </div>
-      </div>
+    <Card>
+      <CardHeader className="flex items-center justify-between gap-4">
+        <CardTitle>Gameweek Points</CardTitle>
+        {rows.length > 0 && (
+          <div className="flex items-center gap-5">
+            <div className="text-right">
+              <p className="font-bebas text-xl leading-none tracking-[1px] text-[#9a9aa5]">
+                {Math.round(average)}
+              </p>
+              <p className="section-label mt-1">Avg</p>
+            </div>
+            <div className="text-right">
+              <p className="font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
+                {Math.round(total)}
+              </p>
+              <p className="section-label mt-1">Total</p>
+            </div>
+          </div>
+        )}
+      </CardHeader>
 
-      {isLoading ? (
-        <p className="mt-6 text-sm text-[#555560]">Loading gameweek points…</p>
-      ) : rows.length === 0 ? (
-        <p className="mt-6 text-sm text-[#555560]">
-          No gameweeks scored yet. Points appear here once a gameweek finishes.
-        </p>
-      ) : (
-        <div className="mt-6 flex items-end gap-2 overflow-x-auto pb-1">
-          {rows.map((row) => {
-            const value = Number(row.points);
-            const heightPct = maxPoints > 0 ? (value / maxPoints) * 100 : 0;
-            const isBest = best != null && row.gameweek === best.gameweek;
-            return (
+      <CardContent className="pt-4">
+        {isLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }, (_, index) => (
               <div
-                key={row.transfer_window_id}
-                className="flex min-w-[2.25rem] flex-1 flex-col items-center gap-2"
-                title={`Gameweek ${row.gameweek}: ${value} pts${
-                  row.rank ? ` · rank #${row.rank}` : ""
-                }`}
-              >
-                <span
-                  className={`font-bebas text-sm leading-none tracking-[1px] ${
-                    isBest ? "text-[#e8fb25]" : "text-[#9a9aa5]"
-                  }`}
+                key={index}
+                className="h-10 animate-pulse rounded-[3px] bg-[#1d1d26]"
+              />
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+            No gameweeks scored yet. Points appear here once a gameweek finishes.
+          </div>
+        ) : (
+          <ul className="space-y-1.5">
+            {rows.map((row) => {
+              const value = Number(row.points);
+              const widthPct = maxPoints > 0 ? (value / maxPoints) * 100 : 0;
+              const isBest =
+                best != null && rows.length > 1 && row.gameweek === best.gameweek;
+              return (
+                <li
+                  key={row.transfer_window_id}
+                  className="flex items-center gap-3"
                 >
-                  {Math.round(value)}
-                </span>
-                <div className="flex h-28 w-full items-end">
-                  <div
-                    className="w-full rounded-t-[2px] transition-[height] duration-300"
-                    style={{
-                      height: `${Math.max(heightPct, 4)}%`,
-                      background: isBest
-                        ? "#e8fb25"
-                        : "rgba(232,251,37,0.32)",
-                    }}
-                  />
-                </div>
-                <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
-                  GW{row.gameweek}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
+                  <span className="w-12 shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+                    GW{row.gameweek}
+                  </span>
+
+                  <div className="relative h-7 flex-1 overflow-hidden rounded-[3px] bg-[#1d1d26]">
+                    <div
+                      className="h-full rounded-[3px] transition-[width] duration-300"
+                      style={{
+                        width: `${Math.max(widthPct, 3)}%`,
+                        background: isBest ? "#e8fb25" : "rgba(232,251,37,0.28)",
+                      }}
+                    />
+                    {row.rank != null && (
+                      <span className="absolute inset-y-0 right-2 flex items-center section-label">
+                        Rank #{row.rank}
+                      </span>
+                    )}
+                  </div>
+
+                  <span
+                    className={`w-12 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] ${
+                      isBest ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                    }`}
+                  >
+                    {Math.round(value)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }
