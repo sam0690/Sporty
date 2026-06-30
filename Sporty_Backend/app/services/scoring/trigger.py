@@ -46,8 +46,25 @@ def enqueue_scoring_for_finished_match(
         if not acquired:
             continue
 
-        celery_app.send_task("score.transfer_window", args=[str(window_id)])
-        enqueued += 1
+        try:
+            # ignore_result=True: this is fire-and-forget, so skip Celery's
+            # result-backend round-trip (on_task_call → result_consumer), which
+            # otherwise crashes the whole request when the result Redis is
+            # unreachable ("Retry limit exceeded ... result store backend").
+            celery_app.send_task(
+                "score.transfer_window", args=[str(window_id)], ignore_result=True
+            )
+            enqueued += 1
+        except Exception:
+            # A broker/result-backend hiccup must not abort the finish handler;
+            # the daily ranking cron re-scores the window as a fallback.
+            logger.exception("Failed to enqueue scoring for window %s", window_id)
+            # Release the throttle so a later attempt can retry sooner.
+            try:
+                redis.delete(throttle_key)
+            except Exception:
+                pass
+            continue
 
         if league_id is not None:
             cache_delete(f"leaderboard:{league_id}:{window_id}")

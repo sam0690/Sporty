@@ -21,6 +21,7 @@ type MatchStoreState = {
   awayTeam: string | null;
   score: Score;
   minute: number | null;
+  minuteStartedTs: number | null;
   players: Record<string, PlayerInfo>;
   events: MatchEvent[];
   playerPoints: Record<string, number>;
@@ -67,6 +68,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   awayTeam: null,
   score: { home: 0, away: 0 },
   minute: null,
+  minuteStartedTs: null,
   players: {},
   events: [],
   playerPoints: {},
@@ -88,17 +90,24 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
       startingLineups: snapshot.lineups ?? EMPTY_LINEUPS,
       lineup: {},
       status: snapshot.status,
+      minuteStartedTs: null,
       lastUpdatedTs: Date.now(),
     }),
 
   applyScoreUpdate: (update) =>
-    set((state) => ({
-      score: { ...state.score, home: update.home, away: update.away },
-      status: update.status ?? state.status,
-      minute: update.minute ?? state.minute,
-      events: mergeEvents(state.events, update),
-      lastUpdatedTs: Date.now(),
-    })),
+    set((state) => {
+      const minuteChanged =
+        update.minute != null && update.minute !== state.minute;
+      return {
+        score: { ...state.score, home: update.home, away: update.away },
+        status: update.status ?? state.status,
+        minute: update.minute ?? state.minute,
+        // Stamp when the minute advanced so the hero can tick MM:SS within it.
+        minuteStartedTs: minuteChanged ? Date.now() : state.minuteStartedTs,
+        events: mergeEvents(state.events, update),
+        lastUpdatedTs: Date.now(),
+      };
+    }),
 
   setSocketStatus: (socketStatus) => set({ socketStatus }),
 

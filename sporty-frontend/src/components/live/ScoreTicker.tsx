@@ -41,6 +41,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
   const minute = useMatchStore((s) => s.minute);
+  const minuteStartedTs = useMatchStore((s) => s.minuteStartedTs);
   const socketStatus = useMatchStore((s) => s.socketStatus);
   const lastUpdatedTs = useMatchStore((s) => s.lastUpdatedTs);
 
@@ -56,6 +57,17 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
   const agoSec = lastUpdatedTs
     ? Math.max(0, Math.round((now - lastUpdatedTs) / 1000))
     : null;
+
+  // Match clock as MM:SS — the minute is server-authoritative; the seconds tick
+  // up in real time within the current minute (capped at 59 so it never shows a
+  // minute the server hasn't reported).
+  let matchClock: string | null = null;
+  if (minute != null) {
+    const secs = minuteStartedTs
+      ? Math.min(59, Math.max(0, Math.floor((now - minuteStartedTs) / 1000)))
+      : 0;
+    matchClock = `${minute}:${String(secs).padStart(2, "0")}`;
+  }
 
   if (loading) {
     return (
@@ -138,10 +150,10 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               <span className="px-2 text-[#33333a] sm:px-4">-</span>
               <span style={{ color: away.color }}>{score.away}</span>
             </div>
-            {phase === "live" && minute != null ? (
-              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[rgba(255,59,48,0.12)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
+            {phase === "live" && matchClock ? (
+              <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[rgba(255,59,48,0.12)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] tabular-nums text-[#ff3b30]">
                 <span className="size-1 rounded-full bg-[#ff3b30] animate-live-pulse" />
-                {minute}&apos;
+                {matchClock}
               </p>
             ) : (
               <p className="section-label mt-3">{label}</p>

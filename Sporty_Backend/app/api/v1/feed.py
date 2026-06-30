@@ -464,9 +464,19 @@ async def ingest_match_result(
     if finished_now:
         stats_summary = persist_match_stats(db, match=match, live_key=live_key, sport=payload.sport)
         db.commit()
-        scoring_enqueued = _enqueue_scoring(
-            db, match_date=match.match_date, sport_id=match.sport_id
-        )
+        # Best-effort: stats are already booked and committed above, so a
+        # Celery/broker failure here must NOT 500 the ingest or break the live
+        # feed. The daily ranking cron re-scores the window as a fallback.
+        try:
+            scoring_enqueued = _enqueue_scoring(
+                db, match_date=match.match_date, sport_id=match.sport_id
+            )
+        except Exception:
+            logger.exception(
+                "Feeder finish %s: stats booked but scoring enqueue failed (cron will re-score)",
+                live_key,
+            )
+            scoring_enqueued = 0
         logger.info(
             "Feeder finished match %s: booked stats for %s player(s), enqueued scoring for %s window(s)",
             live_key,
