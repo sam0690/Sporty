@@ -80,15 +80,20 @@ logger = logging.getLogger(__name__)
 )
 def get_league_leaderboard(
     window_id: UUID | None = None,
+    gameweek: int | None = None,
     historical: bool = True,
     league: League = Depends(require_league_member),
     db: Session = Depends(get_db),
 ):
     """Return the leaderboard for a league.
-    
+
     historical=True preserves departed users in historical/final standings.
+    Pass gameweek=N for a specific gameweek's standings (resolved to the
+    season's window server-side); omit both for the season total standings.
     """
-    return league_service.get_league_leaderboard(db, league.id, window_id, historical)
+    return league_service.get_league_leaderboard(
+        db, league.id, window_id, historical, gameweek
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

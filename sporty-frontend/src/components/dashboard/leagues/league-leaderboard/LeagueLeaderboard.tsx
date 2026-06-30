@@ -5,14 +5,13 @@ import { useParams } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { EmptyState } from "@/components/dashboard/leagues/league-leaderboard/components/EmptyState";
-import { LeaderboardFilters } from "@/components/dashboard/leagues/league-leaderboard/components/LeaderboardFilters";
 import {
   LeaderboardHeader,
   type Sport,
 } from "@/components/dashboard/leagues/league-leaderboard/components/LeaderboardHeader";
 import {
   StandingsTable,
-  type Standing,
+  type StandingRow,
 } from "@/components/dashboard/leagues/league-leaderboard/components/StandingsTable";
 import { UserRankCard } from "@/components/dashboard/leagues/league-leaderboard/components/UserRankCard";
 import {
@@ -38,46 +37,46 @@ export function LeagueLeaderboard() {
   const { username } = useMe();
 
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek>("overall");
-  const [selectedGroup, setSelectedGroup] = useState("Overall");
   const [historical, setHistorical] = useState(true);
 
+  // "overall" → season totals (no gameweek param); a number → that gameweek's
+  // standings (resolved to the season window server-side via the gameweek arg).
+  const selectedGameweek =
+    selectedWeek === "overall" ? undefined : selectedWeek;
   const { data: leaderboard, isLoading: isLeaderboardLoading } = useLeaderboard(
     leagueId,
-    selectedWeek === "overall" ? undefined : selectedWeek.toString(),
+    undefined,
     historical,
+    selectedGameweek,
   );
 
   const isCommissioner = league?.owner?.username === username;
 
-  const standings = useMemo<Standing[]>(() => {
+  const standings = useMemo<StandingRow[]>(() => {
     if (!leaderboard) return [];
-    return leaderboard.entries.map((entry) => ({
-      rank: entry.rank ?? 0,
-      teamId: entry.team_id,
-      teamName: entry.team_name,
-      manager: entry.owner_name,
-      totalPoints: Number(entry.points),
-      weeklyAvg: 0,
-      wins: 0,
-      losses: 0,
-      streak: "-",
-      group: "Overall",
-      weeklyScores: {},
-    }));
+    // Backend rank can be null until the ranking job runs (e.g. an in-progress
+    // gameweek); fall back to points-sorted position so the table is sensible.
+    return [...leaderboard.entries]
+      .sort((a, b) => Number(b.points) - Number(a.points))
+      .map((entry, index) => ({
+        rank: entry.rank ?? index + 1,
+        teamId: entry.team_id,
+        teamName: entry.team_name,
+        manager: entry.owner_name,
+        points: Number(entry.points),
+      }));
   }, [leaderboard]);
 
   const userTeam = useMemo(() => {
     if (!myTeam || !standings.length) return null;
     const teamInStandings = standings.find((s) => s.teamId === myTeam.id);
     if (!teamInStandings) return null;
-    const topPoints = standings[0].totalPoints;
+    const topPoints = standings[0].points;
     return {
       rank: teamInStandings.rank,
       teamName: teamInStandings.teamName,
-      totalPoints: teamInStandings.totalPoints,
-      wins: 0,
-      losses: 0,
-      pointsBehind: topPoints - teamInStandings.totalPoints,
+      totalPoints: teamInStandings.points,
+      pointsBehind: Math.round(topPoints - teamInStandings.points),
     };
   }, [myTeam, standings]);
 
@@ -129,12 +128,6 @@ export function LeagueLeaderboard() {
             selectedWeek={selectedWeek}
             onWeekChange={setSelectedWeek}
           />
-
-          <LeaderboardFilters
-            selectedGroup={selectedGroup}
-            groups={["Overall"]}
-            onGroupChange={setSelectedGroup}
-          />
         </div>
 
         <div className="inline-flex rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-0.5">
@@ -163,20 +156,25 @@ export function LeagueLeaderboard() {
           rank={userTeam.rank}
           teamName={userTeam.teamName}
           totalPoints={userTeam.totalPoints}
-          wins={userTeam.wins}
-          losses={userTeam.losses}
           pointsBehind={userTeam.pointsBehind}
         />
       )}
 
       {standings.length === 0 ? (
-        <EmptyState message="No standings available yet." />
+        <EmptyState
+          message={
+            selectedWeek === "overall"
+              ? "No standings available yet."
+              : `No standings for gameweek ${selectedWeek} yet.`
+          }
+        />
       ) : (
         <StandingsTable
           standings={standings}
           userTeamId={myTeam?.id || ""}
-          selectedWeek={selectedWeek}
-          weeklyStandings={[]}
+          pointsLabel={
+            selectedWeek === "overall" ? "Points" : `GW${selectedWeek} Points`
+          }
         />
       )}
     </section>

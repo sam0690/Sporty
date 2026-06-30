@@ -4,8 +4,6 @@ type UserRankCardProps = {
   rank: number;
   teamName: string;
   totalPoints: number;
-  wins: number;
-  losses: number;
   pointsBehind: number;
 };
 
@@ -13,8 +11,6 @@ export function UserRankCard({
   rank,
   teamName,
   totalPoints,
-  wins,
-  losses,
   pointsBehind,
 }: UserRankCardProps) {
   return (
@@ -34,9 +30,6 @@ export function UserRankCard({
           {totalPoints}
         </p>
         <p className="section-label">Total Points</p>
-        <p className="mt-2 text-sm text-[#555560]">
-          Record: {wins}-{losses}
-        </p>
         {rank > 1 ? (
           <p className="mt-1 font-barlow-condensed text-xs font-600 uppercase tracking-[1px] text-[#555560]">
             {pointsBehind} pts behind leader

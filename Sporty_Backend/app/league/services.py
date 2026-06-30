@@ -2352,15 +2352,40 @@ def get_league_leaderboard(
     league_id: uuid.UUID,
     window_id: uuid.UUID | None = None,
     historical: bool = True,
+    gameweek: int | None = None,
 ) -> dict:
     """Return the leaderboard for a league.
-    
+
     historical=True includes both ACTIVE and LEFT memberships so final and
     historical standings preserve departed users.
     historical=False returns the live leaderboard for active members only.
+
+    A specific gameweek can be requested either by window_id (UUID) directly or
+    by gameweek number (resolved to the league season's window here, so callers
+    don't need to know window UUIDs). window_id takes precedence if both given.
     """
     from app.league.models import FantasyTeam, TeamWeeklyScore
     from app.auth.models import User
+
+    # Resolve a gameweek number to its window for this league's season.
+    if window_id is None and gameweek is not None:
+        league = _require_league(db, league_id)
+        resolved = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.number == gameweek,
+            )
+            .first()
+            if league.season_id
+            else None
+        )
+        if not resolved:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Gameweek {gameweek} not found for this league",
+            )
+        window_id = resolved.id
 
     eligibility_window = aliased(TransferWindow)
     

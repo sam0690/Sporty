@@ -503,11 +503,17 @@ export function useLeaderboard(
   leagueId: string,
   windowId?: string,
   historical = true,
+  gameweek?: number,
 ) {
   return useApiQuery<TLeaderboardResponse>(
-    ["leagues", leagueId, "leaderboard", windowId, historical],
+    ["leagues", leagueId, "leaderboard", windowId, historical, gameweek],
     () =>
-      LeagueService.getLeaderboard(leagueId, windowId ?? undefined, historical),
+      LeagueService.getLeaderboard(
+        leagueId,
+        windowId ?? undefined,
+        historical,
+        gameweek,
+      ),
     { enabled: !!leagueId },
   );
 }

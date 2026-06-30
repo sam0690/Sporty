@@ -291,9 +291,10 @@ export const LeagueService = {
     leagueId: string,
     windowId?: string,
     historical = true,
+    gameweek?: number,
   ): Promise<TLeaderboardResponse> {
     const res = await authApi.get<TLeaderboardResponse>(
-      API_PATHS.LEAGUES.LEADERBOARD(leagueId, windowId, historical),
+      API_PATHS.LEAGUES.LEADERBOARD(leagueId, windowId, historical, gameweek),
     );
     return res.data;
   },
