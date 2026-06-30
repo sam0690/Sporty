@@ -86,76 +86,102 @@ export function TransferConfirmation({
   const confirmDisabled = isLoading || !isValidBatch || !transfersOpen;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4  animate-in fade-in">
-      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8   animate-in zoom-in-95 duration-200">
-        <h3 className="text-2xl font-700 text-[#f0f0f0]">
-          Confirm Staged Transfers
-        </h3>
-
-        <p className="mt-4 text-sm text-[#555560]">
-          Out: {stagedOutPlayers.length} | In: {stagedInPlayers.length}
-        </p>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="rounded-[3px] border border-red-500/20 bg-red-500/10 p-4">
-            <p className="text-[10px] font-700 uppercase tracking-wider text-red-300">
-              Out
-            </p>
-            <div className="mt-2 space-y-1">
-              {stagedOutPlayers.map((player) => (
-                <p key={player.id} className="truncate text-xs text-[#f0f0f0]">
-                  {player.name}
-                </p>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-[3px] border border-emerald-400/20 bg-emerald-400/10 p-4">
-            <p className="text-[10px] font-700 uppercase tracking-wider text-emerald-300">
-              In
-            </p>
-            <div className="mt-2 space-y-1">
-              {stagedInPlayers.map((player) => (
-                <p key={player.id} className="truncate text-xs text-[#f0f0f0]">
-                  {player.name}
-                </p>
-              ))}
-            </div>
-          </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+      <div className="w-full max-w-md overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-6 py-4">
+          <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+            Confirm Transfers
+          </h3>
+          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+            {stagedOutPlayers.length} out · {stagedInPlayers.length} in
+          </span>
         </div>
 
-        <p className="mt-6 text-center text-sm leading-relaxed text-[#555560]">
-          Confirming will apply all staged transfers at once.
-        </p>
+        <div className="p-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-4">
+              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
+                ▼ Out
+              </p>
+              <div className="mt-2 space-y-1">
+                {stagedOutPlayers.length === 0 ? (
+                  <p className="text-xs text-[#555560]">—</p>
+                ) : (
+                  stagedOutPlayers.map((player) => (
+                    <p
+                      key={player.id}
+                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
+                    >
+                      {player.name}
+                    </p>
+                  ))
+                )}
+              </div>
+            </div>
 
-        <div className="mt-8 flex flex-col gap-3">
+            <div className="rounded-[3px] border border-[rgba(76,175,80,0.2)] bg-[rgba(76,175,80,0.06)] p-4">
+              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
+                ▲ In
+              </p>
+              <div className="mt-2 space-y-1">
+                {stagedInPlayers.length === 0 ? (
+                  <p className="text-xs text-[#555560]">—</p>
+                ) : (
+                  stagedInPlayers.map((player) => (
+                    <p
+                      key={player.id}
+                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
+                    >
+                      {player.name}
+                    </p>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {transfersOpen && formattedCountdown ? (
+            <p className="mt-5 text-center text-xs text-[#555560]">
+              Window closes in{" "}
+              <span className="font-bebas text-base tracking-[1px] text-[#e8fb25]">
+                {formattedCountdown}
+              </span>
+            </p>
+          ) : (
+            <p className="mt-5 text-center text-sm text-[#555560]">
+              Confirming applies all staged transfers at once.
+            </p>
+          )}
+
           {!transfersOpen ? (
-            <div className="rounded-[3px] border border-amber-400/20 bg-amber-400/10 p-3 text-sm text-amber-200">
+            <div className="mt-5 rounded-[3px] border border-[rgba(255,216,107,0.25)] bg-[rgba(255,216,107,0.08)] px-3 py-2.5 text-sm text-[#ffd86b]">
               Transfers are closed for this window.
               {formattedCountdown ? (
-                <span className="ml-2 font-mono">
-                  Closing: {formattedCountdown}
+                <span className="ml-2 font-bebas tracking-[1px]">
+                  {formattedCountdown}
                 </span>
               ) : null}
             </div>
           ) : null}
 
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={confirmDisabled}
-            className="w-full rounded-[3px] bg-linear-to-r [#e8fb25] py-3.5 font-700 text-background  transition-all hover:brightness-110 disabled:opacity-50"
-          >
-            {isLoading ? "Processing..." : "Confirm Transfers"}
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isLoading}
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] py-3 font-600 text-[#555560] transition-colors hover:text-[#f0f0f0]"
-          >
-            Cancel
-          </button>
+          <div className="mt-6 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={confirmDisabled}
+              className="w-full rounded-[3px] bg-[#e8fb25] py-3 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isLoading ? "Processing…" : "Confirm Transfers"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isLoading}
+              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       </div>
     </div>

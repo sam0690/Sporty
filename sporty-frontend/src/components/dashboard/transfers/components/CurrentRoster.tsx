@@ -22,10 +22,10 @@ type CurrentRosterProps = {
   disabled?: boolean;
 };
 
-const sportIcons: Record<Exclude<Sport, "All">, string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
+const sportAccentColor: Record<Exclude<Sport, "All">, string> = {
+  football: "#4caf50",
+  basketball: "#ff6b00",
+  cricket: "#00d4ff",
 };
 
 export function CurrentRoster({
@@ -39,78 +39,78 @@ export function CurrentRoster({
   const progressPercent = Math.min((players.length / maxPlayers) * 100, 100);
 
   return (
-    <aside className="rounded-[1.75rem] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5  lg:sticky lg:top-24">
-      <div className="mb-4 border-b border-[rgba(255,255,255,0.08)] pb-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-md font-600 text-[#f0f0f0]">Your Squad</h2>
-          <span className="text-sm text-[#555560]">
-            ({players.length}/{maxPlayers})
-          </span>
-        </div>
+    <aside className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] lg:sticky lg:top-24">
+      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+        <p className="section-label">Your Squad</p>
+        <span className="font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
+          {players.length}
+          <span className="text-[#555560]">/{maxPlayers}</span>
+        </span>
       </div>
 
-      <div className="max-h-96 space-y-2 overflow-y-auto pr-1">
-        {players.map((player) => {
-          const isSelected = selectedOutId === player.id;
-          return (
-            <div
-              key={player.id}
-              className={`flex items-center justify-between rounded-[3px] border px-3 py-2 transition-all ${
-                isSelected
-                  ? "border-accent-primary/25 bg-[rgba(232,251,37,0.1)] ring-1 ring-accent-primary/20"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
-              }`}
-            >
-              <div className="min-w-0">
-                <p
-                  className={`truncate text-sm ${isSelected ? "text-primary-900" : "text-white"}`}
-                >
-                  {player.name}
-                </p>
-                <div className="mt-1 flex flex-wrap items-center gap-1 text-xs text-[#555560]">
-                  <span>
-                    {player.sport === "All" ? "🏟️" : sportIcons[player.sport]}
-                  </span>
-                  <span>{player.position}</span>
-                  <span className="text-[#555560]">• ${player.price}M</span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                disabled={disabled}
-                onClick={() => onDrop(player.id)}
-                className={`ml-2 transition-colors ${
+      <div className="max-h-96 space-y-2 overflow-y-auto p-4">
+        {players.length === 0 ? (
+          <p className="py-6 text-center text-sm text-[#555560]">
+            No players in your squad.
+          </p>
+        ) : (
+          players.map((player) => {
+            const isSelected = selectedOutId === player.id;
+            const accent =
+              player.sport === "All"
+                ? "#555560"
+                : sportAccentColor[player.sport];
+            return (
+              <div
+                key={player.id}
+                style={{ borderLeft: `3px solid ${accent}` }}
+                className={`flex items-center justify-between gap-2 rounded-[3px] border px-3 py-2 transition-colors ${
                   isSelected
-                    ? "text-[#e8fb25]"
-                    : "text-[#555560] hover:text-danger"
+                    ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)]"
+                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
                 }`}
-                aria-label={`Drop ${player.name}`}
               >
-                {isSelected ? (
-                  <span className="text-[10px] font-700 uppercase">
-                    Active
-                  </span>
-                ) : (
-                  <X className="h-4 w-4" />
-                )}
-              </button>
-            </div>
-          );
-        })}
+                <div className="min-w-0">
+                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                    {player.name}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-[#555560]">
+                    {player.position}
+                    <span className="mx-1 text-[#33333a]">·</span>${player.price}M
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => onDrop(player.id)}
+                  className={`shrink-0 rounded-[3px] border p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                    isSelected
+                      ? "border-[rgba(232,251,37,0.4)] text-[#e8fb25]"
+                      : "border-[rgba(255,255,255,0.08)] text-[#555560] hover:border-[rgba(255,59,48,0.3)] hover:text-[#ff3b30]"
+                  }`}
+                  aria-label={`Stage out ${player.name}`}
+                  title={isSelected ? "Staged out" : "Stage out"}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
 
-      <div className="mt-3 border-t border-accent/20 pt-3 text-sm">
-        <div className="flex items-center justify-between text-secondary">
-          <span>In-bank:</span>
-          <span className="font-medium text-[#e8fb25]">
+      <div className="border-t border-[rgba(255,255,255,0.08)] p-4">
+        <div className="flex items-center justify-between">
+          <span className="section-label">In-Bank</span>
+          <span className="font-bebas text-xl leading-none tracking-[1px] text-[#e8fb25]">
             ${budget.toFixed(1)}M
           </span>
         </div>
 
-        <div className="mt-3 h-2 w-full overflow-hidden rounded-[3px] bg-[#1d1d26]">
+        <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-[#1d1d26]">
           <div
-            className="h-full rounded-[3px] bg-linear-to-r [#e8fb25]"
+            className="h-full rounded-full bg-[#e8fb25]"
             style={{ width: `${progressPercent}%` }}
           />
         </div>

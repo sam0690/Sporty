@@ -15,6 +15,12 @@ const sportIconByName: Record<string, string> = {
   cricket: "🏏",
 };
 
+const sportAccentByName: Record<string, string> = {
+  football: "#4caf50",
+  basketball: "#ff6b00",
+  cricket: "#00d4ff",
+};
+
 function formatMoney(value: number | string | undefined): string {
   const numericValue = Number(value ?? 0);
   if (Number.isNaN(numericValue)) {
@@ -44,16 +50,15 @@ export function UserTransferHistoryCarousel({
   isError,
 }: UserTransferHistoryCarouselProps) {
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6  sm:p-7">
-      <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-lg font-600 text-[#f0f0f0] sm:text-xl">
-          Your Transfer History
-        </h3>
-        <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#f0f0f0]">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-6 py-4">
+        <p className="section-label">Your Transfer History</p>
+        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
           Grouped by league
         </span>
       </div>
 
+      <div className="p-6">
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }, (_, index) => (
@@ -64,11 +69,11 @@ export function UserTransferHistoryCarousel({
           ))}
         </div>
       ) : isError ? (
-        <div className="rounded-[3px] border border-danger/20 bg-danger/10 p-4 text-sm text-red-300">
+        <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#ff8a8a]">
           Could not load your transfer history.
         </div>
       ) : groups.length === 0 ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 text-center text-sm text-[#555560]">
           No transfers yet. Once you confirm moves, they will appear here.
         </div>
       ) : (
@@ -82,10 +87,12 @@ export function UserTransferHistoryCarousel({
             const sportBadges = (group.league.sports ?? []).map(
               (leagueSport) => {
                 const sportName = leagueSport.sport.name;
+                const accent = sportAccentByName[sportName] ?? "#9a9aa5";
                 return (
                   <span
                     key={`${group.league.id}-${sportName}`}
-                    className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2.5 py-1 text-xs text-[#f0f0f0]"
+                    className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px]"
+                    style={{ color: accent, background: `${accent}1f` }}
                   >
                     {sportIconByName[sportName] ?? "🏅"}{" "}
                     {leagueSport.sport.display_name}
@@ -96,12 +103,12 @@ export function UserTransferHistoryCarousel({
 
             return (
               <Carousel.Slide key={group.league.id}>
-                <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 sm:p-5">
+                <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 sm:p-5">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-base font-600 text-[#f0f0f0]">
+                    <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
                       {group.league.name}
                     </p>
-                    <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2.5 py-1 text-xs text-[#f0f0f0]">
+                    <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
                       {group.transfers.length} transfer
                       {group.transfers.length === 1 ? "" : "s"}
                     </span>
@@ -110,65 +117,70 @@ export function UserTransferHistoryCarousel({
                   <div className="mb-4 flex flex-wrap gap-2">{sportBadges}</div>
 
                   <div className="max-h-112 space-y-3 overflow-y-auto pr-1">
-                    {group.transfers.map((transfer) => (
-                      <article
-                        key={transfer.id}
-                        className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4"
-                      >
-                        <p className="text-xs text-[#555560]">
-                          {formatTransferTime(transfer.created_at)}
-                        </p>
+                    {group.transfers.map((transfer) => {
+                      const outAccent =
+                        sportAccentByName[transfer.player_out.sport?.name] ??
+                        "#9a9aa5";
+                      const inAccent =
+                        sportAccentByName[transfer.player_in.sport?.name] ??
+                        "#9a9aa5";
+                      return (
+                        <article
+                          key={transfer.id}
+                          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4"
+                        >
+                          <p className="section-label">
+                            {formatTransferTime(transfer.created_at)}
+                          </p>
 
-                        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <div className="rounded-[3px] border border-red-500/20 bg-red-500/10 p-3">
-                            <p className="text-xs font-600 uppercase tracking-wide text-red-300">
-                              Out
-                            </p>
-                            <p className="mt-1 text-sm font-600 text-[#f0f0f0]">
-                              {resolvePlayerName(transfer.player_out)}
-                            </p>
-                            <p className="mt-1 text-xs text-[#555560]">
-                              {sportIconByName[
-                                transfer.player_out.sport?.name
-                              ] ?? "🏅"}{" "}
-                              {transfer.player_out.position}
-                            </p>
-                            <p className="text-xs text-[#555560]">
-                              {transfer.player_out.real_team}
-                            </p>
-                            <p className="mt-1 text-xs text-[#f0f0f0]">
-                              Value {formatMoney(transfer.player_out.cost)}
-                            </p>
+                          <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-3">
+                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
+                                ▼ Out
+                              </p>
+                              <p className="mt-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                                {resolvePlayerName(transfer.player_out)}
+                              </p>
+                              <p className="mt-1 text-xs text-[#555560]">
+                                <span style={{ color: outAccent }}>
+                                  {transfer.player_out.position}
+                                </span>
+                                <span className="mx-1.5 text-[#33333a]">·</span>
+                                {transfer.player_out.real_team}
+                              </p>
+                              <p className="mt-1 font-bebas tracking-[1px] text-[#e8fb25]">
+                                ${formatMoney(transfer.player_out.cost)}
+                              </p>
+                            </div>
+
+                            <div className="rounded-[3px] border border-[rgba(76,175,80,0.2)] bg-[rgba(76,175,80,0.06)] p-3">
+                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
+                                ▲ In
+                              </p>
+                              <p className="mt-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                                {resolvePlayerName(transfer.player_in)}
+                              </p>
+                              <p className="mt-1 text-xs text-[#555560]">
+                                <span style={{ color: inAccent }}>
+                                  {transfer.player_in.position}
+                                </span>
+                                <span className="mx-1.5 text-[#33333a]">·</span>
+                                {transfer.player_in.real_team}
+                              </p>
+                              <p className="mt-1 font-bebas tracking-[1px] text-[#e8fb25]">
+                                ${formatMoney(transfer.player_in.cost)}
+                              </p>
+                            </div>
                           </div>
 
-                          <div className="rounded-[3px] border border-emerald-400/20 bg-emerald-400/10 p-3">
-                            <p className="text-xs font-600 uppercase tracking-wide text-emerald-300">
-                              In
-                            </p>
-                            <p className="mt-1 text-sm font-600 text-[#f0f0f0]">
-                              {resolvePlayerName(transfer.player_in)}
-                            </p>
-                            <p className="mt-1 text-xs text-[#555560]">
-                              {sportIconByName[
-                                transfer.player_in.sport?.name
-                              ] ?? "🏅"}{" "}
-                              {transfer.player_in.position}
-                            </p>
-                            <p className="text-xs text-[#555560]">
-                              {transfer.player_in.real_team}
-                            </p>
-                            <p className="mt-1 text-xs text-[#f0f0f0]">
-                              Value {formatMoney(transfer.player_in.cost)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <p className="mt-3 text-xs text-[#555560]">
-                          Window {transfer.transfer_window.number} • Transfer
-                          cost {formatMoney(transfer.cost_at_transfer)}
-                        </p>
-                      </article>
-                    ))}
+                          <p className="mt-3 text-xs text-[#555560]">
+                            Window {transfer.transfer_window.number}
+                            <span className="mx-1.5 text-[#33333a]">·</span>
+                            Transfer cost {formatMoney(transfer.cost_at_transfer)}
+                          </p>
+                        </article>
+                      );
+                    })}
                   </div>
                 </div>
               </Carousel.Slide>
@@ -176,6 +188,7 @@ export function UserTransferHistoryCarousel({
           })}
         </Carousel>
       )}
+      </div>
     </section>
   );
 }
