@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
@@ -16,15 +16,18 @@ import { StandingsTable } from "@/components/dashboard/leagues/league-home/compo
 import { WeekSelector } from "@/components/dashboard/leagues/league-home/components/WeekSelector";
 import { YourScoreCard } from "@/components/dashboard/leagues/league-home/components/YourScoreCard";
 import { TransferFields } from "@/components/dashboard/leagues/league-home/components/TransferFields";
+import { GameweekBreakdown } from "@/components/dashboard/main-dashboard/components/GameweekBreakdown";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
 import { fetchTransferWindowStatus } from "@/lib/api/notifications";
 
 import {
   useActiveWindow,
+  useLeaderboard,
   useLeague,
   useLeaveLeague,
   useMyTeam,
 } from "@/hooks/leagues/useLeagues";
+import { useDashboardLeagueStats } from "@/hooks/dashboard/useDashboardData";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 
 export function LeagueHome() {
@@ -49,6 +52,46 @@ export function LeagueHome() {
     );
   const leaveLeague = useLeaveLeague();
   const { username } = useMe();
+
+  // Season standings (total points) and this-week board (active window points
+  // + rank) power the standings table, your-score card and the you-vs-leader
+  // matchup. The per-gameweek breakdown comes from the league dashboard stats.
+  const { data: seasonBoard, isLoading: seasonBoardLoading } =
+    useLeaderboard(leagueId);
+  const { data: weekBoard } = useLeaderboard(
+    leagueId,
+    activeWindow?.id,
+    false,
+  );
+  const { data: leagueStats, isLoading: leagueStatsLoading } =
+    useDashboardLeagueStats(leagueId);
+
+  const weekStanding = useMemo(() => {
+    const entries = [...(weekBoard?.entries ?? [])].sort(
+      (a, b) => Number(b.points) - Number(a.points),
+    );
+    const myEntry = entries.find((e) => e.team_id === myTeam?.id) ?? null;
+    const leader = entries[0] ?? null;
+    const youAreLeader =
+      !!myEntry && !!leader && myEntry.team_id === leader.team_id;
+    const opponent = youAreLeader ? (entries[1] ?? null) : leader;
+    const yourScore = Math.round(Number(myEntry?.points ?? 0));
+    const opponentScore = Math.round(Number(opponent?.points ?? 0));
+    const weeklyRank =
+      myEntry?.rank ??
+      (myEntry ? entries.indexOf(myEntry) + 1 : 0);
+    const pointsBehind = leader
+      ? Math.max(0, Math.round(Number(leader.points) - Number(myEntry?.points ?? 0)))
+      : 0;
+    return {
+      youAreLeader,
+      opponentName: opponent?.team_name ?? "",
+      yourScore,
+      opponentScore,
+      weeklyRank,
+      pointsBehind,
+    };
+  }, [weekBoard, myTeam?.id]);
 
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -156,18 +199,33 @@ export function LeagueHome() {
       </div>
 
       {myTeam && league ? (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-          <div className="space-y-5 order-1 lg:order-2 lg:col-span-1">
-            <CurrentMatchup
-              yourTeamName={myTeam.name}
-              yourScore={0}
-              opponentTeamName="TBD"
-              opponentScore={0}
-            />
-            <YourScoreCard yourScore={0} weeklyRank={0} pointsBehind={0} />
-          </div>
-          <div className="order-2 lg:order-1 lg:col-span-2">
-            <StandingsTable standings={[]} userTeamId={myTeam.id} />
+        <div className="space-y-5">
+          <GameweekBreakdown
+            breakdown={leagueStats?.gameweek_breakdown ?? []}
+            isLoading={leagueStatsLoading}
+          />
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <div className="space-y-5 order-1 lg:order-2 lg:col-span-1">
+              <CurrentMatchup
+                yourTeamName={myTeam.name}
+                yourScore={weekStanding.yourScore}
+                opponentTeamName={weekStanding.opponentName}
+                opponentScore={weekStanding.opponentScore}
+                youAreLeader={weekStanding.youAreLeader}
+              />
+              <YourScoreCard
+                yourScore={weekStanding.yourScore}
+                weeklyRank={weekStanding.weeklyRank}
+                pointsBehind={weekStanding.pointsBehind}
+              />
+            </div>
+            <div className="order-2 lg:order-1 lg:col-span-2">
+              <StandingsTable
+                entries={seasonBoard?.entries ?? []}
+                userTeamId={myTeam.id}
+                isLoading={seasonBoardLoading}
+              />
+            </div>
           </div>
         </div>
       ) : (

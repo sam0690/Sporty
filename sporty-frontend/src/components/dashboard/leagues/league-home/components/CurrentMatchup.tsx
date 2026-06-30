@@ -3,8 +3,11 @@
 type CurrentMatchupProps = {
   yourTeamName: string;
   yourScore: number;
+  // The team you're chasing (the league leader). When you ARE the leader this
+  // is the runner-up, and youAreLeader flips the framing.
   opponentTeamName: string;
   opponentScore: number;
+  youAreLeader?: boolean;
 };
 
 export function CurrentMatchup({
@@ -12,44 +15,61 @@ export function CurrentMatchup({
   yourScore,
   opponentTeamName,
   opponentScore,
+  youAreLeader = false,
 }: CurrentMatchupProps) {
-  const youWinning = yourScore >= opponentScore;
+  // Positive = you're ahead of the team you're compared against.
+  const diff = yourScore - opponentScore;
+  const leading = diff >= 0;
 
   return (
     <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 animate-fade-soft">
-      <p className="section-label mb-4">This Week&apos;s Matchup</p>
+      <p className="section-label mb-4">
+        {youAreLeader ? "You vs Runner-Up" : "You vs Leader"}
+      </p>
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <div className="text-center">
-          <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0] truncate">
+          <p className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0]">
             {yourTeamName}
           </p>
           <p className="mt-2 font-bebas text-5xl tracking-[2px] text-[#e8fb25]">
             {yourScore}
           </p>
+          <p className="section-label mt-1">You</p>
         </div>
 
-        <div className="flex flex-col items-center gap-1">
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560]">VS</span>
-        </div>
+        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560]">
+          VS
+        </span>
 
         <div className="text-center">
-          <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0] truncate">
-            {opponentTeamName}
+          <p className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+            {opponentTeamName || "—"}
           </p>
           <p className="mt-2 font-bebas text-5xl tracking-[2px] text-[#555560]">
             {opponentScore}
           </p>
+          <p className="section-label mt-1">
+            {youAreLeader ? "Runner-Up" : "Leader"}
+          </p>
         </div>
       </div>
 
-      {youWinning ? (
-        <div className="mt-4 flex justify-center">
+      <div className="mt-4 flex justify-center">
+        {youAreLeader && leading ? (
           <span className="rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[#1a1a10] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#c8d85a]">
-            Leading
+            Top of the league
           </span>
-        </div>
-      ) : null}
+        ) : leading ? (
+          <span className="rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[#1a1a10] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#c8d85a]">
+            Ahead by {Math.abs(diff)} this week
+          </span>
+        ) : (
+          <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+            {Math.abs(diff)} behind the leader
+          </span>
+        )}
+      </div>
     </section>
   );
 }

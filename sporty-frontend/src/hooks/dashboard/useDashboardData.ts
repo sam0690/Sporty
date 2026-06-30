@@ -3,6 +3,7 @@ import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { LeagueService } from "@/services/LeagueService";
 import { UserService, type TUserActivityItem } from "@/services/UserService";
+import type { TLeagueDashboardStats } from "@/types/league";
 import {
   normalizeSport,
   type SportKind,
@@ -92,7 +93,7 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
 }
 
 export function useDashboardLeagueStats(selectedLeagueId?: string | null) {
-  return useApiQuery(
+  return useApiQuery<TLeagueDashboardStats>(
     ["leagues", selectedLeagueId, "dashboard-stats"],
     () => LeagueService.getDashboardStats(selectedLeagueId!),
     { enabled: Boolean(selectedLeagueId) },
