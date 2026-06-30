@@ -13,7 +13,6 @@ import {
 } from "@/components/dashboard/leagues/league-home/components/LeagueHeader";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { StandingsTable } from "@/components/dashboard/leagues/league-home/components/StandingsTable";
-import { WeekSelector } from "@/components/dashboard/leagues/league-home/components/WeekSelector";
 import { YourScoreCard } from "@/components/dashboard/leagues/league-home/components/YourScoreCard";
 import { TransferFields } from "@/components/dashboard/leagues/league-home/components/TransferFields";
 import { GameweekBreakdown } from "@/components/dashboard/main-dashboard/components/GameweekBreakdown";
@@ -53,16 +52,15 @@ export function LeagueHome() {
   const leaveLeague = useLeaveLeague();
   const { username } = useMe();
 
-  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  // The overview is a snapshot of the running gameweek; browsing other
+  // gameweeks lives on the leaderboard page, so there's no week selector here.
+  const currentWeek = activeWindow?.number ?? 1;
 
-  // The gameweek the cards reflect: the user's pick, else the active window.
-  const currentWeek = selectedWeek ?? activeWindow?.number ?? 1;
-
-  // Season standings (total points) and the selected-gameweek board (per-week
+  // Season standings (total points) and the running gameweek's board (per-week
   // points + rank) power the standings table, your-score card and the
   // you-vs-leader matchup. The per-gameweek breakdown comes from the league
-  // dashboard stats. The week board follows the WeekSelector via `gameweek`,
-  // resolved to the season's transfer window server-side.
+  // dashboard stats. The week board is scoped to the active gameweek via
+  // `gameweek`, resolved to the season's transfer window server-side.
   const { data: seasonBoard, isLoading: seasonBoardLoading } =
     useLeaderboard(leagueId);
   const { data: weekBoard } = useLeaderboard(
@@ -160,15 +158,6 @@ export function LeagueHome() {
         sport={leagueSport}
         currentWeek={currentWeek}
         totalWeeks={activeWindow?.total_number || 16}
-      />
-
-      <WeekSelector
-        currentWeek={currentWeek}
-        totalWeeks={activeWindow?.total_number || 16}
-        onWeekChange={(week) => {
-          if (week < 1 || (activeWindow && week > activeWindow.total_number)) return;
-          setSelectedWeek(week);
-        }}
       />
 
       <NavigationTabs

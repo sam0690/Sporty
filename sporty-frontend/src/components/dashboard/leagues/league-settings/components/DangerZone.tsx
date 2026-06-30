@@ -1,5 +1,7 @@
 "use client";
 
+import { SettingsSection } from "@/components/dashboard/leagues/league-settings/components/SettingsSection";
+
 type DangerZoneProps = {
   leagueName: string;
   onDeleteClick: () => void;
@@ -7,19 +9,25 @@ type DangerZoneProps = {
 
 export function DangerZone({ leagueName, onDeleteClick }: DangerZoneProps) {
   return (
-    <section className="rounded-[3px] border border-red-400/20 bg-red-500/10 p-5 ">
-      <h3 className="text-sm text-red-100">Danger Zone</h3>
-      <p className="mt-1 text-sm text-red-100/75">
-        Delete <span className="font-medium">{leagueName}</span> permanently.
-        This cannot be undone.
-      </p>
-      <button
-        type="button"
-        onClick={onDeleteClick}
-        className="mt-4 rounded-[3px] border border-red-400/20 px-5 py-2 text-sm text-red-100 hover:bg-red-500/15"
-      >
-        Delete League
-      </button>
-    </section>
+    <SettingsSection
+      title="Danger Zone"
+      description="Irreversible actions"
+      tone="danger"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <p className="text-sm text-[#9a9aa5]">
+          Delete{" "}
+          <span className="font-600 text-[#f0f0f0]">{leagueName}</span>{" "}
+          permanently. This cannot be undone.
+        </p>
+        <button
+          type="button"
+          onClick={onDeleteClick}
+          className="shrink-0 rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#ff3b30] transition-colors hover:bg-[rgba(255,59,48,0.1)]"
+        >
+          Delete League
+        </button>
+      </div>
+    </SettingsSection>
   );
 }

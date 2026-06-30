@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  SettingsSection,
+  segmentActive,
+  segmentBase,
+  segmentIdle,
+  settingsInput,
+} from "@/components/dashboard/leagues/league-settings/components/SettingsSection";
+
 type LeagueSettingsData = {
   leagueName: string;
   isPrivate: boolean;
@@ -12,77 +20,82 @@ type SettingsFormProps = {
   onChange: (next: Partial<LeagueSettingsData>) => void;
 };
 
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+      {children}
+    </label>
+  );
+}
+
 export function SettingsForm({ data, onChange }: SettingsFormProps) {
   return (
-    <section className="space-y-6 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-      <h3 className="text-sm text-[#f0f0f0]">League Settings</h3>
-
-      <div>
-        <label className="mb-1 block text-sm text-[#555560]">
-          League Name
-        </label>
-        <input
-          value={data.leagueName}
-          maxLength={50}
-          onChange={(event) => onChange({ leagueName: event.target.value })}
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 text-[#f0f0f0] outline-none focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
-        />
-      </div>
-
-      <div>
-        <label className="mb-1 block text-sm text-[#555560]">
-          League Type
-        </label>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => onChange({ isPrivate: false })}
-            className={`rounded-[3px] border px-4 py-2 text-sm ${!data.isPrivate ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"}`}
-          >
-            Public
-          </button>
-          <button
-            type="button"
-            onClick={() => onChange({ isPrivate: true })}
-            className={`rounded-[3px] border px-4 py-2 text-sm ${data.isPrivate ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"}`}
-          >
-            Private
-          </button>
-        </div>
-        <p className="mt-1 text-xs text-[#f0f0f0]/50">
-          Public leagues are discoverable by anyone; private leagues can only be
-          joined with an invite code.
-        </p>
-      </div>
-
-      {data.showMidseasonJoinToggle ? (
+    <SettingsSection
+      title="League Settings"
+      description="Name and visibility of your league"
+    >
+      <div className="space-y-6">
         <div>
-          <label className="mb-1 block text-sm text-[#555560]">
-            Mid-Season Joining
-          </label>
+          <FieldLabel>League Name</FieldLabel>
+          <input
+            value={data.leagueName}
+            maxLength={50}
+            onChange={(event) => onChange({ leagueName: event.target.value })}
+            className={settingsInput}
+          />
+        </div>
+
+        <div>
+          <FieldLabel>League Type</FieldLabel>
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => onChange({ allowMidseasonJoin: true })}
-              className={`rounded-[3px] border px-4 py-2 text-sm ${data.allowMidseasonJoin ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"}`}
+              onClick={() => onChange({ isPrivate: false })}
+              className={`${segmentBase} ${!data.isPrivate ? segmentActive : segmentIdle}`}
             >
-              Enabled
+              Public
             </button>
             <button
               type="button"
-              onClick={() => onChange({ allowMidseasonJoin: false })}
-              className={`rounded-[3px] border px-4 py-2 text-sm ${!data.allowMidseasonJoin ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"}`}
+              onClick={() => onChange({ isPrivate: true })}
+              className={`${segmentBase} ${data.isPrivate ? segmentActive : segmentIdle}`}
             >
-              Disabled
+              Private
             </button>
           </div>
-          <p className="mt-1 text-xs text-[#f0f0f0]/50">
-            When enabled, new users can join while the league is active and
-            start scoring from the next transfer window.
+          <p className="mt-2 text-xs text-[#555560]">
+            Public leagues are discoverable by anyone; private leagues can only
+            be joined with an invite code.
           </p>
         </div>
-      ) : null}
-    </section>
+
+        {data.showMidseasonJoinToggle ? (
+          <div>
+            <FieldLabel>Mid-Season Joining</FieldLabel>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => onChange({ allowMidseasonJoin: true })}
+                className={`${segmentBase} ${data.allowMidseasonJoin ? segmentActive : segmentIdle}`}
+              >
+                Enabled
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange({ allowMidseasonJoin: false })}
+                className={`${segmentBase} ${!data.allowMidseasonJoin ? segmentActive : segmentIdle}`}
+              >
+                Disabled
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-[#555560]">
+              When enabled, new users can join while the league is active and
+              start scoring from the next transfer window.
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </SettingsSection>
   );
 }
 

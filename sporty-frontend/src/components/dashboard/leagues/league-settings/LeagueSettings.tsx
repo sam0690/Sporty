@@ -12,6 +12,12 @@ import {
   type LeagueSettingsData,
 } from "@/components/dashboard/leagues/league-settings/components/SettingsForm";
 import {
+  SettingsSection,
+  segmentActive,
+  segmentBase,
+  segmentIdle,
+} from "@/components/dashboard/leagues/league-settings/components/SettingsSection";
+import {
   useAddLeagueSport,
   useDeleteLeague,
   useGenerateTransferWindows,
@@ -253,8 +259,16 @@ export function LeagueSettings() {
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 text-sm text-[#555560] ">
-          Only the league commissioner can access settings.
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
+          <p className="text-2xl" aria-hidden>
+            🔒
+          </p>
+          <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+            Commissioner only
+          </p>
+          <p className="mt-1 text-sm text-[#555560]">
+            Only the league commissioner can change these settings.
+          </p>
         </div>
       </section>
     );
@@ -268,50 +282,63 @@ export function LeagueSettings() {
         isCommissioner={isCommissioner}
       />
 
+      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+        <p className="section-label">{league?.name || "League"}</p>
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+          Settings
+        </h1>
+        <p className="mt-1 text-sm text-[#555560]">
+          Manage your league&apos;s configuration and scoring
+        </p>
+      </header>
+
       <SettingsForm
         data={data}
         onChange={(next) => setData((prev) => ({ ...prev, ...next }))}
       />
 
-      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-        <h3 className="text-sm text-[#f0f0f0]">
-          League Lifecycle
-        </h3>
+      <SettingsSection
+        title="League Lifecycle"
+        description="Move the league between setup, drafting, active and completed"
+        action={
+          isBudgetMode ? (
+            <button
+              type="button"
+              onClick={handleGenerateWindows}
+              className={`${segmentBase} ${segmentIdle}`}
+            >
+              Generate Windows
+            </button>
+          ) : null
+        }
+      >
         <div className="flex flex-wrap gap-2">
           {lifecycleStatuses.map((status) => (
             <button
               key={status}
               type="button"
               onClick={() => handleStatusChange(status)}
-              className={`rounded-[3px] border px-4 py-2 text-sm ${league?.status === status ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"}`}
+              className={`${segmentBase} ${league?.status === status ? segmentActive : segmentIdle}`}
             >
               {getLifecycleStatusLabel(status, league)}
             </button>
           ))}
         </div>
+      </SettingsSection>
 
-        {isBudgetMode ? (
-          <button
-            type="button"
-            onClick={handleGenerateWindows}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-sm text-[#f0f0f0] hover:bg-[#1d1d26]"
-          >
-            Generate Transfer Windows
-          </button>
-        ) : null}
-      </section>
-
-      <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-        <h3 className="text-sm text-[#f0f0f0]">League Sports</h3>
+      <SettingsSection
+        title="League Sports"
+        description="Add or remove the sports played in this league"
+      >
         <div className="flex flex-wrap gap-2">
           {(league?.sports ?? []).map((leagueSport) => (
             <button
               key={leagueSport.sport.name}
               type="button"
               onClick={() => removeSport.mutateAsync(leagueSport.sport.name)}
-              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-sm text-[#f0f0f0] hover:bg-[#1d1d26]"
+              className={`${segmentBase} ${segmentActive}`}
             >
-              {leagueSport.sport.display_name} x
+              {leagueSport.sport.display_name} ✕
             </button>
           ))}
           {(sports ?? [])
@@ -326,13 +353,13 @@ export function LeagueSettings() {
                 key={sport.name}
                 type="button"
                 onClick={() => addSport.mutateAsync(sport.name)}
-                className="rounded-[3px] border border-[rgba(232,251,37,0.2)] px-4 py-2 text-sm text-[#e8fb25] hover:bg-[rgba(232,251,37,0.1)]"
+                className={`${segmentBase} ${segmentIdle}`}
               >
                 + {sport.display_name}
               </button>
             ))}
         </div>
-      </section>
+      </SettingsSection>
 
       <ScoringRulesEditor
         scoringRules={scoringRules}
@@ -344,9 +371,9 @@ export function LeagueSettings() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="rounded-[3px] bg-linear-to-r [#e8fb25] px-6 py-2.5 font-600 text-slate-950 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? "Saving…" : "Save Changes"}
         </button>
       </div>
 

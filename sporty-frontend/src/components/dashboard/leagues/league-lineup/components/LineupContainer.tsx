@@ -13,6 +13,53 @@ type LineupContainerProps = {
   disabled?: boolean;
 };
 
+function SportGroup({
+  sportDisplayName,
+  players,
+  onToggleStarter,
+  onSetCaptain,
+  onSetViceCaptain,
+  starterLimitReached,
+  disabled,
+}: {
+  sportDisplayName: string;
+  players: LineupPlayerCardModel[];
+  onToggleStarter: (playerId: string) => void;
+  onSetCaptain: (playerId: string) => void;
+  onSetViceCaptain: (playerId: string) => void;
+  starterLimitReached: boolean;
+  disabled?: boolean;
+}) {
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h3 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+          {sportDisplayName}
+        </h3>
+        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+          {players.length} players
+        </span>
+      </div>
+
+      <div className="space-y-2">
+        {players.map((player) => (
+          <PlayerCard
+            key={player.playerId}
+            player={player}
+            onToggleStarter={onToggleStarter}
+            onSetCaptain={onSetCaptain}
+            onSetViceCaptain={onSetViceCaptain}
+            starterToggleDisabled={
+              disabled || (!player.isStarter && starterLimitReached)
+            }
+            disabled={disabled}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export function LineupContainer({
   startersGroupedBySport,
   benchGroupedBySport,
@@ -26,80 +73,54 @@ export function LineupContainer({
   const benchSports = Object.entries(benchGroupedBySport);
 
   return (
-    <div className="space-y-8 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-      <section className="space-y-4">
-        <h2 className="text-xl font-600 text-[#f0f0f0]">Starting XI</h2>
-        {starterSports.length === 0 ? (
-          <p className="text-sm text-[#555560]">
-            No starters selected yet.
-          </p>
-        ) : (
-          starterSports.map(([sportDisplayName, players]) => (
-            <section key={`starter-${sportDisplayName}`} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg text-[#f0f0f0]">
-                  {sportDisplayName}
-                </h3>
-                <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#f0f0f0]/65">
-                  {players.length} players
-                </span>
-              </div>
+    <div className="space-y-4">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+        <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+          <p className="section-label">Starting Lineup</p>
+        </header>
+        <div className="space-y-5 p-5">
+          {starterSports.length === 0 ? (
+            <p className="text-sm text-[#555560]">No starters selected yet.</p>
+          ) : (
+            starterSports.map(([sportDisplayName, players]) => (
+              <SportGroup
+                key={`starter-${sportDisplayName}`}
+                sportDisplayName={sportDisplayName}
+                players={players}
+                onToggleStarter={onToggleStarter}
+                onSetCaptain={onSetCaptain}
+                onSetViceCaptain={onSetViceCaptain}
+                starterLimitReached={starterLimitReached}
+                disabled={disabled}
+              />
+            ))
+          )}
+        </div>
+      </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {players.map((player) => (
-                  <PlayerCard
-                    key={player.playerId}
-                    player={player}
-                    onToggleStarter={onToggleStarter}
-                    onSetCaptain={onSetCaptain}
-                    onSetViceCaptain={onSetViceCaptain}
-                    starterToggleDisabled={
-                      disabled || (!player.isStarter && starterLimitReached)
-                    }
-                    disabled={disabled}
-                  />
-                ))}
-              </div>
-            </section>
-          ))
-        )}
-      </section>
-
-      <section className="space-y-4">
-        <h2 className="text-xl font-600 text-[#f0f0f0]">Bench</h2>
-        {benchSports.length === 0 ? (
-          <p className="text-sm text-[#555560]">No bench players.</p>
-        ) : (
-          benchSports.map(([sportDisplayName, players]) => (
-            <section key={`bench-${sportDisplayName}`} className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg text-[#f0f0f0]">
-                  {sportDisplayName}
-                </h3>
-                <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#f0f0f0]/65">
-                  {players.length} players
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {players.map((player) => (
-                  <PlayerCard
-                    key={player.playerId}
-                    player={player}
-                    onToggleStarter={onToggleStarter}
-                    onSetCaptain={onSetCaptain}
-                    onSetViceCaptain={onSetViceCaptain}
-                    starterToggleDisabled={
-                      disabled || (!player.isStarter && starterLimitReached)
-                    }
-                    disabled={disabled}
-                  />
-                ))}
-              </div>
-            </section>
-          ))
-        )}
-      </section>
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+        <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+          <p className="section-label">Bench</p>
+        </header>
+        <div className="space-y-5 p-5">
+          {benchSports.length === 0 ? (
+            <p className="text-sm text-[#555560]">No bench players.</p>
+          ) : (
+            benchSports.map(([sportDisplayName, players]) => (
+              <SportGroup
+                key={`bench-${sportDisplayName}`}
+                sportDisplayName={sportDisplayName}
+                players={players}
+                onToggleStarter={onToggleStarter}
+                onSetCaptain={onSetCaptain}
+                onSetViceCaptain={onSetViceCaptain}
+                starterLimitReached={starterLimitReached}
+                disabled={disabled}
+              />
+            ))
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -117,6 +117,37 @@ function parseNumericCost(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+type ChipTone = "neutral" | "volt" | "gold" | "football" | "basketball";
+
+const CHIP_TONES: Record<ChipTone, { border: string; value: string }> = {
+  neutral: { border: "rgba(255,255,255,0.08)", value: "#f0f0f0" },
+  volt: { border: "rgba(232,251,37,0.25)", value: "#e8fb25" },
+  gold: { border: "rgba(255,216,107,0.25)", value: "#ffd86b" },
+  football: { border: "rgba(76,175,80,0.3)", value: "#4caf50" },
+  basketball: { border: "rgba(255,107,0,0.3)", value: "#ff6b00" },
+};
+
+function StatChip({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string | number;
+  tone?: ChipTone;
+}) {
+  const colors = CHIP_TONES[tone];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-[3px] border bg-[#0d0d12] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+      style={{ borderColor: colors.border }}
+    >
+      <span className="text-[#555560]">{label}</span>
+      <span style={{ color: colors.value }}>{value}</span>
+    </span>
+  );
+}
+
 export function LeagueLineup() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
@@ -759,49 +790,49 @@ export function LeagueLineup() {
 
       <LineupViewToggle value={viewMode} onChange={setViewMode} />
 
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
+      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
         <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={handleOptimizeLineup}
             disabled={isOptimizing || updateLineup.isPending}
-            className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-4 py-1.5 text-xs font-600 text-[#e8fb25] transition hover:bg-[rgba(232,251,37,0.1)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-[3px] border border-[rgba(232,251,37,0.35)] bg-[rgba(232,251,37,0.1)] px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {isOptimizing ? "Optimizing..." : "Auto-Optimize Lineup"}
+            {isOptimizing ? "Optimizing…" : "Auto-Optimize Lineup"}
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 text-sm text-[#f0f0f0]/65">
-          <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1">
-            Total Players: {editablePlayers.length}
-          </span>
-          <span className="rounded-[3px] border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-emerald-100">
-            Starting Lineup: {startersCount} / {lineupRules.starters}
-          </span>
-          <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-[#f0f0f0]/75">
-            Bench: {benchCount} / {targetBenchCount}
-          </span>
-          <span className="rounded-[3px] border border-yellow-400/20 bg-yellow-500/10 px-3 py-1 text-yellow-100">
-            Captain: {captain?.name || "N/A"}
-          </span>
-          <span className="rounded-[3px] border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-blue-100">
-            Vice-Captain: {viceCaptain?.name || "N/A"}
-          </span>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatChip label="Total" value={editablePlayers.length} />
+          <StatChip
+            label="Starters"
+            value={`${startersCount} / ${lineupRules.starters}`}
+            tone="volt"
+          />
+          <StatChip label="Bench" value={`${benchCount} / ${targetBenchCount}`} />
+          <StatChip label="Captain" value={captain?.name || "N/A"} tone="gold" />
+          <StatChip
+            label="Vice"
+            value={viceCaptain?.name || "N/A"}
+            tone="neutral"
+          />
           {lineupSport === "multisport" ? (
             <>
-              <span className="rounded-[3px] border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-emerald-100">
-                Football Starters: {starterCountsBySport.football ?? 0} /{" "}
-                {MULTISPORT_STARTER_REQUIREMENTS.football}
-              </span>
-              <span className="rounded-[3px] border border-orange-400/20 bg-orange-500/10 px-3 py-1 text-orange-100">
-                Basketball Starters: {starterCountsBySport.basketball ?? 0} /{" "}
-                {MULTISPORT_STARTER_REQUIREMENTS.basketball}
-              </span>
+              <StatChip
+                label="Football"
+                value={`${starterCountsBySport.football ?? 0} / ${MULTISPORT_STARTER_REQUIREMENTS.football}`}
+                tone="football"
+              />
+              <StatChip
+                label="Basketball"
+                value={`${starterCountsBySport.basketball ?? 0} / ${MULTISPORT_STARTER_REQUIREMENTS.basketball}`}
+                tone="basketball"
+              />
             </>
           ) : null}
         </div>
         {selectionErrorMessage ? (
-          <p className="mt-3 rounded-[3px] border border-red-400/20 bg-red-500/10 px-3 py-2 text-sm text-red-100">
+          <p className="mt-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
             {selectionErrorMessage}
           </p>
         ) : null}

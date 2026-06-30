@@ -30,91 +30,91 @@ export function PlayerCard({
   return (
     <article
       style={{ borderLeft: `3px solid ${accentColor}` }}
-      className={`rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 transition-colors ${
-        player.isCaptain
-          ? "border-l-[#e8fb25]"
-          : player.isViceCaptain
-            ? "border-l-[#555560]"
-            : ""
-      }`}
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.15)]"
     >
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-            {player.name}
-          </p>
-          <p className="mt-1 text-sm text-[#555560]">{player.realTeam}</p>
-        </div>
-        <div className="flex items-center gap-1">
-          {player.isCaptain ? (
-            <span className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-2 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#e8fb25]">
-              C
-            </span>
-          ) : null}
-          {player.isViceCaptain ? (
-            <span className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#1d1d26] px-2 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-              VC
-            </span>
-          ) : null}
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+      {/* Identity */}
+      <div className="flex min-w-0 flex-1 items-center gap-3">
+        <span
+          className="grid h-11 w-14 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
+          style={{ color: accentColor, background: `${accentColor}1f` }}
+        >
           {player.position}
         </span>
-        <span
-          className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
-          style={{ color: accentColor, background: `${accentColor}18` }}
-        >
-          {player.sportDisplayName}
-        </span>
+
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              {player.name}
+            </p>
+            {player.isCaptain ? (
+              <span className="shrink-0 rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+                C
+              </span>
+            ) : null}
+            {player.isViceCaptain ? (
+              <span className="shrink-0 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#1d1d26] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+                VC
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-0.5 truncate text-xs text-[#555560]">
+            {player.realTeam}
+            <span className="mx-1.5 text-[#33333a]">·</span>
+            <span style={{ color: accentColor }}>{player.sportDisplayName}</span>
+            <span className="mx-1.5 text-[#33333a]">·</span>${player.cost}
+          </p>
+        </div>
       </div>
 
-      <p className="mt-3 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
-        Cost: {player.cost}
-      </p>
-
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onToggleStarter?.(player.playerId)}
-          disabled={disabled || starterToggleDisabled}
-          className={`rounded-[3px] border px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-            player.isStarter
-              ? "border-[rgba(255,59,48,0.3)] bg-[#2a1010] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.2)]"
-              : starterToggleDisabled
-                ? "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"
-                : "border-[rgba(76,175,80,0.3)] bg-[#1a2a1a] text-[#4caf50] hover:bg-[rgba(76,175,80,0.2)]"
-          }`}
-        >
-          {player.isStarter
-            ? "Move to Bench"
-            : starterToggleDisabled
-              ? "Starter Limit Reached"
-              : "Move to Starting Lineup"}
-        </button>
-
+      {/* Actions */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2">
         {player.isStarter ? (
           <>
             <button
               type="button"
               onClick={() => onSetCaptain?.(player.playerId)}
               disabled={disabled}
-              className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.15)] disabled:cursor-not-allowed disabled:opacity-60"
+              className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                player.isCaptain
+                  ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.12)] text-[#e8fb25]"
+                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#e8fb25]"
+              }`}
             >
-              Set Captain
+              {player.isCaptain ? "Captain" : "Set C"}
             </button>
             <button
               type="button"
               onClick={() => onSetViceCaptain?.(player.playerId)}
               disabled={disabled}
-              className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#1d1d26] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#f0f0f0] transition-colors hover:bg-[rgba(255,255,255,0.1)] disabled:cursor-not-allowed disabled:opacity-60"
+              className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                player.isViceCaptain
+                  ? "border-[rgba(255,255,255,0.25)] bg-[#1d1d26] text-[#f0f0f0]"
+                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+              }`}
             >
-              Set Vice-Captain
+              {player.isViceCaptain ? "Vice" : "Set VC"}
             </button>
           </>
         ) : null}
+
+        <button
+          type="button"
+          onClick={() => onToggleStarter?.(player.playerId)}
+          disabled={disabled || starterToggleDisabled}
+          className={`rounded-[3px] border px-3.5 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            player.isStarter
+              ? "border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.16)]"
+              : starterToggleDisabled
+                ? "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"
+                : "border-[rgba(76,175,80,0.35)] bg-[rgba(76,175,80,0.1)] text-[#4caf50] hover:bg-[rgba(76,175,80,0.2)]"
+          }`}
+        >
+          {player.isStarter
+            ? "Bench"
+            : starterToggleDisabled
+              ? "Full"
+              : "Start"}
+        </button>
       </div>
     </article>
   );
