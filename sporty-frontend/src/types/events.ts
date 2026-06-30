@@ -29,6 +29,18 @@ export type MatchEvent = {
   team?: string | null;
 };
 
+export type LineupPlayer = {
+  player_id: string;
+  name: string | null;
+  position?: string | null;
+  team?: string | null;
+};
+
+export type MatchLineups = {
+  home: LineupPlayer[];
+  away: LineupPlayer[];
+};
+
 export type MatchSnapshot = {
   match_id: string;
   home_team: string | null;
@@ -38,7 +50,7 @@ export type MatchSnapshot = {
   match_date: string | null;
   players: Record<string, PlayerInfo>;
   events: MatchEvent[];
-  lineups: Record<string, unknown>;
+  lineups: MatchLineups;
   player_points: Record<string, number>;
 };
 

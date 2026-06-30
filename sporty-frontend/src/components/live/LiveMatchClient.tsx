@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { EventFeed } from "@/components/live/EventFeed";
+import { LineupsCard } from "@/components/live/LineupsCard";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
 import { ScoreTicker } from "@/components/live/ScoreTicker";
@@ -139,8 +140,11 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
           post → ratings/MOTM are the centrepiece, flanked by recap + board. */}
       {phase === "pre" && (
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-          <PredictionCard prediction={prediction} />
-          <EventFeed />
+          <LineupsCard />
+          <div className="space-y-6">
+            <PredictionCard prediction={prediction} />
+            <EventFeed />
+          </div>
         </div>
       )}
 
@@ -152,6 +156,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
           </div>
           <div className="space-y-6">
             <LiveLeaderboard />
+            <LineupsCard />
             <PredictionCard prediction={prediction} />
           </div>
         </div>
@@ -167,6 +172,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
           </div>
           <div className="order-3 space-y-6">
             <LiveLeaderboard />
+            <LineupsCard />
             <PredictionCard prediction={prediction} />
             {hasLineupChanges && <LineupCard />}
           </div>

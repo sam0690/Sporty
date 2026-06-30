@@ -4,11 +4,14 @@ import type {
   FantasyPointsDelta,
   LineupChange,
   MatchEvent,
+  MatchLineups,
   MatchSnapshot,
   PlayerInfo,
   Score,
   ScoreUpdate,
 } from "@/types/events";
+
+const EMPTY_LINEUPS: MatchLineups = { home: [], away: [] };
 
 export type SocketStatus = "connecting" | "live" | "reconnecting";
 
@@ -21,6 +24,7 @@ type MatchStoreState = {
   players: Record<string, PlayerInfo>;
   events: MatchEvent[];
   playerPoints: Record<string, number>;
+  startingLineups: MatchLineups;
   lineup: Record<string, unknown>;
   status: string;
   socketStatus: SocketStatus;
@@ -66,6 +70,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   players: {},
   events: [],
   playerPoints: {},
+  startingLineups: EMPTY_LINEUPS,
   lineup: {},
   status: "scheduled",
   socketStatus: "connecting",
@@ -80,7 +85,8 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
       players: snapshot.players,
       events: snapshot.events,
       playerPoints: snapshot.player_points,
-      lineup: snapshot.lineups,
+      startingLineups: snapshot.lineups ?? EMPTY_LINEUPS,
+      lineup: {},
       status: snapshot.status,
       lastUpdatedTs: Date.now(),
     }),

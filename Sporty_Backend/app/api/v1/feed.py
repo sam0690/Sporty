@@ -64,6 +64,7 @@ router = APIRouter(prefix="/feed", tags=["Feeder"])
 
 PREDICTION_TTL_SECONDS = 86400
 RATINGS_TTL_SECONDS = 86400
+LINEUPS_TTL_SECONDS = 86400
 
 
 # ── R-5.1: shared-secret auth ────────────────────────────────────────────────
@@ -114,6 +115,12 @@ class PredictionPayload(BaseModel):
     draw_prob: float
     away_win_prob: float
     model_version: str
+
+
+class MatchLineupsPayload(BaseModel):
+    sporty_match_id: str
+    home: list[str] = []  # player UUIDs playing for the home team
+    away: list[str] = []  # player UUIDs playing for the away team
 
 
 class PlayerRatingEntry(BaseModel):
@@ -511,6 +518,24 @@ async def ingest_player_ratings(
         "cached_key": key,
         "ttl_seconds": RATINGS_TTL_SECONDS,
         "ratings_received": len(payload.ratings),
+    }
+
+
+# ── Match lineups cache (who's playing, per team) ────────────────────────────
+
+
+@router.post("/match-lineups", dependencies=[Depends(verify_feeder_secret)])
+async def ingest_match_lineups(
+    payload: MatchLineupsPayload,
+    redis=Depends(get_async_redis),
+):
+    key = f"lineups:match:{payload.sporty_match_id}"
+    await redis.setex(key, LINEUPS_TTL_SECONDS, payload.model_dump_json())
+    return {
+        "status": "ok",
+        "cached_key": key,
+        "home": len(payload.home),
+        "away": len(payload.away),
     }
 
 

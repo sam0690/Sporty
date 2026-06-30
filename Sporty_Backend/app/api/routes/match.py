@@ -108,10 +108,33 @@ async def get_match_state(
         )
     ).mappings().all()
 
-    # Resolve every player UUID seen (in events + live point hashes) to a name.
+    # Starting lineups (who's playing, per team) — pushed by the feeder and
+    # cached in Redis under the match UUID.
+    lineup_home: list[str] = []
+    lineup_away: list[str] = []
+    lineups_raw = await redis.get(f"lineups:match:{row['id']}")
+    if lineups_raw:
+        try:
+            lineup_data = json.loads(lineups_raw)
+            lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
+            lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
+        except (ValueError, TypeError):
+            pass
+
+    # Resolve every player UUID seen (events + point hashes + lineups) to a name.
     player_ids = {e["player_id"] for e in event_rows if e["player_id"]}
     player_ids |= set(points.keys())
+    player_ids |= set(lineup_home) | set(lineup_away)
     players = await _resolve_players(db, player_ids)
+
+    def _lineup_entry(pid: str) -> dict:
+        info = players.get(pid)
+        return {
+            "player_id": pid,
+            "name": info["name"] if info else None,
+            "position": info["position"] if info else None,
+            "team": info["team"] if info else None,
+        }
 
     events = []
     for e in event_rows:
@@ -142,7 +165,10 @@ async def get_match_state(
         "players": players,
         "events": events,
         "player_points": points,
-        "lineups": {},
+        "lineups": {
+            "home": [_lineup_entry(pid) for pid in lineup_home],
+            "away": [_lineup_entry(pid) for pid in lineup_away],
+        },
     }
 
 
