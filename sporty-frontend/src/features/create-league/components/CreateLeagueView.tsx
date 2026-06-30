@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMe } from "@/hooks/auth/useMe";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
 import { LeagueSettings } from "@/components/dashboard/create-league/components/LeagueSettings";
@@ -67,7 +66,6 @@ function normalizeScoringRules(
 }
 
 export function CreateLeagueView() {
-  const { username } = useMe();
   const { data: seasons } = useSeasons();
   const { data: sports } = useSports();
   const { data: footballRules } = useDefaultScoringRules("football");
@@ -482,11 +480,7 @@ export function CreateLeagueView() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 font-[system-ui,-apple-system] text-[#f0f0f0]">
-      <p className="text-sm text-[#f0f0f0]/60">
-        Manager: {username || "Sporty User"}
-      </p>
-
+    <section className="mx-auto max-w-3xl space-y-6 px-6 py-8 text-[#f0f0f0]">
       <CreateLeagueHeader
         step={step}
         totalSteps={totalSteps}
@@ -494,13 +488,13 @@ export function CreateLeagueView() {
       />
 
       {displayError ? (
-        <div className="rounded-[3px] border border-danger/20 bg-danger/5 px-4 py-2 text-sm text-danger">
+        <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-4 py-2.5 text-sm text-[#ff8a8a]">
           {displayError}
         </div>
       ) : null}
 
-      <div className="animate-[fade-soft_0.2s_ease] rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-8 ">
-        <div className="mt-2">
+      <div className="animate-[fade-soft_0.2s_ease] rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 sm:p-8">
+        <div>
           {step === 1 ? (
             <LeagueBasicInfo
               leagueName={leagueData.leagueName}
@@ -554,7 +548,7 @@ export function CreateLeagueView() {
               <button
                 type="button"
                 onClick={handlePreviousStep}
-                className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 font-medium text-[#f0f0f0] transition-colors hover:bg-white/10 sm:w-auto"
+                className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] sm:w-auto"
               >
                 Back
               </button>
@@ -564,7 +558,7 @@ export function CreateLeagueView() {
             <button
               type="button"
               onClick={handleNextStep}
-              className="w-full rounded-full bg-accent-primary px-8 py-2.5 font-600 text-black shadow-sm transition-colors hover:bg-accent-secondary sm:w-auto"
+              className="w-full rounded-[3px] bg-[#e8fb25] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] sm:w-auto"
             >
               Next
             </button>

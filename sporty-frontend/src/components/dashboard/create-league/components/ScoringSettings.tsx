@@ -33,8 +33,8 @@ type ScoringSettingsProps = {
 };
 
 const sportTitles: Record<LeagueSportName, string> = {
-  football: "⚽ Football Scoring Rules",
-  basketball: "🏀 Basketball Scoring Rules",
+  football: "⚽ Football Scoring",
+  basketball: "🏀 Basketball Scoring",
 };
 
 function formatRuleLabel(action: string): string {
@@ -54,12 +54,12 @@ export function ScoringSettings({
   maxPoints,
 }: ScoringSettingsProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <h3 className="text-sm font-600 text-[#f0f0f0]">Scoring Rules</h3>
-        <p className="text-xs text-[#555560]">
+        <p className="section-label">Scoring Rules</p>
+        <p className="mt-1 text-xs text-[#555560]">
           Enable custom scoring per sport, then toggle and edit individual
-          rules.
+          rules. Only changed rules are saved.
         </p>
       </div>
 
@@ -71,36 +71,40 @@ export function ScoringSettings({
           <details
             key={sport}
             open={sportIndex === 0}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
+            className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-              <span className="text-sm font-600 text-[#f0f0f0]">
+              <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
                 {sportTitles[sport]}
               </span>
-              <span className="text-xs text-[#555560]">
+              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
                 {rules.length} rules
               </span>
             </summary>
 
-            <div className="space-y-4 border-t border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-4 ">
-              <label className="flex items-center justify-between gap-3 text-sm text-[#f0f0f0]">
-                <span>Enable custom scoring for {sport}</span>
+            <div className="space-y-4 border-t border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-4">
+              <label className="flex items-center justify-between gap-3">
+                <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                  Enable custom scoring
+                </span>
                 <button
                   type="button"
                   onClick={() =>
                     onToggleSportCustomScoring(sport, !allowCustom)
                   }
-                  className={`relative inline-flex h-6 w-10 items-center rounded-full transition-colors ${
+                  className={`relative h-6 w-11 rounded-full border transition-colors ${
                     allowCustom
-                      ? "bg-linear-to-r [#e8fb25]"
-                      : "bg-[#1d1d26]"
+                      ? "border-[rgba(232,251,37,0.4)] bg-[#e8fb25]"
+                      : "border-[rgba(255,255,255,0.1)] bg-[#1d1d26]"
                   }`}
                   aria-pressed={allowCustom}
                   aria-label={`Toggle ${sport} custom scoring`}
                 >
                   <span
-                    className={`inline-block h-4 w-4 transform rounded-[3px] bg-white transition-transform ${
-                      allowCustom ? "translate-x-5" : "translate-x-1"
+                    className={`absolute top-0.5 size-5 rounded-full shadow-sm transition-transform ${
+                      allowCustom
+                        ? "translate-x-5 bg-[#0a0a0f]"
+                        : "translate-x-0.5 bg-[#9a9aa5]"
                     }`}
                   />
                 </button>
@@ -120,19 +124,19 @@ export function ScoringSettings({
                       key={`${sport}-${rule.action}`}
                       className={`rounded-[3px] border px-3 py-3 transition-colors ${
                         isCustomized
-                          ? "border-amber-400/20 bg-amber-400/10"
-                          : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
+                          ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.06)]"
+                          : "border-[rgba(255,255,255,0.08)] bg-[#111117]"
                       }`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <p className="text-sm text-[#f0f0f0]">
+                            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
                               {formatRuleLabel(rule.action)}
                             </p>
                             {isCustomized ? (
-                              <span className="text-xs text-amber-300">
-                                ✏️ Customized
+                              <span className="rounded-[3px] bg-[rgba(232,251,37,0.15)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+                                Custom
                               </span>
                             ) : null}
                           </div>
@@ -145,7 +149,7 @@ export function ScoringSettings({
                         </div>
 
                         <div className="flex flex-col gap-2 sm:min-w-55">
-                          <label className="flex items-center justify-between text-xs text-[#555560]">
+                          <label className="flex items-center justify-between font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#9a9aa5]">
                             <span>Custom rule</span>
                             <input
                               type="checkbox"
@@ -158,14 +162,12 @@ export function ScoringSettings({
                                   event.target.checked,
                                 )
                               }
-                              className="h-4 w-4 rounded border-[rgba(255,255,255,0.08)] text-[#e8fb25] disabled:cursor-not-allowed"
+                              className="size-4 accent-[#e8fb25] disabled:cursor-not-allowed"
                             />
                           </label>
 
                           <input
                             type="number"
-                            min={minPoints}
-                            max={maxPoints}
                             step={0.1}
                             value={rule.points}
                             disabled={!allowCustom || !rule.enabled}
@@ -179,12 +181,14 @@ export function ScoringSettings({
                                   : nextValue,
                               );
                             }}
-                            className={`w-full rounded-[3px] border px-3 py-2 text-[#f0f0f0] outline-none transition focus:border-[rgba(232,251,37,0.3)] disabled:bg-[#1d1d26] ${
-                              isInvalid ? "border-danger/30" : "border-[rgba(255,255,255,0.08)]"
+                            className={`w-full rounded-[3px] border bg-[#0d0d12] px-3 py-2 text-right font-bebas text-lg tracking-[1px] text-[#e8fb25] outline-none transition-colors focus:border-[#e8fb25] disabled:opacity-50 ${
+                              isInvalid
+                                ? "border-[rgba(255,59,48,0.4)]"
+                                : "border-[rgba(255,255,255,0.08)]"
                             }`}
                           />
                           {isInvalid && allowCustom && rule.enabled ? (
-                            <p className="text-xs text-red-300">
+                            <p className="text-xs text-[#ff8a8a]">
                               Use a value between {minPoints} and {maxPoints}.
                             </p>
                           ) : null}
@@ -198,10 +202,6 @@ export function ScoringSettings({
           </details>
         );
       })}
-
-      <p className="text-xs text-[#555560]">
-        Only changed rules are submitted as league scoring overrides.
-      </p>
     </div>
   );
 }

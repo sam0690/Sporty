@@ -42,7 +42,7 @@ export function LeagueBasicInfo({
       <div>
         <label
           htmlFor="league-name"
-          className="mb-1 block text-sm text-[#555560]"
+          className="mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]"
         >
           League Name
         </label>
@@ -53,7 +53,7 @@ export function LeagueBasicInfo({
           maxLength={50}
           required
           placeholder="Champions League 2025"
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] outline-none transition-all focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
         />
         <p className="mt-2 text-right text-xs text-[#555560]">
           {leagueName.length}/50
@@ -61,8 +61,10 @@ export function LeagueBasicInfo({
       </div>
 
       <div>
-        <p className="mb-2 text-sm text-[#555560]">Select Sport</p>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+          Select Sport
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {sportOptions.map((option) => {
             const isSelected = option.value === sport;
             return (
@@ -70,16 +72,20 @@ export function LeagueBasicInfo({
                 key={option.value}
                 type="button"
                 onClick={() => onSportChange(option.value)}
-                className={`rounded-[3px] border p-4 text-center transition-all ${
+                className={`rounded-[3px] border p-4 text-center transition-colors ${
                   isSelected
-                    ? "border-[rgba(232,251,37,0.3)] bg-[#1d1d26]"
-                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] hover:border-[rgba(232,251,37,0.2)] hover:bg-[#1d1d26]"
+                    ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.08)]"
+                    : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.18)]"
                 }`}
               >
                 <span className="mb-2 block text-3xl" aria-hidden="true">
                   {option.icon}
                 </span>
-                <span className="text-sm text-[#f0f0f0]">
+                <span
+                  className={`font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
+                    isSelected ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                  }`}
+                >
                   {option.label}
                 </span>
               </button>

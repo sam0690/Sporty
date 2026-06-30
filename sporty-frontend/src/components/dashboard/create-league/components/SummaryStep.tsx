@@ -49,13 +49,13 @@ export function SummaryStep({
 }: SummaryStepProps) {
   return (
     <div className="space-y-6">
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1 ">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-          <p className="text-sm text-[#555560]">League Details</p>
+          <p className="section-label">League Details</p>
           <button
             type="button"
             onClick={onBack}
-            className="text-xs text-[#e8fb25] hover:underline"
+            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:text-[#f0ff45]"
           >
             Edit
           </button>
@@ -101,13 +101,13 @@ export function SummaryStep({
         </div>
       </div>
 
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1 ">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-          <p className="text-sm text-[#555560]">Scoring Rules</p>
+          <p className="section-label">Scoring Rules</p>
           <button
             type="button"
             onClick={onBack}
-            className="text-xs text-[#e8fb25] hover:underline"
+            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:text-[#f0ff45]"
           >
             Edit
           </button>
@@ -123,10 +123,10 @@ export function SummaryStep({
             return (
               <div
                 key={sport}
-                className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
+                className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12]"
               >
                 <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-3 py-2">
-                  <p className="text-sm text-[#f0f0f0]">
+                  <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
                     {sportLabels[sport]}
                   </p>
                   <p className="text-xs text-[#555560]">
@@ -162,7 +162,7 @@ export function SummaryStep({
         <button
           type="button"
           onClick={onBack}
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 text-[#f0f0f0] hover:bg-[#1d1d26] hover:text-[#f0f0f0] sm:w-auto"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] sm:w-auto"
         >
           Back
         </button>
@@ -170,9 +170,9 @@ export function SummaryStep({
           type="button"
           onClick={onCreate}
           disabled={isLoading}
-          className="w-full rounded-[3px] bg-linear-to-r [#e8fb25] px-8 py-2.5 font-600 text-background  hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="w-full rounded-[3px] bg-[#e8fb25] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
-          {isLoading ? "Creating..." : "Create League"}
+          {isLoading ? "Creating…" : "Create League"}
         </button>
       </div>
     </div>

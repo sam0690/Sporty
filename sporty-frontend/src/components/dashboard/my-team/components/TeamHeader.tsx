@@ -12,22 +12,27 @@ export function TeamHeader({
   teamName,
 }: TeamHeaderProps) {
   return (
-    <header className="flex items-end justify-between gap-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5  ">
-      <div>
-        <h1 className="font-bebas tracking-[3px] text-[#f0f0f0] sm:text-4xl">
+    <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <div className="min-w-0">
+        <p className="section-label">{leagueName || "Your Squad"}</p>
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
           My Team
         </h1>
         <p className="mt-1 text-sm text-[#555560]">
-          {leagueName
-            ? `League: ${leagueName}`
-            : "Select a league to view your team"}
-          {teamName ? ` • Team: ${teamName}` : ""}
+          {teamName
+            ? `${teamName}`
+            : leagueName
+              ? "Your squad in this league"
+              : "Select a league to view your team"}
         </p>
       </div>
 
-      <span className="inline-flex items-center rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs font-600 text-[#f0f0f0]">
-        {totalPlayers} players
-      </span>
+      <div className="text-right">
+        <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#e8fb25]">
+          {totalPlayers}
+        </p>
+        <p className="section-label mt-1">Players</p>
+      </div>
     </header>
   );
 }
