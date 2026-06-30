@@ -101,17 +101,15 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
-      <header className="mb-6">
+      <header className="mb-6 border-b border-[rgba(255,255,255,0.08)] pb-6">
         <span className="section-label">Match Centre</span>
-        <h1 className="mt-1 text-2xl font-700 text-foreground sm:text-3xl">
+        <h1 className="mt-2 font-bebas text-4xl tracking-[3px] text-[#f0f0f0] sm:text-5xl">
           {homeTeam && awayTeam ? `${homeTeam} vs ${awayTeam}` : "Live Match"}
         </h1>
         {loading && (
-          <p className="mt-2 text-sm text-muted-foreground">
-            Loading live state…
-          </p>
+          <p className="mt-2 text-sm text-[#555560]">Loading live state…</p>
         )}
-        {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+        {error && <p className="mt-2 text-sm text-[#ff3b5c]">{error}</p>}
       </header>
 
       <ScoreTicker />

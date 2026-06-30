@@ -12,13 +12,11 @@ export function LineupCard() {
     (id && players[id]?.name) || id || "—";
 
   return (
-    <section className="glass rounded-xl p-5">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
       <span className="section-label">Lineup Changes</span>
 
       {entries.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          No lineup changes yet.
-        </p>
+        <p className="mt-4 text-sm text-[#555560]">No lineup changes yet.</p>
       ) : (
         <ul className="mt-3 space-y-2">
           {entries.map(([teamId, raw]) => {
@@ -26,23 +24,21 @@ export function LineupCard() {
             return (
               <li
                 key={teamId}
-                className="rounded-lg border border-border bg-white/5 px-3 py-2.5"
+                className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] px-3 py-2.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-600 text-muted-foreground">
+                  <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
                     {nameFor(change.team_id ?? teamId)}
                   </span>
                   {change.minute != null && (
-                    <span className="font-display text-xs font-900 tabular-nums text-football">
+                    <span className="font-bebas text-sm leading-none tracking-[1px] text-[#e8fb25]">
                       {change.minute}&apos;
                     </span>
                   )}
                 </div>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-                  <span className="text-football">
-                    ▲ {nameFor(change.player_in)}
-                  </span>
-                  <span className="text-danger">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                  <span className="text-[#e8fb25]">▲ {nameFor(change.player_in)}</span>
+                  <span className="text-[#ff3b5c]">
                     ▼ {nameFor(change.player_out)}
                   </span>
                 </div>

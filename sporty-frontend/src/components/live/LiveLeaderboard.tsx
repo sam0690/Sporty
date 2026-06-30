@@ -4,13 +4,6 @@ import { useMemo } from "react";
 
 import { useMatchStore } from "@/store/matchStore";
 
-// Podium tints for the top three ranks; the rest get a muted chip.
-const RANK_STYLES = [
-  "bg-gold/15 text-gold border-gold/30",
-  "bg-white/10 text-foreground border-border",
-  "bg-basketball/15 text-basketball border-basketball/30",
-];
-
 export function LiveLeaderboard() {
   const playerPoints = useMatchStore((s) => s.playerPoints);
   const players = useMatchStore((s) => s.players);
@@ -24,33 +17,31 @@ export function LiveLeaderboard() {
   );
 
   return (
-    <section className="glass rounded-xl p-5">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
       <span className="section-label">Leaderboard</span>
 
       {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          No ranking data yet.
-        </p>
+        <p className="mt-4 text-sm text-[#555560]">No ranking data yet.</p>
       ) : (
-        <ol className="mt-3 space-y-1.5">
+        <ol className="mt-3 space-y-1">
           {rows.map(([playerId, points], idx) => {
-            const rankStyle =
-              RANK_STYLES[idx] ??
-              "bg-white/5 text-muted-foreground border-border";
+            const isTop = idx === 0;
             return (
               <li
                 key={playerId}
-                className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-white/5"
+                className="flex items-center gap-3 rounded-[3px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
               >
                 <span
-                  className={`grid size-7 shrink-0 place-items-center rounded-full border text-xs font-700 tabular-nums ${rankStyle}`}
+                  className={`w-6 shrink-0 text-center font-bebas text-lg leading-none ${
+                    isTop ? "text-[#e8fb25]" : "text-[#555560]"
+                  }`}
                 >
                   {idx + 1}
                 </span>
-                <span className="min-w-0 flex-1 truncate text-sm font-600 text-foreground">
+                <span className="min-w-0 flex-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
                   {players[playerId]?.name ?? playerId}
                 </span>
-                <span className="stat-box-number text-base">
+                <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
                   {points.toFixed(1)}
                 </span>
               </li>

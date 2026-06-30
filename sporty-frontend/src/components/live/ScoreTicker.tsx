@@ -25,55 +25,40 @@ export function ScoreTicker() {
   const { label, live } = describeStatus(status);
 
   return (
-    <section className="glass-strong relative overflow-hidden rounded-2xl p-6">
-      {/* Ambient neon halo behind the scoreline */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-28 h-56 opacity-70"
-        style={{
-          background:
-            "radial-gradient(ellipse at center, color-mix(in oklab, var(--football) 22%, transparent), transparent 70%)",
-        }}
-      />
-
-      <div className="relative flex items-center justify-between">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
         {live ? (
-          <span className="live-badge">Live</span>
+          <span className="inline-flex items-center gap-1.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
+            <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+            Live
+          </span>
         ) : (
           <span className="section-label">{label}</span>
         )}
         <span className="section-label">Match Centre</span>
       </div>
 
-      <div className="relative mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 py-7">
         <div className="min-w-0 text-right">
-          <div className="truncate text-lg font-700 text-foreground sm:text-xl">
+          <p className="truncate font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-xl">
             {homeTeam ?? "Home"}
-          </div>
-          <div className="micro-label mt-1 text-football">Home</div>
+          </p>
+          <p className="section-label mt-1.5">Home</p>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <span className="stat-box-number text-5xl sm:text-6xl">{score.home}</span>
-          <span className="text-2xl font-700 text-muted-foreground">:</span>
-          <span className="stat-box-number text-5xl sm:text-6xl">{score.away}</span>
+        <div className="shrink-0 font-bebas text-5xl leading-none tracking-[3px] text-[#e8fb25] sm:text-6xl">
+          {score.home}
+          <span className="px-2 text-[#555560]">-</span>
+          {score.away}
         </div>
 
         <div className="min-w-0 text-left">
-          <div className="truncate text-lg font-700 text-foreground sm:text-xl">
+          <p className="truncate font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-xl">
             {awayTeam ?? "Away"}
-          </div>
-          <div className="micro-label mt-1 text-basketball">Away</div>
+          </p>
+          <p className="section-label mt-1.5">Away</p>
         </div>
       </div>
-
-      {!live && (
-        <div className="relative mt-5 flex justify-center">
-          <span className="rounded-full border border-border bg-white/5 px-3 py-1 text-xs font-600 uppercase tracking-wider text-muted-foreground">
-            {label}
-          </span>
-        </div>
-      )}
     </section>
   );
 }

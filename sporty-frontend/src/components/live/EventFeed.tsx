@@ -32,15 +32,17 @@ function EventRow({ event }: { event: MatchEvent }) {
   const { icon, label } = eventMeta(event.type);
   return (
     <li className="flex items-center gap-4 py-3">
-      <span className="w-9 shrink-0 text-right font-display text-base font-900 tabular-nums text-football">
+      <span className="w-9 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] text-[#e8fb25]">
         {event.minute != null ? `${event.minute}'` : "—"}
       </span>
-      <span className="grid size-9 shrink-0 place-items-center rounded-full border border-border bg-white/5 text-base">
+      <span className="grid size-9 shrink-0 place-items-center rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.04)] text-base">
         {icon}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-600 text-foreground">{label}</div>
-        <div className="truncate text-xs text-muted-foreground">
+        <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          {label}
+        </div>
+        <div className="truncate text-xs text-[#555560]">
           {event.player_name ?? event.player_id ?? "Unknown player"}
           {event.team ? ` · ${event.team}` : ""}
         </div>
@@ -59,22 +61,22 @@ export function EventFeed() {
   );
 
   return (
-    <section className="glass rounded-xl p-5">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
       <header className="flex items-center justify-between">
         <span className="section-label">Match Events</span>
         {ordered.length > 0 && (
-          <span className="text-xs font-600 text-muted-foreground">
+          <span className="text-xs font-600 text-[#555560]">
             {ordered.length}
           </span>
         )}
       </header>
 
       {ordered.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          No events yet — they’ll appear here as the match unfolds.
+        <p className="mt-4 text-sm text-[#555560]">
+          No events yet — they&apos;ll appear here as the match unfolds.
         </p>
       ) : (
-        <ul className="mt-2 divide-y divide-border">
+        <ul className="mt-2 divide-y divide-[rgba(255,255,255,0.06)]">
           {ordered.map((event) => (
             <EventRow key={event.event_id} event={event} />
           ))}
