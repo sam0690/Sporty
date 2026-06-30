@@ -404,6 +404,28 @@ async def ingest_match_result(
     match.status = payload.status
     db.commit()
 
+    # Resolve player names for this batch so the live feed renders readable
+    # events (not UUIDs) without the client needing a round-trip per event.
+    names: dict[str, dict] = {}
+    batch_ids = []
+    for event in payload.events:
+        try:
+            if event.sporty_player_id:
+                batch_ids.append(uuid.UUID(event.sporty_player_id))
+        except ValueError:
+            continue
+    if batch_ids:
+        for p in db.query(Player.id, Player.name, Player.real_team).filter(Player.id.in_(batch_ids)).all():
+            names[str(p.id)] = {"name": p.name, "team": p.real_team}
+
+    def _event_dict(event) -> dict:
+        info = names.get(event.sporty_player_id or "")
+        return {
+            **event.model_dump(),
+            "player_name": info["name"] if info else None,
+            "team": info["team"] if info else None,
+        }
+
     # Data keys follow the canonical ScoreUpdate shape (home/away/minute) that
     # the frontend matchStore applies; kind/status/events are additive extras.
     channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
@@ -417,7 +439,7 @@ async def ingest_match_result(
             "home": payload.home_score,
             "away": payload.away_score,
             "minute": payload.current_minute,
-            "events": [event.model_dump() for event in payload.events],
+            "events": [_event_dict(event) for event in payload.events],
         },
     )
     await redis.publish(channel, message.model_dump_json())

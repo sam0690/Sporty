@@ -14,11 +14,30 @@ export type Score = {
   away: number;
 };
 
+export type PlayerInfo = {
+  name: string | null;
+  position?: string | null;
+  team?: string | null;
+};
+
+export type MatchEvent = {
+  event_id: string;
+  type: string;
+  minute: number | null;
+  player_id: string | null;
+  player_name?: string | null;
+  team?: string | null;
+};
+
 export type MatchSnapshot = {
   match_id: string;
+  home_team: string | null;
+  away_team: string | null;
   score: Score;
   status: string;
   match_date: string | null;
+  players: Record<string, PlayerInfo>;
+  events: MatchEvent[];
   lineups: Record<string, unknown>;
   player_points: Record<string, number>;
 };
@@ -31,6 +50,18 @@ export type FantasyPointsDelta = {
   ts: number;
 };
 
+// Raw event shape pushed inside a feeder SCORE_UPDATE (FeedEvent.model_dump()
+// enriched server-side with player_name/team). Keys differ from MatchEvent:
+// the feed uses event_type/sporty_player_id; the snapshot uses type/player_id.
+export type FeedEventPayload = {
+  event_id: string;
+  event_type: string;
+  sporty_player_id?: string | null;
+  minute?: number | null;
+  player_name?: string | null;
+  team?: string | null;
+};
+
 export type ScoreUpdate = {
   match_id: string;
   home: number;
@@ -38,6 +69,8 @@ export type ScoreUpdate = {
   minute?: number;
   // Present on feeder-driven updates ("live" | "finished").
   status?: string;
+  // Match events bundled with the score push (goals/cards/assists/etc.).
+  events?: FeedEventPayload[];
 };
 
 export type MatchPrediction = {

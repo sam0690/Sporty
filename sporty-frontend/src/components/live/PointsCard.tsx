@@ -6,6 +6,7 @@ import { useMatchStore } from "@/store/matchStore";
 
 export function PointsCard() {
   const playerPoints = useMatchStore((s) => s.playerPoints);
+  const players = useMatchStore((s) => s.players);
 
   const leaders = useMemo(
     () =>
@@ -24,7 +25,9 @@ export function PointsCard() {
         {leaders.length === 0 && <li>No live deltas yet.</li>}
         {leaders.map(([playerId, points]) => (
           <li key={playerId} className="flex items-center justify-between">
-            <span className="truncate">{playerId}</span>
+            <span className="truncate">
+              {players[playerId]?.name ?? playerId}
+            </span>
             <span className="font-600 text-[#f0f0f0]">
               {points.toFixed(1)}
             </span>

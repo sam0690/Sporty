@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { EventFeed } from "@/components/live/EventFeed";
 import { PointsCard } from "@/components/live/PointsCard";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
@@ -30,6 +31,8 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
 
   const hydrate = useMatchStore((s) => s.hydrate);
   const status = useMatchStore((s) => s.status);
+  const homeTeam = useMatchStore((s) => s.homeTeam);
+  const awayTeam = useMatchStore((s) => s.awayTeam);
 
   useEffect(() => {
     let mounted = true;
@@ -99,7 +102,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   return (
     <main className="mx-auto max-w-4xl space-y-4 px-4 py-6">
       <h1 className="text-2xl font-600 text-slate-900">
-        Live Match {matchId}
+        {homeTeam && awayTeam ? `${homeTeam} vs ${awayTeam}` : "Live Match"}
       </h1>
       {loading && (
         <p className="text-sm text-[#555560]">Loading live state...</p>
@@ -107,6 +110,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
       {error && <p className="text-sm text-red-600">{error}</p>}
       <ScoreTicker />
       <PredictionCard prediction={prediction} />
+      <EventFeed />
       <PointsCard />
       <LiveLeaderboard />
       <RatingsCard ratings={ratings} />

@@ -1,17 +1,43 @@
 from __future__ import annotations
 
 import json
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import text
+from sqlalchemy import select, text
 
 from app.api.deps import (
     get_async_db,
     get_async_redis_dep,
     require_match_access,
 )
+from app.player.models import Player
 
 router = APIRouter(tags=["Realtime"])
+
+
+async def _resolve_players(db, player_ids: set[str]) -> dict[str, dict]:
+    """Map Sporty player UUIDs to display info (name/position/team). Invalid or
+    unknown ids are simply omitted so callers can fall back to a short id."""
+    valid: list[uuid.UUID] = []
+    for pid in player_ids:
+        try:
+            valid.append(uuid.UUID(pid))
+        except (ValueError, TypeError, AttributeError):
+            continue
+    if not valid:
+        return {}
+    rows = (
+        await db.execute(
+            select(Player.id, Player.name, Player.position, Player.real_team).where(
+                Player.id.in_(valid)
+            )
+        )
+    ).all()
+    return {
+        str(r.id): {"name": r.name, "position": r.position, "team": r.real_team}
+        for r in rows
+    }
 
 
 async def _get_cached_match_json(redis, prefix: str, _match) -> dict | None:
@@ -66,16 +92,57 @@ async def get_match_state(
                 continue
             points[player_id] = float(value)
 
+    # Match event timeline (goals/cards/assists/etc.) from the stored live feed,
+    # ordered by minute. Used to render a human-readable feed instead of UUIDs.
+    event_rows = (
+        await db.execute(
+            text(
+                """
+                SELECT event_id, event_type, player_id, team_id, meta
+                FROM live_events
+                WHERE match_id = :match_id
+                ORDER BY COALESCE((meta->>'minute')::int, 0), ts
+                """
+            ),
+            {"match_id": live_key},
+        )
+    ).mappings().all()
+
+    # Resolve every player UUID seen (in events + live point hashes) to a name.
+    player_ids = {e["player_id"] for e in event_rows if e["player_id"]}
+    player_ids |= set(points.keys())
+    players = await _resolve_players(db, player_ids)
+
+    events = []
+    for e in event_rows:
+        pid = e["player_id"] or None
+        info = players.get(pid) if pid else None
+        meta = e["meta"] if isinstance(e["meta"], dict) else {}
+        events.append(
+            {
+                "event_id": e["event_id"],
+                "type": e["event_type"],
+                "minute": meta.get("minute"),
+                "player_id": pid,
+                "player_name": info["name"] if info else None,
+                "team": info["team"] if info else None,
+            }
+        )
+
     return {
         "match_id": row["id"],
+        "home_team": row["home_team"],
+        "away_team": row["away_team"],
         "score": {
             "home": int(row["home_score"] or 0),
             "away": int(row["away_score"] or 0),
         },
         "status": row["status"],
         "match_date": row["match_date"].isoformat() if row["match_date"] else None,
-        "lineups": {},
+        "players": players,
+        "events": events,
         "player_points": points,
+        "lineups": {},
     }
 
 
