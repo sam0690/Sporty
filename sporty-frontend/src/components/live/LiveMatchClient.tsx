@@ -124,33 +124,33 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         : "pre";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-8">
+    <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
       <ScoreTicker loading={loading} />
 
       {error && (
-        <p className="mt-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
+        <p className="mt-4 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
           {error}
         </p>
       )}
 
-      {/* Each phase emphasises different content:
-          pre  → the prediction (who'll win) leads; events wait.
-          live → events are the heartbeat (primary), board + odds in the rail.
-          post → final ratings/MOTM lead; events become a recap. */}
+      {/* Each phase emphasises different content and fills the full width:
+          pre  → prediction (who'll win) leads; events wait.
+          live → events are the heartbeat (wide), board + odds in the rail.
+          post → ratings/MOTM are the centrepiece, flanked by recap + board. */}
       {phase === "pre" && (
-        <div className="mt-5 space-y-5">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
           <PredictionCard prediction={prediction} />
           <EventFeed />
         </div>
       )}
 
       {phase === "live" && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-          <div className="space-y-5">
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1.7fr_1fr]">
+          <div className="space-y-6">
             <EventFeed />
             {hasLineupChanges && <LineupCard />}
           </div>
-          <div className="space-y-5">
+          <div className="space-y-6">
             <LiveLeaderboard />
             <PredictionCard prediction={prediction} />
           </div>
@@ -158,14 +158,17 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
       )}
 
       {phase === "post" && (
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1.5fr_1fr]">
-          <div className="space-y-5">
-            <RatingsCard ratings={ratings} />
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1.7fr_1fr]">
+          <div className="order-2 space-y-6 xl:order-1">
             <EventFeed />
           </div>
-          <div className="space-y-5">
+          <div className="order-1 space-y-6 xl:order-2">
+            <RatingsCard ratings={ratings} />
+          </div>
+          <div className="order-3 space-y-6">
             <LiveLeaderboard />
             <PredictionCard prediction={prediction} />
+            {hasLineupChanges && <LineupCard />}
           </div>
         </div>
       )}
