@@ -25,6 +25,7 @@ export const API_PATHS = {
     ME_ACTIVITY: "/users/me/activity",
     DETAIL: (id: string) => `/users/${id}`,
     ACTIVITY: (id: string) => `/users/${id}/activity`,
+    PUBLIC_STATS: (id: string) => `/users/${id}/public-stats`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
   },

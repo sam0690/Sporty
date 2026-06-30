@@ -39,6 +39,25 @@ export type TUserActivityItem = {
   details: Record<string, unknown>;
 };
 
+export type TUserPublicLeague = {
+  league_id: string | null;
+  name: string;
+  sport: string;
+  rank: number | null;
+  points: number;
+};
+
+export type TUserPublicStats = {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  created_at: string;
+  total_points: number;
+  total_leagues: number;
+  best_rank: number | null;
+  leagues: TUserPublicLeague[];
+};
+
 export type TUsersListResponse = {
   items: TUserProfile[];
   total: number;
@@ -167,6 +186,11 @@ export const UserService = {
 
   async deleteUser(id: string): Promise<void> {
     await authApi.delete(API_PATHS.USERS.DELETE(id));
+  },
+
+  async getUserPublicStats(id: string): Promise<TUserPublicStats> {
+    const res = await authApi.get(API_PATHS.USERS.PUBLIC_STATS(id));
+    return unwrapResponseData(res.data);
   },
 
   async getUserActivity(id: string): Promise<TUserActivityItem[]> {

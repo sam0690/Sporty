@@ -11,6 +11,7 @@ from app.user.schemas import (
     UserActivityResponse,
     UserListResponse,
     UserProfileResponse,
+    UserPublicStatsResponse,
     UserUpdateRequest,
 )
 
@@ -59,6 +60,17 @@ def get_user_activity(
     _current_user: User = Depends(get_current_active_user),
 ):
     return services.get_user_activity(db, user_id)
+
+
+@router.get("/{user_id}/public-stats", response_model=UserPublicStatsResponse, summary="Get a user's public profile stats")
+def get_user_public_stats(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Public profile stats for the target user (their leagues, points, best
+    rank) — accurate for any user, unlike the viewer-scoped dashboard."""
+    return services.get_user_public_stats(db, user_id)
 
 
 @router.patch("/{user_id}", response_model=UserProfileResponse, summary="Update user profile")

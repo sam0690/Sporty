@@ -7,10 +7,6 @@ import { toastifier } from "@/lib/toastifier";
 import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
 import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
 import {
-  PreferencesForm,
-  type Preferences,
-} from "@/components/dashboard/profile/components/PreferencesForm";
-import {
   ProfileForm,
   type ProfileUser,
 } from "@/components/dashboard/profile/components/ProfileForm";
@@ -25,13 +21,6 @@ const mockUser = {
   email: "john@example.com",
   avatar: "",
   bio: "Fantasy sports enthusiast since 2020",
-};
-
-const mockPreferences: Preferences = {
-  emailNotifications: true,
-  pushNotifications: false,
-  darkMode: false,
-  language: "en",
 };
 
 type ExtendedUser = {
@@ -55,8 +44,6 @@ export function ProfileSettingsView() {
     avatar: me?.avatar_url ?? mockUser.avatar,
     bio: mockUser.bio,
   });
-  const [preferences, setPreferences] = useState<Preferences>(mockPreferences);
-
   useEffect(() => {
     const timeout = window.setTimeout(() => setIsLoading(false), 450);
     return () => window.clearTimeout(timeout);
@@ -106,31 +93,6 @@ export function ProfileSettingsView() {
     toastifier.success("✓ Avatar updated successfully");
   };
 
-  const handleChangePassword = async (
-    currentPassword: string,
-    newPassword: string,
-  ): Promise<boolean> => {
-    if (!currentPassword || !newPassword) {
-      toastifier.error("✕ Please complete all password fields");
-      return false;
-    }
-
-    try {
-      await UserService.changePassword(currentPassword, newPassword);
-      return true;
-    } catch {
-      toastifier.error("✕ Unable to update password");
-      return false;
-    }
-  };
-
-  const handleUpdatePreferences = async (
-    nextPreferences: Preferences,
-  ): Promise<void> => {
-    setPreferences(nextPreferences);
-    toastifier.info("i Preferences updated");
-  };
-
   const handleDeleteAccount = async (): Promise<boolean> => {
     try {
       setIsDeleting(true);
@@ -158,7 +120,7 @@ export function ProfileSettingsView() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
+    <section className="mx-auto max-w-3xl px-6 py-8 text-[#f0f0f0]">
       <ProfileHeader
         userName={userData.name}
         userEmail={userData.email}
@@ -172,11 +134,6 @@ export function ProfileSettingsView() {
         />
 
         <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
-        {/* <PasswordForm onChangePassword={handleChangePassword} /> */}
-        <PreferencesForm
-          preferences={preferences}
-          onUpdate={handleUpdatePreferences}
-        />
         <DangerZone onDeleteAccount={handleDeleteAccount} />
       </div>
 

@@ -30,6 +30,25 @@ class UserListResponse(BaseModel):
     has_next: bool
 
 
+class UserPublicLeagueResponse(BaseModel):
+    league_id: uuid.UUID | None = None
+    name: str
+    sport: str
+    rank: int | None = None
+    points: float = 0.0
+
+
+class UserPublicStatsResponse(BaseModel):
+    user_id: uuid.UUID
+    username: str
+    avatar_url: str | None = None
+    created_at: datetime
+    total_points: float = 0.0
+    total_leagues: int = 0
+    best_rank: int | None = None
+    leagues: list[UserPublicLeagueResponse] = []
+
+
 class UserActivityLeagueResponse(BaseModel):
     id: uuid.UUID
     name: str

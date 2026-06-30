@@ -5,171 +5,91 @@ import {
   LeagueHistory,
   type LeagueRow,
 } from "@/components/dashboard/user-profile/components/LeagueHistory";
-import {
-  PlayerHighlights,
-  type TopPlayer,
-} from "@/components/dashboard/user-profile/components/PlayerHighlights";
 import { ProfileHeader } from "@/components/dashboard/user-profile/components/ProfileHeader";
 import {
   RecentActivity,
-  type Activity,
 } from "@/components/dashboard/user-profile/components/RecentActivity";
 import { StatsCards } from "@/components/dashboard/user-profile/components/StatsCards";
 import { useMe } from "@/hooks/auth/useMe";
-import { useMyLeagues } from "@/hooks/leagues/useLeagues";
-import { useUser, useUserActivity } from "@/hooks/users/useUsers";
+import { useUserActivity, useUserPublicStats } from "@/hooks/users/useUsers";
 
-type PublicProfile = {
-  id: string;
-  name: string;
-  avatar: string;
-  bio: string;
-  joinDate: string;
-  totalPoints: number;
-  totalLeagues: number;
-  bestRank: number;
-  leagues: LeagueRow[];
-  recentActivity: Activity[];
-  topPlayers: TopPlayer[];
-};
-
-const mockProfile: PublicProfile = {
-  id: "1",
-  name: "John Doe",
-  avatar: "",
-  bio: "Fantasy sports enthusiast since 2020",
-  joinDate: "2025-01-01",
-  totalPoints: 587,
-  totalLeagues: 3,
-  bestRank: 1,
-  leagues: [
-    {
-      id: 1,
-      name: "Premier League Champions",
-      sport: "football",
-      rank: 3,
-      points: 212,
-    },
-    {
-      id: 2,
-      name: "NBA Fantasy 2025",
-      sport: "basketball",
-      rank: 1,
-      points: 642,
-    },
-    {
-      id: 3,
-      name: "Cricket World Cup",
-      sport: "cricket",
-      rank: 7,
-      points: 387,
-    },
-  ],
-  recentActivity: [],
-  topPlayers: [
-    { name: "Nikola Jokic", points: 142, league: "NBA Fantasy 2025" },
-    { name: "Lionel Messi", points: 87, league: "Premier League Champions" },
-  ],
-};
+function toSport(value: string): LeagueRow["sport"] {
+  if (
+    value === "football" ||
+    value === "basketball" ||
+    value === "cricket" ||
+    value === "multisport"
+  ) {
+    return value;
+  }
+  return "football";
+}
 
 export function UserProfileView({ userId }: { userId?: string }) {
-  const { data: me, username } = useMe();
-  const { data: profileUser } = useUser(userId ?? "");
-  const { data: leagues } = useMyLeagues();
-  const activityUserId = userId ?? me?.id ?? "";
+  const { data: me } = useMe();
+  const targetUserId = userId ?? me?.id ?? "";
+
+  const { data: stats, isLoading: statsLoading } =
+    useUserPublicStats(targetUserId);
   const {
     data: activityFeed,
     isLoading: activityLoading,
     error: activityError,
-  } = useUserActivity(activityUserId);
+  } = useUserActivity(targetUserId);
 
-  const mappedLeagues = useMemo<LeagueRow[]>(
+  const leagues = useMemo<LeagueRow[]>(
     () =>
-      (leagues ?? []).map((league, index) => ({
+      (stats?.leagues ?? []).map((league, index) => ({
         id: index + 1,
         name: league.name,
-        sport:
-          (league.sports?.[0]?.sport.name as
-            | "football"
-            | "basketball"
-            | "cricket") || "football",
-        rank: league.my_team?.rank ?? 0,
-        points: Number(league.my_team?.points ?? 0),
+        sport: toSport(league.sport),
+        rank: league.rank ?? 0,
+        points: Number(league.points),
       })),
-    [leagues],
+    [stats?.leagues],
   );
 
-  const profile = useMemo(() => {
-    const totalPoints = mappedLeagues.reduce(
-      (sum, league) => sum + league.points,
-      0,
-    );
-    const bestRankValue = mappedLeagues
-      .map((league) => league.rank)
-      .filter((rank) => rank > 0)
-      .sort((a, b) => a - b)[0];
-
-    return {
-      ...mockProfile,
-      id: profileUser?.id ?? me?.id ?? mockProfile.id,
-      name: (profileUser?.username ?? username) || mockProfile.name,
-      avatar: profileUser?.avatar_url ?? me?.avatar_url ?? mockProfile.avatar,
-      joinDate:
-        profileUser?.created_at ?? me?.created_at ?? mockProfile.joinDate,
-      bio: "Public profile",
-      totalPoints,
-      totalLeagues: mappedLeagues.length,
-      bestRank: bestRankValue ?? mockProfile.bestRank,
-      leagues: mappedLeagues,
-      recentActivity: activityFeed ?? [],
-    };
-  }, [
-    activityFeed,
-    mappedLeagues,
-    me?.avatar_url,
-    me?.created_at,
-    me?.id,
-    profileUser?.avatar_url,
-    profileUser?.created_at,
-    profileUser?.id,
-    profileUser?.username,
-    username,
-  ]);
-
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
-      <div className="mb-6 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-        <p className="text-sm text-[#555560]">Public Profile</p>
-        <h1 className="mt-1 text-2xl font-700 tracking-tight text-[#f0f0f0]">
-          {profile.name}
-        </h1>
-      </div>
+    <section className="mx-auto w-full max-w-7xl px-6 py-8 text-[#f0f0f0]">
+      <p className="mb-6 section-label">
+        {targetUserId === me?.id ? "Your Profile" : "Player Profile"}
+      </p>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-1">
-          <ProfileHeader
-            name={profile.name}
-            avatar={profile.avatar}
-            bio={profile.bio}
-            joinDate={profile.joinDate}
-          />
-          <StatsCards
-            totalPoints={profile.totalPoints}
-            totalLeagues={profile.totalLeagues}
-            bestRank={profile.bestRank}
-          />
+      {statsLoading ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-1">
+            <div className="h-32 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div className="h-40 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+          </div>
+          <div className="space-y-6 lg:col-span-2">
+            <div className="h-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+          </div>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-1">
+            <ProfileHeader
+              name={stats?.username ?? "Player"}
+              avatar={stats?.avatar_url ?? ""}
+              joinDate={stats?.created_at ?? ""}
+            />
+            <StatsCards
+              totalPoints={stats?.total_points ?? 0}
+              totalLeagues={stats?.total_leagues ?? 0}
+              bestRank={stats?.best_rank ?? null}
+            />
+          </div>
 
-        <div className="space-y-6 lg:col-span-2">
-          <LeagueHistory leagues={profile.leagues} />
-          <RecentActivity
-            recentActivity={profile.recentActivity}
-            isLoading={activityLoading}
-            errorMessage={activityError?.message ?? null}
-          />
-          {/* <PlayerHighlights topPlayers={profile.topPlayers} /> */}
+          <div className="space-y-6 lg:col-span-2">
+            <LeagueHistory leagues={leagues} />
+            <RecentActivity
+              recentActivity={activityFeed ?? []}
+              isLoading={activityLoading}
+              errorMessage={activityError?.message ?? null}
+            />
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }

@@ -5,6 +5,7 @@ import {
   UserService,
   type TUserActivityItem,
   type TUserProfile,
+  type TUserPublicStats,
   type TUsersListResponse,
 } from "@/services/UserService";
 
@@ -34,6 +35,14 @@ export function useUpdateUser(userId: string) {
       },
       successMessage: "Profile updated",
     },
+  );
+}
+
+export function useUserPublicStats(userId: string) {
+  return useApiQuery<TUserPublicStats>(
+    ["users", userId, "public-stats"],
+    () => UserService.getUserPublicStats(userId),
+    { enabled: !!userId },
   );
 }
 

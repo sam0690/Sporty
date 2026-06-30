@@ -76,49 +76,48 @@ function ActivityCard({ activity }: { activity: TUserActivityItem }) {
       : null;
 
   return (
-    <li className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
+    <li className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]">
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#e8fb25]">
             <ActivityIcon type={activity.type} />
           </span>
-          <div>
-            <p className="text-sm font-600 text-[#f0f0f0]">
+          <div className="min-w-0">
+            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
               {activity.title}
             </p>
-            <p className="text-xs text-[#f0f0f0]/50">{activity.league.name}</p>
+            <p className="truncate text-xs text-[#555560]">
+              {activity.league.name}
+            </p>
           </div>
         </div>
-        <span className="text-xs text-[#f0f0f0]/45">
+        <span className="shrink-0 text-xs text-[#555560]">
           {formatDateTime(activity.timestamp)}
         </span>
       </div>
 
-      <p className="mt-3 text-sm text-[#f0f0f0]/65">{activity.description}</p>
+      <p className="mt-3 text-sm text-[#9a9aa5]">{activity.description}</p>
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
-        <span className="rounded-[3px] bg-[#1d1d26] px-2 py-1 text-[#555560]">
-          {activity.type}
-        </span>
         {windowNumber !== null && (
-          <span className="rounded-[3px] bg-emerald-500/10 px-2 py-1 text-emerald-300">
+          <span className="rounded-[3px] bg-[rgba(232,251,37,0.1)] px-2 py-1 text-[#e8fb25]">
             Window {windowNumber}
           </span>
         )}
         {activity.type === "transfer" && playerIn && playerOut && (
-          <span className="rounded-[3px] bg-amber-500/10 px-2 py-1 text-amber-300">
+          <span className="rounded-[3px] bg-[rgba(255,216,107,0.1)] px-2 py-1 text-[#ffd86b]">
             {playerOut}
-            {" -> "}
+            {" → "}
             {playerIn}
           </span>
         )}
         {activity.type === "points" && points !== null && (
-          <span className="rounded-[3px] bg-sky-500/10 px-2 py-1 text-sky-300">
+          <span className="rounded-[3px] bg-[rgba(76,175,80,0.12)] px-2 py-1 text-[#4caf50]">
             {points.toFixed(1)} pts
           </span>
         )}
         {activity.type === "rank" && rank !== null && (
-          <span className="rounded-[3px] bg-violet-500/10 px-2 py-1 text-violet-300">
+          <span className="rounded-[3px] bg-[rgba(0,212,255,0.1)] px-2 py-1 text-[#00d4ff]">
             Rank #{rank}
           </span>
         )}
@@ -142,21 +141,19 @@ export function RecentActivity({
   }, [activeFilter, recentActivity]);
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="text-base text-[#f0f0f0]">
-          Recent Activity
-        </h3>
-        <div className="flex flex-wrap gap-2">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+        <p className="section-label">Recent Activity</p>
+        <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((filter) => (
             <button
               key={filter.value}
               type="button"
               onClick={() => setActiveFilter(filter.value)}
-              className={`rounded-[3px] px-3 py-1 text-xs transition ${
+              className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] transition-colors ${
                 activeFilter === filter.value
-                  ? "bg-accent-primary text-black"
-                  : "bg-[#1d1d26] text-[#555560] hover:bg-[#1d1d26]"
+                  ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
+                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
               }`}
             >
               {filter.label}
@@ -165,31 +162,33 @@ export function RecentActivity({
         </div>
       </div>
 
-      {isLoading && (
-        <div className="mt-4 rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
-          Loading activity feed...
-        </div>
-      )}
+      <div className="p-5">
+        {isLoading && (
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+            Loading activity feed…
+          </div>
+        )}
 
-      {!isLoading && errorMessage && (
-        <div className="mt-4 rounded-[3px] border border-rose-500/20 bg-rose-500/10 p-4 text-sm text-rose-300">
-          {errorMessage}
-        </div>
-      )}
+        {!isLoading && errorMessage && (
+          <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#ff8a8a]">
+            {errorMessage}
+          </div>
+        )}
 
-      {!isLoading && !errorMessage && filtered.length === 0 && (
-        <div className="mt-4 rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
-          No activity found for this filter.
-        </div>
-      )}
+        {!isLoading && !errorMessage && filtered.length === 0 && (
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+            No activity found for this filter.
+          </div>
+        )}
 
-      {!isLoading && !errorMessage && filtered.length > 0 && (
-        <ul className="mt-4 space-y-3">
-          {filtered.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))}
-        </ul>
-      )}
+        {!isLoading && !errorMessage && filtered.length > 0 && (
+          <ul className="space-y-3">
+            {filtered.map((activity) => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

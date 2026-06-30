@@ -52,6 +52,69 @@ def _league_payload(team: FantasyTeam) -> dict:
     }
 
 
+def get_user_public_stats(db: Session, user_id: uuid.UUID) -> dict:
+    """Public profile stats for ANY user: their leagues with per-league points
+    and best rank, plus aggregate totals. Unlike the dashboard, this is keyed by
+    the target user (not the viewer), so other users' profiles are accurate."""
+    user = get_user(db, user_id)  # 404 if missing/inactive
+
+    teams = (
+        db.query(FantasyTeam)
+        .options(joinedload(FantasyTeam.league))
+        .filter(FantasyTeam.user_id == user_id)
+        .all()
+    )
+
+    # One grouped pass for per-team total points + best (min) rank.
+    aggregates: dict[uuid.UUID, tuple[float, int | None]] = {}
+    if teams:
+        rows = (
+            db.query(
+                TeamWeeklyScore.fantasy_team_id,
+                func.coalesce(func.sum(TeamWeeklyScore.points), 0),
+                func.min(TeamWeeklyScore.rank_in_league),
+            )
+            .filter(TeamWeeklyScore.fantasy_team_id.in_([t.id for t in teams]))
+            .group_by(TeamWeeklyScore.fantasy_team_id)
+            .all()
+        )
+        aggregates = {fid: (_to_float(pts), rank) for fid, pts, rank in rows}
+
+    leagues: list[dict] = []
+    total_points = 0.0
+    best_rank: int | None = None
+    for team in teams:
+        points, rank = aggregates.get(team.id, (0.0, None))
+        sport_name = "football"
+        if team.league and team.league.sports:
+            first = getattr(team.league.sports[0], "sport", None)
+            if first and first.name:
+                sport_name = first.name
+        leagues.append(
+            {
+                "league_id": team.league.id if team.league else None,
+                "name": team.league.name if team.league else "Unknown League",
+                "sport": sport_name,
+                "rank": rank,
+                "points": points,
+            }
+        )
+        total_points += points
+        if rank is not None:
+            best_rank = rank if best_rank is None else min(best_rank, rank)
+
+    return {
+        "user_id": user.id,
+        "username": user.username,
+        "avatar_url": user.avatar_url,
+        "created_at": user.created_at,
+        "total_points": total_points,
+        "total_leagues": len(teams),
+        "best_rank": best_rank,
+        "leagues": leagues,
+    }
+
+
 def get_user_activity(
     db: Session,
     user_id: uuid.UUID,

@@ -20,16 +20,26 @@ type ToggleRowProps = {
 
 function ToggleRow({ label, enabled, onToggle }: ToggleRowProps) {
   return (
-    <div className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3">
-      <p className="text-sm text-[#f0f0f0]">{label}</p>
+    <div className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-3">
+      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+        {label}
+      </p>
       <button
         type="button"
         onClick={onToggle}
         aria-pressed={enabled}
-        className={`relative h-6 w-11 rounded-full transition-colors ${enabled ? "bg-linear-to-r [#e8fb25]" : "bg-[#1d1d26]"}`}
+        className={`relative h-6 w-11 rounded-full border transition-colors ${
+          enabled
+            ? "border-[rgba(232,251,37,0.4)] bg-[#e8fb25]"
+            : "border-[rgba(255,255,255,0.1)] bg-[#1d1d26]"
+        }`}
       >
         <span
-          className={`absolute top-0.5 h-5 w-5 rounded-[3px] bg-white shadow-sm transition-transform ${enabled ? "translate-x-5" : "translate-x-0.5"}`}
+          className={`absolute top-0.5 h-5 w-5 rounded-full shadow-sm transition-transform ${
+            enabled
+              ? "translate-x-5 bg-[#0a0a0f]"
+              : "translate-x-0.5 bg-[#9a9aa5]"
+          }`}
         />
       </button>
     </div>
@@ -46,10 +56,12 @@ export function PreferencesForm({
   };
 
   return (
-    <section className="card-fade-in space-y-4 rounded-[1.75rem] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 ">
-      <h2 className="text-md font-600 text-[#f0f0f0]">Preferences</h2>
+    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+        <p className="section-label">Preferences</p>
+      </header>
 
-      <div className="space-y-4">
+      <div className="space-y-3 p-5">
         <ToggleRow
           label="Email Notifications"
           enabled={preferences.emailNotifications}
@@ -76,14 +88,16 @@ export function PreferencesForm({
           onToggle={() => updatePreference({ darkMode: !preferences.darkMode })}
         />
 
-        <div className="flex items-center justify-between pt-1">
-          <p className="text-sm text-[#555560]">Language</p>
+        <div className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-3">
+          <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+            Language
+          </p>
           <select
             value={preferences.language}
             onChange={(event) =>
               updatePreference({ language: event.target.value })
             }
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>

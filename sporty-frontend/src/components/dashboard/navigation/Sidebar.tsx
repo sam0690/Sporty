@@ -37,7 +37,7 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   const handleOpenSettings = () => {
-    router.push("/profile");
+    router.push("/settings");
   };
 
   return (
