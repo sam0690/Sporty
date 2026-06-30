@@ -617,6 +617,18 @@ class LeaderboardResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class GameweekPointsResponse(BaseModel):
+    """One gameweek's score for a team — a single point on the dashboard's
+    per-gameweek history (sourced from team_weekly_scores)."""
+
+    gameweek: int  # TransferWindow.number
+    transfer_window_id: uuid.UUID
+    points: Decimal
+    rank: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LeagueDashboardStatsResponse(BaseModel):
     """GET /leagues/{id}/dashboard/stats — league-scoped dashboard KPIs."""
 
@@ -626,6 +638,9 @@ class LeagueDashboardStatsResponse(BaseModel):
     gameweek_points: Decimal | None = None
     total_points: Decimal = Decimal("0")
     budget: Decimal
+    # Per-gameweek breakdown (ordered by gameweek number). total_points is the
+    # sum of these rows' points; gameweek_points is the active window's row.
+    gameweek_breakdown: list[GameweekPointsResponse] = []
 
     model_config = ConfigDict(from_attributes=True)
 

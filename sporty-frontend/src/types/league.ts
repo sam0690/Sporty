@@ -226,6 +226,13 @@ export type TStageOutRequest = {
   player_id: string;
 };
 
+export type TGameweekPoints = {
+  gameweek: number;
+  transfer_window_id: string;
+  points: number;
+  rank: number | null;
+};
+
 export type TLeagueDashboardStats = {
   league_id: string;
   team_id: string;
@@ -233,6 +240,7 @@ export type TLeagueDashboardStats = {
   gameweek_points: number | null;
   total_points: number;
   budget: number;
+  gameweek_breakdown: TGameweekPoints[];
 };
 
 export type TStageOutResponse = {

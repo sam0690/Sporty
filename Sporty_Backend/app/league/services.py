@@ -2544,26 +2544,47 @@ def get_dashboard_stats(
             .first()
         )
 
+    # Per-gameweek history: one row per window this team has been scored in,
+    # ordered by gameweek number. The dashboard renders this directly; the
+    # active-window points and the all-time total are both derived from it.
+    weekly_rows = (
+        db.query(
+            TransferWindow.number.label("gameweek"),
+            TeamWeeklyScore.transfer_window_id.label("transfer_window_id"),
+            TeamWeeklyScore.points.label("points"),
+            TeamWeeklyScore.rank_in_league.label("rank"),
+        )
+        .join(
+            TransferWindow,
+            TransferWindow.id == TeamWeeklyScore.transfer_window_id,
+        )
+        .filter(TeamWeeklyScore.fantasy_team_id == team.id)
+        .order_by(TransferWindow.number.asc())
+        .all()
+    )
+
+    gameweek_breakdown = [
+        {
+            "gameweek": row.gameweek,
+            "transfer_window_id": row.transfer_window_id,
+            "points": row.points,
+            "rank": row.rank,
+        }
+        for row in weekly_rows
+    ]
+
     gameweek_points: Decimal | None = None
     rank: int | None = None
     if active_window:
-        active_score = (
-            db.query(TeamWeeklyScore)
-            .filter(
-                TeamWeeklyScore.fantasy_team_id == team.id,
-                TeamWeeklyScore.transfer_window_id == active_window.id,
-            )
-            .first()
+        active = next(
+            (r for r in weekly_rows if r.transfer_window_id == active_window.id),
+            None,
         )
-        if active_score:
-            gameweek_points = active_score.points
-            rank = active_score.rank_in_league
+        if active:
+            gameweek_points = active.points
+            rank = active.rank
 
-    total_points = (
-        db.query(func.coalesce(func.sum(TeamWeeklyScore.points), 0))
-        .filter(TeamWeeklyScore.fantasy_team_id == team.id)
-        .scalar()
-    )
+    total_points = sum((row.points for row in weekly_rows), Decimal("0"))
 
     return {
         "league_id": league_id,
@@ -2572,6 +2593,7 @@ def get_dashboard_stats(
         "gameweek_points": gameweek_points,
         "total_points": total_points,
         "budget": team.current_budget,
+        "gameweek_breakdown": gameweek_breakdown,
     }
 
 
