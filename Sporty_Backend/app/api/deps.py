@@ -16,14 +16,20 @@ from app.match.models import Match
 from app.services.connection_manager import ConnectionManager
 
 
-async def get_connection_manager(request: Request) -> ConnectionManager:
-    manager = getattr(request.app.state, "connection_manager", None)
+async def get_connection_manager(websocket: WebSocket) -> ConnectionManager:
+    # This dependency is used by the WebSocket routes only, so it must take the
+    # WebSocket (not a Request) — FastAPI injects WebSocket for ws handlers, and
+    # asking for `request: Request` here crashes ws connects with a TypeError
+    # ("missing 1 required positional argument: 'request'"), closing the socket
+    # immediately and killing all live updates. Both share `.app.state`.
+    app = websocket.app
+    manager = getattr(app.state, "connection_manager", None)
     if manager is not None:
         return manager
 
     redis = await create_redis_pool()
     manager = ConnectionManager(redis=redis)
-    request.app.state.connection_manager = manager
+    app.state.connection_manager = manager
     return manager
 
 
