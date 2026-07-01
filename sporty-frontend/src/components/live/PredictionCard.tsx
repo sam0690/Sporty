@@ -1,58 +1,83 @@
 "use client";
 
+import { useMatchStore } from "@/store/matchStore";
+import { teamIdentity } from "@/lib/teamIdentity";
 import type { MatchPrediction } from "@/types/events";
+import { Panel } from "./Panel";
+import { ChartIcon } from "./icons";
 
 type PredictionCardProps = {
   prediction: MatchPrediction | null;
 };
 
-const BARS: Array<{
-  key: keyof Pick<
-    MatchPrediction,
-    "home_win_prob" | "draw_prob" | "away_win_prob"
-  >;
-  label: string;
-  color: string;
-}> = [
-  { key: "home_win_prob", label: "Home", color: "#e8fb25" },
-  { key: "draw_prob", label: "Draw", color: "#555560" },
-  { key: "away_win_prob", label: "Away", color: "#777783" },
-];
-
 export function PredictionCard({ prediction }: PredictionCardProps) {
+  const homeTeam = useMatchStore((s) => s.homeTeam);
+  const awayTeam = useMatchStore((s) => s.awayTeam);
+
   if (!prediction) {
     return null;
   }
 
-  return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
-      <span className="section-label">Outcome Prediction</span>
+  const homeColor = teamIdentity(homeTeam ?? "Home").color;
+  const awayColor = teamIdentity(awayTeam ?? "Away").color;
+  const drawColor = "#555560";
 
-      <div className="mt-4 space-y-3">
-        {BARS.map(({ key, label, color }) => {
-          const percent = Math.round(prediction[key] * 100);
-          return (
-            <div key={key} className="flex items-center gap-3">
-              <span className="w-12 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
-                {label}
-              </span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
-                <div
-                  className="h-full rounded-full transition-[width] duration-500"
-                  style={{ width: `${percent}%`, background: color }}
-                />
-              </div>
-              <span className="w-10 text-right font-bebas text-base leading-none tracking-[1px] text-[#f0f0f0]">
-                {percent}%
+  const segments = [
+    { key: "home", label: "Home", color: homeColor, value: prediction.home_win_prob },
+    { key: "draw", label: "Draw", color: drawColor, value: prediction.draw_prob },
+    { key: "away", label: "Away", color: awayColor, value: prediction.away_win_prob },
+  ];
+
+  const total =
+    segments.reduce((sum, s) => sum + s.value, 0) || 1; // guard divide-by-zero
+  const pct = (v: number) => Math.round((v / total) * 100);
+
+  const favourite = segments.reduce((a, b) => (b.value > a.value ? b : a));
+
+  return (
+    <Panel
+      title="Outcome Prediction"
+      icon={<ChartIcon className="size-3.5" />}
+      action={
+        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+          {favourite.label} favoured
+        </span>
+      }
+    >
+      {/* Single stacked probability bar */}
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
+        {segments.map((s) => (
+          <div
+            key={s.key}
+            className="h-full transition-[width] duration-500 first:rounded-l-full last:rounded-r-full"
+            style={{ width: `${pct(s.value)}%`, background: s.color }}
+          />
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {segments.map((s) => (
+          <div key={s.key} className="text-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <span
+                className="size-2 rounded-full"
+                style={{ background: s.color }}
+              />
+              <span className="font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+                {s.label}
               </span>
             </div>
-          );
-        })}
+            <p className="mt-1 font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+              {pct(s.value)}%
+            </p>
+          </div>
+        ))}
       </div>
 
-      <div className="mt-4 text-right text-[10px] uppercase tracking-wider text-[#555560]">
-        {prediction.model_version}
+      <div className="mt-4 border-t border-[rgba(255,255,255,0.06)] pt-2.5 text-right text-[10px] uppercase tracking-wider text-[#555560]">
+        Model {prediction.model_version}
       </div>
-    </section>
+    </Panel>
   );
 }

@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 
 import { useMatchStore } from "@/store/matchStore";
+import { Panel, PanelEmpty } from "./Panel";
+import { TrophyIcon } from "./icons";
 
 type Row = {
   playerId: string;
@@ -11,6 +13,24 @@ type Row = {
   goals: number;
   assists: number;
 };
+
+// Podium tints for the top three ranks; everyone else is neutral.
+const MEDAL: Record<number, string> = {
+  0: "#ffd86b", // gold
+  1: "#c8ccd4", // silver
+  2: "#d08a4e", // bronze
+};
+
+function initialsOf(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "?"
+  );
+}
 
 export function LiveLeaderboard() {
   const playerPoints = useMatchStore((s) => s.playerPoints);
@@ -46,47 +66,61 @@ export function LiveLeaderboard() {
   }, [playerPoints, players, events]);
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
-      <span className="section-label">Top Performers</span>
-
+    <Panel title="Top Performers" icon={<TrophyIcon className="size-3.5" />}>
       {rows.length === 0 ? (
-        <p className="mt-4 text-sm text-[#555560]">No player data yet.</p>
+        <PanelEmpty
+          icon={<TrophyIcon className="size-5" />}
+          title="No player data yet"
+          hint="Standout performers appear as points come in."
+        />
       ) : (
-        <ol className="mt-3 space-y-1">
-          {rows.map((row, idx) => (
-            <li
-              key={row.playerId}
-              className="flex items-center gap-3 rounded-[3px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
-            >
-              <span
-                className={`w-5 shrink-0 text-center font-bebas text-base leading-none ${
-                  idx === 0 ? "text-[#e8fb25]" : "text-[#555560]"
-                }`}
+        <ol className="space-y-1">
+          {rows.map((row, idx) => {
+            const medal = MEDAL[idx];
+            return (
+              <li
+                key={row.playerId}
+                className="flex items-center gap-3 rounded-[8px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
               >
-                {idx + 1}
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
-                  {row.name}
-                </p>
-                {(row.goals > 0 || row.assists > 0) && (
-                  <p className="mt-0.5 flex gap-2 text-[10px] font-700 uppercase tracking-[1px]">
-                    {row.goals > 0 && (
-                      <span className="text-[#4caf50]">{row.goals}G</span>
-                    )}
-                    {row.assists > 0 && (
-                      <span className="text-[#00d4ff]">{row.assists}A</span>
-                    )}
+                <span
+                  className="w-5 shrink-0 text-center font-bebas text-lg leading-none tabular-nums"
+                  style={{ color: medal ?? "#555560" }}
+                >
+                  {idx + 1}
+                </span>
+                <span
+                  className="grid size-8 shrink-0 place-items-center rounded-full font-barlow-condensed text-[11px] font-700 tracking-[0.5px]"
+                  style={{
+                    color: medal ?? "#9a9aa5",
+                    background: medal ? `${medal}1f` : "rgba(255,255,255,0.05)",
+                    border: `1px solid ${medal ? `${medal}59` : "rgba(255,255,255,0.08)"}`,
+                  }}
+                >
+                  {initialsOf(row.name)}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                    {row.name}
                   </p>
-                )}
-              </div>
-              <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
-                {row.points.toFixed(1)}
-              </span>
-            </li>
-          ))}
+                  {(row.goals > 0 || row.assists > 0) && (
+                    <p className="mt-0.5 flex gap-2 text-[10px] font-700 uppercase tracking-[1px]">
+                      {row.goals > 0 && (
+                        <span className="text-[#00ff88]">{row.goals}G</span>
+                      )}
+                      {row.assists > 0 && (
+                        <span className="text-[#00d4ff]">{row.assists}A</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+                <span className="shrink-0 font-bebas text-xl leading-none tracking-[1px] tabular-nums text-[#e8fb25]">
+                  {row.points.toFixed(1)}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       )}
-    </section>
+    </Panel>
   );
 }

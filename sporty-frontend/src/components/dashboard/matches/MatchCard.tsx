@@ -48,7 +48,7 @@ export function MatchCard({
   const isLive = status === "live";
   const isFinished = status === "finished";
 
-  const open = () => router.push(`/match/${match.id}`);
+  const open = () => router.push(`/matches/${match.id}`);
 
   return (
     <article

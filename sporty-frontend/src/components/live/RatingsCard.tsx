@@ -3,29 +3,25 @@
 import { useMemo } from "react";
 
 import type { MatchRatings, PlayerRating } from "@/types/events";
+import { Panel } from "./Panel";
+import { StarIcon, TrophyIcon } from "./icons";
 
 function ratingColor(rating: number): string {
-  if (rating >= 8) return "#e8fb25";
-  if (rating >= 7) return "#4caf50";
+  if (rating >= 8) return "#00ff88";
+  if (rating >= 7) return "#e8fb25";
   if (rating >= 6) return "#ffd86b";
   return "#9a9aa5";
 }
 
-function RatingRow({
-  row,
-  isMotm,
-}: {
-  row: PlayerRating;
-  isMotm: boolean;
-}) {
+function RatingRow({ row, isMotm }: { row: PlayerRating; isMotm: boolean }) {
   const color = ratingColor(row.rating);
   const pct = Math.max(6, Math.min(100, (row.rating / 10) * 100));
   return (
     <div
-      className={`rounded-[3px] border bg-[#0d0d12] px-3 py-2.5 transition-colors ${
+      className={`relative overflow-hidden rounded-[8px] border px-3.5 py-3 transition-colors ${
         isMotm
-          ? "border-[rgba(232,251,37,0.35)]"
-          : "border-[rgba(255,255,255,0.08)]"
+          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.05)]"
+          : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.16)]"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -35,16 +31,15 @@ function RatingRow({
               {row.name ?? row.sporty_player_id ?? "Unknown"}
             </span>
             {isMotm && (
-              <span className="shrink-0 rounded-[3px] bg-[rgba(232,251,37,0.15)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-[4px] bg-[rgba(232,251,37,0.16)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+                <StarIcon className="size-2.5" />
                 MOTM
               </span>
             )}
           </div>
           {(row.goals > 0 || row.assists > 0) && (
-            <p className="mt-0.5 flex gap-2 text-[10px] font-700 uppercase tracking-[1px]">
-              {row.goals > 0 && (
-                <span className="text-[#4caf50]">{row.goals}G</span>
-              )}
+            <p className="mt-1 flex gap-2 text-[10px] font-700 uppercase tracking-[1px]">
+              {row.goals > 0 && <span className="text-[#00ff88]">{row.goals}G</span>}
               {row.assists > 0 && (
                 <span className="text-[#00d4ff]">{row.assists}A</span>
               )}
@@ -52,13 +47,13 @@ function RatingRow({
           )}
         </div>
         <span
-          className="shrink-0 font-bebas text-2xl leading-none tracking-[1px]"
-          style={{ color }}
+          className="grid size-11 shrink-0 place-items-center rounded-[7px] font-bebas text-2xl leading-none tracking-[1px]"
+          style={{ color, background: `${color}14`, border: `1px solid ${color}3d` }}
         >
           {row.rating.toFixed(1)}
         </span>
       </div>
-      <div className="mt-2 h-1 overflow-hidden rounded-full bg-[#1d1d26]">
+      <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-[#1d1d26]">
         <div
           className="h-full rounded-full"
           style={{ width: `${pct}%`, background: color }}
@@ -84,24 +79,29 @@ export function RatingsCard({ ratings }: { ratings: MatchRatings | null }) {
   const motmId = ratings.man_of_match_sporty_player_id;
 
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
-        <span className="section-label">Player Ratings</span>
-        {ratings.man_of_match_name && (
+    <Panel
+      title="Player Ratings"
+      icon={<TrophyIcon className="size-3.5" />}
+      action={
+        ratings.man_of_match_name ? (
           <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
-            MOTM <span className="text-[#e8fb25]">{ratings.man_of_match_name}</span>
+            MOTM{" "}
+            <span className="text-[#e8fb25]">{ratings.man_of_match_name}</span>
           </span>
-        )}
-      </header>
-      <div className="grid gap-2 p-5 sm:grid-cols-2">
+        ) : null
+      }
+    >
+      <div className="grid gap-2.5 sm:grid-cols-2">
         {rows.map((row, index) => (
           <RatingRow
             key={row.sporty_player_id ?? `r-${index}`}
             row={row}
-            isMotm={row.sporty_player_id !== null && row.sporty_player_id === motmId}
+            isMotm={
+              row.sporty_player_id !== null && row.sporty_player_id === motmId
+            }
           />
         ))}
       </div>
-    </section>
+    </Panel>
   );
 }

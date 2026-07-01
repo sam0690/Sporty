@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/match/:matchId",
+        destination: "/matches/:matchId",
+        permanent: false,
+      },
+      {
         source: "/league/:id",
         destination: "/leagues/:id",
         permanent: false,

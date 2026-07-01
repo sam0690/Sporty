@@ -5,58 +5,50 @@ import { useMemo } from "react";
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
 import type { MatchEvent } from "@/types/events";
+import { Panel, PanelEmpty } from "./Panel";
+import { ClockIcon, ListIcon, eventVisual } from "./icons";
 
-// Icon + readable label for known feeder event types; unknowns fall back to a
-// title-cased version of the raw type so the feed degrades gracefully.
-const EVENT_META: Record<string, { icon: string; label: string }> = {
-  goal: { icon: "⚽", label: "Goal" },
-  assist: { icon: "🅰️", label: "Assist" },
-  yellow_card: { icon: "🟨", label: "Yellow Card" },
-  red_card: { icon: "🟥", label: "Red Card" },
-  substitution: { icon: "🔁", label: "Substitution" },
-  penalty: { icon: "🎯", label: "Penalty" },
-  own_goal: { icon: "🥅", label: "Own Goal" },
-  clean_sheet: { icon: "🧤", label: "Clean Sheet" },
-};
+function EventRow({ event, last }: { event: MatchEvent; last: boolean }) {
+  const { Icon, color, label } = eventVisual(event.type);
+  const teamColor = event.team ? teamIdentity(event.team).color : color;
 
-function titleCase(value: string): string {
-  return value
-    .replace(/[_-]+/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function eventMeta(type: string): { icon: string; label: string } {
-  return EVENT_META[type.toLowerCase()] ?? { icon: "•", label: titleCase(type) };
-}
-
-function EventRow({ event }: { event: MatchEvent }) {
-  const { icon, label } = eventMeta(event.type);
-  const teamColor = event.team ? teamIdentity(event.team).color : null;
   return (
-    <li className="flex items-center gap-4 py-3">
-      <span className="w-9 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] text-[#e8fb25]">
+    <li className="relative flex gap-4 pb-5 last:pb-0">
+      {/* timeline spine */}
+      {!last && (
+        <span
+          aria-hidden
+          className="absolute left-[1.4rem] top-11 bottom-0 w-px bg-[rgba(255,255,255,0.08)]"
+        />
+      )}
+
+      <span className="w-8 shrink-0 pt-1.5 text-right font-bebas text-lg leading-none tracking-[1px] tabular-nums text-[#9a9aa5]">
         {event.minute != null ? `${event.minute}'` : "—"}
       </span>
+
       <span
-        className="grid size-9 shrink-0 place-items-center rounded-[3px] border bg-[rgba(255,255,255,0.04)] text-base"
+        className="relative z-10 grid size-9 shrink-0 place-items-center rounded-full border"
         style={{
-          borderColor: teamColor ? `${teamColor}55` : "rgba(255,255,255,0.08)",
+          color,
+          borderColor: `${color}59`,
+          background: `${color}17`,
         }}
       >
-        {icon}
+        <Icon className="size-[1.05rem]" />
       </span>
-      <div className="min-w-0 flex-1">
+
+      <div className="min-w-0 flex-1 pt-0.5">
         <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
           {label}
         </div>
-        <div className="truncate text-xs text-[#555560]">
-          {event.player_name ?? event.player_id ?? "Unknown player"}
+        <div className="mt-0.5 truncate text-xs text-[#6a6a76]">
+          <span className="text-[#9a9aa5]">
+            {event.player_name ?? event.player_id ?? "Unknown player"}
+          </span>
           {event.team && (
             <>
               {" · "}
-              <span style={{ color: teamColor ?? undefined }}>
-                {event.team}
-              </span>
+              <span style={{ color: teamColor }}>{event.team}</span>
             </>
           )}
         </div>
@@ -75,35 +67,34 @@ export function EventFeed() {
   );
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
-      <header className="flex items-center justify-between">
-        <span className="section-label">Match Events</span>
-        {ordered.length > 0 && (
-          <span className="text-xs font-600 text-[#555560]">
+    <Panel
+      title="Match Events"
+      icon={<ListIcon className="size-3.5" />}
+      action={
+        ordered.length > 0 ? (
+          <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
             {ordered.length}
           </span>
-        )}
-      </header>
-
+        ) : null
+      }
+    >
       {ordered.length === 0 ? (
-        <div className="mt-2 flex flex-col items-center gap-2 py-10 text-center">
-          <span className="text-2xl opacity-60" aria-hidden>
-            ⏱️
-          </span>
-          <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#9a9aa5]">
-            No events yet
-          </p>
-          <p className="text-xs text-[#555560]">
-            Goals, cards and assists will stream here live.
-          </p>
-        </div>
+        <PanelEmpty
+          icon={<ClockIcon className="size-5" />}
+          title="No events yet"
+          hint="Goals, cards and assists will stream here live."
+        />
       ) : (
-        <ul className="mt-2 divide-y divide-[rgba(255,255,255,0.06)]">
-          {ordered.map((event) => (
-            <EventRow key={event.event_id} event={event} />
+        <ul className="animate-fade-soft">
+          {ordered.map((event, idx) => (
+            <EventRow
+              key={event.event_id}
+              event={event}
+              last={idx === ordered.length - 1}
+            />
           ))}
         </ul>
       )}
-    </section>
+    </Panel>
   );
 }
