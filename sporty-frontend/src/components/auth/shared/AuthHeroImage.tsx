@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { BoltGlyph, SPORT_GLYPHS } from "@/components/landing/sport-icons";
 
 type AuthHeroImageProps = {
@@ -8,78 +9,54 @@ type AuthHeroImageProps = {
   bullets?: string[];
 };
 
-// Pure-CSS branded panel that sits beside the auth form. Replaces the old
-// stock-photo hero with a dark "broadcast" surface consistent with the live
-// match page — same gradient, glow and volt accent language.
+// Pure-CSS branded panel beside the auth form — a dark "broadcast" ink slab
+// (Design_System.md §6) that anchors the bright form column with high contrast.
 export function AuthHeroImage({
   title,
   subtitle,
   bullets = [],
 }: AuthHeroImageProps) {
   return (
-    <div className="relative h-full min-h-[520px] overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-gradient-to-b from-[#14141b] to-[#0b0b10] shadow-[0_30px_70px_-30px_rgba(0,0,0,1)]">
-      {/* accent bar + ambient glow */}
-      <div
-        className="h-1"
-        style={{
-          background: "linear-gradient(90deg, #e8fb25, #00ff88 55%, #00d4ff)",
-        }}
-      />
+    <div className="relative h-full min-h-[520px] overflow-hidden rounded-xl bg-ink-block text-on-ink shadow-lg">
+      {/* accent bar + ambient wash */}
+      <div className="h-1.5 gradient-action" />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(70% 50% at 20% 15%, rgba(232,251,37,0.14), transparent 55%), radial-gradient(60% 50% at 100% 100%, rgba(0,212,255,0.12), transparent 55%)",
+            "radial-gradient(70% 50% at 20% 15%, rgba(220,38,38,0.16), transparent 55%), radial-gradient(60% 50% at 100% 100%, rgba(147,51,234,0.14), transparent 55%)",
         }}
       />
-      <div className="auth-dot-pattern pointer-events-none absolute inset-0 opacity-[0.12]" />
 
       <div className="relative flex h-full flex-col justify-between p-8">
         {/* brand */}
         <div className="flex items-center gap-2.5">
-          <span
-            className="grid size-9 place-items-center rounded-[8px] text-[#0a0a0f]"
-            style={{
-              background: "linear-gradient(150deg, #f0ff45, #e8fb25)",
-              boxShadow: "0 0 24px rgba(232,251,37,0.4)",
-            }}
-          >
+          <span className="grid size-9 place-items-center rounded-sm bg-primary text-on-primary shadow-hard-sm">
             <BoltGlyph className="size-5" />
           </span>
-          <span className="font-bebas text-2xl leading-none tracking-[3px] text-[#f0f0f0]">
-            SPORTY
+          <span className="font-condensed text-2xl font-bold uppercase leading-none tracking-[0.06em] text-on-ink">
+            SPOR<span className="text-primary">TY</span>
           </span>
         </div>
 
         {/* headline */}
         <div className="max-w-sm">
-          <h3 className="font-bebas text-5xl leading-[0.95] tracking-[2px] text-[#f0f0f0]">
+          <h3 className="font-condensed text-5xl font-bold uppercase leading-[0.92] tracking-[0.01em] text-on-ink">
             {title}
           </h3>
           {subtitle && (
-            <p className="mt-3 text-sm leading-6 text-[#9a9aa5]">{subtitle}</p>
+            <p className="mt-3 text-sm leading-6 text-on-ink-muted">{subtitle}</p>
           )}
 
           {bullets.length > 0 && (
             <ul className="mt-6 space-y-2.5">
               {bullets.map((item) => (
                 <li key={item} className="flex items-center gap-2.5">
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[rgba(0,255,136,0.14)] text-[#00ff88]">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="size-3"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={2.6}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
+                  <span className="grid size-5 shrink-0 place-items-center rounded-sm bg-primary/20 text-primary">
+                    <Check className="size-3" strokeWidth={3} aria-hidden="true" />
                   </span>
-                  <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#d7d7de]">
+                  <span className="font-condensed text-sm font-semibold uppercase tracking-[0.04em] text-on-ink">
                     {item}
                   </span>
                 </li>
@@ -93,12 +70,12 @@ export function AuthHeroImage({
           {SPORT_GLYPHS.map(({ Icon, label, color }) => (
             <span
               key={label}
-              className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 py-1.5"
+              className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-3 py-1.5"
             >
               <span style={{ color }}>
                 <Icon className="size-4" />
               </span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#d7d7de]">
+              <span className="font-condensed text-xs font-semibold uppercase tracking-[0.1em] text-on-ink">
                 {label}
               </span>
             </span>

@@ -64,17 +64,17 @@ export function GameweekContextBar({
     activeWindow.number !== editableWindow.number;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[#111117]">
+    <div className="flex flex-wrap items-center justify-between gap-3 overflow-hidden rounded-[3px] border border-[rgba(220,38,38,0.2)] bg-[#FFFFFF]">
       <div className="flex items-stretch gap-3">
-        <div className="w-1 self-stretch bg-[#e8fb25]" />
+        <div className="w-1 self-stretch bg-[#DC2626]" />
         <div className="py-2.5">
-          <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+          <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[1.5px] text-[#DC2626]">
             Setting up ▸ Gameweek {editableWindow.number}
           </p>
           {deadlineMs ? (
-            <p className="mt-0.5 text-xs text-[#555560]">
+            <p className="mt-0.5 text-xs text-[#6B7280]">
               Locks in{" "}
-              <span className="font-700 tabular-nums text-[#9a9aa5]">
+              <span className="font-bold tabular-nums text-[#6B7280]">
                 {formatCountdown(deadlineMs, now)}
               </span>{" "}
               · before its matches start
@@ -86,13 +86,13 @@ export function GameweekContextBar({
       {showLive ? (
         <Link
           href={`/leagues/${leagueId}`}
-          className="group flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-[#0d0d12]"
+          className="group flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-[#FFFFFF]"
         >
-          <span className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
-            <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
+          <span className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#DC2626]">
+            <span className="size-1.5 rounded-full bg-[#DC2626] animate-live-pulse" />
             GW{activeWindow!.number} is live now
           </span>
-          <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#555560] group-hover:text-[#9a9aa5]">
+          <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1.5px] text-[#6B7280] group-hover:text-[#6B7280]">
             View live
             <ArrowRight size={12} />
           </span>

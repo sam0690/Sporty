@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Lock, X } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { DangerZone } from "@/components/dashboard/leagues/league-settings/components/DangerZone";
@@ -253,20 +254,23 @@ export function LeagueSettings() {
 
   if (!isCommissioner) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#0B1220]">
         <NavigationTabs
           activeTab="settings"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-          <p className="text-2xl" aria-hidden>
-            🔒
-          </p>
-          <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <div className="surface flex flex-col items-center p-8 text-center">
+          <div
+            className="flex h-14 w-14 items-center justify-center rounded-md bg-surface-muted text-ink-muted"
+            aria-hidden
+          >
+            <Lock className="h-6 w-6" strokeWidth={1.75} />
+          </div>
+          <p className="mt-3 font-condensed text-sm font-bold uppercase tracking-[0.06em] text-ink">
             Commissioner only
           </p>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-[#6B7280]">
             Only the league commissioner can change these settings.
           </p>
         </div>
@@ -275,19 +279,19 @@ export function LeagueSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#0B1220]">
       <NavigationTabs
         activeTab="settings"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="border-b border-[rgba(11,18,32,0.08)] pb-6">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
           Settings
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-[#6B7280]">
           Manage your league&apos;s configuration and scoring
         </p>
       </header>
@@ -336,9 +340,10 @@ export function LeagueSettings() {
               key={leagueSport.sport.name}
               type="button"
               onClick={() => removeSport.mutateAsync(leagueSport.sport.name)}
-              className={`${segmentBase} ${segmentActive}`}
+              className={`${segmentBase} ${segmentActive} inline-flex items-center gap-1.5`}
             >
-              {leagueSport.sport.display_name} ✕
+              {leagueSport.sport.display_name}
+              <X className="h-3 w-3" />
             </button>
           ))}
           {(sports ?? [])
@@ -371,7 +376,7 @@ export function LeagueSettings() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-[#DC2626] px-6 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#F6F7F9] transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Save Changes"}
         </button>

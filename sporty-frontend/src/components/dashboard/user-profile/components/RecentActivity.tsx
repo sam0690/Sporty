@@ -76,48 +76,48 @@ function ActivityCard({ activity }: { activity: TUserActivityItem }) {
       : null;
 
   return (
-    <li className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4">
+    <li className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#e8fb25]">
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] text-[#DC2626]">
             <ActivityIcon type={activity.type} />
           </span>
           <div className="min-w-0">
-            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+            <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
               {activity.title}
             </p>
-            <p className="truncate text-xs text-[#555560]">
+            <p className="truncate text-xs text-[#6B7280]">
               {activity.league.name}
             </p>
           </div>
         </div>
-        <span className="shrink-0 text-xs text-[#555560]">
+        <span className="shrink-0 text-xs text-[#6B7280]">
           {formatDateTime(activity.timestamp)}
         </span>
       </div>
 
-      <p className="mt-3 text-sm text-[#9a9aa5]">{activity.description}</p>
+      <p className="mt-3 text-sm text-[#6B7280]">{activity.description}</p>
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs">
         {windowNumber !== null && (
-          <span className="rounded-[3px] bg-[rgba(232,251,37,0.1)] px-2 py-1 text-[#e8fb25]">
+          <span className="rounded-[3px] bg-[rgba(220,38,38,0.1)] px-2 py-1 text-[#DC2626]">
             Window {windowNumber}
           </span>
         )}
         {activity.type === "transfer" && playerIn && playerOut && (
-          <span className="rounded-[3px] bg-[rgba(255,216,107,0.1)] px-2 py-1 text-[#ffd86b]">
+          <span className="rounded-[3px] bg-[rgba(255,216,107,0.1)] px-2 py-1 text-[#CA8A04]">
             {playerOut}
             {" → "}
             {playerIn}
           </span>
         )}
         {activity.type === "points" && points !== null && (
-          <span className="rounded-[3px] bg-[rgba(76,175,80,0.12)] px-2 py-1 text-[#4caf50]">
+          <span className="rounded-[3px] bg-[rgba(76,175,80,0.12)] px-2 py-1 text-[#16A34A]">
             {points.toFixed(1)} pts
           </span>
         )}
         {activity.type === "rank" && rank !== null && (
-          <span className="rounded-[3px] bg-[rgba(0,212,255,0.1)] px-2 py-1 text-[#00d4ff]">
+          <span className="rounded-[3px] bg-[rgba(0,212,255,0.1)] px-2 py-1 text-[#0891B2]">
             Rank #{rank}
           </span>
         )}
@@ -141,8 +141,8 @@ export function RecentActivity({
   }, [activeFilter, recentActivity]);
 
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
         <p className="section-label">Recent Activity</p>
         <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((filter) => (
@@ -150,10 +150,10 @@ export function RecentActivity({
               key={filter.value}
               type="button"
               onClick={() => setActiveFilter(filter.value)}
-              className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] transition-colors ${
+              className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] transition-colors ${
                 activeFilter === filter.value
-                  ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                  ? "border-[rgba(220,38,38,0.4)] bg-[rgba(220,38,38,0.1)] text-[#DC2626]"
+                  : "border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] text-[#6B7280] hover:text-[#0B1220]"
               }`}
             >
               {filter.label}
@@ -164,19 +164,19 @@ export function RecentActivity({
 
       <div className="p-5">
         {isLoading && (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+          <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-4 text-sm text-[#6B7280]">
             Loading activity feed…
           </div>
         )}
 
         {!isLoading && errorMessage && (
-          <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#ff8a8a]">
+          <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#DC2626]">
             {errorMessage}
           </div>
         )}
 
         {!isLoading && !errorMessage && filtered.length === 0 && (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+          <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-4 text-sm text-[#6B7280]">
             No activity found for this filter.
           </div>
         )}

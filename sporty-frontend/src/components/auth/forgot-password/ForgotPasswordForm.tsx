@@ -36,18 +36,11 @@ export function ForgotPasswordForm() {
         />
       }
     >
-      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] ">
+      <Card className="animate-fade-in mx-auto w-full max-w-md">
         <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
-          <div className="flex items-center gap-2 text-primary">
-            <span className="text-lg" aria-hidden="true">
-              ⚽🏀🏏
-            </span>
-            <span className="font-barlow-condensed text-base font-700">Sporty</span>
-          </div>
-          <CardTitle className="font-bebas text-5xl text-[#f0f0f0] sm:text-4xl">
-            Forgot password?
-          </CardTitle>
-          <p className="text-sm text-[#f0f0f0]/65">
+          <span className="kicker">Sporty</span>
+          <CardTitle className="text-4xl sm:text-5xl">Forgot password?</CardTitle>
+          <p className="text-sm text-ink-muted">
             No worries, we&apos;ll send you reset instructions
           </p>
         </CardHeader>
@@ -57,12 +50,12 @@ export function ForgotPasswordForm() {
             <div>
               <label
                 htmlFor="email"
-                className="mb-1 block text-sm text-[#f0f0f0]"
+                className="mb-1.5 block font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-ink-muted"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#f0f0f0]/40" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-ink-faint" />
                 <Input
                   id="email"
                   type="email"
@@ -71,19 +64,19 @@ export function ForgotPasswordForm() {
                   placeholder="name@example.com"
                   autoComplete="email"
                   error={emailError}
-                  className="h-12 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 pl-10 text-base text-[#f0f0f0] placeholder:text-[#f0f0f0]/40 focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
+                  className="h-12 pl-10 text-base"
                 />
               </div>
             </div>
 
             <Button
               type="submit"
-              className="h-12 w-full rounded-[3px] text-base font-600 shadow-card hover:shadow-hover transition-all duration-200 active:scale-[0.98] disabled:opacity-60"
+              className="h-12 w-full text-base disabled:opacity-60"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <span className="inline-flex items-center gap-2">
-                  <span className="h-4 w-4 animate-spin rounded-[3px] border-2 border-[#F4F4F9]/30 border-t-[#F4F4F9]" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary/30 border-t-on-primary" />
                   Sending...
                 </span>
               ) : (
@@ -93,21 +86,21 @@ export function ForgotPasswordForm() {
           </form>
 
           {isSubmitted && (
-            <p className="rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.1)] p-3 text-sm text-[#e8fb25]">
+            <p className="rounded-md border border-success/20 bg-success-soft p-3 text-sm font-medium text-success">
               {successMessage}
             </p>
           )}
 
           {submitError && (
-            <p className="rounded-[3px] border border-danger/20 bg-danger/5 p-3 text-sm text-danger">
+            <p className="rounded-md border border-danger/20 bg-danger-soft p-3 text-sm font-medium text-danger">
               {submitError}
             </p>
           )}
 
-          <p className="border-t border-[rgba(255,255,255,0.08)] pt-4 text-center text-sm text-[#555560]">
+          <p className="border-t border-border pt-4 text-center text-sm text-ink-muted">
             <Link
               href="/login"
-              className="font-600 text-[#e8fb25] hover:text-accent-secondary hover:underline"
+              className="font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-primary hover:text-primary-hover hover:no-underline"
             >
               Back to Login
             </Link>

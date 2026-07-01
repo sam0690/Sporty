@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
+import { SportIcon } from "@/components/landing/sport-icons";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 
 type PlayerListProps = {
@@ -18,12 +19,6 @@ type PlayerListProps = {
 
 type DraggablePlayerCardProps = {
   player: Player;
-};
-
-const sportIcons = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
 };
 
 function DraggablePlayerCard({ player }: DraggablePlayerCardProps) {
@@ -48,20 +43,23 @@ function DraggablePlayerCard({ player }: DraggablePlayerCardProps) {
       style={style}
       {...listeners}
       {...attributes}
-      className="cursor-grab rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 transition hover:border-[rgba(232,251,37,0.2)] hover:bg-[#1d1d26]"
+      className="cursor-grab rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-3 transition hover:border-[rgba(220,38,38,0.2)] hover:bg-[#F3F4F7]"
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate text-sm font-600 text-[#f0f0f0]">
+        <p className="truncate text-sm font-semibold text-[#0B1220]">
           {player.name}
         </p>
-        <span className="text-base" aria-label={player.sport}>
-          {sportIcons[player.sport]}
-        </span>
+        <SportIcon
+          sport={player.sport}
+          className="h-4 w-4"
+          tint
+        />
+        <span className="sr-only">{player.sport}</span>
       </div>
-      <p className="mt-1 text-xs text-[#555560]">{player.position}</p>
-      <p className="mt-1 truncate text-xs text-[#555560]">{player.realTeam}</p>
-      <p className="mt-1 text-xs text-[#e8fb25]">
+      <p className="mt-1 text-xs text-[#6B7280]">{player.position}</p>
+      <p className="mt-1 truncate text-xs text-[#6B7280]">{player.realTeam}</p>
+      <p className="mt-1 text-xs text-[#DC2626]">
         Cost {player.cost}
       </p>
     </article>
@@ -107,28 +105,28 @@ export function PlayerList({
   return (
     <DropZone
       id="bench-drop"
-      className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 "
-      activeClassName="border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.1)]"
+      className="space-y-4 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-4 "
+      activeClassName="border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.1)]"
     >
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-base font-600 text-[#f0f0f0]">
+        <h3 className="text-base font-semibold text-[#0B1220]">
           Available Players
         </h3>
-        <p className="text-xs text-[#555560]">Drop here to bench</p>
+        <p className="text-xs text-[#6B7280]">Drop here to bench</p>
       </div>
 
       <input
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         placeholder="Search by name..."
-        className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2 text-sm text-[#f0f0f0] outline-none"
+        className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-3 py-2 text-sm text-[#0B1220] outline-none"
       />
 
       <div className="grid grid-cols-2 gap-2">
         <select
           value={selectedSport}
           onChange={(event) => onSportChange(event.target.value)}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-2 text-xs text-[#f0f0f0] outline-none"
+          className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-2 py-2 text-xs text-[#0B1220] outline-none"
         >
           {sports.map((sport) => (
             <option key={sport} value={sport}>
@@ -139,7 +137,7 @@ export function PlayerList({
         <select
           value={selectedPosition}
           onChange={(event) => onPositionChange(event.target.value)}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-2 text-xs text-[#f0f0f0] outline-none"
+          className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-2 py-2 text-xs text-[#0B1220] outline-none"
         >
           {positions.map((position) => (
             <option key={position} value={position}>
@@ -153,14 +151,14 @@ export function PlayerList({
         <button
           type="button"
           onClick={() => setGroupBy("sport")}
-          className={`rounded-[3px] px-2 py-1 text-xs ${groupBy === "sport" ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "bg-[#1d1d26] text-[#f0f0f0]"}`}
+          className={`rounded-[3px] px-2 py-1 text-xs ${groupBy === "sport" ? "bg-[rgba(220,38,38,0.1)] text-[#DC2626]" : "bg-[#F3F4F7] text-[#0B1220]"}`}
         >
           Group: Sport
         </button>
         <button
           type="button"
           onClick={() => setGroupBy("position")}
-          className={`rounded-[3px] px-2 py-1 text-xs ${groupBy === "position" ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "bg-[#1d1d26] text-[#f0f0f0]"}`}
+          className={`rounded-[3px] px-2 py-1 text-xs ${groupBy === "position" ? "bg-[rgba(220,38,38,0.1)] text-[#DC2626]" : "bg-[#F3F4F7] text-[#0B1220]"}`}
         >
           Group: Position
         </button>
@@ -168,13 +166,13 @@ export function PlayerList({
 
       <div className="max-h-155 space-y-4 overflow-y-auto pr-1">
         {Object.keys(groupedPlayers).length === 0 ? (
-          <p className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-sm text-[#555560]">
+          <p className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-3 text-sm text-[#6B7280]">
             No players found.
           </p>
         ) : (
           Object.entries(groupedPlayers).map(([group, groupPlayers]) => (
             <section key={group} className="space-y-2">
-              <p className="text-xs font-600 uppercase tracking-wide text-[#555560]">
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#6B7280]">
                 {group}
               </p>
               <div className="space-y-2">

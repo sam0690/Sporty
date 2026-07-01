@@ -32,41 +32,28 @@ const LINK_GROUPS: { title: string; links: { label: string; href: string }[] }[]
 export function LandingFooterContainer() {
   return (
     <footer
-      className="relative border-t border-[rgba(255,255,255,0.08)] bg-[#08080c]"
+      className="relative bg-ink-block text-on-ink"
       aria-labelledby="landing-footer-title"
       id="pricing"
     >
-      {/* top edge glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{
-          background:
-            "linear-gradient(90deg, transparent, rgba(232,251,37,0.4), transparent)",
-        }}
-      />
+      {/* top edge accent */}
+      <div className="h-1 w-full gradient-action" aria-hidden />
 
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-14 sm:px-6 lg:px-8 lg:pb-14 lg:pt-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-xs">
             <div className="flex items-center gap-2">
-              <span
-                className="grid size-8 place-items-center rounded-[7px] text-[#0a0a0f]"
-                style={{
-                  background: "linear-gradient(150deg, #f0ff45, #e8fb25)",
-                  boxShadow: "0 0 22px rgba(232,251,37,0.35)",
-                }}
-              >
+              <span className="grid size-8 place-items-center rounded-sm bg-primary text-on-primary">
                 <BoltGlyph className="size-4" />
               </span>
               <span
                 id="landing-footer-title"
-                className="font-bebas text-2xl leading-none tracking-[3px] text-[#f0f0f0]"
+                className="font-condensed text-2xl font-bold uppercase leading-none tracking-[0.06em] text-on-ink"
               >
-                SPORTY
+                SPOR<span className="text-primary">TY</span>
               </span>
             </div>
-            <p className="mt-4 text-sm leading-6 text-[#8a8a95]">
+            <p className="mt-4 text-sm leading-6 text-on-ink-muted">
               Run fantasy teams across football, basketball, and cricket — one
               squad, every matchday.
             </p>
@@ -74,13 +61,15 @@ export function LandingFooterContainer() {
 
           {LINK_GROUPS.map((group) => (
             <div key={group.title}>
-              <h4 className="section-label">{group.title}</h4>
-              <ul className="mt-4 space-y-2.5 text-sm text-[#8a8a95]">
+              <h4 className="font-condensed text-[11px] font-semibold uppercase tracking-[0.18em] text-on-ink-muted">
+                {group.title}
+              </h4>
+              <ul className="mt-4 space-y-2.5 text-sm text-on-ink-muted">
                 {group.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="transition-colors hover:text-[#e8fb25] hover:no-underline"
+                      className="transition-colors hover:text-primary hover:no-underline"
                     >
                       {link.label}
                     </Link>
@@ -91,9 +80,9 @@ export function LandingFooterContainer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-[rgba(255,255,255,0.06)] pt-6 text-sm text-[#555560] sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-6 text-sm text-on-ink-muted sm:flex-row">
           <p>© 2026 Sporty. All rights reserved.</p>
-          <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px]">
+          <p className="font-condensed text-xs font-semibold uppercase tracking-[0.16em]">
             Football · Basketball · Cricket
           </p>
         </div>

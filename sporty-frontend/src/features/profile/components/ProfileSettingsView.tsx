@@ -80,7 +80,7 @@ export function ProfileSettingsView() {
       setUserData((prev) => ({ ...prev, ...nextUser }));
       return true;
     } catch {
-      toastifier.error("✕ Unable to update profile");
+      toastifier.error("Unable to update profile");
       return false;
     }
   };
@@ -90,7 +90,7 @@ export function ProfileSettingsView() {
       await updateUser.mutateAsync({ avatar_url: avatar });
     }
     setUserData((prev) => ({ ...prev, avatar }));
-    toastifier.success("✓ Avatar updated successfully");
+    toastifier.success("Avatar updated successfully");
   };
 
   const handleDeleteAccount = async (): Promise<boolean> => {
@@ -101,14 +101,14 @@ export function ProfileSettingsView() {
       }
       const result = await logout();
       if (!result.success) {
-        toastifier.error(`✕ ${result.error ?? "Unable to delete account"}`);
+        toastifier.error(`${result.error ?? "Unable to delete account"}`);
         return false;
       }
 
-      toastifier.success("✓ Account deleted successfully");
+      toastifier.success("Account deleted successfully");
       return true;
     } catch {
-      toastifier.error("✕ Unable to delete account");
+      toastifier.error("Unable to delete account");
       return false;
     } finally {
       setIsDeleting(false);
@@ -120,7 +120,7 @@ export function ProfileSettingsView() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-3xl px-6 py-8 text-[#0B1220]">
       <ProfileHeader
         userName={userData.name}
         userEmail={userData.email}
@@ -138,7 +138,7 @@ export function ProfileSettingsView() {
       </div>
 
       {isDeleting ? (
-        <p className="mt-4 text-sm text-[#555560]">
+        <p className="mt-4 text-sm text-[#6B7280]">
           Processing account deletion...
         </p>
       ) : null}

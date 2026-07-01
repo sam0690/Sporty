@@ -11,17 +11,17 @@ export function OverviewCards({
 }: OverviewCardsProps) {
   return (
     <section aria-label="Overview Stats" className="mb-6">
-      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
         {stats.map((stat) => (
           <div
             key={stat.label}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5"
+            className="block accent-bar accent-primary p-5"
           >
-            <p className="section-label">{stat.label}</p>
-            <p className="mt-2 font-bebas text-5xl tracking-[2px] text-[#e8fb25]">
+            <p className="micro-label">{stat.label}</p>
+            <p className="stat-num num mt-2 text-5xl text-ink">
               {isLoading ? "—" : stat.value}
             </p>
-            <p className="mt-1 font-barlow-condensed text-xs font-600 uppercase tracking-[1px] text-[#555560]">
+            <p className="mt-1.5 font-condensed text-xs font-semibold uppercase tracking-[0.08em] text-ink-muted">
               {stat.change}
             </p>
           </div>

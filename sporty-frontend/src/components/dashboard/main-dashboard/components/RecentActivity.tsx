@@ -1,3 +1,13 @@
+import type { ComponentType } from "react";
+import {
+  ArrowLeftRight,
+  LayoutGrid,
+  Star,
+  TrendingUp,
+  LogIn,
+  PlusCircle,
+  Activity,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import type { ActivityItem } from "@/components/dashboard/main-dashboard/types";
 import { useRelativeTime } from "@/hooks/general/useRelativeTime";
@@ -9,15 +19,17 @@ type RecentActivityProps = {
   isError: boolean;
 };
 
-function iconForActivity(type: ActivityItem["type"]): string {
+function iconForActivity(
+  type: ActivityItem["type"],
+): ComponentType<{ className?: string }> {
   switch (type) {
-    case "transfer":      return "↔";
-    case "lineup":        return "▤";
-    case "points":        return "★";
-    case "rank":          return "▲";
-    case "league_joined": return "◈";
-    case "league_created": return "◉";
-    default:              return "·";
+    case "transfer":       return ArrowLeftRight;
+    case "lineup":         return LayoutGrid;
+    case "points":         return Star;
+    case "rank":           return TrendingUp;
+    case "league_joined":  return LogIn;
+    case "league_created": return PlusCircle;
+    default:               return Activity;
   }
 }
 
@@ -37,48 +49,48 @@ export function RecentActivity({
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 4 }, (_, index) => (
-              <div
-                key={index}
-                className="h-16 animate-pulse rounded-[3px] bg-[#1d1d26]"
-              />
+              <div key={index} className="shimmer h-16 rounded-md" />
             ))}
           </div>
         ) : isError ? (
-          <div className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[#2a1010] p-4 text-sm text-[#ff3b30]">
+          <div className="rounded-md border border-danger/20 bg-danger-soft p-4 text-sm font-medium text-danger">
             Failed to load recent activity.
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+          <div className="rounded-md border border-border bg-surface-muted p-4 text-sm text-ink-muted">
             No recent activities yet.
           </div>
         ) : (
           <ul className="space-y-2">
-            {items.map((item) => (
-              <li
-                key={item.id}
-                className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 transition-colors hover:border-[rgba(232,251,37,0.15)]"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-[3px] bg-[#111117] font-bebas text-sm text-[#e8fb25]">
-                      {iconForActivity(item.type)}
-                    </span>
-                    <div>
-                      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-                        {item.title}
-                      </p>
-                      <p className="text-sm text-[#555560]">{item.detail}</p>
-                      {item.leagueName ? (
-                        <p className="mt-0.5 section-label">{item.leagueName}</p>
-                      ) : null}
+            {items.map((item) => {
+              const Icon = iconForActivity(item.type);
+              return (
+                <li
+                  key={item.id}
+                  className="rounded-md border border-border bg-surface-muted px-4 py-3 transition-colors hover:border-primary/20"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <span className="mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-sm bg-surface text-primary shadow-xs">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="font-condensed text-sm font-bold uppercase tracking-[0.04em] text-ink">
+                          {item.title}
+                        </p>
+                        <p className="text-sm text-ink-muted">{item.detail}</p>
+                        {item.leagueName ? (
+                          <p className="section-label mt-0.5">{item.leagueName}</p>
+                        ) : null}
+                      </div>
                     </div>
+                    <span className="section-label shrink-0 whitespace-nowrap">
+                      {formatRelativeTime(item.timestamp, nowMs)}
+                    </span>
                   </div>
-                  <span className="shrink-0 section-label whitespace-nowrap">
-                    {formatRelativeTime(item.timestamp, nowMs)}
-                  </span>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </CardContent>

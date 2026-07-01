@@ -33,8 +33,8 @@ type ScoringSettingsProps = {
 };
 
 const sportTitles: Record<LeagueSportName, string> = {
-  football: "⚽ Football Scoring",
-  basketball: "🏀 Basketball Scoring",
+  football: "Football Scoring",
+  basketball: "Basketball Scoring",
 };
 
 function formatRuleLabel(action: string): string {
@@ -57,7 +57,7 @@ export function ScoringSettings({
     <div className="space-y-5">
       <div>
         <p className="section-label">Scoring Rules</p>
-        <p className="mt-1 text-xs text-[#555560]">
+        <p className="mt-1 text-xs text-[#6B7280]">
           Enable custom scoring per sport, then toggle and edit individual
           rules. Only changed rules are saved.
         </p>
@@ -71,20 +71,20 @@ export function ScoringSettings({
           <details
             key={sport}
             open={sportIndex === 0}
-            className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]"
+            className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-              <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              <span className="font-barlow-condensed text-sm font-bold uppercase tracking-[1px] text-[#0B1220]">
                 {sportTitles[sport]}
               </span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+              <span className="font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280]">
                 {rules.length} rules
               </span>
             </summary>
 
-            <div className="space-y-4 border-t border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-4">
+            <div className="space-y-4 border-t border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-4">
               <label className="flex items-center justify-between gap-3">
-                <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                <span className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
                   Enable custom scoring
                 </span>
                 <button
@@ -94,8 +94,8 @@ export function ScoringSettings({
                   }
                   className={`relative h-6 w-11 rounded-full border transition-colors ${
                     allowCustom
-                      ? "border-[rgba(232,251,37,0.4)] bg-[#e8fb25]"
-                      : "border-[rgba(255,255,255,0.1)] bg-[#1d1d26]"
+                      ? "border-[rgba(220,38,38,0.4)] bg-[#DC2626]"
+                      : "border-[rgba(11,18,32,0.1)] bg-[#F3F4F7]"
                   }`}
                   aria-pressed={allowCustom}
                   aria-label={`Toggle ${sport} custom scoring`}
@@ -103,8 +103,8 @@ export function ScoringSettings({
                   <span
                     className={`absolute top-0.5 size-5 rounded-full shadow-sm transition-transform ${
                       allowCustom
-                        ? "translate-x-5 bg-[#0a0a0f]"
-                        : "translate-x-0.5 bg-[#9a9aa5]"
+                        ? "translate-x-5 bg-[#F6F7F9]"
+                        : "translate-x-0.5 bg-[#6B7280]"
                     }`}
                   />
                 </button>
@@ -124,32 +124,32 @@ export function ScoringSettings({
                       key={`${sport}-${rule.action}`}
                       className={`rounded-[3px] border px-3 py-3 transition-colors ${
                         isCustomized
-                          ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.06)]"
-                          : "border-[rgba(255,255,255,0.08)] bg-[#111117]"
+                          ? "border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.06)]"
+                          : "border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]"
                       }`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                            <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
                               {formatRuleLabel(rule.action)}
                             </p>
                             {isCustomized ? (
-                              <span className="rounded-[3px] bg-[rgba(232,251,37,0.15)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+                              <span className="rounded-[3px] bg-[rgba(220,38,38,0.15)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] text-[#DC2626]">
                                 Custom
                               </span>
                             ) : null}
                           </div>
-                          <p className="text-xs text-[#555560]">
+                          <p className="text-xs text-[#6B7280]">
                             {rule.description}
                           </p>
-                          <p className="text-xs text-[#555560]">
+                          <p className="text-xs text-[#6B7280]">
                             Default: {rule.defaultPoints} pts
                           </p>
                         </div>
 
                         <div className="flex flex-col gap-2 sm:min-w-55">
-                          <label className="flex items-center justify-between font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+                          <label className="flex items-center justify-between font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] text-[#6B7280]">
                             <span>Custom rule</span>
                             <input
                               type="checkbox"
@@ -162,7 +162,7 @@ export function ScoringSettings({
                                   event.target.checked,
                                 )
                               }
-                              className="size-4 accent-[#e8fb25] disabled:cursor-not-allowed"
+                              className="size-4 accent-[#DC2626] disabled:cursor-not-allowed"
                             />
                           </label>
 
@@ -181,14 +181,14 @@ export function ScoringSettings({
                                   : nextValue,
                               );
                             }}
-                            className={`w-full rounded-[3px] border bg-[#0d0d12] px-3 py-2 text-right font-bebas text-lg tracking-[1px] text-[#e8fb25] outline-none transition-colors focus:border-[#e8fb25] disabled:opacity-50 ${
+                            className={`w-full rounded-[3px] border bg-[#FFFFFF] px-3 py-2 text-right font-bebas text-lg tracking-[1px] text-[#DC2626] outline-none transition-colors focus:border-[#DC2626] disabled:opacity-50 ${
                               isInvalid
                                 ? "border-[rgba(255,59,48,0.4)]"
-                                : "border-[rgba(255,255,255,0.08)]"
+                                : "border-[rgba(11,18,32,0.08)]"
                             }`}
                           />
                           {isInvalid && allowCustom && rule.enabled ? (
-                            <p className="text-xs text-[#ff8a8a]">
+                            <p className="text-xs text-[#DC2626]">
                               Use a value between {minPoints} and {maxPoints}.
                             </p>
                           ) : null}

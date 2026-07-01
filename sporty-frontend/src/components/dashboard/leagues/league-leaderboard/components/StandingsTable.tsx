@@ -17,7 +17,7 @@ type StandingsTableProps = {
 };
 
 function rankCellClass(rank: number): string {
-  return rank === 1 ? "text-[#e8fb25]" : "text-[#f0f0f0]";
+  return rank === 1 ? "text-[#DC2626]" : "text-[#0B1220]";
 }
 
 export function StandingsTable({
@@ -26,15 +26,15 @@ export function StandingsTable({
   pointsLabel = "Points",
 }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] animate-fade-soft">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] animate-fade-soft">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-[#1d1d26]">
+          <thead className="bg-[#F3F4F7]">
             <tr>
               {["Rank", "Team", "Manager", pointsLabel].map((col) => (
                 <th
                   key={col}
-                  className={`px-5 py-3 font-barlow-condensed text-[10px] font-700 uppercase tracking-[3px] text-[#666] ${
+                  className={`px-5 py-3 font-barlow-condensed text-[10px] font-bold uppercase tracking-[3px] text-[#666] ${
                     col === pointsLabel ? "text-right" : "text-left"
                   }`}
                 >
@@ -44,14 +44,14 @@ export function StandingsTable({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
+          <tbody className="divide-y divide-[rgba(11,18,32,0.05)]">
             {standings.map((team) => {
               const isUser = team.teamId === userTeamId;
               return (
                 <tr
                   key={team.teamId}
-                  className={`text-sm transition-colors hover:bg-[#1d1d26] ${
-                    isUser ? "bg-[rgba(232,251,37,0.05)]" : ""
+                  className={`text-sm transition-colors hover:bg-[#F3F4F7] ${
+                    isUser ? "bg-[rgba(220,38,38,0.05)]" : ""
                   }`}
                 >
                   <td className="px-5 py-3">
@@ -61,15 +61,15 @@ export function StandingsTable({
                       {team.rank}
                     </span>
                   </td>
-                  <td className="px-5 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+                  <td className="px-5 py-3 font-barlow-condensed text-sm font-bold uppercase tracking-[1px] text-[#0B1220]">
                     {team.teamName}
                     {isUser && (
-                      <span className="ml-2 section-label text-[#c8d85a]">You</span>
+                      <span className="ml-2 section-label text-[#B91C1C]">You</span>
                     )}
                   </td>
-                  <td className="px-5 py-3 text-[#555560]">{team.manager}</td>
+                  <td className="px-5 py-3 text-[#6B7280]">{team.manager}</td>
                   <td className="px-5 py-3 text-right">
-                    <span className="font-bebas text-xl tracking-[1px] text-[#e8fb25]">
+                    <span className="font-bebas text-xl tracking-[1px] text-[#DC2626]">
                       {Math.round(team.points)}
                     </span>
                   </td>

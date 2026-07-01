@@ -4,6 +4,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
 import { PlayerStatsCard } from "@/components/dashboard/leagues/league-roster/components/PlayerStatsCard";
+import { SportIcon } from "@/components/landing/sport-icons";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 
 type PitchSlotConfig = {
@@ -20,12 +21,6 @@ type PitchSlotProps = {
   onRemove: (slotId: number) => void;
   onSelectPlayer?: (playerId: number) => void;
   isSelected?: boolean;
-};
-
-const sportIcons = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
 };
 
 const ringStyles = {
@@ -93,8 +88,12 @@ export function PitchSlot({
       >
         {player ? (
           <>
-            <div className="flex h-8 w-8 items-center justify-center rounded-[3px] bg-white text-sm sm:h-10 sm:w-10">
-              {sportIcons[player.sport]}
+            <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-white sm:h-10 sm:w-10">
+              <SportIcon
+                sport={player.sport}
+                className="h-4 w-4 sm:h-5 sm:w-5"
+                tint
+              />
             </div>
             <div className="pointer-events-none absolute top-[calc(100%+4px)] left-1/2 -translate-x-1/2 text-center">
               <p className="w-20 truncate text-xs text-white/90">

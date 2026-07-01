@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  FootballGlyph,
+  BasketballGlyph,
+  CricketGlyph,
+} from "@/components/landing/sport-icons";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 import {
   PitchSlot,
@@ -61,23 +66,23 @@ export function HybridPitch({
   selectedPlayerId,
 }: HybridPitchProps) {
   return (
-    <section className="w-full max-w-2xl mx-auto [animation:fade-soft_0.2s_ease]">
+    <section className="w-full max-w-2xl mx-auto">
       {isMultiSport ? (
         <div className="mb-4 flex flex-wrap items-center justify-center gap-2 text-sm">
           <span
-            className={`rounded-[3px] border px-3 py-1 ${activeCountsPerSport.football === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+            className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-1 ${activeCountsPerSport.football === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
           >
-            ⚽ {activeCountsPerSport.football}/3
+            <FootballGlyph className="h-3.5 w-3.5" /> {activeCountsPerSport.football}/3
           </span>
           <span
-            className={`rounded-[3px] border px-3 py-1 ${activeCountsPerSport.basketball === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+            className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-1 ${activeCountsPerSport.basketball === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
           >
-            🏀 {activeCountsPerSport.basketball}/3
+            <BasketballGlyph className="h-3.5 w-3.5" /> {activeCountsPerSport.basketball}/3
           </span>
           <span
-            className={`rounded-[3px] border px-3 py-1 ${activeCountsPerSport.cricket === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
+            className={`inline-flex items-center gap-1.5 rounded-sm border px-3 py-1 ${activeCountsPerSport.cricket === 3 ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}`}
           >
-            🏏 {activeCountsPerSport.cricket}/3
+            <CricketGlyph className="h-3.5 w-3.5" /> {activeCountsPerSport.cricket}/3
           </span>
         </div>
       ) : null}

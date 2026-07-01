@@ -16,20 +16,20 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
   );
 
   const stats: Array<{ label: string; value: string; accent: string }> = [
-    { label: "Players", value: String(players.length), accent: "#f0f0f0" },
-    { label: "Total Points", value: String(Math.round(totalPoints)), accent: "#e8fb25" },
-    { label: "Squad Value", value: `$${squadValue.toFixed(1)}M`, accent: "#f0f0f0" },
+    { label: "Players", value: String(players.length), accent: "#0B1220" },
+    { label: "Total Points", value: String(Math.round(totalPoints)), accent: "#DC2626" },
+    { label: "Squad Value", value: `$${squadValue.toFixed(1)}M`, accent: "#0B1220" },
     {
       label: "Top Scorer",
       value: topScorer ? `${Math.round(topScorer.totalPoints)}` : "—",
-      accent: "#e8fb25",
+      accent: "#DC2626",
     },
   ];
 
   return (
-    <section className="grid grid-cols-2 gap-px overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.08)] sm:grid-cols-4">
+    <section className="grid grid-cols-2 gap-px overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[rgba(11,18,32,0.08)] sm:grid-cols-4">
       {stats.map((stat) => (
-        <div key={stat.label} className="bg-[#111117] px-5 py-4">
+        <div key={stat.label} className="bg-[#FFFFFF] px-5 py-4">
           <p
             className="font-bebas text-3xl leading-none tracking-[2px]"
             style={{ color: stat.accent }}
@@ -38,7 +38,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
           </p>
           <p className="section-label mt-1.5">{stat.label}</p>
           {stat.label === "Top Scorer" && topScorer && (
-            <p className="mt-0.5 truncate text-xs text-[#555560]">
+            <p className="mt-0.5 truncate text-xs text-[#6B7280]">
               {topScorer.name}
             </p>
           )}
@@ -91,19 +91,19 @@ export function MyTeamView({
               onClick={() => onLeagueChange(league.id)}
               className={`rounded-[3px] border px-4 py-2.5 text-left transition-colors ${
                 isActive
-                  ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)]"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] hover:border-[rgba(255,255,255,0.18)]"
+                  ? "border-[rgba(220,38,38,0.4)] bg-[rgba(220,38,38,0.1)]"
+                  : "border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] hover:border-[rgba(11,18,32,0.18)]"
               }`}
               aria-pressed={isActive}
             >
               <span
-                className={`block font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
-                  isActive ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                className={`block font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] ${
+                  isActive ? "text-[#DC2626]" : "text-[#0B1220]"
                 }`}
               >
                 {league.name}
               </span>
-              <span className="block text-xs text-[#555560]">
+              <span className="block text-xs text-[#6B7280]">
                 {league.teamName ?? "No team yet"}
               </span>
             </button>
@@ -112,13 +112,13 @@ export function MyTeamView({
       </div>
     ) : (
       <label className="block max-w-xl">
-        <span className="mb-2 block font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+        <span className="mb-2 block font-barlow-condensed text-[10px] font-bold uppercase tracking-[1.5px] text-[#6B7280]">
           Select league
         </span>
         <select
           value={activeLeague?.id ?? ""}
           onChange={(event) => onLeagueChange(event.target.value)}
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
           style={{ colorScheme: "dark" }}
           aria-label="Choose league"
         >
@@ -133,7 +133,7 @@ export function MyTeamView({
   ) : null;
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#0B1220]">
       <TeamHeader
         totalPlayers={totals.totalPlayers}
         leagueName={selectedLeagueName}
@@ -149,11 +149,11 @@ export function MyTeamView({
           ))}
         </div>
       ) : leaguesError || selectedTeamError ? (
-        <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#ff8a8a]">
+        <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#DC2626]">
           Failed to load team data. Please try again.
         </div>
       ) : !hasLeagues ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#555560]">
+        <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-8 text-center text-sm text-[#6B7280]">
           You are not part of any leagues yet.
         </div>
       ) : isEmptyTeam ? (
@@ -161,10 +161,10 @@ export function MyTeamView({
       ) : teamLeague && teamLeague.players.length > 0 ? (
         <div className="space-y-6">
           <SquadStats players={teamLeague.players} />
-          <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+          <section className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
               <span className="section-label">Squad</span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+              <span className="font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280]">
                 {teamLeague.teamName}
               </span>
             </header>

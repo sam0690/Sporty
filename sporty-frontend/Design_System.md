@@ -1,431 +1,317 @@
-# Fantasy Club — Design System
+# Sporty — "Broadcast" Design System (v2)
 
-A complete spec for the dark-matte, neon, sports-narrative aesthetic used in this prototype. Hand this file to any developer and they can reproduce the same look, feel, and motion language without reading component source.
+A complete spec for the **light, editorial, vibrant-block, premium-sports** aesthetic. Hand this file to any developer and they can reproduce the same look, feel, and motion without reading component source.
+
+> **v2 replaces v1.** The previous system was a dark-matte, neon-glow, glassmorphism, soft-rounded "night stadium." v2 is its opposite: a **bright broadcast studio** — white canvas, ink slabs, a single red action color, oversized condensed uppercase type, sharp edges, hard-offset "poster" shadows, and ticker/scoreboard motion. Nothing about v2 should read as v1. See §14 for the old→new mapping.
+
+Tokens live in `src/app/globals.css` (`:root` + `@theme inline`). Fonts load in `src/app/layout.tsx`.
 
 ---
 
 ## 1. Overview
 
-**Purpose** — A multi-sport fantasy club UI built around two experiences:
-1. **The Journey** — a single-page vertical scroll telling the story of a season from Draft Day (bottom) to Championship (top).
-2. **The Dashboard** — a management surface for editing teams across Football, Basketball, and a Mix view.
+**Purpose** — A multi-sport fantasy platform (Football, Basketball, Cricket, Rugby, Mix) for creating/joining leagues, drafting squads, setting lineups, and living the week-to-week scoreboard.
 
 **Core philosophy**
-- **Dark matte canvas, neon storytelling.** The base is near-black (`#0A0A0F`). Color earns its place — it appears only where the narrative needs energy (active state, live stat, sport accent, championship gradient).
-- **Three sport identities, never blended.** Football = neon green, Basketball = orange, Mix/Playoffs = purple. Every surface, button, and stat inherits the active sport accent.
-- **Motion is meaning.** Glitch = chaos of draft. Flicker = locker-room neon. Scroll-linked transforms = passage of time. Confetti + 3D trophy = catharsis.
-- **Tabular numbers everywhere.** Stats are first-class typography.
-- **Glass over solid.** Frosted surfaces let the parallax backgrounds breathe.
+
+- **Broadcast, not nightclub.** The base is a bright studio (`#F5F7FA`) with crisp white cards. This is TV-sports / sports-editorial energy (ESPN, DAZN, The Athletic, DraftKings), not a dark neon arcade.
+- **Ink + one red.** Structure is drawn in near-black ink (`#0F172A`) — borders, dark slabs, headlines. **Red (`#DC2626`) is the only action color.** It means "do this / this is live / this is you." Never decorate with red.
+- **Refined blocks, soft elevation.** Content sits in clean panels with hairline borders and **soft, layered shadows** — an elegant, premium editorial feel. Corners are gently rounded (8–14px). A **hard-offset "poster" shadow** (`5px 5px 0` ink) exists as a *rare, deliberate accent* (`.block-hard`), never the default.
+- **Type is the graphic.** Barlow Condensed set BIG and UPPERCASE is the primary visual. Jersey-number stats, editorial kickers, scoreboard headlines.
+- **Sport = data color, not theme.** Each sport has one saturated accent used as a **3px top stripe / tag / dot** for wayfinding. The page theme stays ink+red regardless of sport.
+- **Tabular numbers everywhere.** Every score, rank, price, and countdown is `.num`.
 
 ---
 
 ## 2. Color Tokens
 
-All tokens live in `src/styles.css` under `:root` and `@theme inline`.
-
-### Surface (oklch)
+### Surfaces (light)
 ```css
---background:        oklch(0.13 0.01 270);   /* page bg, paired with hard #0A0A0F on <body> */
---foreground:        oklch(0.98 0.005 270);
---card:              oklch(0.17 0.015 270);
---card-foreground:   oklch(0.98 0.005 270);
---muted:             oklch(0.22 0.02 270);
---muted-foreground:  oklch(0.70 0.02 270);
---border:            oklch(1 0 0 / 0.1);
---input:             oklch(1 0 0 / 0.15);
-```
-Body background is hardcoded to `#0A0A0F` in `@layer base` to guarantee the matte black floor under glass layers.
-
-### Brand neons (exact hex — non-negotiable)
-```css
---football:   #00FF88;   /* soccer accent */
---basketball: #FF6B35;   /* basketball accent */
---playoff:    #9B59B6;   /* mix / playoffs / championship secondary */
---grass:      #0E3D1F;   /* football field deep green */
---court:      #4A2510;   /* basketball court hardwood */
+--canvas:         #F5F7FA;   /* app background */
+--surface:        #FFFFFF;   /* cards, panels */
+--surface-muted:  #F1F5F9;   /* subtle fills, table zebra */
+--surface-sunken: #E9EEF3;   /* insets, progress tracks */
+--ink-block:      #0F172A;   /* dark editorial slab surface */
+--ink-block-2:    #1E293B;
 ```
 
-### Gradients
+### Text
 ```css
---gradient-football:   linear-gradient(135deg, #00FF88 0%, #00B86B 100%);
---gradient-basketball: linear-gradient(135deg, #FF6B35 0%, #C8390F 100%);
---gradient-playoff:    linear-gradient(135deg, #9B59B6 0%, #6A2C91 100%);
---gradient-champion:   linear-gradient(135deg, #FFD86B 0%, #FF6B35 50%, #9B59B6 100%);
+--ink:        #0F172A;   /* headlines / primary text */
+--ink-soft:   #334155;   /* secondary text */
+--ink-muted:  #64748B;   /* captions / muted (AA floor on white) */
+--ink-faint:  #94A3B8;   /* hints / disabled */
+--on-ink:     #F8FAFC;   /* text on dark slabs */
 ```
-The champion gradient is reserved for #1 rank, trophy halo, and the `CHAMPION` headline.
 
-### Neon glow shadows
+### Action / brand — **red is the single action color**
 ```css
---shadow-neon-green:  0 0 24px color-mix(in oklab, #00FF88 60%, transparent);
---shadow-neon-orange: 0 0 24px color-mix(in oklab, #FF6B35 60%, transparent);
---shadow-neon-purple: 0 0 24px color-mix(in oklab, #9B59B6 60%, transparent);
+--primary:       #DC2626;
+--primary-hover: #B91C1C;
+--primary-press: #991B1B;
+--primary-soft:  #FEE2E2;   /* tint bg */
+--on-primary:    #FFFFFF;
+--ring:          #DC2626;
 ```
-**Rule:** glows attach to *active* and *hover* states only — never to idle surfaces. A page full of always-on glows kills the signal.
 
-### Text contrast floor
-Body copy never goes below `rgba(255,255,255,0.7)`. Micro-labels use `0.5`–`0.6`. Never use pure `#FFFFFF` for non-headline body text.
+### Lines
+```css
+--border:        #E2E8F0;   /* default card border */
+--border-strong: #CBD5E1;   /* inputs, dividers */
+--rule:          #0F172A;   /* hard editorial hairline */
+```
+
+### Sport accents — tuned for contrast on **white** (never the v1 neon set)
+```css
+--football:   #16A34A;   --football-soft:   #DCFCE7;
+--basketball: #EA580C;   --basketball-soft: #FFEDD5;
+--cricket:    #0891B2;   --cricket-soft:    #CFFAFE;
+--rugby:      #7C3AED;   --rugby-soft:      #EDE9FE;
+--playoff:    #9333EA;   --playoff-soft:    #F3E8FF;   /* mix / multi-sport */
+--gold:       #CA8A04;   --gold-soft:       #FEF9C3;   /* champion */
+```
+
+### Semantic
+```css
+--success:#16A34A  --warning:#D97706  --danger:#DC2626  --info:#2563EB  --live:#DC2626
+/* each has a *-soft tint for badge fills */
+```
+
+### Gradients — bold, energetic
+```css
+--gradient-action:   linear-gradient(135deg, #F43F5E, #DC2626);   /* CTAs, primary blocks */
+--gradient-ink:      linear-gradient(135deg, #1E293B, #0F172A);   /* dark slabs */
+--gradient-champion: linear-gradient(135deg, #FBBF24, #F97316 55%, #DC2626);  /* #1 / CHAMPION only */
+--gradient-football / -basketball / -playoff / -pitch            /* sport washes */
+```
+**Reserve `--gradient-champion`** for the #1 rank, trophy halo, and the single "you won" headline. Overuse kills it.
+
+### Rules of color
+- **One red.** If two things are red, one of them is wrong. Sport accents carry the color variety.
+- **Glow is gone.** No neon `box-shadow`. Emphasis comes from ink borders + hard-offset shadows.
+- **Contrast floor:** body copy never lighter than `--ink-muted` (`#64748B`) on white. On ink slabs, never below `--on-ink-muted`.
 
 ---
 
 ## 3. Typography
 
 ```css
---font-display: "Inter",   ui-sans-serif, system-ui, sans-serif;
---font-sans:    "DM Sans", ui-sans-serif, system-ui, sans-serif;
+--font-display:   "Barlow Condensed";   /* headlines, stats, kickers */
+--font-sans:      "Barlow";             /* body, labels, inputs */
+--font-condensed: "Barlow Condensed";   /* alias for stat/label utilities */
 ```
+Loaded via `next/font/google` in `layout.tsx` (`--ff-condensed`, `--ff-body`). Legacy classes `font-barlow-condensed`, `font-bebas`, `font-inter`, `font-dm-sans` are all shimmed to the real Barlow families, so existing markup renders correctly during migration.
 
-| Role | Family | Weight | Tracking | Notes |
-|------|--------|--------|----------|-------|
-| Hero headlines (`DRAFT DAY`, `CHAMPION`) | Inter | 900 (black) | `-0.02em` to `-0.04em` | Sizes up to `18vw` / `140px`. Use `font-display` class. |
-| Section titles | Inter | 800 | `-0.02em` | `text-xl` to `text-2xl`. |
-| Card titles / player names | Inter | 800 | normal | `text-sm` to `text-lg`. |
-| Body | DM Sans | 400–500 | normal | `text-sm`, line-height relaxed. |
-| Micro-labels | DM Sans | 700 | `0.25em`–`0.4em`, `UPPERCASE` | `text-[10px]`. Used for "WEEK POINTS", "SCROLL UP", "LIVE". |
-| Stats / numbers | Inter | 800–900 | `tabular-nums` | Apply `.num` or `.tabular` utility — see below. |
+| Role | Family | Weight | Case / Tracking | Utility |
+|------|--------|--------|-----------------|---------|
+| Hero / poster headline | Barlow Condensed | 700 | UPPERCASE, `-0.02em`, up to `12vw` | `.display` |
+| Section title | Barlow Condensed | 700 | tight, `text-2xl`–`text-4xl` | heading tags |
+| Kicker / eyebrow | Barlow Condensed | 700 | UPPERCASE `0.22em`, red, `text-xs` | `.kicker` |
+| Card title / player name | Barlow Condensed | 600–700 | `text-base`–`text-lg` | — |
+| Body | Barlow | 400–500 | normal, line-height 1.5 | default |
+| Micro-label | Barlow Condensed | 600 | UPPERCASE `0.18em`, `text-[11px]` | `.micro-label` / `.section-label` |
+| Stat / jersey number | Barlow Condensed | 700 | `tabular-nums`, oversized | `.stat-num` + `.num` |
 
-```css
-.num, .tabular {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-}
-```
-Every score, rank, currency, and countdown gets `.num`. Non-negotiable for the data-dense feel.
-
-**Fonts must be loaded** via `<link>` in `src/routes/__root.tsx` head (Google Fonts or self-hosted). Defining `--font-display` only names the family — it does not load it.
+Every number gets `.num` (`font-variant-numeric: tabular-nums`). Non-negotiable for the data-dense scoreboard feel.
 
 ---
 
-## 4. Spacing & Shape
+## 4. Shape & Spacing
+
+**Refined, gently rounded.** Corners are soft but restrained — premium, not playful.
 
 | Token | Value | Use |
 |-------|-------|-----|
-| Radius `sm` | `calc(--radius - 4px)` | Inputs, badges |
-| Radius `md` | `calc(--radius - 2px)` | Small cards |
-| Radius `lg` | `0.875rem` (base `--radius`) | Standard cards |
-| Radius `xl` | `calc(--radius + 4px)` | Hero glass cards |
-| Radius `2xl` | `calc(--radius + 8px)` | Stat blocks, summary cards |
-| Pill | `9999px` (`rounded-full`) | All buttons, nav chips, status pills |
+| `--radius-xs` | 6px | tags, ticks |
+| `--radius-sm` | 8px | buttons, inputs |
+| `--radius-md` | 10px | small cards |
+| `--radius-lg` | 14px | standard cards / panels / blocks |
+| `--radius-xl` | 20px | hero / feature blocks |
+| `--radius-2xl` | 28px | large hero surfaces |
+| pill | `9999px` | **status pills, sport tags, LIVE badge only** |
 
 | Layout | Value |
 |--------|-------|
-| Section min-height (journey) | `min-h-[110vh]` — guarantees overlap into parallax scroll math |
-| Page max-width (dashboard) | `max-w-7xl` |
-| Page max-width (journey content) | `max-w-6xl` |
-| Section horizontal padding | `px-4` mobile, `px-6` desktop |
-| Section vertical padding | `py-24` |
-| Card padding | `p-3` (compact), `p-4`–`p-5` (default) |
-| Grid gap | `gap-3` or `gap-4` |
+| Page max-width | `max-w-7xl` (dashboard), `max-w-6xl` (editorial/marketing) |
+| Section padding | `px-4` mobile / `px-6`–`px-8` desktop, `py-16`–`py-24` |
+| Block gap (marketing) | large — `gap-6` to `gap-12` (48px+ hero blocks) |
+| Card padding | `p-4` (default), `p-3` (compact), `p-6` (feature) |
+| Grid gap | `gap-3`–`gap-6` |
+| Spacing rhythm | 4 / 8 system |
 
 ---
 
-## 5. Glassmorphism
+## 5. Elevation & Shadow
 
-Two flavors only. Resist inventing more.
+Soft, layered shadows are the default (premium depth). Hard-offset shadows are a **rare accent** only.
 
 ```css
-.glass {
-  background: color-mix(in oklab, #ffffff 4%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in oklab, #ffffff 10%, transparent);
-  border-radius: 0.875rem;
-}
-.glass-strong {
-  background: color-mix(in oklab, #ffffff 7%, transparent);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
-}
-```
-- `.glass` — chips, secondary buttons, scroll cues, status pills.
-- `.glass-strong` — primary cards, sticky header, summary cards, leaderboard rows.
+--shadow-xs: 0 1px 2px rgba(11,18,32,.04);
+--shadow-sm: 0 1px 2px rgba(11,18,32,.04), 0 2px 6px rgba(11,18,32,.05);    /* resting cards */
+--shadow-md: 0 4px 8px -2px rgba(11,18,32,.05), 0 12px 24px -6px rgba(11,18,32,.09);   /* menus, popovers, sticky bars */
+--shadow-lg: 0 12px 24px -8px rgba(11,18,32,.10), 0 28px 56px -14px rgba(11,18,32,.16); /* modals, toasts */
+--shadow-xl: 0 24px 48px -12px rgba(11,18,32,.16), 0 48px 96px -24px rgba(11,18,32,.22); /* hero */
 
-**Never** apply glass to a full-bleed background. It needs something behind it (gradient, parallax shape, photo wash) to shimmer.
+--shadow-hard:     5px 5px 0 0 var(--ink);      /* rare poster accent (.block-hard) */
+--shadow-hard-sm:  3px 3px 0 0 var(--ink);
+--shadow-hard-red: 5px 5px 0 0 var(--primary);
+```
+**Rule:** bulk cards use `--shadow-sm` + a hairline border, lifting to `--shadow-md/-lg` on hover (`.block`). Hard-offset shadows are reserved for the occasional deliberate poster moment — never the default.
 
 ---
 
-## 6. Motion System
+## 6. Layout & Surface Utilities (the block language)
 
-Motion lives in three registers. Pick the right one for the job.
+All defined in `globals.css`. Compose pages from these, don't reinvent.
 
-### 6a. Framer Motion springs (component-level)
+| Class | What it is |
+|-------|-----------|
+| `.surface` / `.panel` | White card, 1px border, `--shadow-sm`, radius-md. The default container. |
+| `.block` | **Signature block** — 2px ink border + `--shadow-hard-sm`; on hover lifts `translate(-2px,-2px)` to `--shadow-hard`. Use for interactive/feature cards. |
+| `.block-red` | `.block` variant with red border + red hard shadow. Primary emphasis. |
+| `.ink-panel` | Dark slab (`--ink-block` bg, `--on-ink` text). Headers, hero strips, stat banners. |
+| `.accent-bar` + `.accent-{sport}` | 3px top stripe coloring a card by sport / primary. |
+| `.rule` / `.hairline` | 2px ink divider / 1px border divider (editorial section breaks). |
+| `.kicker` | Red uppercase eyebrow opening a section. |
+| `.diagonal` / `.diagonal-tr` | Clip-path chevron cut — kinetic sport edge. |
+| `.glass` / `.glass-strong` | **Light** frost for sticky bars / modals over content (72–86% white + blur). Not for full-bleed backgrounds. |
+| `.field-lines` / `.dot-grid` | Subtle pitch-grid / dotted background washes. |
 
-Reusable spring configs:
-
-| Use | `stiffness` | `damping` | `mass` |
-|-----|-------------|-----------|--------|
-| Card snap-in on scroll | `120` | `14` | default |
-| Magnetic button follow | `250` | `18` | `0.4` |
-| Custom cursor follow | `350` | `28` | `0.4` |
-| Squad swap (`layout`) | `220` | `22` | default |
-| Trophy float | `120` | — | — (via `<Float>` drei) |
-
-Standard scroll-in card pattern:
-```tsx
-<motion.div
-  initial={{ x: side === "L" ? -400 : 400, opacity: 0, rotate: -8 }}
-  whileInView={{ x: 0, opacity: 1, rotate: -3 }}
-  viewport={{ once: false, amount: 0.4 }}
-  transition={{ type: "spring", stiffness: 120, damping: 14, delay: 0.1 + i * 0.12 }}
-/>
+**Composition pattern — editorial section:**
 ```
-Stagger via `delay: base + i * 0.12`.
-
-### 6b. CSS keyframes (ambient)
-
-All defined in `src/styles.css`. Apply by class.
-
-| Class | Keyframe | Duration | Where |
-|-------|----------|----------|-------|
-| `.glitch` | `glitch-rgb` — RGB text-shadow split + `translate` jitter | `2.8s steps(1, end) infinite` | `DRAFT DAY` headline |
-| `.flicker` | `neon-flicker` — opacity dips at 45%/47%/60%/62% | `3s infinite` | Locker-room neon strips. Stagger via `animation-delay`. |
-| `.lightning` | `lightning-flash` — full opacity burst at 93%/96% | `4.5s infinite` | Playoffs storm overlay |
-| `.float-up` | `translateY(20px) → 0` + fade | `0.6s ease-out both` | Section reveals |
-| `.spin-y` | `rotateY 0 → 360deg` | `8s linear infinite` | LotteryBall outer ring |
-| `.ball-roll` | `translateX(-10vw → 110vw) + rotate(720)` | `8s linear infinite` | Regular Season football pass |
-| `.bball-bounce` | parabolic translate + rotate | `7s linear infinite` | Regular Season basketball |
-| `firework-up` (inline) | `translateY(-60vh) scale(8)` + fade | `2.4s ease-out infinite` | Championship fireworks |
-
-### 6c. Scroll-linked transforms
-
-```tsx
-const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-const skew    = useTransform(scrollYProgress, [0, 1], [12, -12]);
-const tracking = useTransform(scrollYProgress, [0, 1], ["-0.04em", "0.08em"]);
-const scale   = useTransform(scrollYProgress, [0, 1], [0.92, 1.05]);
-```
-Applied to the `CHAMPION` headline so it kinetically "tightens" as the user scrolls through it.
-
-### Parallax depth ladder
-| Layer | Multiplier on scroll Y | Examples |
-|-------|------------------------|----------|
-| Background | `0.3×` | Stadium lights, stars, gradient washes |
-| Mid | `0.6×` | Stat clouds, lockers, court lines |
-| Foreground | `1×` (no transform) | Cards, headlines, buttons |
-
-### Easing
-Default `cubic-bezier(0.4, 0, 0.2, 1)` (Tailwind `ease-in-out`). Springs replace easing for anything snappy.
-
----
-
-## 7. Component Catalog
-
-### NavHeader
-Three pill buttons (⚽ ⚾ 🟣) fixed top-center. Each scrolls to its section via `element.scrollIntoView({ behavior: "smooth", block: "start" })`. Active button gets the matching sport gradient + neon shadow.
-
-### LotteryBall (`src/components/journey/LotteryBall.tsx`)
-Pure CSS 3D — no WebGL. Recipe:
-- Wrapper: `perspective: 900`, `260px × 260px`.
-- Outer ring: `.spin-y` + `transform-style: preserve-3d`.
-- Glass shell: radial gradient highlight at 30% 25%, inset green + purple glow.
-- Equator + two `rotateY(±60deg)` rings for orbital lines.
-- Player chips: `translate(-50%,-50%) rotateY(${i*360/N}deg) translateZ(110px)` to orbit them on faces.
-- Center sparkle: `3×3` white dot with `box-shadow: 0 0 24px 8px rgba(255,255,255,0.8)`.
-
-### PlayerCard (journey)
-- `glass` wrapper, `w-44`, `p-3`, `shadow-neon-purple`.
-- Top: 80px gradient swatch (sport-tinted).
-- Bottom row: name (Inter 800), uppercase position label, `#rank` in `.num`.
-- Flies in from off-screen with rotated rest pose (`rotate: ±3deg`).
-
-### PlayerCard (dashboard)
-- `glass-strong`, full-width, `p-3`.
-- 56×56 gradient avatar with initials in black Inter 900.
-- Status dot (`fit` green / `questionable` yellow / `out` red) with matching glow.
-- Right column: large `.num` points in sport accent color.
-- Hover: `-translate-y-0.5`.
-
-### StatCloud
-Floating stat chips that drift on parallax mid layer during Regular Season. Use `useTransform(scrollYProgress, [0,1], [0, -200])` on Y, with horizontal sway via `Math.sin(scrollYProgress)`.
-
-### TensionMeter (Playoffs)
-A horizontal "rope" between two nodes (YOU vs RIVAL). Width derived from `useTransform` on scroll progress so the gap visually tightens. Stroke is `gradient-playoff` with `shadow-neon-purple` on the lead node.
-
-### Trophy3D (`@react-three/fiber`)
-- Canvas `camera={{ position: [0, 1.1, 4], fov: 38 }}`, `dpr={[1, 2]}`.
-- Cup body: `cylinderGeometry [0.85, 0.55, 1.3, 64]` + `MeshTransmissionMaterial` (gold `#FFD86B`, transmission `0.6`, chromatic aberration `0.06`).
-- Rim torus, two side handles (half-torus `Math.PI`), stem, base, plaque.
-- Lights: ambient `0.6`, key directional `1.4`, fill purple directional `0.6`.
-- Wrap in `<Float speed={1.2} rotationIntensity={0.4} floatIntensity={0.8}>`.
-- `<Environment preset="city" />` for chrome reflections.
-- Radial gold→purple glow halo behind the canvas via blurred div.
-
-### MagneticButton
-Captures `mousemove`, calculates offset from center, springs `x`/`y` by `strength * 0.35`. Resets on `mouseleave`. Always include `data-magnetic` so the CustomCursor can detect it.
-
-### CustomCursor
-Desktop only (`window.matchMedia("(pointer: fine)").matches`). Hides native cursor via `body.has-glow-cursor *` rule. Ring (32px white border with inset + outer glow) springs to pointer; inner 6px dot tracks raw. Ring scales `1.8×` over interactive elements.
-
-### ResetFAB
-Bottom-right `MagneticButton` that runs `window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })` to return to Draft Day.
-
-### Dashboard — SummaryCard
-- `glass-strong`, `p-5`, `rounded-2xl`.
-- Top row: sport accent micro-label + `Rank #N` chip.
-- Team name (Inter 800, `text-2xl`).
-- Big `.num` points (`text-4xl`, black).
-- Footer: `Next: <opponent>`.
-
-### Dashboard — MixCard
-- Same shell as SummaryCard with a `gradient-playoff` blurred orb in the corner.
-- Combined total in `gradient-champion bg-clip-text text-transparent`.
-- Two-column FB/BB breakdown grid.
-
-### Dashboard — LiveFeed
-- `glass-strong`, scrollable (`max-h-[360px] overflow-y-auto`).
-- Items animate in with `motion + AnimatePresence + layout`.
-- Pulse dot on "LIVE" label using Tailwind `animate-pulse`.
-- Delta: green if `+`, red if `-`.
-
-### Dashboard — TransferPanel
-- Two side-by-side cards with `ArrowLeftRight` icon between.
-- One-tap substitute button uses `gradient-playoff` + `shadow-neon-purple`.
-- Bench list below with mini avatars (`h-8 w-8`).
-
----
-
-## 8. Scroll Journey Architecture
-
-The page tells a season in reverse: DOM order is **Championship → Playoffs → Regular Season → Draft Day**, but the user lands at the bottom (Draft) and scrolls UP to relive the climb.
-
-```tsx
-// src/routes/index.tsx
-useEffect(() => {
-  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "auto" }), 0);
-}, []);
-```
-
-Every section follows the same composition:
-
-```
-<section min-h-[110vh] relative isolate overflow-hidden>
-  ├── Fixed/absolute background (gradient + parallax shapes, pointer-events-none)
-  ├── Mid layer (parallax stat clouds / lockers / lights)
-  ├── Foreground content (max-w-6xl grid)
-  └── Scroll cue (bottom-centered "scroll up" label + gradient line)
+<section>
+  <div class="kicker">STANDINGS</div>          ← red eyebrow
+  <h2>Premier League</h2>                        ← condensed uppercase title
+  <hr class="rule" />                            ← hard rule
+  <div class="grid gap-4"> …blocks… </div>
 </section>
 ```
 
-Section vibe map:
-| Section | Backdrop | Signature motion |
-|---------|----------|------------------|
-| Draft Day | Locker grid + flickering neon strips | `.glitch` headline, spinning LotteryBall, cards flying in |
-| Regular Season | Split football/basketball court | `.ball-roll` + `.bball-bounce` across screen, drifting StatCloud |
-| Playoffs | Storm gradient + `.lightning` flashes | TensionMeter rope tightens with scroll |
-| Championship | Gold→purple radial + fireworks | 3D trophy, kinetic CHAMPION headline, confetti burst on `useInView` |
+---
+
+## 7. Motion — kinetic-athletic register
+
+Motion is broadcast graphics, not neon flicker. Timing 150–300ms, `--ease` / `--ease-out`. Framer Motion for springs; CSS for ambient.
+
+| Class | Effect | Where |
+|-------|--------|-------|
+| `.ticker-track` | Horizontal marquee (32s loop, pause on hover) | Live-score / news ticker strips |
+| `.clip-reveal` | Edge wipe (`inset(0 100% 0 0)` → in) | Scoreboard rows, stat reveals |
+| `.float-up` / `.animate-fade-in` | `translateY(14px)` + fade | Section / card entrance |
+| `.animate-slide-in-left` | Slide from left | List items, drawer content |
+| `.animate-fade-in-scale` | `scale(0.97)` + fade | Modals, toasts, popovers |
+| `.animate-live-pulse` / `.pill-live` | Opacity pulse + red dot | LIVE labels |
+| `.shimmer` | Light skeleton shimmer | Loading placeholders |
+
+Framer springs (component-level): card snap `stiffness 220 / damping 22`; press feedback subtle `scale(0.98)` via CSS on `button:active`. Reserve confetti for the single championship moment.
+
+**Signature moves:** the **ticker** (live scores scrolling across an ink strip), the **clip-reveal** on scoreboard/stat rows, and the **hard-shadow lift** on `.block` hover. These three carry the identity.
+
+All ambient animation is disabled under `prefers-reduced-motion: reduce` (handled globally in `globals.css`).
 
 ---
 
-## 9. Dashboard Architecture
+## 8. Accessibility
 
-Sport selection drives the entire theme via React state. The active accent maps to gradient, text color, and shadow:
+- **Contrast** — body text ≥ `--ink-muted` on white (AA). On ink slabs use `--on-ink` / `--on-ink-muted`. Red on white (`#DC2626`) passes AA for text and UI.
+- **Color is never the only signal** — sport accents always pair with a text label; LIVE pairs the red dot with the word "LIVE"; +/- deltas pair color with a sign/arrow.
+- **Focus** — every interactive element keeps the 2px red `:focus-visible` ring. Never suppressed.
+- **Touch** — targets ≥ 44px; bottom nav ≤ 5 items.
+- **Motion** — all keyframe decoration respects reduced-motion.
+- **Numbers** — tabular figures prevent layout shift on live-updating scores.
 
+---
+
+## 9. Component Catalog
+
+### Buttons (`components/ui/Button.tsx`)
+Sharp `radius-sm`, Barlow Condensed 600 UPPERCASE, `tracking-[0.06em]`.
+- **primary** — solid `--primary`, white text; hover `--primary-hover`; feature CTAs may add `--shadow-hard-red` + hover lift.
+- **secondary** — solid ink (`--ink`), white text.
+- **outline** — transparent, 1.5px `--border-strong`, ink text; hover ink border.
+- **ghost** — transparent, ink-muted text; hover `--surface-muted`.
+- **danger** — same as primary (red is already danger); reserve for destructive with an icon + confirm.
+Sizes: `sm` `px-3 py-1.5 text-xs` · `md` `px-5 py-2.5 text-sm` · `lg` `px-6 py-3 text-base`.
+
+### Card (`components/ui/Card.tsx`)
+White, 1px `--border`, `radius-md`, `--shadow-sm`. `CardTitle` = Barlow Condensed 700 uppercase. Add `.accent-{sport}` for a sport stripe, or swap to `.block` for interactive emphasis.
+
+### Input (`components/ui/Input.tsx`)
+White bg, 1.5px `--border-strong`, `radius-sm`, ink text, `--ink-faint` placeholder; focus → red border + red ring. Visible label above (never placeholder-only); error text `--danger` below.
+
+### Ink Panel / Scoreboard header
+`.ink-panel` slab: kicker + big condensed title in `--on-ink`, right-aligned stat in `.stat-num`. Used for page headers, gameweek banners, match scoreboards.
+
+### Stat Block
+`.block` or `.surface` with `.accent-{sport}`: giant `.stat-num` (`text-4xl`–`text-6xl`) on top, `.micro-label` beneath. Optional delta pill.
+
+### Standings / Leaderboard table
+Full-width `.surface`. Header row = `.ink-panel` or ink text on `--surface-muted`. Zebra via `--surface-muted`. Bold rank column; `#1` uses `.rank-1` champion gradient; the "you" row gets `--primary-soft` bg + red left-border. Sortable headers show `aria-sort`.
+
+### Player card
+`.block`, sport `.accent-bar`. Left: gradient/initial avatar (radius-sm, **not** circular — jersey-tile feel). Name (Condensed 700), position `.micro-label`, price `.num`. Status dot: fit `--success` / doubt `--warning` / out `--danger`, each with label. Right: points in `.stat-num`.
+
+### Badges / Pills
+`.pill` (uppercase condensed) for status; `.sport-badge-{sport}` soft-tint tags; `.pill-live` for LIVE. Sharp small radius except status pills (full).
+
+### Nav shell
+- **Desktop:** left `.surface` sidebar OR top bar. Brand mark (ink + red), uppercase condensed nav labels, active item = ink text + 3px red left/bottom indicator + `--surface-muted` fill.
+- **Mobile:** bottom nav ≤ 5 items, icon + label, active = red.
+Sticky headers use `.glass-strong`.
+
+### Ticker
+Ink strip (`.ink-panel`) full-bleed, `.ticker-track` scrolling score chips (team · score · `.pill-live`). Pauses on hover. The signature broadcast element.
+
+### Empty states & skeletons
+Empty: centered ink icon in a `--surface-muted` tile, condensed uppercase title, muted body, one primary CTA. Skeletons use `.shimmer` on `--surface-muted` blocks.
+
+---
+
+## 10. Signature Recipes (copy-paste)
+
+**Hard-shadow feature block**
+```html
+<div class="block block-red rounded-sm p-6">
+  <div class="kicker">GAMEWEEK 12</div>
+  <div class="stat-num num text-5xl mt-2">1,204</div>
+  <div class="micro-label mt-1">total points</div>
+</div>
+```
+
+**Broadcast ticker**
+```html
+<div class="ink-panel overflow-hidden">
+  <div class="ticker-track">
+    <!-- duplicate the chip list twice for a seamless -50% loop -->
+    <span class="px-4 py-2 num">ARS 2 – 1 CHE</span> …
+  </div>
+</div>
+```
+
+**Editorial section head**
+```html
+<div class="kicker">MY LEAGUES</div>
+<h2 class="text-3xl">This Season</h2>
+<hr class="rule my-4" />
+```
+
+**Scoreboard row reveal** — add `.clip-reveal` (stagger with `animation-delay` per row).
+
+---
+
+## 11. Sport Theming
+
+The **page** is ink+red always. Sport identity is applied locally as a data color:
 ```ts
-const accentMap = {
-  football:   { text: "text-football",   grad: "gradient-football",   ring: "shadow-neon-green"  },
-  basketball: { text: "text-basketball", grad: "gradient-basketball", ring: "shadow-neon-orange" },
-  mix:        { text: "text-playoff",    grad: "gradient-playoff",    ring: "shadow-neon-purple" },
+const sport = {
+  football:   { accent: "accent-football",   badge: "sport-badge-football",   grad: "gradient-football"   },
+  basketball: { accent: "accent-basketball", badge: "sport-badge-basketball", grad: "gradient-basketball" },
+  cricket:    { accent: "accent-cricket",    badge: "sport-badge-cricket",    grad: "gradient-cricket"    },
+  rugby:      { accent: "accent-rugby",      badge: "sport-badge-rugby",      grad: "gradient-playoff"    },
+  mix:        { accent: "accent-playoff",    badge: "sport-badge-multisport", grad: "gradient-playoff"    },
 };
 ```
-
-Layout grid:
-- **Header**: sticky `glass-strong`, brand mark left, gameweek center, budget chip right.
-- **Sport switcher**: pill row, active = filled gradient + neon shadow + black text.
-- **Summary**: 3-column grid (`md:grid-cols-3`) — Football / Basketball / Mix cards.
-- **Upcoming + LiveFeed**: 3-col split (`lg:grid-cols-3`), upcoming spans 2 cols with horizontal `snap-x snap-mandatory` carousel.
-- **Squad + Transfers**: same 3-col split, squad as `sm:grid-cols-2`.
-- **Leaderboard**: full-width `glass-strong` rounded list, `you` row gets subtle `bg-white/[0.04]` and accent text.
-- **FAB**: bottom-right Transfer button, accent-themed.
-
----
-
-## 10. Signature Effects (copy-paste recipes)
-
-### RGB glitch
-```css
-@keyframes glitch-rgb {
-  0%, 100% { text-shadow: 2px 0 #00FF88, -2px 0 #FF6B35; transform: translate(0); }
-  20%      { text-shadow: -2px 0 #00FF88, 2px 0 #FF6B35; transform: translate(-1px, 1px); }
-  40%      { text-shadow: 2px 2px #9B59B6, -2px -2px #00FF88; transform: translate(1px, -1px); }
-  60%      { text-shadow: -2px 2px #FF6B35, 2px -2px #9B59B6; transform: translate(-1px, 0); }
-  80%      { text-shadow: 2px -2px #00FF88, -2px 2px #FF6B35; transform: translate(1px, 1px); }
-}
-.glitch { animation: glitch-rgb 2.8s infinite steps(1, end); }
-```
-
-### Neon flicker
-```css
-@keyframes neon-flicker {
-  0%, 100% { opacity: 1; } 45% { opacity: 0.95; } 47% { opacity: 0.55; }
-  48% { opacity: 1; } 60% { opacity: 0.85; } 62% { opacity: 0.6; } 64% { opacity: 1; }
-}
-.flicker { animation: neon-flicker 3s infinite; }
-```
-
-### Lightning flash
-```css
-@keyframes lightning-flash {
-  0%, 92%, 100% { opacity: 0; } 93% { opacity: 1; }
-  95% { opacity: 0.2; } 96% { opacity: 1; } 98% { opacity: 0; }
-}
-.lightning { animation: lightning-flash 4.5s infinite; }
-```
-
-### Football roll
-```css
-@keyframes ball-roll {
-  from { transform: translateX(-10vw) rotate(0deg); }
-  to   { transform: translateX(110vw) rotate(720deg); }
-}
-.ball-roll { animation: ball-roll 8s linear infinite; }
-```
-
-### Basketball bounce
-```css
-@keyframes bball-bounce {
-  0%   { transform: translate(-10vw, 0)  rotate(0deg); }
-  25%  { transform: translate(25vw, -60px) rotate(180deg); }
-  50%  { transform: translate(60vw, 0)  rotate(360deg); }
-  75%  { transform: translate(80vw, -40px) rotate(540deg); }
-  100% { transform: translate(110vw, 0) rotate(720deg); }
-}
-.bball-bounce { animation: bball-bounce 7s linear infinite; }
-```
-
-### Firework burst (inline animation per particle)
-```css
-@keyframes firework-up {
-  0%   { transform: translateY(0)     scale(1); opacity: 1; }
-  60%  { transform: translateY(-60vh) scale(1); opacity: 1; }
-  100% { transform: translateY(-60vh) scale(8); opacity: 0; }
-}
-```
-
-### Confetti burst
-```tsx
-import Confetti from "react-confetti";
-const inView = useInView(ref, { amount: 0.4 });
-useEffect(() => { if (inView) setConfettiOn(true); /* off after 6.5s */ }, [inView]);
-<Confetti width={w} height={h} numberOfPieces={350} gravity={0.25} recycle={false}
-  colors={["#FFD86B", "#FF6B35", "#9B59B6", "#00FF88", "#ffffff"]} />
-```
-
-### Share Victory (native + clipboard fallback)
-```ts
-if (navigator.share) await navigator.share({ title, text, url });
-else { await navigator.clipboard.writeText(url); toast.success("Link copied! Share your victory."); }
-```
-
----
-
-## 11. Accessibility
-
-- **Reduced motion** — wrap all keyframe-driven decoration in `@media (prefers-reduced-motion: reduce) { .glitch, .flicker, .lightning, .spin-y, .ball-roll, .bball-bounce { animation: none; } }`.
-- **Glow restraint** — neon `box-shadow` only on hover/active/`you`-row, never on idle bulk content. Prevents bloom haze on long scrolls.
-- **Contrast** — body text minimum `rgba(255,255,255,0.7)` on `#0A0A0F` (~AA). Micro-labels under `0.6` are decorative only and always paired with adjacent strong text.
-- **Touch** — `CustomCursor` only mounts when `(pointer: fine)`. Magnetic effect degrades to a plain pill.
-- **Focus** — every interactive element keeps `:focus-visible` ring (`--ring`). Don't suppress the outline on magnetic buttons.
-- **Motion-triggered effects** like confetti use `useInView` so they don't fire on hidden tabs.
+Use `accent` for the card top-stripe, `badge` for the tag, `grad` for avatars / small fills. Do **not** repaint the whole page per sport.
 
 ---
 
@@ -433,51 +319,48 @@ else { await navigator.clipboard.writeText(url); toast.success("Link copied! Sha
 
 ```
 src/
-├── styles.css                    # tokens, @theme, keyframes, utilities
-├── routes/
-│   ├── __root.tsx                # font <link>, providers
-│   ├── index.tsx                 # journey page (sections in reverse DOM order)
-│   └── dashboard.tsx             # management surface
+├── app/
+│   ├── globals.css        # tokens, @theme, utilities, keyframes  ← this system
+│   ├── layout.tsx         # Barlow + Barlow Condensed fonts, providers
+│   └── (auth|public|dashboard)/…
 ├── components/
-│   ├── journey/
-│   │   ├── NavHeader.tsx
-│   │   ├── CustomCursor.tsx
-│   │   ├── MagneticButton.tsx
-│   │   ├── ResetFAB.tsx
-│   │   ├── LotteryBall.tsx
-│   │   ├── Trophy3D.tsx
-│   │   ├── SectionDraft.tsx
-│   │   ├── SectionRegular.tsx
-│   │   ├── SectionPlayoffs.tsx
-│   │   └── SectionChampionship.tsx
-│   └── ui/                       # shadcn primitives (button, card, sonner, etc.)
-└── lib/
-    ├── mockData.ts               # Player, Sport, fixtures, feed, leaderboard
-    └── utils.ts                  # cn()
+│   ├── ui/                # Button, Card, Input, badges, empty-states, skeletons
+│   ├── dashboard/navigation/  # Sidebar, MobileBottomNav, header, NotificationBell
+│   ├── landing/ · live/ · public-matches/
+│   └── …
+└── features/              # feature modules (compose ui + hooks)
 ```
 
-**Dependencies that matter for this aesthetic:**
-- `framer-motion` — all springs, scroll-linked transforms, layout animations.
-- `@react-three/fiber` + `@react-three/drei` — trophy only. Don't add more 3D canvases; cost compounds.
-- `react-confetti` — championship moment.
-- `lucide-react` — icons.
-- `sonner` — toasts (`Link copied!`, transfer confirmations).
-- `tailwindcss v4` — CSS-first config in `styles.css`.
+**Dependencies that matter for this aesthetic:** `framer-motion` (springs, reveals), `lucide-react` (icons — one family, ~1.75px stroke), `react-confetti` (championship only), `@mantine/core` (behavioral primitives, restyled to tokens), `tailwindcss v4` (CSS-first config in `globals.css`).
 
 ---
 
-## 13. Adoption Checklist (porting to a new project)
+## 13. Adoption Checklist (per component during Phases 1–9)
 
-1. Drop the full `:root` block and `@theme inline` map into your `src/styles.css`.
-2. Load Inter (700–900) and DM Sans (400–700) via `<link>` in root head.
-3. Copy the keyframes block verbatim.
-4. Copy `.glass` / `.glass-strong` utilities.
-5. Set `<body>` background to `#0A0A0F` and font-family to `var(--font-sans)`.
-6. Lift `MagneticButton`, `CustomCursor`, `ResetFAB` as your interaction kit.
-7. Pick a sport accent per section/page and theme buttons + shadows from it.
-8. Reserve `gradient-champion` for the single "you won" moment — overuse kills it.
-9. Audit every number on screen: does it have `.num`? If not, add it.
-10. Test with `prefers-reduced-motion: reduce` enabled — the page should still tell the same story, just calmer.
+1. Delete hardcoded dark hex (`#0a0a0f`, `#111117`, `#f0f0f0`, `#e8fb25`, `text-white/70`, `bg-black`) → light tokens.
+2. Container → `.surface` / `.block` / `.ink-panel`. Corners sharp (radius-sm/md).
+3. Emphasis → ink border + hard-offset shadow, **not** glow.
+4. Headings → Barlow Condensed uppercase; open sections with a `.kicker` + `.rule`.
+5. One red for actions; sport color only as stripe/tag/dot.
+6. Every number → `.num`; big stats → `.stat-num`.
+7. Verify contrast on white (AA); keep the red focus ring.
+8. Test `prefers-reduced-motion` and 375 / 768 / 1024 / 1440.
+9. When a component is fully migrated, drop its legacy shim block from `globals.css`.
+
+---
+
+## 14. What changed from v1 (old → new)
+
+| Dimension | v1 "Night Stadium" | v2 "Broadcast" |
+|-----------|--------------------|----------------|
+| Canvas | `#0A0A0F` matte black | `#F5F7FA` bright studio |
+| Surfaces | Frosted **glass** over parallax | Solid **white blocks** + 1px border |
+| Accent | Neon green / orange / purple (glow) | **One red** action color + sport data-colors |
+| Emphasis | Neon `box-shadow` glow | **Hard-offset poster shadow** + ink border |
+| Shape | Soft `0.875rem` rounded | **Sharp** 2–6px edges |
+| Type | Inter + DM Sans | **Barlow Condensed + Barlow** (condensed uppercase) |
+| Motion | Glitch / flicker / lightning | **Ticker / clip-reveal / shadow-lift** |
+| Mood | Dark arcade, immersive scroll-journey | Bright sports-editorial / broadcast studio |
 
 ---
 

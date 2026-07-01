@@ -1,5 +1,7 @@
 "use client";
 
+import { SportIcon } from "@/components/landing/sport-icons";
+
 type PositionLimit = {
   max: number;
   current: number;
@@ -26,17 +28,14 @@ const SPORT_POSITION_GROUPS = {
 const SPORT_META = {
   football: {
     label: "Football",
-    icon: "⚽",
     badge: "bg-accent-football/10 text-accent-football",
   },
   basketball: {
     label: "Basketball",
-    icon: "🏀",
     badge: "bg-accent-basketball/10 text-accent-basketball",
   },
   cricket: {
     label: "Cricket",
-    icon: "🏏",
     badge: "bg-accent-cricket/10 text-accent-cricket",
   },
 } as const;
@@ -70,19 +69,19 @@ export function PositionLimits({
           ).find((key) =>
             SPORT_POSITION_GROUPS[key].includes(position as never),
           );
-          const sportIcon = sportKey ? `${SPORT_META[sportKey].icon} ` : "";
-
           return (
             <div
               key={position}
-              className="flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+              className="flex items-center gap-2 rounded-sm border border-border bg-surface-muted px-4 py-1.5 font-condensed text-xs font-bold uppercase tracking-[0.06em]"
             >
-              <span className="text-[#9a9aa5]">
-                {sportIcon}
+              <span className="flex items-center gap-1.5 text-ink-muted">
+                {sportKey ? (
+                  <SportIcon sport={sportKey} className="h-3 w-3" tint />
+                ) : null}
                 {position}
               </span>
               <span
-                className={`tabular-nums ${atLimit ? "text-[#e8fb25]" : "text-[#555560]"}`}
+                className={`tabular-nums ${atLimit ? "text-[#DC2626]" : "text-[#6B7280]"}`}
               >
                 {current}/{max}
               </span>

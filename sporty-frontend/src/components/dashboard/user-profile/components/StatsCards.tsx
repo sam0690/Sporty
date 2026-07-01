@@ -12,12 +12,12 @@ export function StatsCards({
   bestRank,
 }: StatsCardsProps) {
   const stats: Array<{ label: string; value: string; accent: string }> = [
-    { label: "Total Points", value: String(Math.round(totalPoints)), accent: "#e8fb25" },
-    { label: "Leagues", value: String(totalLeagues), accent: "#f0f0f0" },
+    { label: "Total Points", value: String(Math.round(totalPoints)), accent: "#DC2626" },
+    { label: "Leagues", value: String(totalLeagues), accent: "#0B1220" },
     {
       label: "Best Rank",
       value: bestRank ? `#${bestRank}` : "—",
-      accent: "#e8fb25",
+      accent: "#DC2626",
     },
   ];
 
@@ -26,7 +26,7 @@ export function StatsCards({
       {stats.map((stat) => (
         <article
           key={stat.label}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-4"
+          className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-4"
         >
           <p
             className="font-bebas text-3xl leading-none tracking-[2px]"

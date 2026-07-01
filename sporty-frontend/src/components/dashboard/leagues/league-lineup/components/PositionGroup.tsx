@@ -1,5 +1,7 @@
 "use client";
 
+import type { ComponentType } from "react";
+import { Zap, Target, Shield, Hand, Circle, User } from "lucide-react";
 import {
   PlayerSlot,
   type Player,
@@ -18,21 +20,16 @@ type PositionGroupProps = {
   disabled?: boolean;
 };
 
-function positionIcon(position: string): string {
-  if (position === "Forward") return "⚡";
-  if (position === "Midfielder") return "🎯";
-  if (position === "Defender") return "🛡️";
-  if (position === "Goalkeeper") return "🧤";
-  if (position === "PointGuard") return "🎯";
-  if (position === "ShootingGuard") return "🎯";
-  if (position === "SmallForward") return "⚡";
-  if (position === "PowerForward") return "⚡";
-  if (position === "Center") return "🏀";
-  if (position === "Batsman") return "🏏";
-  if (position === "Bowler") return "🎳";
-  if (position === "AllRounder") return "🏏";
-  if (position === "WicketKeeper") return "🧤";
-  return "👤";
+function positionIcon(position: string): ComponentType<{ className?: string }> {
+  if (position === "Forward" || position === "SmallForward" || position === "PowerForward")
+    return Zap;
+  if (position === "Midfielder" || position === "PointGuard" || position === "ShootingGuard")
+    return Target;
+  if (position === "Defender") return Shield;
+  if (position === "Goalkeeper" || position === "WicketKeeper") return Hand;
+  if (position === "Center" || position === "Batsman" || position === "Bowler" || position === "AllRounder")
+    return Circle;
+  return User;
 }
 
 export function PositionGroup({
@@ -46,14 +43,18 @@ export function PositionGroup({
   const emptySlots = Math.max(0, limits.max - activeCount);
 
   return (
-    <section className="space-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4">
+    <section className="space-y-3 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-4">
       <header className="mb-3 flex items-center justify-between">
-        <p className="section-label">
-          {positionIcon(position)} {position}
+        <p className="section-label flex items-center gap-1.5">
+          {(() => {
+            const PosIcon = positionIcon(position);
+            return <PosIcon className="h-3.5 w-3.5" />;
+          })()}
+          {position}
         </p>
         <p
           className={`font-bebas text-base leading-none tracking-[1px] tabular-nums ${
-            activeCount >= limits.max ? "text-[#e8fb25]" : "text-[#555560]"
+            activeCount >= limits.max ? "text-[#DC2626]" : "text-[#6B7280]"
           }`}
         >
           {activeCount}/{limits.max}
@@ -75,7 +76,7 @@ export function PositionGroup({
         {Array.from({ length: emptySlots }).map((_, index) => (
           <div
             key={`${position}-empty-${index}`}
-            className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560] transition-all duration-150"
+            className="rounded-[3px] border border-dashed border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-4 text-center font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280] transition-all duration-150"
           >
             Drop {position} here
           </div>

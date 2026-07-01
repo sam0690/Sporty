@@ -1,5 +1,6 @@
 "use client";
 
+import { Users } from "lucide-react";
 import {
   MemberCard,
   type Member,
@@ -22,14 +23,17 @@ export function MemberList({
 }: MemberListProps) {
   if (members.length === 0) {
     return (
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-        <p className="text-2xl" aria-hidden>
-          👥
-        </p>
-        <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+      <div className="surface flex flex-col items-center p-8 text-center">
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-md bg-surface-muted text-ink-muted"
+          aria-hidden
+        >
+          <Users className="h-6 w-6" strokeWidth={1.75} />
+        </div>
+        <p className="mt-3 font-condensed text-sm font-bold uppercase tracking-[0.06em] text-ink">
           No members found
         </p>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-[#6B7280]">
           Invite friends to fill out your league.
         </p>
       </div>

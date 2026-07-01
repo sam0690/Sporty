@@ -22,7 +22,7 @@ type SettingsFormProps = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+    <label className="mb-2 block font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280]">
       {children}
     </label>
   );
@@ -63,7 +63,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
               Private
             </button>
           </div>
-          <p className="mt-2 text-xs text-[#555560]">
+          <p className="mt-2 text-xs text-[#6B7280]">
             Public leagues are discoverable by anyone; private leagues can only
             be joined with an invite code.
           </p>
@@ -88,7 +88,7 @@ export function SettingsForm({ data, onChange }: SettingsFormProps) {
                 Disabled
               </button>
             </div>
-            <p className="mt-2 text-xs text-[#555560]">
+            <p className="mt-2 text-xs text-[#6B7280]">
               When enabled, new users can join while the league is active and
               start scoring from the next transfer window.
             </p>

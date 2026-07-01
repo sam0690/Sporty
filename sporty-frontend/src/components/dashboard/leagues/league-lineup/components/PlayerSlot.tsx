@@ -23,9 +23,9 @@ type PlayerSlotProps = {
 };
 
 const sportAccentColor: Record<Sport, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
-  cricket: "#00d4ff",
+  football: "#16A34A",
+  basketball: "#EA580C",
+  cricket: "#0891B2",
 };
 
 export function PlayerSlot({
@@ -48,17 +48,17 @@ export function PlayerSlot({
         }
       }}
       style={{ borderLeft: `3px solid ${sportAccentColor[player.sport]}` }}
-      className={`group flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-3 transition-colors ${
+      className={`group flex items-center justify-between rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-3 transition-colors ${
         variant === "bench" ? "cursor-grab active:cursor-grabbing" : "cursor-pointer"
-      } ${disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[#1d1d26]"}`}
+      } ${disabled ? "cursor-not-allowed opacity-60" : "hover:bg-[#F3F4F7]"}`}
       aria-disabled={disabled}
     >
       <div className="min-w-0">
-        <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <p className="truncate font-barlow-condensed text-sm font-bold uppercase tracking-[1px] text-[#0B1220]">
           {player.name}
         </p>
         <div className="mt-1 flex items-center gap-2">
-          <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+          <span className="font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] text-[#6B7280]">
             {player.position}
           </span>
           <span className="section-label">Proj: {player.projected.toFixed(1)}</span>
@@ -67,7 +67,7 @@ export function PlayerSlot({
 
       <div className="ml-3 flex items-center gap-2">
         {variant === "bench" ? (
-          <GripVertical className="h-4 w-4 text-[#555560]" />
+          <GripVertical className="h-4 w-4 text-[#6B7280]" />
         ) : null}
         <button
           type="button"
@@ -76,7 +76,7 @@ export function PlayerSlot({
             event.stopPropagation();
             if (!disabled) onToggle(player.id);
           }}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] p-1 text-[#555560] transition-colors hover:border-[rgba(255,59,48,0.3)] hover:text-[#ff3b30] disabled:opacity-60"
+          className="rounded-[3px] border border-[rgba(11,18,32,0.08)] p-1 text-[#6B7280] transition-colors hover:border-[rgba(255,59,48,0.3)] hover:text-[#DC2626] disabled:opacity-60"
           aria-label={isActive ? "Remove from lineup" : "Add to lineup"}
         >
           {isActive ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}

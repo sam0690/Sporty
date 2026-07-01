@@ -28,7 +28,7 @@ export function SocialLogin() {
       <Button
         type="button"
         variant="outline"
-        className="h-11 rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] px-4 text-[#f0f0f0] normal-case tracking-normal transition-colors hover:border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
+        className="h-11 px-4 normal-case tracking-normal"
         onClick={loginWithGoogle}
       >
         <svg className="mr-2 size-4" viewBox="0 0 24 24" aria-hidden="true">
@@ -54,7 +54,7 @@ export function SocialLogin() {
       <Button
         type="button"
         variant="outline"
-        className="h-11 rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] px-4 text-[#555560] normal-case tracking-normal"
+        className="h-11 px-4 normal-case tracking-normal"
         disabled
       >
         <svg className="mr-2 size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">

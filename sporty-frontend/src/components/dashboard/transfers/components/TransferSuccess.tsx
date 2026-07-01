@@ -20,11 +20,11 @@ export function TransferSuccess({
     }
 
     if (status === "success") {
-      toastifier.success(`✓ ${message}`);
+      toastifier.success(`${message}`);
       return;
     }
 
-    toastifier.error(`✕ ${message}`);
+    toastifier.error(`${message}`);
   }, [status, message, token]);
 
   return null;

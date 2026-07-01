@@ -80,13 +80,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
           label={unreadCount > 9 ? "9+" : unreadCount}
           disabled={unreadCount === 0}
           size={16}
-          color="#e8fb25"
+          color="#DC2626"
         >
           <ActionIcon
             variant="transparent"
             aria-label="Notifications"
             className={cn(
-              "border border-[rgba(255,255,255,0.08)] bg-transparent text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0]",
+              "border border-border bg-transparent text-ink-muted transition-colors hover:border-border-strong hover:text-ink",
               className,
             )}
             onClick={() => setOpened((value) => !value)}
@@ -98,9 +98,9 @@ export function NotificationBell({ className }: NotificationBellProps) {
 
       <Popover.Dropdown
         style={{
-          background: "#111117",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "3px",
+          background: "var(--surface)",
+          border: "1px solid var(--border)",
+          borderRadius: "4px",
         }}
       >
         <Text
@@ -108,21 +108,21 @@ export function NotificationBell({ className }: NotificationBellProps) {
           size="xs"
           mb="xs"
           style={{
-            fontFamily: "var(--font-barlow-condensed)",
+            fontFamily: "var(--font-condensed)",
             textTransform: "uppercase",
-            letterSpacing: "2px",
-            color: "#f0f0f0",
+            letterSpacing: "0.12em",
+            color: "var(--ink)",
           }}
         >
           Notifications
         </Text>
 
         {loading ? (
-          <Text size="sm" style={{ color: "#555560" }}>
+          <Text size="sm" style={{ color: "var(--ink-muted)" }}>
             Loading notifications...
           </Text>
         ) : items.length === 0 ? (
-          <Text size="sm" style={{ color: "#555560" }}>
+          <Text size="sm" style={{ color: "var(--ink-muted)" }}>
             No notifications yet.
           </Text>
         ) : (
@@ -134,14 +134,14 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   type="button"
                   onClick={() => void onRead(item.id)}
                   className={cn(
-                    "w-full rounded-[3px] border px-3 py-2 text-left text-sm transition-colors",
+                    "w-full rounded-sm border px-3 py-2 text-left text-sm transition-colors",
                     item.is_read
-                      ? "border-[rgba(255,255,255,0.08)] bg-transparent text-[#555560] hover:border-white/15 hover:text-[#f0f0f0]"
-                      : "border-[rgba(232,251,37,0.2)] bg-[#1a1a10] text-[#f0f0f0] hover:border-[rgba(232,251,37,0.4)]",
+                      ? "border-border bg-transparent text-ink-muted hover:border-border-strong hover:text-ink"
+                      : "border-primary/25 bg-primary-soft text-ink hover:border-primary/50",
                   )}
                 >
                   <p>{item.message}</p>
-                  <p className="mt-1 text-xs text-[#555560]">
+                  <p className="mt-1 text-xs text-ink-muted">
                     {new Date(item.created_at).toLocaleString()}
                   </p>
                 </button>

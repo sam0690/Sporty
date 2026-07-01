@@ -49,65 +49,65 @@ export function SummaryStep({
 }: SummaryStepProps) {
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+        <div className="flex items-center justify-between border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
           <p className="section-label">League Details</p>
           <button
             type="button"
             onClick={onBack}
-            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:text-[#f0ff45]"
+            className="font-barlow-condensed text-[10px] font-bold uppercase tracking-[1.5px] text-[#DC2626] transition-colors hover:text-[#B91C1C]"
           >
             Edit
           </button>
         </div>
         <div className="space-y-0">
-          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-            <p className="text-sm text-[#555560]">Name</p>
-            <p className="text-sm text-[#f0f0f0]">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
+            <p className="text-sm text-[#6B7280]">Name</p>
+            <p className="text-sm text-[#0B1220]">
               {leagueData.leagueName || "-"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-            <p className="text-sm text-[#555560]">Sport</p>
-            <p className="text-sm text-[#f0f0f0]">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
+            <p className="text-sm text-[#6B7280]">Sport</p>
+            <p className="text-sm text-[#0B1220]">
               {selectedSports.map((sport) => sportLabels[sport]).join(", ") ||
                 "-"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-            <p className="text-sm text-[#555560]">Type</p>
-            <p className="text-sm text-[#f0f0f0]">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
+            <p className="text-sm text-[#6B7280]">Type</p>
+            <p className="text-sm text-[#0B1220]">
               {leagueData.isPrivate ? "Private" : "Public"}
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-            <p className="text-sm text-[#555560]">Team Size</p>
-            <p className="text-sm text-[#f0f0f0]">{leagueData.teamSize}</p>
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
+            <p className="text-sm text-[#6B7280]">Team Size</p>
+            <p className="text-sm text-[#0B1220]">{leagueData.teamSize}</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
-            <p className="text-sm text-[#555560]">Competition Type</p>
-            <p className="text-sm text-[#f0f0f0]">
+          <div className="grid grid-cols-2 gap-2 border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
+            <p className="text-sm text-[#6B7280]">Competition Type</p>
+            <p className="text-sm text-[#0B1220]">
               {leagueData.competitionType === "draft"
                 ? "Draft Mode"
                 : "Budget Mode"}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 px-4 py-3">
-            <p className="text-sm text-[#555560]">Draft Date</p>
-            <p className="text-sm text-[#f0f0f0]">
+            <p className="text-sm text-[#6B7280]">Draft Date</p>
+            <p className="text-sm text-[#0B1220]">
               {leagueData.draftDate || "Not set"}
             </p>
           </div>
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+        <div className="flex items-center justify-between border-b border-[rgba(11,18,32,0.08)] px-4 py-3">
           <p className="section-label">Scoring Rules</p>
           <button
             type="button"
             onClick={onBack}
-            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:text-[#f0ff45]"
+            className="font-barlow-condensed text-[10px] font-bold uppercase tracking-[1.5px] text-[#DC2626] transition-colors hover:text-[#B91C1C]"
           >
             Edit
           </button>
@@ -123,13 +123,13 @@ export function SummaryStep({
             return (
               <div
                 key={sport}
-                className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12]"
+                className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]"
               >
-                <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-3 py-2">
-                  <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                <div className="flex items-center justify-between border-b border-[rgba(11,18,32,0.08)] px-3 py-2">
+                  <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
                     {sportLabels[sport]}
                   </p>
-                  <p className="text-xs text-[#555560]">
+                  <p className="text-xs text-[#6B7280]">
                     {isCustomEnabled
                       ? `${customRules.length} custom rule(s)`
                       : "Default scoring"}
@@ -139,12 +139,12 @@ export function SummaryStep({
                   {(isCustomEnabled ? customRules : rules).map((rule) => (
                     <div
                       key={`${sport}-${rule.action}`}
-                      className="grid grid-cols-2 border-b border-[rgba(255,255,255,0.08)] px-3 py-2 last:border-b-0"
+                      className="grid grid-cols-2 border-b border-[rgba(11,18,32,0.08)] px-3 py-2 last:border-b-0"
                     >
-                      <p className="text-sm text-[#555560]">
+                      <p className="text-sm text-[#6B7280]">
                         {formatRuleLabel(rule.action)}
                       </p>
-                      <p className="text-sm text-[#f0f0f0]">
+                      <p className="text-sm text-[#0B1220]">
                         {isCustomEnabled && rule.enabled
                           ? `${rule.points} (default ${rule.defaultPoints})`
                           : rule.defaultPoints}
@@ -162,7 +162,7 @@ export function SummaryStep({
         <button
           type="button"
           onClick={onBack}
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] sm:w-auto"
+          className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-8 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#6B7280] transition-colors hover:text-[#0B1220] sm:w-auto"
         >
           Back
         </button>
@@ -170,7 +170,7 @@ export function SummaryStep({
           type="button"
           onClick={onCreate}
           disabled={isLoading}
-          className="w-full rounded-[3px] bg-[#e8fb25] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="w-full rounded-[3px] bg-[#DC2626] px-8 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#F6F7F9] transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isLoading ? "Creating…" : "Create League"}
         </button>

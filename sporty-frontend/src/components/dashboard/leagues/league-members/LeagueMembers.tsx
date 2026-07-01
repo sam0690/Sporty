@@ -79,32 +79,32 @@ export function LeagueMembers() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#0B1220]">
       <NavigationTabs
         activeTab="members"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(11,18,32,0.08)] pb-6">
         <div>
           <p className="section-label">{league?.name || "League"}</p>
-          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
             Members
           </h1>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-[#6B7280]">
             Everyone competing in this league
           </p>
         </div>
         <div className="flex items-center gap-5">
           <div className="text-right">
-            <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#e8fb25]">
+            <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#DC2626]">
               {members.length}
             </p>
             <p className="section-label mt-1">Total</p>
           </div>
           <div className="text-right">
-            <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#f0f0f0]">
+            <p className="font-bebas text-4xl leading-none tracking-[2px] text-[#0B1220]">
               {activeCount}
             </p>
             <p className="section-label mt-1">Active</p>
@@ -113,14 +113,14 @@ export function LeagueMembers() {
       </header>
 
       <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#555560]">
+        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]">
           ⌕
         </span>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by member or team name"
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] py-2.5 pl-10 pr-4 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] py-2.5 pl-10 pr-4 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
         />
       </div>
 
@@ -129,7 +129,7 @@ export function LeagueMembers() {
           {Array.from({ length: 4 }, (_, i) => (
             <div
               key={i}
-              className="h-24 animate-pulse rounded-[3px] bg-[#1d1d26]"
+              className="h-24 animate-pulse rounded-[3px] bg-[#F3F4F7]"
             />
           ))}
         </div>

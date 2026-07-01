@@ -1,410 +1,629 @@
 @import "tailwindcss";
 
 /* ════════════════════════════════════════════════════════════════════
+   SPORTY — "BROADCAST" DESIGN SYSTEM  v2
+   Light · vibrant-block · premium-sports editorial.
    Design_System.md is the single source of truth for every value below.
-   §2 Color · §3 Typography · §4 Spacing & Shape · §5 Glass · §6 Motion
+   §2 Color · §3 Type · §4 Shape · §5 Elevation · §6 Layout · §7 Motion
    ════════════════════════════════════════════════════════════════════ */
 
 /* ── §2 Color Tokens ────────────────────────────────────────────────── */
 
 :root {
-  /* Surface (oklch) */
-  --background: oklch(0.13 0.01 270);
-  --foreground: oklch(0.98 0.005 270);
-  --card: oklch(0.17 0.015 270);
-  --card-foreground: oklch(0.98 0.005 270);
-  --muted: oklch(0.22 0.02 270);
-  --muted-foreground: oklch(0.7 0.02 270);
-  --border: oklch(1 0 0 / 0.1);
-  --input: oklch(1 0 0 / 0.15);
+  /* Surfaces (light) — soft, premium neutrals */
+  --canvas:         #F6F7F9;   /* app background */
+  --surface:        #FFFFFF;   /* cards, panels */
+  --surface-muted:  #F3F4F7;   /* subtle fills, table zebra */
+  --surface-sunken: #ECEEF2;   /* insets, progress tracks */
+  --ink-block:      #0B1120;   /* deep premium slab surface */
+  --ink-block-2:    #18213A;
 
-  /* Brand neons (exact hex — non-negotiable) */
-  --football: #00ff88;
-  --basketball: #ff6b35;
-  --playoff: #9b59b6;
-  --grass: #0e3d1f;
-  --court: #4a2510;
-  --gold: #ffd86b;
+  /* Text — contrast floor is --ink-muted on white (AA) */
+  --ink:        #0B1220;   /* headlines / primary text */
+  --ink-soft:   #3A4256;   /* secondary text */
+  --ink-muted:  #6B7280;   /* captions / muted */
+  --ink-faint:  #9AA1AE;   /* hints / disabled */
+  --on-ink:     #F8FAFC;   /* text on dark slabs */
+  --on-ink-muted: #9AA6C0;
 
-  /* Gap-derived tokens — NOT in Design_System.md, see rewrite changelog:
-     Sporty also has Cricket/Rugby sports and needs a negative/danger red
-     (spec references "red" for `out` status and negative deltas but
-     defines no hex). Kept in the same neon family. */
-  --cricket: #00d4ff;
-  --rugby: #e040fb;
-  --danger: #ff3b5c;
-  --warning: var(--gold);
+  /* Lines — hairline, refined */
+  --border:        #EAECF0;
+  --border-strong: #D4D8DF;
+  --rule:          #0B1220;   /* editorial hairline */
 
-  /* Gradients */
-  --gradient-football: linear-gradient(135deg, #00ff88 0%, #00b86b 100%);
-  --gradient-basketball: linear-gradient(135deg, #ff6b35 0%, #c8390f 100%);
-  --gradient-playoff: linear-gradient(135deg, #9b59b6 0%, #6a2c91 100%);
+  /* Action / brand — red is the single action color */
+  --primary:       #DC2626;
+  --primary-hover: #B91C1C;
+  --primary-press: #991B1B;
+  --primary-soft:  #FEE2E2;
+  --on-primary:    #FFFFFF;
+  --ring:          #DC2626;
+
+  /* Sport accents — tuned for contrast on white (never the neon set) */
+  --football:   #16A34A;
+  --basketball: #EA580C;
+  --cricket:    #0891B2;
+  --rugby:      #7C3AED;
+  --playoff:    #9333EA;   /* mix / multi-sport / playoffs */
+  --gold:       #CA8A04;   /* champion, darkened for white bg */
+
+  /* Soft accent tints (badge / chip fills) */
+  --football-soft:   #DCFCE7;
+  --basketball-soft: #FFEDD5;
+  --cricket-soft:    #CFFAFE;
+  --rugby-soft:      #EDE9FE;
+  --playoff-soft:    #F3E8FF;
+  --gold-soft:       #FEF9C3;
+
+  /* Semantic */
+  --success: #16A34A;  --success-soft: #DCFCE7;
+  --warning: #D97706;  --warning-soft: #FEF3C7;
+  --danger:  #DC2626;  --danger-soft:  #FEE2E2;
+  --info:    #2563EB;  --info-soft:    #DBEAFE;
+  --live:    #DC2626;
+
+  /* Gradients — bold two/three-stop, energetic */
+  --gradient-action:     linear-gradient(135deg, #F43F5E 0%, #DC2626 100%);
+  --gradient-ink:        linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+  --gradient-football:   linear-gradient(135deg, #22C55E 0%, #15803D 100%);
+  --gradient-basketball: linear-gradient(135deg, #FB923C 0%, #C2410C 100%);
+  --gradient-playoff:    linear-gradient(135deg, #A855F7 0%, #6B21A8 100%);
+  --gradient-pitch:      linear-gradient(180deg, #16A34A 0%, #14532D 100%);
   /* Reserved: #1 rank, trophy halo, CHAMPION headline only */
-  --gradient-champion: linear-gradient(135deg, #ffd86b 0%, #ff6b35 50%, #9b59b6 100%);
+  --gradient-champion:   linear-gradient(135deg, #FBBF24 0%, #F97316 55%, #DC2626 100%);
 
-  /* Neon glow shadows — active/hover states only, never idle surfaces */
-  --shadow-neon-green: 0 0 24px color-mix(in oklab, #00ff88 60%, transparent);
-  --shadow-neon-orange: 0 0 24px color-mix(in oklab, #ff6b35 60%, transparent);
-  --shadow-neon-purple: 0 0 24px color-mix(in oklab, #9b59b6 60%, transparent);
-  --shadow-neon-cyan: 0 0 24px color-mix(in oklab, #00d4ff 60%, transparent); /* gap-derived for cricket */
+  /* Elevation — flat resting surfaces (border-only); depth only on overlays/hover */
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: 0 4px 8px -2px rgba(11, 18, 32, 0.05), 0 12px 24px -6px rgba(11, 18, 32, 0.09);
+  --shadow-lg: 0 12px 24px -8px rgba(11, 18, 32, 0.10), 0 28px 56px -14px rgba(11, 18, 32, 0.16);
+  --shadow-xl: 0 24px 48px -12px rgba(11, 18, 32, 0.16), 0 48px 96px -24px rgba(11, 18, 32, 0.22);
+  /* Rare hard-offset "poster" accent — deliberate emphasis only */
+  --shadow-hard:     5px 5px 0 0 var(--ink);
+  --shadow-hard-sm:  3px 3px 0 0 var(--ink);
+  --shadow-hard-red: 5px 5px 0 0 var(--primary);
 
-  /* §4 Shape */
-  --radius: 0.875rem;
+  /* §4 Shape — refined, gently rounded */
+  --radius:     12px;
+  --radius-xs:  6px;
+  --radius-sm:  8px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  20px;
+  --radius-2xl: 28px;
+  --radius-pill: 9999px;
 
-  /* Focus ring — gap-derived (spec mandates a :focus-visible ring but no
-     value): default to the football accent; sport-themed surfaces may
-     override --ring locally. */
-  --ring: color-mix(in oklab, var(--football) 70%, transparent);
+  /* §7 Motion */
+  --ease:     cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @theme inline {
   /* Surfaces */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  --color-background: var(--canvas);
+  --color-canvas: var(--canvas);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-ink-block: var(--ink-block);
+  --color-ink-block-2: var(--ink-block-2);
+
+  /* Text */
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-muted: var(--on-ink-muted);
+  --color-muted: var(--surface-muted);
+  --color-muted-foreground: var(--ink-muted);
+
+  /* Lines */
   --color-border: var(--border);
-  --color-input: var(--input);
+  --color-border-strong: var(--border-strong);
+  --color-rule: var(--rule);
+  --color-input: var(--border-strong);
   --color-ring: var(--ring);
 
-  /* Brand neons */
+  /* Action / brand */
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-press: var(--primary-press);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-foreground: var(--on-primary);
+  --color-on-primary: var(--on-primary);
+
+  /* Sport accents */
   --color-football: var(--football);
   --color-basketball: var(--basketball);
-  --color-playoff: var(--playoff);
-  --color-grass: var(--grass);
-  --color-court: var(--court);
-  --color-gold: var(--gold);
   --color-cricket: var(--cricket);
   --color-rugby: var(--rugby);
-  --color-danger: var(--danger);
+  --color-playoff: var(--playoff);
+  --color-gold: var(--gold);
+  --color-football-soft: var(--football-soft);
+  --color-basketball-soft: var(--basketball-soft);
+  --color-cricket-soft: var(--cricket-soft);
+  --color-rugby-soft: var(--rugby-soft);
+  --color-playoff-soft: var(--playoff-soft);
+  --color-gold-soft: var(--gold-soft);
+
+  /* Semantic */
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-live: var(--live);
 
-  /* ── Legacy aliases (shims; deleted as each component is rewritten) ── */
-  --color-volt: var(--football);
-  --color-live: var(--danger);
-  --color-surface: var(--card);
-  --color-surface-strong: var(--muted);
-  --color-surface-elevated: var(--muted);
-  --color-foreground-muted: var(--muted-foreground);
-  --color-accent-primary: var(--football);
-  --color-accent-secondary: var(--danger);
+  /* ── Legacy color shims → light system (deleted as components migrate) ── */
+  --color-volt: var(--primary);
+  --color-live: var(--live);
+  --color-surface-strong: var(--surface);
+  --color-surface-elevated: var(--surface);
+  --color-foreground-muted: var(--ink-muted);
+  --color-accent-primary: var(--primary);
+  --color-accent-secondary: var(--primary);
   --color-accent-tertiary: var(--basketball);
-  --color-accent-success: var(--football);
+  --color-accent-success: var(--success);
   --color-accent-danger: var(--danger);
+  --color-grass: var(--football);
+  --color-court: var(--basketball);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 
-  /* §3 Typography — Inter = display, DM Sans = body (loaded in layout.tsx) */
-  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  /* Legacy font shims → display family until components are rewritten */
-  --font-bebas: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-barlow-condensed: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
+  /* §3 Typography — Barlow Condensed (display) + Barlow (body). Loaded in layout.tsx. */
+  --font-display: var(--ff-condensed), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--ff-body), "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-condensed: var(--ff-condensed), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  /* Legacy font shims → real Barlow families (font-barlow-condensed used in 100+ files) */
+  --font-barlow-condensed: var(--ff-condensed), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-bebas: var(--ff-condensed), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-barlow: var(--ff-body), "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-inter: var(--ff-condensed), "Barlow Condensed", ui-sans-serif, system-ui, sans-serif;
+  --font-dm-sans: var(--ff-body), "Barlow", ui-sans-serif, system-ui, sans-serif;
 
-  /* §4 Radius scale (rounded-sm … rounded-2xl) */
-  --radius-sm: calc(var(--radius) - 4px); /* inputs, badges */
-  --radius-md: calc(var(--radius) - 2px); /* small cards */
-  --radius-lg: var(--radius); /* standard cards */
-  --radius-xl: calc(var(--radius) + 4px); /* hero glass cards */
-  --radius-2xl: calc(var(--radius) + 8px); /* stat blocks, summary cards */
+  /* §4 Radius scale */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
 
-  /* §2 Neon glow shadow utilities (shadow-neon-*) */
-  --shadow-neon-green: var(--shadow-neon-green);
-  --shadow-neon-orange: var(--shadow-neon-orange);
-  --shadow-neon-purple: var(--shadow-neon-purple);
-  --shadow-neon-cyan: var(--shadow-neon-cyan);
+  /* §5 Shadow utilities */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-hard: var(--shadow-hard);
+  --shadow-hard-sm: var(--shadow-hard-sm);
+  --shadow-hard-red: var(--shadow-hard-red);
+  /* Legacy neon-glow shims → hard-offset poster shadows */
+  --shadow-neon-green: var(--shadow-hard);
+  --shadow-neon-orange: var(--shadow-hard);
+  --shadow-neon-purple: var(--shadow-hard);
+  --shadow-neon-cyan: var(--shadow-hard);
 }
 
 /* ── Base ───────────────────────────────────────────────────────────── */
 
 @layer base {
   html {
-    background: #0a0a0f;
+    background: var(--canvas);
+    -webkit-text-size-adjust: 100%;
   }
 
-  /* Hard matte-black floor under all glass layers (DS §2) */
   body {
-    background: #0a0a0f;
-    color: var(--foreground);
+    background: var(--canvas);
+    color: var(--ink);
     font-family: var(--font-sans);
-    min-height: 100vh;
+    font-weight: 400;
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* §3 — display family on all headings */
+  /* §3 — display family on all headings, tight athletic tracking */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    font-weight: 800;
-    letter-spacing: -0.02em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.02;
+    color: var(--ink);
   }
 
-  /* §11 — focus ring is never suppressed */
+  p, li, span, label, input, textarea, select, button {
+    font-family: var(--font-sans);
+  }
+
+  /* §8 — focus ring is never suppressed */
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 
-  /* §6 — default easing, 150–200ms interactive transitions */
+  /* §7 — default interactive transitions */
   button {
     transition:
-      opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      border-color 0.15s cubic-bezier(0.4, 0, 0.2, 1),
-      box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  button:active:not(:disabled) {
-    transform: scale(0.98);
+      background-color 0.15s var(--ease),
+      color 0.15s var(--ease),
+      border-color 0.15s var(--ease),
+      box-shadow 0.18s var(--ease),
+      transform 0.12s var(--ease);
   }
   a {
-    transition: color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: color 0.15s var(--ease);
   }
   tr {
-    transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: background-color 0.15s var(--ease);
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--football) 30%, transparent);
-    color: var(--foreground);
+    background: color-mix(in oklab, var(--primary) 22%, transparent);
+    color: var(--ink);
   }
 
-  ::-webkit-scrollbar {
-    width: 4px;
-  }
-  ::-webkit-scrollbar-track {
-    background: #0a0a0f;
-  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--surface-muted); }
   ::-webkit-scrollbar-thumb {
-    background: var(--muted);
-    border-radius: 2px;
+    background: var(--border-strong);
+    border: 2px solid var(--surface-muted);
+    border-radius: var(--radius-pill);
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--muted-foreground);
-  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
 }
 
-/* ── §3 Tabular numbers — every score, rank, currency, countdown ───── */
+/* ════════════════════════════════════════════════════════════════════
+   §3  TYPOGRAPHY UTILITIES
+   ════════════════════════════════════════════════════════════════════ */
 
+/* Hero / poster display — oversized condensed uppercase */
+.display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+/* Editorial kicker / eyebrow — the section-opener label */
+.kicker {
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--primary);
+  line-height: 1;
+}
+
+/* Micro-label — "WEEK POINTS", "LIVE", stat captions */
+.micro-label,
+.section-label,
+.stat-box-label {
+  font-family: var(--font-condensed);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Every score, rank, currency, countdown */
 .num,
 .tabular {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
 
-/* ── §5 Glassmorphism — two flavors only ────────────────────────────── */
+/* Big jersey-style stat number */
+.stat-num,
+.stat-box-number {
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  line-height: 0.9;
+  color: var(--ink);
+}
 
+/* ════════════════════════════════════════════════════════════════════
+   §6  LAYOUT / SURFACE UTILITIES  (the block language)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Standard white panel — refined hairline + soft elevation */
+.surface,
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Elegant interactive block — soft shadow, gentle lift on hover */
+.block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
+}
+.block:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
+}
+.block-red:hover {
+  border-color: color-mix(in oklab, var(--primary) 40%, var(--border));
+}
+
+/* Rare poster-block accent — deliberate, bold emphasis */
+.block-hard {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-hard-sm);
+  transition: transform 0.14s var(--ease), box-shadow 0.14s var(--ease);
+}
+.block-hard:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-hard);
+}
+
+/* Dark editorial slab — headers, hero strips, stat banners */
+.ink-panel {
+  background: var(--ink-block);
+  color: var(--on-ink);
+  border-radius: var(--radius-lg);
+}
+.ink-panel .micro-label,
+.ink-panel .section-label { color: var(--on-ink-muted); }
+
+/* Sport accent bar — 3px top stripe on cards */
+.accent-bar { border-top: 3px solid var(--ink); }
+.accent-football   { border-top-color: var(--football); }
+.accent-basketball { border-top-color: var(--basketball); }
+.accent-cricket    { border-top-color: var(--cricket); }
+.accent-rugby      { border-top-color: var(--rugby); }
+.accent-playoff    { border-top-color: var(--playoff); }
+.accent-primary    { border-top-color: var(--primary); }
+
+/* Hard editorial rule (divider) */
+.rule {
+  height: 2px;
+  background: var(--rule);
+  border: 0;
+}
+.hairline {
+  height: 1px;
+  background: var(--border);
+  border: 0;
+}
+
+/* Diagonal chevron accent (kinetic sport motion cue) */
+.diagonal {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 calc(100% - 18px));
+}
+.diagonal-tr {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 0 18px);
+}
+
+/* Frosted overlay (light glass) — modals, sticky bars over content */
 .glass {
-  background: color-mix(in oklab, #ffffff 4%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in oklab, #ffffff 10%, transparent);
-  border-radius: 0.875rem;
+  background: color-mix(in oklab, #ffffff 72%, transparent);
+  backdrop-filter: blur(12px) saturate(1.4);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
 }
-
 .glass-strong {
-  background: color-mix(in oklab, #ffffff 7%, transparent);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
+  background: color-mix(in oklab, #ffffff 86%, transparent);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-md);
 }
 
-/* ── §2 Gradient surface utilities (accentMap classes, DS §9) ───────── */
+/* ════════════════════════════════════════════════════════════════════
+   §6b  CHIPS · PILLS · BADGES · STATUS
+   ════════════════════════════════════════════════════════════════════ */
 
-.gradient-football {
-  background: var(--gradient-football);
-}
-.gradient-basketball {
-  background: var(--gradient-basketball);
-}
-.gradient-playoff {
-  background: var(--gradient-playoff);
-}
-.gradient-champion {
-  background: var(--gradient-champion);
-}
-/* Gap-derived: cricket gradient in the same 135° two-stop family */
-.gradient-cricket {
-  background: linear-gradient(135deg, #00d4ff 0%, #0092b8 100%);
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-condensed);
+  font-weight: 600;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.4;
 }
 
-/* Champion text treatment — #1 rank / CHAMPION headline only */
+/* LIVE status */
+.pill-live,
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-condensed);
+  font-weight: 700;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--live);
+}
+.pill-live::before,
+.live-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--live);
+  animation: live-pulse 1.2s ease-in-out infinite;
+}
+
+/* Sport badges — soft tint fills */
+.sport-badge-football   { background: var(--football-soft);   color: #166534; }
+.sport-badge-basketball { background: var(--basketball-soft); color: #9A3412; }
+.sport-badge-cricket    { background: var(--cricket-soft);    color: #155E75; }
+.sport-badge-rugby      { background: var(--rugby-soft);      color: #5B21B6; }
+.sport-badge-multisport { background: var(--playoff-soft);    color: #6B21A8; }
+
+/* ════════════════════════════════════════════════════════════════════
+   §2b  GRADIENT SURFACES + CHAMPION TREATMENT
+   ════════════════════════════════════════════════════════════════════ */
+
+.gradient-action     { background: var(--gradient-action); }
+.gradient-ink        { background: var(--gradient-ink); }
+.gradient-football   { background: var(--gradient-football); }
+.gradient-basketball { background: var(--gradient-basketball); }
+.gradient-playoff    { background: var(--gradient-playoff); }
+.gradient-champion   { background: var(--gradient-champion); }
+.gradient-cricket    { background: linear-gradient(135deg, #22D3EE 0%, #0E7490 100%); }
+.gradient-pitch      { background: var(--gradient-pitch); }
+
 .text-champion {
   background: var(--gradient-champion);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
-
-/* ── §3 Micro-label utility — "WEEK POINTS", "SCROLL UP", "LIVE" ────── */
-
-.micro-label {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
+.text-gradient-action {
+  background: var(--gradient-action);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-/* ── §6b / §10 Keyframes (ambient register) ─────────────────────────── */
-
-@keyframes glitch-rgb {
-  0%, 100% { text-shadow: 2px 0 #00ff88, -2px 0 #ff6b35; transform: translate(0); }
-  20%      { text-shadow: -2px 0 #00ff88, 2px 0 #ff6b35; transform: translate(-1px, 1px); }
-  40%      { text-shadow: 2px 2px #9b59b6, -2px -2px #00ff88; transform: translate(1px, -1px); }
-  60%      { text-shadow: -2px 2px #ff6b35, 2px -2px #9b59b6; transform: translate(-1px, 0); }
-  80%      { text-shadow: 2px -2px #00ff88, -2px 2px #ff6b35; transform: translate(1px, 1px); }
+/* Field / court background washes (subtle, on light) */
+.field-lines {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--football) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--football) 10%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
 }
-.glitch {
-  animation: glitch-rgb 2.8s infinite steps(1, end);
-}
-
-@keyframes neon-flicker {
-  0%, 100% { opacity: 1; }
-  45% { opacity: 0.95; }
-  47% { opacity: 0.55; }
-  48% { opacity: 1; }
-  60% { opacity: 0.85; }
-  62% { opacity: 0.6; }
-  64% { opacity: 1; }
-}
-.flicker {
-  animation: neon-flicker 3s infinite;
+.dot-grid,
+.auth-dot-pattern {
+  background-image: radial-gradient(color-mix(in oklab, var(--ink) 8%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-@keyframes lightning-flash {
-  0%, 92%, 100% { opacity: 0; }
-  93% { opacity: 1; }
-  95% { opacity: 0.2; }
-  96% { opacity: 1; }
-  98% { opacity: 0; }
+/* ════════════════════════════════════════════════════════════════════
+   §7  MOTION — kinetic-athletic register
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Broadcast ticker marquee */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
-.lightning {
-  animation: lightning-flash 4.5s infinite;
+.ticker-track {
+  display: inline-flex;
+  white-space: nowrap;
+  will-change: transform;
+  animation: ticker 32s linear infinite;
+}
+.ticker-track:hover { animation-play-state: paused; }
+
+/* Entrance animations are intentionally disabled — content renders instantly,
+   flat and calm. These classes are neutralized (and force visibility so any
+   paired `opacity-0` utility doesn't hide content). */
+.float-up,
+.animate-fade-in,
+.card-fade-in,
+.animate-fade-soft,
+.animate-slide-in-left,
+.animate-fade-in-scale,
+.clip-reveal {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  clip-path: none !important;
 }
 
-@keyframes float-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.float-up {
-  animation: float-up 0.6s ease-out both;
+/* Kept for modal/toast entrance (small, purposeful) */
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
-@keyframes spin-y {
-  from { transform: rotateY(0deg); }
-  to   { transform: rotateY(360deg); }
-}
-.spin-y {
-  animation: spin-y 8s linear infinite;
-}
-
-@keyframes ball-roll {
-  from { transform: translateX(-10vw) rotate(0deg); }
-  to   { transform: translateX(110vw) rotate(720deg); }
-}
-.ball-roll {
-  animation: ball-roll 8s linear infinite;
-}
-
-@keyframes bball-bounce {
-  0%   { transform: translate(-10vw, 0) rotate(0deg); }
-  25%  { transform: translate(25vw, -60px) rotate(180deg); }
-  50%  { transform: translate(60vw, 0) rotate(360deg); }
-  75%  { transform: translate(80vw, -40px) rotate(540deg); }
-  100% { transform: translate(110vw, 0) rotate(720deg); }
-}
-.bball-bounce {
-  animation: bball-bounce 7s linear infinite;
-}
-
-@keyframes firework-up {
-  0%   { transform: translateY(0) scale(1); opacity: 1; }
-  60%  { transform: translateY(-60vh) scale(1); opacity: 1; }
-  100% { transform: translateY(-60vh) scale(8); opacity: 0; }
-}
-
+/* Live pulse */
 @keyframes live-pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.35; }
 }
-.animate-live-pulse {
-  animation: live-pulse 1.2s ease-in-out infinite;
-}
+.animate-live-pulse { animation: live-pulse 1.2s ease-in-out infinite; }
 
-/* §11 — reduced motion: same story, calmer */
-@media (prefers-reduced-motion: reduce) {
-  .glitch,
-  .flicker,
-  .lightning,
-  .spin-y,
-  .ball-roll,
-  .bball-bounce,
-  .float-up,
-  .animate-live-pulse {
-    animation: none;
-  }
-}
-
-/* ════════════════════════════════════════════════════════════════════
-   LEGACY SHIMS — classes still referenced by not-yet-rewritten
-   components, re-pointed at design-system tokens. Each block is deleted
-   when its consumer is rewritten in Steps 2–5.
-   ════════════════════════════════════════════════════════════════════ */
-
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
-}
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes fade-soft {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-@keyframes slide-in-left {
-  from { opacity: 0; transform: translateX(-16px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
+/* Skeleton shimmer (light) */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--surface-muted) 25%,
+    var(--surface-sunken) 37%,
+    var(--surface-muted) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
 
-.animate-fade-in-scale { animation: fadeInScale 0.3s ease-out forwards; }
-.animate-fade-in       { animation: fade-in 0.4s ease-out forwards; }
-.animate-fade-soft     { animation: fade-soft 0.3s ease-out forwards; }
-.card-fade-in          { animation: fade-in 0.25s ease-out forwards; }
-.animate-slide-in-left { animation: slide-in-left 0.4s ease-out forwards; }
+/* §8 — reduced motion: same story, calmer */
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track,
+  .float-up, .animate-fade-in, .card-fade-in,
+  .animate-fade-soft, .animate-slide-in-left, .animate-fade-in-scale,
+  .clip-reveal, .animate-live-pulse, .shimmer,
+  .pill-live::before, .live-badge::before {
+    animation: none !important;
+  }
+}
 
-.sport-badge-football   { background: color-mix(in oklab, var(--football) 12%, transparent); color: var(--football); }
-.sport-badge-cricket    { background: color-mix(in oklab, var(--cricket) 12%, transparent); color: var(--cricket); }
-.sport-badge-basketball { background: color-mix(in oklab, var(--basketball) 12%, transparent); color: var(--basketball); }
-.sport-badge-rugby      { background: color-mix(in oklab, var(--rugby) 12%, transparent); color: var(--rugby); }
-.sport-badge-multisport { background: color-mix(in oklab, var(--playoff) 12%, transparent); color: var(--playoff); }
+/* ════════════════════════════════════════════════════════════════════
+   LEGACY SHIMS — retuned to the light system so not-yet-migrated
+   components stay coherent. Deleted per-block as each consumer is
+   rewritten in Phases 1–9.
+   ════════════════════════════════════════════════════════════════════ */
 
-.live-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.alert-deadline {
+  background: var(--warning-soft);
+  border: 1px solid color-mix(in oklab, var(--warning) 45%, transparent);
+  color: #92400E;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
   font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: var(--danger);
-}
-.live-badge::before {
-  content: "";
-  display: block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--danger);
-  animation: live-pulse 1.2s ease-in-out infinite;
+  font-size: 0.875rem;
+  font-weight: 500;
 }
 
+.angled-top    { clip-path: polygon(0 4%, 100% 0, 100% 100%, 0 100%); }
+.angled-bottom { clip-path: polygon(0 0, 100% 0, 100% 96%, 0 100%); }
+
+/* #1 rank wears the champion gradient */
+.rank-1 {
+  background: var(--gradient-champion);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.rank-2, .rank-3 { color: var(--ink); }
+.rank-rest { color: var(--ink-muted); }
+
+/* Toasts */
 .sporty-toast-root {
   position: fixed;
   right: 1rem;
@@ -421,88 +640,31 @@
   gap: 0.625rem;
   min-width: 260px;
   max-width: 340px;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   padding: 0.75rem 1rem;
-  background: color-mix(in oklab, #ffffff 7%, transparent);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
-  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--ink);
+  color: var(--ink);
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
   opacity: 0;
   transform: translateY(-6px);
-  animation: fadeInScale 0.18s ease-out forwards;
+  animation: fadeInScale 0.18s var(--ease-out) forwards;
 }
-.sporty-toast-success { border-color: color-mix(in oklab, var(--football) 50%, transparent); color: var(--football); }
-.sporty-toast-error   { border-color: color-mix(in oklab, var(--danger) 50%, transparent); color: var(--danger); }
-.sporty-toast-info    { border-color: color-mix(in oklab, var(--cricket) 50%, transparent); color: var(--cricket); }
-.sporty-toast-warning { border-color: color-mix(in oklab, var(--gold) 50%, transparent); color: var(--gold); }
+.sporty-toast-success { border-left-color: var(--success); }
+.sporty-toast-error   { border-left-color: var(--danger); }
+.sporty-toast-info    { border-left-color: var(--info); }
+.sporty-toast-warning { border-left-color: var(--warning); }
 .sporty-toast-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.25rem;
   height: 1.25rem;
-  border-radius: calc(var(--radius) - 4px);
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 700;
-}
-
-.alert-deadline {
-  background: color-mix(in oklab, #ffffff 4%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid color-mix(in oklab, var(--gold) 35%, transparent);
-  color: var(--gold);
-  border-radius: var(--radius);
-  padding: 0.75rem 1rem;
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-}
-
-.stat-box-number {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum";
-  color: var(--football);
-}
-.stat-box-label,
-.section-label {
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 10px;
-  letter-spacing: 0.25em;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-}
-
-.auth-dot-pattern {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
-  background-size: 20px 20px;
-}
-
-.angled-top {
-  clip-path: polygon(0 4%, 100% 0, 100% 100%, 0 100%);
-}
-.angled-bottom {
-  clip-path: polygon(0 0, 100% 0, 100% 96%, 0 100%);
-}
-
-/* #1 rank wears the champion gradient (DS §2) */
-.rank-1 {
-  background: var(--gradient-champion);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.rank-2,
-.rank-3 {
-  color: var(--foreground);
-}
-.rank-rest {
-  color: var(--muted-foreground);
 }

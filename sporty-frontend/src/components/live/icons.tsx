@@ -158,14 +158,14 @@ export type EventVisual = {
 };
 
 const EVENT_VISUALS: Record<string, EventVisual> = {
-  goal: { Icon: GoalIcon, color: "#00ff88", label: "Goal" },
-  assist: { Icon: AssistIcon, color: "#00d4ff", label: "Assist" },
-  yellow_card: { Icon: CardIcon, color: "#ffd86b", label: "Yellow Card" },
-  red_card: { Icon: CardIcon, color: "#ff3b5c", label: "Red Card" },
-  substitution: { Icon: SubIcon, color: "#9a9aa5", label: "Substitution" },
-  penalty: { Icon: PenaltyIcon, color: "#e8fb25", label: "Penalty" },
-  own_goal: { Icon: GoalIcon, color: "#ff3b5c", label: "Own Goal" },
-  clean_sheet: { Icon: ShieldIcon, color: "#00d4ff", label: "Clean Sheet" },
+  goal: { Icon: GoalIcon, color: "#16A34A", label: "Goal" },
+  assist: { Icon: AssistIcon, color: "#0891B2", label: "Assist" },
+  yellow_card: { Icon: CardIcon, color: "#CA8A04", label: "Yellow Card" },
+  red_card: { Icon: CardIcon, color: "#DC2626", label: "Red Card" },
+  substitution: { Icon: SubIcon, color: "#6B7280", label: "Substitution" },
+  penalty: { Icon: PenaltyIcon, color: "#DC2626", label: "Penalty" },
+  own_goal: { Icon: GoalIcon, color: "#DC2626", label: "Own Goal" },
+  clean_sheet: { Icon: ShieldIcon, color: "#0891B2", label: "Clean Sheet" },
 };
 
 function titleCase(value: string): string {
@@ -177,7 +177,7 @@ export function eventVisual(type: string): EventVisual {
   return (
     EVENT_VISUALS[key] ?? {
       Icon: WhistleIcon,
-      color: "#9a9aa5",
+      color: "#6B7280",
       label: titleCase(type),
     }
   );

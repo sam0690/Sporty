@@ -14,7 +14,7 @@ type TeamPreviewProps = {
 
 function LoadingPitch() {
   return (
-    <div className="relative mx-auto aspect-3/4 animate-pulse overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26]">
+    <div className="relative mx-auto aspect-3/4 animate-pulse overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7]">
       {[
         "left-[35%] top-[10%]",
         "right-[35%] top-[10%]",
@@ -30,7 +30,7 @@ function LoadingPitch() {
       ].map((slot) => (
         <div
           key={slot}
-          className={`absolute ${slot} h-10 w-10 rounded-[3px] bg-[#333340] sm:h-14 sm:w-14`}
+          className={`absolute ${slot} h-10 w-10 rounded-[3px] bg-[#EAECF0] sm:h-14 sm:w-14`}
         />
       ))}
     </div>
@@ -58,15 +58,15 @@ export function TeamPreview({
         {isLoading ? (
           <LoadingPitch />
         ) : isError ? (
-          <div className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[#2a1010] p-4 text-sm text-[#ff3b30]">
+          <div className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[#FEE2E2] p-4 text-sm text-[#DC2626]">
             Failed to load team previews.
           </div>
         ) : !hasLeagues ? (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+          <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-4 text-sm text-[#6B7280]">
             You have not joined a league yet.
           </div>
         ) : !activeSlide ? (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+          <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-4 text-sm text-[#6B7280]">
             No lineup has been set yet.
           </div>
         ) : (
@@ -75,13 +75,13 @@ export function TeamPreview({
             onClick={() =>
               router.push(`/leagues/${activeSlide.leagueId}/lineup`)
             }
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] p-3 text-left transition-colors hover:border-[rgba(232,251,37,0.3)]"
+            className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] p-3 text-left transition-colors hover:border-[rgba(220,38,38,0.3)]"
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[1px] text-[#0B1220]">
                 {activeSlide.leagueName}
               </p>
-              <span className="rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[#1a1a10] px-2 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#c8d85a]">
+              <span className="rounded-[3px] border border-[rgba(220,38,38,0.25)] bg-[#FEE2E2] px-2 py-0.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#B91C1C]">
                 {activeSlide.gameweek ? `GW ${activeSlide.gameweek}` : "Current GW"}
               </span>
             </div>
@@ -93,7 +93,7 @@ export function TeamPreview({
                 renderSlot={({ slot }) => {
                   if (!slot.player) {
                     return (
-                      <div className="h-10 w-10 rounded-[3px] border border-dashed border-[rgba(255,255,255,0.15)] bg-[#1d1d26] sm:h-14 sm:w-14" />
+                      <div className="h-10 w-10 rounded-[3px] border border-dashed border-[rgba(11,18,32,0.15)] bg-[#F3F4F7] sm:h-14 sm:w-14" />
                     );
                   }
                   return (

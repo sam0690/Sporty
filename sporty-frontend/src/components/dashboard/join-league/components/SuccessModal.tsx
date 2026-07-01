@@ -32,11 +32,11 @@ export function SuccessModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] p-8 text-center shadow-[0_40px_90px_-30px_rgba(0,0,0,1)]">
+      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[16px] border border-[rgba(11,18,32,0.1)] bg-gradient-to-b from-[#FFFFFF] to-[#FFFFFF] p-8 text-center shadow-[0_40px_90px_-30px_rgba(0,0,0,1)]">
         {/* glowing check */}
         <div className="flex justify-center">
           <span
-            className="grid size-16 place-items-center rounded-full text-[#00ff88]"
+            className="grid size-16 place-items-center rounded-full text-[#16A34A]"
             style={{
               background: "rgba(0,255,136,0.1)",
               border: "1px solid rgba(0,255,136,0.35)",
@@ -59,7 +59,7 @@ export function SuccessModal({
         </div>
 
         <span className="section-label mt-5 block">You&apos;re in</span>
-        <h2 className="mt-2 font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">
+        <h2 className="mt-2 font-bebas text-4xl tracking-[2px] text-[#0B1220]">
           Successfully Joined!
         </h2>
 
@@ -72,12 +72,12 @@ export function SuccessModal({
           }}
         >
           <glyph.Icon className="size-4" />
-          <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px]">
+          <span className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px]">
             {leagueData.name}
           </span>
         </div>
 
-        <p className="mt-3 text-sm text-[#9a9aa5]">
+        <p className="mt-3 text-sm text-[#6B7280]">
           Team: {leagueData.teamName ?? "Not assigned yet"}
         </p>
 
@@ -95,7 +95,7 @@ export function SuccessModal({
               }
               router.push(`/leagues`);
             }}
-            className="w-full rounded-[10px] bg-[#e8fb25] px-6 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#0a0a0f] shadow-[0_10px_30px_-10px_rgba(232,251,37,0.5)] transition-colors hover:bg-[#f0ff45]"
+            className="w-full rounded-[10px] bg-[#DC2626] px-6 py-3 font-barlow-condensed text-sm font-bold uppercase tracking-[2px] text-[#F6F7F9] shadow-[0_10px_30px_-10px_rgba(220,38,38,0.5)] transition-colors hover:bg-[#B91C1C]"
           >
             Go to League
           </button>
@@ -109,7 +109,7 @@ export function SuccessModal({
               }
               router.push(`/leagues`);
             }}
-            className="w-full rounded-[10px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.03)] px-6 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#f0f0f0] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:bg-[rgba(255,255,255,0.06)]"
+            className="w-full rounded-[10px] border border-[rgba(11,18,32,0.12)] bg-[rgba(11,18,32,0.03)] px-6 py-3 font-barlow-condensed text-sm font-bold uppercase tracking-[2px] text-[#0B1220] transition-colors hover:border-[rgba(11,18,32,0.25)] hover:bg-[rgba(11,18,32,0.06)]"
           >
             Set Lineup
           </button>
@@ -117,7 +117,7 @@ export function SuccessModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-full rounded-[10px] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
+            className="w-full rounded-[10px] px-6 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#6B7280] transition-colors hover:text-[#0B1220]"
           >
             Close
           </button>

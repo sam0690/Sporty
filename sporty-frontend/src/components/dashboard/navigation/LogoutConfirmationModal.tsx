@@ -29,24 +29,24 @@ export function LogoutConfirmationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !isLoading) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0]">
-        <div className="inline-flex rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[#1a1a10] px-3 py-1">
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#c8d85a]">
+      <div className="w-full max-w-md rounded-md border border-border bg-surface p-6 text-ink shadow-lg">
+        <div className="inline-flex rounded-sm bg-danger-soft px-3 py-1">
+          <span className="font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-danger">
             Logout Confirmation
           </span>
         </div>
 
-        <h2 className="mt-4 font-bebas text-4xl uppercase tracking-[2px] text-[#f0f0f0]">
+        <h2 className="mt-4 font-condensed text-4xl font-bold uppercase tracking-[0.01em] text-ink">
           Do you want to log out?
         </h2>
 
-        <p className="mt-3 text-sm leading-6 text-[#555560]">
+        <p className="mt-3 text-sm leading-6 text-ink-muted">
           You&apos;ll be signed out of your account and redirected to the login
           screen. Choose Cancel to stay logged in.
         </p>
@@ -56,7 +56,7 @@ export function LogoutConfirmationModal({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0] disabled:opacity-50 sm:w-auto"
+            className="w-full rounded-sm border-[1.5px] border-border-strong bg-surface px-5 py-2.5 font-condensed text-xs font-semibold uppercase tracking-[0.1em] text-ink transition-colors hover:border-ink hover:bg-surface-muted disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
@@ -64,7 +64,7 @@ export function LogoutConfirmationModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#ff3b30] px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:opacity-60 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-sm bg-danger px-5 py-2.5 font-condensed text-xs font-semibold uppercase tracking-[0.1em] text-on-primary transition-colors hover:bg-primary-press disabled:opacity-60 sm:w-auto"
           >
             <LogOut className="h-3.5 w-3.5" />
             {isLoading ? "Logging out..." : "Logout"}

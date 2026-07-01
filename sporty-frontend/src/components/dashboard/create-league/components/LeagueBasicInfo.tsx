@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { SportIcon } from "@/components/landing/sport-icons";
 
 type LeagueBasicInfoProps = {
   leagueName: string;
@@ -14,13 +15,12 @@ type LeagueBasicInfoProps = {
 type SportOption = {
   value: string;
   label: string;
-  icon: string;
 };
 
 const sportOptions: SportOption[] = [
-  { value: "football", label: "Football", icon: "⚽" },
-  { value: "basketball", label: "Basketball", icon: "🏀" },
-  { value: "multisport", label: "Multi-Sport", icon: "⚽🏀" },
+  { value: "football", label: "Football" },
+  { value: "basketball", label: "Basketball" },
+  { value: "multisport", label: "Multi-Sport" },
 ];
 
 export function LeagueBasicInfo({
@@ -42,7 +42,7 @@ export function LeagueBasicInfo({
       <div>
         <label
           htmlFor="league-name"
-          className="mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]"
+          className="mb-2 block font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280]"
         >
           League Name
         </label>
@@ -53,15 +53,15 @@ export function LeagueBasicInfo({
           maxLength={50}
           required
           placeholder="Champions League 2025"
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
         />
-        <p className="mt-2 text-right text-xs text-[#555560]">
+        <p className="mt-2 text-right text-xs text-[#6B7280]">
           {leagueName.length}/50
         </p>
       </div>
 
       <div>
-        <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+        <p className="mb-2 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280]">
           Select Sport
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -74,16 +74,20 @@ export function LeagueBasicInfo({
                 onClick={() => onSportChange(option.value)}
                 className={`rounded-[3px] border p-4 text-center transition-colors ${
                   isSelected
-                    ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.08)]"
-                    : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.18)]"
+                    ? "border-[rgba(220,38,38,0.4)] bg-[rgba(220,38,38,0.08)]"
+                    : "border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] hover:border-[rgba(11,18,32,0.18)]"
                 }`}
               >
-                <span className="mb-2 block text-3xl" aria-hidden="true">
-                  {option.icon}
+                <span className="mb-2 flex justify-center" aria-hidden="true">
+                  <SportIcon
+                    sport={option.value}
+                    className="h-7 w-7"
+                    tint
+                  />
                 </span>
                 <span
-                  className={`font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
-                    isSelected ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                  className={`font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] ${
+                    isSelected ? "text-[#DC2626]" : "text-[#0B1220]"
                   }`}
                 >
                   {option.label}
@@ -92,16 +96,16 @@ export function LeagueBasicInfo({
             );
           })}
         </div>
-        <p className="mt-2 text-xs text-[#555560]">{helperText}</p>
+        <p className="mt-2 text-xs text-[#6B7280]">{helperText}</p>
       </div>
 
       {/* <div>
-        <p className="mb-2 text-sm text-[#555560]">League Logo</p>
+        <p className="mb-2 text-sm text-[#6B7280]">League Logo</p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label
               htmlFor="league-logo"
-              className="mb-1 block text-xs uppercase tracking-widest text-[#555560]"
+              className="mb-1 block text-xs uppercase tracking-widest text-[#6B7280]"
             >
               Emoji/Icon
             </label>
@@ -109,14 +113,14 @@ export function LeagueBasicInfo({
               id="league-logo"
               value={leagueLogo}
               onChange={(event) => onLeagueLogoChange(event.target.value)}
-              placeholder="🏆"
-              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] outline-none transition-all focus:border-[rgba(232,251,37,0.3)] focus:border-[#e8fb25]"
+              placeholder="Badge"
+              className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-4 py-3 text-[#0B1220] outline-none transition-all focus:border-[rgba(220,38,38,0.3)] focus:border-[#DC2626]"
             />
           </div>
           <div>
             <label
               htmlFor="league-logo-upload"
-              className="mb-1 block text-xs uppercase tracking-widest text-[#555560]"
+              className="mb-1 block text-xs uppercase tracking-widest text-[#6B7280]"
             >
               Upload
             </label>
@@ -130,11 +134,11 @@ export function LeagueBasicInfo({
                   onLeagueLogoChange(file.name);
                 }
               }}
-              className="w-full cursor-pointer rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(232,251,37,0.1)] file:px-3 file:py-1 file:text-sm file:font-medium file:text-[#e8fb25]"
+              className="w-full cursor-pointer rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-4 py-3 text-[#0B1220] file:mr-3 file:rounded-full file:border-0 file:bg-[rgba(220,38,38,0.1)] file:px-3 file:py-1 file:text-sm file:font-medium file:text-[#DC2626]"
             />
           </div>
         </div>
-        <p className="mt-2 text-xs text-[#555560]">
+        <p className="mt-2 text-xs text-[#6B7280]">
           Optional: add an emoji or upload a badge.
         </p>
       </div> */}

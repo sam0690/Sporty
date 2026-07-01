@@ -46,21 +46,21 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
     setIsSaving(false);
 
     if (success) {
-      toastifier.success("✓ Profile updated successfully");
+      toastifier.success("Profile updated successfully");
     }
   };
 
   const fieldLabel =
-    "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]";
+    "mb-2 block font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280]";
   const fieldInput =
-    "w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]";
+    "w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]";
 
   return (
     <form
       onSubmit={handleSave}
-      className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]"
+      className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]"
     >
-      <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+      <header className="border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
         <p className="section-label">Personal Info</p>
       </header>
 
@@ -83,7 +83,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
         <div>
           <label htmlFor="email" className={fieldLabel}>
             Email
-            <span className="ml-2 text-[#555560]">(read-only)</span>
+            <span className="ml-2 text-[#6B7280]">(read-only)</span>
           </label>
           <input
             id="email"
@@ -92,7 +92,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             onChange={(event) =>
               setForm((prev) => ({ ...prev, email: event.target.value }))
             }
-            className={`${fieldInput} cursor-not-allowed text-[#9a9aa5]`}
+            className={`${fieldInput} cursor-not-allowed text-[#6B7280]`}
             required
             readOnly
           />
@@ -115,7 +115,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             className={fieldInput}
             maxLength={160}
           />
-          <p className="mt-1 text-right text-xs text-[#555560]">
+          <p className="mt-1 text-right text-xs text-[#6B7280]">
             {form.bio.length}/160
           </p>
         </div>
@@ -124,7 +124,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           <button
             type="submit"
             disabled={isSaving}
-            className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-[3px] bg-[#DC2626] px-6 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#F6F7F9] transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSaving ? "Saving…" : "Save"}
           </button>
@@ -132,7 +132,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           <button
             type="button"
             onClick={() => setForm(user)}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+            className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-6 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#6B7280] transition-colors hover:text-[#0B1220]"
           >
             Cancel
           </button>

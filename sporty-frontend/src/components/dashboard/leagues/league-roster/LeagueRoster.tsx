@@ -240,7 +240,7 @@ export function LeagueRoster() {
   const isDirty =
     JSON.stringify(slotToPlayer) !== JSON.stringify(savedSlotToPlayer);
 
-  const activeSportSummary = `⚽ ${activeCountsPerSport.football}/3 ${activeCountsPerSport.football === 3 ? "✅" : ""} | 🏀 ${activeCountsPerSport.basketball}/3 ${activeCountsPerSport.basketball === 3 ? "✅" : ""} | 🏏 ${activeCountsPerSport.cricket}/3 ${activeCountsPerSport.cricket === 3 ? "✅" : ""}`;
+  const activeSportSummary = `Football ${activeCountsPerSport.football}/3 · Basketball ${activeCountsPerSport.basketball}/3 · Cricket ${activeCountsPerSport.cricket}/3`;
 
   const findCurrentSlotOfPlayer = (playerId: number): number | null => {
     const entry = Object.entries(slotToPlayer).find(
@@ -336,7 +336,7 @@ export function LeagueRoster() {
     const currentSlot = findCurrentSlotOfPlayer(playerId);
 
     if (occupiedPlayerId && occupiedPlayerId !== playerId) {
-      toastifier.error("✕ Slot already occupied");
+      toastifier.error("Slot already occupied");
       return;
     }
 
@@ -366,7 +366,7 @@ export function LeagueRoster() {
 
     if (isMultiSport && nextCounts[player.sport] >= 3) {
       toastifier.error(
-        `✕ Cannot have more than 3 active players from ${player.sport}`,
+        `Cannot have more than 3 active players from ${player.sport}`,
       );
       return;
     }
@@ -388,7 +388,7 @@ export function LeagueRoster() {
         activeCountsPerSport.cricket !== 3
       ) {
         toastifier.error(
-          "✕ Multi-Sport lineup requires exactly 3 players per sport",
+          "Multi-Sport lineup requires exactly 3 players per sport",
         );
         return;
       }
@@ -398,7 +398,7 @@ export function LeagueRoster() {
     await new Promise((resolve) => setTimeout(resolve, 600));
     setSavedSlotToPlayer(slotToPlayer);
     setIsSaving(false);
-    toastifier.success("✓ Lineup saved successfully");
+    toastifier.success("Lineup saved successfully");
   };
 
   if (isLoading || !roster) {
@@ -426,7 +426,7 @@ export function LeagueRoster() {
 
   if (teamError) {
     return (
-      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
+      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#0B1220]">
         <NavigationTabs
           activeTab="lineup"
           leagueId={leagueId}
@@ -434,7 +434,7 @@ export function LeagueRoster() {
         />
 
         <div className="rounded-[3px] border border-red-500/20 bg-red-500/10 p-5">
-          <h2 className="text-base font-600 text-red-200">
+          <h2 className="text-base font-semibold text-red-200">
             Unable to load roster
           </h2>
           <p className="mt-1 text-sm text-red-200/80">
@@ -443,7 +443,7 @@ export function LeagueRoster() {
           <button
             type="button"
             onClick={() => void refetchTeam()}
-            className="mt-4 rounded-[3px] border border-red-500/20 bg-[#1d1d26] px-4 py-2 text-sm text-red-200 hover:bg-red-500/10"
+            className="mt-4 rounded-[3px] border border-red-500/20 bg-[#F3F4F7] px-4 py-2 text-sm text-red-200 hover:bg-red-500/10"
           >
             Retry
           </button>
@@ -457,8 +457,8 @@ export function LeagueRoster() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#f0f0f0]">
-      <p className="text-sm text-[#555560]">
+    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 font-[system-ui,-apple-system,Segoe_UI,Roboto,sans-serif] text-[#0B1220]">
+      <p className="text-sm text-[#6B7280]">
         Manager: {username || "Sporty User"}
       </p>
 
@@ -523,11 +523,11 @@ export function LeagueRoster() {
 
         <DragOverlay>
           {activeDragPlayerId && playerById[activeDragPlayerId] ? (
-            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2">
-              <p className="text-sm text-[#f0f0f0]">
+            <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-3 py-2">
+              <p className="text-sm text-[#0B1220]">
                 {playerById[activeDragPlayerId].name}
               </p>
-              <p className="text-xs text-[#555560]">
+              <p className="text-xs text-[#6B7280]">
                 {playerById[activeDragPlayerId].position}
               </p>
             </div>
@@ -536,7 +536,7 @@ export function LeagueRoster() {
       </DndContext>
 
       {isMultiSport ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3 text-sm text-[#f0f0f0]">
+        <div className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-3 text-sm text-[#0B1220]">
           Sport Limits: {activeSportSummary}
         </div>
       ) : null}
@@ -546,7 +546,7 @@ export function LeagueRoster() {
           type="button"
           onClick={handleSave}
           disabled={!isDirty || isSaving}
-          className="rounded-[3px] bg-linear-to-r [#e8fb25] px-6 py-2.5 text-sm text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-linear-to-r [#DC2626] px-6 py-2.5 text-sm text-slate-950 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving..." : "Save Lineup"}
         </button>

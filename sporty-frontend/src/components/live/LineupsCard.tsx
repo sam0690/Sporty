@@ -33,7 +33,7 @@ function TeamColumn({
           {initials}
         </span>
         <div className={`min-w-0 ${isRight ? "text-right" : ""}`}>
-          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          <p className="truncate font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
             {teamName}
           </p>
           <p className="section-label mt-0.5">{players.length} players</p>
@@ -44,12 +44,12 @@ function TeamColumn({
         {players.map((p) => (
           <li
             key={p.player_id}
-            className={`flex items-center gap-2.5 rounded-[6px] px-1.5 py-1.5 transition-colors hover:bg-[rgba(255,255,255,0.04)] ${
+            className={`flex items-center gap-2.5 rounded-[6px] px-1.5 py-1.5 transition-colors hover:bg-[rgba(11,18,32,0.04)] ${
               isRight ? "flex-row-reverse text-right" : ""
             }`}
           >
             <span
-              className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[5px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
+              className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[5px] px-1 font-barlow-condensed text-[10px] font-bold uppercase tracking-[0.5px]"
               style={{
                 color,
                 background: `${color}17`,
@@ -58,7 +58,7 @@ function TeamColumn({
             >
               {p.position ?? "—"}
             </span>
-            <span className="truncate text-sm text-[#d7d7de]">
+            <span className="truncate text-sm text-[#3A4256]">
               {p.name ?? "Unknown"}
             </span>
           </li>
@@ -83,7 +83,7 @@ export function LineupsCard() {
       <div className="relative grid grid-cols-2 gap-5">
         <span
           aria-hidden
-          className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[rgba(255,255,255,0.06)]"
+          className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[rgba(11,18,32,0.06)]"
         />
         <TeamColumn teamName={homeTeam ?? "Home"} players={home} align="left" />
         <TeamColumn teamName={awayTeam ?? "Away"} players={away} align="right" />

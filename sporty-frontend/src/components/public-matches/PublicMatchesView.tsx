@@ -65,11 +65,11 @@ function groupByCompetition(items: TMatch[]): Group[] {
 function TeamRow({ name, score }: { name: string; score: number | null }) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+      <span className="truncate font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
         {name}
       </span>
       {score != null && (
-        <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] tabular-nums text-[#f0f0f0]">
+        <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] tabular-nums text-[#0B1220]">
           {score}
         </span>
       )}
@@ -86,26 +86,26 @@ function MatchRow({ match }: { match: TMatch }) {
   return (
     <Link
       href={`/fixtures/${match.id}`}
-      className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[rgba(255,255,255,0.03)] hover:no-underline"
-      style={isLive ? { borderLeft: "2px solid #ff3b5c" } : undefined}
+      className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[rgba(11,18,32,0.03)] hover:no-underline"
+      style={isLive ? { borderLeft: "2px solid #DC2626" } : undefined}
     >
       <div className="w-14 shrink-0 text-center">
         {isLive ? (
-          <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#ff3b5c]">
-            <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+          <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] text-[#DC2626]">
+            <span className="size-1.5 rounded-full bg-[#DC2626] animate-live-pulse" />
             Live
           </span>
         ) : isFinished ? (
-          <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#777783]">
+          <span className="font-barlow-condensed text-[10px] font-bold uppercase tracking-[1.5px] text-[#6B7280]">
             FT
           </span>
         ) : (
           <div className="leading-tight">
-            <span className="block font-bebas text-base leading-none tracking-[1px] text-[#9a9aa5]">
+            <span className="block font-bebas text-base leading-none tracking-[1px] text-[#6B7280]">
               {kickoff(match.match_date)}
             </span>
             {!isToday(match.match_date) && (
-              <span className="mt-0.5 block text-[9px] uppercase tracking-[1px] text-[#555560]">
+              <span className="mt-0.5 block text-[9px] uppercase tracking-[1px] text-[#6B7280]">
                 {shortDate(match.match_date)}
               </span>
             )}
@@ -118,7 +118,7 @@ function MatchRow({ match }: { match: TMatch }) {
         <TeamRow name={match.away_team} score={hasScore ? match.away_score : null} />
       </div>
 
-      <span className="section-label shrink-0 text-[#555560] transition-colors group-hover:text-[#e8fb25]">
+      <span className="section-label shrink-0 text-[#6B7280] transition-colors group-hover:text-[#DC2626]">
         ›
       </span>
     </Link>
@@ -129,8 +129,8 @@ function CompetitionPanel({ group }: { group: Group }) {
   const glyph = sportGlyph(group.sport);
   const Glyph = glyph.Icon;
   return (
-    <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14]">
-      <header className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.07)] px-4 py-3">
+    <section className="overflow-hidden rounded-[12px] border border-[rgba(11,18,32,0.08)] bg-gradient-to-b from-[#FFFFFF] to-[#FFFFFF]">
+      <header className="flex items-center justify-between gap-3 border-b border-[rgba(11,18,32,0.07)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span
             className="grid size-6 shrink-0 place-items-center rounded-[6px]"
@@ -138,18 +138,18 @@ function CompetitionPanel({ group }: { group: Group }) {
           >
             <Glyph className="size-3.5" />
           </span>
-          <span className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#d7d7de]">
+          <span className="truncate font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#3A4256]">
             {group.competition}
           </span>
         </div>
         {group.live > 0 && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b5c]">
-            <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2 py-0.5 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1.5px] text-[#DC2626]">
+            <span className="size-1.5 rounded-full bg-[#DC2626] animate-live-pulse" />
             {group.live} Live
           </span>
         )}
       </header>
-      <div className="divide-y divide-[rgba(255,255,255,0.05)]">
+      <div className="divide-y divide-[rgba(11,18,32,0.05)]">
         {group.matches.map((m) => (
           <MatchRow key={m.id} match={m} />
         ))}
@@ -173,8 +173,8 @@ function Chip({
       onClick={onClick}
       className={
         active
-          ? "inline-flex items-center gap-2 rounded-full bg-[#e8fb25] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f]"
-          : "inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.12)] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
+          ? "inline-flex items-center gap-2 rounded-full bg-[#DC2626] px-3.5 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#F6F7F9]"
+          : "inline-flex items-center gap-2 rounded-full border border-[rgba(11,18,32,0.12)] px-3.5 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280] transition-colors hover:border-[rgba(11,18,32,0.28)] hover:text-[#0B1220]"
       }
     >
       {children}
@@ -202,25 +202,25 @@ export function PublicMatchesView() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 50% at 12% 0%, rgba(232,251,37,0.07), transparent 55%), radial-gradient(55% 50% at 90% 0%, rgba(0,212,255,0.06), transparent 55%)",
+            "radial-gradient(60% 50% at 12% 0%, rgba(220,38,38,0.07), transparent 55%), radial-gradient(55% 50% at 90% 0%, rgba(0,212,255,0.06), transparent 55%)",
         }}
       />
       <main className="relative mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-        <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+        <header className="border-b border-[rgba(11,18,32,0.08)] pb-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <p className="section-label">Matchday</p>
-              <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+              <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
                 Fixtures &amp; Results
               </h1>
-              <p className="mt-1 text-sm text-[#9a9aa5]">
+              <p className="mt-1 text-sm text-[#6B7280]">
                 Live scores, upcoming kickoffs and recent results — free to browse,
                 no account needed.
               </p>
             </div>
             {totalLive > 0 && (
-              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#ff3b5c]">
-                <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+              <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-3 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#DC2626]">
+                <span className="size-1.5 rounded-full bg-[#DC2626] animate-live-pulse" />
                 {totalLive} playing now
               </span>
             )}
@@ -252,23 +252,23 @@ export function PublicMatchesView() {
         {isLoading && (
           <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="h-56 animate-pulse rounded-[12px] bg-[#14141b]" />
+              <div key={i} className="h-56 animate-pulse rounded-[12px] bg-[#FFFFFF]" />
             ))}
           </div>
         )}
 
         {isError && (
-          <p className="mt-8 rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] px-4 py-3 text-sm text-[#ff8a8a]">
+          <p className="mt-8 rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] px-4 py-3 text-sm text-[#DC2626]">
             Couldn&apos;t load fixtures. Please try again.
           </p>
         )}
 
         {!isLoading && !isError && groups.length === 0 && (
-          <div className="mt-8 rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#0f0f14] p-12 text-center">
-            <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+          <div className="mt-8 rounded-[12px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-12 text-center">
+            <p className="font-barlow-condensed text-base font-bold uppercase tracking-[1px] text-[#6B7280]">
               No fixtures right now
             </p>
-            <p className="mt-1 text-sm text-[#555560]">
+            <p className="mt-1 text-sm text-[#6B7280]">
               Check back soon — fixtures appear here as they&apos;re scheduled.
             </p>
           </div>
@@ -281,17 +281,17 @@ export function PublicMatchesView() {
                 <CompetitionPanel key={g.competition} group={g} />
               ))}
             </div>
-            <div className="mt-10 flex flex-col items-center gap-3 rounded-[14px] border border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.05)] p-8 text-center">
-              <p className="font-bebas text-3xl tracking-[2px] text-[#f0f0f0]">
+            <div className="mt-10 flex flex-col items-center gap-3 rounded-[14px] border border-[rgba(220,38,38,0.2)] bg-[rgba(220,38,38,0.05)] p-8 text-center">
+              <p className="font-bebas text-3xl tracking-[2px] text-[#0B1220]">
                 Turn these fixtures into points
               </p>
-              <p className="max-w-md text-sm text-[#9a9aa5]">
+              <p className="max-w-md text-sm text-[#6B7280]">
                 Build a fantasy squad, set your lineup, and score from every
                 match — across football, basketball and cricket.
               </p>
               <Link
                 href="/register"
-                className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-[#e8fb25] px-6 py-3 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] shadow-[0_10px_30px_-10px_rgba(232,251,37,0.5)] transition-colors hover:bg-[#f0ff45] hover:no-underline"
+                className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-[#DC2626] px-6 py-3 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#F6F7F9] shadow-[0_10px_30px_-10px_rgba(220,38,38,0.5)] transition-colors hover:bg-[#B91C1C] hover:no-underline"
               >
                 Get Started Free →
               </Link>

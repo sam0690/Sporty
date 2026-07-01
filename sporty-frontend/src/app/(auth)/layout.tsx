@@ -4,17 +4,17 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="auth-shell relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0f] px-4 py-10 text-[#f0f0f0] sm:px-6 lg:px-8">
-      {/* ambient broadcast glow */}
+    <div className="auth-shell relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-10 text-ink sm:px-6 lg:px-8">
+      {/* ambient broadcast wash */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(60% 55% at 15% 10%, rgba(232,251,37,0.08), transparent 55%), radial-gradient(55% 55% at 90% 90%, rgba(0,212,255,0.07), transparent 55%)",
+            "radial-gradient(60% 55% at 15% 10%, rgba(220,38,38,0.06), transparent 55%), radial-gradient(55% 55% at 90% 90%, rgba(37,99,235,0.05), transparent 55%)",
         }}
       />
-      <div className="auth-dot-pattern pointer-events-none absolute inset-0 opacity-20" />
+      <div className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
       <div className="relative z-10 w-full">{children}</div>
     </div>
   );

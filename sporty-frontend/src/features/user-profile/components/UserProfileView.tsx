@@ -50,7 +50,7 @@ export function UserProfileView({ userId }: { userId?: string }) {
   );
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto w-full max-w-7xl px-6 py-8 text-[#0B1220]">
       <p className="mb-6 section-label">
         {targetUserId === me?.id ? "Your Profile" : "Player Profile"}
       </p>
@@ -58,11 +58,11 @@ export function UserProfileView({ userId }: { userId?: string }) {
       {statsLoading ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-1">
-            <div className="h-32 animate-pulse rounded-[3px] bg-[#1d1d26]" />
-            <div className="h-40 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div className="h-32 animate-pulse rounded-[3px] bg-[#F3F4F7]" />
+            <div className="h-40 animate-pulse rounded-[3px] bg-[#F3F4F7]" />
           </div>
           <div className="space-y-6 lg:col-span-2">
-            <div className="h-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div className="h-64 animate-pulse rounded-[3px] bg-[#F3F4F7]" />
           </div>
         </div>
       ) : (

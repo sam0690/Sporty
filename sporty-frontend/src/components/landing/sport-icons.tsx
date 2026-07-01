@@ -71,9 +71,9 @@ export type SportGlyph = {
 };
 
 export const SPORT_GLYPHS: SportGlyph[] = [
-  { Icon: FootballGlyph, label: "Football", color: "#00ff88" },
-  { Icon: BasketballGlyph, label: "Basketball", color: "#ff6b00" },
-  { Icon: CricketGlyph, label: "Cricket", color: "#00d4ff" },
+  { Icon: FootballGlyph, label: "Football", color: "#16A34A" },
+  { Icon: BasketballGlyph, label: "Basketball", color: "#EA580C" },
+  { Icon: CricketGlyph, label: "Cricket", color: "#0891B2" },
 ];
 
 const SPORT_GLYPH_MAP: Record<string, SportGlyph> = {
@@ -86,11 +86,33 @@ const SPORT_GLYPH_MAP: Record<string, SportGlyph> = {
 const MULTISPORT_GLYPH: SportGlyph = {
   Icon: BoltGlyph,
   label: "Multi-sport",
-  color: "#e8fb25",
+  color: "#9333EA",
 };
 
 // Resolve a sport name (from the API) to its glyph; unknown / mixed leagues
 // fall back to the volt multi-sport mark.
 export function sportGlyph(sport?: string | null): SportGlyph {
   return SPORT_GLYPH_MAP[(sport ?? "").toLowerCase()] ?? MULTISPORT_GLYPH;
+}
+
+// Convenience component: renders the sport glyph inline (replaces ⚽🏀🏏 emoji).
+export function SportIcon({
+  sport,
+  className,
+  tint = false,
+}: {
+  sport?: string | null;
+  className?: string;
+  tint?: boolean;
+}) {
+  const glyph = sportGlyph(sport);
+  const Icon = glyph.Icon;
+  if (tint) {
+    return (
+      <span style={{ color: glyph.color }} className="inline-flex">
+        <Icon className={className} />
+      </span>
+    );
+  }
+  return <Icon className={className} />;
 }

@@ -13,17 +13,11 @@ export function Logo({ onClick }: LogoProps) {
       className="group inline-flex items-center gap-2 hover:no-underline focus-visible:outline-none"
       aria-label="Sporty home"
     >
-      <span
-        className="grid size-8 place-items-center rounded-[7px] text-[#0a0a0f]"
-        style={{
-          background: "linear-gradient(150deg, #f0ff45, #e8fb25)",
-          boxShadow: "0 0 22px rgba(232,251,37,0.35)",
-        }}
-      >
+      <span className="grid size-8 place-items-center rounded-sm bg-primary text-on-primary shadow-hard-sm">
         <BoltGlyph className="size-4" />
       </span>
-      <span className="font-bebas text-2xl leading-none tracking-[3px] text-[#f0f0f0] transition-colors group-hover:text-[#e8fb25]">
-        SPORTY
+      <span className="font-condensed text-2xl font-bold uppercase leading-none tracking-[0.06em] text-ink">
+        SPOR<span className="text-primary">TY</span>
       </span>
     </Link>
   );

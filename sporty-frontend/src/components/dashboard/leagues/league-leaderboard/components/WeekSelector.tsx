@@ -23,7 +23,7 @@ export function WeekSelector({
 
   return (
     <section className="mb-6 flex flex-wrap items-center justify-end gap-2">
-      <div className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-1 ">
+      <div className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-2 py-1 ">
         <button
           type="button"
           onClick={() => {
@@ -31,13 +31,13 @@ export function WeekSelector({
             onWeekChange(next);
           }}
           disabled={selectedWeek === "overall" ? false : numericSelected <= 1}
-          className="rounded-full p-1 text-[#f0f0f0]/50 transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-full p-1 text-[#0B1220]/50 transition-colors hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Previous week"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
 
-        <p className="px-1 text-sm text-[#f0f0f0]">
+        <p className="px-1 text-sm text-[#0B1220]">
           Week {numericSelected}
         </p>
 
@@ -50,7 +50,7 @@ export function WeekSelector({
           disabled={
             selectedWeek === "overall" ? false : numericSelected >= totalWeeks
           }
-          className="rounded-full p-1 text-[#f0f0f0]/50 transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-40"
+          className="rounded-full p-1 text-[#0B1220]/50 transition-colors hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Next week"
         >
           <ChevronRight className="h-4 w-4" />
@@ -62,8 +62,8 @@ export function WeekSelector({
         onClick={() => onWeekChange("overall")}
         className={`rounded-[3px] border px-4 py-1.5 text-sm transition-colors ${
           overallActive
-            ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-            : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560] hover:bg-[#1d1d26]"
+            ? "border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] text-[#DC2626]"
+            : "border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] text-[#6B7280] hover:bg-[#F3F4F7]"
         }`}
       >
         Overall

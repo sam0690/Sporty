@@ -1,5 +1,13 @@
 "use client";
 
+import type { ComponentType } from "react";
+import {
+  FootballGlyph,
+  BasketballGlyph,
+  CricketGlyph,
+  BoltGlyph,
+} from "@/components/landing/sport-icons";
+
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
 type RosterHeaderProps = {
@@ -11,11 +19,18 @@ type RosterHeaderProps = {
   totalWeeks?: number;
 };
 
-const sportBadgeStyles: Record<Sport, string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
-  multisport: "⚽🏀🏏",
+const sportGlyph: Record<Sport, ComponentType<{ className?: string }>> = {
+  football: FootballGlyph,
+  basketball: BasketballGlyph,
+  cricket: CricketGlyph,
+  multisport: BoltGlyph,
+};
+
+const sportColor: Record<Sport, string> = {
+  football: "#16A34A",
+  basketball: "#EA580C",
+  cricket: "#0891B2",
+  multisport: "#9333EA",
 };
 
 export function RosterHeader({
@@ -26,25 +41,35 @@ export function RosterHeader({
   currentWeek,
   totalWeeks,
 }: RosterHeaderProps) {
+  const Glyph = sportGlyph[sport];
+
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 ">
+    <header className="surface flex flex-wrap items-center justify-between gap-4 p-5">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-700 tracking-[2px] text-[#f0f0f0]">
+        <span
+          className="grid h-9 w-9 place-items-center rounded-sm"
+          style={{ color: sportColor[sport], background: `${sportColor[sport]}14` }}
+          aria-label={sport}
+          title={sport}
+        >
+          <Glyph className="h-5 w-5" />
+        </span>
+        <h1 className="font-condensed text-2xl font-bold uppercase tracking-[0.02em] text-ink">
           {leagueName}
         </h1>
-        <span className="text-lg" aria-label={sport} title={sport}>
-          {sportBadgeStyles[sport]}
-        </span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         {currentWeek && totalWeeks && (
-          <p className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-sm text-[#f0f0f0]">
+          <p className="rounded-sm border border-border bg-surface-muted px-3 py-1.5 font-condensed text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
             Week {currentWeek} of {totalWeeks}
           </p>
         )}
-        <p className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-sm text-[#f0f0f0]">
-          {rosterSize}/{maxRosterSize} players
+        <p className="rounded-sm border border-border bg-surface-muted px-3 py-1.5 font-condensed text-xs font-semibold uppercase tracking-[0.08em] text-ink-soft">
+          <span className="num">
+            {rosterSize}/{maxRosterSize}
+          </span>{" "}
+          players
         </p>
       </div>
     </header>

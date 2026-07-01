@@ -17,12 +17,12 @@ export function FooterCta({ content }: FooterCtaProps) {
     <div className="mx-auto max-w-3xl text-center">
       <h2
         id="landing-footer-title"
-        className="font-barlow-condensed text-5xl font-700 tracking-[2px] text-[#f0f0f0]"
+        className="font-condensed text-5xl font-bold uppercase tracking-[0.01em] text-ink"
       >
         {content.title}
       </h2>
 
-      <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#f0f0f0]/65">
+      <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-ink-muted">
         {content.subtitle}
       </p>
 
@@ -38,17 +38,17 @@ export function FooterCta({ content }: FooterCtaProps) {
           type="email"
           required
           placeholder={content.inputPlaceholder}
-          className="h-12 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 text-sm text-[#f0f0f0] placeholder:text-[#f0f0f0]/40 focus:border-[rgba(232,251,37,0.6)] focus:outline-none focus:border-[#e8fb25] transition-all duration-200"
+          className="h-12 w-full rounded-sm border-[1.5px] border-border-strong bg-surface px-4 text-sm text-ink placeholder:text-ink-faint transition-all duration-200 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         <Button
           type="submit"
-          className="h-12 w-full rounded-[3px] px-5 text-sm font-600 sm:w-auto"
+          className="h-12 w-full px-5 text-sm sm:w-auto"
         >
           {content.buttonLabel}
         </Button>
       </form>
 
-      <p className="mt-4 text-xs text-[#f0f0f0]/45">{content.helperText}</p>
+      <p className="mt-4 text-xs text-ink-muted">{content.helperText}</p>
     </div>
   );
 }

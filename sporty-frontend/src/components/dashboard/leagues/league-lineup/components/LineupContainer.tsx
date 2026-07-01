@@ -33,10 +33,10 @@ function SportGroup({
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+        <h3 className="font-barlow-condensed text-sm font-bold uppercase tracking-[2px] text-[#6B7280]">
           {sportDisplayName}
         </h3>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+        <span className="font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280]">
           {players.length} players
         </span>
       </div>
@@ -74,13 +74,13 @@ export function LineupContainer({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-        <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+        <header className="border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
           <p className="section-label">Starting Lineup</p>
         </header>
         <div className="space-y-5 p-5">
           {starterSports.length === 0 ? (
-            <p className="text-sm text-[#555560]">No starters selected yet.</p>
+            <p className="text-sm text-[#6B7280]">No starters selected yet.</p>
           ) : (
             starterSports.map(([sportDisplayName, players]) => (
               <SportGroup
@@ -98,13 +98,13 @@ export function LineupContainer({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-        <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+        <header className="border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
           <p className="section-label">Bench</p>
         </header>
         <div className="space-y-5 p-5">
           {benchSports.length === 0 ? (
-            <p className="text-sm text-[#555560]">No bench players.</p>
+            <p className="text-sm text-[#6B7280]">No bench players.</p>
           ) : (
             benchSports.map(([sportDisplayName, players]) => (
               <SportGroup

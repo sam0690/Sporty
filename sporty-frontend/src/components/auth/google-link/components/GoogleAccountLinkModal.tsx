@@ -33,19 +33,19 @@ export function GoogleAccountLinkModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 ">
-      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0]  ">
-        <div className="inline-flex rounded-[3px] border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-600 uppercase tracking-[0.18em] text-cyan-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-lg border border-border bg-surface p-6 text-ink shadow-lg">
+        <div className="inline-flex rounded-sm bg-info-soft px-3 py-1 font-condensed text-xs font-semibold uppercase tracking-[0.16em] text-info">
           Account linking required
         </div>
-        <h2 className="mt-4 text-2xl font-600 text-[#f0f0f0]">
+        <h2 className="mt-4 font-condensed text-2xl font-bold uppercase tracking-[0.01em] text-ink">
           Verify your password to continue
         </h2>
-        <p className="mt-3 text-sm leading-6 text-[#f0f0f0]">
+        <p className="mt-3 text-sm leading-6 text-ink-muted">
           {email ? (
             <>
               An account already exists with{" "}
-              <span className="font-medium text-[#f0f0f0]">{email}</span>.
+              <span className="font-medium text-ink">{email}</span>.
               Enter your password to confirm ownership before linking Google.
             </>
           ) : (
@@ -53,20 +53,20 @@ export function GoogleAccountLinkModal({
           )}
         </p>
 
-        <label className="mt-5 block text-left text-sm text-[#f0f0f0]">
+        <label className="mt-5 block text-left font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-ink-muted">
           Password
           <input
             type="password"
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-2 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3 text-[#f0f0f0] outline-none transition focus:border-[rgba(232,251,37,0.4)] focus:border-[#e8fb25]"
+            className="mt-2 w-full rounded-sm border-[1.5px] border-border-strong bg-surface px-4 py-3 text-base text-ink outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30"
             placeholder="Enter your password"
           />
         </label>
 
         {errorMessage ? (
-          <p className="mt-3 rounded-[3px] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <p className="mt-3 rounded-md border border-danger/20 bg-danger-soft px-4 py-3 text-sm font-medium text-danger">
             {errorMessage}
           </p>
         ) : null}

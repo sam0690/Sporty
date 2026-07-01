@@ -16,7 +16,7 @@ type PanelProps = {
 export function Panel({
   title,
   icon,
-  accent = "#e8fb25",
+  accent = "#DC2626",
   action,
   children,
   className = "",
@@ -24,9 +24,9 @@ export function Panel({
 }: PanelProps) {
   return (
     <section
-      className={`overflow-hidden rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-24px_rgba(0,0,0,0.9)] ${className}`}
+      className={`overflow-hidden rounded-[10px] border border-[rgba(11,18,32,0.08)] bg-gradient-to-b from-[#FFFFFF] to-[#FFFFFF] shadow-[0_1px_0_rgba(11,18,32,0.03)_inset,0_18px_40px_-24px_rgba(0,0,0,0.9)] ${className}`}
     >
-      <header className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.07)] px-5 py-3.5">
+      <header className="flex items-center justify-between gap-3 border-b border-[rgba(11,18,32,0.07)] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           {icon && (
             <span
@@ -36,7 +36,7 @@ export function Panel({
               {icon}
             </span>
           )}
-          <span className="section-label !text-[rgba(255,255,255,0.62)]">
+          <span className="section-label !text-[rgba(11,18,32,0.62)]">
             {title}
           </span>
         </div>
@@ -59,13 +59,13 @@ export function PanelEmpty({
 }) {
   return (
     <div className="flex flex-col items-center gap-2.5 py-10 text-center">
-      <span className="grid size-11 place-items-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] text-[#555560]">
+      <span className="grid size-11 place-items-center rounded-full border border-[rgba(11,18,32,0.08)] bg-[rgba(11,18,32,0.02)] text-[#6B7280]">
         {icon}
       </span>
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+      <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[1px] text-[#6B7280]">
         {title}
       </p>
-      {hint && <p className="max-w-[24ch] text-xs text-[#555560]">{hint}</p>}
+      {hint && <p className="max-w-[24ch] text-xs text-[#6B7280]">{hint}</p>}
     </div>
   );
 }

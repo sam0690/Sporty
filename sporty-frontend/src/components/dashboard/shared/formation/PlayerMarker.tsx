@@ -37,11 +37,11 @@ export function PlayerMarker({
 
         {/* Small Floating Overlays (C/VC) - Top left */}
         {isCaptain ? (
-          <div className="absolute -left-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-[3px] border border-yellow-200 bg-yellow-400 font-700 text-yellow-950 shadow-sm ring-1 ring-white/10 text-[8px] sm:h-5 sm:w-5 sm:text-[10px]">
+          <div className="absolute -left-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-[3px] border border-yellow-200 bg-yellow-400 font-bold text-yellow-950 shadow-sm ring-1 ring-white/10 text-[8px] sm:h-5 sm:w-5 sm:text-[10px]">
             C
           </div>
         ) : isViceCaptain ? (
-          <div className="absolute -left-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-[3px] border border-sky-300 bg-sky-400 font-700 text-sky-950 shadow-sm ring-1 ring-white/10 text-[8px] sm:h-5 sm:w-5 sm:text-[10px]">
+          <div className="absolute -left-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-[3px] border border-sky-300 bg-sky-400 font-bold text-sky-950 shadow-sm ring-1 ring-white/10 text-[8px] sm:h-5 sm:w-5 sm:text-[10px]">
             VC
           </div>
         ) : null}
@@ -50,7 +50,7 @@ export function PlayerMarker({
         {/* Points - Top right */}
         {typeof points === "number" && (
           <div
-            className={`absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-[3px] border shadow-sm ring-1 ring-white/10 text-[8px] font-700 sm:h-5 sm:w-5 sm:text-[9px] ${getSportAccentClass(
+            className={`absolute -right-1 -top-1 z-10 flex h-4 w-4 items-center justify-center rounded-[3px] border shadow-sm ring-1 ring-white/10 text-[8px] font-bold sm:h-5 sm:w-5 sm:text-[9px] ${getSportAccentClass(
               sport,
             )}`}
           >
@@ -62,10 +62,10 @@ export function PlayerMarker({
       {/* Name Label */}
       <div className="relative mt-1.5 flex w-full flex-col items-center">
         <div className="flex w-16 flex-col items-center sm:w-20">
-          <p className="w-full truncate rounded-sm bg-black/60 px-1 py-0.5 text-center text-[9px] font-700 text-white backdrop-blur-[2px] sm:text-[10px]">
+          <p className="w-full truncate rounded-sm bg-black/60 px-1 py-0.5 text-center text-[9px] font-bold text-white backdrop-blur-[2px] sm:text-[10px]">
             {name}
           </p>
-          <p className="mt-0.5 text-[8px] font-600 uppercase tracking-[2px] text-white/90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] sm:text-[9px]">
+          <p className="mt-0.5 text-[8px] font-semibold uppercase tracking-[2px] text-white/90 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] sm:text-[9px]">
             {position}
           </p>
         </div>

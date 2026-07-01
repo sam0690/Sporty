@@ -7,10 +7,10 @@ type LineupViewToggleProps = {
 
 export function LineupViewToggle({ value, onChange }: LineupViewToggleProps) {
   const buttonClass = (active: boolean) =>
-    `rounded-[3px] border px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] transition-colors ${
+    `rounded-[3px] border px-4 py-2 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] transition-colors ${
       active
-        ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-        : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+        ? "border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] text-[#DC2626]"
+        : "border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] text-[#6B7280] hover:text-[#0B1220]"
     }`;
 
   return (

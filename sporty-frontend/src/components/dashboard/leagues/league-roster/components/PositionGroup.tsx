@@ -18,8 +18,8 @@ export function PositionGroup({
 }: PositionGroupProps) {
   return (
     <section>
-      <header className="mb-3 border-b border-[rgba(255,255,255,0.08)] pb-2">
-        <h3 className="text-lg font-600 text-[#f0f0f0]">
+      <header className="mb-3 border-b border-[rgba(11,18,32,0.08)] pb-2">
+        <h3 className="text-lg font-semibold text-[#0B1220]">
           {position} ({players.length})
         </h3>
       </header>

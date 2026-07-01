@@ -12,16 +12,16 @@ export function LandingHeroContainer() {
       aria-labelledby="landing-hero-title"
       id="features"
     >
-      {/* ambient broadcast glow */}
+      {/* ambient broadcast wash */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "radial-gradient(70% 60% at 15% 0%, rgba(232,251,37,0.08), transparent 55%), radial-gradient(60% 60% at 100% 30%, rgba(0,212,255,0.07), transparent 55%)",
+            "radial-gradient(70% 60% at 12% 0%, rgba(220,38,38,0.06), transparent 55%), radial-gradient(55% 55% at 100% 25%, rgba(37,99,235,0.05), transparent 55%)",
         }}
       />
-      <div className="auth-dot-pattern pointer-events-none absolute inset-0 opacity-[0.15]" />
+      <div className="dot-grid pointer-events-none absolute inset-0 opacity-60" />
 
       <div className="relative mx-auto w-full max-w-7xl px-4 pb-14 pt-12 sm:px-6 md:pb-16 md:pt-16 lg:px-8 lg:pb-20 lg:pt-20">
         <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-14">

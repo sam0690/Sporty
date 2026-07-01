@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
 
 type CopyButtonProps = {
@@ -14,7 +15,7 @@ export function CopyButton({ value, label }: CopyButtonProps) {
   const handleCopy = async () => {
     await navigator.clipboard.writeText(value);
     setCopied(true);
-    toastifier.success(`✓ ${label} copied`);
+    toastifier.success(`${label} copied`);
     setTimeout(() => setCopied(false), 1200);
   };
 
@@ -22,13 +23,21 @@ export function CopyButton({ value, label }: CopyButtonProps) {
     <button
       type="button"
       onClick={handleCopy}
-      className={`shrink-0 rounded-[3px] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] transition-colors ${
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-sm px-3.5 py-1.5 font-condensed text-xs font-bold uppercase tracking-[0.1em] transition-colors ${
         copied
-          ? "bg-[#e8fb25] text-[#0a0a0f]"
-          : "border border-[rgba(232,251,37,0.35)] text-[#e8fb25] hover:bg-[rgba(232,251,37,0.1)]"
+          ? "bg-primary text-on-primary"
+          : "border border-primary/35 text-primary hover:bg-primary-soft"
       }`}
     >
-      {copied ? "✓ Copied" : "Copy"}
+      {copied ? (
+        <>
+          <Check className="h-3.5 w-3.5" /> Copied
+        </>
+      ) : (
+        <>
+          <Copy className="h-3.5 w-3.5" /> Copy
+        </>
+      )}
     </button>
   );
 }

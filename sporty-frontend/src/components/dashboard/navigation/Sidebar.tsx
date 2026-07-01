@@ -41,18 +41,18 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-[rgba(255,255,255,0.08)] bg-[#0d0d14] md:flex md:flex-col">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border bg-surface md:flex md:flex-col">
       {/* Logo */}
-      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-6 py-5">
+      <div className="flex items-center justify-between border-b border-border px-6 py-5">
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2 hover:no-underline"
         >
-          <span className="font-bebas text-2xl tracking-[3px] text-[#e8fb25]">
-            SPORTY
+          <span className="font-condensed text-2xl font-bold uppercase tracking-[0.08em] leading-none text-ink">
+            SPOR<span className="text-primary">TY</span>
           </span>
         </Link>
-        <NotificationBell className="text-[#555560] transition-colors hover:text-[#f0f0f0]" />
+        <NotificationBell className="text-ink-muted transition-colors hover:text-ink" />
       </div>
 
       {/* Nav items */}
@@ -69,20 +69,22 @@ export function Sidebar({ items }: SidebarProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "group flex items-center gap-3 px-3 py-2.5 text-sm transition-all duration-150 hover:no-underline",
+                "group flex items-center gap-3 rounded-sm py-2.5 pl-[10px] pr-3 text-sm transition-all duration-150 hover:no-underline",
                 active
-                  ? "border-l-2 border-[#e8fb25] bg-[#1d1d26] text-[#f0f0f0] pl-[10px]"
-                  : "border-l-2 border-transparent text-[#555560] hover:bg-[#1d1d26] hover:text-[#f0f0f0] pl-[10px]",
+                  ? "border-l-2 border-primary bg-surface-muted text-ink"
+                  : "border-l-2 border-transparent text-ink-muted hover:bg-surface-muted hover:text-ink",
               )}
               aria-current={active ? "page" : undefined}
             >
               <Icon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors",
-                  active ? "text-[#e8fb25]" : "text-[#555560] group-hover:text-[#f0f0f0]",
+                  active
+                    ? "text-primary"
+                    : "text-ink-faint group-hover:text-ink",
                 )}
               />
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px]">
+              <span className="font-condensed text-sm font-semibold uppercase tracking-[0.1em]">
                 {item.label}
               </span>
             </Link>
@@ -91,11 +93,11 @@ export function Sidebar({ items }: SidebarProps) {
       </nav>
 
       {/* Bottom actions */}
-      <div className="border-t border-[rgba(255,255,255,0.08)] p-4 space-y-2">
+      <div className="space-y-2 border-t border-border p-4">
         <button
           type="button"
           onClick={handleOpenSettings}
-          className="flex w-full items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-3 py-2 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0]"
+          className="flex w-full items-center gap-2 rounded-sm border border-border bg-transparent px-3 py-2 font-condensed text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-border-strong hover:bg-surface-muted hover:text-ink"
         >
           <Settings className="h-3.5 w-3.5" />
           Settings
@@ -104,7 +106,7 @@ export function Sidebar({ items }: SidebarProps) {
           type="button"
           onClick={() => setShowLogoutModal(true)}
           disabled={actionLoading.logout}
-          className="flex w-full items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-3 py-2 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-[#ff3b30]/40 hover:text-[#ff3b30] disabled:opacity-50"
+          className="flex w-full items-center gap-2 rounded-sm border border-border bg-transparent px-3 py-2 font-condensed text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted transition-colors hover:border-danger/40 hover:text-danger disabled:opacity-50"
           aria-label="Log out"
         >
           <LogOut className="h-3.5 w-3.5" />

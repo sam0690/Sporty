@@ -1,26 +1,33 @@
 "use client";
 
+import type { ComponentType } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronRight, Target } from "lucide-react";
+import {
+  FootballGlyph,
+  BasketballGlyph,
+  CricketGlyph,
+} from "@/components/landing/sport-icons";
 
 import type { TMatch } from "@/types/match";
 
 type SportConfig = {
-  emoji: string;
+  Icon: ComponentType<{ className?: string }>;
   label: string;
   accent: string;
   badge: string;
 };
 
 const SPORT_CONFIG: Record<string, SportConfig> = {
-  football: { emoji: "⚽", label: "Football", accent: "#4caf50", badge: "sport-badge-football" },
-  basketball: { emoji: "🏀", label: "Basketball", accent: "#ff6b00", badge: "sport-badge-basketball" },
-  cricket: { emoji: "🏏", label: "Cricket", accent: "#00d4ff", badge: "sport-badge-cricket" },
+  football: { Icon: FootballGlyph, label: "Football", accent: "#16A34A", badge: "sport-badge-football" },
+  basketball: { Icon: BasketballGlyph, label: "Basketball", accent: "#EA580C", badge: "sport-badge-basketball" },
+  cricket: { Icon: CricketGlyph, label: "Cricket", accent: "#0891B2", badge: "sport-badge-cricket" },
 };
 
 const FALLBACK_SPORT: SportConfig = {
-  emoji: "🎯",
+  Icon: Target,
   label: "Match",
-  accent: "#e8fb25",
+  accent: "#DC2626",
   badge: "sport-badge-multisport",
 };
 
@@ -44,6 +51,7 @@ export function MatchCard({
   const router = useRouter();
   const status = (match.status ?? "").toLowerCase();
   const sport = sportConfig(match.sport);
+  const SportIcon = sport.Icon;
   const hasScore = match.home_score !== null && match.away_score !== null;
   const isLive = status === "live";
   const isFinished = status === "finished";
@@ -62,23 +70,18 @@ export function MatchCard({
         }
       }}
       style={{ animationDelay: `${animationDelay}ms`, borderLeft: `3px solid ${sport.accent}` }}
-      className="group flex cursor-pointer items-center gap-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.18)] animate-fade-soft"
+      className="group flex cursor-pointer items-center gap-4 rounded-md border border-border bg-surface px-4 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md animate-fade-soft"
     >
       {/* Time / status rail */}
       <div className="w-16 shrink-0 text-center">
         {isLive ? (
-          <span className="inline-flex flex-col items-center gap-0.5">
-            <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#ff3b30]">
-              <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
-              Live
-            </span>
-          </span>
+          <span className="pill-live justify-center">Live</span>
         ) : isFinished ? (
-          <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#777783]">
+          <span className="font-condensed text-[10px] font-bold uppercase tracking-[0.14em] text-ink-muted">
             FT
           </span>
         ) : (
-          <span className="font-bebas text-lg leading-none tracking-[1px] text-[#9a9aa5]">
+          <span className="stat-num num text-lg text-ink-muted">
             {kickoffTime(match.match_date)}
           </span>
         )}
@@ -87,21 +90,21 @@ export function MatchCard({
       {/* Teams + scores */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
-          <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          <span className="truncate font-condensed text-sm font-bold uppercase tracking-[0.03em] text-ink">
             {match.home_team}
           </span>
           {hasScore && (
-            <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
+            <span className="stat-num num shrink-0 text-lg text-ink">
               {match.home_score}
             </span>
           )}
         </div>
         <div className="mt-1.5 flex items-center justify-between gap-3">
-          <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          <span className="truncate font-condensed text-sm font-bold uppercase tracking-[0.03em] text-ink">
             {match.away_team}
           </span>
           {hasScore && (
-            <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
+            <span className="stat-num num shrink-0 text-lg text-ink">
               {match.away_score}
             </span>
           )}
@@ -110,12 +113,10 @@ export function MatchCard({
 
       {/* Sport + chevron */}
       <div className="flex shrink-0 items-center gap-3">
-        <span aria-hidden style={{ color: sport.accent }} className="text-sm">
-          {sport.emoji}
+        <span aria-hidden style={{ color: sport.accent }}>
+          <SportIcon className="h-4 w-4" />
         </span>
-        <span className="section-label text-[#555560] transition-colors group-hover:text-[#e8fb25]">
-          ›
-        </span>
+        <ChevronRight className="h-4 w-4 text-ink-faint transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
       </div>
     </article>
   );

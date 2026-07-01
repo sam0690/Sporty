@@ -24,9 +24,9 @@ type LeagueGroupProps = {
 };
 
 const sportAccent: Record<Sport, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
-  cricket: "#00d4ff",
+  football: "#16A34A",
+  basketball: "#EA580C",
+  cricket: "#0891B2",
 };
 
 const sportLabel: Record<Sport, string> = {
@@ -74,11 +74,11 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {sportCounts.map(({ sport, count }) => {
-            const accent = sportAccent[sport] ?? "#9a9aa5";
+            const accent = sportAccent[sport] ?? "#6B7280";
             return (
               <span
                 key={sport}
-                className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px]"
+                className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px]"
                 style={{ color: accent, background: `${accent}1f` }}
               >
                 {sportLabel[sport]} · {count}
@@ -86,7 +86,7 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
             );
           })}
         </div>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+        <span className="font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280]">
           {players.length} players
         </span>
       </div>
@@ -95,13 +95,13 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
         {positionGroups.map(({ position, players: groupPlayers }) => (
           <div key={position} className="space-y-2">
             <div className="flex items-center gap-2">
-              <h3 className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+              <h3 className="font-barlow-condensed text-xs font-bold uppercase tracking-[2px] text-[#6B7280]">
                 {position}
               </h3>
-              <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+              <span className="font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] text-[#6B7280]">
                 {groupPlayers.length}
               </span>
-              <span className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+              <span className="h-px flex-1 bg-[rgba(11,18,32,0.06)]" />
             </div>
             <div className="space-y-2">
               {groupPlayers.map((player) => (

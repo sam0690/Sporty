@@ -21,9 +21,9 @@ export function KickMemberModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0] ">
-        <h3 className="text-lg text-[#f0f0f0]">Kick Member?</h3>
-        <p className="mt-2 text-sm text-[#f0f0f0]/65">
+      <div className="w-full max-w-md rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-6 text-[#0B1220] ">
+        <h3 className="text-lg text-[#0B1220]">Kick Member?</h3>
+        <p className="mt-2 text-sm text-[#0B1220]/65">
           Remove {memberName} from this league?
         </p>
 
@@ -31,7 +31,7 @@ export function KickMemberModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
+            className="flex-1 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-4 py-2 text-[#0B1220] transition-colors hover:bg-[#F3F4F7]"
           >
             Cancel
           </button>

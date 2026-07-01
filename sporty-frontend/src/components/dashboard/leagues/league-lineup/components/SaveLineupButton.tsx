@@ -16,24 +16,24 @@ export function SaveLineupButton({
   const isDisabled = !isDirty || disabled || isLoading;
 
   return (
-    <div className="sticky bottom-0 border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0f] py-4">
+    <div className="sticky bottom-0 border-t border-[rgba(11,18,32,0.08)] bg-[#F6F7F9] py-4">
       <div className="flex items-center justify-end gap-3">
         {isDirty && !isDisabled ? (
-          <span className="animate-live-pulse h-2 w-2 rounded-[3px] bg-[#e8fb25]" aria-hidden="true" />
+          <span className="animate-live-pulse h-2 w-2 rounded-[3px] bg-[#DC2626]" aria-hidden="true" />
         ) : null}
         <button
           type="button"
           onClick={onSave}
           disabled={isDisabled}
-          className={`rounded-[3px] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
+          className={`rounded-[3px] px-8 py-2.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] transition-colors ${
             isDisabled
-              ? "cursor-not-allowed bg-[#1d1d26] text-[#555560]"
-              : "bg-[#e8fb25] text-[#0a0a0f] hover:bg-[#f0ff45]"
+              ? "cursor-not-allowed bg-[#F3F4F7] text-[#6B7280]"
+              : "bg-[#DC2626] text-[#F6F7F9] hover:bg-[#B91C1C]"
           }`}
         >
           {isLoading ? (
             <span className="inline-flex items-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-[3px] border-2 border-[#0a0a0f]/30 border-t-[#0a0a0f]" />
+              <span className="h-4 w-4 animate-spin rounded-[3px] border-2 border-[#F6F7F9]/30 border-t-[#F6F7F9]" />
               Saving...
             </span>
           ) : (

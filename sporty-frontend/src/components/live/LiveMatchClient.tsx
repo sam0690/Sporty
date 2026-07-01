@@ -133,7 +133,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
       <ScoreTicker loading={loading} />
 
       {error && (
-        <p className="mt-4 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
+        <p className="mt-4 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#DC2626]">
           {error}
         </p>
       )}

@@ -61,12 +61,12 @@ export function AvatarUpload({
   };
 
   return (
-    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+      <header className="border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
         <p className="section-label">Avatar</p>
       </header>
       <div className="flex flex-wrap items-center gap-4 p-5">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] text-[#555560]">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] text-[#6B7280]">
           {preview ? (
             <img
               src={preview}
@@ -74,7 +74,7 @@ export function AvatarUpload({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px]">
+            <span className="font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px]">
               No Image
             </span>
           )}
@@ -91,7 +91,7 @@ export function AvatarUpload({
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+            className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-4 py-2 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280] transition-colors hover:text-[#0B1220]"
           >
             Upload New
           </button>
@@ -101,7 +101,7 @@ export function AvatarUpload({
               type="button"
               onClick={saveAvatar}
               disabled={isUploading}
-              className="rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-[3px] bg-[#DC2626] px-4 py-2 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#F6F7F9] transition-colors hover:bg-[#B91C1C] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isUploading ? "Saving…" : "Save"}
             </button>

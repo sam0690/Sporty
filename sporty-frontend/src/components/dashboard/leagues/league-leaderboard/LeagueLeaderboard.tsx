@@ -86,7 +86,7 @@ export function LeagueLeaderboard() {
   if (isLoading) {
     return (
       <section className="mx-auto max-w-6xl space-y-4 px-6 py-8">
-        <div className="h-10 w-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+        <div className="h-10 w-64 animate-pulse rounded-[3px] bg-[#F3F4F7]" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <CardSkeleton />
           <CardSkeleton />
@@ -102,7 +102,7 @@ export function LeagueLeaderboard() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#0B1220]">
       <p className="section-label">Manager: {username || "Sporty User"}</p>
 
       <NavigationTabs
@@ -120,7 +120,7 @@ export function LeagueLeaderboard() {
       />
 
       {/* Filters bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-3">
         <div className="flex flex-wrap items-center gap-2">
           <WeekSelector
             currentWeek={activeWindow?.number || 1}
@@ -130,7 +130,7 @@ export function LeagueLeaderboard() {
           />
         </div>
 
-        <div className="inline-flex rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-0.5">
+        <div className="inline-flex rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-0.5">
           {(["Historical", "Live"] as const).map((mode) => {
             const isActive = mode === "Historical" ? historical : !historical;
             return (
@@ -138,10 +138,10 @@ export function LeagueLeaderboard() {
                 key={mode}
                 type="button"
                 onClick={() => setHistorical(mode === "Historical")}
-                className={`rounded-[3px] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
+                className={`rounded-[3px] px-3 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[2px] transition-colors ${
                   isActive
-                    ? "bg-[#e8fb25] text-[#0a0a0f]"
-                    : "text-[#555560] hover:text-[#f0f0f0]"
+                    ? "bg-[#DC2626] text-[#F6F7F9]"
+                    : "text-[#6B7280] hover:text-[#0B1220]"
                 }`}
               >
                 {mode}

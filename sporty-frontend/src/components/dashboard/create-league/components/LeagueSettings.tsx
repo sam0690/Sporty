@@ -16,9 +16,9 @@ type LeagueSettingsProps = {
 const teamSizes = [4, 6, 8, 10, 12, 14, 16];
 
 const fieldLabel =
-  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]";
+  "mb-2 block font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280]";
 const fieldControl =
-  "w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]";
+  "w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-2.5 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]";
 
 function RadioCard({
   selected,
@@ -37,26 +37,26 @@ function RadioCard({
       onClick={onSelect}
       className={`flex items-start gap-3 rounded-[3px] border p-4 text-left transition-colors ${
         selected
-          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.08)]"
-          : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.18)]"
+          ? "border-[rgba(220,38,38,0.4)] bg-[rgba(220,38,38,0.08)]"
+          : "border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] hover:border-[rgba(11,18,32,0.18)]"
       }`}
     >
       <span
         className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border ${
-          selected ? "border-[#e8fb25]" : "border-[rgba(255,255,255,0.25)]"
+          selected ? "border-[#DC2626]" : "border-[rgba(11,18,32,0.25)]"
         }`}
       >
-        {selected && <span className="size-2 rounded-full bg-[#e8fb25]" />}
+        {selected && <span className="size-2 rounded-full bg-[#DC2626]" />}
       </span>
       <span>
         <p
-          className={`font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
-            selected ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+          className={`font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] ${
+            selected ? "text-[#DC2626]" : "text-[#0B1220]"
           }`}
         >
           {title}
         </p>
-        <p className="mt-1 text-xs text-[#555560]">{desc}</p>
+        <p className="mt-1 text-xs text-[#6B7280]">{desc}</p>
       </span>
     </button>
   );

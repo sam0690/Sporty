@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
@@ -13,13 +14,6 @@ type LeagueCardProps = {
   yourRank: number;
   teamName: string;
   animationDelay?: number;
-};
-
-const sportIcons: Record<Sport, string> = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
-  multisport: "⚽🏀🏏",
 };
 
 const sportImages: Record<Sport, string> = {
@@ -37,10 +31,10 @@ const sportBadgeClass: Record<Sport, string> = {
 };
 
 const sportAccentColor: Record<Sport, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
-  cricket: "#00d4ff",
-  multisport: "#e8fb25",
+  football: "#16A34A",
+  basketball: "#EA580C",
+  cricket: "#0891B2",
+  multisport: "#DC2626",
 };
 
 export function LeagueCard({
@@ -65,10 +59,10 @@ export function LeagueCard({
           router.push(`/leagues/${id}`);
         }
       }}
-      className="group cursor-pointer overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] opacity-0 transition-colors duration-150 hover:border-[rgba(255,255,255,0.15)] animate-fade-soft"
+      className="block group cursor-pointer overflow-hidden opacity-0 animate-fade-soft"
       style={{
         animationDelay: `${animationDelay}ms`,
-        borderLeft: `3px solid ${sportAccentColor[sport]}`,
+        borderTop: `3px solid ${sportAccentColor[sport]}`,
       }}
     >
       <div className="relative h-28 overflow-hidden">
@@ -76,37 +70,36 @@ export function LeagueCard({
           src={sportImages[sport]}
           alt={`${sport} league`}
           fill
-          className="object-cover transition-transform duration-200 group-hover:scale-[1.02]"
+          className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink/50 to-transparent" />
         <span
-          className={`absolute right-3 top-3 rounded-[3px] px-2 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+          className={`pill absolute right-3 top-3 ${sportBadgeClass[sport]}`}
           aria-label={sport}
         >
           {sport}
         </span>
       </div>
 
-      <div className="space-y-3 p-4">
-        <h3 className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+      <div className="space-y-3 p-5">
+        <h3 className="font-condensed text-lg font-bold uppercase tracking-[0.02em] text-ink">
           {name}
         </h3>
 
-        <div className="space-y-1 text-sm text-[#555560]">
+        <div className="space-y-0.5 text-sm text-ink-muted">
           <p>{teamName}</p>
           <p>{memberCount} members</p>
         </div>
 
-        <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.08)] pt-3">
-          <div className="flex items-center gap-2">
-            <span className="font-bebas text-2xl text-[#e8fb25]">
-              #{yourRank}
-            </span>
+        <div className="flex items-center justify-between border-t border-border pt-3">
+          <div className="flex items-baseline gap-2">
+            <span className="stat-num num text-2xl text-primary">#{yourRank}</span>
             <span className="section-label">Rank</span>
           </div>
-          <span className="section-label text-[#555560] transition-colors group-hover:text-[#f0f0f0]">
-            View →
+          <span className="inline-flex items-center gap-1 font-condensed text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted transition-colors group-hover:text-primary">
+            View
+            <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
           </span>
         </div>
       </div>

@@ -18,7 +18,7 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-[rgba(255,255,255,0.08)] bg-[#0d0d14] md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-surface md:hidden"
       aria-label="Mobile Dashboard Navigation"
     >
       <div className="flex h-16 items-stretch">
@@ -31,15 +31,15 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex flex-1 flex-col items-center justify-center gap-1 transition-colors active:scale-95 hover:no-underline",
+                "relative flex flex-1 flex-col items-center justify-center gap-1 transition-colors hover:no-underline active:scale-95",
                 active
-                  ? "text-[#e8fb25] border-t-2 border-[#e8fb25] -mt-0.5"
-                  : "text-[#555560] border-t-2 border-transparent hover:text-[#f0f0f0]",
+                  ? "-mt-0.5 border-t-2 border-primary text-primary"
+                  : "border-t-2 border-transparent text-ink-muted hover:text-ink",
               )}
               aria-current={active ? "page" : undefined}
             >
               <Icon className="h-4 w-4" />
-              <span className="text-[10px] font-barlow-condensed font-700 uppercase tracking-[1px]">
+              <span className="font-condensed text-[11px] font-semibold uppercase tracking-[0.08em]">
                 {item.label}
               </span>
             </Link>

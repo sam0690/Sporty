@@ -26,46 +26,46 @@ export function CurrentTeam({
   );
 
   return (
-    <aside className="sticky top-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+    <aside className="sticky top-4 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-4">
       <div className="flex items-baseline justify-between">
         <p className="section-label">Your Team</p>
-        <p className="font-bebas text-xl leading-none tracking-[1px] text-[#f0f0f0] tabular-nums">
+        <p className="font-bebas text-xl leading-none tracking-[1px] text-[#0B1220] tabular-nums">
           {players.length}
-          <span className="text-[#555560]">/{requiredPlayers}</span>
+          <span className="text-[#6B7280]">/{requiredPlayers}</span>
         </p>
       </div>
 
-      <div className="mt-3 h-2 overflow-hidden rounded-[3px] bg-[#0d0d12]">
+      <div className="mt-3 h-2 overflow-hidden rounded-[3px] bg-[#FFFFFF]">
         <div
-          className="h-2 rounded-[3px] bg-[#e8fb25] transition-[width] duration-300"
+          className="h-2 rounded-[3px] bg-[#DC2626] transition-[width] duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       <div className="mt-4 max-h-80 space-y-2 overflow-y-auto pr-1">
         {players.length === 0 ? (
-          <p className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] py-6 text-center text-xs text-[#555560]">
+          <p className="rounded-[3px] border border-dashed border-[rgba(11,18,32,0.08)] py-6 text-center text-xs text-[#6B7280]">
             No players added yet
           </p>
         ) : (
           players.map((player) => (
             <article
               key={player.id}
-              className="flex items-center justify-between gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-2.5"
+              className="flex items-center justify-between gap-2 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-2.5"
             >
               <div className="min-w-0">
-                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                <p className="truncate font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
                   {player.name}
                 </p>
-                <p className="mt-0.5 text-xs text-[#555560]">
+                <p className="mt-0.5 text-xs text-[#6B7280]">
                   {player.icon} {player.position} ·{" "}
-                  <span className="text-[#9a9aa5]">${player.price}</span>
+                  <span className="text-[#6B7280]">${player.price}</span>
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => onRemovePlayer(player.id)}
-                className="grid size-7 shrink-0 place-items-center rounded-[3px] text-[#555560] transition-colors hover:bg-[rgba(255,59,48,0.1)] hover:text-[#ff3b30]"
+                className="grid size-7 shrink-0 place-items-center rounded-[3px] text-[#6B7280] transition-colors hover:bg-[rgba(255,59,48,0.1)] hover:text-[#DC2626]"
                 aria-label={`Remove ${player.name}`}
               >
                 <X size={14} />
@@ -75,10 +75,10 @@ export function CurrentTeam({
         )}
       </div>
 
-      <div className="mt-4 space-y-1.5 border-t border-[rgba(255,255,255,0.08)] pt-3">
+      <div className="mt-4 space-y-1.5 border-t border-[rgba(11,18,32,0.08)] pt-3">
         <div className="flex items-center justify-between text-sm">
           <span className="section-label">Total</span>
-          <span className="font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0] tabular-nums">
+          <span className="font-bebas text-lg leading-none tracking-[1px] text-[#0B1220] tabular-nums">
             ${totalCost}
           </span>
         </div>
@@ -86,7 +86,7 @@ export function CurrentTeam({
           <span className="section-label">Remaining</span>
           <span
             className={`font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
-              overBudget ? "text-[#ff3b30]" : "text-[#e8fb25]"
+              overBudget ? "text-[#DC2626]" : "text-[#DC2626]"
             }`}
           >
             ${remaining}

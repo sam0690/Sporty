@@ -33,19 +33,19 @@ export function InviteFriends() {
   }, [inviteCode]);
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#0B1220]">
       <NavigationTabs
         activeTab="invite"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="border-b border-[rgba(11,18,32,0.08)] pb-6">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
           Invite Friends
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-[#6B7280]">
           {isPublicLeague
             ? "This league is public — anyone with the link can join."
             : "Share this code or link to invite new members to your league."}

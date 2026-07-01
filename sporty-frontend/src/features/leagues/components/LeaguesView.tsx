@@ -33,7 +33,7 @@ export function LeaguesView() {
   };
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 text-[#f0f0f0] sm:px-6 lg:px-8 lg:py-10">
+    <section className="mx-auto max-w-7xl px-4 py-8 text-[#0B1220] sm:px-6 lg:px-8 lg:py-10">
       <LeaguesHeader userName={userName} />
 
       <div className="mt-8">

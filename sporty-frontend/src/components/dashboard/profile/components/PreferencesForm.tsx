@@ -20,8 +20,8 @@ type ToggleRowProps = {
 
 function ToggleRow({ label, enabled, onToggle }: ToggleRowProps) {
   return (
-    <div className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-3">
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+    <div className="flex items-center justify-between rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-3">
+      <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
         {label}
       </p>
       <button
@@ -30,15 +30,15 @@ function ToggleRow({ label, enabled, onToggle }: ToggleRowProps) {
         aria-pressed={enabled}
         className={`relative h-6 w-11 rounded-full border transition-colors ${
           enabled
-            ? "border-[rgba(232,251,37,0.4)] bg-[#e8fb25]"
-            : "border-[rgba(255,255,255,0.1)] bg-[#1d1d26]"
+            ? "border-[rgba(220,38,38,0.4)] bg-[#DC2626]"
+            : "border-[rgba(11,18,32,0.1)] bg-[#F3F4F7]"
         }`}
       >
         <span
           className={`absolute top-0.5 h-5 w-5 rounded-full shadow-sm transition-transform ${
             enabled
-              ? "translate-x-5 bg-[#0a0a0f]"
-              : "translate-x-0.5 bg-[#9a9aa5]"
+              ? "translate-x-5 bg-[#F6F7F9]"
+              : "translate-x-0.5 bg-[#6B7280]"
           }`}
         />
       </button>
@@ -56,8 +56,8 @@ export function PreferencesForm({
   };
 
   return (
-    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
+      <header className="border-b border-[rgba(11,18,32,0.08)] px-5 py-3">
         <p className="section-label">Preferences</p>
       </header>
 
@@ -88,8 +88,8 @@ export function PreferencesForm({
           onToggle={() => updatePreference({ darkMode: !preferences.darkMode })}
         />
 
-        <div className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-3">
-          <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+        <div className="flex items-center justify-between rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-3">
+          <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
             Language
           </p>
           <select
@@ -97,7 +97,7 @@ export function PreferencesForm({
             onChange={(event) =>
               updatePreference({ language: event.target.value })
             }
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+            className="rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-3 py-1.5 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
           >
             <option value="en">English</option>
             <option value="es">Spanish</option>

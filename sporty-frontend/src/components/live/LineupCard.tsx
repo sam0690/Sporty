@@ -25,21 +25,21 @@ export function LineupCard() {
           return (
             <li
               key={teamId}
-              className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3.5 py-3"
+              className="rounded-[8px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-3.5 py-3"
             >
               <div className="flex items-center justify-between">
-                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+                <span className="font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280]">
                   {nameFor(change.team_id ?? teamId)}
                 </span>
                 {change.minute != null && (
-                  <span className="font-bebas text-sm leading-none tracking-[1px] text-[#e8fb25]">
+                  <span className="font-bebas text-sm leading-none tracking-[1px] text-[#DC2626]">
                     {change.minute}&apos;
                   </span>
                 )}
               </div>
               <div className="mt-2.5 space-y-1.5 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[rgba(0,255,136,0.14)] text-[#00ff88]">
+                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[rgba(0,255,136,0.14)] text-[#16A34A]">
                     <svg
                       viewBox="0 0 24 24"
                       className="size-3"
@@ -53,12 +53,12 @@ export function LineupCard() {
                       <path d="M12 19V5M12 5l-5 5M12 5l5 5" />
                     </svg>
                   </span>
-                  <span className="truncate text-[#d7d7de]">
+                  <span className="truncate text-[#3A4256]">
                     {nameFor(change.player_in)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[rgba(255,59,92,0.14)] text-[#ff3b5c]">
+                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[rgba(255,59,92,0.14)] text-[#DC2626]">
                     <svg
                       viewBox="0 0 24 24"
                       className="size-3"
@@ -72,7 +72,7 @@ export function LineupCard() {
                       <path d="M12 5v14M12 19l-5-5M12 19l5-5" />
                     </svg>
                   </span>
-                  <span className="truncate text-[#8a8a95]">
+                  <span className="truncate text-[#6B7280]">
                     {nameFor(change.player_out)}
                   </span>
                 </div>

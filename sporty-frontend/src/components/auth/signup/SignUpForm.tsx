@@ -11,11 +11,11 @@ import { Divider } from "@/components/auth/login/components/Divider";
 import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[#0d0d12] pl-10 pr-12 text-sm text-[#f0f0f0] placeholder:text-[#555560] transition-colors focus:border-[#e8fb25] focus:outline-none focus:ring-2 focus:ring-[rgba(232,251,37,0.15)]";
+  "h-11 w-full rounded-sm border-[1.5px] border-border-strong bg-surface pl-10 pr-12 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30";
 const LABEL_CLASS =
-  "mb-1.5 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]";
+  "mb-1.5 block font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-ink-muted";
 const ICON_CLASS =
-  "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#555560]";
+  "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint";
 
 export function SignUpForm() {
   const {
@@ -47,18 +47,18 @@ export function SignUpForm() {
       <div className="mx-auto w-full max-w-md">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] hover:no-underline"
+          className="inline-flex items-center gap-1.5 font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-ink-muted transition-colors hover:text-ink hover:no-underline"
         >
           ← Back to Home
         </Link>
 
-        <div className="animate-fade-in mt-5 overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_30px_70px_-30px_rgba(0,0,0,1)]">
+        <div className="animate-fade-in mt-5 overflow-hidden rounded-xl border border-border bg-surface shadow-lg">
           <div className="space-y-2.5 p-8 pb-4">
-            <span className="section-label">Create Account</span>
-            <h1 className="font-bebas text-5xl leading-none tracking-[3px] text-[#f0f0f0]">
+            <span className="kicker">Create Account</span>
+            <h1 className="font-condensed text-5xl font-bold uppercase leading-none tracking-[0.01em] text-ink">
               Create Account
             </h1>
-            <p className="text-sm text-[#9a9aa5]">
+            <p className="text-sm text-ink-muted">
               Start your fantasy sports journey today.
             </p>
           </div>
@@ -81,7 +81,7 @@ export function SignUpForm() {
                   />
                 </div>
                 {formState.errors.username?.message && (
-                  <span className="mt-1 block text-xs text-[#ff3b5c]">
+                  <span className="mt-1 block text-xs font-medium text-danger">
                     {formState.errors.username.message}
                   </span>
                 )}
@@ -103,7 +103,7 @@ export function SignUpForm() {
                   />
                 </div>
                 {formState.errors.email?.message && (
-                  <span className="mt-1 block text-xs text-[#ff3b5c]">
+                  <span className="mt-1 block text-xs font-medium text-danger">
                     {formState.errors.email.message}
                   </span>
                 )}
@@ -126,7 +126,7 @@ export function SignUpForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#555560] transition-colors hover:text-[#e8fb25]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted transition-colors hover:text-primary"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -137,7 +137,7 @@ export function SignUpForm() {
                   </button>
                 </div>
                 {formState.errors.password?.message && (
-                  <span className="mt-1 block text-xs text-[#ff3b5c]">
+                  <span className="mt-1 block text-xs font-medium text-danger">
                     {formState.errors.password.message}
                   </span>
                 )}
@@ -161,7 +161,7 @@ export function SignUpForm() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#555560] transition-colors hover:text-[#e8fb25]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink-muted transition-colors hover:text-primary"
                     aria-label={
                       showConfirmPassword
                         ? "Hide confirm password"
@@ -176,7 +176,7 @@ export function SignUpForm() {
                   </button>
                 </div>
                 {formState.errors.confirmPassword?.message && (
-                  <span className="mt-1 block text-xs text-[#ff3b5c]">
+                  <span className="mt-1 block text-xs font-medium text-danger">
                     {formState.errors.confirmPassword.message}
                   </span>
                 )}
@@ -184,12 +184,12 @@ export function SignUpForm() {
 
               <Button
                 type="submit"
-                className="h-11 w-full rounded-[8px] shadow-[0_10px_30px_-10px_rgba(232,251,37,0.5)] active:scale-[0.98] disabled:opacity-60"
+                className="h-11 w-full disabled:opacity-60"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <span className="inline-flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#0a0a0f]/30 border-t-[#0a0a0f]" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-on-primary/30 border-t-on-primary" />
                     Creating account...
                   </span>
                 ) : (
@@ -201,11 +201,11 @@ export function SignUpForm() {
             <Divider />
             <SocialLogin />
 
-            <p className="border-t border-[rgba(255,255,255,0.08)] pt-4 text-center text-sm text-[#9a9aa5]">
+            <p className="border-t border-border pt-4 text-center text-sm text-ink-muted">
               Already have an account?{" "}
               <Link
                 href="/login"
-                className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] hover:text-[#f0ff45] hover:no-underline"
+                className="font-condensed text-xs font-semibold uppercase tracking-[0.12em] text-primary hover:text-primary-hover hover:no-underline"
               >
                 Sign in →
               </Link>

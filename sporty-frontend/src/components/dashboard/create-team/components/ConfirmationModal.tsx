@@ -50,17 +50,17 @@ export function ConfirmationModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF]">
         {/* volt accent strip */}
-        <div className="h-1 bg-[#e8fb25]" />
+        <div className="h-1 bg-[#DC2626]" />
 
         <div className="p-6">
           <p className="section-label">Final Step</p>
-          <h2 className="mt-1 font-bebas text-3xl leading-none tracking-[2px] text-[#f0f0f0]">
+          <h2 className="mt-1 font-bebas text-3xl leading-none tracking-[2px] text-[#0B1220]">
             Confirm Team Creation
           </h2>
 
-          <div className="mt-5 space-y-2.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4">
+          <div className="mt-5 space-y-2.5 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-4">
             {rows.map((row) => (
               <div
                 key={row.label}
@@ -71,9 +71,9 @@ export function ConfirmationModal({
                   className={
                     row.emphasis
                       ? `font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
-                          row.danger ? "text-[#ff3b30]" : "text-[#e8fb25]"
+                          row.danger ? "text-[#DC2626]" : "text-[#DC2626]"
                         }`
-                      : "truncate text-right font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
+                      : "truncate text-right font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]"
                   }
                 >
                   {row.value}
@@ -86,7 +86,7 @@ export function ConfirmationModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-5 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+              className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-5 py-2.5 font-barlow-condensed text-sm font-bold uppercase tracking-[1.5px] text-[#6B7280] transition-colors hover:text-[#0B1220]"
             >
               <ArrowLeft size={15} />
               Back
@@ -95,7 +95,7 @@ export function ConfirmationModal({
               type="button"
               onClick={onConfirm}
               disabled={isLoading}
-              className="inline-flex items-center gap-1.5 rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-[3px] bg-[#DC2626] px-6 py-2.5 font-barlow-condensed text-sm font-bold uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Check size={15} />
               {isLoading ? "Creating…" : "Create Team"}

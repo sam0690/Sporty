@@ -12,14 +12,14 @@ import type {
 } from "@/types/league";
 
 const SPORT_ACCENT: Record<string, string> = {
-  football: "#00ff88",
-  soccer: "#00ff88",
-  basketball: "#ff6b00",
-  cricket: "#00d4ff",
+  football: "#16A34A",
+  soccer: "#16A34A",
+  basketball: "#EA580C",
+  cricket: "#0891B2",
 };
 
 function sportAccent(sport?: string): string {
-  return SPORT_ACCENT[(sport ?? "").toLowerCase()] ?? "#e8fb25";
+  return SPORT_ACCENT[(sport ?? "").toLowerCase()] ?? "#DC2626";
 }
 
 function fmt(points: string | number): string {
@@ -32,17 +32,17 @@ const STATUS_META: Record<
   TGameweekPlayerStatus,
   { label: string; color: string }
 > = {
-  played: { label: "Played", color: "#9a9aa5" },
-  did_not_play: { label: "Did not play", color: "#ff3b5c" },
-  subbed_in: { label: "Subbed in", color: "#00ff88" },
-  subbed_out: { label: "Subbed out", color: "#ff3b5c" },
-  benched: { label: "Bench", color: "#555560" },
+  played: { label: "Played", color: "#6B7280" },
+  did_not_play: { label: "Did not play", color: "#DC2626" },
+  subbed_in: { label: "Subbed in", color: "#16A34A" },
+  subbed_out: { label: "Subbed out", color: "#DC2626" },
+  benched: { label: "Bench", color: "#6B7280" },
 };
 
 function ArmbandBadge({ letter, color }: { letter: string; color: string }) {
   return (
     <span
-      className="grid size-4 shrink-0 place-items-center rounded-full font-barlow-condensed text-[9px] font-700"
+      className="grid size-4 shrink-0 place-items-center rounded-full font-barlow-condensed text-[9px] font-bold"
       style={{ color, background: `${color}1f`, border: `1px solid ${color}59` }}
     >
       {letter}
@@ -51,7 +51,7 @@ function ArmbandBadge({ letter, color }: { letter: string; color: string }) {
 }
 
 function SubArrow({ dir }: { dir: "in" | "out" }) {
-  const color = dir === "in" ? "#00ff88" : "#ff3b5c";
+  const color = dir === "in" ? "#16A34A" : "#DC2626";
   const d = dir === "in" ? "M12 19V5M12 5l-5 5M12 5l5 5" : "M12 5v14M12 19l-5-5M12 19l5-5";
   return (
     <span
@@ -80,9 +80,9 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
   const contributed = Number(p.contributed_points);
 
   return (
-    <li className="flex items-center gap-3 rounded-[8px] px-2.5 py-2.5 transition-colors hover:bg-[rgba(255,255,255,0.03)]">
+    <li className="flex items-center gap-3 rounded-[8px] px-2.5 py-2.5 transition-colors hover:bg-[rgba(11,18,32,0.03)]">
       <span
-        className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[6px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
+        className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[6px] px-1 font-barlow-condensed text-[10px] font-bold uppercase tracking-[0.5px]"
         style={{ color: accent, background: `${accent}17`, border: `1px solid ${accent}33` }}
       >
         {p.player.position}
@@ -90,32 +90,32 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          <span className="truncate font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
             {p.player.name}
           </span>
-          {p.is_captain && <ArmbandBadge letter="C" color="#e8fb25" />}
-          {p.is_vice_captain && <ArmbandBadge letter="V" color="#9a9aa5" />}
+          {p.is_captain && <ArmbandBadge letter="C" color="#DC2626" />}
+          {p.is_vice_captain && <ArmbandBadge letter="V" color="#6B7280" />}
           {p.status === "subbed_in" && <SubArrow dir="in" />}
           {p.status === "subbed_out" && <SubArrow dir="out" />}
         </div>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#6a6a76]">
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#9AA1AE]">
           <span className="truncate">{p.player.real_team}</span>
-          <span className="text-[#33333a]">·</span>
+          <span className="text-[#EAECF0]">·</span>
           <span style={{ color: status.color }}>{status.label}</span>
-          <span className="text-[#33333a]">·</span>
+          <span className="text-[#EAECF0]">·</span>
           <span>{p.minutes_played}&apos;</span>
         </div>
       </div>
 
       {p.captain_bonus && Number(p.captain_bonus) > 0 ? (
-        <span className="hidden shrink-0 rounded-full bg-[rgba(232,251,37,0.12)] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25] sm:inline">
+        <span className="hidden shrink-0 rounded-full bg-[rgba(220,38,38,0.12)] px-2 py-0.5 font-barlow-condensed text-[10px] font-bold uppercase tracking-[1px] text-[#DC2626] sm:inline">
           +{fmt(p.captain_bonus)} bonus
         </span>
       ) : null}
 
       <span
         className={`shrink-0 font-bebas text-xl leading-none tracking-[1px] tabular-nums ${
-          p.counted ? "text-[#e8fb25]" : "text-[#555560]"
+          p.counted ? "text-[#DC2626]" : "text-[#6B7280]"
         }`}
       >
         {contributed > 0 ? "+" : ""}
@@ -136,10 +136,10 @@ function Section({
 }) {
   if (players.length === 0) return null;
   return (
-    <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14]">
-      <header className="flex items-center justify-between border-b border-[rgba(255,255,255,0.07)] px-4 py-3">
+    <section className="overflow-hidden rounded-[12px] border border-[rgba(11,18,32,0.08)] bg-gradient-to-b from-[#FFFFFF] to-[#FFFFFF]">
+      <header className="flex items-center justify-between border-b border-[rgba(11,18,32,0.07)] px-4 py-3">
         <span className="section-label">{title}</span>
-        <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
+        <span className="rounded-full bg-[rgba(11,18,32,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-bold tabular-nums text-[#6B7280]">
           {count}
         </span>
       </header>
@@ -188,13 +188,13 @@ export function GameweekRecap() {
         isCommissioner={isCommissioner}
       />
 
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(11,18,32,0.08)] pb-6">
         <div>
           <p className="section-label">Gameweek Recap</p>
-          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
             {data?.team_name ?? "My Team"}
           </h1>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-[#6B7280]">
             How each of your players scored this gameweek.
           </p>
         </div>
@@ -205,19 +205,19 @@ export function GameweekRecap() {
             type="button"
             disabled={!canPrev}
             onClick={() => currentGw && setGw(currentGw - 1)}
-            className="grid size-9 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
+            className="grid size-9 place-items-center rounded-[8px] border border-[rgba(11,18,32,0.12)] text-[#6B7280] transition-colors hover:border-[rgba(11,18,32,0.25)] hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Previous gameweek"
           >
             ‹
           </button>
-          <span className="min-w-28 rounded-[8px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-2 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+          <span className="min-w-28 rounded-[8px] border border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.08)] px-3 py-2 text-center font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#DC2626]">
             {currentGw != null ? `Gameweek ${currentGw}` : "—"}
           </span>
           <button
             type="button"
             disabled={!canNext}
             onClick={() => currentGw && setGw(currentGw + 1)}
-            className="grid size-9 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
+            className="grid size-9 place-items-center rounded-[8px] border border-[rgba(11,18,32,0.12)] text-[#6B7280] transition-colors hover:border-[rgba(11,18,32,0.25)] hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Next gameweek"
           >
             ›
@@ -227,13 +227,13 @@ export function GameweekRecap() {
 
       {isLoading && (
         <div className="space-y-3">
-          <div className="h-28 animate-pulse rounded-[14px] bg-[#14141b]" />
-          <div className="h-64 animate-pulse rounded-[12px] bg-[#14141b]" />
+          <div className="h-28 animate-pulse rounded-[14px] bg-[#FFFFFF]" />
+          <div className="h-64 animate-pulse rounded-[12px] bg-[#FFFFFF]" />
         </div>
       )}
 
       {isError && (
-        <p className="rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] px-4 py-3 text-sm text-[#ff8a8a]">
+        <p className="rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] px-4 py-3 text-sm text-[#DC2626]">
           Couldn&apos;t load this gameweek. It may not be scored yet.
         </p>
       )}
@@ -241,19 +241,19 @@ export function GameweekRecap() {
       {data && !isLoading && (
         <>
           {/* Summary scoreboard */}
-          <section className="relative overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[#0b0b10] p-6 shadow-[0_24px_60px_-30px_rgba(0,0,0,1)]">
+          <section className="relative overflow-hidden rounded-[14px] border border-[rgba(11,18,32,0.09)] bg-[#FFFFFF] p-6 shadow-[0_24px_60px_-30px_rgba(0,0,0,1)]">
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0"
               style={{
                 background:
-                  "radial-gradient(70% 80% at 100% 0%, rgba(232,251,37,0.1), transparent 55%)",
+                  "radial-gradient(70% 80% at 100% 0%, rgba(220,38,38,0.1), transparent 55%)",
               }}
             />
             <div className="relative flex flex-wrap items-center justify-between gap-6">
               <div>
                 <p className="section-label">Total Points</p>
-                <p className="mt-1 font-bebas text-7xl leading-none tracking-[2px] text-[#e8fb25]">
+                <p className="mt-1 font-bebas text-7xl leading-none tracking-[2px] text-[#DC2626]">
                   {fmt(data.total_points)}
                 </p>
               </div>
@@ -275,11 +275,11 @@ export function GameweekRecap() {
           <Section title="Bench" players={bench} count={bench.length} />
 
           {data.players.length === 0 && (
-            <div className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#0f0f14] p-10 text-center">
-              <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+            <div className="rounded-[12px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-10 text-center">
+              <p className="font-barlow-condensed text-base font-bold uppercase tracking-[1px] text-[#6B7280]">
                 No lineup for this gameweek
               </p>
-              <p className="mt-1 text-sm text-[#555560]">
+              <p className="mt-1 text-sm text-[#6B7280]">
                 You didn&apos;t have a team set for gameweek {currentGw}.
               </p>
             </div>
@@ -300,11 +300,11 @@ function Stat({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-center">
+    <div className="rounded-[10px] border border-[rgba(11,18,32,0.08)] bg-[rgba(11,18,32,0.02)] px-4 py-2.5 text-center">
       <p className="section-label">{label}</p>
       <p
         className={`mt-1 font-bebas text-2xl leading-none tracking-[1px] tabular-nums ${
-          accent ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+          accent ? "text-[#DC2626]" : "text-[#0B1220]"
         }`}
       >
         {value}

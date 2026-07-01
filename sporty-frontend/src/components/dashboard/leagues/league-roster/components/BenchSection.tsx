@@ -1,5 +1,6 @@
 "use client";
 
+import { SportIcon } from "@/components/landing/sport-icons";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 
 type SportCount = {
@@ -16,11 +17,6 @@ type BenchSectionProps = {
   pitchIsFull: boolean;
 };
 
-const sportIcons = {
-  football: "⚽",
-  basketball: "🏀",
-  cricket: "🏏",
-};
 
 export function BenchSection({
   benchPlayers,
@@ -61,8 +57,11 @@ export function BenchSection({
                 <article key={player.id} className="w-64 rounded-[3px] border border-accent/20 bg-white p-3 md:w-auto">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-sm text-black">{player.name}</p>
-                      <p className="text-xs text-secondary">{sportIcons[player.sport]} {player.position}</p>
+                      <p className="truncate text-sm font-semibold text-ink">{player.name}</p>
+                      <p className="flex items-center gap-1.5 text-xs text-ink-muted">
+                        <SportIcon sport={player.sport} className="h-3 w-3" tint />
+                        {player.position}
+                      </p>
                     </div>
                     <p className="text-xs text-black">{player.totalPoints} pts</p>
                   </div>

@@ -18,11 +18,11 @@ function EventRow({ event, last }: { event: MatchEvent; last: boolean }) {
       {!last && (
         <span
           aria-hidden
-          className="absolute left-[1.4rem] top-11 bottom-0 w-px bg-[rgba(255,255,255,0.08)]"
+          className="absolute left-[1.4rem] top-11 bottom-0 w-px bg-[rgba(11,18,32,0.08)]"
         />
       )}
 
-      <span className="w-8 shrink-0 pt-1.5 text-right font-bebas text-lg leading-none tracking-[1px] tabular-nums text-[#9a9aa5]">
+      <span className="w-8 shrink-0 pt-1.5 text-right font-bebas text-lg leading-none tracking-[1px] tabular-nums text-[#6B7280]">
         {event.minute != null ? `${event.minute}'` : "—"}
       </span>
 
@@ -38,11 +38,11 @@ function EventRow({ event, last }: { event: MatchEvent; last: boolean }) {
       </span>
 
       <div className="min-w-0 flex-1 pt-0.5">
-        <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+        <div className="font-barlow-condensed text-sm font-bold uppercase tracking-[0.5px] text-[#0B1220]">
           {label}
         </div>
-        <div className="mt-0.5 truncate text-xs text-[#6a6a76]">
-          <span className="text-[#9a9aa5]">
+        <div className="mt-0.5 truncate text-xs text-[#9AA1AE]">
+          <span className="text-[#6B7280]">
             {event.player_name ?? event.player_id ?? "Unknown player"}
           </span>
           {event.team && (
@@ -72,7 +72,7 @@ export function EventFeed() {
       icon={<ListIcon className="size-3.5" />}
       action={
         ordered.length > 0 ? (
-          <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
+          <span className="rounded-full bg-[rgba(11,18,32,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-bold tabular-nums text-[#6B7280]">
             {ordered.length}
           </span>
         ) : null

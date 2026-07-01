@@ -44,13 +44,13 @@ export function AccountSettings() {
   };
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 text-[#f0f0f0]">
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+    <section className="mx-auto max-w-3xl px-6 py-8 text-[#0B1220]">
+      <header className="border-b border-[rgba(11,18,32,0.08)] pb-6">
         <p className="section-label">Account</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
           Settings
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-[#6B7280]">
           Notifications, language and security
         </p>
       </header>
@@ -66,17 +66,17 @@ export function AccountSettings() {
         {/* Identity (avatar, name, bio, delete account) lives on the profile page. */}
         <Link
           href="/profile"
-          className="flex items-center justify-between gap-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-5 py-4 transition-colors hover:border-[rgba(232,251,37,0.2)] hover:no-underline"
+          className="flex items-center justify-between gap-4 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-5 py-4 transition-colors hover:border-[rgba(220,38,38,0.2)] hover:no-underline"
         >
           <div>
-            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+            <p className="font-barlow-condensed text-sm font-bold uppercase tracking-[1px] text-[#0B1220]">
               Profile &amp; Account
             </p>
-            <p className="mt-0.5 text-sm text-[#555560]">
+            <p className="mt-0.5 text-sm text-[#6B7280]">
               Edit your avatar, display name and bio, or delete your account
             </p>
           </div>
-          <span className="shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+          <span className="shrink-0 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#DC2626]">
             Open →
           </span>
         </Link>

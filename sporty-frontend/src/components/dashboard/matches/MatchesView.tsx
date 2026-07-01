@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CalendarDays } from "lucide-react";
 
 import { useMatches } from "@/hooks/matches/useMatches";
 import type { TMatch } from "@/types/match";
@@ -53,8 +54,8 @@ function Chip({
       onClick={onClick}
       className={
         active
-          ? "rounded-full bg-[#e8fb25] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f]"
-          : "rounded-full border border-[rgba(255,255,255,0.12)] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
+          ? "rounded-full bg-[#DC2626] px-3.5 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#F6F7F9]"
+          : "rounded-full border border-[rgba(11,18,32,0.12)] px-3.5 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1.5px] text-[#6B7280] transition-colors hover:border-[rgba(11,18,32,0.28)] hover:text-[#0B1220]"
       }
     >
       {children}
@@ -127,12 +128,12 @@ export function MatchesView() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="border-b border-[rgba(11,18,32,0.08)] pb-6">
         <p className="section-label">Matchday Centre</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#0B1220] sm:text-6xl">
           Matches
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-[#6B7280]">
           Fixtures across every sport, day by day.
         </p>
       </header>
@@ -142,15 +143,21 @@ export function MatchesView() {
           <Chip active={sportFilter === "all"} onClick={() => setSportFilter("all")}>
             All Sports
           </Chip>
-          {sports.map((sport) => (
-            <Chip
-              key={sport}
-              active={sportFilter === sport}
-              onClick={() => setSportFilter(sport)}
-            >
-              {sportConfig(sport).emoji} {sportConfig(sport).label}
-            </Chip>
-          ))}
+          {sports.map((sport) => {
+            const SportIcon = sportConfig(sport).Icon;
+            return (
+              <Chip
+                key={sport}
+                active={sportFilter === sport}
+                onClick={() => setSportFilter(sport)}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <SportIcon className="h-3.5 w-3.5" />
+                  {sportConfig(sport).label}
+                </span>
+              </Chip>
+            );
+          })}
         </div>
       )}
 
@@ -166,20 +173,20 @@ export function MatchesView() {
                 onClick={() => setSelectedDayKey(day.key)}
                 className={`shrink-0 rounded-[3px] border px-3.5 py-2 text-center transition-colors ${
                   active
-                    ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)]"
-                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] hover:border-[rgba(255,255,255,0.18)]"
+                    ? "border-[rgba(220,38,38,0.4)] bg-[rgba(220,38,38,0.1)]"
+                    : "border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] hover:border-[rgba(11,18,32,0.18)]"
                 }`}
               >
                 <span
-                  className={`block font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${
-                    active ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                  className={`block font-barlow-condensed text-xs font-bold uppercase tracking-[1px] ${
+                    active ? "text-[#DC2626]" : "text-[#0B1220]"
                   }`}
                 >
                   {relativeDayLabel(day.date)}
                 </span>
-                <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] text-[#555560]">
+                <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] text-[#6B7280]">
                   {day.liveCount > 0 && (
-                    <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
+                    <span className="size-1.5 rounded-full bg-[#DC2626] animate-live-pulse" />
                   )}
                   {day.matches.length} {day.matches.length === 1 ? "match" : "matches"}
                 </span>
@@ -192,26 +199,29 @@ export function MatchesView() {
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div key={i} className="h-16 animate-pulse rounded-[3px] bg-[#F3F4F7]" />
           ))}
         </div>
       )}
 
       {isError && (
-        <p className="text-sm text-[#ff8a8a]">
+        <p className="text-sm text-[#DC2626]">
           Couldn&apos;t load matches. Please try again.
         </p>
       )}
 
       {!isLoading && !isError && days.length === 0 && (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
-          <p className="text-3xl" aria-hidden>
-            📅
-          </p>
-          <p className="mt-3 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <div className="surface flex flex-col items-center p-10 text-center">
+          <div
+            className="flex h-16 w-16 items-center justify-center rounded-md bg-surface-muted text-ink-muted"
+            aria-hidden
+          >
+            <CalendarDays className="h-7 w-7" strokeWidth={1.75} />
+          </div>
+          <p className="mt-3 font-condensed text-base font-bold uppercase tracking-[0.04em] text-ink">
             No fixtures
           </p>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-[#6B7280]">
             {items.length === 0
               ? "Fixtures appear here as soon as they're scheduled."
               : "No matches for this sport."}
@@ -221,7 +231,7 @@ export function MatchesView() {
 
       {activeDay && (
         <section className="space-y-3">
-          <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+          <h2 className="font-barlow-condensed text-sm font-bold uppercase tracking-[2px] text-[#6B7280]">
             {fullDayLabel(activeDay.date)}
           </h2>
           <div className="space-y-2">

@@ -80,16 +80,16 @@ export function PlayerMarket({
   );
 
   return (
-    <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+    <section className="space-y-4 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] p-4">
       <p className="section-label">Player Market</p>
 
       <label className="relative block">
-        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#555560]" />
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6B7280]" />
         <input
           value={searchQuery}
           onChange={(event) => onSearchQueryChange(event.target.value)}
           placeholder="Search by player name..."
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2 pl-11 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-2 pl-11 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
         />
       </label>
 
@@ -99,7 +99,7 @@ export function PlayerMarket({
           <select
             value={selectedPosition}
             onChange={(event) => onPositionChange(event.target.value)}
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3 py-2 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+            className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-3 py-2 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
           >
             {positions.map((position) => (
               <option key={position} value={position}>
@@ -118,7 +118,7 @@ export function PlayerMarket({
             value={minCost}
             onChange={(event) => onMinCostChange(event.target.value)}
             placeholder="0"
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3 py-2 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+            className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-3 py-2 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
           />
         </label>
 
@@ -131,7 +131,7 @@ export function PlayerMarket({
             value={maxCost}
             onChange={(event) => onMaxCostChange(event.target.value)}
             placeholder="Any"
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3 py-2 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+            className="w-full rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-3 py-2 text-sm text-[#0B1220] outline-none transition-colors focus:border-[#DC2626]"
           />
         </label>
       </div>
@@ -146,10 +146,10 @@ export function PlayerMarket({
                 key={sportOption}
                 type="button"
                 onClick={() => onSportChange(sportOption)}
-                className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] capitalize transition-colors ${
+                className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1px] capitalize transition-colors ${
                   active
-                    ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                    ? "border-[rgba(220,38,38,0.3)] bg-[rgba(220,38,38,0.1)] text-[#DC2626]"
+                    : "border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] text-[#6B7280] hover:text-[#0B1220]"
                 }`}
               >
                 {sportOption}
@@ -159,14 +159,14 @@ export function PlayerMarket({
         </div>
       ) : null}
 
-      <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
-          <span className="text-[#f0f0f0]">Page {currentPage}</span>
+      <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2 font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280]">
+          <span className="text-[#0B1220]">Page {currentPage}</span>
           <span>/ {Math.max(totalPages, 1)}</span>
           <span className="hidden sm:inline">·</span>
           <span>{totalPlayers} players</span>
           {isLoadingPage ? (
-            <span className="inline-flex items-center gap-1 rounded-[3px] bg-[rgba(232,251,37,0.1)] px-2.5 py-1 text-[#e8fb25]">
+            <span className="inline-flex items-center gap-1 rounded-[3px] bg-[rgba(220,38,38,0.1)] px-2.5 py-1 text-[#DC2626]">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
               Loading
             </span>
@@ -178,7 +178,7 @@ export function PlayerMarket({
             type="button"
             onClick={onPreviousPage}
             disabled={currentPage <= 1 || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] px-3.5 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-[#6B7280] transition-colors hover:text-[#0B1220] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
             Prev
@@ -187,7 +187,7 @@ export function PlayerMarket({
             type="button"
             onClick={onNextPage}
             disabled={!hasNext || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-[3px] bg-[#e8fb25] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:bg-[#1d1d26] disabled:text-[#555560]"
+            className="inline-flex items-center gap-1 rounded-[3px] bg-[#DC2626] px-3.5 py-1.5 font-barlow-condensed text-xs font-bold uppercase tracking-[1px] text-black transition-colors hover:bg-[#DC2626] disabled:cursor-not-allowed disabled:bg-[#F3F4F7] disabled:text-[#6B7280]"
           >
             Next
             <ChevronRight className="h-4 w-4" />
@@ -197,8 +197,8 @@ export function PlayerMarket({
 
       <div className="max-h-[60vh] space-y-3 overflow-y-auto p-1">
         {isLoadingPage && players.length === 0 ? (
-          <div className="flex min-h-40 items-center justify-center rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#0d0d12] text-sm text-[#555560]">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#e8fb25]" />
+          <div className="flex min-h-40 items-center justify-center rounded-[3px] border border-dashed border-[rgba(11,18,32,0.08)] bg-[#FFFFFF] text-sm text-[#6B7280]">
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-[#DC2626]" />
             Loading players...
           </div>
         ) : players.length === 0 ? (

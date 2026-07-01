@@ -4,18 +4,18 @@ export function SettingsSkeleton() {
   return (
     <section className="mx-auto max-w-3xl px-6 py-8">
       <div className="flex flex-wrap items-center gap-6">
-        <div className="h-20 w-20 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+        <div className="h-20 w-20 animate-pulse rounded-[3px] bg-[#F3F4F7]" />
         <div className="space-y-2">
-          <div className="h-8 w-56 animate-pulse rounded bg-[#1d1d26]" />
-          <div className="h-5 w-72 animate-pulse rounded bg-[#1d1d26]" />
+          <div className="h-8 w-56 animate-pulse rounded bg-[#F3F4F7]" />
+          <div className="h-5 w-72 animate-pulse rounded bg-[#F3F4F7]" />
         </div>
       </div>
 
-      <div className="mt-6 space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 ">
-        <div className="h-10 w-full animate-pulse rounded bg-[#1d1d26]" />
-        <div className="h-10 w-full animate-pulse rounded bg-[#1d1d26]" />
-        <div className="h-20 w-full animate-pulse rounded bg-[#1d1d26]" />
-        <div className="h-10 w-24 animate-pulse rounded bg-[#1d1d26]" />
+      <div className="mt-6 space-y-4 rounded-[3px] border border-[rgba(11,18,32,0.08)] bg-[#F3F4F7] p-6 ">
+        <div className="h-10 w-full animate-pulse rounded bg-[#F3F4F7]" />
+        <div className="h-10 w-full animate-pulse rounded bg-[#F3F4F7]" />
+        <div className="h-20 w-full animate-pulse rounded bg-[#F3F4F7]" />
+        <div className="h-10 w-24 animate-pulse rounded bg-[#F3F4F7]" />
       </div>
     </section>
   );

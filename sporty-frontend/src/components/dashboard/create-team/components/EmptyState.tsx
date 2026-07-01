@@ -1,16 +1,21 @@
 "use client";
 
+import { Shield } from "lucide-react";
+
 type EmptyStateProps = {
   message: string;
 };
 
 export function EmptyState({ message }: EmptyStateProps) {
   return (
-    <section className="rounded-[3px] border border-dashed border-[rgba(255,255,255,0.08)] bg-[#0d0d12] py-12 text-center">
-      <div className="mx-auto mb-3 text-4xl" aria-hidden="true">
-        🛡️
+    <section className="flex flex-col items-center rounded-lg border border-dashed border-border-strong bg-surface py-12 text-center">
+      <div
+        className="mb-3 flex h-14 w-14 items-center justify-center rounded-md bg-surface-muted text-ink-muted"
+        aria-hidden="true"
+      >
+        <Shield className="h-6 w-6" strokeWidth={1.75} />
       </div>
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#555560]">
+      <p className="font-condensed text-sm font-bold uppercase tracking-[0.06em] text-ink-muted">
         {message}
       </p>
     </section>
