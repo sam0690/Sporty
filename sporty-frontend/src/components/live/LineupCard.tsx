@@ -20,12 +20,13 @@ export function LineupCard() {
   return (
     <Panel title="Lineup Changes" icon={<SubIcon className="size-3.5" />}>
       <ul className="space-y-2">
-        {entries.map(([teamId, raw]) => {
+        {entries.map(([teamId, raw], idx) => {
           const change = raw as LineupChange;
           return (
             <li
               key={teamId}
-              className="rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3.5 py-3"
+              className="pop-in rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3.5 py-3"
+              style={{ animationDelay: `${idx * 50}ms` }}
             >
               <div className="flex items-center justify-between">
                 <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">

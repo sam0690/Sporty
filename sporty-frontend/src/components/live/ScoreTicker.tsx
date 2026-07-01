@@ -30,12 +30,12 @@ function Crest({
 }) {
   return (
     <span
-      className="grid size-14 shrink-0 place-items-center rounded-[10px] font-bebas text-xl leading-none tracking-[1px] sm:size-[4.5rem] sm:text-3xl"
+      className="grid size-14 shrink-0 place-items-center rounded-[12px] font-bebas text-xl leading-none tracking-[1px] sm:size-[4.5rem] sm:text-3xl"
       style={{
         color,
-        background: `linear-gradient(160deg, ${color}2e, ${color}0d)`,
-        border: `1px solid ${color}59`,
-        boxShadow: `0 0 30px ${color}26, 0 1px 0 ${color}33 inset`,
+        background: `linear-gradient(160deg, ${color}33, ${color}0d)`,
+        border: `1px solid ${color}5c`,
+        boxShadow: `0 0 34px ${color}2e, 0 1px 0 ${color}40 inset`,
       }}
       aria-label={name}
     >
@@ -86,18 +86,18 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
     return (
       <section className="overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12]">
         <div className="h-1 bg-[#1d1d26]" />
-        <div className="h-12 border-b border-[rgba(255,255,255,0.06)]" />
+        <div className="skeleton h-12 border-b border-[rgba(255,255,255,0.06)]" />
         <div className="flex items-center justify-center gap-6 px-6 py-16">
-          <div className="h-16 w-40 animate-pulse rounded bg-[#1d1d26]" />
-          <div className="h-16 w-28 animate-pulse rounded bg-[#1d1d26]" />
-          <div className="h-16 w-40 animate-pulse rounded bg-[#1d1d26]" />
+          <div className="skeleton h-16 w-40 rounded-[10px]" />
+          <div className="skeleton h-16 w-28 rounded-[10px]" />
+          <div className="skeleton h-16 w-40 rounded-[10px]" />
         </div>
       </section>
     );
   }
 
   return (
-    <section className="relative overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[#0b0b10] shadow-[0_24px_60px_-30px_rgba(0,0,0,1)]">
+    <section className="pop-in relative isolate overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[#0b0b10] shadow-[0_24px_60px_-30px_rgba(0,0,0,1)]">
       {/* team-colour split accent, blended in the middle */}
       <div
         className="h-1"
@@ -106,14 +106,25 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
         }}
       />
 
-      {/* ambient team-colour glow + subtle grain vignette */}
+      {/* ambient team-colour glow orbs + subtle grain vignette */}
+      <div
+        aria-hidden
+        className="glow-orb -left-12 top-1/2 size-64 -translate-y-1/2 opacity-[0.22]"
+        style={{ background: home.color }}
+      />
+      <div
+        aria-hidden
+        className="glow-orb -right-12 top-1/2 size-64 -translate-y-1/2 opacity-[0.22]"
+        style={{ background: away.color }}
+      />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          background: `radial-gradient(120% 100% at 0% 40%, ${home.color}26, transparent 46%), radial-gradient(120% 100% at 100% 40%, ${away.color}26, transparent 46%), radial-gradient(80% 60% at 50% 120%, rgba(0,0,0,0.5), transparent)`,
+          background: `radial-gradient(80% 60% at 50% 120%, rgba(0,0,0,0.5), transparent)`,
         }}
       />
+      <div aria-hidden className="grain-overlay" />
 
       <div className="relative">
         <div className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.06)] px-5 py-3 sm:px-6">

@@ -13,16 +13,25 @@ function ratingColor(rating: number): string {
   return "#9a9aa5";
 }
 
-function RatingRow({ row, isMotm }: { row: PlayerRating; isMotm: boolean }) {
+function RatingRow({
+  row,
+  isMotm,
+  index,
+}: {
+  row: PlayerRating;
+  isMotm: boolean;
+  index: number;
+}) {
   const color = ratingColor(row.rating);
   const pct = Math.max(6, Math.min(100, (row.rating / 10) * 100));
   return (
     <div
-      className={`relative overflow-hidden rounded-[8px] border px-3.5 py-3 transition-colors ${
+      className={`pop-in relative overflow-hidden rounded-[8px] border px-3.5 py-3 transition-colors ${
         isMotm
-          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.05)]"
+          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.05)] shadow-[0_0_24px_-10px_rgba(232,251,37,0.5)]"
           : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.16)]"
       }`}
+      style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
     >
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
@@ -96,6 +105,7 @@ export function RatingsCard({ ratings }: { ratings: MatchRatings | null }) {
           <RatingRow
             key={row.sporty_player_id ?? `r-${index}`}
             row={row}
+            index={index}
             isMotm={
               row.sporty_player_id !== null && row.sporty_player_id === motmId
             }

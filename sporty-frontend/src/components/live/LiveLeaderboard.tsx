@@ -80,7 +80,11 @@ export function LiveLeaderboard() {
             return (
               <li
                 key={row.playerId}
-                className="flex items-center gap-3 rounded-[8px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                className="pop-in flex items-center gap-3 rounded-[8px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                style={{
+                  animationDelay: `${idx * 40}ms`,
+                  background: idx === 0 ? "rgba(255,216,107,0.05)" : undefined,
+                }}
               >
                 <span
                   className="w-5 shrink-0 text-center font-bebas text-lg leading-none tabular-nums"

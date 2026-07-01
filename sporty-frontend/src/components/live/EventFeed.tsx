@@ -8,17 +8,32 @@ import type { MatchEvent } from "@/types/events";
 import { Panel, PanelEmpty } from "./Panel";
 import { ClockIcon, ListIcon, eventVisual } from "./icons";
 
-function EventRow({ event, last }: { event: MatchEvent; last: boolean }) {
+function EventRow({
+  event,
+  last,
+  index,
+}: {
+  event: MatchEvent;
+  last: boolean;
+  index: number;
+}) {
   const { Icon, color, label } = eventVisual(event.type);
   const teamColor = event.team ? teamIdentity(event.team).color : color;
 
   return (
-    <li className="relative flex gap-4 pb-5 last:pb-0">
-      {/* timeline spine */}
+    <li
+      className="pop-in relative flex gap-4 pb-5 last:pb-0"
+      style={{ animationDelay: `${Math.min(index, 10) * 45}ms` }}
+    >
+      {/* timeline spine — fades out toward the end of the feed */}
       {!last && (
         <span
           aria-hidden
-          className="absolute left-[1.4rem] top-11 bottom-0 w-px bg-[rgba(255,255,255,0.08)]"
+          className="absolute left-[1.4rem] top-11 bottom-0 w-px"
+          style={{
+            background:
+              "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))",
+          }}
         />
       )}
 
@@ -32,6 +47,7 @@ function EventRow({ event, last }: { event: MatchEvent; last: boolean }) {
           color,
           borderColor: `${color}59`,
           background: `${color}17`,
+          boxShadow: `0 0 14px ${color}22`,
         }}
       >
         <Icon className="size-[1.05rem]" />
@@ -85,12 +101,13 @@ export function EventFeed() {
           hint="Goals, cards and assists will stream here live."
         />
       ) : (
-        <ul className="animate-fade-soft">
+        <ul>
           {ordered.map((event, idx) => (
             <EventRow
               key={event.event_id}
               event={event}
               last={idx === ordered.length - 1}
+              index={idx}
             />
           ))}
         </ul>

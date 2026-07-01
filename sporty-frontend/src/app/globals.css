@@ -340,9 +340,83 @@
   .ball-roll,
   .bball-bounce,
   .float-up,
-  .animate-live-pulse {
+  .animate-live-pulse,
+  .pop-in,
+  .marquee-track {
     animation: none;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   Broadcast-grade polish utilities — shared by the public fixtures list
+   and the live match detail page. Kept generic so any future card/list
+   surface can opt in without re-deriving these values.
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Card pop-in — slightly more presence than .float-up for hero/grid cards. */
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.pop-in {
+  animation: pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Shimmer skeleton — replaces flat `animate-pulse` blocks for loading states. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: #14141b;
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.06) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+/* Ambient glow orb — soft blurred colour wash behind hero/scoreboard surfaces.
+   Position and size via className/style on the wrapping element; this only
+   sets the visual treatment. */
+.glow-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(60px);
+  pointer-events: none;
+}
+
+/* Fine grain overlay — cuts the flatness of large dark gradient surfaces. */
+.grain-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.9) 0.5px, transparent 0.5px);
+  background-size: 3px 3px;
+}
+
+/* Marquee — continuous horizontal scroll for the live score ticker strip. */
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-scroll 28s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
 }
 
 /* ════════════════════════════════════════════════════════════════════

@@ -24,14 +24,18 @@ export function Panel({
 }: PanelProps) {
   return (
     <section
-      className={`overflow-hidden rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-24px_rgba(0,0,0,0.9)] ${className}`}
+      className={`pop-in overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.04)_inset,0_20px_44px_-26px_rgba(0,0,0,0.95)] transition-colors duration-300 hover:border-[rgba(255,255,255,0.13)] ${className}`}
     >
       <header className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.07)] px-5 py-3.5">
         <div className="flex items-center gap-2.5">
           {icon && (
             <span
-              className="grid size-6 shrink-0 place-items-center rounded-[6px]"
-              style={{ color: accent, background: `${accent}1a` }}
+              className="grid size-7 shrink-0 place-items-center rounded-[7px]"
+              style={{
+                color: accent,
+                background: `${accent}17`,
+                boxShadow: `0 0 0 1px ${accent}26`,
+              }}
             >
               {icon}
             </span>

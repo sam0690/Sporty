@@ -45,12 +45,16 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
       }
     >
       {/* Single stacked probability bar */}
-      <div className="flex h-3 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)] shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]">
         {segments.map((s) => (
           <div
             key={s.key}
-            className="h-full transition-[width] duration-500 first:rounded-l-full last:rounded-r-full"
-            style={{ width: `${pct(s.value)}%`, background: s.color }}
+            className="h-full transition-[width] duration-700 ease-out first:rounded-l-full last:rounded-r-full"
+            style={{
+              width: `${pct(s.value)}%`,
+              background: s.color,
+              boxShadow: s.key === favourite.key ? `0 0 12px ${s.color}66` : undefined,
+            }}
           />
         ))}
       </div>

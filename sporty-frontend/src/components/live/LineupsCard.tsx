@@ -83,7 +83,11 @@ export function LineupsCard() {
       <div className="relative grid grid-cols-2 gap-5">
         <span
           aria-hidden
-          className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-[rgba(255,255,255,0.06)]"
+          className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2"
+          style={{
+            background:
+              "linear-gradient(180deg, transparent, rgba(255,255,255,0.1) 15%, rgba(255,255,255,0.1) 85%, transparent)",
+          }}
         />
         <TeamColumn teamName={homeTeam ?? "Home"} players={home} align="left" />
         <TeamColumn teamName={awayTeam ?? "Away"} players={away} align="right" />
