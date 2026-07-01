@@ -3,8 +3,12 @@
 These run on a tight schedule (e.g., every minute) and should be protected
 by Redis locks so only one worker executes them at a time.
 
-Implementation of the live sync services will be filled in later; for now
-these tasks call stub services so imports + scheduling work.
+Football and NBA now have real polling implementations (see
+app/services/sync/football_live_sync.py, nba_live_sync.py), gated behind
+settings.LIVE_POLLING_ENABLED (default False) — while it's off, both return
+immediately as a no-op, same as before. Live match data currently comes from
+the SportyDataFeeder simulator instead (app/api/v1/feed.py). Cricket
+(sync_cricket_live_matches) remains an unimplemented stub.
 """
 
 from __future__ import annotations

@@ -63,6 +63,21 @@ def fantasy_delta(sport: str, event_type: str) -> float:
     return table.get(event_type, 0.0)
 
 
+class LiveEventLike:
+    """Minimal (sporty_player_id, event_type) shape apply_live_points needs.
+
+    feed.py's own FeedEvent (pydantic, parsed from the feeder's push payload)
+    satisfies this same shape by attribute access. Real-API live pollers
+    (app/services/sync/football_live_sync.py, nba_live_sync.py) have no
+    incoming payload to parse, so they build these directly."""
+
+    __slots__ = ("sporty_player_id", "event_type")
+
+    def __init__(self, sporty_player_id: str, event_type: str):
+        self.sporty_player_id = sporty_player_id
+        self.event_type = event_type
+
+
 async def apply_live_points(redis, *, live_key: str, sport: str, events, channel: str) -> int:
     """Accumulate per-player deltas for one minute batch, update the Redis
     hashes the realtime endpoints read, and publish FANTASY_POINTS_DELTA

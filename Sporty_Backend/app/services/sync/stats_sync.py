@@ -46,6 +46,7 @@ async def sync_finished_match_stats(db: Session):
         .filter(
             Match.status == "finished",
             Match.updated_at >= one_hour_ago,
+            ~Match.external_api_id.like("feeder:%"),
         )
         .all()
     )
@@ -131,7 +132,11 @@ async def sync_live_match_stats(db: Session):
     """
     print("🔴 Syncing live match stats...")
 
-    live_matches = db.query(Match).filter(Match.status == "live").all()
+    live_matches = (
+        db.query(Match)
+        .filter(Match.status == "live", ~Match.external_api_id.like("feeder:%"))
+        .all()
+    )
 
     if not live_matches:
         print("  ℹ️  No live matches found.")

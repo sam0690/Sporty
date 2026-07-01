@@ -82,6 +82,16 @@ class Settings(BaseSettings):
     REDIS_PUBSUB_PREFIX: str = "match"
     REALTIME_PIPELINE_ENABLED: bool = False
 
+    # Real-API live-match polling (app/services/sync/football_live_sync.py,
+    # nba_live_sync.py) — separate from REALTIME_PIPELINE_ENABLED (the Kafka
+    # pipeline). Off by default: live match data currently comes from the
+    # SportyDataFeeder simulator via /api/v1/feed/*. The polling code is fully
+    # implemented and writes into the same Match/LiveEvent/Redis-pubsub model
+    # the feeder uses, so flipping this on is the only step needed later —
+    # but RapidAPI free-tier quotas (100 req/day) will not sustain a 1-minute
+    # poll interval against real fixtures without a paid plan.
+    LIVE_POLLING_ENABLED: bool = False
+
     FOOTBALL_LIVE_LEAGUE_ID: int = 39
     BASKETBALL_LIVE_LEAGUE_ID: int = 12
 
