@@ -115,14 +115,18 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
     };
   }, [status, ratings, matchId]);
 
-  useMatchSocket(matchId);
-
   const phase =
     status === "finished" || status === "ft" || status === "completed"
       ? "post"
       : status === "live" || status === "in_progress" || status === "playing"
         ? "live"
         : "pre";
+
+  // A finished match emits no further updates — skip the websocket entirely so
+  // we don't hold an idle, endlessly-reconnecting connection (matters most for
+  // the public, high-traffic historical fixtures). Wait for the snapshot to load
+  // so we decide on the real status, not the default "scheduled".
+  useMatchSocket(matchId, !loading && phase !== "post");
 
   return (
     <main className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6">

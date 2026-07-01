@@ -133,7 +133,7 @@ export function MatchesView() {
           Matches
         </h1>
         <p className="mt-1 text-sm text-[#555560]">
-          Fixtures from your leagues&apos; sports, day by day.
+          Fixtures across every sport, day by day.
         </p>
       </header>
 
@@ -213,7 +213,7 @@ export function MatchesView() {
           </p>
           <p className="mt-1 text-sm text-[#555560]">
             {items.length === 0
-              ? "Fixtures appear once they're scheduled for a sport in one of your leagues."
+              ? "Fixtures appear here as soon as they're scheduled."
               : "No matches for this sport."}
           </p>
         </div>

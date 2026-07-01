@@ -11,7 +11,14 @@ import type {
   WSMessage,
 } from "@/types/events";
 
-export function useMatchSocket(matchId: string) {
+/**
+ * Subscribe to a match's live event stream.
+ *
+ * @param enabled When false, no socket is opened (and any existing one is
+ *   closed). Use this to skip the connection for finished matches, which never
+ *   emit further updates — avoiding a pointless open socket + reconnect loop.
+ */
+export function useMatchSocket(matchId: string, enabled: boolean = true) {
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimer = useRef<number | null>(null);
 
@@ -21,6 +28,10 @@ export function useMatchSocket(matchId: string) {
   const setSocketStatus = useMatchStore((s) => s.setSocketStatus);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     let closedByUser = false;
 
     const connect = () => {
@@ -72,6 +83,7 @@ export function useMatchSocket(matchId: string) {
     };
   }, [
     matchId,
+    enabled,
     applyLineupChange,
     applyPointsDelta,
     applyScoreUpdate,

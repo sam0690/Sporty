@@ -11,7 +11,6 @@ from app.core.security import decode_access_token
 from app.core.config import settings
 from app.core.database import get_async_db
 from app.core.redis import create_redis_pool, get_async_redis
-from app.league.models import LeagueMembership, LeagueSport
 from app.match.models import Match
 from app.services.connection_manager import ConnectionManager
 
@@ -87,7 +86,9 @@ async def get_current_active_user_ws(ws: WebSocket, db=Depends(get_async_db)) ->
     return user
 
 
-async def ensure_user_can_access_match(db: AsyncSession, *, user_id: uuid.UUID, match_id: str) -> Match:
+async def ensure_user_can_access_match(
+    db: AsyncSession, *, match_id: str, user_id: uuid.UUID | None = None
+) -> Match:
     match = None
     try:
         match_uuid = uuid.UUID(match_id)
@@ -100,38 +101,27 @@ async def ensure_user_can_access_match(db: AsyncSession, *, user_id: uuid.UUID, 
     if match is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
 
-    membership_exists = (
-        await db.execute(
-            select(LeagueMembership.id)
-            .join(LeagueSport, LeagueSport.league_id == LeagueMembership.league_id)
-            .where(LeagueMembership.user_id == user_id)
-            .where(LeagueSport.sport_id == match.sport_id)
-            .limit(1)
-        )
-    ).scalar_one_or_none()
-    if membership_exists is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="You are not authorized to access this match stream",
-        )
-
+    # Matches are a public discovery surface — anyone (authenticated or not) may
+    # open a match's detail + stream. `user_id` is accepted but unused, kept for
+    # call-site compatibility / future per-user logic.
     return match
 
 
 async def require_match_access(
     match_id: str,
-    current_user: User = Depends(get_current_active_user_async),
     db: AsyncSession = Depends(get_async_db),
 ) -> Match:
-    return await ensure_user_can_access_match(db, user_id=current_user.id, match_id=match_id)
+    # Public: no auth required — the match detail (score/events/lineups) is
+    # viewable by anyone, mirroring the public /matches list + /fixtures page.
+    return await ensure_user_can_access_match(db, match_id=match_id)
 
 
 async def require_match_access_ws(
     match_id: str,
-    current_user: User = Depends(get_current_active_user_ws),
     db: AsyncSession = Depends(get_async_db),
 ) -> Match:
-    return await ensure_user_can_access_match(db, user_id=current_user.id, match_id=match_id)
+    # Public: no auth required on the match event stream either.
+    return await ensure_user_can_access_match(db, match_id=match_id)
 
 
 __all__ = [

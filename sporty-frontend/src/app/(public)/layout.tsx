@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/landing/navbar";
+import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function PublicLayout({
   children,
@@ -6,9 +7,10 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="landing-shell min-h-screen bg-background text-[#f0f0f0]">
+    <div className="landing-shell flex min-h-screen flex-col bg-background text-[#f0f0f0]">
       <Navbar />
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
+      <LandingFooter />
     </div>
   );
 }

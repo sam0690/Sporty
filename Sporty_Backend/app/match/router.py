@@ -5,12 +5,14 @@ are keyed by a match id the caller must already know. This list endpoint is
 the discovery surface that feeds the frontend Matches/Fixtures page so users
 can actually reach the live match view.
 
-Access model: a user may view matches for any sport in which they hold a
-league membership — identical to `ensure_user_can_access_match`, so every
-match returned here is one the user can subsequently open.
+Access model: any authenticated user may view all fixtures, regardless of
+league membership — matches are a public discovery surface within the app, so
+users can browse fixtures before (or without) joining a league.
 """
 
 from __future__ import annotations
+
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -18,11 +20,26 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.database import get_db
-from app.league.models import LeagueMembership, LeagueSport, Sport
+from app.league.models import Sport
 from app.match.models import Match
 from app.match.schemas import MatchListResponse, MatchResponse
 
 router = APIRouter(tags=["Matches"])
+
+
+def _to_match_response(match: Match, sport_name: str) -> MatchResponse:
+    return MatchResponse(
+        id=match.id,
+        external_api_id=match.external_api_id,
+        sport=sport_name,
+        home_team=match.home_team,
+        away_team=match.away_team,
+        match_date=match.match_date,
+        status=match.status,
+        competition=match.competition,
+        home_score=match.home_score,
+        away_score=match.away_score,
+    )
 
 
 @router.get(
@@ -42,19 +59,10 @@ def list_matches(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    # Sports the user can access (any league they belong to).
-    accessible_sport_ids = (
-        db.query(LeagueSport.sport_id)
-        .join(LeagueMembership, LeagueMembership.league_id == LeagueSport.league_id)
-        .filter(LeagueMembership.user_id == current_user.id)
-        .distinct()
-        .subquery()
-    )
-
+    # Any authenticated user can browse all fixtures — no league gating.
     query = (
         db.query(Match, Sport.name.label("sport_name"))
         .join(Sport, Match.sport_id == Sport.id)
-        .filter(Match.sport_id.in_(accessible_sport_ids))
     )
 
     if status:
@@ -65,19 +73,67 @@ def list_matches(
     # Most recent / live first; the UI groups by status.
     rows = query.order_by(Match.match_date.desc()).limit(limit).all()
 
-    items = [
-        MatchResponse(
-            id=match.id,
-            external_api_id=match.external_api_id,
-            sport=sport_name_value,
-            home_team=match.home_team,
-            away_team=match.away_team,
-            match_date=match.match_date,
-            status=match.status,
-            competition=match.competition,
-            home_score=match.home_score,
-            away_score=match.away_score,
+    items = [_to_match_response(match, name) for match, name in rows]
+    return MatchListResponse(items=items, total=len(items))
+
+
+@router.get(
+    "/matches/public",
+    response_model=MatchListResponse,
+    summary="Public fixtures for the landing page (no auth)",
+)
+def list_public_matches(
+    sport_name: str | None = Query(
+        default=None, description='Filter by sport slug: "football" | "basketball" | "cricket"'
+    ),
+    limit: int = Query(default=18, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """Unauthenticated fixtures feed for the marketing landing page — no league
+    scoping. Blends, in order, live matches → soonest upcoming → most-recent
+    results, so the section always has content even off-season. FotMob-style."""
+    now = datetime.now(timezone.utc)
+
+    def base():
+        q = (
+            db.query(Match, Sport.name.label("sport_name"))
+            .join(Sport, Match.sport_id == Sport.id)
         )
-        for match, sport_name_value in rows
-    ]
+        if sport_name:
+            q = q.filter(Sport.name == sport_name.strip().lower())
+        return q
+
+    live = (
+        base()
+        .filter(Match.status == "live")
+        .order_by(Match.match_date.asc())
+        .limit(limit)
+        .all()
+    )
+    upcoming = (
+        base()
+        .filter(Match.status != "live", Match.match_date >= now)
+        .order_by(Match.match_date.asc())
+        .limit(limit)
+        .all()
+    )
+    recent = (
+        base()
+        .filter(Match.status != "live", Match.match_date < now)
+        .order_by(Match.match_date.desc())
+        .limit(limit)
+        .all()
+    )
+
+    # Concatenate in priority order, de-duplicate by id, cap to limit.
+    seen: set = set()
+    items: list[MatchResponse] = []
+    for match, name in [*live, *upcoming, *recent]:
+        if match.id in seen:
+            continue
+        seen.add(match.id)
+        items.append(_to_match_response(match, name))
+        if len(items) >= limit:
+            break
+
     return MatchListResponse(items=items, total=len(items))
