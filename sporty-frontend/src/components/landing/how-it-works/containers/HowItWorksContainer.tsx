@@ -24,9 +24,9 @@ export function HowItWorksContainer() {
           subheading={HOW_IT_WORKS_CONTENT.subheading}
         />
 
-        <div className="mt-12 grid gap-10 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
-          {HOW_IT_WORKS_CONTENT.steps.map((step) => (
-            <HowItWorksCard key={step.title} step={step} />
+        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
+          {HOW_IT_WORKS_CONTENT.steps.map((step, index) => (
+            <HowItWorksCard key={step.title} step={step} index={index} />
           ))}
         </div>
       </div>

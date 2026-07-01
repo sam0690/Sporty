@@ -13,25 +13,31 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
   const hasNumbers = /\d/.test(password);
 
   let label = "Weak";
-  let color = "bg-danger";
+  let color = "#ff3b5c";
   let width = "33%";
 
   if (password.length >= 8 && hasLetters && hasNumbers) {
     label = "Strong";
-    color = "bg-primary";
+    color = "#00ff88";
     width = "100%";
   } else if (password.length >= 6 && (hasLetters || hasNumbers)) {
     label = "Medium";
-    color = "bg-warning";
+    color = "#ffd86b";
     width = "66%";
   }
 
   return (
-    <div className="mt-2 space-y-1">
-      <div className="h-2 w-full overflow-hidden rounded-[3px] bg-accent/30">
-        <div className={`h-full rounded-full ${color} transition-all duration-500`} style={{ width }} />
+    <div className="mt-2 space-y-1.5">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width, background: color }}
+        />
       </div>
-      <p className="text-xs text-secondary">Password strength: {label}</p>
+      <p className="font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#555560]">
+        Password strength:{" "}
+        <span style={{ color }}>{label}</span>
+      </p>
     </div>
   );
 }

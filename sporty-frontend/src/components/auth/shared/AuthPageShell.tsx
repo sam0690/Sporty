@@ -7,15 +7,14 @@ type AuthPageShellProps = {
   hero: ReactNode;
 };
 
+// Two-column auth layout: form on the left, branded broadcast panel on the
+// right. The full-screen dark background + dot pattern come from the (auth)
+// route layout, so this only owns the centred grid.
 export function AuthPageShell({ children, hero }: AuthPageShellProps) {
   return (
-    <section className="relative w-full min-h-screen overflow-hidden bg-[#0a0a0f] px-4 py-8 text-[#f0f0f0] sm:px-6 sm:py-10">
-      <div className="pointer-events-none absolute inset-0 -z-10 opacity-40 auth-dot-pattern" />
-
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-8 md:grid-cols-2">
-        <div className="w-full">{children}</div>
-        {hero}
-      </div>
-    </section>
+    <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-stretch gap-6 lg:grid-cols-[1fr_1.05fr] lg:gap-10">
+      <div className="flex items-center">{children}</div>
+      <div className="hidden lg:block">{hero}</div>
+    </div>
   );
 }

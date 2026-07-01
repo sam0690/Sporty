@@ -1,60 +1,166 @@
-import Image from "next/image";
 import type { LandingHeroVisual } from "@/components/landing/landing-hero/types";
+import { FootballGlyph, CricketGlyph } from "@/components/landing/sport-icons";
 
 type RightContentProps = {
   visual: LandingHeroVisual;
 };
 
+// A pure-CSS "broadcast" fixture card that mirrors the live match page — it
+// sells the product far better than a stock stadium photo and keeps the landing
+// visually consistent with /matches/[id].
+const HOME = { name: "Arsenal", initials: "ARS", color: "#ff3b5c", score: 2 };
+const AWAY = { name: "Chelsea", initials: "CHE", color: "#00d4ff", score: 1 };
+
+const TIMELINE = [
+  { minute: "67'", label: "Goal", who: "Saka", color: "#00ff88" },
+  { minute: "54'", label: "Yellow Card", who: "Caicedo", color: "#ffd86b" },
+  { minute: "39'", label: "Goal", who: "Ødegaard", color: "#00ff88" },
+];
+
 export function RightContent({ visual }: RightContentProps) {
   return (
-    <div className="relative aspect-[4/3] overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <Image
-        src={visual.imageSrc}
-        alt={visual.imageAlt}
-        fill
-        priority
-        className="object-cover"
-        sizes="(max-width: 1024px) 100vw, 50vw"
+    <div className="relative">
+      {/* ambient glow behind the card */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -inset-6 -z-10 opacity-70"
+        style={{
+          background:
+            "radial-gradient(60% 60% at 30% 20%, rgba(255,59,92,0.22), transparent 60%), radial-gradient(60% 60% at 80% 80%, rgba(0,212,255,0.22), transparent 60%)",
+        }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-primary/10 to-transparent" />
 
-      <div className="absolute bottom-4 left-4 right-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-black/45 p-3  sm:p-4">
-        <p className="text-sm text-[#f0f0f0]">
-          {visual.nextMatchLabel}
-        </p>
-        <div className="mt-2 h-2 w-full rounded-[3px] bg-[#1d1d26]">
+      <div className="overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-[#0b0b10] shadow-[0_30px_70px_-30px_rgba(0,0,0,1)]">
+        {/* team-colour accent bar */}
+        <div
+          className="h-1"
+          style={{
+            background: `linear-gradient(90deg, ${HOME.color}, ${HOME.color} 42%, ${AWAY.color} 58%, ${AWAY.color})`,
+          }}
+        />
+
+        {/* status row */}
+        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-5 py-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
+            <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+            Live
+          </span>
+          <span className="section-label">Premier League</span>
+        </div>
+
+        {/* scoreboard */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7">
+          <div className="flex items-center justify-end gap-3 text-right">
+            <div className="min-w-0">
+              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                {HOME.name}
+              </p>
+              <p className="section-label mt-1">Home</p>
+            </div>
+            <Crest team={HOME} />
+          </div>
+
+          <div className="text-center">
+            <div className="flex items-center justify-center font-bebas text-5xl leading-none tracking-[2px]">
+              <span style={{ color: HOME.color }} className="tabular-nums">
+                {HOME.score}
+              </span>
+              <span className="px-2 text-[#3a3a42]">:</span>
+              <span style={{ color: AWAY.color }} className="tabular-nums">
+                {AWAY.score}
+              </span>
+            </div>
+            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.28)] bg-[rgba(255,59,92,0.12)] px-2.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-[#ff3b5c]">
+              67:14
+            </p>
+          </div>
+
+          <div className="flex items-center justify-start gap-3">
+            <Crest team={AWAY} />
+            <div className="min-w-0">
+              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                {AWAY.name}
+              </p>
+              <p className="section-label mt-1">Away</p>
+            </div>
+          </div>
+        </div>
+
+        {/* mini event timeline */}
+        <div className="border-t border-[rgba(255,255,255,0.06)] px-5 py-4">
+          <p className="section-label">Match Events</p>
+          <ul className="mt-3 space-y-2.5">
+            {TIMELINE.map((e) => (
+              <li key={e.minute} className="flex items-center gap-3">
+                <span className="w-8 text-right font-bebas text-base leading-none tabular-nums text-[#9a9aa5]">
+                  {e.minute}
+                </span>
+                <span
+                  className="grid size-7 shrink-0 place-items-center rounded-full border"
+                  style={{
+                    color: e.color,
+                    borderColor: `${e.color}59`,
+                    background: `${e.color}17`,
+                  }}
+                >
+                  <FootballGlyph className="size-3.5" />
+                </span>
+                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                  {e.label}
+                </span>
+                <span className="text-xs text-[#6a6a76]">· {e.who}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* next matchday progress */}
+        <div className="border-t border-[rgba(255,255,255,0.06)] px-5 py-4">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+              <CricketGlyph className="size-4 text-[#00d4ff]" />
+              {visual.nextMatchLabel}
+            </span>
+            <span className="font-bebas text-sm tracking-[1px] text-[#e8fb25]">
+              {visual.progressPercent}%
+            </span>
+          </div>
           <div
-            className="h-full rounded-[3px] bg-primary transition-all duration-500"
-            style={{ width: `${visual.progressPercent}%` }}
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={visual.progressPercent}
             aria-label="Next match progress"
-          />
-        </div>
-      </div>
-
-      <div className="absolute -bottom-6 -right-6 hidden gap-3 md:flex">
-        <div className="relative h-24 w-24 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] shadow-hover">
-          <Image
-            src="/images/landing/basketball-court.jpg"
-            alt="Basketball court"
-            fill
-            className="object-cover"
-            sizes="96px"
-          />
-        </div>
-        <div className="relative h-24 w-24 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] shadow-hover">
-          <Image
-            src="/images/landing/cricket-field.jpg"
-            alt="Cricket field"
-            fill
-            className="object-cover"
-            sizes="96px"
-          />
+          >
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#e8fb25] to-[#00ff88] transition-all duration-500"
+              style={{ width: `${visual.progressPercent}%` }}
+            />
+          </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function Crest({
+  team,
+}: {
+  team: { initials: string; color: string; name: string };
+}) {
+  return (
+    <span
+      className="grid size-12 shrink-0 place-items-center rounded-[9px] font-bebas text-lg leading-none tracking-[1px]"
+      style={{
+        color: team.color,
+        background: `linear-gradient(160deg, ${team.color}2e, ${team.color}0d)`,
+        border: `1px solid ${team.color}59`,
+        boxShadow: `0 0 24px ${team.color}26`,
+      }}
+      aria-label={team.name}
+    >
+      {team.initials}
+    </span>
   );
 }

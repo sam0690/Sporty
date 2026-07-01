@@ -1,47 +1,101 @@
 import Link from "next/link";
+import { BoltGlyph } from "@/components/landing/sport-icons";
+
+const LINK_GROUPS: { title: string; links: { label: string; href: string }[] }[] =
+  [
+    {
+      title: "Features",
+      links: [
+        { label: "Multi-sport leagues", href: "/#features" },
+        { label: "Lineup tools", href: "/#how-it-works" },
+        { label: "Live leaderboard", href: "/dashboard" },
+      ],
+    },
+    {
+      title: "Support",
+      links: [
+        { label: "Help Center", href: "/support" },
+        { label: "Terms", href: "/terms" },
+        { label: "Privacy", href: "/privacy" },
+      ],
+    },
+    {
+      title: "Social",
+      links: [
+        { label: "Twitter", href: "https://twitter.com" },
+        { label: "Instagram", href: "https://instagram.com" },
+        { label: "YouTube", href: "https://youtube.com" },
+      ],
+    },
+  ];
 
 export function LandingFooterContainer() {
   return (
-    <footer className="bg-black" aria-labelledby="landing-footer-title" id="pricing">
+    <footer
+      className="relative border-t border-[rgba(255,255,255,0.08)] bg-[#08080c]"
+      aria-labelledby="landing-footer-title"
+      id="pricing"
+    >
+      {/* top edge glow */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-px"
+        style={{
+          background:
+            "linear-gradient(90deg, transparent, rgba(232,251,37,0.4), transparent)",
+        }}
+      />
+
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-14 sm:px-6 lg:px-8 lg:pb-14 lg:pt-16">
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <h3 id="landing-footer-title" className="font-barlow-condensed text-sm font-700 tracking-wide text-[#F4F4F9]">About</h3>
-            <p className="mt-3 text-sm leading-6 text-[#F4F4F9]/60">
-              Sporty helps fantasy managers run teams across football, basketball, and cricket.
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+          <div className="max-w-xs">
+            <div className="flex items-center gap-2">
+              <span
+                className="grid size-8 place-items-center rounded-[7px] text-[#0a0a0f]"
+                style={{
+                  background: "linear-gradient(150deg, #f0ff45, #e8fb25)",
+                  boxShadow: "0 0 22px rgba(232,251,37,0.35)",
+                }}
+              >
+                <BoltGlyph className="size-4" />
+              </span>
+              <span
+                id="landing-footer-title"
+                className="font-bebas text-2xl leading-none tracking-[3px] text-[#f0f0f0]"
+              >
+                SPORTY
+              </span>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-[#8a8a95]">
+              Run fantasy teams across football, basketball, and cricket — one
+              squad, every matchday.
             </p>
           </div>
 
-          <div>
-            <h4 className="text-sm font-600 tracking-wide text-[#F4F4F9]">Features</h4>
-            <ul className="mt-3 space-y-2 text-sm text-[#F4F4F9]/60">
-              <li><Link href="/#features" className="hover:text-primary hover:no-underline transition-colors">Multi-sport leagues</Link></li>
-              <li><Link href="/#how-it-works" className="hover:text-primary hover:no-underline transition-colors">Lineup tools</Link></li>
-              <li><Link href="/dashboard" className="hover:text-primary hover:no-underline transition-colors">Live leaderboard</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-600 tracking-wide text-[#F4F4F9]">Support</h4>
-            <ul className="mt-3 space-y-2 text-sm text-[#F4F4F9]/60">
-              <li><Link href="/support" className="hover:text-primary hover:no-underline transition-colors">Help Center</Link></li>
-              <li><Link href="/terms" className="hover:text-primary hover:no-underline transition-colors">Terms</Link></li>
-              <li><Link href="/privacy" className="hover:text-primary hover:no-underline transition-colors">Privacy</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-sm font-600 tracking-wide text-[#F4F4F9]">Social</h4>
-            <ul className="mt-3 space-y-2 text-sm text-[#F4F4F9]/60">
-              <li><Link href="https://twitter.com" className="hover:text-primary hover:no-underline transition-colors">Twitter</Link></li>
-              <li><Link href="https://instagram.com" className="hover:text-primary hover:no-underline transition-colors">Instagram</Link></li>
-              <li><Link href="https://youtube.com" className="hover:text-primary hover:no-underline transition-colors">YouTube</Link></li>
-            </ul>
-          </div>
+          {LINK_GROUPS.map((group) => (
+            <div key={group.title}>
+              <h4 className="section-label">{group.title}</h4>
+              <ul className="mt-4 space-y-2.5 text-sm text-[#8a8a95]">
+                {group.links.map((link) => (
+                  <li key={link.label}>
+                    <Link
+                      href={link.href}
+                      className="transition-colors hover:text-[#e8fb25] hover:no-underline"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-10 border-t border-[rgba(255,255,255,0.08)] pt-6 text-sm text-[#F4F4F9]/40">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-[rgba(255,255,255,0.06)] pt-6 text-sm text-[#555560] sm:flex-row">
           <p>© 2026 Sporty. All rights reserved.</p>
+          <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px]">
+            Football · Basketball · Cricket
+          </p>
         </div>
       </div>
     </footer>
