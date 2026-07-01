@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 type TabKey =
   | "overview"
   | "lineup"
+  | "gameweek"
   | "leaderboard"
   | "members"
   | "invite"
@@ -19,6 +20,7 @@ type NavigationTabsProps = {
 const tabs: { key: TabKey; label: string }[] = [
   { key: "overview", label: "Overview" },
   { key: "lineup", label: "Lineup" },
+  { key: "gameweek", label: "Gameweek" },
   { key: "leaderboard", label: "Leaderboard" },
   { key: "members", label: "Members" },
   { key: "invite", label: "Invite" },
@@ -36,6 +38,7 @@ export function NavigationTabs({
     const routes: Record<TabKey, string> = {
       overview:    `/leagues/${leagueId}`,
       lineup:      `/leagues/${leagueId}/lineup`,
+      gameweek:    `/leagues/${leagueId}/gameweek`,
       leaderboard: `/leagues/${leagueId}/leaderboard`,
       members:     `/leagues/${leagueId}/members`,
       invite:      `/leagues/${leagueId}/invite`,

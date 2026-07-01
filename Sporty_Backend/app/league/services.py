@@ -2209,7 +2209,7 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
     # Show the lineup for the gameweek you're setting up (next not-yet-locked).
     window = _find_editable_transfer_window(db, league)
 
-    starting_lineup_entries = (
+    lineup_entries = (
         db.query(TeamGameweekLineup)
         .filter(
             TeamGameweekLineup.fantasy_team_id == team.id,
@@ -2219,6 +2219,12 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
         .order_by(TeamGameweekLineup.id.asc())
         .all()
     ) if window else []
+
+    starting_lineup_entries = [e for e in lineup_entries if e.is_starter]
+    bench_entries = sorted(
+        (e for e in lineup_entries if not e.is_starter),
+        key=lambda e: (e.bench_order if e.bench_order is not None else 1_000),
+    )
 
     squad_players = (
         db.query(TeamPlayer)
@@ -2237,24 +2243,179 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
     }
     fallback_created_at = datetime.now(timezone.utc)
 
-    starting_lineup = [
-        {
+    def _entry(row) -> dict:
+        return {
             "player_id": row.player_id,
             "is_captain": row.is_captain,
             "is_vice_captain": row.is_vice_captain,
+            "is_starter": row.is_starter,
+            "bench_order": row.bench_order,
             "player": row.player,
             "created_at": created_at_by_player_id.get(row.player_id, fallback_created_at),
         }
-        for row in starting_lineup_entries
-        if row.player  # Skip entries where player was deleted
-    ]
+
+    starting_lineup = [_entry(row) for row in starting_lineup_entries if row.player]
+    bench = [_entry(row) for row in bench_entries if row.player]
 
     return {
         "fantasy_team_id": team.id,
         "team_name": team.name,
         "transfer_window_id": window.id if window else None,
         "starting_lineup": starting_lineup,
+        "bench": bench,
         "squad_players": squad_players,
+    }
+
+
+def get_gameweek_recap(
+    db: Session,
+    league_id: uuid.UUID,
+    user_id: uuid.UUID,
+    window_id: uuid.UUID | None = None,
+    gameweek: int | None = None,
+) -> dict:
+    """Return the user's team for a scored gameweek with a per-player points
+    breakdown — who started, who was benched, who was auto-subbed in/out, and
+    how many points each player contributed (including the captain/vice bonus).
+
+    The window is resolved by ``window_id`` if given, else by ``gameweek`` number
+    within the league's season, else the most recently scored window for this
+    team (falling back to the latest window in the league's season)."""
+    from app.services.scoring.team_scoring import (
+        load_slot_bounds,
+        load_team_lineup_rows,
+        resolve_team_gameweek,
+    )
+
+    team = _require_fantasy_team(db, league_id, user_id)
+    league = _require_league(db, league_id)
+
+    if window_id is not None:
+        window = (
+            db.query(TransferWindow)
+            .filter(TransferWindow.id == window_id)
+            .first()
+        )
+        if window is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Transfer window not found",
+            )
+    elif gameweek is not None:
+        window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.number == gameweek,
+            )
+            .first()
+        )
+        if window is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Gameweek {gameweek} not found",
+            )
+    else:
+        # Most recent window this team has a persisted score for.
+        window = (
+            db.query(TransferWindow)
+            .join(
+                TeamWeeklyScore,
+                TeamWeeklyScore.transfer_window_id == TransferWindow.id,
+            )
+            .filter(TeamWeeklyScore.fantasy_team_id == team.id)
+            .order_by(TransferWindow.number.desc())
+            .first()
+        )
+        if window is None:
+            window = (
+                db.query(TransferWindow)
+                .filter(TransferWindow.season_id == league.season_id)
+                .order_by(TransferWindow.number.desc())
+                .first()
+            )
+    if window is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No gameweek available for this league yet",
+        )
+
+    slot_bounds = load_slot_bounds(db, league_id)
+    rows = load_team_lineup_rows(
+        db, team_ids=[team.id], transfer_window_id=window.id
+    ).get(team.id, [])
+    result = resolve_team_gameweek(team.id, rows, slot_bounds) if rows else None
+
+    player_ids = [r.player_id for r in rows]
+    players_by_id = {
+        p.id: p
+        for p in (
+            db.query(Player)
+            .options(joinedload(Player.sport))
+            .filter(Player.id.in_(player_ids))
+            .all()
+            if player_ids
+            else []
+        )
+    }
+
+    stored = (
+        db.query(TeamWeeklyScore)
+        .filter(
+            TeamWeeklyScore.fantasy_team_id == team.id,
+            TeamWeeklyScore.transfer_window_id == window.id,
+        )
+        .first()
+    )
+
+    player_lines: list[dict] = []
+    if result is not None:
+        for line in result.players:
+            player = players_by_id.get(line.player_id)
+            if player is None:
+                continue  # player deleted — skip gracefully
+            contributed = (
+                (line.points if line.counted else Decimal("0")) + line.captain_bonus
+            )
+            player_lines.append(
+                {
+                    "player": player,
+                    "is_starter": line.is_starter,
+                    "is_captain": line.is_captain,
+                    "is_vice_captain": line.is_vice_captain,
+                    "bench_order": line.bench_order,
+                    "minutes_played": line.minutes_played,
+                    "points": line.points,
+                    "captain_bonus": line.captain_bonus,
+                    "counted": line.counted,
+                    "status": line.status,
+                    "contributed_points": contributed,
+                }
+            )
+
+    # Starters first (highest contribution on top), then bench in sub-priority.
+    player_lines.sort(
+        key=lambda x: (
+            0 if x["is_starter"] else 1,
+            x["bench_order"] if x["bench_order"] is not None else -1,
+            -float(x["contributed_points"]),
+        )
+    )
+
+    total = result.total_points if result else (stored.points if stored else Decimal("0"))
+    base = result.base_points if result else Decimal("0")
+    bonus = result.captain_vice_bonus if result else Decimal("0")
+
+    return {
+        "fantasy_team_id": team.id,
+        "team_name": team.name,
+        "transfer_window_id": window.id,
+        "gameweek_number": window.number,
+        "total_points": total,
+        "base_points": base,
+        "captain_vice_bonus": bonus,
+        "rank_in_league": stored.rank_in_league if stored else None,
+        "players": player_lines,
     }
 
 
@@ -2265,6 +2426,7 @@ def update_lineup(
     player_ids: list[uuid.UUID],
     captain_id: uuid.UUID,
     vice_captain_id: uuid.UUID,
+    bench_player_ids: list[uuid.UUID] | None = None,
 ) -> dict:
     """Set starters and captains for the current window.
     
@@ -2359,27 +2521,57 @@ def update_lineup(
             detail=str(exc),
         )
 
+    # ── Resolve the bench (everything in the squad that isn't a starter) ──────
+    # Client-provided order takes priority for auto-substitution; any remaining
+    # squad members are appended in squad (created_at) order.
+    starters_set = set(player_ids)
+    ordered_squad_ids = [
+        tp.player_id
+        for tp in sorted(squad_players, key=lambda tp: tp.created_at)
+    ]
+    bench_ids: list[uuid.UUID] = []
+    seen: set[uuid.UUID] = set(starters_set)
+    for pid in (bench_player_ids or []):
+        if pid in owned_player_ids and pid not in seen:
+            bench_ids.append(pid)
+            seen.add(pid)
+    for pid in ordered_squad_ids:
+        if pid not in seen:
+            bench_ids.append(pid)
+            seen.add(pid)
+
     # 3. Clear existing lineup for this window
     db.query(TeamGameweekLineup).filter(
         TeamGameweekLineup.fantasy_team_id == team.id,
         TeamGameweekLineup.transfer_window_id == window.id,
     ).delete()
 
-    # 4. Create new entries
+    # 4. Create new entries — starters first, then the ordered bench.
     for pid in player_ids:
-        entry = TeamGameweekLineup(
+        db.add(TeamGameweekLineup(
             fantasy_team_id=team.id,
             transfer_window_id=window.id,
             player_id=pid,
             is_captain=(pid == captain_id),
             is_vice_captain=(pid == vice_captain_id),
-        )
-        db.add(entry)
+            is_starter=True,
+            bench_order=None,
+        ))
+    for order, pid in enumerate(bench_ids):
+        db.add(TeamGameweekLineup(
+            fantasy_team_id=team.id,
+            transfer_window_id=window.id,
+            player_id=pid,
+            is_captain=False,
+            is_vice_captain=False,
+            is_starter=False,
+            bench_order=order,
+        ))
 
     db.flush()
     logger.info(
-        "Updated lineup for team=%s in window=%s (starters: %d)",
-        team.id, window.id, len(player_ids)
+        "Updated lineup for team=%s in window=%s (starters: %d, bench: %d)",
+        team.id, window.id, len(player_ids), len(bench_ids)
     )
 
     return get_current_lineup(db, league_id, user_id)

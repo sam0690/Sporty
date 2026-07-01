@@ -258,8 +258,11 @@ class DatasetImporter:
         base_day = datetime.combine(season.start_date, time.min, tzinfo=timezone.utc)
         start_at = base_day + timedelta(days=window_number - 1)
         end_at = start_at + timedelta(days=1) - timedelta(seconds=1)
-        transfer_deadline_at = end_at - timedelta(hours=2)
-        lineup_deadline_at = end_at - timedelta(hours=1)
+        # Deadlines anchored to the START of the gameweek so it locks the moment
+        # it opens — BEFORE its matches play — matching generate_transfer_windows.
+        # (End-anchored deadlines let users edit while results come in.)
+        transfer_deadline_at = start_at
+        lineup_deadline_at = start_at + timedelta(minutes=1)
 
         if transfer_window:
             transfer_window.start_at = start_at

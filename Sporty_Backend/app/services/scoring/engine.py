@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.redis import cache_delete
 from app.core.redis_lock import redis_lock
-from app.league.models import League, LeagueSport, Sport, TransferWindow
+from app.league.models import League, LeagueSport, LeagueStatus, Sport, TransferWindow
 from app.services.scoring.player_scoring import (
     score_cricket_players_for_window,
     score_football_players_for_window,
@@ -42,6 +42,25 @@ def score_transfer_window_for_league(
         league = db.query(League).filter(League.id == league_id).first()
         if not league:
             raise ValueError(f"League {league_id} not found")
+
+        # Only a live league scores. Before ACTIVE (SETUP/DRAFTING) squads aren't
+        # finalized, so there is nothing legitimate to score — skip so a shared
+        # season window doesn't create phantom scores/rankings for leagues that
+        # haven't started. (ACTIVE and COMPLETED still score: COMPLETED covers
+        # the final gameweek and idempotent re-scoring of a finished season.)
+        if league.status in (LeagueStatus.SETUP, LeagueStatus.DRAFTING):
+            logger.info(
+                "Skipping scoring for league %s: %s phase",
+                league_id, league.status.value,
+            )
+            return {
+                "skipped": True,
+                "reason": "league_not_active",
+                "league_status": league.status.value,
+                "football_players_updated": 0,
+                "cricket_players_updated": 0,
+                "basketball_players_updated": 0,
+            }
 
         sport_ids = [
             sport_id

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import uuid
+from dataclasses import dataclass, field
 from decimal import Decimal
 
-from sqlalchemy import and_, case, func, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session, aliased
 
@@ -11,11 +12,13 @@ from app.league.models import (
     FantasyTeam,
     LeagueMembershipStatus,
     LeagueMembership,
+    LineupSlot,
     TeamGameweekLineup,
     TeamWeeklyScore,
     TransferWindow,
 )
-from app.player.models import PlayerGameweekStat
+from app.player.models import Player, PlayerGameweekStat
+from app.services.scoring.auto_subs import LineupPlayer, resolve_effective_lineup
 
 
 def apply_captain_vice_bonus(
@@ -34,24 +37,171 @@ def apply_captain_vice_bonus(
     return base_points
 
 
-def upsert_team_weekly_scores(
+# ── Data shapes shared by scoring + the gameweek recap ─────────────────────────
+
+
+@dataclass
+class LineupRow:
+    """One team_gameweek_lineups row enriched with the player's gameweek stat."""
+
+    player_id: uuid.UUID
+    sport_id: uuid.UUID | None
+    position: str | None
+    is_starter: bool
+    bench_order: int | None
+    is_captain: bool
+    is_vice_captain: bool
+    minutes_played: int
+    points: Decimal
+
+
+@dataclass
+class PlayerGameweekLine:
+    """Per-player breakdown for the recap view."""
+
+    player_id: uuid.UUID
+    is_starter: bool
+    is_captain: bool
+    is_vice_captain: bool
+    bench_order: int | None
+    minutes_played: int
+    points: Decimal          # raw player points for the window
+    counted: bool            # part of the effective scoring XI
+    status: str              # played | did_not_play | subbed_in | subbed_out | benched
+    captain_bonus: Decimal   # extra points this player contributed via the (C)/(V) rule
+
+
+@dataclass
+class TeamGameweekResult:
+    fantasy_team_id: uuid.UUID
+    base_points: Decimal = Decimal("0")
+    captain_vice_bonus: Decimal = Decimal("0")
+    total_points: Decimal = Decimal("0")
+    players: list[PlayerGameweekLine] = field(default_factory=list)
+
+
+def _position_key(sport_id: uuid.UUID | None, position: str | None):
+    if sport_id is None or not position:
+        return None
+    return (sport_id, position.strip().upper())
+
+
+def resolve_team_gameweek(
+    fantasy_team_id: uuid.UUID,
+    rows: list[LineupRow],
+    slot_bounds: dict,
+) -> TeamGameweekResult:
+    """Pure resolution of a single team's gameweek: run auto-subs over the
+    starters/bench, apply the captain/vice rule, and produce the per-player
+    breakdown used by both scoring and the recap endpoint."""
+    starters_rows = [r for r in rows if r.is_starter]
+    bench_rows = sorted(
+        (r for r in rows if not r.is_starter),
+        key=lambda r: (r.bench_order if r.bench_order is not None else 1_000),
+    )
+
+    starters = [
+        LineupPlayer(
+            player_id=r.player_id,
+            position_key=_position_key(r.sport_id, r.position),
+            minutes_played=r.minutes_played,
+            points=r.points,
+        )
+        for r in starters_rows
+    ]
+    bench = [
+        LineupPlayer(
+            player_id=r.player_id,
+            position_key=_position_key(r.sport_id, r.position),
+            minutes_played=r.minutes_played,
+            points=r.points,
+            bench_order=r.bench_order,
+        )
+        for r in bench_rows
+    ]
+
+    sub = resolve_effective_lineup(starters, bench, slot_bounds)
+
+    # Captain / vice-captain bonus (both are always starters).
+    captain = next((r for r in starters_rows if r.is_captain), None)
+    vice = next((r for r in starters_rows if r.is_vice_captain), None)
+    base = sub.base_points
+    total = apply_captain_vice_bonus(
+        base_points=base,
+        captain_points=captain.points if captain else None,
+        captain_minutes=captain.minutes_played if captain else None,
+        vice_points=vice.points if vice else None,
+        vice_minutes=vice.minutes_played if vice else None,
+    )
+    bonus = total - base
+
+    # Attribute the bonus to whichever armband actually earned it.
+    bonus_player_id: uuid.UUID | None = None
+    if captain and captain.minutes_played > 0:
+        bonus_player_id = captain.player_id
+    elif captain and captain.minutes_played == 0 and vice and vice.minutes_played > 0:
+        bonus_player_id = vice.player_id
+
+    players: list[PlayerGameweekLine] = []
+    for r in rows:
+        counted = r.player_id in sub.effective_ids
+        if r.player_id in sub.subbed_out:
+            status = "subbed_out"
+        elif r.player_id in sub.subbed_in:
+            status = "subbed_in"
+        elif r.is_starter:
+            status = "played" if r.minutes_played > 0 else "did_not_play"
+        else:
+            status = "benched"
+        players.append(
+            PlayerGameweekLine(
+                player_id=r.player_id,
+                is_starter=r.is_starter,
+                is_captain=r.is_captain,
+                is_vice_captain=r.is_vice_captain,
+                bench_order=r.bench_order,
+                minutes_played=r.minutes_played,
+                points=r.points,
+                counted=counted,
+                status=status,
+                captain_bonus=bonus if r.player_id == bonus_player_id else Decimal("0"),
+            )
+        )
+
+    return TeamGameweekResult(
+        fantasy_team_id=fantasy_team_id,
+        base_points=base,
+        captain_vice_bonus=bonus,
+        total_points=total,
+        players=players,
+    )
+
+
+def load_slot_bounds(db: Session, league_id: uuid.UUID) -> dict:
+    """position_key (sport_id, POSITION) -> (min_count, max_count) for a league."""
+    rows = db.execute(
+        select(
+            LineupSlot.sport_id,
+            LineupSlot.position,
+            LineupSlot.min_count,
+            LineupSlot.max_count,
+        ).where(LineupSlot.league_id == league_id)
+    ).all()
+    return {
+        (sport_id, position.strip().upper()): (int(min_c), int(max_c))
+        for sport_id, position, min_c, max_c in rows
+    }
+
+
+def _eligible_team_ids(
     db: Session,
     *,
     league_id: uuid.UUID,
-    transfer_window_id: uuid.UUID,
-) -> int:
-    # Algorithm: aggregate lineup+player stats in SQL for each team, apply captain/vice rule in SQL CASE expression, then upsert team_weekly_scores.
-    current_window_number = (
-        db.query(TransferWindow.number)
-        .filter(TransferWindow.id == transfer_window_id)
-        .scalar()
-    )
-    if current_window_number is None:
-        return 0
-
+    current_window_number: int,
+) -> list[uuid.UUID]:
     eligibility_window = aliased(TransferWindow)
-    teams_subquery = (
-        select(FantasyTeam.id.label("fantasy_team_id"))
+    rows = db.execute(
+        select(FantasyTeam.id)
         .join(
             LeagueMembership,
             and_(
@@ -71,114 +221,139 @@ def upsert_team_weekly_scores(
                 eligibility_window.number <= current_window_number,
             )
         )
-        .subquery()
-    )
+    ).all()
+    return [team_id for (team_id,) in rows]
 
-    lineup_stats_subquery = (
+
+def load_team_lineup_rows(
+    db: Session,
+    *,
+    team_ids: list[uuid.UUID],
+    transfer_window_id: uuid.UUID,
+) -> dict[uuid.UUID, list[LineupRow]]:
+    """Load every team's lineup for the window, enriched with each player's
+    position and gameweek stat, grouped by fantasy_team_id."""
+    if not team_ids:
+        return {}
+
+    rows = db.execute(
         select(
-            TeamGameweekLineup.fantasy_team_id.label("fantasy_team_id"),
-            func.coalesce(PlayerGameweekStat.fantasy_points, Decimal("0")).label("player_points"),
-            func.coalesce(PlayerGameweekStat.minutes_played, 0).label("minutes_played"),
-            TeamGameweekLineup.is_captain.label("is_captain"),
-            TeamGameweekLineup.is_vice_captain.label("is_vice_captain"),
+            TeamGameweekLineup.fantasy_team_id,
+            TeamGameweekLineup.player_id,
+            Player.sport_id,
+            Player.position,
+            TeamGameweekLineup.is_starter,
+            TeamGameweekLineup.bench_order,
+            TeamGameweekLineup.is_captain,
+            TeamGameweekLineup.is_vice_captain,
+            func.coalesce(PlayerGameweekStat.minutes_played, 0),
+            func.coalesce(PlayerGameweekStat.fantasy_points, Decimal("0")),
         )
+        .join(Player, Player.id == TeamGameweekLineup.player_id)
         .outerjoin(
             PlayerGameweekStat,
             and_(
                 PlayerGameweekStat.player_id == TeamGameweekLineup.player_id,
-                PlayerGameweekStat.transfer_window_id == TeamGameweekLineup.transfer_window_id,
+                PlayerGameweekStat.transfer_window_id
+                == TeamGameweekLineup.transfer_window_id,
             ),
         )
+        .where(TeamGameweekLineup.fantasy_team_id.in_(team_ids))
         .where(TeamGameweekLineup.transfer_window_id == transfer_window_id)
-        .subquery()
-    )
-
-    aggregated_subquery = (
-        select(
-            teams_subquery.c.fantasy_team_id,
-            func.coalesce(func.sum(lineup_stats_subquery.c.player_points), Decimal("0")).label("base_points"),
-            func.max(
-                case(
-                    (lineup_stats_subquery.c.is_captain.is_(True), lineup_stats_subquery.c.player_points),
-                    else_=None,
-                )
-            ).label("captain_points"),
-            func.max(
-                case(
-                    (lineup_stats_subquery.c.is_captain.is_(True), lineup_stats_subquery.c.minutes_played),
-                    else_=0,
-                )
-            ).label("captain_minutes"),
-            func.max(
-                case(
-                    (lineup_stats_subquery.c.is_vice_captain.is_(True), lineup_stats_subquery.c.player_points),
-                    else_=None,
-                )
-            ).label("vice_points"),
-            func.max(
-                case(
-                    (lineup_stats_subquery.c.is_vice_captain.is_(True), lineup_stats_subquery.c.minutes_played),
-                    else_=0,
-                )
-            ).label("vice_minutes"),
-        )
-        .select_from(teams_subquery)
-        .outerjoin(
-            lineup_stats_subquery,
-            lineup_stats_subquery.c.fantasy_team_id == teams_subquery.c.fantasy_team_id,
-        )
-        .group_by(teams_subquery.c.fantasy_team_id)
-        .subquery()
-    )
-
-    final_points_expr = (
-        aggregated_subquery.c.base_points
-        + case(
-            (
-                aggregated_subquery.c.captain_minutes > 0,
-                func.coalesce(aggregated_subquery.c.captain_points, Decimal("0")),
-            ),
-            (
-                and_(
-                    func.coalesce(aggregated_subquery.c.captain_minutes, 0) == 0,
-                    aggregated_subquery.c.vice_minutes > 0,
-                ),
-                func.coalesce(aggregated_subquery.c.vice_points, Decimal("0")),
-            ),
-            else_=Decimal("0"),
-        )
-    )
-
-    final_rows = db.execute(
-        select(
-            aggregated_subquery.c.fantasy_team_id,
-            final_points_expr.label("final_points"),
-        )
     ).all()
 
-    if not final_rows:
+    grouped: dict[uuid.UUID, list[LineupRow]] = {}
+    for (
+        fantasy_team_id,
+        player_id,
+        sport_id,
+        position,
+        is_starter,
+        bench_order,
+        is_captain,
+        is_vice_captain,
+        minutes_played,
+        points,
+    ) in rows:
+        grouped.setdefault(fantasy_team_id, []).append(
+            LineupRow(
+                player_id=player_id,
+                sport_id=sport_id,
+                position=position,
+                is_starter=bool(is_starter),
+                bench_order=bench_order,
+                is_captain=bool(is_captain),
+                is_vice_captain=bool(is_vice_captain),
+                minutes_played=int(minutes_played or 0),
+                points=Decimal(points or 0),
+            )
+        )
+    return grouped
+
+
+def upsert_team_weekly_scores(
+    db: Session,
+    *,
+    league_id: uuid.UUID,
+    transfer_window_id: uuid.UUID,
+) -> int:
+    """Compute and persist each eligible team's total for the window.
+
+    Scoring uses the starting lineup only, with formation-aware auto-substitution
+    of bench players for starters who played 0 minutes, then the captain/vice
+    bonus. Runs per-team in Python (the constraint-aware sub logic can't be a
+    single SQL statement) and bulk-upserts team_weekly_scores.
+    """
+    current_window_number = (
+        db.query(TransferWindow.number)
+        .filter(TransferWindow.id == transfer_window_id)
+        .scalar()
+    )
+    if current_window_number is None:
         return 0
 
-    values = [
-        {
-            "id": uuid.uuid4(),
-            "fantasy_team_id": fantasy_team_id,
-            "transfer_window_id": transfer_window_id,
-            "points": final_points,
-            "rank_in_league": None,
-        }
-        for fantasy_team_id, final_points in final_rows
-    ]
+    team_ids = _eligible_team_ids(
+        db, league_id=league_id, current_window_number=current_window_number
+    )
+    if not team_ids:
+        return 0
+
+    slot_bounds = load_slot_bounds(db, league_id)
+    lineups_by_team = load_team_lineup_rows(
+        db, team_ids=team_ids, transfer_window_id=transfer_window_id
+    )
+
+    values = []
+    for team_id in team_ids:
+        rows = lineups_by_team.get(team_id, [])
+        if rows:
+            result = resolve_team_gameweek(team_id, rows, slot_bounds)
+            total = result.total_points
+        else:
+            total = Decimal("0")
+        values.append(
+            {
+                "id": uuid.uuid4(),
+                "fantasy_team_id": team_id,
+                "transfer_window_id": transfer_window_id,
+                "points": total,
+                "rank_in_league": None,
+            }
+        )
+
+    if not values:
+        return 0
 
     insert_stmt = insert(TeamWeeklyScore).values(values)
-
     upsert_stmt = insert_stmt.on_conflict_do_update(
-        index_elements=[TeamWeeklyScore.fantasy_team_id, TeamWeeklyScore.transfer_window_id],
+        index_elements=[
+            TeamWeeklyScore.fantasy_team_id,
+            TeamWeeklyScore.transfer_window_id,
+        ],
         set_={
             "points": insert_stmt.excluded.points,
             "rank_in_league": None,
         },
     )
-
     result = db.execute(upsert_stmt)
     return int(result.rowcount or 0)

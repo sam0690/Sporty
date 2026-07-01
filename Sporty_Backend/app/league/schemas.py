@@ -14,7 +14,14 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from app.league.models import LeagueMembershipStatus
 from app.league.models import LeagueStatus
@@ -656,6 +663,8 @@ class LineupEntryResponse(BaseModel):
     player_id: uuid.UUID
     is_captain: bool
     is_vice_captain: bool
+    is_starter: bool = True
+    bench_order: int | None = None
     player: PlayerBrief
     created_at: datetime
 
@@ -668,7 +677,41 @@ class LineupResponse(BaseModel):
     team_name: str
     transfer_window_id: uuid.UUID
     starting_lineup: list[LineupEntryResponse]
+    bench: list[LineupEntryResponse] = Field(default_factory=list)
     squad_players: list[TeamPlayerResponse] = Field(default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GameweekPlayerRecap(BaseModel):
+    """One player's contribution in a scored gameweek."""
+    player: PlayerBrief
+    is_starter: bool
+    is_captain: bool
+    is_vice_captain: bool
+    bench_order: int | None = None
+    minutes_played: int
+    points: Decimal            # raw fantasy points the player earned this window
+    captain_bonus: Decimal     # extra points from the captain / vice-captain rule
+    counted: bool              # whether the player was in the effective scoring XI
+    status: str                # played | did_not_play | subbed_in | subbed_out | benched
+    contributed_points: Decimal  # what this player actually added to the team total
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class GameweekRecapResponse(BaseModel):
+    """GET /leagues/{id}/my-team/gameweek-recap — the user's team for a scored
+    gameweek with a per-player points breakdown (incl. auto-substitutions)."""
+    fantasy_team_id: uuid.UUID
+    team_name: str
+    transfer_window_id: uuid.UUID
+    gameweek_number: int
+    total_points: Decimal
+    base_points: Decimal
+    captain_vice_bonus: Decimal
+    rank_in_league: int | None = None
+    players: list[GameweekPlayerRecap] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -680,13 +723,27 @@ class LineupUpdateRequest(BaseModel):
         max_length=15,
         validation_alias=AliasChoices("starting_lineup_player_ids", "player_ids"),
     )
+    # Optional ordered bench (index 0 = first auto-sub to come on). When omitted,
+    # the bench is derived as (squad − starters) in squad order. Players listed
+    # here take priority; any remaining squad members are appended after them.
+    bench_player_ids: list[uuid.UUID] = Field(
+        default_factory=list,
+        max_length=15,
+    )
     captain_id: uuid.UUID
     vice_captain_id: uuid.UUID
 
-    @field_validator("starting_lineup_player_ids")
+    @field_validator("starting_lineup_player_ids", "bench_player_ids")
     @classmethod
     def no_duplicates(cls, v: list[uuid.UUID]) -> list[uuid.UUID]:
         if len(v) != len(set(v)):
             raise ValueError("Duplicate players in lineup")
         return v
+
+    @model_validator(mode="after")
+    def starters_and_bench_disjoint(self) -> "LineupUpdateRequest":
+        overlap = set(self.starting_lineup_player_ids) & set(self.bench_player_ids)
+        if overlap:
+            raise ValueError("A player cannot be both a starter and on the bench")
+        return self
 

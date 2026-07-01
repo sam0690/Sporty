@@ -75,3 +75,22 @@ export const SPORT_GLYPHS: SportGlyph[] = [
   { Icon: BasketballGlyph, label: "Basketball", color: "#ff6b00" },
   { Icon: CricketGlyph, label: "Cricket", color: "#00d4ff" },
 ];
+
+const SPORT_GLYPH_MAP: Record<string, SportGlyph> = {
+  football: SPORT_GLYPHS[0],
+  soccer: SPORT_GLYPHS[0],
+  basketball: SPORT_GLYPHS[1],
+  cricket: SPORT_GLYPHS[2],
+};
+
+const MULTISPORT_GLYPH: SportGlyph = {
+  Icon: BoltGlyph,
+  label: "Multi-sport",
+  color: "#e8fb25",
+};
+
+// Resolve a sport name (from the API) to its glyph; unknown / mixed leagues
+// fall back to the volt multi-sport mark.
+export function sportGlyph(sport?: string | null): SportGlyph {
+  return SPORT_GLYPH_MAP[(sport ?? "").toLowerCase()] ?? MULTISPORT_GLYPH;
+}

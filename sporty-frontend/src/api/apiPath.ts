@@ -51,6 +51,13 @@ export const API_PATHS = {
       `/leagues/${id}/sports/${sport}`,
     LINEUP_SLOTS: (id: string) => `/leagues/${id}/lineup-slots`,
     LINEUP: (id: string) => `/leagues/${id}/my-team/lineup`,
+    GAMEWEEK_RECAP: (id: string, windowId?: string, gameweek?: number) => {
+      const params = new URLSearchParams();
+      if (windowId) params.set("window_id", windowId);
+      if (gameweek != null) params.set("gameweek", String(gameweek));
+      const query = params.toString();
+      return `/leagues/${id}/my-team/gameweek-recap${query ? `?${query}` : ""}`;
+    },
     DRAFT_START: (id: string) => `/leagues/${id}/draft/start`,
     DRAFT_PICK: (id: string) => `/leagues/${id}/draft/pick`,
     DRAFT_TURN: (id: string) => `/leagues/${id}/draft/turn`,

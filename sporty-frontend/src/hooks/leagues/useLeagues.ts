@@ -18,6 +18,7 @@ import {
   TLineupUpdateRequest,
   TLineupResponse,
   TLeaderboardResponse,
+  TGameweekRecapResponse,
   TTransferWindow,
   TDraftPick,
   TStageOutRequest,
@@ -514,6 +515,18 @@ export function useLeaderboard(
         historical,
         gameweek,
       ),
+    { enabled: !!leagueId },
+  );
+}
+
+export function useGameweekRecap(
+  leagueId: string,
+  gameweek?: number,
+  windowId?: string,
+) {
+  return useApiQuery<TGameweekRecapResponse>(
+    ["leagues", leagueId, "gameweek-recap", windowId ?? null, gameweek ?? null],
+    () => LeagueService.getGameweekRecap(leagueId, windowId, gameweek),
     { enabled: !!leagueId },
   );
 }

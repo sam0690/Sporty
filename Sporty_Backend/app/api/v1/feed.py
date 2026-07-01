@@ -615,8 +615,10 @@ async def demo_setup(payload: DemoSetupPayload, db=Depends(get_db)):
     if window is None:
         window = TransferWindow(
             season_id=season.id, number=99, start_at=win_start, end_at=win_end,
-            transfer_deadline_at=win_end - timedelta(hours=2),
-            lineup_deadline_at=win_end - timedelta(hours=1),
+            # Start-anchored deadlines (locks when the window opens) to match the
+            # canonical convention in generate_transfer_windows.
+            transfer_deadline_at=win_start,
+            lineup_deadline_at=win_start + timedelta(minutes=1),
         )
         db.add(window)
         db.flush()

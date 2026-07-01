@@ -1048,6 +1048,16 @@ class TeamGameweekLineup(Base):
     is_captain: Mapped[bool] = mapped_column(Boolean, default=False)
     is_vice_captain: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    # Whether this player is in the starting lineup (True) or on the bench
+    # (False). Only starters score directly; bench players are auto-substituted
+    # in for starters who play 0 minutes (formation permitting) at scoring time.
+    is_starter: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=text("true")
+    )
+    # Auto-substitution priority for bench players (0 = first to come on).
+    # NULL for starters.
+    bench_order: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+
     # Relationships
     fantasy_team: Mapped["FantasyTeam"] = relationship(foreign_keys=[fantasy_team_id])
     transfer_window: Mapped["TransferWindow"] = relationship(foreign_keys=[transfer_window_id])

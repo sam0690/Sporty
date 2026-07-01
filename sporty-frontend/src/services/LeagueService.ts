@@ -15,6 +15,7 @@ import type {
   TFantasyTeam,
   TLineupResponse,
   TLineupUpdateRequest,
+  TGameweekRecapResponse,
   TTransfer,
   TUserTransferLeagueGroup,
   TTransferWindow,
@@ -285,6 +286,18 @@ export const LeagueService = {
         data,
       )
     ).data;
+  },
+
+  /** The user's team for a scored gameweek, with per-player points + auto-subs */
+  async getGameweekRecap(
+    leagueId: string,
+    windowId?: string,
+    gameweek?: number,
+  ): Promise<TGameweekRecapResponse> {
+    const res = await authApi.get<TGameweekRecapResponse>(
+      API_PATHS.LEAGUES.GAMEWEEK_RECAP(leagueId, windowId, gameweek),
+    );
+    return res.data;
   },
 
   async getLeaderboard(

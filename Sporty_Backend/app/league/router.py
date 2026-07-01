@@ -47,6 +47,7 @@ from app.league.schemas import (
     LeagueResponse,
     LeagueSportAdd,
     LeagueSportResponse,
+    GameweekRecapResponse,
     LineupResponse,
     LineupSlotCreate,
     LineupSlotResponse,
@@ -855,9 +856,30 @@ def update_my_lineup(
         data.starting_lineup_player_ids,
         data.captain_id,
         data.vice_captain_id,
+        data.bench_player_ids,
     )
     db.commit()
     return lineup
+
+
+@router.get(
+    "/{league_id}/my-team/gameweek-recap",
+    response_model=GameweekRecapResponse,
+    summary="Gameweek recap: user's team with per-player points",
+)
+def get_my_gameweek_recap(
+    window_id: uuid.UUID | None = None,
+    gameweek: int | None = None,
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return the user's team for a scored gameweek with each player's points,
+    including auto-substitutions and the captain/vice bonus. Defaults to the most
+    recently scored gameweek; pass ``window_id`` or ``gameweek`` for a specific one."""
+    return league_service.get_gameweek_recap(
+        db, league.id, current_user.id, window_id, gameweek
+    )
 
 
 @router.get(

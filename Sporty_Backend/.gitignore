@@ -83,3 +83,9 @@ docs/
 # Node modules (if any)
 # ============================================
 node_modules/
+
+# ============================================
+# Celery Beat runtime scheduler DB (not source)
+# ============================================
+celerybeat-schedule
+celerybeat-schedule*

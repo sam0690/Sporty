@@ -94,8 +94,52 @@ export type TLineupResponse = {
 
 export type TLineupUpdateRequest = {
   starting_lineup_player_ids: string[];
+  bench_player_ids?: string[];
   captain_id: string;
   vice_captain_id: string;
+};
+
+export type TGameweekPlayerStatus =
+  | "played"
+  | "did_not_play"
+  | "subbed_in"
+  | "subbed_out"
+  | "benched";
+
+export type TGameweekPlayerRecap = {
+  player: {
+    id: string;
+    name: string;
+    position: string;
+    real_team: string;
+    cost: string;
+    sport: {
+      name: string;
+      display_name: string;
+    };
+  };
+  is_starter: boolean;
+  is_captain: boolean;
+  is_vice_captain: boolean;
+  bench_order: number | null;
+  minutes_played: number;
+  points: string;
+  captain_bonus: string;
+  counted: boolean;
+  status: TGameweekPlayerStatus;
+  contributed_points: string;
+};
+
+export type TGameweekRecapResponse = {
+  fantasy_team_id: string;
+  team_name: string;
+  transfer_window_id: string;
+  gameweek_number: number;
+  total_points: string;
+  base_points: string;
+  captain_vice_bonus: string;
+  rank_in_league: number | null;
+  players: TGameweekPlayerRecap[];
 };
 
 export type TLeaderboardEntry = {
