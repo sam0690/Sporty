@@ -1049,6 +1049,8 @@ def make_draft_pick(
     # Add player to the team's roster
     team_player = TeamPlayer(
         fantasy_team_id=team.id,
+        league_id=league_id,
+        is_draft=league.draft_mode,
         player_id=player_id,
         sport_type=player.sport.name,
         acquired_window_id=first_window.id,
@@ -1080,6 +1082,11 @@ def make_draft_pick(
     if next_pick_number >= total_picks_possible:
         league.status = LeagueStatus.ACTIVE
         logger.info("Draft complete for league=%s — auto-transitioned to ACTIVE", league_id)
+        # Seed the waiver order (reverse draft order) now the draft is done.
+        from app.services import waiver_service
+
+        db.flush()
+        waiver_service.init_waiver_order(db, league)
 
     db.flush()
 
@@ -1255,6 +1262,8 @@ def make_transfer(
     # Add the incoming player
     team_player_in = TeamPlayer(
         fantasy_team_id=team.id,
+        league_id=league_id,
+        is_draft=league.draft_mode,
         player_id=player_in_id,
         sport_type=player_in.sport.name,
         acquired_window_id=window.id,
@@ -2019,6 +2028,8 @@ def build_initial_team(
         )
         team_player = TeamPlayer(
             fantasy_team_id=team.id,
+            league_id=league_id,
+            is_draft=league.draft_mode,
             player_id=player.id,
             sport_type=player.sport.name,
             acquired_window_id=first_window.id,

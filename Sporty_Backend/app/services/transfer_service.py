@@ -64,6 +64,14 @@ def _require_league_and_team(db: Session, league_id: uuid.UUID, current_user: Us
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
     if league.status != LeagueStatus.ACTIVE:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="League is not ACTIVE")
+    # Budget-style transfers don't apply to draft leagues: a drafted squad has
+    # unique player ownership and no per-team budget market. Draft roster moves
+    # (waivers / free agents / trades) are a separate system.
+    if league.draft_mode:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Transfers are not available in draft leagues",
+        )
 
     team = (
         db.query(FantasyTeam)
@@ -546,6 +554,8 @@ def confirm_transfers(
         db.add(
             TeamPlayer(
                 fantasy_team_id=team.id,
+                league_id=league.id,
+                is_draft=league.draft_mode,
                 player_id=pid_in,
                 sport_type=sport_map.get(pid_in),
                 acquired_window_id=window_id,

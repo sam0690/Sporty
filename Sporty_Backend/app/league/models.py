@@ -12,6 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    JSON,
     Numeric,
     SmallInteger,
     String,
@@ -772,6 +773,20 @@ class TeamPlayer(Base):
         ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
         nullable=False, index=True,
     )
+    # Denormalised league_id (reachable via fantasy_team, but stored here so the
+    # free-agent pool query and the draft-ownership index avoid a join).
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("leagues.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    # Snapshot of league.draft_mode. Lets the unique-ownership index below be
+    # scoped to draft leagues (a partial-index predicate can only reference this
+    # table's own columns). draft_mode never changes after league creation, so
+    # the snapshot cannot drift — same rationale as sport_type below.
+    is_draft: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False,
+    )
     # FK to players table
     player_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -840,6 +855,19 @@ class TeamPlayer(Base):
             "fantasy_team_id", "player_id",
             unique=True,
             postgresql_where=text("released_window_id IS NULL"),
+        ),
+        # League-wide unique ownership for DRAFT leagues only: a player may be
+        # actively owned by at most one team per draft league. Budget/classic
+        # leagues (is_draft=false) are intentionally excluded — the same player
+        # can sit on many teams there.
+        Index(
+            "uq_draft_active_player_ownership",
+            "league_id", "player_id",
+            unique=True,
+            postgresql_where=text("released_window_id IS NULL AND is_draft = true"),
+            # SQLite (tests) also supports partial indexes; keep the predicate so
+            # release-then-re-add of the same player (trades) doesn't collide.
+            sqlite_where=text("released_window_id IS NULL AND is_draft = 1"),
         ),
     )
 
@@ -1266,4 +1294,204 @@ class DraftPick(Base):
         ),
         CheckConstraint("round_number >= 1", name="ck_draft_round_positive"),
         CheckConstraint("pick_number >= 1", name="ck_draft_pick_positive"),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 15. RosterMove
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Immutable audit log of every roster change in a DRAFT league: the initial
+# draft picks, free-agent add/drops, waiver claims, and trades. Budget-league
+# transfers keep using the Transfer table; this is the draft equivalent.
+#
+# add_player_id / drop_player_id are both nullable so the row can capture an
+# add-only, drop-only, or paired add+drop move.
+
+
+class RosterMove(Base):
+    __tablename__ = "roster_moves"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("leagues.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    fantasy_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    # draft | free_agent | waiver | trade
+    move_type: Mapped[str] = mapped_column(String(20), nullable=False)
+
+    add_player_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id"), nullable=True,
+    )
+    drop_player_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id"), nullable=True,
+    )
+    # The window the move takes effect in (nullable for pre-season draft picks).
+    window_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("transfer_windows.id"), nullable=True,
+    )
+    # Who initiated the move (nullable for system-run waiver processing).
+    actor_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True,
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "move_type IN ('draft', 'free_agent', 'waiver', 'trade')",
+            name="ck_roster_move_type",
+        ),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 16. WaiverOrder  (draft leagues — rolling priority list, FPL default)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# One row per team per draft league. `position` is the rolling waiver priority
+# (1 = first pick on contested claims). Initialised to the REVERSE of the draft
+# order when the draft completes; after a successful waiver claim the winning
+# team moves to the back (highest position).
+
+
+class WaiverOrder(Base):
+    __tablename__ = "waiver_order"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("leagues.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    fantasy_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    position: Mapped[int] = mapped_column(SmallInteger, nullable=False)
+
+    __table_args__ = (
+        UniqueConstraint("league_id", "fantasy_team_id", name="uq_waiver_order_team"),
+        UniqueConstraint("league_id", "position", name="uq_waiver_order_position"),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 17. WaiverClaim
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# A pending add/drop request resolved in bulk at the window's waiver deadline,
+# in waiver_order. `claim_priority` orders a single team's own competing claims
+# (lower = processed first). `priority_snapshot` records the team's waiver
+# position at submission time (informational).
+
+
+class WaiverClaim(Base):
+    __tablename__ = "waiver_claims"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("leagues.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    fantasy_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    add_player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id"), nullable=False,
+    )
+    drop_player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id"), nullable=False,
+    )
+    process_window_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("transfer_windows.id"), nullable=False,
+    )
+    # Order among a single team's own claims (lower runs first).
+    claim_priority: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    priority_snapshot: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+    # pending | success | failed | cancelled
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    failure_reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending', 'success', 'failed', 'cancelled')",
+            name="ck_waiver_claim_status",
+        ),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 18. TradeOffer  (manager-to-manager swaps, optional veto)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# offered_player_ids / requested_player_ids are JSON arrays of player UUID
+# strings (portable across Postgres + the SQLite test shim). On accept the trade
+# enters a veto window; it finalises (atomic ownership swap) once veto_deadline
+# passes unless vetoed.
+
+
+class TradeOffer(Base):
+    __tablename__ = "trade_offers"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("leagues.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    from_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    to_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    offered_player_ids: Mapped[list] = mapped_column(JSON, nullable=False)
+    requested_player_ids: Mapped[list] = mapped_column(JSON, nullable=False)
+    # proposed | accepted | rejected | cancelled | vetoed | executed
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="proposed")
+    veto_deadline: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('proposed', 'accepted', 'rejected', 'cancelled', "
+            "'vetoed', 'executed')",
+            name="ck_trade_offer_status",
+        ),
     )

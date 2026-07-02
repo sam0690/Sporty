@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/lib/toastifier";
@@ -183,12 +184,33 @@ export function LeagueHome() {
         isCommissioner={isCommissioner}
       />
 
-      <TransferFields
-        leagueId={leagueId}
-        isOpen={isTransferWindowActive}
-        isLoading={transferWindowLoading}
-        window={editableWindow}
-      />
+      {isBudgetMode ? (
+        <TransferFields
+          leagueId={leagueId}
+          isOpen={isTransferWindowActive}
+          isLoading={transferWindowLoading}
+          window={editableWindow}
+        />
+      ) : (
+        <section className="flex flex-col gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <span className="section-label">Roster Moves</span>
+            <p className="mt-2 text-sm text-[#9a9aa5]">
+              {leagueStatus === "active"
+                ? "Pick up unowned players from the free-agent pool (add one, drop one)."
+                : "No budget transfers in a draft league. Free agents open once the season is underway."}
+            </p>
+          </div>
+          {leagueStatus === "active" ? (
+            <Link
+              href={`/leagues/${leagueId}/free-agents`}
+              className="inline-flex shrink-0 items-center justify-center rounded-[3px] bg-[#e8fb25] px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+            >
+              Free Agents
+            </Link>
+          ) : null}
+        </section>
+      )}
 
       <div className="flex justify-end">
         <button

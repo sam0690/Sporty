@@ -29,6 +29,12 @@ import {
   TConfirmTransfersResponse,
   TDraftTurn,
   TDiscardPlayerResponse,
+  TFreeAgentPage,
+  TFreeAgentClaimResponse,
+  TWaiverClaim,
+  TWaiverOrderEntry,
+  TLeagueRoster,
+  TTradeOffer,
 } from "@/types";
 import { toastifier } from "@/lib/toastifier";
 import { isApiError } from "@/utils/api-Error";
@@ -239,6 +245,153 @@ export const useDraftTurn = (leagueId: string, enabled = true) => {
       refetchInterval: 3000,
     },
   );
+};
+
+export const useFreeAgents = (
+  leagueId: string,
+  opts?: { position?: string; search?: string; limit?: number; offset?: number },
+  enabled = true,
+) => {
+  return useApiQuery<TFreeAgentPage>(
+    ["leagues", leagueId, "free-agents", opts ?? {}],
+    () => LeagueService.getFreeAgents(leagueId, opts),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useClaimFreeAgent = (leagueId: string) => {
+  const queryClient = useQueryClient();
+  return useApiMutation<
+    TFreeAgentClaimResponse,
+    { addPlayerId: string; dropPlayerId: string }
+  >(
+    ({ addPlayerId, dropPlayerId }) =>
+      LeagueService.claimFreeAgent(leagueId, addPlayerId, dropPlayerId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "free-agents"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "my-team"],
+        });
+      },
+      successMessage: "Roster move complete!",
+    },
+  );
+};
+
+export const useWaiverClaims = (leagueId: string, enabled = true) => {
+  return useApiQuery<TWaiverClaim[]>(
+    ["leagues", leagueId, "waivers"],
+    () => LeagueService.getWaiverClaims(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useWaiverOrder = (leagueId: string, enabled = true) => {
+  return useApiQuery<TWaiverOrderEntry[]>(
+    ["leagues", leagueId, "waiver-order"],
+    () => LeagueService.getWaiverOrder(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useSubmitWaiverClaim = (leagueId: string) => {
+  const queryClient = useQueryClient();
+  return useApiMutation<
+    TWaiverClaim,
+    { addPlayerId: string; dropPlayerId: string }
+  >(
+    ({ addPlayerId, dropPlayerId }) =>
+      LeagueService.submitWaiverClaim(leagueId, addPlayerId, dropPlayerId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "waivers"],
+        });
+      },
+      successMessage: "Waiver claim submitted!",
+    },
+  );
+};
+
+export const useCancelWaiverClaim = (leagueId: string) => {
+  const queryClient = useQueryClient();
+  return useApiMutation<TWaiverClaim, string>(
+    (claimId: string) => LeagueService.cancelWaiverClaim(leagueId, claimId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "waivers"],
+        });
+      },
+      successMessage: "Claim cancelled",
+    },
+  );
+};
+
+export const useReorderWaiverClaims = (leagueId: string) => {
+  const queryClient = useQueryClient();
+  return useApiMutation<TWaiverClaim[], string[]>(
+    (orderedClaimIds: string[]) =>
+      LeagueService.reorderWaiverClaims(leagueId, orderedClaimIds),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "waivers"],
+        });
+      },
+      successMessage: "Priority updated",
+    },
+  );
+};
+
+export const useTrades = (leagueId: string, enabled = true) => {
+  return useApiQuery<TTradeOffer[]>(
+    ["leagues", leagueId, "trades"],
+    () => LeagueService.getTrades(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useTradeRosters = (leagueId: string, enabled = true) => {
+  return useApiQuery<TLeagueRoster[]>(
+    ["leagues", leagueId, "trade-rosters"],
+    () => LeagueService.getTradeRosters(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useProposeTrade = (leagueId: string) => {
+  const queryClient = useQueryClient();
+  return useApiMutation<
+    { id: string; status: string },
+    {
+      to_team_id: string;
+      offered_player_ids: string[];
+      requested_player_ids: string[];
+    }
+  >((payload) => LeagueService.proposeTrade(leagueId, payload), {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "trades"] });
+    },
+    successMessage: "Trade proposed!",
+  });
+};
+
+export const useTradeAction = (leagueId: string) => {
+  const queryClient = useQueryClient();
+  return useApiMutation<
+    { id: string; status: string },
+    { tradeId: string; action: "accept" | "reject" | "cancel" | "veto" }
+  >(({ tradeId, action }) => LeagueService.tradeAction(leagueId, tradeId, action), {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "trades"] });
+      queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "my-team"] });
+    },
+    successMessage: "Trade updated",
+  });
 };
 
 const ACTIVE_WINDOW_QUERY_KEY = (leagueId: string) => [

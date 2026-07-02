@@ -315,6 +315,75 @@ export type TConfirmTransfersResponse = {
   transfersRemaining: number;
 };
 
+export type TFreeAgent = {
+  id: string;
+  name: string;
+  position: string;
+  real_team: string;
+  cost: number;
+  sport: string;
+};
+
+export type TFreeAgentPage = {
+  items: TFreeAgent[];
+  total: number;
+};
+
+export type TFreeAgentClaimResponse = {
+  status: string;
+  added: { id: string; name: string };
+  dropped: { id: string; name: string };
+  effective_window_id: string;
+};
+
+export type TWaiverClaim = {
+  id: string;
+  add_player_id: string;
+  drop_player_id: string;
+  claim_priority: number;
+  status: "pending" | "success" | "failed" | "cancelled";
+  failure_reason: string | null;
+};
+
+export type TWaiverOrderEntry = {
+  position: number;
+  fantasy_team_id: string;
+  team_name: string;
+};
+
+export type TRosterPlayer = {
+  id: string;
+  name: string;
+  position: string;
+  real_team: string;
+  sport: string;
+};
+
+export type TLeagueRoster = {
+  team_id: string;
+  team_name: string;
+  players: TRosterPlayer[];
+};
+
+export type TTradeStatus =
+  | "proposed"
+  | "accepted"
+  | "rejected"
+  | "cancelled"
+  | "vetoed"
+  | "executed";
+
+export type TTradeOffer = {
+  id: string;
+  direction: "incoming" | "outgoing";
+  from_team: { id: string; name: string };
+  to_team: { id: string; name: string };
+  offered: { id: string; name: string }[];
+  requested: { id: string; name: string }[];
+  status: TTradeStatus;
+  veto_deadline: string | null;
+};
+
 export type TFantasyTeam = {
   id: string;
   name: string;

@@ -26,6 +26,12 @@ import type {
   TStageInResponse,
   TConfirmTransfersRequest,
   TConfirmTransfersResponse,
+  TFreeAgentPage,
+  TFreeAgentClaimResponse,
+  TWaiverClaim,
+  TWaiverOrderEntry,
+  TLeagueRoster,
+  TTradeOffer,
 } from "@/types/league";
 
 /**
@@ -131,6 +137,107 @@ export const LeagueService = {
   /** Get current draft turn for polling clients */
   async getDraftTurn(id: string): Promise<TDraftTurn> {
     const res = await authApi.get(API_PATHS.LEAGUES.DRAFT_TURN(id));
+    return res.data;
+  },
+
+  /** List free agents (unowned players) in a draft league */
+  async getFreeAgents(
+    id: string,
+    opts?: { position?: string; search?: string; limit?: number; offset?: number },
+  ): Promise<TFreeAgentPage> {
+    const res = await authApi.get(API_PATHS.LEAGUES.FREE_AGENTS(id, opts));
+    return res.data;
+  },
+
+  /** Claim a free agent (add/drop) in a draft league */
+  async claimFreeAgent(
+    id: string,
+    addPlayerId: string,
+    dropPlayerId: string,
+  ): Promise<TFreeAgentClaimResponse> {
+    const res = await authApi.post(API_PATHS.LEAGUES.FREE_AGENT_CLAIM(id), {
+      add_player_id: addPlayerId,
+      drop_player_id: dropPlayerId,
+    });
+    return res.data;
+  },
+
+  /** List my waiver claims for a draft league */
+  async getWaiverClaims(id: string): Promise<TWaiverClaim[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.WAIVERS(id));
+    return res.data;
+  },
+
+  /** Get the league's rolling waiver order */
+  async getWaiverOrder(id: string): Promise<TWaiverOrderEntry[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.WAIVER_ORDER(id));
+    return res.data;
+  },
+
+  /** Submit a waiver claim (add/drop) */
+  async submitWaiverClaim(
+    id: string,
+    addPlayerId: string,
+    dropPlayerId: string,
+  ): Promise<TWaiverClaim> {
+    const res = await authApi.post(API_PATHS.LEAGUES.WAIVERS(id), {
+      add_player_id: addPlayerId,
+      drop_player_id: dropPlayerId,
+    });
+    return res.data;
+  },
+
+  /** Cancel a pending waiver claim */
+  async cancelWaiverClaim(id: string, claimId: string): Promise<TWaiverClaim> {
+    const res = await authApi.delete(API_PATHS.LEAGUES.WAIVER_CANCEL(id, claimId));
+    return res.data;
+  },
+
+  /** Reorder my pending waiver claims (highest priority first) */
+  async reorderWaiverClaims(
+    id: string,
+    orderedClaimIds: string[],
+  ): Promise<TWaiverClaim[]> {
+    const res = await authApi.put(API_PATHS.LEAGUES.WAIVER_ORDER(id), {
+      ordered_claim_ids: orderedClaimIds,
+    });
+    return res.data;
+  },
+
+  /** List trades involving my team (incoming + outgoing) */
+  async getTrades(id: string): Promise<TTradeOffer[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.TRADES(id));
+    return res.data;
+  },
+
+  /** Every team's active roster (for building a trade) */
+  async getTradeRosters(id: string): Promise<TLeagueRoster[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.TRADE_ROSTERS(id));
+    return res.data;
+  },
+
+  /** Propose a trade to another team */
+  async proposeTrade(
+    id: string,
+    payload: {
+      to_team_id: string;
+      offered_player_ids: string[];
+      requested_player_ids: string[];
+    },
+  ): Promise<{ id: string; status: string }> {
+    const res = await authApi.post(API_PATHS.LEAGUES.TRADES(id), payload);
+    return res.data;
+  },
+
+  /** Act on a trade: accept | reject | cancel | veto */
+  async tradeAction(
+    id: string,
+    tradeId: string,
+    action: "accept" | "reject" | "cancel" | "veto",
+  ): Promise<{ id: string; status: string }> {
+    const res = await authApi.post(
+      API_PATHS.LEAGUES.TRADE_ACTION(id, tradeId, action),
+    );
     return res.data;
   },
 

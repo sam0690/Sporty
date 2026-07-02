@@ -35,7 +35,8 @@ from app.auth.models import User, RefreshToken  # noqa: F401
 from app.league.models import (  # noqa: F401
     Sport, Season, TransferWindow, League, LeagueSport, LineupSlot,
   LeagueMembership, FantasyTeam, TeamPlayer, Transfer, BudgetTransaction,
-    TeamGameweekLineup, TeamWeeklyScore
+    TeamGameweekLineup, TeamWeeklyScore, DraftPick, RosterMove,
+    WaiverOrder, WaiverClaim, TradeOffer
 )
 from app.match.models import Match  # noqa: F401
 from app.player.models import (  # noqa: F401
@@ -68,6 +69,9 @@ from app.scoring.router import router as scoring_router
 from app.match.router import router as match_router
 from app.user.router import router as user_router
 from app.api.v1.transfers import router as transfers_router
+from app.api.v1.draft_roster import router as draft_roster_router
+from app.api.v1.waivers import router as waivers_router
+from app.api.v1.trades import router as trades_router
 from app.api.v1.feed import router as feed_router
 from app.api.routes.match import router as realtime_match_router
 from app.api.routes.websocket import router as realtime_websocket_router
@@ -106,6 +110,48 @@ def _run_league_lifecycle_job() -> None:
     logger.exception("Daily league lifecycle job failed")
   finally:
     db.close()
+
+
+def _run_waiver_processing_job() -> None:
+  from app.core.redis_lock import redis_lock
+  from app.services.waiver_service import process_due_waivers
+
+  # Serialise across instances — every instance runs its own scheduler, but the
+  # roster mutations must be applied once. Skip this tick if another holds it.
+  with redis_lock("lock:draft:waiver_processing", ttl_seconds=300) as acquired:
+    if not acquired:
+      return
+    db = SessionLocal()
+    try:
+      stats = process_due_waivers(db)
+      db.commit()
+      if stats["windows"]:
+        logger.info("Waiver processing job completed: %s", stats)
+    except Exception:
+      db.rollback()
+      logger.exception("Waiver processing job failed")
+    finally:
+      db.close()
+
+
+def _run_trade_finalization_job() -> None:
+  from app.core.redis_lock import redis_lock
+  from app.services.trade_service import finalize_due_trades
+
+  with redis_lock("lock:draft:trade_finalization", ttl_seconds=300) as acquired:
+    if not acquired:
+      return
+    db = SessionLocal()
+    try:
+      stats = finalize_due_trades(db)
+      db.commit()
+      if stats["executed"]:
+        logger.info("Trade finalization job completed: %s", stats)
+    except Exception:
+      db.rollback()
+      logger.exception("Trade finalization job failed")
+    finally:
+      db.close()
 
 
 def _run_cache_warming_job() -> None:
@@ -211,6 +257,22 @@ async def lifespan(app: FastAPI):
       hour=2,
       minute=0,
       id="gameweek_ranking_update",
+      replace_existing=True,
+    )
+    # Draft roster: resolve due waiver claims and finalise trades past their
+    # veto window. Hourly so a window's waiver deadline is picked up promptly.
+    scheduler.add_job(
+      _run_waiver_processing_job,
+      trigger="cron",
+      minute=15,
+      id="waiver_processing_hourly",
+      replace_existing=True,
+    )
+    scheduler.add_job(
+      _run_trade_finalization_job,
+      trigger="cron",
+      minute=20,
+      id="trade_finalization_hourly",
       replace_existing=True,
     )
     scheduler.start()
@@ -464,6 +526,9 @@ app.include_router(scoring_router, prefix="/api/v1")
 app.include_router(match_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(transfers_router, prefix="/api/v1")
+app.include_router(draft_roster_router, prefix="/api/v1")
+app.include_router(waivers_router, prefix="/api/v1")
+app.include_router(trades_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
 app.include_router(realtime_match_router, prefix="/api")
 app.include_router(realtime_websocket_router, prefix="/api")

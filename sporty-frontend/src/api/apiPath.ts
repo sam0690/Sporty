@@ -68,6 +68,27 @@ export const API_PATHS = {
     GENERATE_WINDOWS: (id: string) =>
       `/leagues/${id}/transfer-windows/generate`,
     TRANSFERS: (id: string) => `/leagues/${id}/transfers`,
+    FREE_AGENTS: (
+      id: string,
+      opts?: { position?: string; search?: string; limit?: number; offset?: number },
+    ) => {
+      const params = new URLSearchParams();
+      if (opts?.position) params.set("position", opts.position);
+      if (opts?.search) params.set("search", opts.search);
+      if (opts?.limit != null) params.set("limit", String(opts.limit));
+      if (opts?.offset != null) params.set("offset", String(opts.offset));
+      const query = params.toString();
+      return `/leagues/${id}/free-agents${query ? `?${query}` : ""}`;
+    },
+    FREE_AGENT_CLAIM: (id: string) => `/leagues/${id}/free-agents/claim`,
+    WAIVERS: (id: string) => `/leagues/${id}/waivers`,
+    WAIVER_ORDER: (id: string) => `/leagues/${id}/waivers/order`,
+    WAIVER_CANCEL: (id: string, claimId: string) =>
+      `/leagues/${id}/waivers/${claimId}`,
+    TRADES: (id: string) => `/leagues/${id}/trades`,
+    TRADE_ROSTERS: (id: string) => `/leagues/${id}/trades/rosters`,
+    TRADE_ACTION: (id: string, tradeId: string, action: string) =>
+      `/leagues/${id}/trades/${tradeId}/${action}`,
     LEADERBOARD: (
       id: string,
       windowId?: string,

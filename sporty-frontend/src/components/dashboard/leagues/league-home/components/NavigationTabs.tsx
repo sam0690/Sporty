@@ -2,11 +2,17 @@
 
 import { useRouter } from "next/navigation";
 
+import { useLeague } from "@/hooks/leagues/useLeagues";
+import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
+
 type TabKey =
   | "overview"
   | "lineup"
   | "gameweek"
   | "leaderboard"
+  | "free-agents"
+  | "waivers"
+  | "trades"
   | "members"
   | "invite"
   | "settings";
@@ -22,6 +28,9 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "lineup", label: "Lineup" },
   { key: "gameweek", label: "Gameweek" },
   { key: "leaderboard", label: "Leaderboard" },
+  { key: "free-agents", label: "Free Agents" },
+  { key: "waivers", label: "Waivers" },
+  { key: "trades", label: "Trades" },
   { key: "members", label: "Members" },
   { key: "invite", label: "Invite" },
   { key: "settings", label: "Settings" },
@@ -33,16 +42,21 @@ export function NavigationTabs({
   isCommissioner = false,
 }: NavigationTabsProps) {
   const router = useRouter();
+  const { data: league } = useLeague(leagueId);
+  const { isDraftMode } = useLeagueCompetitionMode(league);
 
   const goToTab = (tab: TabKey) => {
     const routes: Record<TabKey, string> = {
-      overview:    `/leagues/${leagueId}`,
-      lineup:      `/leagues/${leagueId}/lineup`,
-      gameweek:    `/leagues/${leagueId}/gameweek`,
-      leaderboard: `/leagues/${leagueId}/leaderboard`,
-      members:     `/leagues/${leagueId}/members`,
-      invite:      `/leagues/${leagueId}/invite`,
-      settings:    `/leagues/${leagueId}/settings`,
+      overview:      `/leagues/${leagueId}`,
+      lineup:        `/leagues/${leagueId}/lineup`,
+      gameweek:      `/leagues/${leagueId}/gameweek`,
+      leaderboard:   `/leagues/${leagueId}/leaderboard`,
+      "free-agents": `/leagues/${leagueId}/free-agents`,
+      waivers:       `/leagues/${leagueId}/waivers`,
+      trades:        `/leagues/${leagueId}/trades`,
+      members:       `/leagues/${leagueId}/members`,
+      invite:        `/leagues/${leagueId}/invite`,
+      settings:      `/leagues/${leagueId}/settings`,
     };
     router.push(routes[tab]);
   };
@@ -55,6 +69,11 @@ export function NavigationTabs({
       <div className="flex min-w-max gap-1">
         {tabs
           .filter((tab) => tab.key !== "settings" || isCommissioner)
+          .filter(
+            (tab) =>
+              !["free-agents", "waivers", "trades"].includes(tab.key) ||
+              isDraftMode,
+          )
           .map((tab) => {
             const isActive = tab.key === activeTab;
 
