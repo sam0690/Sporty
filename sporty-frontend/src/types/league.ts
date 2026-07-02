@@ -216,6 +216,10 @@ export type TTeamPlayer = {
   };
   created_at: string;
   joined_at?: string;
+  // Per-player points (populated by GET /leagues/{id}/my-team). Decimal strings.
+  total_points?: string;
+  avg_points?: string;
+  gameweek_points?: string;
 };
 
 export type TTransferPlayer = {

@@ -16,6 +16,7 @@ export type MyTeamPlayerView = {
   cost: string;
   totalPoints: number;
   avgPoints: number;
+  gameweekPoints: number;
 };
 
 export type MyTeamLeagueView = {

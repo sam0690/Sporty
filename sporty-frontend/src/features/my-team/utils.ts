@@ -44,8 +44,9 @@ export const mapTeamLeagueView = (
     position: teamPlayer.player.position,
     realTeam: teamPlayer.player.real_team,
     cost: teamPlayer.player.cost,
-    totalPoints: 0,
-    avgPoints: 0,
+    totalPoints: Number(teamPlayer.total_points ?? 0),
+    avgPoints: Number(teamPlayer.avg_points ?? 0),
+    gameweekPoints: Number(teamPlayer.gameweek_points ?? 0),
   }));
 
   const sports = Array.from(

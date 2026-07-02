@@ -14,6 +14,7 @@ type LeaguePlayer = {
   cost: string;
   totalPoints: number;
   avgPoints: number;
+  gameweekPoints: number;
   teamName?: string;
 };
 
@@ -114,6 +115,7 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
                   cost={player.cost}
                   totalPoints={player.totalPoints}
                   avgPoints={player.avgPoints}
+                  gameweekPoints={player.gameweekPoints}
                   teamName={player.teamName}
                 />
               ))}

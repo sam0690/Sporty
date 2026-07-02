@@ -44,7 +44,7 @@ from app.league.models import (
 )
 from app.league.schemas import LeagueCreate, LineupSlotCreate
 from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
-from app.player.models import Player
+from app.player.models import Player, PlayerGameweekStat
 from app.services.budget_utils import calculate_refund
 from app.core.config import settings
 from app.squad.services import (
@@ -2283,7 +2283,110 @@ def get_user_team(
             detail="You don't have a fantasy team in this league",
         )
 
+    _attach_player_points(db, league_id, team)
     return team
+
+
+def _attach_player_points(
+    db: Session,
+    league_id: uuid.UUID,
+    team: FantasyTeam,
+) -> None:
+    """Attach per-player points onto each roster entry for the my-team view.
+
+    Sets transient `total_points`, `avg_points`, and `gameweek_points` on every
+    active TeamPlayer (read by TeamPlayerResponse via from_attributes). Points
+    come from PlayerGameweekStat.fantasy_points, scoped to the league's season:
+      - total_points   = sum of a player's fantasy points across season windows
+      - avg_points     = total / number of gameweeks the player was scored in
+      - gameweek_points = the active window's points (0 if no active window)
+
+    A player's fantasy points are season-wide (they don't depend on which team
+    owns them), so this is whole-season haul, not points-while-owned. Two grouped
+    queries regardless of roster size. Read helper — does not mutate the DB.
+    """
+    rows = list(team.team_players or [])
+    for team_player in rows:
+        team_player.total_points = Decimal("0")
+        team_player.avg_points = Decimal("0")
+        team_player.gameweek_points = Decimal("0")
+
+    if not rows:
+        return
+
+    season_id = (
+        db.query(League.season_id).filter(League.id == league_id).scalar()
+    )
+    if season_id is None:
+        return
+
+    player_ids = [team_player.player_id for team_player in rows]
+
+    # Season total + gameweeks-scored per player, in one grouped query.
+    season_rows = (
+        db.query(
+            PlayerGameweekStat.player_id.label("player_id"),
+            func.coalesce(func.sum(PlayerGameweekStat.fantasy_points), 0).label(
+                "total"
+            ),
+            func.count(PlayerGameweekStat.id).label("gameweeks"),
+        )
+        .join(
+            TransferWindow,
+            TransferWindow.id == PlayerGameweekStat.transfer_window_id,
+        )
+        .filter(
+            TransferWindow.season_id == season_id,
+            PlayerGameweekStat.player_id.in_(player_ids),
+        )
+        .group_by(PlayerGameweekStat.player_id)
+        .all()
+    )
+    totals_by_player = {
+        row.player_id: (Decimal(row.total), int(row.gameweeks))
+        for row in season_rows
+    }
+
+    # The active window's points per player ("this gameweek").
+    now = datetime.now(timezone.utc)
+    active_window = (
+        db.query(TransferWindow)
+        .filter(
+            TransferWindow.season_id == season_id,
+            TransferWindow.start_at <= now,
+            TransferWindow.end_at >= now,
+        )
+        .order_by(TransferWindow.number.desc())
+        .first()
+    )
+    gameweek_by_player: dict[uuid.UUID, Decimal] = {}
+    if active_window is not None:
+        for player_id, points in (
+            db.query(
+                PlayerGameweekStat.player_id,
+                PlayerGameweekStat.fantasy_points,
+            )
+            .filter(
+                PlayerGameweekStat.transfer_window_id == active_window.id,
+                PlayerGameweekStat.player_id.in_(player_ids),
+            )
+            .all()
+        ):
+            gameweek_by_player[player_id] = Decimal(points)
+
+    for team_player in rows:
+        total, gameweeks = totals_by_player.get(
+            team_player.player_id, (Decimal("0"), 0)
+        )
+        team_player.total_points = total
+        team_player.avg_points = (
+            (total / gameweeks).quantize(Decimal("0.01"))
+            if gameweeks > 0
+            else Decimal("0")
+        )
+        team_player.gameweek_points = gameweek_by_player.get(
+            team_player.player_id, Decimal("0")
+        )
 
 
 def get_active_seasons(db: Session) -> list[Season]:

@@ -10,6 +10,7 @@ type PlayerCardProps = {
   cost?: string;
   totalPoints: number;
   avgPoints: number;
+  gameweekPoints: number;
   teamName?: string;
 };
 
@@ -33,6 +34,7 @@ export function PlayerCard({
   cost,
   totalPoints,
   avgPoints,
+  gameweekPoints,
 }: PlayerCardProps) {
   const accent = sportAccent[sport] ?? "#9a9aa5";
 
@@ -72,9 +74,15 @@ export function PlayerCard({
       <div className="flex shrink-0 items-center gap-4 text-right">
         <div>
           <p className="font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
-            {totalPoints}
+            {Math.round(totalPoints)}
           </p>
           <p className="section-label mt-1">Points</p>
+        </div>
+        <div>
+          <p className="font-bebas text-lg leading-none tracking-[1px] text-[#9a9aa5]">
+            {gameweekPoints > 0 ? `+${Math.round(gameweekPoints)}` : Math.round(gameweekPoints)}
+          </p>
+          <p className="section-label mt-1">GW</p>
         </div>
         <div>
           <p className="font-bebas text-lg leading-none tracking-[1px] text-[#9a9aa5]">

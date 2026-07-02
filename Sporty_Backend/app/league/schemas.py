@@ -293,10 +293,20 @@ class FantasyTeamResponse(BaseModel):
 
 
 class TeamPlayerResponse(BaseModel):
-    """Minimal roster entry for a team owner view."""
+    """Minimal roster entry for a team owner view.
+
+    Points fields are populated by get_user_team from PlayerGameweekStat:
+      - total_points   — season fantasy points (sum across the season's windows)
+      - avg_points     — total_points / gameweeks the player has been scored in
+      - gameweek_points — the active window's points ("this gameweek")
+    All default to 0 pre-season / before any scoring has run.
+    """
 
     player: PlayerBrief
     joined_at: datetime = Field(alias="created_at")
+    total_points: Decimal = Decimal("0")
+    avg_points: Decimal = Decimal("0")
+    gameweek_points: Decimal = Decimal("0")
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 

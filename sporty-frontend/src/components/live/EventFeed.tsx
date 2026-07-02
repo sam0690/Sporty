@@ -59,7 +59,7 @@ function EventRow({
         </div>
         <div className="mt-0.5 truncate text-xs text-[#6a6a76]">
           <span className="text-[#9a9aa5]">
-            {event.player_name ?? event.player_id ?? "Unknown player"}
+            {event.player_name ?? "Unknown player"}
           </span>
           {event.team && (
             <>

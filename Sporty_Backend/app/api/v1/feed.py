@@ -24,6 +24,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.core.config import settings
@@ -221,6 +222,85 @@ async def schedule_match(payload: ScheduleMatchPayload, db=Depends(get_db)):
     }
 
 
+# ── Delete a scheduled match ─────────────────────────────────────────────────
+# The counterpart to schedule-match: lets the feeder remove a fixture it created
+# (and everything derived from it) when a simulation is cancelled or cleaned up.
+
+
+@router.delete("/schedule-match/{sporty_match_id}", dependencies=[Depends(verify_feeder_secret)])
+async def delete_scheduled_match(
+    sporty_match_id: str,
+    db=Depends(get_db),
+    redis=Depends(get_async_redis),
+):
+    """Delete a feeder-scheduled match and its derived data.
+
+    Removes the match row, its live_events, and cached realtime payloads
+    (prediction/ratings/lineups/fantasy points) in Redis. Accepts either the
+    Sporty match UUID or the feeder external_ref (same lookup as every push).
+
+    Refuses to delete a LIVE match (409) so an in-progress broadcast is never
+    pulled out from under connected clients — cancel/finish it first. Unknown
+    ids return 404.
+    """
+    match = find_match(db, sporty_match_id)
+    if match is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Match {sporty_match_id} not found",
+        )
+    if match.status == "live":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete a live match — wait until it is scheduled or finished",
+        )
+
+    live_key = _live_key(match)
+    match_uuid_str = str(match.id)
+
+    # live_events reference the match by its string key (no FK), which may be the
+    # external_ref or the UUID depending on how it was pushed — clear all forms.
+    event_keys = {live_key, match_uuid_str}
+    if match.external_api_id:
+        event_keys.add(match.external_api_id)
+    events_deleted = (
+        db.query(LiveEvent)
+        .filter(LiveEvent.match_id.in_(event_keys))
+        .delete(synchronize_session=False)
+    )
+
+    db.delete(match)
+    db.commit()
+
+    # Best-effort Redis cleanup — a stale cache must never fail the delete.
+    try:
+        cache_keys: list[str] = []
+        for base in {live_key, match_uuid_str}:
+            cache_keys += [
+                f"prediction:match:{base}",
+                f"ratings:match:{base}",
+                f"lineups:match:{base}",
+            ]
+            cache_keys += await redis.keys(f"fantasy:match:{base}:player:*")
+        if cache_keys:
+            await redis.delete(*cache_keys)
+    except Exception:  # noqa: BLE001 — cache is derived, safe to leave stale
+        logger.warning(
+            "Redis cache cleanup failed for deleted match %s", sporty_match_id,
+            exc_info=True,
+        )
+
+    logger.info(
+        "Feeder deleted match %s (%s live_events removed)",
+        sporty_match_id, events_deleted,
+    )
+    return {
+        "sporty_match_id": match_uuid_str,
+        "deleted": True,
+        "events_deleted": events_deleted,
+    }
+
+
 # ── Register feeder players ──────────────────────────────────────────────────
 # Feeder simulations invent their own rosters; for fantasy scoring the backend
 # must hold a Player row per simulated player so live_events (carrying that
@@ -413,17 +493,29 @@ async def ingest_match_result(
 
     # Resolve player names for this batch so the live feed renders readable
     # events (not UUIDs) without the client needing a round-trip per event.
+    # A feeder id may be our Player.id (matched case-insensitively) or the
+    # player's external_api_id; key the lookup by the exact sporty_player_id so
+    # resolution survives whatever case/form the feed sent.
     names: dict[str, dict] = {}
-    batch_ids = []
-    for event in payload.events:
-        try:
-            if event.sporty_player_id:
-                batch_ids.append(uuid.UUID(event.sporty_player_id))
-        except ValueError:
-            continue
+    batch_ids = [e.sporty_player_id for e in payload.events if e.sporty_player_id]
     if batch_ids:
-        for p in db.query(Player.id, Player.name, Player.real_team).filter(Player.id.in_(batch_ids)).all():
-            names[str(p.id)] = {"name": p.name, "team": p.real_team}
+        lowered = list({pid.lower() for pid in batch_ids})
+        matched = db.execute(
+            text(
+                """
+                SELECT id::text AS id, external_api_id, name, real_team
+                FROM players
+                WHERE lower(id::text) = ANY(:lowered) OR external_api_id = ANY(:ids)
+                """
+            ),
+            {"lowered": lowered, "ids": batch_ids},
+        ).mappings().all()
+        by_lower_id = {r["id"].lower(): r for r in matched if r["id"]}
+        by_ext = {r["external_api_id"]: r for r in matched if r["external_api_id"]}
+        for pid in batch_ids:
+            row = by_lower_id.get(pid.lower()) or by_ext.get(pid)
+            if row:
+                names[pid] = {"name": row["name"], "team": row["real_team"]}
 
     def _event_dict(event) -> dict:
         info = names.get(event.sporty_player_id or "")

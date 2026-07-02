@@ -4,6 +4,7 @@ import { CreateTeamHeader } from "@/components/dashboard/create-team/components/
 import { CurrentTeam } from "@/components/dashboard/create-team/components/CurrentTeam";
 import { PlayerMarket } from "@/components/dashboard/create-team/components/PlayerMarket";
 import { TeamNameForm } from "@/components/dashboard/create-team/components/TeamNameForm";
+import { SquadValidationChecklist } from "@/components/dashboard/create-team/components/SquadValidationChecklist";
 import type { MarketPlayer } from "@/components/dashboard/create-team/components/PlayerCard";
 import { MULTISPORT_MIN_BY_SPORT } from "../hooks/useCreateTeamDashboard";
 import { CardSkeleton } from "@/components/ui/skeletons";
@@ -82,6 +83,10 @@ export function CreateTeamView(
     handleDiscardTeamPlayer,
     handleNextStep,
     handleCreateTeam,
+    handleGoToLineup,
+    squadValidation,
+    isRosterComplete,
+    isDraftComplete,
     buildTeamMutation,
     makeDraftPickMutation,
     discardTeamPlayerMutation,
@@ -145,62 +150,112 @@ export function CreateTeamView(
         ) : null}
 
         {status === "drafting" ? (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <div
-                className={`mb-3 rounded-[3px] border px-4 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] ${isMyDraftTurn ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5]"}`}
-              >
-                {isMyDraftTurn
-                  ? "Your turn — choose a player now."
-                  : "Waiting for your turn. Player selection is locked."}
+          isRosterComplete || isDraftComplete ? (
+            <div className="space-y-5">
+              <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(76,175,80,0.3)] bg-[#131a13] p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <span className="section-label text-[#4caf50]">
+                    Draft Complete
+                  </span>
+                  <p className="mt-1 text-sm text-[#9a9aa5]">
+                    Your squad is set. Head to the lineup to pick your starters
+                    and captain.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleGoToLineup}
+                  className="shrink-0 rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+                >
+                  Set Lineup
+                </button>
               </div>
-              <PlayerMarket
-                players={marketPlayers}
-                onAddPlayer={handleDraftPick}
-                onRemovePlayer={() => {}}
-                selectedPlayerIds={[]}
-                sport={leagueSport}
-                remainingBudget={Number(myTeam?.current_budget ?? budget)}
-                searchQuery={searchQuery}
-                selectedPosition={selectedPosition}
-                selectedSport={selectedSport}
-                minCost={minCostInput}
-                maxCost={maxCostInput}
-                onSearchQueryChange={handleSearchQueryChange}
-                onPositionChange={handlePositionChange}
-                onSportChange={handleSportChange}
-                onMinCostChange={handleMinCostChange}
-                onMaxCostChange={handleMaxCostChange}
-                canAddPlayers={isMyDraftTurn}
-                addDisabledReason="Waiting for your draft turn"
-                currentPage={playersCurrentPage}
-                totalPages={playersTotalPages}
-                totalPlayers={playersTotal}
-                hasNext={!!playersData?.has_next}
-                isLoadingPage={isPlayersPageLoading}
-                onPreviousPage={handlePreviousPlayersPage}
-                onNextPage={handleNextPlayersPage}
-              />
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                  <CurrentTeam
+                    players={draftedPlayers}
+                    onRemovePlayer={() => {}}
+                    budget={budget}
+                    totalCost={(draftedPlayers as { price: number }[]).reduce(
+                      (sum, p) => sum + p.price,
+                      0,
+                    )}
+                    requiredPlayers={requiredPlayers}
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <SquadValidationChecklist rules={squadValidation} />
+                </div>
+              </div>
             </div>
-            <div className="lg:col-span-1">
-              <CurrentTeam
-                players={draftedPlayers}
-                onRemovePlayer={() => {}}
-                budget={budget}
-                totalCost={(draftedPlayers as { price: number }[]).reduce(
-                  (sum, p) => sum + p.price,
-                  0,
-                )}
-                requiredPlayers={requiredPlayers}
-              />
+          ) : (
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <div
+                  className={`mb-3 rounded-[3px] border px-4 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] ${isMyDraftTurn ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5]"}`}
+                >
+                  {isMyDraftTurn
+                    ? "Your turn — choose a player now."
+                    : "Waiting for your turn. Player selection is locked."}
+                </div>
+                <PlayerMarket
+                  players={marketPlayers}
+                  onAddPlayer={handleDraftPick}
+                  onRemovePlayer={() => {}}
+                  selectedPlayerIds={[]}
+                  sport={leagueSport}
+                  remainingBudget={Number(myTeam?.current_budget ?? budget)}
+                  searchQuery={searchQuery}
+                  selectedPosition={selectedPosition}
+                  selectedSport={selectedSport}
+                  minCost={minCostInput}
+                  maxCost={maxCostInput}
+                  onSearchQueryChange={handleSearchQueryChange}
+                  onPositionChange={handlePositionChange}
+                  onSportChange={handleSportChange}
+                  onMinCostChange={handleMinCostChange}
+                  onMaxCostChange={handleMaxCostChange}
+                  canAddPlayers={isMyDraftTurn}
+                  addDisabledReason="Waiting for your draft turn"
+                  currentPage={playersCurrentPage}
+                  totalPages={playersTotalPages}
+                  totalPlayers={playersTotal}
+                  hasNext={!!playersData?.has_next}
+                  isLoadingPage={isPlayersPageLoading}
+                  onPreviousPage={handlePreviousPlayersPage}
+                  onNextPage={handleNextPlayersPage}
+                />
+              </div>
+              <div className="space-y-6 lg:col-span-1">
+                <CurrentTeam
+                  players={draftedPlayers}
+                  onRemovePlayer={() => {}}
+                  budget={budget}
+                  totalCost={(draftedPlayers as { price: number }[]).reduce(
+                    (sum, p) => sum + p.price,
+                    0,
+                  )}
+                  requiredPlayers={requiredPlayers}
+                />
+                <SquadValidationChecklist rules={squadValidation} />
+              </div>
             </div>
-          </div>
+          )
         ) : null}
 
         {status === "active" || status === "completed" ? (
           draftedPlayers.length > 0 ? (
             <div className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
-              <p className="section-label">Final Team</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="section-label">Final Team</p>
+                <button
+                  type="button"
+                  onClick={handleGoToLineup}
+                  className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+                >
+                  Set Lineup
+                </button>
+              </div>
               <CurrentTeam
                 players={draftedPlayers}
                 onRemovePlayer={() => {}}
@@ -386,7 +441,7 @@ export function CreateTeamView(
               />
             </div>
 
-            <div className="lg:col-span-1">
+            <div className="space-y-6 lg:col-span-1">
               <CurrentTeam
                 players={selectedPlayers}
                 onRemovePlayer={handleRemovePlayer}
@@ -394,6 +449,7 @@ export function CreateTeamView(
                 totalCost={totalCost}
                 requiredPlayers={requiredPlayers}
               />
+              <SquadValidationChecklist rules={squadValidation} />
             </div>
           </div>
 

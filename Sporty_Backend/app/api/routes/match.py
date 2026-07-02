@@ -17,27 +17,51 @@ router = APIRouter(tags=["Realtime"])
 
 
 async def _resolve_players(db, player_ids: set[str]) -> dict[str, dict]:
-    """Map Sporty player UUIDs to display info (name/position/team). Invalid or
-    unknown ids are simply omitted so callers can fall back to a short id."""
-    valid: list[uuid.UUID] = []
-    for pid in player_ids:
-        try:
-            valid.append(uuid.UUID(pid))
-        except (ValueError, TypeError, AttributeError):
-            continue
-    if not valid:
+    """Map Sporty player ids to display info (name/position/team).
+
+    A feeder id may be our Player.id (UUID) OR the player's external_api_id, so
+    match on both — mirroring _resolve_player_names used by the ratings route.
+    The result is keyed by BOTH the canonical id and the external id (plus the
+    exact id string the caller passed) so lookups succeed regardless of which
+    form the events / point hashes used. Unknown ids are omitted so callers can
+    fall back to a friendly label.
+    """
+    ids = [pid for pid in player_ids if pid]
+    if not ids:
         return {}
+    # id comparison is case-insensitive (feeder point-hash keys arrive uppercase
+    # while Player.id renders lowercase); external_api_id is matched verbatim.
+    lowered = list({pid.lower() for pid in ids})
     rows = (
         await db.execute(
-            select(Player.id, Player.name, Player.position, Player.real_team).where(
-                Player.id.in_(valid)
-            )
+            text(
+                """
+                SELECT id::text AS id, external_api_id, name, position, real_team
+                FROM players
+                WHERE lower(id::text) = ANY(:lowered) OR external_api_id = ANY(:ids)
+                """
+            ),
+            {"lowered": lowered, "ids": ids},
         )
-    ).all()
-    return {
-        str(r.id): {"name": r.name, "position": r.position, "team": r.real_team}
-        for r in rows
-    }
+    ).mappings().all()
+
+    by_lower_id: dict[str, dict] = {}
+    by_ext: dict[str, dict] = {}
+    for r in rows:
+        info = {"name": r["name"], "position": r["position"], "team": r["real_team"]}
+        if r["id"]:
+            by_lower_id[r["id"].lower()] = info
+        if r["external_api_id"]:
+            by_ext[r["external_api_id"]] = info
+
+    # Key by the exact id string the caller passed so lookups succeed whatever
+    # case/form the events, point hashes, or lineups used.
+    resolved: dict[str, dict] = {}
+    for pid in ids:
+        info = by_lower_id.get(pid.lower()) or by_ext.get(pid)
+        if info:
+            resolved[pid] = info
+    return resolved
 
 
 async def _get_cached_match_json(redis, prefix: str, _match) -> dict | None:

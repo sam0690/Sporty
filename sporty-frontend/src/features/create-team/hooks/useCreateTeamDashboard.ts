@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -54,6 +55,7 @@ export function useCreateTeamDashboard() {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { username, data: me } = useMe();
   const leagueId = params?.id || searchParams.get("leagueId") || "";
 
@@ -99,6 +101,36 @@ export function useCreateTeamDashboard() {
     leagueId || "",
     !!leagueId && isDraftLeague && league?.status === "drafting",
   );
+
+  // Keep the draft pool in sync with the live draft. `useDraftTurn` polls every
+  // few seconds; `next_pick_number` increments on every pick (by anyone), so a
+  // change means a player was just taken. Refetch the players pool then — the
+  // backend already excludes rostered players by league_id — so selected
+  // players drop out automatically, no manual refresh needed.
+  const lastPickNumberRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!isDraftLeague || league?.status !== "drafting") {
+      lastPickNumberRef.current = null;
+      return;
+    }
+    const pickNumber = draftTurn?.next_pick_number;
+    if (pickNumber == null) return;
+
+    // First reading just establishes a baseline — don't refetch on mount.
+    if (lastPickNumberRef.current === null) {
+      lastPickNumberRef.current = pickNumber;
+      return;
+    }
+    if (pickNumber !== lastPickNumberRef.current) {
+      lastPickNumberRef.current = pickNumber;
+      queryClient.invalidateQueries({ queryKey: ["players"] });
+    }
+  }, [
+    draftTurn?.next_pick_number,
+    isDraftLeague,
+    league?.status,
+    queryClient,
+  ]);
 
   const [step, setStep] = useState(1);
   const [selectedPlayers, setSelectedPlayers] = useState<MarketPlayer[]>([]);
@@ -204,6 +236,79 @@ export function useCreateTeamDashboard() {
   const budgetUsed = Math.max(0, budget - remainingBudget);
   const budgetProgress =
     budget > 0 ? Math.min(100, (budgetUsed / budget) * 100) : 0;
+
+  const draftedCountsBySport = useMemo(
+    () =>
+      draftedPlayers.reduce<Record<string, number>>((acc, player) => {
+        acc[player.sport] = (acc[player.sport] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [draftedPlayers],
+  );
+
+  // Live squad-composition validation — enforced rules only: squad size,
+  // budget, and (multisport) per-sport minimums. Budget mode validates the
+  // in-progress selection; draft mode validates the already-drafted roster.
+  const activeCounts = isDraftLeague
+    ? draftedCountsBySport
+    : selectedCountsBySport;
+  const activeSquadSize = isDraftLeague
+    ? draftedPlayers.length
+    : selectedPlayers.length;
+  const activeRemainingBudget = isDraftLeague
+    ? Number(myTeam?.current_budget ?? budget)
+    : remainingBudget;
+
+  const squadValidation: Array<{
+    key: string;
+    label: string;
+    detail: string;
+    satisfied: boolean;
+  }> = [
+    {
+      key: "size",
+      label: "Squad size",
+      detail: `${activeSquadSize}/${requiredPlayers}`,
+      satisfied: activeSquadSize === requiredPlayers,
+    },
+    {
+      key: "budget",
+      label: "Within budget",
+      detail: `$${activeRemainingBudget.toFixed(1)}M left`,
+      satisfied: activeRemainingBudget >= 0,
+    },
+    ...(isMultiSportLeague
+      ? [
+          {
+            key: "football",
+            label: "Football minimum",
+            detail: `${activeCounts.football ?? 0}/${MULTISPORT_MIN_BY_SPORT.football}`,
+            satisfied:
+              (activeCounts.football ?? 0) >= MULTISPORT_MIN_BY_SPORT.football,
+          },
+          {
+            key: "basketball",
+            label: "Basketball minimum",
+            detail: `${activeCounts.basketball ?? 0}/${MULTISPORT_MIN_BY_SPORT.basketball}`,
+            satisfied:
+              (activeCounts.basketball ?? 0) >=
+              MULTISPORT_MIN_BY_SPORT.basketball,
+          },
+        ]
+      : []),
+  ];
+  const isSquadValid = squadValidation.every((rule) => rule.satisfied);
+
+  // In a snake draft every manager finishes with a full squad at the same last
+  // pick, so "roster full" and "draft complete" coincide — either is a safe
+  // signal to surface the finish CTA.
+  const isRosterComplete = draftedPlayers.length >= requiredPlayers;
+  const isDraftComplete = Boolean(draftTurn?.is_draft_complete);
+
+  const handleGoToLineup = useCallback(() => {
+    if (!leagueId) return;
+    router.push(`/leagues/${leagueId}/lineup`);
+  }, [leagueId, router]);
 
   const handleSearchQueryChange = useCallback(
     (value: string) => {
@@ -536,6 +641,10 @@ export function useCreateTeamDashboard() {
     remainingBudget,
     budgetUsed,
     budgetProgress,
+    squadValidation,
+    isSquadValid,
+    isRosterComplete,
+    isDraftComplete,
     isAutoPicking,
     isMyDraftTurn,
     // handlers
@@ -549,6 +658,7 @@ export function useCreateTeamDashboard() {
     handleDiscardTeamPlayer,
     handleNextStep,
     handleCreateTeam,
+    handleGoToLineup,
     // mutations (exposed for view-level controls)
     buildTeamMutation,
     makeDraftPickMutation,

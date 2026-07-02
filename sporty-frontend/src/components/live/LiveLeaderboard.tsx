@@ -40,20 +40,38 @@ export function LiveLeaderboard() {
   // Per-player goal/assist tallies from the event timeline, so the board is
   // meaningful even when fantasy points aren't flowing (e.g. no demo lineup).
   const rows = useMemo<Row[]>(() => {
+    // Ids arrive in mixed case: feeder fantasy-point keys are UPPERCASE while
+    // the resolved players map is keyed by canonical lowercase UUIDs. Normalize
+    // everything to lowercase so names resolve and a single player isn't split
+    // into two rows.
+    const nameByLowerId: Record<string, string> = {};
+    for (const [id, info] of Object.entries(players)) {
+      if (info?.name) nameByLowerId[id.toLowerCase()] = info.name;
+    }
+
     const contrib: Record<string, { goals: number; assists: number }> = {};
     for (const e of events) {
       if (!e.player_id) continue;
-      const c = (contrib[e.player_id] ??= { goals: 0, assists: 0 });
+      const key = e.player_id.toLowerCase();
+      const c = (contrib[key] ??= { goals: 0, assists: 0 });
       if (e.type === "goal") c.goals += 1;
       else if (e.type === "assist") c.assists += 1;
     }
 
-    const ids = new Set([...Object.keys(playerPoints), ...Object.keys(contrib)]);
+    const pointsByLowerId: Record<string, number> = {};
+    for (const [id, pts] of Object.entries(playerPoints)) {
+      pointsByLowerId[id.toLowerCase()] = pts;
+    }
+
+    const ids = new Set([
+      ...Object.keys(pointsByLowerId),
+      ...Object.keys(contrib),
+    ]);
     return [...ids]
       .map<Row>((id) => ({
         playerId: id,
-        name: players[id]?.name ?? id,
-        points: playerPoints[id] ?? 0,
+        name: nameByLowerId[id] ?? "Unknown player",
+        points: pointsByLowerId[id] ?? 0,
         goals: contrib[id]?.goals ?? 0,
         assists: contrib[id]?.assists ?? 0,
       }))
