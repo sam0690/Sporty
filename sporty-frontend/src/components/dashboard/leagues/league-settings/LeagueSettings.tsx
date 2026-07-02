@@ -27,6 +27,7 @@ import {
   useUpdateLeague,
   useUpdateMidseasonJoin,
   useUpdateLeagueStatus,
+  useStartDraft,
 } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 import {
@@ -51,7 +52,7 @@ export function LeagueSettings() {
   const { data: sports } = useSports();
 
   const isCommissioner = league?.owner?.username === username;
-  const { isBudgetMode } = useLeagueCompetitionMode(league);
+  const { isBudgetMode, isDraftMode } = useLeagueCompetitionMode(league);
   const selectedSport = league?.sports?.[0]?.sport.name ?? "football";
 
   const { data: defaultRules } = useDefaultScoringRules(selectedSport);
@@ -59,6 +60,7 @@ export function LeagueSettings() {
   const upsertOverride = useUpsertScoringOverride(leagueId);
   const deleteOverride = useDeleteScoringOverride(leagueId);
   const updateStatus = useUpdateLeagueStatus(leagueId);
+  const startDraft = useStartDraft();
   const updateLeague = useUpdateLeague(leagueId);
   const updateMidseasonJoin = useUpdateMidseasonJoin(leagueId);
   const generateWindows = useGenerateTransferWindows(leagueId);
@@ -233,9 +235,25 @@ export function LeagueSettings() {
     }
   };
 
+  // Entering DRAFTING for a draft league must go through start_draft (which
+  // assigns draft positions + creates teams), NOT the raw status transition —
+  // otherwise the draft is left uninitialised and no one can pick.
+  const handleStartDraft = async () => {
+    try {
+      await startDraft.mutateAsync(leagueId);
+      router.push(`/leagues/${leagueId}/create-team`);
+    } catch {
+      // errors are surfaced by shared mutation toast
+    }
+  };
+
   const handleStatusChange = async (
     nextStatus: "setup" | "drafting" | "active" | "completed",
   ) => {
+    if (nextStatus === "drafting" && isDraftMode) {
+      await handleStartDraft();
+      return;
+    }
     try {
       await updateStatus.mutateAsync(nextStatus);
     } catch {

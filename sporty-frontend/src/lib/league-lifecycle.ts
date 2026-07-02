@@ -40,7 +40,7 @@ export function getLifecycleStatusLabel(
   league?: LeagueModeSource | null,
 ): string {
   if (status === "drafting") {
-    return getCompetitionType(league) === "draft" ? "Drafted" : "Setup";
+    return getCompetitionType(league) === "draft" ? "Drafting" : "Setup";
   }
 
   return status.charAt(0).toUpperCase() + status.slice(1);

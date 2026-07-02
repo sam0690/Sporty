@@ -24,6 +24,7 @@ import {
   useLeague,
   useLeaveLeague,
   useMyTeam,
+  useStartDraft,
 } from "@/hooks/leagues/useLeagues";
 import { useDashboardLeagueStats } from "@/hooks/dashboard/useDashboardData";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
@@ -47,6 +48,7 @@ export function LeagueHome() {
   const { data: editableWindow, isLoading: transferWindowLoading } =
     useEditableWindow(leagueId);
   const leaveLeague = useLeaveLeague();
+  const startDraft = useStartDraft();
   const { username } = useMe();
 
   // The overview is a snapshot of the running gameweek; browsing other
@@ -117,6 +119,20 @@ export function LeagueHome() {
     league?.sports?.[0]?.sport.name === "basketball"
       ? league.sports[0].sport.name
       : "football";
+
+  // Entering DRAFTING for a draft league must go through start_draft, which
+  // assigns draft positions + creates every member's team before flipping the
+  // league to the drafting phase. On success we drop the commissioner straight
+  // into the draft room.
+  const handleStartDraft = async () => {
+    if (!league) return;
+    try {
+      await startDraft.mutateAsync(league.id);
+      router.push(`/leagues/${league.id}/create-team`);
+    } catch {
+      // errors are surfaced by the shared mutation toast
+    }
+  };
 
   const handleLeaveLeague = async () => {
     if (!league) return;
@@ -225,8 +241,22 @@ export function LeagueHome() {
         <div className="space-y-4">
           {isDraftMode ? (
             leagueStatus === "setup" ? (
-              <div className="alert-deadline">
-                Draft has not started yet. Team creation happens through the draft only.
+              <div className="alert-deadline flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  {isCommissioner
+                    ? "All set? Start the draft to randomise the order, create every member's team, and open the draft room. Members can't join once it starts."
+                    : "Draft has not started yet. Team creation happens through the draft only."}
+                </span>
+                {isCommissioner ? (
+                  <button
+                    type="button"
+                    onClick={handleStartDraft}
+                    disabled={startDraft.isPending}
+                    className="shrink-0 rounded-[3px] bg-[#e8fb25] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {startDraft.isPending ? "Starting…" : "Start Draft"}
+                  </button>
+                ) : null}
               </div>
             ) : leagueStatus === "drafting" ? (
               <div className="rounded-[3px] border border-[rgba(0,212,255,0.3)] bg-[#1a1a2a] p-5 text-sm text-[#00d4ff]">
