@@ -1,0 +1,355 @@
+{
+  "match": {
+    "id": "d826bd9c-b6ba-46bb-8e4a-d0c17117931e",
+    "sport_id": "68971488-f98b-486b-9b0b-c5542bf25ee8",
+    "external_api_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+    "home_team": "WAS",
+    "away_team": "MEM",
+    "match_date": "2026-06-28 00:00:00+00:00",
+    "status": "live",
+    "home_score": 8,
+    "away_score": 9,
+    "competition": "Feeder Simulation",
+    "season": "2025-26",
+    "created_at": "2026-07-02 18:46:02.773670+00:00",
+    "updated_at": "2026-07-02 18:46:39.315140+00:00"
+  },
+  "live_events": [
+    {
+      "id": "72b884c8-0111-4956-8d4f-844f693fcd4a",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "56e8ba87-1530-48ed-b539-9e4507373e27",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "e1ff3595-a1df-437a-bb18-9715891bcbd1",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "968eb42d-dacb-45fd-b843-16f056a3441e",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "8572d4a4-5221-410d-95c3-197a9e6cbd09",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "a3c7bb50-456d-4fe7-9159-7e87c22bc0c8",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "8e6e53fb-d4f2-4963-b962-b634660d8d3a",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "2e49f1e5-f625-4a95-a954-103f41b08252",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "fe89c3fc-5439-4cb6-89d7-c9ee2cf4cb6c",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "ec025545-50ff-4745-b42a-53d66f9a5d81",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "78812115-536c-437b-85f5-f6f79a93fb1a",
+      "sport": "basketball",
+      "event_type": "assist",
+      "player_id": "e1ff3595-a1df-437a-bb18-9715891bcbd1",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "29941cc0-8887-4029-8189-c9e4774aeb83",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "c3447f00-9b0d-4240-94e5-2bf34fcfb594",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "0e73a3d0-39b6-4e4a-8ecb-d37ce8754185",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "53ec905e-e85b-4ae3-abe8-5f27b162c582",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "f709eb91-6f97-4d9f-8284-ffe92ee96549",
+      "sport": "basketball",
+      "event_type": "assist",
+      "player_id": "a3c7bb50-456d-4fe7-9159-7e87c22bc0c8",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "35f405e9-1c76-4302-ba7a-bc3e888442b8",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "b8ee5581-d421-42e7-9fb1-79c5f087b698",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "0e73a3d0-39b6-4e4a-8ecb-d37ce8754185",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "4f62c8ed-a81c-4c38-90bc-d631eb0cc010",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "a5c131ef-09b2-464a-83dc-1c790ee697ee",
+      "sport": "basketball",
+      "event_type": "free_throw",
+      "player_id": "3c0896c8-6963-44dc-b8eb-704cd2a55aa0",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "c9153f7e-b31b-49dc-9eaf-35ff7678faed",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "300daa10-021a-4796-b652-d8989d509dcd",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "3c0896c8-6963-44dc-b8eb-704cd2a55aa0",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 1,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:19.771614+00:00",
+      "created_at": "2026-07-02 18:46:19.767913+00:00"
+    },
+    {
+      "id": "8da9af1a-613b-4c62-9729-d55b93750014",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "3260722f-7d05-4421-b9d6-baba6099028c",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "fe89c3fc-5439-4cb6-89d7-c9ee2cf4cb6c",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 3,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:29.071259+00:00",
+      "created_at": "2026-07-02 18:46:29.067452+00:00"
+    },
+    {
+      "id": "166b8ebe-c6f2-472e-bb7c-5df4c739b90b",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "d1a06d95-c1fe-40eb-b7f1-11dc4e022c58",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "e1ff3595-a1df-437a-bb18-9715891bcbd1",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "4ddce198-c94e-4fc1-a47f-18b9a9ab1fda",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "6d8262b7-60ee-409f-ac3f-59732a746810",
+      "sport": "basketball",
+      "event_type": "assist",
+      "player_id": "0e73a3d0-39b6-4e4a-8ecb-d37ce8754185",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "07b3b854-c0e1-47a8-8c24-0a2725e8510d",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "1bbb8cd6-08af-4d48-99b0-acc232ed4809",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "a3c7bb50-456d-4fe7-9159-7e87c22bc0c8",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "b1b82295-faee-4242-bfbb-561ab4998cd2",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "0894abea-4db1-4127-adaf-c58af1992a03",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "0e73a3d0-39b6-4e4a-8ecb-d37ce8754185",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "88c746dd-075b-44c3-84b2-aa31209936d3",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "af9557bc-5f5b-4457-9a54-0b3369f30512",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "3c0896c8-6963-44dc-b8eb-704cd2a55aa0",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "b4a77619-8c30-4826-9807-20aea27ae6e9",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "2e159399-bff6-4d91-b079-64009cd21829",
+      "sport": "basketball",
+      "event_type": "assist",
+      "player_id": "3fca711d-b0ba-4324-a63f-815bf5aa0b81",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "03cf60d5-476f-42ba-9e29-83a32186bd6c",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "6e13169e-b9b1-436d-bcd6-77ac5766d24e",
+      "sport": "basketball",
+      "event_type": "free_throw",
+      "player_id": "3c0896c8-6963-44dc-b8eb-704cd2a55aa0",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "159c26bb-2c9e-497a-9f0b-8ee806d70df9",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "ee975a96-4b9a-489f-9b07-ba26fba95f97",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "a45db5df-c8b3-46ca-9068-767844cf947e",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 4,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:34.018660+00:00",
+      "created_at": "2026-07-02 18:46:34.015040+00:00"
+    },
+    {
+      "id": "4c27a4e5-2a87-4086-9ac9-6119cf4fc02c",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "b193fd84-6f65-4b4b-b0eb-8874a93516e8",
+      "sport": "basketball",
+      "event_type": "free_throw",
+      "player_id": "3fca711d-b0ba-4324-a63f-815bf5aa0b81",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 5,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:39.318933+00:00",
+      "created_at": "2026-07-02 18:46:39.315140+00:00"
+    },
+    {
+      "id": "365ca9a0-8dc0-4490-91db-3213091824cc",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "b74d982f-b8f3-4378-abc2-4ec6cfaf7e43",
+      "sport": "basketball",
+      "event_type": "point_2",
+      "player_id": "a45db5df-c8b3-46ca-9068-767844cf947e",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 5,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:39.318933+00:00",
+      "created_at": "2026-07-02 18:46:39.315140+00:00"
+    },
+    {
+      "id": "b5b70515-7b8c-4c9a-9fc5-7e27a33839ad",
+      "match_id": "feeder:869892d7-bc42-5e9f-a54c-954f31040b17",
+      "event_id": "70558005-25a4-47fa-904e-27d46ae2d7c1",
+      "sport": "basketball",
+      "event_type": "rebound",
+      "player_id": "a45db5df-c8b3-46ca-9068-767844cf947e",
+      "team_id": "",
+      "value": 0.0,
+      "meta": {
+        "minute": 5,
+        "source": "feeder"
+      },
+      "ts": "2026-07-02 18:46:39.318933+00:00",
+      "created_at": "2026-07-02 18:46:39.315140+00:00"
+    }
+  ]
+}

@@ -230,6 +230,7 @@ async def schedule_match(payload: ScheduleMatchPayload, db=Depends(get_db)):
 @router.delete("/schedule-match/{sporty_match_id}", dependencies=[Depends(verify_feeder_secret)])
 async def delete_scheduled_match(
     sporty_match_id: str,
+    force: bool = False,
     db=Depends(get_db),
     redis=Depends(get_async_redis),
 ):
@@ -240,8 +241,9 @@ async def delete_scheduled_match(
     Sporty match UUID or the feeder external_ref (same lookup as every push).
 
     Refuses to delete a LIVE match (409) so an in-progress broadcast is never
-    pulled out from under connected clients — cancel/finish it first. Unknown
-    ids return 404.
+    pulled out from under connected clients — cancel/finish it first, OR pass
+    `?force=true` to override (used to clean up a simulation orphaned in `live`
+    after the feeder died mid-run). Unknown ids return 404.
     """
     match = find_match(db, sporty_match_id)
     if match is None:
@@ -249,10 +251,10 @@ async def delete_scheduled_match(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Match {sporty_match_id} not found",
         )
-    if match.status == "live":
+    if match.status == "live" and not force:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Cannot delete a live match — wait until it is scheduled or finished",
+            detail="Cannot delete a live match — finish it or pass force=true to override",
         )
 
     live_key = _live_key(match)
