@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 
 type LeagueCreateTeamPageProps = {
-  params: {
-    id: string;
-  };
+  params: Promise<{ id: string }>;
 };
 
-export default function LeagueCreateTeamPage({
+export default async function LeagueCreateTeamPage({
   params,
 }: LeagueCreateTeamPageProps) {
-  redirect(`/create-team?leagueId=${params.id}`);
+  const { id } = await params;
+  redirect(`/create-team?leagueId=${id}`);
 }
