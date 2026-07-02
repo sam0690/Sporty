@@ -397,7 +397,7 @@ def get_leagues_for_user(db: Session, user_id: uuid.UUID) -> list[League]:
     every league the user joined (including ones they own, since the
     owner is auto-enrolled in create_league).
     """
-    return (
+    leagues = (
         db.query(League)
         .join(LeagueMembership)
         .filter(LeagueMembership.user_id == user_id)
@@ -406,6 +406,103 @@ def get_leagues_for_user(db: Session, user_id: uuid.UUID) -> list[League]:
         .order_by(League.created_at.desc())
         .all()
     )
+    _attach_my_team_summaries(db, leagues, user_id)
+    return leagues
+
+
+def _attach_my_team_summaries(
+    db: Session,
+    leagues: list[League],
+    user_id: uuid.UUID,
+) -> None:
+    """Populate each league's transient `my_team` attribute for the request user.
+
+    Sets the user's team id + name, their TOTAL season points, and their season
+    rank (position when every team in that league is ordered by total points,
+    highest first). Ranking needs every team's total, so all teams across these
+    leagues are aggregated in ONE grouped query instead of N per-league
+    round-trips. Leagues where the user has no active team keep `my_team = None`.
+    Rank stays None until scoring has begun (no team has points yet).
+
+    `my_team` is a plain (non-mapped) instance attribute — LeagueResponse reads
+    it via `from_attributes`. This is a read helper; it does not mutate the DB.
+    """
+    for league in leagues:
+        league.my_team = None
+
+    if not leagues:
+        return
+
+    league_ids = [league.id for league in leagues]
+
+    # The requesting user's active team in each of these leagues (id + name).
+    my_team_by_league = {
+        team.league_id: team
+        for team in (
+            db.query(FantasyTeam)
+            .filter(
+                FantasyTeam.league_id.in_(league_ids),
+                FantasyTeam.user_id == user_id,
+                FantasyTeam.status == FantasyTeamStatus.ACTIVE,
+            )
+            .all()
+        )
+    }
+    if not my_team_by_league:
+        return
+
+    # Total season points for every active team in these leagues, so we can
+    # rank. outerjoin keeps teams with no scored weeks yet (total = 0).
+    totals_by_league: dict[uuid.UUID, list] = {}
+    total_rows = (
+        db.query(
+            FantasyTeam.league_id.label("league_id"),
+            FantasyTeam.id.label("team_id"),
+            func.coalesce(func.sum(TeamWeeklyScore.points), 0).label("total"),
+        )
+        .outerjoin(
+            TeamWeeklyScore,
+            TeamWeeklyScore.fantasy_team_id == FantasyTeam.id,
+        )
+        .filter(
+            FantasyTeam.league_id.in_(league_ids),
+            FantasyTeam.status == FantasyTeamStatus.ACTIVE,
+        )
+        .group_by(FantasyTeam.league_id, FantasyTeam.id)
+        .all()
+    )
+    for row in total_rows:
+        totals_by_league.setdefault(row.league_id, []).append(row)
+
+    for league in leagues:
+        team = my_team_by_league.get(league.id)
+        if team is None:
+            continue
+
+        rows = sorted(
+            totals_by_league.get(league.id, []),
+            key=lambda r: Decimal(r.total),
+            reverse=True,
+        )
+        my_total = next(
+            (Decimal(r.total) for r in rows if r.team_id == team.id),
+            Decimal("0"),
+        )
+        # Only rank once scoring has started; before that every team ties at 0
+        # and a position number would be meaningless.
+        scoring_started = any(Decimal(r.total) > 0 for r in rows)
+        rank = (
+            next((i + 1 for i, r in enumerate(rows) if r.team_id == team.id), None)
+            if scoring_started
+            else None
+        )
+
+        league.my_team = {
+            "id": team.id,
+            "name": team.name,
+            "rank": rank,
+            "points": my_total,
+        }
 
 
 def update_league_status(

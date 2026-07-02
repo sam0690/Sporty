@@ -101,7 +101,7 @@ export function LeagueCard({
         <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.08)] pt-3">
           <div className="flex items-center gap-2">
             <span className="font-bebas text-2xl text-[#e8fb25]">
-              #{yourRank}
+              {yourRank > 0 ? `#${yourRank}` : "—"}
             </span>
             <span className="section-label">Rank</span>
           </div>

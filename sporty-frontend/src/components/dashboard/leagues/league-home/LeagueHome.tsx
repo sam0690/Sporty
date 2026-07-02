@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
@@ -29,6 +29,7 @@ import {
 } from "@/hooks/leagues/useLeagues";
 import { useDashboardLeagueStats } from "@/hooks/dashboard/useDashboardData";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
+import { useLeagueDraftStream } from "@/hooks/leagues/useLeagueDraftStream";
 
 export function LeagueHome() {
   const params = useParams<{ id: string }>();
@@ -120,6 +121,29 @@ export function LeagueHome() {
     league?.sports?.[0]?.sport.name === "basketball"
       ? league.sports[0].sport.name
       : "football";
+
+  // Draft rooms are member-scoped: once a draft league is DRAFTING, everyone
+  // belongs in the draft screen. `replace` (not push) keeps the back button
+  // from bouncing users straight back into the redirect.
+  const goToDraftRoom = useCallback(() => {
+    router.replace(`/create-team?leagueId=${leagueId}`);
+  }, [router, leagueId]);
+
+  // Reload-safe guard: members AND the commissioner who land on (or reload) the
+  // overview while the draft is running are taken to the draft room.
+  useEffect(() => {
+    if (isDraftMode && leagueStatus === "drafting") {
+      goToDraftRoom();
+    }
+  }, [isDraftMode, leagueStatus, goToDraftRoom]);
+
+  // Live fan-out (SSE, no polling): members waiting in the SETUP room follow the
+  // commissioner into the draft the instant it starts.
+  useLeagueDraftStream(
+    leagueId,
+    isDraftMode && leagueStatus === "setup",
+    goToDraftRoom,
+  );
 
   // Entering DRAFTING for a draft league must go through start_draft, which
   // assigns draft positions + creates every member's team before flipping the
@@ -281,8 +305,15 @@ export function LeagueHome() {
                 ) : null}
               </div>
             ) : leagueStatus === "drafting" ? (
-              <div className="rounded-[3px] border border-[rgba(0,212,255,0.3)] bg-[#1a1a2a] p-5 text-sm text-[#00d4ff]">
-                Draft is in progress. Make your picks from the draft screen.
+              <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(0,212,255,0.3)] bg-[#1a1a2a] p-5 text-sm text-[#00d4ff] sm:flex-row sm:items-center sm:justify-between">
+                <span>Draft is in progress. Make your picks from the draft screen.</span>
+                <button
+                  type="button"
+                  onClick={goToDraftRoom}
+                  className="shrink-0 rounded-[3px] bg-[#00d4ff] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#4de0ff]"
+                >
+                  Enter Draft Room
+                </button>
               </div>
             ) : (
               <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 text-sm text-[#555560]">

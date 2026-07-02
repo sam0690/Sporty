@@ -22,14 +22,19 @@ export function LeaguesView() {
     name: l.name,
     sport: (l.sports?.[0]?.sport.name as Sport) || "multisport",
     memberCount: l.member_count,
-    yourRank: l.my_team?.rank || 0,
+    yourRank: l.my_team?.rank ?? 0,
     teamName: l.my_team?.name || "No Team",
+    points: Number(l.my_team?.points ?? 0),
   }));
+
+  const rankedPositions = leagues
+    .map((l) => l.yourRank)
+    .filter((rank) => rank > 0);
 
   const stats = {
     totalLeagues: leagues.length,
-    highestRank: 0,
-    totalPoints: 0,
+    highestRank: rankedPositions.length ? Math.min(...rankedPositions) : 0,
+    totalPoints: leagues.reduce((sum, l) => sum + l.points, 0),
   };
 
   return (

@@ -116,6 +116,21 @@ class LeagueTeamDetail(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class MyTeamBrief(BaseModel):
+    """The requesting user's team within a league.
+
+    Attached to LeagueResponse so the leagues list can render each card's
+    team name, season rank, and total points without a per-league round-trip.
+    None when the user has no (active) team in that league yet.
+    """
+    id: uuid.UUID
+    name: str
+    rank: int | None = None
+    points: Decimal = Decimal("0")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LeagueResponse(BaseModel):
     """What gets returned when reading a league.
 
@@ -156,6 +171,10 @@ class LeagueResponse(BaseModel):
 
     # Team details with owner and membership join timestamp
     teams_detail: list[LeagueTeamDetail] = []
+
+    # The requesting user's own team in this league (name/rank/points).
+    # Populated by the service on user-scoped list endpoints; None otherwise.
+    my_team: MyTeamBrief | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -13,6 +13,7 @@ Transaction convention:
   - All reads:     call service → return directly (no commit)
 """
 
+import json
 import logging
 import time
 import uuid
@@ -67,6 +68,36 @@ from app.league.schemas import (
 
 router = APIRouter(prefix="/leagues", tags=["Leagues"])
 logger = logging.getLogger(__name__)
+
+
+def draft_channel(league_id: uuid.UUID) -> str:
+    """Redis pub/sub channel for a league's draft events (SSE fan-out)."""
+    return f"league:{league_id}:draft"
+
+
+def _publish_draft_started(league_id: uuid.UUID) -> None:
+    """Fan out a 'draft started' event so every member's browser can move to
+    the draft room in real time via SSE.
+
+    Best-effort: a Redis hiccup must never fail the draft-start request — the
+    frontend's status-based reload guard still recovers on the next fetch.
+    """
+    try:
+        get_redis().publish(
+            draft_channel(league_id),
+            json.dumps(
+                {
+                    "type": "draft_started",
+                    "league_id": str(league_id),
+                    "status": "drafting",
+                }
+            ),
+        )
+    except Exception:  # noqa: BLE001 — realtime is a non-critical side channel
+        logger.warning(
+            "Failed to publish draft_started for league %s", league_id,
+            exc_info=True,
+        )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -552,6 +583,7 @@ def start_draft(
     """
     league = league_service.start_draft(db, league.id, current_user)
     db.commit()
+    _publish_draft_started(league.id)
     return league
 
 
