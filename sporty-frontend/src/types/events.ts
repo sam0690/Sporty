@@ -141,5 +141,9 @@ export type LineupChange = {
   team_id: string;
   player_in: string;
   player_out: string;
+  /** Display names resolved server-side (feeder substitutions); the ids are
+   *  the fallback when a player is unmapped. */
+  player_in_name?: string | null;
+  player_out_name?: string | null;
   minute?: number;
 };

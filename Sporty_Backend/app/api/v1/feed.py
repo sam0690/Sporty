@@ -103,6 +103,9 @@ class FeedEvent(BaseModel):
     sporty_player_id: str | None = None
     sporty_team_id: str | None = None
     minute: int | None = None
+    # Substitutions: the player coming OFF (sporty_player_id is the player
+    # coming on). Ignored for every other event type.
+    related_sporty_player_id: str | None = None
 
 
 class MatchResultPayload(BaseModel):
@@ -505,6 +508,7 @@ async def ingest_match_result(
     # resolution survives whatever case/form the feed sent.
     names: dict[str, dict] = {}
     batch_ids = [e.sporty_player_id for e in payload.events if e.sporty_player_id]
+    batch_ids += [e.related_sporty_player_id for e in payload.events if e.related_sporty_player_id]
     if batch_ids:
         lowered = list({pid.lower() for pid in batch_ids})
         matched = db.execute(
@@ -549,6 +553,28 @@ async def ingest_match_result(
         },
     )
     await redis.publish(channel, message.model_dump_json())
+
+    # Substitutions additionally publish the dedicated LINEUP_CHANGE message the
+    # frontend's LineupCard listens for (player_in = the event's player,
+    # player_out = related_sporty_player_id; names resolved above when linked).
+    for event in payload.events:
+        if event.event_type != "substitution" or not event.sporty_player_id:
+            continue
+        info_in = names.get(event.sporty_player_id or "")
+        info_out = names.get(event.related_sporty_player_id or "")
+        lineup_message = WSMessage(
+            event="LINEUP_CHANGE",
+            data={
+                "match_id": live_key,
+                "team_id": event.sporty_team_id or "",
+                "player_in": event.sporty_player_id,
+                "player_out": event.related_sporty_player_id,
+                "player_in_name": info_in["name"] if info_in else None,
+                "player_out_name": info_out["name"] if info_out else None,
+                "minute": event.minute,
+            },
+        )
+        await redis.publish(channel, lineup_message.model_dump_json())
 
     # Live per-player fantasy deltas → Redis hashes + FANTASY_POINTS_DELTA so the
     # frontend PointsCard ticks up during the match (needs linked player ids).

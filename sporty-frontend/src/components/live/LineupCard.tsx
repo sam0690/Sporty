@@ -55,7 +55,7 @@ export function LineupCard() {
                     </svg>
                   </span>
                   <span className="truncate text-[#d7d7de]">
-                    {nameFor(change.player_in)}
+                    {change.player_in_name ?? nameFor(change.player_in)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -74,7 +74,7 @@ export function LineupCard() {
                     </svg>
                   </span>
                   <span className="truncate text-[#8a8a95]">
-                    {nameFor(change.player_out)}
+                    {change.player_out_name ?? nameFor(change.player_out)}
                   </span>
                 </div>
               </div>

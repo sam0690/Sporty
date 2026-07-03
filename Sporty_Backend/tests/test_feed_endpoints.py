@@ -58,8 +58,12 @@ class _FakeDB:
             return _FakeQuery(self.sport)
         return _FakeQuery(self.match)
 
-    def execute(self, statement):
+    def execute(self, statement, params=None):
         self.statements.append(statement)
+        if params is not None or not hasattr(statement, "_multi_values"):
+            # Textual queries (e.g. the player-name resolution SELECT): no rows
+            # in the fake — events simply render without resolved names.
+            return SimpleNamespace(mappings=lambda: SimpleNamespace(all=lambda: []))
         rowcount = len(statement.compile(dialect=postgresql.dialect()).params) and sum(
             1 for _ in statement._multi_values[0]
         )
@@ -290,6 +294,43 @@ class TestPrediction:
         assert key == f"prediction:match:{MATCH_UUID}"
         assert ttl == 86400
         assert json.loads(value)["home_win_prob"] == 0.62
+
+
+class TestSubstitutionLineupChange:
+    def test_substitution_publishes_lineup_change(self, harness):
+        payload = match_result_payload(events=[
+            {
+                "event_id": "33333333-3333-3333-3333-333333333333",
+                "event_type": "substitution",
+                "sporty_player_id": "p-uuid-on",
+                "sporty_team_id": "t-uuid-1",
+                "minute": 62,
+                "related_sporty_player_id": "p-uuid-off",
+            },
+        ])
+        response = harness.client.post(
+            "/api/v1/feed/match-result", json=payload,
+            headers={"X-Feeder-Secret": SECRET},
+        )
+        assert response.status_code == 200
+
+        messages = [json.loads(m) for _, m in harness.redis.published]
+        lineup = [m for m in messages if m["event"] == "LINEUP_CHANGE"]
+        assert len(lineup) == 1
+        data = lineup[0]["data"]
+        assert data["player_in"] == "p-uuid-on"
+        assert data["player_out"] == "p-uuid-off"
+        assert data["team_id"] == "t-uuid-1"
+        assert data["minute"] == 62
+
+    def test_non_substitution_events_do_not_publish_lineup_change(self, harness):
+        response = harness.client.post(
+            "/api/v1/feed/match-result", json=match_result_payload(),
+            headers={"X-Feeder-Secret": SECRET},
+        )
+        assert response.status_code == 200
+        messages = [json.loads(m) for _, m in harness.redis.published]
+        assert not [m for m in messages if m["event"] == "LINEUP_CHANGE"]
 
 
 class TestModelMetrics:
