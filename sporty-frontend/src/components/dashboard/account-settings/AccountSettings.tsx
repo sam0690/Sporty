@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 
 import {
@@ -8,22 +7,26 @@ import {
   type Preferences,
 } from "@/components/dashboard/profile/components/PreferencesForm";
 import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";
+import { useMe } from "@/hooks/auth/useMe";
+import { useUpdateUser } from "@/hooks/users/useUsers";
 import { UserService } from "@/services/UserService";
 import { toastifier } from "@/lib/toastifier";
 
-const defaultPreferences: Preferences = {
-  emailNotifications: true,
-  pushNotifications: false,
-  darkMode: true,
-  language: "en",
-};
-
 export function AccountSettings() {
-  const [preferences, setPreferences] = useState<Preferences>(defaultPreferences);
+  const { data: me } = useMe();
+  const updateUser = useUpdateUser(me?.id ?? "");
 
-  const handleUpdatePreferences = (next: Preferences): void => {
-    setPreferences(next);
-    toastifier.info("Preferences updated");
+  const preferences: Preferences = {
+    emailNotifications: me?.email_notifications_enabled ?? true,
+  };
+
+  const handleUpdatePreferences = async (next: Preferences): Promise<void> => {
+    if (!me?.id) {
+      return;
+    }
+    await updateUser.mutateAsync({
+      email_notifications_enabled: next.emailNotifications,
+    });
   };
 
   const handleChangePassword = async (

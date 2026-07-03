@@ -2,9 +2,9 @@
 
 type Preferences = {
   emailNotifications: boolean;
-  pushNotifications: boolean;
-  darkMode: boolean;
-  language: string;
+  // Push notifications, dark mode, and language are not wired to any
+  // backend/theme system yet — their controls are disabled below until
+  // that infra exists.
 };
 
 type PreferencesFormProps = {
@@ -72,6 +72,11 @@ export function PreferencesForm({
           }
         />
 
+        {/*
+          Push Notifications, Dark Mode, and Language are disabled until
+          their backing infra exists (device-token opt-in, theme system,
+          i18n respectively).
+
         <ToggleRow
           label="Push Notifications"
           enabled={preferences.pushNotifications}
@@ -104,6 +109,7 @@ export function PreferencesForm({
             <option value="fr">French</option>
           </select>
         </div>
+        */}
       </div>
     </section>
   );

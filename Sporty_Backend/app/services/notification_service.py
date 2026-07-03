@@ -141,7 +141,11 @@ def check_and_notify_open_windows(db: Session) -> dict[str, int]:
                 )
                 notifications_created += 1
 
-                if membership.user and membership.user.email:
+                if (
+                    membership.user
+                    and membership.user.email
+                    and membership.user.email_notifications_enabled
+                ):
                     sent = send_transfer_window_open_email(
                         to_email=membership.user.email,
                         username=membership.user.username,

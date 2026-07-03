@@ -1,11 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.database import get_db
+from app.services.storage_service import ALLOWED_AVATAR_CONTENT_TYPES, MAX_AVATAR_SIZE_BYTES, upload_avatar
 from app.user import services
 from app.user.schemas import (
     UserActivityResponse,
@@ -81,6 +82,27 @@ def update_user(
     current_user: User = Depends(get_current_active_user),
 ):
     return services.update_user(db, user_id, current_user.id, data)
+
+
+@router.post("/{user_id}/avatar", response_model=UserProfileResponse, summary="Upload profile avatar")
+async def upload_user_avatar(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    file: UploadFile = File(...),
+):
+    if user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only update your own avatar")
+
+    if file.content_type not in ALLOWED_AVATAR_CONTENT_TYPES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Avatar must be JPEG, PNG, or WEBP")
+
+    contents = await file.read()
+    if len(contents) > MAX_AVATAR_SIZE_BYTES:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Avatar must be smaller than 2MB")
+
+    avatar_url = upload_avatar(user_id, file, contents)
+    return services.update_user(db, user_id, current_user.id, UserUpdateRequest(avatar_url=avatar_url))
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response, summary="Deactivate account")

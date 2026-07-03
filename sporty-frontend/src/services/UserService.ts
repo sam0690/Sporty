@@ -12,6 +12,7 @@ export type TMe = {
   google_id: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  email_notifications_enabled: boolean;
   created_at: string;
 };
 
@@ -178,9 +179,20 @@ export const UserService = {
 
   async updateUser(
     id: string,
-    payload: { username?: string; avatar_url?: string | null },
+    payload: {
+      username?: string;
+      avatar_url?: string | null;
+      email_notifications_enabled?: boolean;
+    },
   ): Promise<TUserProfile> {
     const res = await authApi.patch(API_PATHS.USERS.UPDATE(id), payload);
+    return unwrapResponseData(res.data);
+  },
+
+  async uploadAvatar(id: string, file: File): Promise<TUserProfile> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await authApi.post(API_PATHS.USERS.UPLOAD_AVATAR(id), formData);
     return unwrapResponseData(res.data);
   },
 

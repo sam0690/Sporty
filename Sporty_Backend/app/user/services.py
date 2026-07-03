@@ -372,6 +372,9 @@ def update_user(db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUI
     if data.avatar_url is not None:
         user.avatar_url = data.avatar_url.strip() or None
 
+    if data.email_notifications_enabled is not None:
+        user.email_notifications_enabled = data.email_notifications_enabled
+
     db.commit()
     db.refresh(user)
     return user

@@ -12,6 +12,7 @@ class UserProfileResponse(BaseModel):
     auth_provider: str
     avatar_url: str | None = None
     is_active: bool
+    email_notifications_enabled: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -20,6 +21,7 @@ class UserProfileResponse(BaseModel):
 class UserUpdateRequest(BaseModel):
     username: str | None = Field(default=None, min_length=3, max_length=50)
     avatar_url: str | None = Field(default=None, max_length=500)
+    email_notifications_enabled: bool | None = Field(default=None)
 
 
 class UserListResponse(BaseModel):

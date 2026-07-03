@@ -12,7 +12,7 @@ import {
 } from "@/components/dashboard/profile/components/ProfileForm";
 import { ProfileHeader } from "@/components/dashboard/profile/components/ProfileHeader";
 import { SettingsSkeleton } from "@/components/dashboard/profile/components/SettingsSkeleton";
-import { useUpdateUser } from "@/hooks/users/useUsers";
+import { useUpdateUser, useUploadAvatar } from "@/hooks/users/useUsers";
 import { UserService } from "@/services/UserService";
 
 const mockUser = {
@@ -35,6 +35,7 @@ export function ProfileSettingsView() {
   const { logout } = useAuth();
   const { data: me, username } = useMe();
   const updateUser = useUpdateUser(me?.id ?? "");
+  const uploadAvatar = useUploadAvatar(me?.id ?? "");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userData, setUserData] = useState<ExtendedUser>({
@@ -85,12 +86,12 @@ export function ProfileSettingsView() {
     }
   };
 
-  const handleAvatarChange = async (avatar: string): Promise<void> => {
-    if (me?.id) {
-      await updateUser.mutateAsync({ avatar_url: avatar });
+  const handleAvatarChange = async (file: File): Promise<void> => {
+    if (!me?.id) {
+      return;
     }
-    setUserData((prev) => ({ ...prev, avatar }));
-    toastifier.success("✓ Avatar updated successfully");
+    const updated = await uploadAvatar.mutateAsync(file);
+    setUserData((prev) => ({ ...prev, avatar: updated.avatar_url ?? "" }));
   };
 
   const handleDeleteAccount = async (): Promise<boolean> => {

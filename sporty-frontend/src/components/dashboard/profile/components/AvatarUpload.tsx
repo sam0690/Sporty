@@ -5,7 +5,7 @@ import { toastifier } from "@/lib/toastifier";
 
 type AvatarUploadProps = {
   currentAvatar: string;
-  onAvatarChange: (avatar: string) => Promise<void> | void;
+  onAvatarChange: (file: File) => Promise<void> | void;
 };
 
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -16,12 +16,20 @@ export function AvatarUpload({
   onAvatarChange,
 }: AvatarUploadProps) {
   const [preview, setPreview] = useState(currentAvatar);
-  const [pendingAvatar, setPendingAvatar] = useState("");
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     setPreview(currentAvatar);
   }, [currentAvatar]);
+
+  useEffect(() => {
+    return () => {
+      if (preview.startsWith("blob:")) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -39,25 +47,22 @@ export function AvatarUpload({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      setPreview(result);
-      setPendingAvatar(result);
-    };
-    reader.readAsDataURL(file);
+    setPreview(URL.createObjectURL(file));
+    setPendingFile(file);
   };
 
   const saveAvatar = async () => {
-    if (!pendingAvatar) {
+    if (!pendingFile) {
       return;
     }
 
     setIsUploading(true);
-    await new Promise((resolve) => setTimeout(resolve, 600));
-    await onAvatarChange(pendingAvatar);
-    setPendingAvatar("");
-    setIsUploading(false);
+    try {
+      await onAvatarChange(pendingFile);
+      setPendingFile(null);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -96,7 +101,7 @@ export function AvatarUpload({
             Upload New
           </button>
 
-          {pendingAvatar ? (
+          {pendingFile ? (
             <button
               type="button"
               onClick={saveAvatar}

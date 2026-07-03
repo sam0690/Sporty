@@ -134,6 +134,15 @@ class Settings(BaseSettings):
     # Default frontend base; override via env in non-local environments
     FRONTEND_BASE_URL: str = "https://sporty-woad.vercel.app"
 
+    # ── Cloudflare R2 (avatar/object storage, S3-compatible) ─────
+    R2_ACCOUNT_ID: str = ""
+    R2_ACCESS_KEY_ID: str = ""
+    R2_SECRET_ACCESS_KEY: str = ""
+    R2_BUCKET_NAME: str = ""
+    # Public base URL for serving objects — either the bucket's r2.dev URL
+    # or a custom domain attached to the bucket, e.g. "https://pub-xxxx.r2.dev"
+    R2_PUBLIC_URL_BASE: str = ""
+
     # Forgot-password abuse protection (legacy - superseded by rate limiter)
     FORGOT_PASSWORD_RATE_LIMIT_WINDOW_SECONDS: int = 300
     FORGOT_PASSWORD_RATE_LIMIT_MAX_REQUESTS: int = 5
@@ -182,6 +191,19 @@ class Settings(BaseSettings):
         if not parsed.scheme or not parsed.netloc:
             return ""
         return f"{parsed.scheme}://{parsed.netloc}"
+
+    def r2_is_configured(self) -> bool:
+        """True once a bucket + credentials + public URL base are all set."""
+        return bool(
+            self.R2_ACCOUNT_ID
+            and self.R2_ACCESS_KEY_ID
+            and self.R2_SECRET_ACCESS_KEY
+            and self.R2_BUCKET_NAME
+            and self.R2_PUBLIC_URL_BASE
+        )
+
+    def r2_endpoint_url(self) -> str:
+        return f"https://{self.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
     def get_csrf_exempt_paths(self) -> list[str]:
         """Get list of paths exempt from CSRF protection."""

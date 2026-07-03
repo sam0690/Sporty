@@ -26,14 +26,31 @@ export function useUser(userId: string) {
 export function useUpdateUser(userId: string) {
   const queryClient = useQueryClient();
   return useApiMutation(
-    (payload: { username?: string; avatar_url?: string | null }) =>
-      UserService.updateUser(userId, payload),
+    (payload: {
+      username?: string;
+      avatar_url?: string | null;
+      email_notifications_enabled?: boolean;
+    }) => UserService.updateUser(userId, payload),
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["users", userId] });
         queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
       },
       successMessage: "Profile updated",
+    },
+  );
+}
+
+export function useUploadAvatar(userId: string) {
+  const queryClient = useQueryClient();
+  return useApiMutation(
+    (file: File) => UserService.uploadAvatar(userId, file),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["users", userId] });
+        queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+      },
+      successMessage: "Avatar updated",
     },
   );
 }

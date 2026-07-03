@@ -28,6 +28,7 @@ export const API_PATHS = {
     PUBLIC_STATS: (id: string) => `/users/${id}/public-stats`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
+    UPLOAD_AVATAR: (id: string) => `/users/${id}/avatar`,
   },
 
   LEAGUES: {
