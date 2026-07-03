@@ -292,6 +292,47 @@ class TestPrediction:
         assert json.loads(value)["home_win_prob"] == 0.62
 
 
+class TestModelMetrics:
+    def test_model_metrics_are_cached_globally(self, harness):
+        payload = {
+            "generated_at": "2026-07-03T12:00:00+00:00",
+            "finished_matches_scored": 8,
+            "predictions_scored": 8,
+            "by_model_version": {
+                "outcome_v4_elo_sot": {
+                    "n": 8,
+                    "accuracy": 0.625,
+                    "log_loss": 0.9013,
+                    "brier": 0.5495,
+                    "ece": 0.4508,
+                    "calibration": [
+                        {"bin": "0.6-0.7", "n": 4, "avg_confidence": 0.657, "accuracy": 1.0}
+                    ],
+                }
+            },
+        }
+        response = harness.client.post(
+            "/api/v1/feed/model-metrics", json=payload, headers={"X-Feeder-Secret": SECRET}
+        )
+        assert response.status_code == 200
+        assert response.json()["model_versions"] == ["outcome_v4_elo_sot"]
+
+        key, ttl, value = harness.redis.setex_calls[0]
+        assert key == "model:metrics"
+        assert ttl == 7 * 86400
+        cached = json.loads(value)
+        assert cached["by_model_version"]["outcome_v4_elo_sot"]["accuracy"] == 0.625
+
+    def test_model_metrics_require_secret(self, harness):
+        response = harness.client.post(
+            "/api/v1/feed/model-metrics",
+            json={"generated_at": "x", "finished_matches_scored": 0,
+                  "predictions_scored": 0, "by_model_version": {}},
+            headers={"X-Feeder-Secret": "wrong"},
+        )
+        assert response.status_code == 401
+
+
 class TestPlayerRatings:
     def test_ratings_are_cached_24h_and_motm_logged(self, harness, caplog):
         payload = {

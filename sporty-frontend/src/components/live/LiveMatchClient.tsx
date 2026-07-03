@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { EventFeed } from "@/components/live/EventFeed";
 import { LineupsCard } from "@/components/live/LineupsCard";
+import { ModelMetricsCard } from "@/components/live/ModelMetricsCard";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
 import { ScoreTicker } from "@/components/live/ScoreTicker";
@@ -15,10 +16,11 @@ import {
   fetchMatchPrediction,
   fetchMatchRatings,
   fetchMatchSnapshot,
+  fetchModelMetrics,
 } from "@/lib/realtimeApi";
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
-import type { MatchPrediction, MatchRatings } from "@/types/events";
+import type { MatchPrediction, MatchRatings, ModelMetrics } from "@/types/events";
 
 type LiveMatchClientProps = {
   matchId: string;
@@ -29,6 +31,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<MatchPrediction | null>(null);
   const [ratings, setRatings] = useState<MatchRatings | null>(null);
+  const [modelMetrics, setModelMetrics] = useState<ModelMetrics | null>(null);
 
   const hydrate = useMatchStore((s) => s.hydrate);
   const status = useMatchStore((s) => s.status);
@@ -72,6 +75,14 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         }
       } catch {
         // Prediction is decorative — never block the live view on it.
+      }
+      try {
+        const metrics = await fetchModelMetrics();
+        if (mounted) {
+          setModelMetrics(metrics);
+        }
+      } catch {
+        // The model scorecard is decorative too.
       }
     };
 
@@ -164,6 +175,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
             <LineupsCard />
             <div className="space-y-6">
               <PredictionCard prediction={prediction} />
+              <ModelMetricsCard metrics={modelMetrics} />
               <EventFeed />
             </div>
           </div>
@@ -195,6 +207,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
               <LiveLeaderboard />
               <LineupsCard />
               <PredictionCard prediction={prediction} />
+              <ModelMetricsCard metrics={modelMetrics} />
               {hasLineupChanges && <LineupCard />}
             </div>
           </div>

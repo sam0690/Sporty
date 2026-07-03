@@ -66,6 +66,11 @@ router = APIRouter(prefix="/feed", tags=["Feeder"])
 PREDICTION_TTL_SECONDS = 86400
 RATINGS_TTL_SECONDS = 86400
 LINEUPS_TTL_SECONDS = 86400
+# Global (not match-scoped) model-performance scorecard; refreshed by the
+# feeder after every finished match, so a long TTL only matters when the
+# feeder goes quiet.
+MODEL_METRICS_TTL_SECONDS = 7 * 86400
+MODEL_METRICS_KEY = "model:metrics"
 
 
 # ── R-5.1: shared-secret auth ────────────────────────────────────────────────
@@ -599,6 +604,36 @@ async def ingest_prediction(
     key = f"prediction:match:{payload.sporty_match_id}"
     await redis.setex(key, PREDICTION_TTL_SECONDS, payload.model_dump_json())
     return {"status": "ok", "cached_key": key, "ttl_seconds": PREDICTION_TTL_SECONDS}
+
+
+# ── Model-performance scorecard cache ────────────────────────────────────────
+# The feeder scores its stored predictions against finished matches
+# (GET /predict/metrics on the feeder) and pushes the scorecard here after each
+# finished simulation; the frontend reads it via GET /api/model-metrics.
+
+
+class ModelMetricsPayload(BaseModel):
+    generated_at: str
+    finished_matches_scored: int
+    predictions_scored: int
+    # {model_version: {n, accuracy, log_loss, brier, ece, calibration: [...]}}
+    by_model_version: dict[str, dict] = {}
+
+
+@router.post("/model-metrics", dependencies=[Depends(verify_feeder_secret)])
+async def ingest_model_metrics(
+    payload: ModelMetricsPayload,
+    redis=Depends(get_async_redis),
+):
+    await redis.setex(
+        MODEL_METRICS_KEY, MODEL_METRICS_TTL_SECONDS, payload.model_dump_json()
+    )
+    return {
+        "status": "ok",
+        "cached_key": MODEL_METRICS_KEY,
+        "ttl_seconds": MODEL_METRICS_TTL_SECONDS,
+        "model_versions": sorted(payload.by_model_version),
+    }
 
 
 # ── R-5.4: player ratings cache ──────────────────────────────────────────────
