@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
@@ -23,14 +24,19 @@ function Crest({
   name,
   color,
   initials,
+  logoUrl,
 }: {
   name: string;
   color: string;
   initials: string;
+  logoUrl?: string | null;
 }) {
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(logoUrl) && !failed;
+
   return (
     <span
-      className="grid size-14 shrink-0 place-items-center rounded-[12px] font-bebas text-xl leading-none tracking-[1px] sm:size-[4.5rem] sm:text-3xl"
+      className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[12px] font-bebas text-xl leading-none tracking-[1px] sm:size-[4.5rem] sm:text-3xl"
       style={{
         color,
         background: `linear-gradient(160deg, ${color}33, ${color}0d)`,
@@ -39,7 +45,18 @@ function Crest({
       }}
       aria-label={name}
     >
-      {initials}
+      {showImage ? (
+        <Image
+          src={logoUrl as string}
+          alt={name}
+          width={72}
+          height={72}
+          className="h-full w-full object-contain p-1.5"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        initials
+      )}
     </span>
   );
 }
@@ -49,6 +66,8 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
   const status = useMatchStore((s) => s.status);
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
+  const homeTeamLogoUrl = useMatchStore((s) => s.homeTeamLogoUrl);
+  const awayTeamLogoUrl = useMatchStore((s) => s.awayTeamLogoUrl);
   const minute = useMatchStore((s) => s.minute);
   const minuteStartedTs = useMatchStore((s) => s.minuteStartedTs);
   const socketStatus = useMatchStore((s) => s.socketStatus);
@@ -179,6 +198,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               name={homeTeam ?? "Home"}
               color={home.color}
               initials={home.initials}
+              logoUrl={homeTeamLogoUrl}
             />
           </div>
 
@@ -219,6 +239,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               name={awayTeam ?? "Away"}
               color={away.color}
               initials={away.initials}
+              logoUrl={awayTeamLogoUrl}
             />
             <div className="min-w-0 text-left">
               <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-4xl">

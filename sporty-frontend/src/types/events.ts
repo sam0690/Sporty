@@ -45,6 +45,8 @@ export type MatchSnapshot = {
   match_id: string;
   home_team: string | null;
   away_team: string | null;
+  home_team_logo_url: string | null;
+  away_team_logo_url: string | null;
   score: Score;
   status: string;
   match_date: string | null;

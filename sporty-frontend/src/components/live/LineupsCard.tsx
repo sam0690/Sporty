@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
+
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
 import type { LineupPlayer } from "@/types/events";
@@ -8,14 +11,18 @@ import { ListIcon } from "./icons";
 
 function TeamColumn({
   teamName,
+  logoUrl,
   players,
   align,
 }: {
   teamName: string;
+  logoUrl?: string | null;
   players: LineupPlayer[];
   align: "left" | "right";
 }) {
   const { color, initials } = teamIdentity(teamName);
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(logoUrl) && !failed;
   const isRight = align === "right";
   return (
     <div>
@@ -23,14 +30,25 @@ function TeamColumn({
         className={`flex items-center gap-2.5 ${isRight ? "flex-row-reverse text-right" : ""}`}
       >
         <span
-          className="grid size-8 shrink-0 place-items-center rounded-[7px] font-bebas text-sm leading-none tracking-[1px]"
+          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[7px] font-bebas text-sm leading-none tracking-[1px]"
           style={{
             color,
             background: `linear-gradient(160deg, ${color}2e, ${color}0d)`,
             border: `1px solid ${color}59`,
           }}
         >
-          {initials}
+          {showImage ? (
+            <Image
+              src={logoUrl as string}
+              alt={teamName}
+              width={32}
+              height={32}
+              className="h-full w-full object-contain p-1"
+              onError={() => setFailed(true)}
+            />
+          ) : (
+            initials
+          )}
         </span>
         <div className={`min-w-0 ${isRight ? "text-right" : ""}`}>
           <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
@@ -72,6 +90,8 @@ export function LineupsCard() {
   const startingLineups = useMatchStore((s) => s.startingLineups);
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
+  const homeTeamLogoUrl = useMatchStore((s) => s.homeTeamLogoUrl);
+  const awayTeamLogoUrl = useMatchStore((s) => s.awayTeamLogoUrl);
 
   const { home, away } = startingLineups;
   if (home.length === 0 && away.length === 0) {
@@ -89,8 +109,18 @@ export function LineupsCard() {
               "linear-gradient(180deg, transparent, rgba(255,255,255,0.1) 15%, rgba(255,255,255,0.1) 85%, transparent)",
           }}
         />
-        <TeamColumn teamName={homeTeam ?? "Home"} players={home} align="left" />
-        <TeamColumn teamName={awayTeam ?? "Away"} players={away} align="right" />
+        <TeamColumn
+          teamName={homeTeam ?? "Home"}
+          logoUrl={homeTeamLogoUrl}
+          players={home}
+          align="left"
+        />
+        <TeamColumn
+          teamName={awayTeam ?? "Away"}
+          logoUrl={awayTeamLogoUrl}
+          players={away}
+          align="right"
+        />
       </div>
     </Panel>
   );

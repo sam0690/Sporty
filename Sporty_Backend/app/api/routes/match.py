@@ -12,9 +12,40 @@ from app.api.deps import (
     get_current_active_user_async,
     require_match_access,
 )
+from app.match.router import MATCH_TEAM_NAME_ALIASES
 from app.player.models import Player
 
 router = APIRouter(tags=["Realtime"])
+
+
+async def _resolve_team_logo_urls(
+    db, sport_id: str | None, home_team: str | None, away_team: str | None
+) -> tuple[str | None, str | None]:
+    """Same name+sport lookup (with the same alias map) as the REST /matches
+    list — kept as a single shared alias table so both surfaces agree on
+    which fixture strings map to which RealTeam row."""
+    if not sport_id or not (home_team or away_team):
+        return None, None
+
+    canonical_home = MATCH_TEAM_NAME_ALIASES.get(home_team, home_team) if home_team else None
+    canonical_away = MATCH_TEAM_NAME_ALIASES.get(away_team, away_team) if away_team else None
+    names = [n for n in (canonical_home, canonical_away) if n]
+    if not names:
+        return None, None
+
+    rows = (
+        await db.execute(
+            text(
+                "SELECT name, logo_url FROM real_teams WHERE sport_id = :sport_id AND name = ANY(:names)"
+            ),
+            {"sport_id": sport_id, "names": names},
+        )
+    ).mappings().all()
+    logo_by_name = {r["name"]: r["logo_url"] for r in rows}
+    return (
+        logo_by_name.get(canonical_home) if canonical_home else None,
+        logo_by_name.get(canonical_away) if canonical_away else None,
+    )
 
 
 async def _resolve_players(db, player_ids: set[str]) -> dict[str, dict]:
@@ -90,7 +121,8 @@ async def get_match_state(
         await db.execute(
             text(
                 """
-                SELECT id::text AS id, home_team, away_team, home_score, away_score, status, match_date
+                SELECT id::text AS id, sport_id::text AS sport_id, home_team, away_team,
+                       home_score, away_score, status, match_date
                 FROM matches
                 WHERE id::text = :match_id OR external_api_id = :match_id
                 LIMIT 1
@@ -177,10 +209,16 @@ async def get_match_state(
             }
         )
 
+    home_team_logo_url, away_team_logo_url = await _resolve_team_logo_urls(
+        db, row["sport_id"], row["home_team"], row["away_team"]
+    )
+
     return {
         "match_id": row["id"],
         "home_team": row["home_team"],
         "away_team": row["away_team"],
+        "home_team_logo_url": home_team_logo_url,
+        "away_team_logo_url": away_team_logo_url,
         "score": {
             "home": int(row["home_score"] or 0),
             "away": int(row["away_score"] or 0),

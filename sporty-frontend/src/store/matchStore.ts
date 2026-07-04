@@ -19,6 +19,8 @@ type MatchStoreState = {
   matchId: string | null;
   homeTeam: string | null;
   awayTeam: string | null;
+  homeTeamLogoUrl: string | null;
+  awayTeamLogoUrl: string | null;
   score: Score;
   minute: number | null;
   minuteStartedTs: number | null;
@@ -66,6 +68,8 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   matchId: null,
   homeTeam: null,
   awayTeam: null,
+  homeTeamLogoUrl: null,
+  awayTeamLogoUrl: null,
   score: { home: 0, away: 0 },
   minute: null,
   minuteStartedTs: null,
@@ -83,6 +87,8 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
       matchId: snapshot.match_id,
       homeTeam: snapshot.home_team,
       awayTeam: snapshot.away_team,
+      homeTeamLogoUrl: snapshot.home_team_logo_url,
+      awayTeamLogoUrl: snapshot.away_team_logo_url,
       score: snapshot.score,
       players: snapshot.players,
       events: snapshot.events,
