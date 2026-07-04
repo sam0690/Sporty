@@ -109,6 +109,18 @@ async def _get_cached_match_json(redis, prefix: str, _match) -> dict | None:
     return None
 
 
+async def _get_persisted_match_json(db, kind: str, match_id) -> dict | None:
+    """Durable backstop once the 24h Redis cache entry for a feeder push
+    (prediction/ratings/lineups) has expired — see match_feed_cache."""
+    row = (
+        await db.execute(
+            text("SELECT payload FROM match_feed_cache WHERE match_id = :match_id AND kind = :kind"),
+            {"match_id": str(match_id), "kind": kind},
+        )
+    ).mappings().first()
+    return row["payload"] if row else None
+
+
 @router.get("/match/{match_id}/state")
 async def get_match_state(
     match_id: str,
@@ -170,13 +182,17 @@ async def get_match_state(
     lineup_home: list[str] = []
     lineup_away: list[str] = []
     lineups_raw = await redis.get(f"lineups:match:{row['id']}")
+    lineup_data = None
     if lineups_raw:
         try:
             lineup_data = json.loads(lineups_raw)
-            lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
-            lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
         except (ValueError, TypeError):
-            pass
+            lineup_data = None
+    if lineup_data is None:
+        lineup_data = await _get_persisted_match_json(db, "lineups", row["id"])
+    if lineup_data:
+        lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
+        lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
 
     # Resolve every player UUID seen (events + point hashes + lineups) to a name.
     player_ids = {e["player_id"] for e in event_rows if e["player_id"]}
@@ -254,11 +270,15 @@ async def get_model_metrics(
 async def get_match_prediction(
     match_id: str,
     _match=Depends(require_match_access),
+    db=Depends(get_async_db),
     redis=Depends(get_async_redis_dep),
 ):
     """Pre-match outcome probabilities pushed by the Sporty Data Feeder
-    (cached 24h under prediction:match:{id})."""
+    (cached 24h under prediction:match:{id}, falling back to the durable
+    match_feed_cache backstop once that entry expires)."""
     prediction = await _get_cached_match_json(redis, "prediction", _match)
+    if prediction is None:
+        prediction = await _get_persisted_match_json(db, "prediction", _match.id)
     if prediction is None:
         raise HTTPException(status_code=404, detail="No prediction available for this match")
     return prediction
@@ -307,8 +327,11 @@ async def get_match_ratings(
 
     Enriched server-side with player display names so the UI doesn't have to
     resolve raw feeder ids. `name` is added per rating (null when unmapped) and
-    `man_of_match_name` alongside the existing MOTM id."""
+    `man_of_match_name` alongside the existing MOTM id. Falls back to the
+    durable match_feed_cache backstop once the 24h Redis entry expires."""
     ratings = await _get_cached_match_json(redis, "ratings", _match)
+    if ratings is None:
+        ratings = await _get_persisted_match_json(db, "ratings", _match.id)
     if ratings is None:
         raise HTTPException(status_code=404, detail="No ratings available for this match")
 

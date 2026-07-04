@@ -24,7 +24,7 @@ from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel, Field
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from app.core.config import settings
@@ -33,6 +33,7 @@ from app.database import get_db
 from app.league.models import Sport
 from app.match.models import Match
 from app.models.db.live_event import LiveEvent
+from app.models.db.match_feed_cache import MatchFeedCache
 from app.models.schemas.events import WSMessage
 from app.player.models import Player, RealTeam
 from app.services.feed_scoring import apply_live_points, persist_match_stats
@@ -180,6 +181,21 @@ def find_match(db, sporty_match_id: str) -> Match | None:
 def _live_key(match: Match) -> str:
     # Same key the WebSocket/SSE routes subscribe with.
     return match.external_api_id or str(match.id)
+
+
+def _persist_feed_cache(db, match_id, kind: str, payload: dict) -> None:
+    """Durable backstop for a Redis push (prediction/ratings/lineups) so a GET
+    still has something to serve once the 24h TTL cache entry expires."""
+    statement = (
+        pg_insert(MatchFeedCache)
+        .values(match_id=match_id, kind=kind, payload=payload)
+        .on_conflict_do_update(
+            index_elements=["match_id", "kind"],
+            set_={"payload": payload, "updated_at": func.now()},
+        )
+    )
+    db.execute(statement)
+    db.commit()
 
 
 # ── Schedule a simulated match ───────────────────────────────────────────────
@@ -625,10 +641,18 @@ async def ingest_match_result(
 @router.post("/prediction", dependencies=[Depends(verify_feeder_secret)])
 async def ingest_prediction(
     payload: PredictionPayload,
+    db=Depends(get_db),
     redis=Depends(get_async_redis),
 ):
+    match = find_match(db, payload.sporty_match_id)
+    if match is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Match {payload.sporty_match_id} is not scheduled in Sporty",
+        )
     key = f"prediction:match:{payload.sporty_match_id}"
     await redis.setex(key, PREDICTION_TTL_SECONDS, payload.model_dump_json())
+    _persist_feed_cache(db, match.id, "prediction", payload.model_dump(mode="json"))
     return {"status": "ok", "cached_key": key, "ttl_seconds": PREDICTION_TTL_SECONDS}
 
 
@@ -668,10 +692,18 @@ async def ingest_model_metrics(
 @router.post("/player-ratings", dependencies=[Depends(verify_feeder_secret)])
 async def ingest_player_ratings(
     payload: PlayerRatingsPayload,
+    db=Depends(get_db),
     redis=Depends(get_async_redis),
 ):
+    match = find_match(db, payload.sporty_match_id)
+    if match is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Match {payload.sporty_match_id} is not scheduled in Sporty",
+        )
     key = f"ratings:match:{payload.sporty_match_id}"
     await redis.setex(key, RATINGS_TTL_SECONDS, payload.model_dump_json())
+    _persist_feed_cache(db, match.id, "ratings", payload.model_dump(mode="json"))
     logger.info(
         "Player ratings received for match %s (%s players); man of the match: %s",
         payload.sporty_match_id,
@@ -692,10 +724,18 @@ async def ingest_player_ratings(
 @router.post("/match-lineups", dependencies=[Depends(verify_feeder_secret)])
 async def ingest_match_lineups(
     payload: MatchLineupsPayload,
+    db=Depends(get_db),
     redis=Depends(get_async_redis),
 ):
+    match = find_match(db, payload.sporty_match_id)
+    if match is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Match {payload.sporty_match_id} is not scheduled in Sporty",
+        )
     key = f"lineups:match:{payload.sporty_match_id}"
     await redis.setex(key, LINEUPS_TTL_SECONDS, payload.model_dump_json())
+    _persist_feed_cache(db, match.id, "lineups", payload.model_dump(mode="json"))
     return {
         "status": "ok",
         "cached_key": key,
