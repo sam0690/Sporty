@@ -12,7 +12,7 @@ from collections import Counter
 from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth.models import User
 from app.league.models import (
@@ -24,8 +24,9 @@ from app.league.models import (
     TeamPlayer,
     TransferWindow,
 )
-from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
+from app.league.sportConfigs import derive_sport_type
 from app.player.models import Player
+from app.squad.services import check_squad_constraints
 
 
 def _require_draft_team(
@@ -146,34 +147,28 @@ def get_free_agents(
 
 def _position_violation(
     db: Session,
+    league: League,
     team_id: uuid.UUID,
     add_player: Player,
     drop_player: Player,
 ) -> str | None:
-    """Return a reason string if the swap breaks position minimums, else None."""
+    """Return a reason string if the swap breaks max-per-club or position
+    minimums, else None. A drafted roster is always full at this point (see
+    check_add_drop), so the position-minimum check always applies here, not
+    just the max-per-club one."""
     sport_type = derive_sport_type([add_player.sport.name])
-    minimums = SPORT_CONFIGS.get(sport_type, {}).get("position_minimums", {})
-    if not minimums:
-        return None  # e.g. basketball has no position constraints
-
-    active_positions = (
-        db.query(Player.position)
-        .join(TeamPlayer, TeamPlayer.player_id == Player.id)
+    current_roster = (
+        db.query(TeamPlayer)
+        .options(joinedload(TeamPlayer.player))
         .filter(
             TeamPlayer.fantasy_team_id == team_id,
             TeamPlayer.released_window_id.is_(None),
-            Player.sport_id == add_player.sport_id,
         )
         .all()
     )
-    counts: Counter[str] = Counter(row[0] for row in active_positions)
-    counts[drop_player.position] -= 1
-    counts[add_player.position] += 1
-
-    for pos, required in minimums.items():
-        if counts.get(pos, 0) < required:
-            return f"Roster would drop below the {pos} minimum ({required})"
-    return None
+    return check_squad_constraints(
+        current_roster, league, sport_type, "single", add_player, drop_player
+    )
 
 
 def check_add_drop(
@@ -222,7 +217,7 @@ def check_add_drop(
     ):
         return "That player has already been claimed", drop_tp
 
-    reason = _position_violation(db, team.id, add_player, drop_player)
+    reason = _position_violation(db, league, team.id, add_player, drop_player)
     if reason:
         return reason, drop_tp
 

@@ -19,7 +19,13 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from app.league.sportConfigs import MIXED_SPORT_QUOTAS, SPORT_CONFIG_REGISTRY, derive_sport_type
+from app.league.sportConfigs import (
+    MIXED_SPORT_QUOTAS,
+    SPORT_CONFIG_REGISTRY,
+    derive_sport_type,
+    get_max_per_club,
+    get_position_minimums,
+)
 
 # ── Lineup size rules (starters / bench / total) per sport type ───────────────
 #
@@ -75,6 +81,19 @@ def _player_name(obj: Any) -> str:
     if hasattr(obj, "player") and obj.player is not None and hasattr(obj.player, "name"):
         return obj.player.name
     return str(getattr(obj, "id", obj))
+
+
+def _player_real_team_key(obj: Any) -> Any:
+    """Club identity for max-per-club counting: real_team_id when present
+    (Player.real_team is still migrating to a nullable FK — see project tech
+    debt), falling back to the string real_team, then the player's own id so
+    two players with no club data never silently count as the same club."""
+    player = obj.player if hasattr(obj, "player") and obj.player is not None else obj
+    return (
+        getattr(player, "real_team_id", None)
+        or getattr(player, "real_team", None)
+        or _player_id(obj)
+    )
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -288,3 +307,120 @@ def validate_lineup_for_league_type(
                 f"{football_req} football and {basketball_req} basketball "
                 f"player(s)."
             )
+
+
+# ── Squad constraint checks (max-per-club, position minimums) ────────────────
+#
+# Shared by every entry point that adds a player to a roster — draft picks,
+# transfers, trades, and free-agent/waiver claims — so max-per-club and
+# position-minimum rules are enforced consistently everywhere instead of each
+# call site re-implementing (or skipping) the same rule.
+
+
+def _assert_max_per_club(team_players: list[Any], sport_type: str) -> None:
+    """Raise ValueError if any real-world club exceeds the sport's cap across
+    the given (already-final/projected) list of players."""
+    max_per_club = get_max_per_club(sport_type)
+    if not max_per_club:
+        return  # sport has no club cap
+
+    counts: dict[Any, int] = {}
+    labels: dict[Any, Any] = {}
+    for tp in team_players:
+        key = _player_real_team_key(tp)
+        counts[key] = counts.get(key, 0) + 1
+        if key not in labels:
+            player = tp.player if hasattr(tp, "player") and tp.player is not None else tp
+            labels[key] = getattr(player, "real_team", None) or "this club"
+
+    for key, count in counts.items():
+        if count > max_per_club:
+            raise ValueError(
+                f"Squad would have {count} players from {labels[key]}, "
+                f"max is {max_per_club}."
+            )
+
+
+def _assert_position_minimums_if_complete(
+    team_players: list[Any],
+    league: Any,
+    sport_type: str,
+    mode: str,
+) -> None:
+    """Position minimums only become a real constraint once the squad would
+    be complete — you can't have hit a minimum with slots/picks still to
+    come, mirroring how validate_squad_size only checks size at completion."""
+    if len(team_players) < league.squad_size:
+        return
+    minimums = get_position_minimums(sport_type, mode)
+    if not minimums:
+        return
+
+    counts: dict[str, int] = {}
+    for tp in team_players:
+        pos = _player_position(tp)
+        if pos:
+            counts[pos] = counts.get(pos, 0) + 1
+
+    for pos, required in minimums.items():
+        actual = counts.get(pos, 0)
+        if actual < required:
+            raise ValueError(
+                f"Squad needs at least {required} {pos} player(s), has {actual}."
+            )
+
+
+def check_full_squad_constraints(
+    team_players: list[Any],
+    league: Any,
+    sport_type: str,
+    mode: str,
+) -> str | None:
+    """Validate max-per-club and (once complete) position minimums for a
+    complete or fully-projected roster in one shot — for entry points that
+    can change multiple players at once (e.g. a transfer session confirming
+    several staged in/out pairs together), where there's no single
+    incoming/outgoing pair to hand to check_squad_constraints.
+
+    team_players: the FINAL roster being validated — Player or TeamPlayer
+        objects; caller loads/assembles this (no DB I/O here, per the module
+        docstring).
+
+    Returns a violation message, or None if the roster is legal.
+    """
+    try:
+        _assert_max_per_club(team_players, sport_type)
+        _assert_position_minimums_if_complete(team_players, league, sport_type, mode)
+    except ValueError as exc:
+        return str(exc)
+    return None
+
+
+def check_squad_constraints(
+    team_players: list[Any],
+    league: Any,
+    sport_type: str,
+    mode: str,
+    incoming_player: Any,
+    outgoing_player: Any | None = None,
+) -> str | None:
+    """Validate that adding `incoming_player` to a roster (optionally
+    swapping out `outgoing_player`) keeps max-per-club within its cap and,
+    once the squad would be complete, satisfies every position minimum.
+
+    team_players: the team's CURRENT active roster (before this change) —
+        Player or TeamPlayer objects; caller loads this (no DB I/O here, per
+        the module docstring).
+    sport_type / mode: from derive_sport_type(...) and "single"/"mixed" —
+        selects which SPORT_CONFIG_REGISTRY entry applies.
+
+    Returns a violation message, or None if the change is legal — this
+    string-or-None shape (rather than raising) matches the calling
+    convention already used by draft_roster_service.check_add_drop, the
+    other place this gets called from.
+    """
+    outgoing_id = _player_id(outgoing_player) if outgoing_player is not None else None
+    projected_players = [
+        tp for tp in team_players if outgoing_id is None or _player_id(tp) != outgoing_id
+    ] + [incoming_player]
+    return check_full_squad_constraints(projected_players, league, sport_type, mode)

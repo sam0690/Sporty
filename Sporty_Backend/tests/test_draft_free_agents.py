@@ -219,18 +219,24 @@ def test_claim_swaps_roster_and_logs_move() -> None:
         sport = _sport_of(db, league)
         window = _window(db, db.query(Season).first())
         team = _team(db, league, owner)
-        rt = _real_team(db, sport)
+        # Spread across 3 clubs so this partial (8-of-15) squad never exceeds
+        # the max-per-club cap (3). Position minimums only apply once the
+        # squad reaches league.squad_size, so a partial squad like this one
+        # doesn't need to satisfy them.
+        rts = [_real_team(db, sport) for _ in range(3)]
 
-        # A valid football squad so the swap keeps all position minimums met.
-        gk = _player(db, sport, rt, "GK", position="GKP")
-        defs = [_player(db, sport, rt, f"DEF{i}", position="DEF") for i in range(3)]
-        mids = [_player(db, sport, rt, f"MID{i}", position="MID") for i in range(3)]
-        fwd = _player(db, sport, rt, "FWD", position="FWD")
+        def rt_for(i):
+            return rts[i % len(rts)]
+
+        gk = _player(db, sport, rt_for(0), "GK", position="GKP")
+        defs = [_player(db, sport, rt_for(i + 1), f"DEF{i}", position="DEF") for i in range(3)]
+        mids = [_player(db, sport, rt_for(i + 4), f"MID{i}", position="MID") for i in range(3)]
+        fwd = _player(db, sport, rt_for(7), "FWD", position="FWD")
         for p in [gk, *defs, *mids, fwd]:
             _own(db, league, team, p, window)
 
-        drop_player = mids[0]  # dropping one MID (3 -> 2, min is 2)
-        add_player = _player(db, sport, rt, "AddMe", position="MID")
+        drop_player = mids[0]  # dropping one MID
+        add_player = _player(db, sport, rt_for(4), "AddMe", position="MID")
 
         result = fa.claim_free_agent(db, league.id, add_player.id, drop_player.id, owner)
         db.flush()
@@ -328,18 +334,24 @@ def test_claim_rejected_when_position_minimum_violated() -> None:
         sport = _sport_of(db, league)
         window = _window(db, db.query(Season).first())
         team = _team(db, league, owner)
-        rt = _real_team(db, sport)
+        # Position minimums only apply once the squad is complete (matching
+        # "a drafted roster is always full" — see claim_free_agent), so build
+        # a full 15-player squad exactly at the strict minimums (2/5/5/3),
+        # spread across enough clubs to stay under the max-per-club cap (3).
+        rts = [_real_team(db, sport) for _ in range(5)]
 
-        # Squad sits exactly at the DEF minimum (3). Dropping a DEF for a MID
-        # would leave 2 DEF < min 3.
-        gk = _player(db, sport, rt, "GK", position="GKP")
-        defs = [_player(db, sport, rt, f"DEF{i}", position="DEF") for i in range(3)]
-        mids = [_player(db, sport, rt, f"MID{i}", position="MID") for i in range(2)]
-        fwd = _player(db, sport, rt, "FWD", position="FWD")
-        for p in [gk, *defs, *mids, fwd]:
+        def rt_for(i):
+            return rts[i % len(rts)]
+
+        gks = [_player(db, sport, rt_for(i), f"GK{i}", position="GKP") for i in range(2)]
+        defs = [_player(db, sport, rt_for(i + 2), f"DEF{i}", position="DEF") for i in range(5)]
+        mids = [_player(db, sport, rt_for(i + 7), f"MID{i}", position="MID") for i in range(5)]
+        fwds = [_player(db, sport, rt_for(i + 12), f"FWD{i}", position="FWD") for i in range(3)]
+        for p in [*gks, *defs, *mids, *fwds]:
             _own(db, league, team, p, window)
 
-        incoming_mid = _player(db, sport, rt, "IncomingMID", position="MID")
+        # Dropping a DEF for a MID would leave 4 DEF < min 5.
+        incoming_mid = _player(db, sport, rt_for(2), "IncomingMID", position="MID")
 
         with pytest.raises(HTTPException) as exc:
             fa.claim_free_agent(db, league.id, incoming_mid.id, defs[0].id, owner)

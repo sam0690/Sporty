@@ -6,11 +6,11 @@ import {
   PreferencesForm,
   type Preferences,
 } from "@/components/dashboard/profile/components/PreferencesForm";
-import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";
+// import { PasswordForm } from "@/components/dashboard/profile/components/PasswordForm";
 import { useMe } from "@/hooks/auth/useMe";
 import { useUpdateUser } from "@/hooks/users/useUsers";
-import { UserService } from "@/services/UserService";
-import { toastifier } from "@/lib/toastifier";
+// import { UserService } from "@/services/UserService";
+// import { toastifier } from "@/lib/toastifier";
 
 export function AccountSettings() {
   const { data: me } = useMe();
@@ -29,22 +29,22 @@ export function AccountSettings() {
     });
   };
 
-  const handleChangePassword = async (
-    currentPassword: string,
-    newPassword: string,
-  ): Promise<boolean> => {
-    if (!currentPassword || !newPassword) {
-      toastifier.error("Please complete all password fields");
-      return false;
-    }
-    try {
-      await UserService.changePassword(currentPassword, newPassword);
-      return true;
-    } catch {
-      toastifier.error("Unable to update password");
-      return false;
-    }
-  };
+  // const handleChangePassword = async (
+  //   currentPassword: string,
+  //   newPassword: string,
+  // ): Promise<boolean> => {
+  //   if (!currentPassword || !newPassword) {
+  //     toastifier.error("Please complete all password fields");
+  //     return false;
+  //   }
+  //   try {
+  //     await UserService.changePassword(currentPassword, newPassword);
+  //     return true;
+  //   } catch {
+  //     toastifier.error("Unable to update password");
+  //     return false;
+  //   }
+  // };
 
   return (
     <section className="mx-auto max-w-3xl px-6 py-8 text-[#f0f0f0]">
@@ -64,7 +64,7 @@ export function AccountSettings() {
           onUpdate={handleUpdatePreferences}
         />
 
-        <PasswordForm onChangePassword={handleChangePassword} />
+        {/* <PasswordForm onChangePassword={handleChangePassword} /> */}
 
         {/* Identity (avatar, name, bio, delete account) lives on the profile page. */}
         <Link

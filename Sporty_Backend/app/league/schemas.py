@@ -152,6 +152,10 @@ class LeagueResponse(BaseModel):
     max_teams: int
     squad_size: int
     budget_per_team: Decimal
+    # Canonical squad-shape rules (app/league/sportConfigs.py) — one source of
+    # truth the frontend reads instead of hardcoding numbers that could drift.
+    position_minimums: dict[str, int] = {}
+    max_per_club: int
     draft_mode: bool
     allow_midseason_join: bool
     transfers_per_window: int

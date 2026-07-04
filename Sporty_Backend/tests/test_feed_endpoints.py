@@ -460,6 +460,27 @@ class TestScheduleMatch:
         )
 
 
+class _FakeAsyncResult:
+    def mappings(self):
+        return self
+
+    def all(self):
+        return []
+
+    def first(self):
+        return None
+
+
+class _FakeAsyncDB:
+    """No real rows for either the player-name-resolution SELECT or the
+    match_feed_cache Postgres-fallback SELECT — these read tests only need to
+    verify the Redis-cache path (and the 404-when-nothing-cached path), not
+    the durable-backstop query itself."""
+
+    async def execute(self, statement, params=None):
+        return _FakeAsyncResult()
+
+
 class TestFeedReadEndpoints:
     """GET /api/match/{id}/prediction and /ratings — the REST surface the
     frontend uses to read what the feeder pushed."""
@@ -474,6 +495,7 @@ class TestFeedReadEndpoints:
         read_app.include_router(realtime_match_router, prefix="/api")
         read_app.dependency_overrides[deps.require_match_access] = lambda: match
         read_app.dependency_overrides[deps.get_async_redis_dep] = lambda: harness.redis
+        read_app.dependency_overrides[deps.get_async_db] = lambda: _FakeAsyncDB()
         return SimpleNamespace(client=TestClient(read_app), redis=harness.redis, match=match)
 
     def test_prediction_roundtrip_from_feed_push(self, harness, read_harness):

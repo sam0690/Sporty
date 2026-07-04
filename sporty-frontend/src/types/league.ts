@@ -48,6 +48,10 @@ export type TLeague = {
   midseason_join_message?: string | null;
   status: string;
   squad_size: number;
+  // Canonical squad-shape rules (backend app/league/sportConfigs.py) — read
+  // these instead of hardcoding position/club numbers on the frontend.
+  position_minimums?: Record<string, number>;
+  max_per_club?: number;
   team_count?: number;
   memberships?: TMembership[];
   teams?: TFantasyTeam[];

@@ -85,6 +85,7 @@ export function CreateTeamView(
     handleCreateTeam,
     handleGoToLineup,
     squadValidation,
+    clubCounts,
     isRosterComplete,
     isDraftComplete,
     buildTeamMutation,
@@ -122,6 +123,7 @@ export function CreateTeamView(
           totalSteps={1}
           selectedCount={draftedPlayers.length}
           requiredCount={requiredPlayers}
+          showBudget={false}
         />
 
         {error ? (
@@ -184,7 +186,7 @@ export function CreateTeamView(
                   />
                 </div>
                 <div className="lg:col-span-1">
-                  <SquadValidationChecklist rules={squadValidation} />
+                  <SquadValidationChecklist rules={squadValidation} clubWarnings={clubCounts} />
                 </div>
               </div>
             </div>
@@ -237,7 +239,7 @@ export function CreateTeamView(
                   )}
                   requiredPlayers={requiredPlayers}
                 />
-                <SquadValidationChecklist rules={squadValidation} />
+                <SquadValidationChecklist rules={squadValidation} clubWarnings={clubCounts} />
               </div>
             </div>
           )
@@ -302,6 +304,7 @@ export function CreateTeamView(
           totalSteps={3}
           selectedCount={(myTeam.team_players ?? myTeam.players ?? []).length}
           requiredCount={requiredPlayers}
+          showBudget={!isDraftLeague}
         />
 
         <CurrentTeam
@@ -449,7 +452,7 @@ export function CreateTeamView(
                 totalCost={totalCost}
                 requiredPlayers={requiredPlayers}
               />
-              <SquadValidationChecklist rules={squadValidation} />
+              <SquadValidationChecklist rules={squadValidation} clubWarnings={clubCounts} />
             </div>
           </div>
 

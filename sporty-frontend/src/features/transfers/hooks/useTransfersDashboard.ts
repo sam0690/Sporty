@@ -21,6 +21,7 @@ import type { OwnedPlayer } from "@/components/dashboard/transfers/components/Cu
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 
 const TRANSFER_POOL_PAGE_SIZE = 20;
+const EMPTY_POSITION_MINIMUMS: Record<string, number> = {};
 
 const toSport = (value?: string): Exclude<Sport, "All"> => {
   if (value === "football" || value === "basketball" || value === "cricket") {
@@ -132,6 +133,7 @@ export function useTransfersDashboard() {
       price: Number(p.player.cost),
       avgPoints: 0,
       form: 0,
+      realTeam: p.player.real_team,
     }));
   }, [myTeam]);
 
@@ -149,6 +151,7 @@ export function useTransfersDashboard() {
         price: Number(p.current_cost ?? p.cost ?? 0),
         avgPoints: 0,
         form: 0,
+        realTeam: p.real_team,
       }));
   }, [playersData, ownedPlayers, stagedInPlayers]);
 
@@ -164,6 +167,44 @@ export function useTransfersDashboard() {
     () => ownedPlayers.filter((player) => !stagedOutIds.has(player.id.toString())),
     [ownedPlayers, stagedOutIds],
   );
+
+  // Projected final roster if all staged transfers were confirmed right now —
+  // used to give live feedback on position minimums / max-per-club before
+  // confirming, same canonical rules the backend enforces (app/league/sportConfigs.py).
+  const projectedRoster = useMemo(
+    () => [...visibleOwnedPlayers, ...stagedInPlayers],
+    [visibleOwnedPlayers, stagedInPlayers],
+  );
+
+  const positionMinimums = league?.position_minimums ?? EMPTY_POSITION_MINIMUMS;
+  const maxPerClub = league?.max_per_club;
+
+  const positionValidation = useMemo(() => {
+    const counts = projectedRoster.reduce<Record<string, number>>((acc, player) => {
+      acc[player.position] = (acc[player.position] ?? 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(positionMinimums).map(([position, required]) => ({
+      key: `position-${position}`,
+      label: `${position} minimum`,
+      detail: `${counts[position] ?? 0}/${required}`,
+      satisfied: (counts[position] ?? 0) >= required,
+    }));
+  }, [projectedRoster, positionMinimums]);
+
+  const clubCounts = useMemo(() => {
+    if (!maxPerClub) {
+      return [];
+    }
+    const counts = projectedRoster.reduce<Record<string, number>>((acc, player) => {
+      const club = player.realTeam || "Unknown club";
+      acc[club] = (acc[club] ?? 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts)
+      .filter(([, count]) => count >= maxPerClub)
+      .map(([club, count]) => ({ club, count, max: maxPerClub }));
+  }, [projectedRoster, maxPerClub]);
 
   const availableSportsForFilter = useMemo(
     () =>
@@ -371,6 +412,8 @@ export function useTransfersDashboard() {
     positionOptionsBySport,
     isTransfersOpen,
     isMultiSportLeague,
+    positionValidation,
+    clubCounts,
     selectedSport,
     selectedPosition,
     searchQuery,

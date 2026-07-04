@@ -11,6 +11,7 @@ type OwnedPlayer = {
   price: number;
   avgPoints?: number;
   form?: number;
+  realTeam?: string;
 };
 
 type CurrentRosterProps = {

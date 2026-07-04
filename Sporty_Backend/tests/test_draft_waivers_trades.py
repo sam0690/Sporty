@@ -110,12 +110,17 @@ def _own(db, league, team, player, window):
     db.add(tp); db.flush(); return tp
 
 
-def _valid_squad(db, league, team, sport, rt, window, prefix):
-    """1 GK, 3 DEF, 3 MID, 1 FWD owned by team. Returns the MID players."""
-    gk = _player(db, sport, rt, f"{prefix}GK", "GKP")
-    defs = [_player(db, sport, rt, f"{prefix}DEF{i}", "DEF") for i in range(3)]
-    mids = [_player(db, sport, rt, f"{prefix}MID{i}", "MID") for i in range(3)]
-    fwd = _player(db, sport, rt, f"{prefix}FWD", "FWD")
+def _valid_squad(db, league, team, sport, real_teams, window, prefix):
+    """1 GK, 3 DEF, 3 MID, 1 FWD owned by team, spread across real_teams (a
+    list of >=3 RealTeam rows) so no club exceeds the max-per-club cap (3).
+    Returns the MID players."""
+    def rt_for(i):
+        return real_teams[i % len(real_teams)]
+
+    gk = _player(db, sport, rt_for(0), f"{prefix}GK", "GKP")
+    defs = [_player(db, sport, rt_for(i + 1), f"{prefix}DEF{i}", "DEF") for i in range(3)]
+    mids = [_player(db, sport, rt_for(i + 4), f"{prefix}MID{i}", "MID") for i in range(3)]
+    fwd = _player(db, sport, rt_for(7), f"{prefix}FWD", "FWD")
     for p in [gk, *defs, *mids, fwd]:
         _own(db, league, team, p, window)
     return mids
@@ -160,10 +165,12 @@ def test_waiver_order_is_reverse_draft_order() -> None:
 def test_contested_waiver_higher_priority_wins_and_rotates() -> None:
     with session_scope() as db:
         league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
-        rt = _real_team(db, sport)
-        owner_mids = _valid_squad(db, league, owner_team, sport, rt, window, "O")
-        joiner_mids = _valid_squad(db, league, joiner_team, sport, rt, window, "J")
-        fa = _player(db, sport, rt, "FreeAgent", "MID")
+        real_teams = [_real_team(db, sport) for _ in range(3)]
+        owner_mids = _valid_squad(db, league, owner_team, sport, real_teams, window, "O")
+        joiner_mids = _valid_squad(db, league, joiner_team, sport, real_teams, window, "J")
+        # Separate club so winning it can't push any club over the cap.
+        fa_rt = _real_team(db, sport)
+        fa = _player(db, sport, fa_rt, "FreeAgent", "MID")
 
         # Both teams claim the same free agent.
         waiver_service.submit_claim(db, league.id, fa.id, owner_mids[0].id, owner)
@@ -195,9 +202,10 @@ def test_contested_waiver_higher_priority_wins_and_rotates() -> None:
 def test_cancel_waiver_claim() -> None:
     with session_scope() as db:
         league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
-        rt = _real_team(db, sport)
-        owner_mids = _valid_squad(db, league, owner_team, sport, rt, window, "O")
-        fa = _player(db, sport, rt, "FA", "MID")
+        real_teams = [_real_team(db, sport) for _ in range(3)]
+        owner_mids = _valid_squad(db, league, owner_team, sport, real_teams, window, "O")
+        fa_rt = _real_team(db, sport)
+        fa = _player(db, sport, fa_rt, "FA", "MID")
         claim = waiver_service.submit_claim(db, league.id, fa.id, owner_mids[0].id, owner)
         waiver_service.cancel_claim(db, league.id, uuid.UUID(claim["id"]), owner)
         mine = waiver_service.list_my_claims(db, league.id, owner)
@@ -207,9 +215,9 @@ def test_cancel_waiver_claim() -> None:
 def test_trade_propose_accept_execute_swaps_ownership() -> None:
     with session_scope() as db:
         league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
-        rt = _real_team(db, sport)
-        owner_mids = _valid_squad(db, league, owner_team, sport, rt, window, "O")
-        joiner_mids = _valid_squad(db, league, joiner_team, sport, rt, window, "J")
+        real_teams = [_real_team(db, sport) for _ in range(3)]
+        owner_mids = _valid_squad(db, league, owner_team, sport, real_teams, window, "O")
+        joiner_mids = _valid_squad(db, league, joiner_team, sport, real_teams, window, "J")
         give = owner_mids[0]
         get = joiner_mids[0]
 
@@ -235,9 +243,9 @@ def test_trade_propose_accept_execute_swaps_ownership() -> None:
 def test_trade_veto_blocks_and_uneven_rejected() -> None:
     with session_scope() as db:
         league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
-        rt = _real_team(db, sport)
-        owner_mids = _valid_squad(db, league, owner_team, sport, rt, window, "O")
-        joiner_mids = _valid_squad(db, league, joiner_team, sport, rt, window, "J")
+        real_teams = [_real_team(db, sport) for _ in range(3)]
+        owner_mids = _valid_squad(db, league, owner_team, sport, real_teams, window, "O")
+        joiner_mids = _valid_squad(db, league, joiner_team, sport, real_teams, window, "J")
 
         # uneven trade rejected
         with pytest.raises(HTTPException) as exc:

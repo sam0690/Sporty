@@ -481,6 +481,31 @@ class League(Base):
             if team.status == FantasyTeamStatus.ACTIVE
         ]
 
+    def _sport_type(self) -> str:
+        from app.league.sportConfigs import derive_sport_type
+
+        sport_names = [ls.sport.name for ls in self.sports if ls.sport]
+        return derive_sport_type(sport_names)
+
+    @property
+    def position_minimums(self) -> dict[str, int]:
+        """Canonical position-minimum quotas for this league's squad shape —
+        single source of truth for the frontend (create-team/draft/transfers)
+        instead of hardcoding numbers that could drift from the backend."""
+        from app.league.sportConfigs import get_position_minimums
+
+        sport_type = self._sport_type()
+        mode = "mixed" if sport_type == "mixed" else "single"
+        return get_position_minimums(sport_type, mode)
+
+    @property
+    def max_per_club(self) -> int:
+        """Max players allowed from the same real-world club — see
+        position_minimums for why this is exposed the same way."""
+        from app.league.sportConfigs import get_max_per_club
+
+        return get_max_per_club(self._sport_type())
+
     __table_args__ = (
         CheckConstraint("max_teams >= 2", name="ck_league_max_teams"),
         CheckConstraint("squad_size >= 1", name="ck_league_squad_size"),

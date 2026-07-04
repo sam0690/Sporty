@@ -48,6 +48,7 @@ from app.player.models import Player, PlayerGameweekStat
 from app.services.budget_utils import calculate_refund
 from app.core.config import settings
 from app.squad.services import (
+    check_squad_constraints,
     validate_lineup_for_league_type,
     validate_position_slots,
     validate_squad_size,
@@ -980,6 +981,30 @@ def start_draft(
     return _require_league(db, league_id, eager=True)
 
 
+def _league_sport_mode(db: Session, league_id: uuid.UUID) -> tuple[str, str]:
+    """(sport_type, mode) for check_squad_constraints/get_position_minimums.
+
+    sport_type is "football"/"basketball"/"mixed" (derive_sport_type over
+    every sport attached to the league); mode is "mixed" when sport_type is
+    "mixed", else "single". For a mixed league this makes
+    get_position_minimums return {} (no constraint from this check) — mixed
+    squad composition is already validated separately via MIXED_SPORT_QUOTAS
+    in validate_squad_size.
+    """
+    sport_names = [
+        name
+        for (name,) in (
+            db.query(Sport.name)
+            .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+            .filter(LeagueSport.league_id == league_id)
+            .all()
+        )
+    ]
+    sport_type = derive_sport_type(sport_names)
+    mode = "mixed" if sport_type == "mixed" else "single"
+    return sport_type, mode
+
+
 def make_draft_pick(
     db: Session,
     league_id: uuid.UUID,
@@ -996,7 +1021,10 @@ def make_draft_pick(
       5. Player must not already be drafted in this league.
       6. Player must belong to a sport attached to this league.
       7. Team must not have exceeded squad_size.
-      8. Player cost must not exceed the team's remaining budget.
+      8. Pick must not exceed max-per-club, or (once the squad would be
+         complete) leave a position minimum unmet.
+
+    No budget guard: draft picks have no cost cap (see inline comment below).
 
     Snake draft order:
     ──────────────────
@@ -1108,17 +1136,28 @@ def make_draft_pick(
             detail="Your squad is already full",
         )
 
-    # Budget check
-    if player.cost > team.current_budget:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Insufficient budget: need {player.cost}, "
-                f"have {team.current_budget}"
-            ),
+    # Max-per-club / position-minimum constraints
+    current_roster = (
+        db.query(TeamPlayer)
+        .options(joinedload(TeamPlayer.player))
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.released_window_id.is_(None),
         )
+        .all()
+    )
+    sport_type, mode = _league_sport_mode(db, league_id)
+    violation = check_squad_constraints(
+        current_roster, league, sport_type, mode, player
+    )
+    if violation:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=violation)
 
     # ── All guards passed — execute the pick ────────────────────────
+    # No budget check: draft leagues have no cost cap on picks — the only
+    # scarcity mechanism is turn-based exclusivity (one owner per player).
+    # Player.cost still gets recorded (cost_at_acquisition below) purely for
+    # squad-value display/history, same as a budget-mode league.
 
     # We need the first transfer window as the acquired_window for TeamPlayer
     first_window = (
@@ -1154,9 +1193,6 @@ def make_draft_pick(
         cost_at_acquisition=player.cost,
     )
     db.add(team_player)
-
-    # Deduct cost from budget
-    team.current_budget -= player.cost
 
     # ── Auto-transition: DRAFTING → ACTIVE after last pick ──────────
     #
@@ -1238,6 +1274,8 @@ def make_transfer(
       7. player_out != player_in (enforced by DB, but checked early
          for a better error message).
       8. Team has not exceeded transfers_per_window limit for this window.
+      9. Swap must not exceed max-per-club, or (once the squad would be
+         complete) leave a position minimum unmet.
 
     Budget-mode transfers intentionally mirror budget-mode initial squad
     creation: player ownership is scoped to the fantasy team, not the
@@ -1350,6 +1388,23 @@ def make_transfer(
                 f"{player_in.cost}, shortfall of {abs(budget_after)}"
             ),
         )
+
+    # ── Max-per-club / position-minimum constraints ─────────────────
+    current_roster = (
+        db.query(TeamPlayer)
+        .options(joinedload(TeamPlayer.player))
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.released_window_id.is_(None),
+        )
+        .all()
+    )
+    sport_type, mode = _league_sport_mode(db, league_id)
+    violation = check_squad_constraints(
+        current_roster, league, sport_type, mode, player_in, team_player_out
+    )
+    if violation:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=violation)
 
     # ── Execute the transfer ────────────────────────────────────────
 

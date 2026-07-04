@@ -9,6 +9,7 @@ import { TransferConfirmation } from "@/components/dashboard/transfers/component
 import { TransfersHeader } from "@/components/dashboard/transfers/components/TransfersHeader";
 import { TransferSuccess } from "@/components/dashboard/transfers/components/TransferSuccess";
 import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/components/UserTransferHistoryCarousel";
+import { SquadValidationChecklist } from "@/components/dashboard/create-team/components/SquadValidationChecklist";
 import { GameweekContextBar } from "@/components/dashboard/leagues/GameweekContextBar";
 import { EmptyTransfers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
@@ -45,6 +46,8 @@ export function TransfersView(props: Props) {
     positionOptionsBySport,
     isTransfersOpen,
     isMultiSportLeague,
+    positionValidation,
+    clubCounts,
     selectedSport,
     selectedPosition,
     searchQuery,
@@ -115,6 +118,11 @@ export function TransfersView(props: Props) {
               {transfersRemaining} transfers remaining this session
             </div>
           ) : null}
+          <SquadValidationChecklist
+            title="Squad Rules"
+            rules={positionValidation}
+            clubWarnings={clubCounts}
+          />
           {stagedOutPlayers.length > 0 || stagedInPlayers.length > 0 ? (
             <div className="overflow-hidden rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[#111117]">
               <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">

@@ -24,6 +24,7 @@ from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
 from app.services.transfer_session_service import clear_session, get_session, save_session
+from app.squad.services import check_full_squad_constraints
 
 logger = logging.getLogger(__name__)
 
@@ -527,6 +528,18 @@ def confirm_transfers(
                         f"(got {final_counts_by_sport.get(sport_name, 0)})."
                     ),
                 )
+
+    # ── Max-per-club / position-minimum constraints on the final roster ──
+    final_players = (
+        db.query(Player)
+        .filter(Player.id.in_([uuid.UUID(pid) for pid in final_player_ids]))
+        .all()
+    )
+    sport_type = "mixed" if is_multisport_league else sport_name_for_rules
+    mode = "mixed" if is_multisport_league else "single"
+    violation = check_full_squad_constraints(final_players, league, sport_type, mode)
+    if violation:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=violation)
 
     refunds = Decimal("0")
     penalties_by_player_out: dict[uuid.UUID, Decimal] = {}

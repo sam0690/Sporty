@@ -10,6 +10,8 @@ type CreateTeamHeaderProps = {
   totalSteps: number;
   selectedCount: number;
   requiredCount: number;
+  /** Draft leagues have no cost cap on picks — hide the budget readout. */
+  showBudget?: boolean;
 };
 
 const sportBadgeClass: Record<Sport, string> = {
@@ -34,6 +36,7 @@ export function CreateTeamHeader({
   totalSteps,
   selectedCount,
   requiredCount,
+  showBudget = true,
 }: CreateTeamHeaderProps) {
   const progress = Math.min(
     100,
@@ -61,16 +64,18 @@ export function CreateTeamHeader({
           </p>
         </div>
 
-        <div className="text-right">
-          <p className="section-label">Budget ${budget}</p>
-          <p
-            className={`mt-1 font-bebas text-2xl tracking-[1px] tabular-nums ${
-              overBudget ? "text-[#ff3b30]" : "text-[#e8fb25]"
-            }`}
-          >
-            ${remainingBudget} left
-          </p>
-        </div>
+        {showBudget ? (
+          <div className="text-right">
+            <p className="section-label">Budget ${budget}</p>
+            <p
+              className={`mt-1 font-bebas text-2xl tracking-[1px] tabular-nums ${
+                overBudget ? "text-[#ff3b30]" : "text-[#e8fb25]"
+              }`}
+            >
+              ${remainingBudget} left
+            </p>
+          </div>
+        ) : null}
       </div>
 
       <div className="space-y-2">

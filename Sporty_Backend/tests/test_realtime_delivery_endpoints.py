@@ -23,6 +23,9 @@ class _FakeResult:
     def first(self):
         return self._row
 
+    def all(self):
+        return [self._row] if self._row is not None else []
+
     def scalar_one_or_none(self):
         return self._scalar
 
@@ -34,6 +37,7 @@ class _FakeAsyncDB:
             return _FakeResult(
                 row={
                     "id": "match-1",
+                    "sport_id": "sport-1",
                     "home_team": "A",
                     "away_team": "B",
                     "home_score": 2,
@@ -75,6 +79,11 @@ class _FakeRedis:
     async def hget(self, key: str, field: str):
         _ = field
         return self._points.get(key)
+
+    async def get(self, key: str):
+        # No lineups/prediction/ratings cache seeded for this test — the
+        # match-state endpoint should just render with empty lineups.
+        return None
 
     def pubsub(self):
         return _FakePubSub('{"event":"MATCH_EVENT","data":{"kind":"LEADERBOARD_DELTA"}}')

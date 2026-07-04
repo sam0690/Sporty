@@ -188,7 +188,7 @@ def _persist_feed_cache(db, match_id, kind: str, payload: dict) -> None:
     still has something to serve once the 24h TTL cache entry expires."""
     statement = (
         pg_insert(MatchFeedCache)
-        .values(match_id=match_id, kind=kind, payload=payload)
+        .values([{"match_id": match_id, "kind": kind, "payload": payload}])
         .on_conflict_do_update(
             index_elements=["match_id", "kind"],
             set_={"payload": payload, "updated_at": func.now()},

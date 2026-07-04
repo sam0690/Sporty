@@ -32,6 +32,8 @@ export const MULTISPORT_MIN_BY_SPORT = {
   basketball: 7,
 } as const;
 
+const EMPTY_POSITION_MINIMUMS: Record<string, number> = {};
+
 const PLAYER_PAGE_SIZE = 20;
 
 function normalizeLeagueSport(
@@ -265,6 +267,37 @@ export function useCreateTeamDashboard() {
     ? Number(myTeam?.current_budget ?? budget)
     : remainingBudget;
 
+  // Canonical rules from the backend (app/league/sportConfigs.py) — read,
+  // never hardcoded, so the frontend can't drift from what's enforced there.
+  const activePlayers = isDraftLeague ? draftedPlayers : selectedPlayers;
+  const positionMinimums = league?.position_minimums ?? EMPTY_POSITION_MINIMUMS;
+  const maxPerClub = league?.max_per_club;
+
+  const activePositionCounts = useMemo(
+    () =>
+      activePlayers.reduce<Record<string, number>>((acc, player) => {
+        acc[player.position] = (acc[player.position] ?? 0) + 1;
+        return acc;
+      }, {}),
+    [activePlayers],
+  );
+
+  // Per-club tally for a max-per-club warning list — only clubs at or past
+  // the cap are worth surfacing, not every club in the squad.
+  const clubCounts = useMemo(() => {
+    if (!maxPerClub) {
+      return [];
+    }
+    const counts = activePlayers.reduce<Record<string, number>>((acc, player) => {
+      const club = player.realTeam || "Unknown club";
+      acc[club] = (acc[club] ?? 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts)
+      .filter(([, count]) => count >= maxPerClub)
+      .map(([club, count]) => ({ club, count, max: maxPerClub }));
+  }, [activePlayers, maxPerClub]);
+
   const squadValidation: Array<{
     key: string;
     label: string;
@@ -277,12 +310,18 @@ export function useCreateTeamDashboard() {
       detail: `${activeSquadSize}/${requiredPlayers}`,
       satisfied: activeSquadSize === requiredPlayers,
     },
-    {
-      key: "budget",
-      label: "Within budget",
-      detail: `$${activeRemainingBudget.toFixed(1)}M left`,
-      satisfied: activeRemainingBudget >= 0,
-    },
+    // Draft leagues have no cost cap on picks, so budget isn't a real
+    // constraint there — only show it for budget-mode squad building.
+    ...(isDraftLeague
+      ? []
+      : [
+          {
+            key: "budget",
+            label: "Within budget",
+            detail: `$${activeRemainingBudget.toFixed(1)}M left`,
+            satisfied: activeRemainingBudget >= 0,
+          },
+        ]),
     ...(isMultiSportLeague
       ? [
           {
@@ -302,6 +341,12 @@ export function useCreateTeamDashboard() {
           },
         ]
       : []),
+    ...Object.entries(positionMinimums).map(([position, required]) => ({
+      key: `position-${position}`,
+      label: `${position} minimum`,
+      detail: `${activePositionCounts[position] ?? 0}/${required}`,
+      satisfied: (activePositionCounts[position] ?? 0) >= required,
+    })),
   ];
   const isSquadValid = squadValidation.every((rule) => rule.satisfied);
 
@@ -648,6 +693,7 @@ export function useCreateTeamDashboard() {
     budgetUsed,
     budgetProgress,
     squadValidation,
+    clubCounts,
     isSquadValid,
     isRosterComplete,
     isDraftComplete,

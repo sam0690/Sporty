@@ -16,11 +16,15 @@ from app.auth.models import User
 from app.league.models import (
     FantasyTeam,
     League,
+    LeagueSport,
     RosterMove,
+    Sport,
     TeamPlayer,
 )
+from app.league.sportConfigs import derive_sport_type
 from app.player.models import Player
 from app.services import draft_roster_service as dr
+from app.squad.services import check_full_squad_constraints
 
 # Commissioner veto window after a trade is accepted, before it finalises.
 VETO_HOURS = 24
@@ -174,6 +178,37 @@ def propose_trade(
             status_code=status.HTTP_409_CONFLICT,
             detail="Traded players must match by sport on both sides",
         )
+
+    # Max-per-club / position-minimum constraints on BOTH sides' final rosters.
+    sport_names = [
+        name
+        for (name,) in (
+            db.query(Sport.name)
+            .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+            .filter(LeagueSport.league_id == league_id)
+            .all()
+        )
+    ]
+    sport_type = derive_sport_type(sport_names)
+    mode = "mixed" if sport_type == "mixed" else "single"
+
+    for team, outgoing_ids, incoming_ids in (
+        (from_team, offered_player_ids, requested_player_ids),
+        (to_team, requested_player_ids, offered_player_ids),
+    ):
+        current_roster = (
+            db.query(TeamPlayer)
+            .filter(
+                TeamPlayer.fantasy_team_id == team.id,
+                TeamPlayer.released_window_id.is_(None),
+            )
+            .all()
+        )
+        final_player_ids = {tp.player_id for tp in current_roster} - set(outgoing_ids) | set(incoming_ids)
+        final_players = db.query(Player).filter(Player.id.in_(final_player_ids)).all()
+        violation = check_full_squad_constraints(final_players, league, sport_type, mode)
+        if violation:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=violation)
 
     offer = TradeOffer(
         league_id=league_id,
