@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "cdn.nba.com" },
+      { protocol: "https", hostname: "pub-a57fa79d95fd430987b84680cd11e457.r2.dev" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+    ],
+  },
+
   // ── API Rewrites (Development) ─────────────────────────────
   // Proxy /api/* requests to the FastAPI backend so that cookies
   // are sent as same-origin (avoids SameSite=Lax blocking cross-origin

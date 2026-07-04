@@ -80,6 +80,8 @@ def get_league_rosters(db: Session, league_id: uuid.UUID, current_user: User) ->
                 "name": player.name,
                 "position": player.position,
                 "real_team": player.real_team,
+                "photo_url": player.photo_url,
+                "real_team_logo_url": player.real_team_logo_url,
                 "sport": player.sport.name,
             }
         )

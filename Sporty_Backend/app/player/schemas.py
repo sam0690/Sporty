@@ -38,6 +38,8 @@ class PlayerResponse(BaseModel):
     position: str
     # TODO: switch to player.real_team_fk.name after FK migration
     real_team: str
+    photo_url: str | None = None
+    real_team_logo_url: str | None = None
     cost: Decimal
     is_available: bool
     created_at: datetime

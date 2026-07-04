@@ -136,6 +136,25 @@ class FootballAPIClient:
             response.raise_for_status()
             return response.json()
 
+    async def get_teams(
+        self, league_id: int = 39, season: int = 2024
+    ) -> dict[str, Any]:
+        """
+        Fetch all teams (with crest/logo URLs) for a league/season.
+
+        Returns:
+            {"response": [{"team": {"id":..., "name":..., "logo": "https://..."}, "venue": {...}}, ...]}
+        """
+        url = f"{self.BASE_URL}/teams"
+        params = {"league": league_id, "season": season}
+
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url, headers=self.headers, params=params, timeout=30
+            )
+            response.raise_for_status()
+            return response.json()
+
     async def get_player_by_id(
         self, player_id: int, season: int = 2024
     ) -> dict[str, Any]:

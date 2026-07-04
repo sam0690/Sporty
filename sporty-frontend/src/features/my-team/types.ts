@@ -13,6 +13,8 @@ export type MyTeamPlayerView = {
   sport: Sport;
   position: string;
   realTeam: string;
+  photoUrl?: string | null;
+  realTeamLogoUrl?: string | null;
   cost: string;
   totalPoints: number;
   avgPoints: number;

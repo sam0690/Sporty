@@ -134,6 +134,8 @@ def get_free_agents(
             "name": p.name,
             "position": p.position,
             "real_team": p.real_team,
+            "photo_url": p.photo_url,
+            "real_team_logo_url": p.real_team_logo_url,
             "cost": float(p.cost),
             "sport": p.sport.name,
         }

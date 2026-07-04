@@ -43,6 +43,8 @@ export const mapTeamLeagueView = (
     sport: normalizeSport(teamPlayer.player.sport?.name),
     position: teamPlayer.player.position,
     realTeam: teamPlayer.player.real_team,
+    photoUrl: teamPlayer.player.photo_url,
+    realTeamLogoUrl: teamPlayer.player.real_team_logo_url,
     cost: teamPlayer.player.cost,
     totalPoints: Number(teamPlayer.total_points ?? 0),
     avgPoints: Number(teamPlayer.avg_points ?? 0),

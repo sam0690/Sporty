@@ -1,5 +1,7 @@
 "use client";
 
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
+
 type Sport = "football" | "basketball" | "cricket";
 
 type PlayerCardProps = {
@@ -7,6 +9,8 @@ type PlayerCardProps = {
   sport: Sport;
   position: string;
   realTeam?: string;
+  photoUrl?: string | null;
+  realTeamLogoUrl?: string | null;
   cost?: string;
   totalPoints: number;
   avgPoints: number;
@@ -31,6 +35,8 @@ export function PlayerCard({
   sport,
   position,
   realTeam,
+  photoUrl,
+  realTeamLogoUrl,
   cost,
   totalPoints,
   avgPoints,
@@ -44,8 +50,19 @@ export function PlayerCard({
       className="card-fade-in flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.18)]"
     >
       <div className="flex min-w-0 flex-1 items-center gap-3">
+        <div className="relative shrink-0">
+          <PlayerAvatar name={name} photoUrl={photoUrl} size="md" />
+          {realTeam ? (
+            <TeamLogo
+              teamName={realTeam}
+              logoUrl={realTeamLogoUrl}
+              size="sm"
+              className="absolute -bottom-1 -right-1 border-2 border-[#111117]"
+            />
+          ) : null}
+        </div>
         <span
-          className="grid h-11 w-14 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
           style={{ color: accent, background: `${accent}1f` }}
         >
           {position}

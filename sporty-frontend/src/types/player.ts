@@ -9,6 +9,8 @@ export type TPlayer = {
   sport: TSportBrief;
   position: string;
   real_team: string;
+  photo_url?: string | null;
+  real_team_logo_url?: string | null;
   cost?: number;
   current_cost: number;
   is_available?: boolean;
@@ -22,6 +24,8 @@ export type TPlayerBrief = {
   sport_name: string;
   position: string;
   real_team: string;
+  photo_url?: string | null;
+  real_team_logo_url?: string | null;
   current_cost: number;
 };
 

@@ -53,6 +53,7 @@ class RealTeam(Base):
     city: Mapped[str | None] = mapped_column(String(100), nullable=True)
     conference: Mapped[str | None] = mapped_column(String(50), nullable=True)
     division: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     sport: Mapped["Sport"] = relationship(foreign_keys=[sport_id], overlaps="real_teams")
     players: Mapped[list["Player"]] = relationship(back_populates="real_team_ref")
@@ -116,6 +117,14 @@ class Player(Base):
     )
 
     name: Mapped[str] = mapped_column(String(150), nullable=False)
+    photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    # Denormalised copy of real_team_ref.logo_url — same tradeoff as the
+    # `real_team` string above: avoids joinedload(Player.real_team_ref) at
+    # every one of the ~10 existing query sites that already eager-load
+    # Player.sport. Re-synced by scripts/backfill_player_team_images.py
+    # whenever team logos change (rare).
+    real_team_logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Position code validated at the app layer, not DB Enum.
     # Football: "GKP", "DEF", "MID", "FWD"

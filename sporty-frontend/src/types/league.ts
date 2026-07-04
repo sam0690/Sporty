@@ -76,6 +76,8 @@ export type TLineupEntry = {
     name: string;
     position: string;
     real_team: string;
+    photo_url?: string | null;
+    real_team_logo_url?: string | null;
     cost: string;
     sport: {
       name: string;
@@ -112,6 +114,8 @@ export type TGameweekPlayerRecap = {
     name: string;
     position: string;
     real_team: string;
+    photo_url?: string | null;
+    real_team_logo_url?: string | null;
     cost: string;
     sport: {
       name: string;
@@ -208,6 +212,8 @@ export type TTeamPlayer = {
     name: string;
     position: string;
     real_team: string;
+    photo_url?: string | null;
+    real_team_logo_url?: string | null;
     cost: string;
     sport: {
       name: string;
@@ -228,6 +234,8 @@ export type TTransferPlayer = {
   display_name?: string;
   position: string;
   real_team: string;
+  photo_url?: string | null;
+  real_team_logo_url?: string | null;
   cost: number | string;
   sport: TSportBrief;
 };
@@ -324,6 +332,8 @@ export type TFreeAgent = {
   name: string;
   position: string;
   real_team: string;
+  photo_url?: string | null;
+  real_team_logo_url?: string | null;
   cost: number;
   sport: string;
 };
@@ -360,6 +370,8 @@ export type TRosterPlayer = {
   name: string;
   position: string;
   real_team: string;
+  photo_url?: string | null;
+  real_team_logo_url?: string | null;
   sport: string;
 };
 
