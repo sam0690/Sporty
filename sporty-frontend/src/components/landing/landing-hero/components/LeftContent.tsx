@@ -55,7 +55,7 @@ export function LeftContent({ content }: LeftContentProps) {
                   isPrimary &&
                     "shadow-[0_10px_30px_-10px_rgba(232,251,37,0.5)]",
                   !isPrimary &&
-                    "!border-white/20 !text-[#f0f0f0] hover:!bg-[#1d1d26] hover:!text-[#f0f0f0]",
+                    "border-white/20! text-[#f0f0f0]! hover:bg-[#1d1d26]! hover:text-[#f0f0f0]!",
                 )}
               >
                 {!isPrimary ? (

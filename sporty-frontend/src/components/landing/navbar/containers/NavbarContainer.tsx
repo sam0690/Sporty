@@ -10,12 +10,8 @@ import { NavLinks } from "@/components/landing/navbar/components/NavLinks";
 
 export function NavbarContainer() {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileOpenPath, setMobileOpenPath] = useState<string | null>(null);
   const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,7 +24,7 @@ export function NavbarContainer() {
   }, []);
 
   const closeMobileMenu = () => {
-    setMobileOpen(false);
+    setMobileOpenPath(null);
   };
 
   return (
@@ -48,8 +44,10 @@ export function NavbarContainer() {
         <NavActions />
 
         <MobileMenu
-          open={mobileOpen}
-          onToggle={() => setMobileOpen((prev) => !prev)}
+          open={mobileOpenPath === pathname}
+          onToggle={() =>
+            setMobileOpenPath((prev) => (prev === pathname ? null : pathname))
+          }
         >
           <NavLinks
             items={NAV_ITEMS}
