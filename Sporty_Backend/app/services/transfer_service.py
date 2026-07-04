@@ -237,6 +237,28 @@ def _build_new_session(
     )
     original_team = [str(row[0]) for row in team_players]
 
+    # Seed the counter from already-confirmed transfers for this window, not
+    # 0 — otherwise a freshly-rebuilt session (new day, new tab, TTL expiry)
+    # forgets transfers already spent this window and lets the user exceed
+    # transfers_per_window across multiple confirm rounds.
+    #
+    # Counted via BudgetTransaction("transfer_in_cost"), not the Transfer
+    # audit table: confirm_transfers only writes a Transfer row per paired
+    # out/in swap (min(len(pending_out), len(pending_in))), but a multisport
+    # league allows unpaired in/out counts, and the session's own counter
+    # increments once per stage_in call regardless of pairing. BudgetTransaction
+    # is written once per incoming player unconditionally, so it's the one
+    # persisted record that matches the session counter's unit exactly.
+    transfers_used = (
+        db.query(func.count(BudgetTransaction.id))
+        .filter(
+            BudgetTransaction.fantasy_team_id == team.id,
+            BudgetTransaction.transfer_window_id == uuid.UUID(gameweek_id),
+            BudgetTransaction.transaction_type == "transfer_in_cost",
+        )
+        .scalar()
+    ) or 0
+
     return {
         "userId": user_id,
         "leagueId": str(league.id),
@@ -247,7 +269,7 @@ def _build_new_session(
         "pendingOut": [],
         "pendingIn": [],
         "transfersAllowed": int(league.transfers_per_window),
-        "transfersUsed": 0,
+        "transfersUsed": int(transfers_used),
     }
 
 
