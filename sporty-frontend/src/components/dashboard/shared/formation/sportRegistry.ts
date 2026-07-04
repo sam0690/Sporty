@@ -1,6 +1,6 @@
 export type SportKind = "football" | "basketball" | "cricket" | "unknown";
 
-export type SurfaceKind = "pitch" | "court" | "neutral";
+export type SurfaceKind = "pitch" | "court" | "multisport" | "neutral";
 
 export function normalizeSport(value?: string | null): SportKind {
   const normalized = value?.trim().toLowerCase() ?? "";

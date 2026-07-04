@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { Player } from "@/components/dashboard/leagues/league-roster/components/PlayerCard";
 import {
   PitchSlot,
@@ -82,17 +83,14 @@ export function HybridPitch({
         </div>
       ) : null}
 
-      <div className="relative mx-auto aspect-[3/4] w-full overflow-hidden rounded-[3px] bg-gradient-to-b from-[#1a4d2e] to-[#0f3a22] shadow-xl">
-        <div className="pointer-events-none absolute left-1/2 top-0 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
-        <div className="pointer-events-none absolute bottom-0 left-1/2 h-[12%] w-[34%] -translate-x-1/2 border border-white/20" />
-        <div className="pointer-events-none absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/20" />
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-white/20 sm:h-24 sm:w-24" />
-
-        <div className="pointer-events-none absolute left-1/2 top-1/2 h-32 w-12 -translate-x-1/2 -translate-y-1/2 bg-amber-800/40" />
-
-        <div className="pointer-events-none absolute left-[8%] top-[12%] h-[76%] w-[84%] rounded-[3px] border border-orange-400/20" />
-        <div className="pointer-events-none absolute left-1/2 top-[7%] h-16 w-16 -translate-x-1/2 rounded-[3px] border border-orange-400/20 sm:h-20 sm:w-20" />
-        <div className="pointer-events-none absolute bottom-[4%] left-1/2 h-16 w-16 -translate-x-1/2 rounded-[3px] border border-orange-400/20 sm:h-20 sm:w-20" />
+      <div className="relative mx-auto aspect-331/594 w-full overflow-hidden rounded-[3px] shadow-xl">
+        <Image
+          src="/images/courts/multisport-court.png"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, 480px"
+        />
 
         {pitchSpots.map((spot) => {
           const slot = slotConfigs.find((item) => item.id === spot.id);

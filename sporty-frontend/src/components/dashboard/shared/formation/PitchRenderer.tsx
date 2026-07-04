@@ -1,4 +1,5 @@
-import type { CSSProperties, ReactNode } from "react";
+import Image from "next/image";
+import type { ReactNode } from "react";
 
 type PitchRendererProps = {
   children: ReactNode;
@@ -9,20 +10,17 @@ export function PitchRenderer({
   children,
   className = "",
 }: PitchRendererProps) {
-  const style: CSSProperties = {
-    aspectRatio: "3 / 4",
-  };
-
   return (
     <div
-      style={style}
-      className={`relative mx-auto w-full overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-linear-to-b from-[#1a4d2e] via-[#134225] to-[#0c311c]  ${className}`}
+      className={`relative mx-auto aspect-19/34 w-full overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0c311c] ${className}`}
     >
-      <div className="pointer-events-none absolute inset-x-[12%] top-[7%] h-[14%] rounded-[3px] border border-white/15" />
-      <div className="pointer-events-none absolute inset-x-[12%] bottom-[7%] h-[14%] rounded-[3px] border border-white/15" />
-      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[18%] w-[18%] -translate-x-1/2 -translate-y-1/2 rounded-[3px] border border-white/15" />
-      <div className="pointer-events-none absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-white/15" />
-      <div className="pointer-events-none absolute left-1/2 top-[8%] bottom-[8%] w-px -translate-x-1/2 bg-[#1d1d26]" />
+      <Image
+        src="/images/courts/football-pitch.png"
+        alt=""
+        fill
+        className="object-cover"
+        sizes="(max-width: 768px) 100vw, 480px"
+      />
       {children}
     </div>
   );

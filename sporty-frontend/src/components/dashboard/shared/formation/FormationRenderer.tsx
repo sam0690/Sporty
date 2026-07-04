@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { CourtRenderer } from "@/components/dashboard/shared/formation/CourtRenderer";
+import { MultisportRenderer } from "@/components/dashboard/shared/formation/MultisportRenderer";
 import { PitchRenderer } from "@/components/dashboard/shared/formation/PitchRenderer";
 import type {
   FormationPlayerLike,
@@ -27,6 +28,10 @@ function SectionSurface<TPlayer extends FormationPlayerLike>({
 }) {
   if (section.surface === "court") {
     return <CourtRenderer>{children}</CourtRenderer>;
+  }
+
+  if (section.surface === "multisport") {
+    return <MultisportRenderer>{children}</MultisportRenderer>;
   }
 
   return <PitchRenderer>{children}</PitchRenderer>;

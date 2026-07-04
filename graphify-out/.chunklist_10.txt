@@ -1,0 +1,13 @@
+/home/sam069/projects/Sporty/Sporty_Backend/docs/monitoring/prometheus-alert-rules.yml
+/home/sam069/projects/Sporty/Sporty_Backend/docs/monitoring/PHASE5_MONITORING_RUNBOOK.md
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/sync_live_stats.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/create_sports.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/sync_basketball.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/import_datasets.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/realtime_smoke_test.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/sync_all_data.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/seed_default_scoring_rules.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/seed_season_and_windows.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/reanchor_transfer_window_deadlines.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/cleanup_orphan_live_events.py
+/home/sam069/projects/Sporty/Sporty_Backend/scripts/backfill_player_team_images.py

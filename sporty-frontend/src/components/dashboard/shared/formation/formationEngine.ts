@@ -639,25 +639,27 @@ function buildMixedLayout<TPlayer extends FormationPlayerLike>(
 
   const bbPool = [...basketballPlayers, ...others];
 
-  // Basketball (and others) at the TOP (scaled to top 40% of pitch)
-  const bbRows = buildBasketballRows(bbPool).rows;
-  const basketballSlots = generateCoordinates(
-    bbRows.map((row) => ({
+  // Football at the TOP (scaled to top 50% of surface) — matches the pitch
+  // half of multisport-court.png.
+  const fbRows = buildFootballRows(footballPlayers).rows;
+  const footballSlots = generateCoordinates(
+    fbRows.map((row) => ({
       ...row,
       y: Number((row.y * 0.5 + 0.08).toFixed(3)),
     })),
   );
 
-  // Football at the BOTTOM (scaled to bottom 50% of pitch)
-  const fbRows = buildFootballRows(footballPlayers).rows;
-  const footballSlots = generateCoordinates(
-    fbRows.map((row) => ({
+  // Basketball (and others) at the BOTTOM (scaled to bottom 45% of surface) —
+  // matches the court half of multisport-court.png.
+  const bbRows = buildBasketballRows(bbPool).rows;
+  const basketballSlots = generateCoordinates(
+    bbRows.map((row) => ({
       ...row,
       y: Number((row.y * 0.45 + 0.52).toFixed(3)),
     })),
   );
 
-  return [...basketballSlots, ...footballSlots];
+  return [...footballSlots, ...basketballSlots];
 }
 
 function assignByAvailableSports<TPlayer extends FormationPlayerLike>(
@@ -769,7 +771,7 @@ export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
       {
         id: "mixed-section",
         sport: "football", // Unified indicator
-        surface: "pitch",
+        surface: "multisport",
         title: "Multisport Pitch",
         formationLabel: `${footballCount} FB + ${basketballCount} BB`,
         slots: buildMixedLayout(activePlayers),

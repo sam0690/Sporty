@@ -1,0 +1,14 @@
+/home/sam069/projects/Sporty/sporty-frontend/src/services/FeatureService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/OptimizationService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/ScoringService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/TeamService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/MatchService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/LeagueService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/PlayerService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/services/UserService.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/store/matchStore.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/types/index.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/types/league.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/types/player.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/types/match.ts
+/home/sam069/projects/Sporty/sporty-frontend/src/types/events.ts
