@@ -22,6 +22,8 @@ class MatchResponse(BaseModel):
     sport: str
     home_team: str
     away_team: str
+    home_team_logo_url: str | None = None
+    away_team_logo_url: str | None = None
     match_date: datetime
     status: str
     competition: str

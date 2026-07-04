@@ -6,10 +6,18 @@ import type { MatchGroup } from "./matchFormat";
 import { isToday, kickoffTime, shortDate, statusMeta } from "./matchFormat";
 import { TeamBadge } from "./TeamBadge";
 
-function TeamRow({ name, score }: { name: string; score: number | null }) {
+function TeamRow({
+  name,
+  logoUrl,
+  score,
+}: {
+  name: string;
+  logoUrl?: string | null;
+  score: number | null;
+}) {
   return (
     <div className="flex items-center gap-2.5">
-      <TeamBadge name={name} size="sm" />
+      <TeamBadge name={name} logoUrl={logoUrl} size="sm" />
       <span className="min-w-0 flex-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
         {name}
       </span>
@@ -57,8 +65,16 @@ function MatchRow({ match }: { match: TMatch }) {
       </div>
 
       <div className="min-w-0 flex-1 space-y-1.5">
-        <TeamRow name={match.home_team} score={hasScore ? match.home_score : null} />
-        <TeamRow name={match.away_team} score={hasScore ? match.away_score : null} />
+        <TeamRow
+          name={match.home_team}
+          logoUrl={match.home_team_logo_url}
+          score={hasScore ? match.home_score : null}
+        />
+        <TeamRow
+          name={match.away_team}
+          logoUrl={match.away_team_logo_url}
+          score={hasScore ? match.away_score : null}
+        />
       </div>
 
       <span className="section-label shrink-0 text-[#555560] transition-colors group-hover:text-[#e8fb25]">

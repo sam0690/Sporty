@@ -11,6 +11,8 @@ export type TMatch = {
   sport: string;
   home_team: string;
   away_team: string;
+  home_team_logo_url: string | null;
+  away_team_logo_url: string | null;
   match_date: string;
   status: TMatchStatus | string;
   competition: string;

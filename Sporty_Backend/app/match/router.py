@@ -12,6 +12,7 @@ users can browse fixtures before (or without) joining a league.
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
@@ -23,17 +24,58 @@ from app.database import get_db
 from app.league.models import Sport
 from app.match.models import Match
 from app.match.schemas import MatchListResponse, MatchResponse
+from app.player.models import RealTeam
 
 router = APIRouter(tags=["Matches"])
 
+# Match.home_team/away_team are free-text strings from the external-API sync,
+# which don't always agree with RealTeam.name (used elsewhere for crest
+# lookups, e.g. the squad/lineup views) — some fixtures use the short form
+# ("Newcastle") where RealTeam uses the long form ("Newcastle United"), or
+# vice versa. Explicit alias map, not fuzzy matching, mirroring the same
+# fix already applied to the feeder's team-name matching.
+MATCH_TEAM_NAME_ALIASES: dict[str, str] = {
+    "Brighton": "Brighton &amp; Hove Albion",
+    "Newcastle": "Newcastle United",
+    "Tottenham": "Tottenham Hotspur",
+    "West Ham": "West Ham United",
+    "Wolves": "Wolverhampton",
+    "Liverpool FC": "Liverpool",
+}
 
-def _to_match_response(match: Match, sport_name: str) -> MatchResponse:
+
+def _real_team_logo_lookup(db: Session) -> dict[tuple[uuid.UUID, str], str]:
+    """(sport_id, team name) -> logo_url for every RealTeam with a logo set.
+    Built once per request — RealTeam is a small table (dozens of rows), so
+    this is a single cheap query rather than one join per match row."""
+    rows = (
+        db.query(RealTeam.sport_id, RealTeam.name, RealTeam.logo_url)
+        .filter(RealTeam.logo_url.isnot(None))
+        .all()
+    )
+    return {(sport_id, name): logo_url for sport_id, name, logo_url in rows}
+
+
+def _team_logo_url(
+    lookup: dict[tuple[uuid.UUID, str], str], sport_id: uuid.UUID, team_name: str
+) -> str | None:
+    canonical_name = MATCH_TEAM_NAME_ALIASES.get(team_name, team_name)
+    return lookup.get((sport_id, canonical_name))
+
+
+def _to_match_response(
+    match: Match,
+    sport_name: str,
+    logo_lookup: dict[tuple[uuid.UUID, str], str],
+) -> MatchResponse:
     return MatchResponse(
         id=match.id,
         external_api_id=match.external_api_id,
         sport=sport_name,
         home_team=match.home_team,
         away_team=match.away_team,
+        home_team_logo_url=_team_logo_url(logo_lookup, match.sport_id, match.home_team),
+        away_team_logo_url=_team_logo_url(logo_lookup, match.sport_id, match.away_team),
         match_date=match.match_date,
         status=match.status,
         competition=match.competition,
@@ -73,7 +115,8 @@ def list_matches(
     # Most recent / live first; the UI groups by status.
     rows = query.order_by(Match.match_date.desc()).limit(limit).all()
 
-    items = [_to_match_response(match, name) for match, name in rows]
+    logo_lookup = _real_team_logo_lookup(db)
+    items = [_to_match_response(match, name, logo_lookup) for match, name in rows]
     return MatchListResponse(items=items, total=len(items))
 
 
@@ -126,13 +169,14 @@ def list_public_matches(
     )
 
     # Concatenate in priority order, de-duplicate by id, cap to limit.
+    logo_lookup = _real_team_logo_lookup(db)
     seen: set = set()
     items: list[MatchResponse] = []
     for match, name in [*live, *upcoming, *recent]:
         if match.id in seen:
             continue
         seen.add(match.id)
-        items.append(_to_match_response(match, name))
+        items.append(_to_match_response(match, name, logo_lookup))
         if len(items) >= limit:
             break
 

@@ -57,7 +57,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
           <p className="truncate text-right font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-2xl">
             {match.home_team}
           </p>
-          <TeamBadge name={match.home_team} size="lg" />
+          <TeamBadge name={match.home_team} logoUrl={match.home_team_logo_url} size="lg" />
         </div>
 
         <div className="shrink-0 text-center">
@@ -77,7 +77,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
         </div>
 
         <div className="flex min-w-0 items-center justify-start gap-3 sm:gap-4">
-          <TeamBadge name={match.away_team} size="lg" />
+          <TeamBadge name={match.away_team} logoUrl={match.away_team_logo_url} size="lg" />
           <p className="truncate font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-2xl">
             {match.away_team}
           </p>

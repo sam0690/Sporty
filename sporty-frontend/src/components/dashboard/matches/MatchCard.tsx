@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 
+import { TeamLogo } from "@/components/ui";
 import type { TMatch } from "@/types/match";
 
 type SportConfig = {
@@ -87,8 +88,11 @@ export function MatchCard({
       {/* Teams + scores */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
-          <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
-            {match.home_team}
+          <span className="flex min-w-0 items-center gap-2">
+            <TeamLogo teamName={match.home_team} logoUrl={match.home_team_logo_url} size="sm" />
+            <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+              {match.home_team}
+            </span>
           </span>
           {hasScore && (
             <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
@@ -97,8 +101,11 @@ export function MatchCard({
           )}
         </div>
         <div className="mt-1.5 flex items-center justify-between gap-3">
-          <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
-            {match.away_team}
+          <span className="flex min-w-0 items-center gap-2">
+            <TeamLogo teamName={match.away_team} logoUrl={match.away_team_logo_url} size="sm" />
+            <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+              {match.away_team}
+            </span>
           </span>
           {hasScore && (
             <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
