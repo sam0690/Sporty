@@ -148,23 +148,22 @@ export function FreeAgentsView() {
                   className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
-                    <div className="relative shrink-0">
-                      <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" />
-                      {p.real_team ? (
-                        <TeamLogo
-                          teamName={p.real_team}
-                          logoUrl={p.real_team_logo_url}
-                          size="sm"
-                          className="absolute -bottom-1 -right-1 border-2 border-[#111117]"
-                        />
-                      ) : null}
-                    </div>
+                    <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
                     <div className="min-w-0">
                       <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
                         {p.name}
                       </p>
-                      <p className="mt-0.5 text-xs text-[#555560]">
-                        {p.position} · {p.real_team} · {p.sport}
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#555560]">
+                        <span>{p.position}</span>
+                        {p.real_team ? (
+                          <>
+                            <span className="text-[#33333a]">·</span>
+                            <TeamLogo teamName={p.real_team} logoUrl={p.real_team_logo_url} size="sm" />
+                            <span>{p.real_team}</span>
+                          </>
+                        ) : null}
+                        <span className="text-[#33333a]">·</span>
+                        <span>{p.sport}</span>
                       </p>
                     </div>
                   </div>
@@ -213,8 +212,15 @@ export function FreeAgentsView() {
                       <PlayerAvatar name={tp.player.name} photoUrl={tp.player.photo_url} size="sm" />
                       <span className="truncate text-sm text-[#f0f0f0]">{tp.player.name}</span>
                     </span>
-                    <span className="shrink-0 text-xs text-[#555560]">
-                      {tp.player.position} · {tp.player.real_team}
+                    <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
+                      <span>{tp.player.position}</span>
+                      {tp.player.real_team ? (
+                        <>
+                          <span className="text-[#33333a]">·</span>
+                          <TeamLogo teamName={tp.player.real_team} logoUrl={tp.player.real_team_logo_url} size="sm" />
+                          <span>{tp.player.real_team}</span>
+                        </>
+                      ) : null}
                     </span>
                   </button>
                 ))

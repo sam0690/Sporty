@@ -1,6 +1,7 @@
 "use client";
 
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
 
 type PlayerCardProps = {
   player: LineupPlayerCardModel;
@@ -34,8 +35,9 @@ export function PlayerCard({
     >
       {/* Identity */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
+        <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="md" className="shrink-0" />
         <span
-          className="grid h-11 w-14 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
           style={{ color: accentColor, background: `${accentColor}1f` }}
         >
           {player.position}
@@ -57,8 +59,13 @@ export function PlayerCard({
               </span>
             ) : null}
           </div>
-          <p className="mt-0.5 truncate text-xs text-[#555560]">
-            {player.realTeam}
+          <p className="mt-0.5 flex items-center truncate text-xs text-[#555560]">
+            {player.realTeam ? (
+              <span className="flex items-center gap-1.5">
+                <TeamLogo teamName={player.realTeam} logoUrl={player.realTeamLogoUrl} size="sm" />
+                {player.realTeam}
+              </span>
+            ) : null}
             <span className="mx-1.5 text-[#33333a]">·</span>
             <span style={{ color: accentColor }}>{player.sportDisplayName}</span>
             <span className="mx-1.5 text-[#33333a]">·</span>${player.cost}

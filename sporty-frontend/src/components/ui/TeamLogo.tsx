@@ -38,11 +38,11 @@ export function TeamLogo({
   const showImage = Boolean(logoUrl) && !failed;
 
   return (
-    <div
+    <span
       title={teamName}
       className={cn(
         box,
-        "shrink-0 overflow-hidden rounded-full border border-[rgba(255,255,255,0.1)] bg-[#1d1d26] flex items-center justify-center font-barlow-condensed font-700 text-[#9a9aa5]",
+        "shrink-0 overflow-hidden rounded-full border border-[rgba(255,255,255,0.1)] bg-[#1d1d26] inline-flex items-center justify-center font-barlow-condensed font-700 text-[#9a9aa5]",
         text,
         className,
       )}
@@ -59,6 +59,6 @@ export function TeamLogo({
       ) : (
         getAbbreviation(teamName)
       )}
-    </div>
+    </span>
   );
 }

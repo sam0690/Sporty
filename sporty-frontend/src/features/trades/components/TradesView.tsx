@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import { useMe } from "@/hooks/auth/useMe";
 import {
   useLeague,
@@ -44,8 +45,16 @@ function PlayerToggle({
           : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] text-[#f0f0f0] hover:border-[rgba(255,255,255,0.2)]"
       }`}
     >
-      <span className="truncate">{player.name}</span>
-      <span className="shrink-0 text-xs text-[#555560]">{player.position}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <PlayerAvatar name={player.name} photoUrl={player.photo_url} size="sm" className="shrink-0" />
+        <span className="truncate">{player.name}</span>
+      </span>
+      <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
+        <span>{player.position}</span>
+        {player.real_team ? (
+          <TeamLogo teamName={player.real_team} logoUrl={player.real_team_logo_url} size="sm" />
+        ) : null}
+      </span>
     </button>
   );
 }

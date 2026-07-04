@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import { useGameweekRecap, useLeague } from "@/hooks/leagues/useLeagues";
 import { useMe } from "@/hooks/auth/useMe";
 import type {
@@ -81,6 +82,7 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
 
   return (
     <li className="flex items-center gap-3 rounded-[8px] px-2.5 py-2.5 transition-colors hover:bg-[rgba(255,255,255,0.03)]">
+      <PlayerAvatar name={p.player.name} photoUrl={p.player.photo_url} size="sm" className="shrink-0" />
       <span
         className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[6px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
         style={{ color: accent, background: `${accent}17`, border: `1px solid ${accent}33` }}
@@ -99,7 +101,12 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
           {p.status === "subbed_out" && <SubArrow dir="out" />}
         </div>
         <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#6a6a76]">
-          <span className="truncate">{p.player.real_team}</span>
+          {p.player.real_team ? (
+            <span className="flex items-center gap-1.5 truncate">
+              <TeamLogo teamName={p.player.real_team} logoUrl={p.player.real_team_logo_url} size="sm" />
+              {p.player.real_team}
+            </span>
+          ) : null}
           <span className="text-[#33333a]">·</span>
           <span style={{ color: status.color }}>{status.label}</span>
           <span className="text-[#33333a]">·</span>

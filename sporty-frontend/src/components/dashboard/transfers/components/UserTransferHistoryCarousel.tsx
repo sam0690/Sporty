@@ -1,6 +1,7 @@
 "use client";
 
 import { Carousel } from "@mantine/carousel";
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import type { TUserTransferLeagueGroup } from "@/types";
 
 type UserTransferHistoryCarouselProps = {
@@ -138,15 +139,32 @@ export function UserTransferHistoryCarousel({
                               <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
                                 ▼ Out
                               </p>
-                              <p className="mt-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
-                                {resolvePlayerName(transfer.player_out)}
-                              </p>
-                              <p className="mt-1 text-xs text-[#555560]">
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <PlayerAvatar
+                                  name={resolvePlayerName(transfer.player_out)}
+                                  photoUrl={transfer.player_out.photo_url}
+                                  size="sm"
+                                  className="shrink-0"
+                                />
+                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                                  {resolvePlayerName(transfer.player_out)}
+                                </p>
+                              </div>
+                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#555560]">
                                 <span style={{ color: outAccent }}>
                                   {transfer.player_out.position}
                                 </span>
-                                <span className="mx-1.5 text-[#33333a]">·</span>
-                                {transfer.player_out.real_team}
+                                {transfer.player_out.real_team ? (
+                                  <>
+                                    <span className="text-[#33333a]">·</span>
+                                    <TeamLogo
+                                      teamName={transfer.player_out.real_team}
+                                      logoUrl={transfer.player_out.real_team_logo_url}
+                                      size="sm"
+                                    />
+                                    <span>{transfer.player_out.real_team}</span>
+                                  </>
+                                ) : null}
                               </p>
                               <p className="mt-1 font-bebas tracking-[1px] text-[#e8fb25]">
                                 ${formatMoney(transfer.player_out.cost)}
@@ -157,15 +175,32 @@ export function UserTransferHistoryCarousel({
                               <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
                                 ▲ In
                               </p>
-                              <p className="mt-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
-                                {resolvePlayerName(transfer.player_in)}
-                              </p>
-                              <p className="mt-1 text-xs text-[#555560]">
+                              <div className="mt-1.5 flex items-center gap-2">
+                                <PlayerAvatar
+                                  name={resolvePlayerName(transfer.player_in)}
+                                  photoUrl={transfer.player_in.photo_url}
+                                  size="sm"
+                                  className="shrink-0"
+                                />
+                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                                  {resolvePlayerName(transfer.player_in)}
+                                </p>
+                              </div>
+                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#555560]">
                                 <span style={{ color: inAccent }}>
                                   {transfer.player_in.position}
                                 </span>
-                                <span className="mx-1.5 text-[#33333a]">·</span>
-                                {transfer.player_in.real_team}
+                                {transfer.player_in.real_team ? (
+                                  <>
+                                    <span className="text-[#33333a]">·</span>
+                                    <TeamLogo
+                                      teamName={transfer.player_in.real_team}
+                                      logoUrl={transfer.player_in.real_team_logo_url}
+                                      size="sm"
+                                    />
+                                    <span>{transfer.player_in.real_team}</span>
+                                  </>
+                                ) : null}
                               </p>
                               <p className="mt-1 font-bebas tracking-[1px] text-[#e8fb25]">
                                 ${formatMoney(transfer.player_in.cost)}

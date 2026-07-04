@@ -192,7 +192,9 @@ export const UserService = {
   async uploadAvatar(id: string, file: File): Promise<TUserProfile> {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await authApi.post(API_PATHS.USERS.UPLOAD_AVATAR(id), formData);
+    const res = await authApi.post(API_PATHS.USERS.UPLOAD_AVATAR(id), formData, {
+      headers: { "Content-Type": undefined },
+    });
     return unwrapResponseData(res.data);
   },
 

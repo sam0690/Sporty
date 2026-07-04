@@ -163,6 +163,9 @@ export function useCreateTeamDashboard() {
       sport: p.sport.name as "football" | "basketball",
       icon: sportIconByName[p.sport.name] ?? "🏅",
       position: p.position,
+      realTeam: p.real_team,
+      photoUrl: p.photo_url,
+      realTeamLogoUrl: p.real_team_logo_url,
       price: Number(p.current_cost),
       projected: 0,
     }));
@@ -178,6 +181,9 @@ export function useCreateTeamDashboard() {
         sport: player.sport.name as "football" | "basketball",
         icon: sportIconByName[player.sport.name] ?? "🏅",
         position: player.position,
+        realTeam: player.real_team,
+        photoUrl: player.photo_url,
+        realTeamLogoUrl: player.real_team_logo_url,
         price: Number(player.cost),
         projected: 0,
       };

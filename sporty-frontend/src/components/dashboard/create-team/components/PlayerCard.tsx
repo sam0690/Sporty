@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Plus } from "lucide-react";
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
 
 type SportType = "football" | "basketball" | "cricket" | "multisport";
 
@@ -10,6 +11,9 @@ type MarketPlayer = {
   sport: SportType;
   icon: string;
   position: string;
+  realTeam?: string;
+  photoUrl?: string | null;
+  realTeamLogoUrl?: string | null;
   price: number;
   projected: number;
 };
@@ -57,28 +61,37 @@ export function PlayerCard({
           : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
       }`}
     >
-      <div className="min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
-            {player.name}
+      <div className="flex min-w-0 items-center gap-3">
+        <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+              {player.name}
+            </p>
+            {showSportIcon ? (
+              <span aria-label={player.sport}>{player.icon}</span>
+            ) : null}
+          </div>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <span
+              className={`rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
+            >
+              {player.position}
+            </span>
+            {player.realTeam ? (
+              <span className="flex items-center gap-1.5 text-xs text-[#555560]">
+                <TeamLogo teamName={player.realTeam} logoUrl={player.realTeamLogoUrl} size="sm" />
+                {player.realTeam}
+              </span>
+            ) : null}
+            <span className="font-bebas text-base leading-none tracking-[1px] text-[#e8fb25]">
+              ${player.price}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-[#555560]">
+            Proj <span className="tabular-nums">{player.projected.toFixed(1)}</span>
           </p>
-          {showSportIcon ? (
-            <span aria-label={player.sport}>{player.icon}</span>
-          ) : null}
         </div>
-        <div className="mt-1.5 flex items-center gap-2">
-          <span
-            className={`rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
-          >
-            {player.position}
-          </span>
-          <span className="font-bebas text-base leading-none tracking-[1px] text-[#e8fb25]">
-            ${player.price}
-          </span>
-        </div>
-        <p className="mt-1 text-xs text-[#555560]">
-          Proj <span className="tabular-nums">{player.projected.toFixed(1)}</span>
-        </p>
       </div>
 
       {isSelected ? (
