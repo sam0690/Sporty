@@ -194,8 +194,14 @@ async def get_match_state(
         lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
         lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
 
+    # Pre-parse each row's meta once — substitutions carry the outgoing
+    # player's id here (see feed.py's ingest_match_result), which needs to
+    # join the name-resolution batch below alongside every other player id.
+    event_metas = [e["meta"] if isinstance(e["meta"], dict) else {} for e in event_rows]
+
     # Resolve every player UUID seen (events + point hashes + lineups) to a name.
     player_ids = {e["player_id"] for e in event_rows if e["player_id"]}
+    player_ids |= {meta.get("related_player_id") for meta in event_metas if meta.get("related_player_id")}
     player_ids |= set(points.keys())
     player_ids |= set(lineup_home) | set(lineup_away)
     players = await _resolve_players(db, player_ids)
@@ -210,10 +216,11 @@ async def get_match_state(
         }
 
     events = []
-    for e in event_rows:
+    for e, meta in zip(event_rows, event_metas):
         pid = e["player_id"] or None
         info = players.get(pid) if pid else None
-        meta = e["meta"] if isinstance(e["meta"], dict) else {}
+        related_pid = meta.get("related_player_id")
+        related_info = players.get(related_pid) if related_pid else None
         events.append(
             {
                 "event_id": e["event_id"],
@@ -222,6 +229,9 @@ async def get_match_state(
                 "player_id": pid,
                 "player_name": info["name"] if info else None,
                 "team": info["team"] if info else None,
+                "related_player_id": related_pid,
+                "related_player_name": related_info["name"] if related_info else None,
+                "related_team": related_info["team"] if related_info else None,
             }
         )
 

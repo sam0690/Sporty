@@ -58,9 +58,17 @@ function EventRow({
           {label}
         </div>
         <div className="mt-0.5 truncate text-xs text-[#6a6a76]">
-          <span className="text-[#9a9aa5]">
-            {event.player_name ?? "Unknown player"}
-          </span>
+          {event.type === "substitution" ? (
+            <span className="text-[#9a9aa5]">
+              {event.player_name ?? "Unknown player"}
+              {" on for "}
+              {event.related_player_name ?? "Unknown player"}
+            </span>
+          ) : (
+            <span className="text-[#9a9aa5]">
+              {event.player_name ?? "Unknown player"}
+            </span>
+          )}
           {event.team && (
             <>
               {" · "}

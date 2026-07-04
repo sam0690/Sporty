@@ -55,6 +55,9 @@ function mergeEvents(existing: MatchEvent[], update: ScoreUpdate): MatchEvent[] 
       player_id: e.sporty_player_id ?? null,
       player_name: e.player_name ?? null,
       team: e.team ?? null,
+      related_player_id: e.related_sporty_player_id ?? null,
+      related_player_name: e.related_player_name ?? null,
+      related_team: e.related_team ?? null,
     }));
   if (!incoming.length) {
     return existing;

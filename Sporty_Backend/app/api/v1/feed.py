@@ -499,7 +499,11 @@ async def ingest_match_result(
                 "player_id": event.sporty_player_id or "",
                 "team_id": event.sporty_team_id or "",
                 "value": 0.0,
-                "meta": {"minute": event.minute, "source": "feeder"},
+                "meta": {
+                    "minute": event.minute,
+                    "source": "feeder",
+                    "related_player_id": event.related_sporty_player_id or None,
+                },
                 "ts": now,
             }
             for event in payload.events
@@ -546,10 +550,13 @@ async def ingest_match_result(
 
     def _event_dict(event) -> dict:
         info = names.get(event.sporty_player_id or "")
+        related_info = names.get(event.related_sporty_player_id or "")
         return {
             **event.model_dump(),
             "player_name": info["name"] if info else None,
             "team": info["team"] if info else None,
+            "related_player_name": related_info["name"] if related_info else None,
+            "related_team": related_info["team"] if related_info else None,
         }
 
     # Data keys follow the canonical ScoreUpdate shape (home/away/minute) that

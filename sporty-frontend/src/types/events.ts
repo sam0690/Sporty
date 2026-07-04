@@ -27,6 +27,11 @@ export type MatchEvent = {
   player_id: string | null;
   player_name?: string | null;
   team?: string | null;
+  // Substitutions only: the player coming OFF (paired with player_id/name,
+  // which is the player coming ON).
+  related_player_id?: string | null;
+  related_player_name?: string | null;
+  related_team?: string | null;
 };
 
 export type LineupPlayer = {
@@ -74,6 +79,10 @@ export type FeedEventPayload = {
   minute?: number | null;
   player_name?: string | null;
   team?: string | null;
+  // Substitutions only: the player coming OFF.
+  related_sporty_player_id?: string | null;
+  related_player_name?: string | null;
+  related_team?: string | null;
 };
 
 export type ScoreUpdate = {
