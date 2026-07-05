@@ -17,6 +17,15 @@ class AuthProvider(str, enum.Enum):
     GOOGLE = "google"
 
 
+# ── User role enum ────────────────────────────────────────────────────────────
+
+class UserRole(str, enum.Enum):
+    USER = "user"
+    SUPPORT = "support"
+    ADMIN = "admin"
+    SUPER_ADMIN = "super_admin"
+
+
 # ── Step 1: User Model ───────────────────────────────────────────────────────
 
 class User(Base):
@@ -43,6 +52,13 @@ class User(Base):
     avatar_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    role: Mapped[UserRole] = mapped_column(
+        SAEnum(UserRole, name="userrole_enum", values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=UserRole.USER,
+        server_default=UserRole.USER.value,
+    )
 
     email_notifications_enabled: Mapped[bool] = mapped_column(
         Boolean, default=True, nullable=False, server_default="true"

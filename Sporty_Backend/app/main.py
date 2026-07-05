@@ -50,6 +50,7 @@ from app.player.models_nba import NBAStat  # noqa: F401
 from app.ingestion.models import IngestionPlayer, IngestionTeam  # noqa: F401
 from app.notification.models import Notification  # noqa: F401
 from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+from app.admin.models import AdminAuditLog  # noqa: F401
 from app.database import SessionLocal
 from app.core.redis import close_async_redis, get_redis
 from app.core.config import settings
@@ -76,6 +77,7 @@ from app.api.v1.feed import router as feed_router
 from app.api.routes.match import router as realtime_match_router
 from app.api.routes.websocket import router as realtime_websocket_router
 from app.api.routes.sse import router as realtime_sse_router
+from app.admin.router import router as admin_router
 
 logger = logging.getLogger(__name__)
 
@@ -530,6 +532,7 @@ app.include_router(draft_roster_router, prefix="/api/v1")
 app.include_router(waivers_router, prefix="/api/v1")
 app.include_router(trades_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
+app.include_router(admin_router, prefix="/api/v1")
 app.include_router(realtime_match_router, prefix="/api")
 app.include_router(realtime_websocket_router, prefix="/api")
 app.include_router(realtime_sse_router, prefix="/api")
