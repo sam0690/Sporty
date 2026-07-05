@@ -45,6 +45,7 @@ class AdminActionType(str, enum.Enum):
     LEAGUE_STATUS_OVERRIDE = "league_status_override"
     LEAGUE_DELETE_OVERRIDE = "league_delete_override"
     LEAGUE_SETTINGS_OVERRIDE = "league_settings_override"
+    SEASON_CREATE = "season_create"
     SCORING_RECALCULATE = "scoring_recalculate"
     SCORING_WINDOW_LOCK = "scoring_window_lock"
     SCORING_WINDOW_UNLOCK = "scoring_window_unlock"

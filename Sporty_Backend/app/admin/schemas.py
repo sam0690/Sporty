@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -74,6 +74,16 @@ class LeagueSettingsOverrideRequest(BaseModel):
 
 
 class AdminActionReason(BaseModel):
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+# ── Seasons ─────────────────────────────────────────────────────────────────────
+
+class SeasonCreateRequest(BaseModel):
+    sport_id: uuid.UUID
+    name: str = Field(min_length=1, max_length=100)
+    start_date: date
+    end_date: date
     reason: str | None = Field(default=None, max_length=1000)
 
 

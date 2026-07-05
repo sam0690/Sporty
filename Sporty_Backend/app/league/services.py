@@ -325,7 +325,9 @@ def create_league(
             detail="end_date must be on or after start_date",
         )
 
+    new_id = uuid.uuid4()
     league = League(
+        id=new_id,
         owner_id=owner.id,
         season_id=data.season_id,
         name=data.name,
@@ -341,6 +343,10 @@ def create_league(
         transfer_day=data.transfer_day,
         start_date=league_start,
         end_date=league_end,
+        # A freshly created league is the head of its own season lineage —
+        # see renew_league() for how later seasons attach to this group.
+        season_group_id=new_id,
+        season_number=1,
     )
     db.add(league)
 
@@ -595,6 +601,159 @@ def update_league_status(
 
     # Re-load with eager options so the caller can serialise to LeagueResponse
     return _require_league(db, league_id, eager=True)
+
+
+def get_season_history(db: Session, league_id: uuid.UUID) -> list[League]:
+    """Return every league in the same season lineage as league_id, oldest first.
+
+    A league's own lineage always includes itself (season_group_id defaults
+    to its own id when it has never been renewed — see create_league).
+    """
+    league = _require_league(db, league_id)
+    return (
+        db.query(League)
+        .filter(League.season_group_id == league.season_group_id)
+        .order_by(League.season_number.asc())
+        .all()
+    )
+
+
+def _next_available_season(db: Session, source: League) -> Season:
+    """Pick the season to renew `source` into when the caller didn't specify one.
+
+    Earliest active Season, for the source league's first sport, starting
+    after the source league's end_date. Raises 409 if none exists yet —
+    the commissioner has to wait for an admin to create next year's Season
+    (see app/admin/services.py:create_season_admin).
+    """
+    first_sport_id = (
+        db.query(LeagueSport.sport_id)
+        .filter(LeagueSport.league_id == source.id)
+        .order_by(LeagueSport.created_at.asc())
+        .limit(1)
+        .scalar()
+    )
+    query = db.query(Season).filter(Season.is_active.is_(True))
+    if first_sport_id:
+        query = query.filter(Season.sport_id == first_sport_id)
+    if source.end_date:
+        query = query.filter(Season.start_date > source.end_date)
+    season = query.order_by(Season.start_date.asc()).first()
+    if not season:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Next season isn't available yet — ask an admin to create it",
+        )
+    return season
+
+
+def renew_league(
+    db: Session,
+    source_league_id: uuid.UUID,
+    target_season_id: uuid.UUID | None,
+    current_user: User,
+    *,
+    admin_override: bool = False,
+) -> League:
+    """Start the next season of a completed league: a new League row, same
+    lineage (season_group_id, season_number + 1), same settings/sports/slots,
+    members auto carried over. Squads are intentionally NOT copied — team
+    creation is already a separate step (start_draft / build_initial_team),
+    so the new league naturally starts with zero FantasyTeam rows.
+
+    Only the league OWNER can renew (admin_override=True bypasses this for
+    platform-admin use). Does NOT commit — caller owns the transaction.
+    """
+    source = _require_league(db, source_league_id, eager=True)
+
+    if not admin_override and source.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the league owner can start the next season",
+        )
+
+    if source.status != LeagueStatus.COMPLETED:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Only completed leagues can start a new season",
+        )
+
+    already_renewed = (
+        db.query(League)
+        .filter(
+            League.season_group_id == source.season_group_id,
+            League.season_number == source.season_number + 1,
+        )
+        .first()
+    )
+    if already_renewed:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This league has already started its next season",
+        )
+
+    if target_season_id is not None:
+        target_season = db.query(Season).filter(Season.id == target_season_id).first()
+        if not target_season:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Season not found")
+        if source.end_date and target_season.start_date <= source.end_date:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Target season must start after the current season ends",
+            )
+    else:
+        target_season = _next_available_season(db, source)
+
+    new_id = uuid.uuid4()
+    new_league = League(
+        id=new_id,
+        owner_id=source.owner_id,
+        season_id=target_season.id,
+        name=source.name,
+        invite_code=_generate_invite_code(db),
+        status=LeagueStatus.SETUP,
+        is_public=source.is_public,
+        max_teams=source.max_teams,
+        squad_size=source.squad_size,
+        budget_per_team=source.budget_per_team,
+        draft_mode=source.draft_mode,
+        allow_midseason_join=source.allow_midseason_join,
+        transfers_per_window=source.transfers_per_window,
+        transfer_day=source.transfer_day,
+        start_date=target_season.start_date,
+        end_date=target_season.end_date,
+        season_group_id=source.season_group_id,
+        season_number=source.season_number + 1,
+    )
+    db.add(new_league)
+
+    for league_sport in source.sports:
+        new_league.sports.append(LeagueSport(sport_id=league_sport.sport_id))
+
+    source_slots = db.query(LineupSlot).filter(LineupSlot.league_id == source.id).all()
+    for slot in source_slots:
+        db.add(LineupSlot(
+            league_id=new_id,
+            sport_id=slot.sport_id,
+            position=slot.position,
+            min_count=slot.min_count,
+            max_count=slot.max_count,
+        ))
+
+    active_members = (
+        db.query(LeagueMembership)
+        .filter(
+            LeagueMembership.league_id == source.id,
+            LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+        )
+        .all()
+    )
+    for member in active_members:
+        new_league.memberships.append(LeagueMembership(user_id=member.user_id))
+
+    db.flush()
+
+    return _require_league(db, new_id, eager=True)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

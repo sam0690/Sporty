@@ -35,6 +35,7 @@ import {
   TWaiverOrderEntry,
   TLeagueRoster,
   TTradeOffer,
+  TSeasonHistoryItem,
 } from "@/types";
 import { toastifier } from "@/lib/toastifier";
 import { isApiError } from "@/utils/api-Error";
@@ -588,6 +589,31 @@ export function useUpdateLeagueStatus(leagueId: string) {
         queryClient.invalidateQueries({ queryKey: ["leagues", "me"] });
       },
       successMessage: "League status updated",
+    },
+  );
+}
+
+export function useRenewLeague(leagueId: string) {
+  const queryClient = useQueryClient();
+  return useApiMutation(
+    (targetSeasonId?: string) =>
+      LeagueService.renewLeague(leagueId, targetSeasonId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "seasons"] });
+        queryClient.invalidateQueries({ queryKey: ["leagues", "me"] });
+      },
+      successMessage: "Next season started!",
+    },
+  );
+}
+
+export function useSeasonHistory(leagueId: string) {
+  return useApiQuery<TSeasonHistoryItem[]>(
+    ["leagues", leagueId, "seasons"],
+    () => LeagueService.getSeasonHistory(leagueId),
+    {
+      enabled: !!leagueId,
     },
   );
 }

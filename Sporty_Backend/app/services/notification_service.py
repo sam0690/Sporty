@@ -65,6 +65,15 @@ def notify_league_completed(db: Session, league_ids: Sequence[uuid.UUID]) -> int
     )
 
 
+def notify_new_season_started(db: Session, league_ids: Sequence[uuid.UUID]) -> int:
+    """Notify carried-over members that a renewed league's next season is ready."""
+    return _create_league_status_notifications(
+        db,
+        league_ids,
+        "{league_name} — a new season is ready! Join and set up your squad.",
+    )
+
+
 def get_user_notifications(db: Session, user_id: uuid.UUID) -> list[Notification]:
     return (
         db.query(Notification)

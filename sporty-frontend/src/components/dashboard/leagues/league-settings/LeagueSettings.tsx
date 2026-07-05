@@ -23,6 +23,8 @@ import {
   useGenerateTransferWindows,
   useLeague,
   useRemoveLeagueSport,
+  useRenewLeague,
+  useSeasonHistory,
   useSports,
   useUpdateLeague,
   useUpdateMidseasonJoin,
@@ -60,6 +62,8 @@ export function LeagueSettings() {
   const upsertOverride = useUpsertScoringOverride(leagueId);
   const deleteOverride = useDeleteScoringOverride(leagueId);
   const updateStatus = useUpdateLeagueStatus(leagueId);
+  const renewLeague = useRenewLeague(leagueId);
+  const { data: seasonHistory } = useSeasonHistory(leagueId);
   const startDraft = useStartDraft();
   const updateLeague = useUpdateLeague(leagueId);
   const updateMidseasonJoin = useUpdateMidseasonJoin(leagueId);
@@ -261,6 +265,15 @@ export function LeagueSettings() {
     }
   };
 
+  const handleRenewLeague = async () => {
+    try {
+      const nextLeague = await renewLeague.mutateAsync(undefined);
+      router.push(`/leagues/${nextLeague.id}/settings`);
+    } catch {
+      // errors are surfaced by shared mutation toast
+    }
+  };
+
   const handleGenerateWindows = async () => {
     try {
       await generateWindows.mutateAsync(undefined);
@@ -343,6 +356,64 @@ export function LeagueSettings() {
           ))}
         </div>
       </SettingsSection>
+
+      {(league?.status === "completed" || (seasonHistory?.length ?? 0) > 1) && (
+        <SettingsSection
+          title="Season Rollover"
+          description="Start the next season of this league, or review past seasons"
+          action={
+            league?.status === "completed" ? (
+              <button
+                type="button"
+                onClick={handleRenewLeague}
+                disabled={renewLeague.isPending}
+                className={`${segmentBase} ${segmentActive} disabled:cursor-not-allowed disabled:opacity-60`}
+              >
+                {renewLeague.isPending ? "Starting…" : "Start Next Season"}
+              </button>
+            ) : null
+          }
+        >
+          {(seasonHistory?.length ?? 0) > 0 ? (
+            <div className="flex flex-col gap-2">
+              {seasonHistory!.map((season) => (
+                <div
+                  key={season.id}
+                  className={`flex items-center justify-between rounded-[3px] border px-4 py-2 text-sm ${
+                    season.id === leagueId
+                      ? "border-[#e8fb25]/40 bg-[#e8fb25]/5"
+                      : "border-[rgba(255,255,255,0.08)]"
+                  }`}
+                >
+                  <span className="font-barlow-condensed uppercase tracking-[1px] text-[#f0f0f0]">
+                    Season {season.season_number}
+                  </span>
+                  <span className="text-[#555560]">
+                    {getLifecycleStatusLabel(
+                      season.status as
+                        | "setup"
+                        | "drafting"
+                        | "active"
+                        | "completed",
+                      league,
+                    )}
+                  </span>
+                  {season.id !== leagueId && (
+                    <a
+                      href={`/leagues/${season.id}/settings`}
+                      className="text-xs uppercase tracking-[1px] text-[#e8fb25] hover:underline"
+                    >
+                      View →
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#555560]">No past seasons yet.</p>
+          )}
+        </SettingsSection>
+      )}
 
       <SettingsSection
         title="League Sports"

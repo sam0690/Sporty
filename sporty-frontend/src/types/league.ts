@@ -47,6 +47,7 @@ export type TLeague = {
   midseason_entry_window_number?: number | null;
   midseason_join_message?: string | null;
   status: string;
+  season_number?: number;
   squad_size: number;
   // Canonical squad-shape rules (backend app/league/sportConfigs.py) — read
   // these instead of hardcoding position/club numbers on the frontend.
@@ -68,6 +69,16 @@ export type TLeague = {
     rank: number | null;
     points: number | null;
   };
+};
+
+/** One entry in a league's season-rollover lineage (GET /leagues/{id}/seasons). */
+export type TSeasonHistoryItem = {
+  id: string;
+  season_number: number;
+  status: TLeagueStatus;
+  name: string;
+  start_date: string | null;
+  end_date: string | null;
 };
 
 export type TLineupEntry = {

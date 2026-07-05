@@ -160,6 +160,7 @@ class LeagueResponse(BaseModel):
     allow_midseason_join: bool
     transfers_per_window: int
     transfer_day: int
+    season_number: int = 1
     created_at: datetime
     member_count: int = 0
     team_count: int = 0
@@ -411,6 +412,30 @@ class MidseasonJoinUpdate(BaseModel):
     """PATCH /leagues/{id}/midseason-join — toggle active budget joining."""
 
     allow_midseason_join: bool
+
+
+class RenewLeagueRequest(BaseModel):
+    """POST /leagues/{id}/renew — start the next season of a completed league.
+
+    target_season_id is optional — if omitted, the service auto-selects the
+    earliest active Season (for the league's sport) starting after the
+    current league's end_date.
+    """
+
+    target_season_id: uuid.UUID | None = None
+
+
+class SeasonHistoryItem(BaseModel):
+    """One entry in a league's season-rollover lineage."""
+
+    id: uuid.UUID
+    season_number: int
+    status: LeagueStatus
+    name: str
+    start_date: date | None = None
+    end_date: date | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class LeagueSettingsUpdate(BaseModel):

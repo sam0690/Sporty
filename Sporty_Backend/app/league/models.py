@@ -416,6 +416,17 @@ class League(Base):
         nullable=False,
     )
 
+    # Season-rollover lineage: shared across every League row spawned from
+    # the same original league via renew_league(). Not a FK — just a tag
+    # identifying "this recurring league" across years. A freshly created
+    # league is its own lineage head: season_group_id == id, season_number == 1.
+    season_group_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), nullable=False, index=True
+    )
+    season_number: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, default=1
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

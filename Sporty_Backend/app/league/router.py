@@ -30,7 +30,7 @@ from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
 from app.league.auto_pick_service import auto_pick_team
 from app.league.models import FantasyTeam, League, TeamWeeklyScore
-from app.services import transfer_service
+from app.services import transfer_service, notification_service
 from app.league.schemas import (
     AutoPickRequest,
     AutoPickSquadResponse,
@@ -56,6 +56,8 @@ from app.league.schemas import (
     MembershipResponse,
     LeagueSettingsUpdate,
     MidseasonJoinUpdate,
+    RenewLeagueRequest,
+    SeasonHistoryItem,
     SeasonResponse,
     SportResponse,
     StatusUpdate,
@@ -445,6 +447,56 @@ def update_status(
     )
     db.commit()
     return league
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# POST /leagues/{league_id}/renew — start the next season
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.post(
+    "/{league_id}/renew",
+    response_model=LeagueResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Start the next season of this league",
+)
+def renew_league(
+    data: RenewLeagueRequest,
+    league: League = Depends(require_league_owner),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Create the next season's league from a COMPLETED one.
+
+    Same settings, sports, and lineup slots; members are carried over
+    automatically (they can leave if they don't want to continue). Squads
+    are always built fresh in the new league via the normal draft/build-team
+    flow — nothing is copied there.
+    """
+    new_league = league_service.renew_league(
+        db, league.id, data.target_season_id, current_user,
+    )
+    db.commit()
+    notification_service.notify_new_season_started(db, [new_league.id])
+    db.commit()
+    return new_league
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/{league_id}/seasons — season-rollover history
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/{league_id}/seasons",
+    response_model=list[SeasonHistoryItem],
+    summary="List every season in this league's rollover lineage",
+)
+def get_season_history(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    return league_service.get_season_history(db, league.id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

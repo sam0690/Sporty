@@ -31,6 +31,7 @@ from app.admin.schemas import (
     RepriceResponse,
     RoleChangeRequest,
     ScoringRecalculateResponse,
+    SeasonCreateRequest,
     SystemConfigResponse,
     TicketUpdateRequest,
     TradeActionResponse,
@@ -46,7 +47,7 @@ from app.support import services as support_services
 from app.support.models import TicketStatus
 from app.support.schemas import TicketMessageResponse
 from app.league.models import League, LeagueStatus
-from app.league.schemas import LeagueResponse
+from app.league.schemas import LeagueResponse, SeasonResponse
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -216,6 +217,38 @@ def override_league_settings(
 ):
     return services.override_league_settings(
         db, current_user, league.id, name=data.name, is_public=data.is_public, reason=data.reason
+    )
+
+
+# ── Seasons ─────────────────────────────────────────────────────────────────────
+
+@router.get("/seasons", response_model=list[SeasonResponse], summary="List all seasons across all sports (admin)")
+def list_seasons(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.list_seasons_admin(db)
+
+
+@router.post(
+    "/seasons",
+    response_model=SeasonResponse,
+    status_code=201,
+    summary="Create a season for a sport (admin)",
+)
+def create_season(
+    data: SeasonCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.create_season_admin(
+        db,
+        current_user,
+        sport_id=data.sport_id,
+        name=data.name,
+        start_date=data.start_date,
+        end_date=data.end_date,
+        reason=data.reason,
     )
 
 

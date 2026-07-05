@@ -11,6 +11,7 @@ import type {
   TLineupSlot,
   TLeaderboardResponse,
   TSeason,
+  TSeasonHistoryItem,
   TSport,
   TFantasyTeam,
   TLineupResponse,
@@ -327,6 +328,20 @@ export const LeagueService = {
     const res = await authApi.patch(API_PATHS.LEAGUES.UPDATE_STATUS(id), {
       new_status: newStatus,
     });
+    return res.data;
+  },
+
+  /** Start the next season of a completed league. */
+  async renewLeague(id: string, targetSeasonId?: string): Promise<TLeague> {
+    const res = await authApi.post(API_PATHS.LEAGUES.RENEW(id), {
+      target_season_id: targetSeasonId ?? null,
+    });
+    return res.data;
+  },
+
+  /** List every season in this league's rollover lineage, oldest first. */
+  async getSeasonHistory(id: string): Promise<TSeasonHistoryItem[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.SEASON_HISTORY(id));
     return res.data;
   },
 

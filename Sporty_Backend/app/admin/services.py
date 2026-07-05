@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.admin.models import AdminActionType, AdminAuditLog, SystemConfig
@@ -16,6 +17,8 @@ from app.league.models import (
     FantasyTeam,
     League,
     LeagueStatus,
+    Season,
+    Sport,
     TeamPlayer,
     TradeOffer,
     Transfer,
@@ -265,6 +268,62 @@ def override_league_settings(
     )
     db.commit()
     return league
+
+
+# ── Seasons ─────────────────────────────────────────────────────────────────────
+#
+# Season rows (app/league/models.py Season) are the real-world date range a
+# League runs in (e.g. "2026/27"). There's no user-facing way to create one —
+# until now this was seed-script/CLI only (scripts/seed_season_and_windows.py),
+# which meant league renewal (renew_league) had nothing to point at once a
+# year's Season passed. This is the minimal admin surface to keep pace with
+# the real-world calendar without shell access.
+
+def list_seasons_admin(db: Session) -> list[Season]:
+    return db.query(Season).order_by(Season.sport_id, Season.start_date.desc()).all()
+
+
+def create_season_admin(
+    db: Session,
+    actor: User,
+    sport_id: uuid.UUID,
+    name: str,
+    start_date,
+    end_date,
+    reason: str | None = None,
+) -> Season:
+    sport = db.query(Sport).filter(Sport.id == sport_id).first()
+    if not sport:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sport not found")
+
+    if end_date <= start_date:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="end_date must be after start_date",
+        )
+
+    season = Season(sport_id=sport_id, name=name, start_date=start_date, end_date=end_date)
+    db.add(season)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A season with this name, start date, or overlapping date range already exists for this sport",
+        )
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.SEASON_CREATE,
+        target_type="season",
+        target_id=season.id,
+        reason=reason,
+        metadata={"sport_id": str(sport_id), "name": name},
+    )
+    db.commit()
+    return season
 
 
 # ── Scoring ─────────────────────────────────────────────────────────────────────
