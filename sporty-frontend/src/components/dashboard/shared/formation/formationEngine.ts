@@ -140,6 +140,99 @@ function footballRoleBucket(position: string): FootballRoleBucket {
   return "centralMid";
 }
 
+export type FootballFormationBucket = "GK" | "DEF" | "MID" | "FWD";
+
+function collapseToFormationBucket(
+  bucket: FootballRoleBucket,
+): FootballFormationBucket {
+  switch (bucket) {
+    case "goalkeeper":
+      return "GK";
+    case "defense":
+      return "DEF";
+    case "attack":
+      return "FWD";
+    default:
+      // holdingMid / centralMid / attackingMid all count as MID for formation
+      // purposes — the split only matters for row layout, not rule-checking.
+      return "MID";
+  }
+}
+
+/**
+ * FPL's own starting-XI rule (confirmed via
+ * premierleague.com/en/news/2174899/fpl-basics-managing-your-team): exactly
+ * 1 GK, 3-5 DEF, 2-5 MID, 1-3 FWD (outfield sums to 10). Any combination
+ * inside these bounds is a valid "formation" — nothing outside them is legal.
+ * This is the single source of truth for formation validity everywhere it
+ * matters: live substitution-blocking, Save-time validation, and
+ * Auto-Optimize's constraints.
+ */
+export const FOOTBALL_FORMATION_BOUNDS: Record<
+  FootballFormationBucket,
+  { min: number; max: number }
+> = {
+  GK: { min: 1, max: 1 },
+  DEF: { min: 3, max: 5 },
+  MID: { min: 2, max: 5 },
+  FWD: { min: 1, max: 3 },
+};
+
+const FORMATION_BUCKET_LABELS: Record<FootballFormationBucket, string> = {
+  GK: "goalkeeper",
+  DEF: "defender",
+  MID: "midfielder",
+  FWD: "forward",
+};
+
+export function getFootballFormationBucket(
+  position: string,
+): FootballFormationBucket {
+  return collapseToFormationBucket(footballRoleBucket(position));
+}
+
+export function computeFootballBucketCounts<
+  TPlayer extends FormationPlayerLike,
+>(players: TPlayer[]): Record<FootballFormationBucket, number> {
+  const counts: Record<FootballFormationBucket, number> = {
+    GK: 0,
+    DEF: 0,
+    MID: 0,
+    FWD: 0,
+  };
+  for (const player of players) {
+    counts[collapseToFormationBucket(footballRoleBucket(player.position))] += 1;
+  }
+  return counts;
+}
+
+/** Validate a proposed starting XI against `FOOTBALL_FORMATION_BOUNDS`,
+ * returning the first violated bound with a human-readable reason so the
+ * same message can be shown live (pitch) and at Save time. */
+export function validateFootballFormation<TPlayer extends FormationPlayerLike>(
+  players: TPlayer[],
+): { ok: true } | { ok: false; reason: string } {
+  const counts = computeFootballBucketCounts(players);
+  for (const bucket of ["GK", "DEF", "MID", "FWD"] as const) {
+    const { min, max } = FOOTBALL_FORMATION_BOUNDS[bucket];
+    const count = counts[bucket];
+    const label = FORMATION_BUCKET_LABELS[bucket];
+    if (count < min) {
+      return {
+        ok: false,
+        reason:
+          min === max
+            ? `You need exactly ${min} ${label}${min === 1 ? "" : "s"}.`
+            : `You need at least ${min} ${label}s.`,
+      };
+    }
+    if (count > max) {
+      return { ok: false, reason: `You can have at most ${max} ${label}s.` };
+    }
+  }
+  return { ok: true };
+}
+
 function footballBucketWeight(bucket: FootballRoleBucket, position: string) {
   const normalized = normalizePosition(position);
 
@@ -323,9 +416,17 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
     midfieldPool.length >= 5 &&
     (hasWideOrAdvancedMid || attackPlayers.length <= 2);
 
+  // Below the FPL midfield floor (2), pad the capacity so the row still
+  // renders an empty slot rather than silently under-showing the shape —
+  // matches how the defense/attack rows already handle a below-floor count.
+  const paddedMidfieldCapacity = Math.max(
+    FOOTBALL_FORMATION_BOUNDS.MID.min,
+    midfieldPool.length,
+  );
+
   const lowerMidfieldCapacity = useSplitMidfield
     ? Math.max(2, Math.min(3, holdingMidPlayers.length || 2))
-    : midfieldPool.length;
+    : paddedMidfieldCapacity;
   const upperMidfieldCapacity = useSplitMidfield
     ? Math.max(1, midfieldPool.length - lowerMidfieldCapacity)
     : 0;
@@ -375,7 +476,7 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
       y: 0.68,
       xStart: 0.12,
       xEnd: 0.88,
-      capacity: Math.max(3, defensePlayers.length || 4),
+      capacity: Math.max(FOOTBALL_FORMATION_BOUNDS.DEF.min, defensePlayers.length),
       players: defensePlayers,
     },
     {
@@ -409,7 +510,7 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
       y: 0.18,
       xStart: 0.24,
       xEnd: 0.76,
-      capacity: Math.max(1, attackPlayers.length || 2),
+      capacity: Math.max(FOOTBALL_FORMATION_BOUNDS.FWD.min, attackPlayers.length),
       players: attackPlayers,
     },
   ];
@@ -517,97 +618,10 @@ export function generateCoordinates<TPlayer extends FormationPlayerLike>(
   return buildSlots(rows) as FormationSlot<TPlayer>[];
 }
 
-/**
- * Selectable football shapes for the manual formation picker. These are purely
- * cosmetic: pitch coordinates don't affect scoring, and slot roles aren't
- * enforced, so a preset just redistributes the eleven starters across rows.
- */
-export const FOOTBALL_FORMATIONS = [
-  { label: "4-4-2", def: 4, mid: 4, att: 2 },
-  { label: "4-3-3", def: 4, mid: 3, att: 3 },
-  { label: "3-5-2", def: 3, mid: 5, att: 2 },
-  { label: "5-3-2", def: 5, mid: 3, att: 2 },
-  { label: "4-5-1", def: 4, mid: 5, att: 1 },
-  { label: "3-4-3", def: 3, mid: 4, att: 3 },
-] as const;
-
-export type FootballFormation = (typeof FOOTBALL_FORMATIONS)[number]["label"];
-
-function footballRowsFromFormation<TPlayer extends FormationPlayerLike>(
-  players: TPlayer[],
-  formation: string,
-) {
-  const preset = FOOTBALL_FORMATIONS.find((entry) => entry.label === formation);
-  if (!preset) {
-    return null;
-  }
-
-  const sorted = sortPlayersByWeight(players, footballPositionWeight);
-  const goalkeeperPlayers = sorted.filter(
-    (player) => footballRoleBucket(player.position) === "goalkeeper",
-  );
-  const outfieldPlayers = sorted.filter(
-    (player) => footballRoleBucket(player.position) !== "goalkeeper",
-  );
-
-  const defenseEnd = preset.def;
-  const midfieldEnd = preset.def + preset.mid;
-  const attackEnd = midfieldEnd + preset.att;
-
-  const rows: RowBlueprint<TPlayer>[] = [
-    {
-      id: "football:goalkeeper",
-      label: "GK",
-      role: "goalkeeper",
-      y: 0.86,
-      xStart: 0.5,
-      xEnd: 0.5,
-      capacity: 1,
-      players: goalkeeperPlayers.slice(0, 1),
-    },
-    {
-      id: "football:defense",
-      label: "DEF",
-      role: "defense",
-      y: 0.68,
-      xStart: 0.12,
-      xEnd: 0.88,
-      capacity: preset.def,
-      players: outfieldPlayers.slice(0, defenseEnd),
-    },
-    {
-      id: "football:midfield-lower",
-      label: "MID",
-      role: "midfield",
-      y: 0.42,
-      xStart: 0.15,
-      xEnd: 0.85,
-      capacity: preset.mid,
-      players: outfieldPlayers.slice(defenseEnd, midfieldEnd),
-    },
-    {
-      id: "football:attack",
-      label: "ATT",
-      role: "attack",
-      y: 0.18,
-      xStart: 0.24,
-      xEnd: 0.76,
-      capacity: preset.att,
-      players: outfieldPlayers.slice(midfieldEnd, attackEnd),
-    },
-  ];
-
-  return { formationLabel: preset.label, rows };
-}
-
 function buildFootballFormation<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
-  formation?: string,
 ) {
-  const preset = formation
-    ? footballRowsFromFormation(players, formation)
-    : null;
-  const { formationLabel, rows } = preset ?? buildFootballRows(players);
+  const { formationLabel, rows } = buildFootballRows(players);
   return {
     formationLabel,
     slots: generateCoordinates(rows),
@@ -679,7 +693,6 @@ function assignByAvailableSports<TPlayer extends FormationPlayerLike>(
 function sectionForSport<TPlayer extends FormationPlayerLike>(
   sport: SportKind,
   players: TPlayer[],
-  formation?: string,
 ): FormationSection<TPlayer> {
   if (sport === "basketball") {
     const basketball = buildBasketballLayout(players);
@@ -694,7 +707,7 @@ function sectionForSport<TPlayer extends FormationPlayerLike>(
   }
 
   if (sport === "football") {
-    const football = buildFootballFormation(players, formation);
+    const football = buildFootballFormation(players);
     return {
       id: "football-section",
       sport,
@@ -736,14 +749,21 @@ export function groupPlayersBySport<TPlayer extends FormationPlayerLike>(
 
 export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
-  options: { activeOnly?: boolean; formation?: string } = {},
+  options: { activeOnly?: boolean } = {},
 ): TeamLayout<TPlayer> {
   const activePlayers = options.activeOnly
     ? players.filter((player) => player.isStarter !== false)
     : [...players];
 
   const grouped = groupPlayersBySport(activePlayers);
-  const sportKeys = Object.keys(grouped)
+
+  // Which sport(s) this pitch represents is a property of the whole squad, not
+  // just the currently-selected starters — a fresh basketball team with zero
+  // starters picked yet must still render the basketball court, not fall back
+  // to football. Slot *content* still only shows active players (`grouped`
+  // above); this second grouping only decides the surface/mode.
+  const groupedForMode = options.activeOnly ? groupPlayersBySport(players) : grouped;
+  const sportKeys = Object.keys(groupedForMode)
     .filter((key) => key !== "unknown")
     .sort((left, right) => {
       const priority = ["football", "basketball", "cricket", "unknown"];
@@ -751,7 +771,7 @@ export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
     }) as SportKind[];
 
   const visibleSports = sportKeys.filter(
-    (sport) => (grouped[sport] ?? []).length > 0,
+    (sport) => (groupedForMode[sport] ?? []).length > 0,
   );
 
   let sections: FormationSection<TPlayer>[] = [];
@@ -787,7 +807,6 @@ export function buildTeamLayout<TPlayer extends FormationPlayerLike>(
                   activePlayers[0]?.sport ?? activePlayers[0]?.sportName,
                 ),
               grouped[visibleSports[0] ?? "unknown"] ?? activePlayers,
-              options.formation,
             ),
           ]
         : visibleSports.map((sport) =>

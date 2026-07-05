@@ -24,20 +24,24 @@ import {
   type DragStartEvent,
   type UniqueIdentifier,
 } from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowDownToLine, Crown, Plus, RotateCcw, Shield, X } from "lucide-react";
+import { ArrowDownToLine, Crown, Plus, Shield, X } from "lucide-react";
 import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
-import type {
-  LineupPositionMap,
-  SlotCoord,
-} from "@/components/dashboard/leagues/league-lineup/hooks/useLineupPositions";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import {
-  FOOTBALL_FORMATIONS,
   buildTeamLayout,
+  isFootballGoalkeeper,
+  validateFootballFormation,
   type FormationSlot,
+  type TeamLayout,
 } from "@/components/dashboard/shared/formation/formationEngine";
 import {
   getSportAccentClass,
@@ -48,10 +52,9 @@ import { toastifier } from "@/lib/toastifier";
 
 type LineupPitchViewProps = {
   allPlayers: LineupPlayerCardModel[];
-  positions: LineupPositionMap;
-  onSetPosition: (playerId: string, coord: SlotCoord) => void;
-  onClearPosition: (playerId: string) => void;
-  onResetPositions: () => void;
+  /** Bench priority order (player ids); drives auto-sub priority server-side. */
+  benchOrder: string[];
+  onReorderBench: (draggedId: string, targetId: string) => void;
   onToggleStarter: (playerId: string) => void;
   onSetCaptain: (playerId: string) => void;
   onSetViceCaptain: (playerId: string) => void;
@@ -82,15 +85,32 @@ const sportBadgeClass: Record<SportKind, string> = {
   unknown: "sport-badge-multisport",
 };
 
-// Drops snap to exact slot coordinates, so a tight epsilon reliably matches a
-// stored coordinate back to its slot while tolerating float rounding.
-const COORD_EPSILON = 0.005;
-
-function coordsMatch(a: SlotCoord | undefined, b: SlotCoord): boolean {
-  if (!a) {
-    return false;
+// Would this proposed starting XI still be legal? Football is bounds-checked
+// against FPL's own rule (GK=1, DEF 3-5, MID 2-5, FWD 1-3 — see
+// formationEngine.ts). Multisport's football contingent is only 5 players, so
+// the full bounds table is mathematically infeasible there — only the
+// unambiguous "exactly 1 keeper" rule applies. Basketball has no reliable
+// per-position data (see formationEngine.ts), so it's never bounds-checked.
+function validateNextStarters(
+  nextStarters: PitchPlayer[],
+  mode: TeamLayout<PitchPlayer>["mode"],
+): { ok: true } | { ok: false; reason: string } {
+  if (mode === "football") {
+    return validateFootballFormation(nextStarters);
   }
-  return Math.abs(a.x - b.x) < COORD_EPSILON && Math.abs(a.y - b.y) < COORD_EPSILON;
+  if (mode === "mixed") {
+    const footballStarters = nextStarters.filter((p) => p.sport === "football");
+    const goalkeeperCount = footballStarters.filter((p) =>
+      isFootballGoalkeeper(p.position),
+    ).length;
+    if (goalkeeperCount !== 1) {
+      return {
+        ok: false,
+        reason: "Your multisport lineup needs exactly 1 football goalkeeper.",
+      };
+    }
+  }
+  return { ok: true };
 }
 
 // ── Presentational chip reused by the pitch marker and the drag overlay so the
@@ -294,20 +314,29 @@ const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
   onTap,
 }: DraggableBenchPlayerCardProps) {
   const prefersReducedMotion = useReducedMotion();
-  const draggable = useDraggable({
+  // useSortable (not plain useDraggable) so a bench card is both draggable
+  // (out to the pitch, or onto another bench card to reorder) AND droppable
+  // (so a starter/bench card can be dropped onto it) within the same
+  // DndContext — see handleDragEnd's "player-" branch for how the two
+  // gestures are told apart.
+  const sortable = useSortable({
     id: `player-${player.id}`,
     data: { type: "player", playerId: player.id, from: "bench" },
   });
 
   return (
     <motion.article
-      ref={draggable.setNodeRef}
-      style={{ touchAction: "none" }}
-      {...draggable.listeners}
-      {...draggable.attributes}
+      ref={sortable.setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(sortable.transform),
+        transition: sortable.transition,
+        touchAction: "none",
+      }}
+      {...sortable.listeners}
+      {...sortable.attributes}
       layout={!prefersReducedMotion}
       initial={prefersReducedMotion ? false : { opacity: 0, y: -6 }}
-      animate={{ opacity: draggable.isDragging ? 0.45 : 1, y: 0 }}
+      animate={{ opacity: sortable.isDragging ? 0.45 : 1, y: 0 }}
       transition={{ duration: 0.18 }}
       onClick={() => onTap(player.id)}
       className={`cursor-pointer rounded-[3px] border p-3 transition-colors ${
@@ -342,10 +371,8 @@ const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
 
 export function LineupPitchView({
   allPlayers,
-  positions,
-  onSetPosition,
-  onClearPosition,
-  onResetPositions,
+  benchOrder,
+  onReorderBench,
   onToggleStarter,
   onSetCaptain,
   onSetViceCaptain,
@@ -367,17 +394,13 @@ export function LineupPitchView({
     [allPlayers],
   );
 
-  // Cosmetic formation preset (football only). null → engine auto-derives the
-  // shape from the starters present.
-  const [formationPreset, setFormationPreset] = useState<string | null>(null);
-
+  // Rows (and which formation they add up to) are entirely derived from the
+  // current starters' real positions — there is no manual formation picker
+  // and no per-player coordinate to persist, matching how FPL's own pitch
+  // works (a player's "slot" is just which role-row they're in).
   const layout = useMemo(
-    () =>
-      buildTeamLayout(pitchPlayers, {
-        activeOnly: true,
-        formation: formationPreset ?? undefined,
-      }),
-    [pitchPlayers, formationPreset],
+    () => buildTeamLayout(pitchPlayers, { activeOnly: true }),
+    [pitchPlayers],
   );
 
   const playerById = useMemo(
@@ -414,10 +437,22 @@ export function LineupPitchView({
   // just outside a tight slot still snaps to the obvious target.
   const collisionDetection = useCallback<CollisionDetection>((args) => {
     const pointerCollisions = pointerWithin(args);
-    if (pointerCollisions.length > 0) {
+    if (pointerCollisions.length === 0) {
+      return closestCenter(args);
+    }
+    if (pointerCollisions.length === 1) {
       return pointerCollisions;
     }
-    return closestCenter(args);
+    // Dense rows (4-5 players) can pack slot centers closer together than the
+    // fixed marker hit-box on narrower viewports, so more than one drop zone
+    // can legitimately contain the pointer. Break the tie deterministically by
+    // nearest center instead of arbitrary DOM order, so an adjacent-slot swap
+    // always lands on the intended target.
+    const pointerMatchIds = new Set(pointerCollisions.map((collision) => collision.id));
+    const narrowedContainers = args.droppableContainers.filter((container) =>
+      pointerMatchIds.has(container.id),
+    );
+    return closestCenter({ ...args, droppableContainers: narrowedContainers });
   }, []);
 
   const prefersReducedMotion = useReducedMotion();
@@ -476,72 +511,15 @@ export function LineupPitchView({
     [slots],
   );
 
-  // Resolve which player occupies each slot. Stored coordinates win; unmoved
-  // players fall back to the engine's role-based default; anything left fills
-  // remaining same-sport slots. This is fully deterministic because every
-  // move/swap stores coordinates for *both* affected players.
-  const { occupancyBySlot, coordByPlayerId } = useMemo(() => {
-    const starters = pitchPlayers.filter((player) => player.isStarter);
-    const assigned = new Set<string>();
-    const occupancy: Record<string, string | null> = {};
-
-    // Pass 1 — stored coordinates.
-    for (const slot of slots) {
-      const match = starters.find(
-        (player) =>
-          !assigned.has(player.id) &&
-          player.sport === slot.sport &&
-          coordsMatch(positions[player.id], { x: slot.x, y: slot.y }),
-      );
-      if (match) {
-        occupancy[slot.id] = match.id;
-        assigned.add(match.id);
-      } else {
-        occupancy[slot.id] = null;
-      }
-    }
-
-    // Pass 2 — engine default for still-empty slots.
-    for (const slot of slots) {
-      if (occupancy[slot.id]) {
-        continue;
-      }
-      const defaultId = slot.player?.id;
-      if (defaultId && !assigned.has(defaultId)) {
-        occupancy[slot.id] = defaultId;
-        assigned.add(defaultId);
-      }
-    }
-
-    // Pass 3 — safety net for any starter still unplaced (e.g. stale coord).
-    for (const slot of slots) {
-      if (occupancy[slot.id]) {
-        continue;
-      }
-      const candidate = starters.find(
-        (player) => !assigned.has(player.id) && player.sport === slot.sport,
-      );
-      if (candidate) {
-        occupancy[slot.id] = candidate.id;
-        assigned.add(candidate.id);
-      }
-    }
-
-    const coords: Record<string, SlotCoord> = {};
-    for (const slot of slots) {
-      const occupantId = occupancy[slot.id];
-      if (occupantId) {
-        coords[occupantId] = { x: slot.x, y: slot.y };
-      }
-    }
-
-    return { occupancyBySlot: occupancy, coordByPlayerId: coords };
-  }, [pitchPlayers, slots, positions]);
-
-  const benchPlayers = useMemo(
-    () => pitchPlayers.filter((player) => !player.isStarter),
-    [pitchPlayers],
-  );
+  const benchPlayers = useMemo(() => {
+    const unordered = pitchPlayers.filter((player) => !player.isStarter);
+    const orderIndex = new Map(benchOrder.map((id, index) => [id, index]));
+    return [...unordered].sort((a, b) => {
+      const aIndex = orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+      const bIndex = orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+      return aIndex - bIndex;
+    });
+  }, [pitchPlayers, benchOrder]);
 
   const activeSportCounts = useMemo(
     () =>
@@ -574,10 +552,24 @@ export function LineupPitchView({
         return false;
       }
 
-      const occupantId = occupancyBySlot[slotId];
-      // The player's own slot, or a swap/substitution into an occupied slot.
-      if (occupantId) {
-        return true;
+      const occupant = slot.player;
+      if (occupant) {
+        // Own slot (no-op) is always "eligible"; otherwise only a bench
+        // player can legally substitute into an occupied slot — starter-onto
+        // -starter isn't a supported gesture (row order is auto-derived).
+        if (occupant.id === player.id) {
+          return true;
+        }
+        if (player.isStarter) {
+          return false;
+        }
+        const nextStarterIds = new Set(
+          pitchPlayers.filter((p) => p.isStarter).map((p) => p.id),
+        );
+        nextStarterIds.delete(occupant.id);
+        nextStarterIds.add(player.id);
+        const nextStarters = pitchPlayers.filter((p) => nextStarterIds.has(p.id));
+        return validateNextStarters(nextStarters, layout.mode).ok;
       }
       // Empty slot: only blocked when adding a bench player past the limit.
       if (!player.isStarter && starterLimitReached) {
@@ -597,16 +589,20 @@ export function LineupPitchView({
     [
       activeSportCounts,
       isMultiSport,
-      occupancyBySlot,
+      layout.mode,
+      pitchPlayers,
       playerById,
       slotById,
       starterLimitReached,
     ],
   );
 
-  // The single source of placement truth, shared by drag-drop and tap-to-place.
-  // Returns whether the placement was applied.
-  const commitPlayerToSlot = useCallback(
+  // The single source of substitution truth, shared by drag-drop and
+  // tap-to-place. Returns whether the substitution was applied. A slot's
+  // occupant is `slot.player` directly — rows are already built from the
+  // current starters' real positions, so there's no separate occupancy to
+  // resolve (unlike the old free-form coordinate system).
+  const commitSubstitution = useCallback(
     (dragged: PitchPlayer, slot: FormationSlot<PitchPlayer>): boolean => {
       if (slot.sport !== dragged.sport) {
         triggerShake(slot.id);
@@ -614,41 +610,43 @@ export function LineupPitchView({
         return false;
       }
 
-      const slotCoord: SlotCoord = { x: slot.x, y: slot.y };
-      const occupantId = occupancyBySlot[slot.id];
+      const occupant = slot.player;
 
       // No-op: dropped back onto the player's own slot.
-      if (occupantId === dragged.id) {
+      if (occupant?.id === dragged.id) {
         return true;
       }
 
-      // ── Occupied slot → swap (pitch↔pitch) or substitution (bench→pitch) ──
-      if (occupantId) {
-        const occupant = playerById[occupantId];
-        if (!occupant) {
+      // ── Occupied slot → substitution (bench → starter) ──
+      if (occupant) {
+        if (dragged.isStarter) {
+          // Starter-onto-starter isn't a supported gesture: row order is
+          // auto-derived and meaningless, and neither is FPL's own pitch.
+          toastifier.info(`${dragged.name} is already in your starting lineup.`);
           return false;
         }
-        if (dragged.isStarter) {
-          // Swap two starters' positions.
-          const previousCoord = coordByPlayerId[dragged.id];
-          onSetPosition(dragged.playerId, slotCoord);
-          if (previousCoord) {
-            onSetPosition(occupant.playerId, previousCoord);
-          } else {
-            onClearPosition(occupant.playerId);
-          }
-        } else {
-          // Substitute the bench player in for the occupant (count-neutral).
-          onToggleStarter(dragged.playerId);
-          onSetPosition(dragged.playerId, slotCoord);
-          onToggleStarter(occupant.playerId);
-          onClearPosition(occupant.playerId);
-          toastifier.info(`${dragged.name} ↔ ${occupant.name}`);
+
+        const nextStarterIds = new Set(
+          pitchPlayers.filter((p) => p.isStarter).map((p) => p.id),
+        );
+        nextStarterIds.delete(occupant.id);
+        nextStarterIds.add(dragged.id);
+        const nextStarters = pitchPlayers.filter((p) => nextStarterIds.has(p.id));
+
+        const validation = validateNextStarters(nextStarters, layout.mode);
+        if (!validation.ok) {
+          triggerShake(slot.id);
+          toastifier.error(validation.reason);
+          return false;
         }
+
+        onToggleStarter(dragged.playerId);
+        onToggleStarter(occupant.playerId);
+        toastifier.info(`${dragged.name} ↔ ${occupant.name}`);
         return true;
       }
 
-      // ── Empty slot ──
+      // ── Empty slot (floor-padding, or an incomplete XI) ──
       if (!dragged.isStarter) {
         if (starterLimitReached) {
           triggerShake(slot.id);
@@ -667,24 +665,25 @@ export function LineupPitchView({
           }
         }
         onToggleStarter(dragged.playerId);
+        toastifier.info(`${dragged.name} added to lineup.`);
       }
-      onSetPosition(dragged.playerId, slotCoord);
       return true;
     },
     [
       activeSportCounts,
-      coordByPlayerId,
       isMultiSport,
-      occupancyBySlot,
-      onClearPosition,
-      onSetPosition,
+      layout.mode,
       onToggleStarter,
-      playerById,
+      pitchPlayers,
       starterLimitReached,
       triggerShake,
     ],
   );
 
+  // Direct single-sided bench (drag-to-bench-zone or the "Move to Bench"
+  // button): intentionally NOT bounds-checked, so a user can freely
+  // reorganize across two steps (bench one player, then add another) without
+  // getting blocked mid-sequence — the final XI is still gated at Save time.
   const benchPlayer = useCallback(
     (playerId: string) => {
       const player = playerById[playerId];
@@ -693,22 +692,21 @@ export function LineupPitchView({
       }
       if (player.isStarter) {
         onToggleStarter(player.playerId);
-        onClearPosition(player.playerId);
         toastifier.info(`${player.name} moved to bench`);
       }
       setSelectedPlayerId(null);
     },
-    [onClearPosition, onToggleStarter, playerById],
+    [onToggleStarter, playerById],
   );
 
   const handleRemoveFromSlot = useCallback(
     (slotId: string) => {
-      const playerId = occupancyBySlot[slotId];
+      const playerId = slotById[slotId]?.player?.id;
       if (playerId) {
         benchPlayer(playerId);
       }
     },
-    [benchPlayer, occupancyBySlot],
+    [benchPlayer, slotById],
   );
 
   // Tap a slot: with a player selected, place/swap/substitute; otherwise select
@@ -722,7 +720,7 @@ export function LineupPitchView({
       if (!slot) {
         return;
       }
-      const occupantId = occupancyBySlot[slotId];
+      const occupantId = slot.player?.id ?? null;
 
       if (!selectedPlayerId) {
         if (occupantId) {
@@ -741,18 +739,11 @@ export function LineupPitchView({
         setSelectedPlayerId(null);
         return;
       }
-      if (commitPlayerToSlot(dragged, slot)) {
+      if (commitSubstitution(dragged, slot)) {
         setSelectedPlayerId(dragged.id);
       }
     },
-    [
-      commitPlayerToSlot,
-      disabled,
-      occupancyBySlot,
-      playerById,
-      selectedPlayerId,
-      slotById,
-    ],
+    [commitSubstitution, disabled, playerById, selectedPlayerId, slotById],
   );
 
   const handlePlayerTap = useCallback(
@@ -775,32 +766,18 @@ export function LineupPitchView({
       const target = slots.find(
         (slot) =>
           slot.sport === player.sport &&
-          !occupancyBySlot[slot.id] &&
+          !slot.player &&
           canPlaceInSlot(playerId, slot.id),
       );
       if (!target) {
         toastifier.info("No open slot — tap a player on the pitch to swap.");
         return;
       }
-      if (commitPlayerToSlot(player, target)) {
+      if (commitSubstitution(player, target)) {
         setSelectedPlayerId(player.id);
       }
     },
-    [canPlaceInSlot, commitPlayerToSlot, occupancyBySlot, playerById, slots],
-  );
-
-  // Applying a preset clears custom coordinates so the chosen shape is the
-  // authoritative layout; subsequent drags then store positions on top of it.
-  const handleSelectFormation = useCallback(
-    (formation: string | null) => {
-      if (disabled) {
-        return;
-      }
-      onResetPositions();
-      setSelectedPlayerId(null);
-      setFormationPreset(formation);
-    },
-    [disabled, onResetPositions],
+    [canPlaceInSlot, commitSubstitution, playerById, slots],
   );
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
@@ -841,6 +818,26 @@ export function LineupPitchView({
         return;
       }
 
+      // Dropped onto a bench card (only bench cards use this id scheme —
+      // pitch slots use "slot-…"): a starter lands here to bench them (same
+      // as the explicit drop zone, just a bigger/more natural target); a
+      // bench player lands here to reorder bench priority.
+      if (typeof overId === "string" && overId.startsWith("player-")) {
+        const targetPlayerId = overId.replace("player-", "");
+        if (targetPlayerId === dragged.id) {
+          return;
+        }
+        if (dragged.isStarter) {
+          benchPlayer(dragged.id);
+          return;
+        }
+        const targetPlayer = playerById[targetPlayerId];
+        if (targetPlayer && !targetPlayer.isStarter) {
+          onReorderBench(dragged.id, targetPlayerId);
+        }
+        return;
+      }
+
       // Dropped on nothing → cancel (never bench by accident).
       if (typeof overId !== "string" || !overId.startsWith("slot-")) {
         return;
@@ -849,11 +846,11 @@ export function LineupPitchView({
       if (!slot) {
         return;
       }
-      if (commitPlayerToSlot(dragged, slot)) {
+      if (commitSubstitution(dragged, slot)) {
         setSelectedPlayerId(dragged.id);
       }
     },
-    [benchPlayer, commitPlayerToSlot, playerById, slotById],
+    [benchPlayer, commitSubstitution, onReorderBench, playerById, slotById],
   );
 
   const handleDragCancel = useCallback(() => {
@@ -864,10 +861,6 @@ export function LineupPitchView({
   // The player currently driving target highlighting (drag wins over tap).
   const interactionPlayerId = activeDragPlayerId ?? selectedPlayerId;
   const isDragging = activeDragPlayerId !== null;
-
-  // Formation presets only make sense for a standard 11-a-side football pitch.
-  const showFormationPicker =
-    layout.mode === "football" && (activeSportCounts.football ?? 0) === 11;
 
   const playerFromDragId = useCallback(
     (id: UniqueIdentifier | undefined): PitchPlayer | null => {
@@ -949,16 +942,6 @@ export function LineupPitchView({
           <section className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
             <div className="flex items-center justify-between gap-2">
               <p className="section-label">Bench Players</p>
-              <button
-                type="button"
-                onClick={onResetPositions}
-                disabled={disabled}
-                className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] px-2.5 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
-                title="Reset pitch positions to the auto formation"
-              >
-                <RotateCcw size={12} />
-                Reset
-              </button>
             </div>
 
             <DropZone
@@ -971,14 +954,19 @@ export function LineupPitchView({
                   No bench players. Drag a player here to bench them.
                 </p>
               ) : (
-                benchPlayers.map((player) => (
-                  <DraggableBenchPlayerCard
-                    key={player.id}
-                    player={player}
-                    isSelected={selectedPlayerId === player.id}
-                    onTap={handlePlayerTap}
-                  />
-                ))
+                <SortableContext
+                  items={benchPlayers.map((player) => `player-${player.id}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {benchPlayers.map((player) => (
+                    <DraggableBenchPlayerCard
+                      key={player.id}
+                      player={player}
+                      isSelected={selectedPlayerId === player.id}
+                      onTap={handlePlayerTap}
+                    />
+                  ))}
+                </SortableContext>
               )}
             </DropZone>
           </section>
@@ -997,45 +985,10 @@ export function LineupPitchView({
               </div>
             ) : null}
 
-            {showFormationPicker ? (
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="section-label mr-1">Formation</span>
-                <button
-                  type="button"
-                  onClick={() => handleSelectFormation(null)}
-                  disabled={disabled}
-                  className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                    formationPreset === null
-                      ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-                      : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
-                  }`}
-                >
-                  Auto
-                </button>
-                {FOOTBALL_FORMATIONS.map((formation) => (
-                  <button
-                    key={formation.label}
-                    type="button"
-                    onClick={() => handleSelectFormation(formation.label)}
-                    disabled={disabled}
-                    className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] tabular-nums transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                      formationPreset === formation.label
-                        ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-                        : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
-                    }`}
-                  >
-                    {formation.label}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-
             <FormationRenderer
               layout={layout}
-              showSectionLabels={isMultiSport}
               renderSlot={({ slot }) => {
-                const occupantId = occupancyBySlot[slot.id];
-                const player = occupantId ? playerById[occupantId] ?? null : null;
+                const player = slot.player;
                 const lineupPlayer = player
                   ? lineupPlayerById[player.playerId]
                   : null;

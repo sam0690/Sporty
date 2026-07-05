@@ -24,23 +24,32 @@ import {
   useLeagueLineupData,
   type LineupPlayerCardModel,
 } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
-import { useLineupPositions } from "@/components/dashboard/leagues/league-lineup/hooks/useLineupPositions";
 import { toastifier } from "@/lib/toastifier";
 import { OptimizationService } from "@/services/OptimizationService";
 import { PlayerService } from "@/services/PlayerService";
-import { isFootballGoalkeeper } from "@/components/dashboard/shared/formation/formationEngine";
+import {
+  FOOTBALL_FORMATION_BOUNDS,
+  getFootballFormationBucket,
+  isFootballGoalkeeper,
+  validateFootballFormation,
+} from "@/components/dashboard/shared/formation/formationEngine";
 
 type HeaderSport = "football" | "basketball" | "cricket" | "multisport";
 const FALLBACK_DEADLINE = "2099-01-01T00:00:00.000Z";
 
 const SPORT_LINEUP_RULES = {
   football: { starters: 11, bench: 4, total: 15, label: "Football" },
-  basketball: { starters: 5, bench: 10, total: 15, label: "Basketball" },
+  basketball: { starters: 5, bench: 8, total: 13, label: "Basketball" },
   multisport: { starters: 9, bench: 6, total: 15, label: "Multisport" },
 } as const;
 
 const MULTISPORT_SQUAD_MIN = 13;
 const MULTISPORT_SQUAD_MAX = 15;
+// Canonical label Auto-Optimize's position constraints key goalkeepers under,
+// regardless of the raw position string in player data (GK/GKP/etc — see
+// isFootballGoalkeeper). No basketball position ever uses this label, so it's
+// safe to forward even for a multisport lineup.
+const GOALKEEPER_POSITION_LABEL = "GKP";
 const PLAYER_STATS_CACHE_TTL_MS = 2 * 60 * 1000;
 
 type PlayerProjectionCacheEntry = {
@@ -228,6 +237,42 @@ export function LeagueLineup() {
     [editablePlayers],
   );
 
+  // Bench priority order (drag-reorderable on the pitch view), sent to the
+  // backend as `bench_player_ids` — this is what FPL's own bench reordering
+  // controls: which reserve gets auto-subbed in first. New bench arrivals are
+  // appended at the end; departed players are pruned automatically. Re-synced
+  // during render (React's "adjust state on key change" pattern, avoiding an
+  // effect) whenever the bench composition actually changes.
+  const benchIdsSignature = bench.map((player) => player.playerId).join("|");
+  const [benchOrder, setBenchOrder] = useState<string[]>(() =>
+    bench.map((player) => player.playerId),
+  );
+  const [lastBenchIdsSignature, setLastBenchIdsSignature] =
+    useState(benchIdsSignature);
+  if (benchIdsSignature !== lastBenchIdsSignature) {
+    setLastBenchIdsSignature(benchIdsSignature);
+    setBenchOrder((previous) => {
+      const benchIds = bench.map((player) => player.playerId);
+      const benchIdSet = new Set(benchIds);
+      const kept = previous.filter((id) => benchIdSet.has(id));
+      const missing = benchIds.filter((id) => !kept.includes(id));
+      return [...kept, ...missing];
+    });
+  }
+
+  const handleReorderBench = useCallback((draggedId: string, targetId: string) => {
+    setBenchOrder((previous) => {
+      const withoutDragged = previous.filter((id) => id !== draggedId);
+      const targetIndex = withoutDragged.indexOf(targetId);
+      if (targetIndex === -1) {
+        return previous;
+      }
+      const next = [...withoutDragged];
+      next.splice(targetIndex, 0, draggedId);
+      return next;
+    });
+  }, []);
+
   const startersGroupedBySport = useMemo(
     () => groupPlayersBySport(starters),
     [starters],
@@ -237,22 +282,6 @@ export function LeagueLineup() {
     () => groupPlayersBySport(bench),
     [bench],
   );
-
-  const lineupPlayerIds = useMemo(
-    () => editablePlayers.map((player) => player.playerId),
-    [editablePlayers],
-  );
-
-  const {
-    positions: pitchPositions,
-    setPosition: setPitchPosition,
-    clearPosition: clearPitchPosition,
-    resetPositions: resetPitchPositions,
-  } = useLineupPositions({
-    leagueId,
-    teamId: lineupData?.fantasy_team_id ?? null,
-    validPlayerIds: lineupPlayerIds,
-  });
 
   const lineupSport = useMemo(() => {
     const hasManySports = (league?.sports?.length ?? 0) > 1;
@@ -296,17 +325,32 @@ export function LeagueLineup() {
     captain.isStarter &&
     viceCaptain.isStarter;
 
-  const hasGoalkeeper = useMemo(() => {
-    // We only enforce GK for football or multisport (which includes football)
-    if (lineupSport !== "football" && lineupSport !== "multisport") {
-      return true;
+  // Same bounds FPL itself enforces (GK=1, DEF 3-5, MID 2-5, FWD 1-3),
+  // reused live on the pitch (LineupPitchView), here at Save time, and in
+  // Auto-Optimize's own constraints — one source of truth so the message a
+  // user sees never drifts between those three places. Multisport's football
+  // contingent is only 5 starters, so only the unambiguous "exactly 1
+  // keeper" rule applies there; basketball has no reliable position data
+  // (see formationEngine.ts) so it's never bounds-checked.
+  const formationValidation = useMemo(():
+    | { ok: true }
+    | { ok: false; reason: string } => {
+    if (lineupSport === "football") {
+      return validateFootballFormation(starters);
     }
-
-    return starters.some((p) => {
-      // Must be a football player to be a football GK
-      if (p.sportName !== "football") return false;
-      return isFootballGoalkeeper(p.position);
-    });
+    if (lineupSport === "multisport") {
+      const hasGoalkeeper = starters.some(
+        (p) => p.sportName === "football" && isFootballGoalkeeper(p.position),
+      );
+      return hasGoalkeeper
+        ? { ok: true }
+        : {
+            ok: false,
+            reason:
+              "Your multisport lineup needs exactly 1 football goalkeeper.",
+          };
+    }
+    return { ok: true };
   }, [starters, lineupSport]);
 
   const starterCountsBySport = useMemo(
@@ -351,8 +395,8 @@ export function LeagueLineup() {
       }
     }
 
-    if (!hasGoalkeeper) {
-      return "Your starting lineup must include at least one Football Goalkeeper.";
+    if (!formationValidation.ok) {
+      return formationValidation.reason;
     }
 
     if (!leadershipValid) {
@@ -368,7 +412,7 @@ export function LeagueLineup() {
     lineupSport,
     startersCount,
     multisportStarterMixValid,
-    hasGoalkeeper,
+    formationValidation,
   ]);
 
   const canSave =
@@ -379,7 +423,7 @@ export function LeagueLineup() {
         multisportStarterMixValid
       : lineupCountValid) &&
     leadershipValid &&
-    hasGoalkeeper;
+    formationValidation.ok;
 
   const isLineupOpen =
     Boolean(activeWindow?.id) && !activeWindow?.lineup_locked;
@@ -529,8 +573,10 @@ export function LeagueLineup() {
       starting_lineup_player_ids: starterIds,
       captain_id: selectedCaptain!.playerId,
       vice_captain_id: selectedViceCaptain!.playerId,
+      bench_player_ids: benchOrder,
     });
   }, [
+    benchOrder,
     canSave,
     editablePlayers,
     isLineupOpen,
@@ -649,8 +695,13 @@ export function LeagueLineup() {
       >((acc, slot) => {
         // For multisport, position labels can overlap across sports (e.g. PF),
         // so sport constraints are the primary guard and positional constraints
-        // are kept only when disambiguated by single-sport context.
-        if (lineupSport === "multisport") {
+        // are kept only when disambiguated by single-sport context. "GKP" is
+        // the one unambiguous exception (no basketball position shares it),
+        // so it's still forwarded below.
+        const isUnambiguousGoalkeeperSlot =
+          slot.position === GOALKEEPER_POSITION_LABEL &&
+          slot.sport?.name === "football";
+        if (lineupSport === "multisport" && !isUnambiguousGoalkeeperSlot) {
           return acc;
         }
 
@@ -660,6 +711,37 @@ export function LeagueLineup() {
         };
         return acc;
       }, {});
+
+      // Auto-Optimize has no built-in notion of FPL's own formation rule
+      // (GK=1, DEF 3-5, MID 2-5, FWD 1-3) unless a commissioner manually
+      // configured matching lineup_slots, which most leagues never do.
+      // Always floor to that rule regardless of what (if anything) the
+      // league configured — this is also the canonical key space every
+      // football candidate's position gets normalized to below, so it
+      // composes cleanly with any commissioner-configured GK/DEF/MID/FWD
+      // slots (finer-grained raw labels like "CB" no longer have a matching
+      // candidate to constrain, but those are rare to begin with).
+      if (lineupSport === "football") {
+        for (const bucket of ["GK", "DEF", "MID", "FWD"] as const) {
+          const bounds = FOOTBALL_FORMATION_BOUNDS[bucket];
+          const existing = positionConstraints[bucket];
+          positionConstraints[bucket] = {
+            min: Math.max(bounds.min, existing?.min ?? 0),
+            max: existing?.max ?? bounds.max,
+          };
+        }
+      } else if (lineupSport === "multisport") {
+        // Multisport's football contingent is only 5 starters — FPL's full
+        // bounds (needing at least 3+2+1=6 outfielders) are mathematically
+        // infeasible there. Only the unambiguous "exactly 1 keeper" rule
+        // applies.
+        const existingGoalkeeperSlot =
+          positionConstraints[GOALKEEPER_POSITION_LABEL];
+        positionConstraints[GOALKEEPER_POSITION_LABEL] = {
+          min: Math.max(1, existingGoalkeeperSlot?.min ?? 0),
+          max: existingGoalkeeperSlot?.max,
+        };
+      }
 
       const sportConstraints =
         lineupSport === "multisport"
@@ -672,15 +754,31 @@ export function LeagueLineup() {
             };
 
       const optimization = await OptimizationService.optimizeLineup({
-        candidates: editablePlayers.map((player) => ({
-          id: player.playerId,
-          sport: player.sportName,
-          position: player.position,
-          club: player.realTeam,
-          cost: parseNumericCost(player.cost),
-          projected_points: projectionMap.get(player.playerId) ?? 0,
-          is_available: true,
-        })),
+        candidates: editablePlayers.map((player) => {
+          const isFootballCandidate = player.sportName === "football";
+          // Canonicalize football positions so the constraints above reliably
+          // sum every player into the right bucket regardless of raw data
+          // variance. Single-sport football normalizes to the full GK/DEF/
+          // MID/FWD bucket space (matching the constraint keys just built);
+          // multisport only needs the unambiguous goalkeeper label.
+          const position = isFootballCandidate
+            ? lineupSport === "football"
+              ? getFootballFormationBucket(player.position)
+              : isFootballGoalkeeper(player.position)
+                ? GOALKEEPER_POSITION_LABEL
+                : player.position
+            : player.position;
+
+          return {
+            id: player.playerId,
+            sport: player.sportName,
+            position,
+            club: player.realTeam,
+            cost: parseNumericCost(player.cost),
+            projected_points: projectionMap.get(player.playerId) ?? 0,
+            is_available: true,
+          };
+        }),
         constraints: {
           budget: estimatedBudget,
           squad_size: lineupRules.starters,
@@ -875,10 +973,8 @@ export function LeagueLineup() {
       ) : (
         <LineupPitchView
           allPlayers={editablePlayers}
-          positions={pitchPositions}
-          onSetPosition={setPitchPosition}
-          onClearPosition={clearPitchPosition}
-          onResetPositions={resetPitchPositions}
+          benchOrder={benchOrder}
+          onReorderBench={handleReorderBench}
           onToggleStarter={toggleStarter}
           onSetCaptain={setCaptain}
           onSetViceCaptain={setViceCaptain}
