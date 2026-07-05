@@ -12,6 +12,10 @@ from app.admin.schemas import (
     AdminLeagueListResponse,
     AdminPlayerDetail,
     AdminPlayerEditRequest,
+    AdminTicketDetail,
+    AdminTicketListItem,
+    AdminTicketListResponse,
+    AdminTicketMessageCreateRequest,
     AdminUserDetail,
     AdminUserListResponse,
     CeleryJobsResponse,
@@ -24,6 +28,7 @@ from app.admin.schemas import (
     RoleChangeRequest,
     ScoringRecalculateResponse,
     SystemConfigResponse,
+    TicketUpdateRequest,
     TradeActionResponse,
     TransferReverseResponse,
     TransferWindowLockResponse,
@@ -33,6 +38,9 @@ from app.admin.schemas import (
 from app.auth.models import User, UserRole
 from app.database import get_db
 from app.league.dependencies import _get_league_or_404
+from app.support import services as support_services
+from app.support.models import TicketStatus
+from app.support.schemas import TicketMessageResponse
 from app.league.models import League, LeagueStatus
 from app.league.schemas import LeagueResponse
 
@@ -418,3 +426,90 @@ def toggle_live_polling(
     current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
 ):
     return services.toggle_live_polling(db, current_user, data.enabled, reason=data.reason)
+
+
+# ── Support tickets ───────────────────────────────────────────────────────────────
+
+def _ticket_list_item(ticket, reporter_username: str, assigned_username: str | None) -> AdminTicketListItem:
+    return AdminTicketListItem(
+        id=ticket.id,
+        reporter_user_id=ticket.reporter_user_id,
+        reporter_username=reporter_username,
+        league_id=ticket.league_id,
+        subject=ticket.subject,
+        category=ticket.category,
+        priority=ticket.priority,
+        status=ticket.status,
+        assigned_admin_user_id=ticket.assigned_admin_user_id,
+        assigned_admin_username=assigned_username,
+        created_at=ticket.created_at,
+        updated_at=ticket.updated_at,
+    )
+
+
+@router.get("/tickets", response_model=AdminTicketListResponse, summary="List support tickets (admin)")
+def list_tickets(
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=20, ge=1, le=100),
+    status_filter: TicketStatus | None = Query(default=None, alias="status"),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    rows, total = services.list_tickets_admin(db, page=page, page_size=page_size, status_filter=status_filter)
+    items = [_ticket_list_item(ticket, reporter, assignee) for ticket, reporter, assignee in rows]
+    return {
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "has_next": (page * page_size) < total,
+    }
+
+
+@router.get("/tickets/{ticket_id}", response_model=AdminTicketDetail, summary="Get a ticket, including internal notes (admin)")
+def get_ticket(
+    ticket_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    ticket = services.get_ticket_admin(db, ticket_id)
+    reporter_username, assigned_username = services._ticket_usernames(db, ticket)
+    messages = support_services.list_messages(db, ticket_id, include_internal=True)
+    return AdminTicketDetail(
+        **_ticket_list_item(ticket, reporter_username, assigned_username).model_dump(),
+        resolved_at=ticket.resolved_at,
+        messages=[TicketMessageResponse.model_validate(m) for m in messages],
+    )
+
+
+@router.patch("/tickets/{ticket_id}", response_model=AdminTicketDetail, summary="Update a ticket's status/priority/assignment (admin)")
+def update_ticket(
+    ticket_id: uuid.UUID,
+    data: TicketUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    ticket = services.update_ticket_admin(
+        db, current_user, ticket_id,
+        new_status=data.status, priority=data.priority,
+        assigned_admin_user_id=data.assigned_admin_user_id, reason=data.reason,
+    )
+    reporter_username, assigned_username = services._ticket_usernames(db, ticket)
+    messages = support_services.list_messages(db, ticket_id, include_internal=True)
+    return AdminTicketDetail(
+        **_ticket_list_item(ticket, reporter_username, assigned_username).model_dump(),
+        resolved_at=ticket.resolved_at,
+        messages=[TicketMessageResponse.model_validate(m) for m in messages],
+    )
+
+
+@router.post("/tickets/{ticket_id}/messages", response_model=TicketMessageResponse, summary="Reply to a ticket, optionally as an internal note (admin)")
+def add_ticket_message(
+    ticket_id: uuid.UUID,
+    data: AdminTicketMessageCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    return services.add_ticket_message_admin(
+        db, current_user, ticket_id, data.body, is_internal_note=data.is_internal_note
+    )

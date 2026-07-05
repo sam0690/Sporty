@@ -6,6 +6,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.admin.models import AdminActionType
 from app.auth.models import UserRole
 from app.league.models import LeagueStatus
+from app.support.models import TicketCategory, TicketPriority, TicketStatus
+from app.support.schemas import TicketMessageResponse
 
 
 # ── Users ───────────────────────────────────────────────────────────────────────
@@ -222,3 +224,45 @@ class AdminAuditLogListResponse(BaseModel):
     page: int
     page_size: int
     has_next: bool
+
+
+# ── Support tickets ──────────────────────────────────────────────────────────────
+
+class AdminTicketListItem(BaseModel):
+    id: uuid.UUID
+    reporter_user_id: uuid.UUID
+    reporter_username: str
+    league_id: uuid.UUID | None
+    subject: str
+    category: TicketCategory
+    priority: TicketPriority
+    status: TicketStatus
+    assigned_admin_user_id: uuid.UUID | None
+    assigned_admin_username: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class AdminTicketListResponse(BaseModel):
+    items: list[AdminTicketListItem]
+    total: int
+    page: int
+    page_size: int
+    has_next: bool
+
+
+class AdminTicketDetail(AdminTicketListItem):
+    resolved_at: datetime | None
+    messages: list[TicketMessageResponse]
+
+
+class TicketUpdateRequest(BaseModel):
+    status: TicketStatus | None = None
+    priority: TicketPriority | None = None
+    assigned_admin_user_id: uuid.UUID | None = None
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class AdminTicketMessageCreateRequest(BaseModel):
+    body: str = Field(min_length=1)
+    is_internal_note: bool = False

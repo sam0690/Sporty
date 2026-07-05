@@ -24,6 +24,7 @@ from app.player import models as player_models  # noqa: F401
 from app.player import models_nba as player_models_nba  # noqa: F401
 from app.scoring import models as scoring_models  # noqa: F401
 from app.admin import models as admin_models  # noqa: F401
+from app.support import models as support_models  # noqa: F401
 
 # Alembic Config object
 config = context.config

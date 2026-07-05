@@ -85,6 +85,11 @@ export function AdminDashboard() {
           title="Config"
           description="Runtime feature-flag overrides."
         />
+        <NavCard
+          href={ROUTES.ADMIN_TICKETS.path}
+          title="Tickets"
+          description="Support queue — assign, reply, resolve."
+        />
       </div>
     </div>
   );

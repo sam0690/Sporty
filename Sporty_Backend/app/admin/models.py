@@ -56,6 +56,8 @@ class AdminActionType(str, enum.Enum):
     TRADE_CANCEL_OVERRIDE = "trade_cancel_override"
     FEATURE_FLAG_TOGGLE = "feature_flag_toggle"
     TICKET_RESOLVE = "ticket_resolve"
+    TICKET_UPDATE = "ticket_update"
+    TICKET_ASSIGN = "ticket_assign"
 
 
 # ── Admin audit log ─────────────────────────────────────────────────────────────

@@ -9,6 +9,7 @@ import {
   UserRound,
   CalendarDays,
   Lock,
+  LifeBuoy,
 } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
 import {
@@ -34,6 +35,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       { label: "Matches", href: "/matches", icon: CalendarDays },
       { label: "Transfers", href: "/transfers", icon: ArrowRightLeft },
       { label: "Profile", href: `/user/${userId}`, icon: UserRound },
+      { label: "Support", href: "/support", icon: LifeBuoy },
       ...(isAdminRole(me?.role) ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),
     ],
     [userId, me?.role],

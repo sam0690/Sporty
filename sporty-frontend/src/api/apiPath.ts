@@ -199,5 +199,22 @@ export const API_PATHS = {
     CONFIG_LIST: "/admin/config",
     CONFIG_REALTIME_PIPELINE: "/admin/config/realtime-pipeline",
     CONFIG_LIVE_POLLING: "/admin/config/live-polling",
+
+    TICKETS: (opts?: { page?: number; pageSize?: number; status?: string }) => {
+      const params = new URLSearchParams();
+      if (opts?.page != null) params.set("page", String(opts.page));
+      if (opts?.pageSize != null) params.set("page_size", String(opts.pageSize));
+      if (opts?.status) params.set("status", opts.status);
+      const query = params.toString();
+      return `/admin/tickets${query ? `?${query}` : ""}`;
+    },
+    TICKET_DETAIL: (id: string) => `/admin/tickets/${id}`,
+    TICKET_MESSAGES: (id: string) => `/admin/tickets/${id}/messages`,
+  },
+
+  SUPPORT: {
+    TICKETS: "/support/tickets",
+    TICKET_DETAIL: (id: string) => `/support/tickets/${id}`,
+    TICKET_MESSAGES: (id: string) => `/support/tickets/${id}/messages`,
   },
 } as const;

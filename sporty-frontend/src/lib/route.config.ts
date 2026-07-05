@@ -53,6 +53,11 @@ export const ROUTES: Record<string, RouteMeta> = {
     name: "Settings",
     protection: "protected",
   },
+  SUPPORT: {
+    path: "/support",
+    name: "Support",
+    protection: "protected",
+  },
   USER_PROFILE: {
     path: "/user/:id",
     name: "User Profile",
@@ -101,6 +106,11 @@ export const ROUTES: Record<string, RouteMeta> = {
   ADMIN_CONFIG: {
     path: "/admin/config",
     name: "Admin Config",
+    protection: "admin",
+  },
+  ADMIN_TICKETS: {
+    path: "/admin/tickets",
+    name: "Admin Tickets",
     protection: "admin",
   },
 } as const;

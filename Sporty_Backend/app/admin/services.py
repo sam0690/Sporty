@@ -25,6 +25,8 @@ from app.player.models import Player
 from app.services import trade_service
 from app.services.pricing.repricing import recalculate_player_prices
 from app.services.scoring.engine import score_active_transfer_windows, score_transfer_window_for_league
+from app.support import services as support_services
+from app.support.models import SupportTicket, TicketMessage, TicketStatus
 from app.user import services as user_services
 
 
@@ -825,3 +827,106 @@ def toggle_live_polling(db: Session, actor: User, enabled: bool, reason: str | N
     db.commit()
     db.refresh(row)
     return row
+
+
+# ── Support tickets ───────────────────────────────────────────────────────────────
+
+def list_tickets_admin(
+    db: Session,
+    page: int,
+    page_size: int,
+    status_filter: TicketStatus | None = None,
+    assigned_admin_user_id: uuid.UUID | None = None,
+) -> tuple[list[tuple[SupportTicket, str, str | None]], int]:
+    from sqlalchemy.orm import aliased
+
+    AssignedUser = aliased(User)
+    query = (
+        db.query(SupportTicket, User.username, AssignedUser.username)
+        .join(User, User.id == SupportTicket.reporter_user_id)
+        .outerjoin(AssignedUser, AssignedUser.id == SupportTicket.assigned_admin_user_id)
+    )
+    if status_filter is not None:
+        query = query.filter(SupportTicket.status == status_filter)
+    if assigned_admin_user_id is not None:
+        query = query.filter(SupportTicket.assigned_admin_user_id == assigned_admin_user_id)
+    query = query.order_by(SupportTicket.created_at.desc())
+
+    total = query.count()
+    rows = query.offset((page - 1) * page_size).limit(page_size).all()
+    return rows, total
+
+
+def get_ticket_admin(db: Session, ticket_id: uuid.UUID) -> SupportTicket:
+    ticket = db.query(SupportTicket).filter(SupportTicket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ticket not found")
+    return ticket
+
+
+def _ticket_usernames(db: Session, ticket: SupportTicket) -> tuple[str, str | None]:
+    reporter = db.query(User).filter(User.id == ticket.reporter_user_id).first()
+    assignee = (
+        db.query(User).filter(User.id == ticket.assigned_admin_user_id).first()
+        if ticket.assigned_admin_user_id
+        else None
+    )
+    return (reporter.username if reporter else ""), (assignee.username if assignee else None)
+
+
+def update_ticket_admin(
+    db: Session,
+    actor: User,
+    ticket_id: uuid.UUID,
+    *,
+    new_status: TicketStatus | None = None,
+    priority=None,
+    assigned_admin_user_id: uuid.UUID | None = None,
+    reason: str | None = None,
+) -> SupportTicket:
+    ticket = get_ticket_admin(db, ticket_id)
+    before = {
+        "status": ticket.status.value,
+        "priority": ticket.priority.value,
+        "assigned_admin_user_id": str(ticket.assigned_admin_user_id) if ticket.assigned_admin_user_id else None,
+    }
+
+    action = AdminActionType.TICKET_UPDATE
+    if new_status is not None:
+        ticket.status = new_status
+        if new_status == TicketStatus.RESOLVED and ticket.resolved_at is None:
+            ticket.resolved_at = datetime.now(timezone.utc)
+            action = AdminActionType.TICKET_RESOLVE
+    if priority is not None:
+        ticket.priority = priority
+    if assigned_admin_user_id is not None:
+        ticket.assigned_admin_user_id = assigned_admin_user_id
+        if new_status is None:
+            action = AdminActionType.TICKET_ASSIGN
+
+    record_admin_action(
+        db, actor=actor, action=action, target_type="ticket", target_id=ticket_id,
+        reason=reason, metadata={"before": before},
+    )
+    db.commit()
+    db.refresh(ticket)
+    return ticket
+
+
+def add_ticket_message_admin(
+    db: Session,
+    actor: User,
+    ticket_id: uuid.UUID,
+    body: str,
+    *,
+    is_internal_note: bool = False,
+) -> TicketMessage:
+    get_ticket_admin(db, ticket_id)  # 404s if missing
+    message = support_services.add_message(db, ticket_id, actor, body, is_internal_note=is_internal_note)
+    record_admin_action(
+        db, actor=actor, action=AdminActionType.TICKET_UPDATE, target_type="ticket", target_id=ticket_id,
+        metadata={"message": True, "internal": is_internal_note},
+    )
+    db.commit()
+    db.refresh(message)
+    return message

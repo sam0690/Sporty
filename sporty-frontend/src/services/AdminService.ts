@@ -1,5 +1,8 @@
 import { authApi } from "@/api/auth-api-client";
 import { API_PATHS } from "@/api/apiPath";
+import type { TTicketCategory, TTicketMessage, TTicketPriority, TTicketStatus } from "@/services/SupportService";
+
+export type { TTicketMessage };
 
 export type TAdminUserListItem = {
   id: string;
@@ -172,6 +175,41 @@ export type TSystemConfigEntry = {
   updated_at: string;
 };
 
+export type TAdminTicketListItem = {
+  id: string;
+  reporter_user_id: string;
+  reporter_username: string;
+  league_id: string | null;
+  subject: string;
+  category: TTicketCategory;
+  priority: TTicketPriority;
+  status: TTicketStatus;
+  assigned_admin_user_id: string | null;
+  assigned_admin_username: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type TAdminTicketListResponse = {
+  items: TAdminTicketListItem[];
+  total: number;
+  page: number;
+  page_size: number;
+  has_next: boolean;
+};
+
+export type TAdminTicketDetail = TAdminTicketListItem & {
+  resolved_at: string | null;
+  messages: TTicketMessage[];
+};
+
+export type TTicketUpdateRequest = {
+  status?: TTicketStatus;
+  priority?: TTicketPriority;
+  assigned_admin_user_id?: string;
+  reason?: string;
+};
+
 /**
  * Admin service — platform-admin API calls (user/league oversight, audit log).
  * Every call requires the caller to hold at least the "support" admin role;
@@ -329,6 +367,28 @@ export const AdminService = {
 
   async toggleLivePolling(enabled: boolean, reason?: string): Promise<TSystemConfigEntry> {
     const res = await authApi.post(API_PATHS.ADMIN.CONFIG_LIVE_POLLING, { enabled, reason });
+    return res.data;
+  },
+
+  // ── Support tickets ───────────────────────────────────────────────────────
+
+  async getTickets(params?: { page?: number; pageSize?: number; status?: string }): Promise<TAdminTicketListResponse> {
+    const res = await authApi.get(API_PATHS.ADMIN.TICKETS(params));
+    return res.data;
+  },
+
+  async getTicket(id: string): Promise<TAdminTicketDetail> {
+    const res = await authApi.get(API_PATHS.ADMIN.TICKET_DETAIL(id));
+    return res.data;
+  },
+
+  async updateTicket(id: string, data: TTicketUpdateRequest): Promise<TAdminTicketDetail> {
+    const res = await authApi.patch(API_PATHS.ADMIN.TICKET_DETAIL(id), data);
+    return res.data;
+  },
+
+  async addTicketMessage(id: string, body: string, isInternalNote: boolean): Promise<TTicketMessage> {
+    const res = await authApi.post(API_PATHS.ADMIN.TICKET_MESSAGES(id), { body, is_internal_note: isInternalNote });
     return res.data;
   },
 };
