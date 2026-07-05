@@ -39,10 +39,10 @@ export function ConfirmationModal({
       label: "Players",
       value: `${teamData.selectedCount}/${teamData.requiredPlayers}`,
     },
-    { label: "Total Cost", value: `$${teamData.totalCost}`, emphasis: true },
+    { label: "Total Cost", value: `$${teamData.totalCost.toFixed(1)}M`, emphasis: true },
     {
       label: "Remaining",
-      value: `$${teamData.remainingBudget}`,
+      value: `$${teamData.remainingBudget.toFixed(1)}M`,
       emphasis: true,
       danger: overBudget,
     },

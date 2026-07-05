@@ -67,7 +67,7 @@ class PlayerGameweekLine:
     minutes_played: int
     points: Decimal          # raw player points for the window
     counted: bool            # part of the effective scoring XI
-    status: str              # played | did_not_play | subbed_in | subbed_out | benched
+    status: str              # played | did_not_play | not_yet_played | subbed_in | subbed_out | benched
     captain_bonus: Decimal   # extra points this player contributed via the (C)/(V) rule
 
 
@@ -90,10 +90,41 @@ def resolve_team_gameweek(
     fantasy_team_id: uuid.UUID,
     rows: list[LineupRow],
     slot_bounds: dict,
+    *,
+    window_has_played: bool = True,
 ) -> TeamGameweekResult:
     """Pure resolution of a single team's gameweek: run auto-subs over the
     starters/bench, apply the captain/vice rule, and produce the per-player
-    breakdown used by both scoring and the recap endpoint."""
+    breakdown used by both scoring and the recap endpoint.
+
+    ``window_has_played=False`` means the gameweek hasn't happened yet, so
+    every ``PlayerGameweekStat`` is absent rather than genuinely zero — skip
+    auto-subs/scoring entirely and report starters as "not_yet_played" instead
+    of the (indistinguishable-looking) "did_not_play"."""
+    if not window_has_played:
+        players = [
+            PlayerGameweekLine(
+                player_id=r.player_id,
+                is_starter=r.is_starter,
+                is_captain=r.is_captain,
+                is_vice_captain=r.is_vice_captain,
+                bench_order=r.bench_order,
+                minutes_played=r.minutes_played,
+                points=r.points,
+                counted=False,
+                status="not_yet_played" if r.is_starter else "benched",
+                captain_bonus=Decimal("0"),
+            )
+            for r in rows
+        ]
+        return TeamGameweekResult(
+            fantasy_team_id=fantasy_team_id,
+            base_points=Decimal("0"),
+            captain_vice_bonus=Decimal("0"),
+            total_points=Decimal("0"),
+            players=players,
+        )
+
     starters_rows = [r for r in rows if r.is_starter]
     bench_rows = sorted(
         (r for r in rows if not r.is_starter),

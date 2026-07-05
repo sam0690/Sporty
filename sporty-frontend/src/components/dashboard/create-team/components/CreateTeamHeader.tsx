@@ -66,13 +66,13 @@ export function CreateTeamHeader({
 
         {showBudget ? (
           <div className="text-right">
-            <p className="section-label">Budget ${budget}</p>
+            <p className="section-label">Budget ${budget.toFixed(1)}M</p>
             <p
               className={`mt-1 font-bebas text-2xl tracking-[1px] tabular-nums ${
                 overBudget ? "text-[#ff3b30]" : "text-[#e8fb25]"
               }`}
             >
-              ${remainingBudget} left
+              ${remainingBudget.toFixed(1)}M left
             </p>
           </div>
         ) : null}

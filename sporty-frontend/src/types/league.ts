@@ -119,6 +119,7 @@ export type TLineupUpdateRequest = {
 export type TGameweekPlayerStatus =
   | "played"
   | "did_not_play"
+  | "not_yet_played"
   | "subbed_in"
   | "subbed_out"
   | "benched";

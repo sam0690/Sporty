@@ -35,6 +35,7 @@ const STATUS_META: Record<
 > = {
   played: { label: "Played", color: "#9a9aa5" },
   did_not_play: { label: "Did not play", color: "#ff3b5c" },
+  not_yet_played: { label: "Not yet played", color: "#9a9aa5" },
   subbed_in: { label: "Subbed in", color: "#00ff88" },
   subbed_out: { label: "Subbed out", color: "#ff3b5c" },
   benched: { label: "Bench", color: "#555560" },

@@ -2759,9 +2759,16 @@ def get_gameweek_recap(
             .first()
         )
         if window is None:
+            # No persisted score yet for this team/league — fall back to the
+            # most recent window that has actually ended, never an upcoming
+            # one, so we don't report "did not play" for a gameweek that
+            # hasn't been played yet.
             window = (
                 db.query(TransferWindow)
-                .filter(TransferWindow.season_id == league.season_id)
+                .filter(
+                    TransferWindow.season_id == league.season_id,
+                    TransferWindow.end_at <= func.now(),
+                )
                 .order_by(TransferWindow.number.desc())
                 .first()
             )
@@ -2771,11 +2778,19 @@ def get_gameweek_recap(
             detail="No gameweek available for this league yet",
         )
 
+    window_has_played = window.end_at <= datetime.now(timezone.utc)
+
     slot_bounds = load_slot_bounds(db, league_id)
     rows = load_team_lineup_rows(
         db, team_ids=[team.id], transfer_window_id=window.id
     ).get(team.id, [])
-    result = resolve_team_gameweek(team.id, rows, slot_bounds) if rows else None
+    result = (
+        resolve_team_gameweek(
+            team.id, rows, slot_bounds, window_has_played=window_has_played
+        )
+        if rows
+        else None
+    )
 
     player_ids = [r.player_id for r in rows]
     players_by_id = {

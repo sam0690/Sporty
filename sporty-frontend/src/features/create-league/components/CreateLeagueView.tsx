@@ -6,7 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
 import { LeagueSettings } from "@/components/dashboard/create-league/components/LeagueSettings";
-import { ScoringSettings } from "@/components/dashboard/create-league/components/ScoringSettings";
+// Scoring customization step hidden for now — see the commented-out render below.
+// import { ScoringSettings } from "@/components/dashboard/create-league/components/ScoringSettings";
 import { SummaryStep } from "@/components/dashboard/create-league/components/SummaryStep";
 import { SuccessModal } from "@/components/dashboard/create-league/components/SuccessModal";
 import { useDefaultScoringRules } from "@/hooks/scoring/useScoring";
@@ -95,7 +96,7 @@ export function CreateLeagueView() {
       budget: 103,
       max_teams: 10,
       squad_size: 15,
-      draft_mode: true,
+      draft_mode: false,
       is_public: true,
     },
     mode: "onSubmit",
@@ -105,7 +106,7 @@ export function CreateLeagueView() {
   const sportIds = useWatch({ control, name: "sport_ids" });
   const maxTeams = useWatch({ control, name: "max_teams" }) ?? 10;
   const squadSize = useWatch({ control, name: "squad_size" }) ?? 15;
-  const draftMode = useWatch({ control, name: "draft_mode" }) ?? true;
+  const draftMode = useWatch({ control, name: "draft_mode" }) ?? false;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
   const [customScoringEnabledBySport, setCustomScoringEnabledBySport] =
@@ -128,7 +129,10 @@ export function CreateLeagueView() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const totalSteps = 4;
+  // Scoring customization step is hidden for now (see the commented-out
+  // ScoringSettings render below), so the flow is Basic Info → Settings →
+  // Summary.
+  const totalSteps = 3;
   const selectedSports = useMemo(() => {
     const currentSportIds = sportIds ?? ["football"];
 
@@ -516,6 +520,9 @@ export function CreateLeagueView() {
             />
           ) : null}
 
+          {/* Scoring customization hidden for now — owners can't override
+              default scoring rules yet; re-enable this step when that's
+              ready.
           {step === 3 ? (
             <ScoringSettings
               selectedSports={selectedSports}
@@ -528,8 +535,9 @@ export function CreateLeagueView() {
               maxPoints={MAX_CUSTOM_POINTS}
             />
           ) : null}
+          */}
 
-          {step === 4 ? (
+          {step === totalSteps ? (
             <SummaryStep
               leagueData={leagueData}
               selectedSports={selectedSports}

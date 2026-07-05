@@ -362,14 +362,14 @@ export function CreateTeamView(
       <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
         <div className="flex items-center justify-between">
           <span className="section-label">
-            Budget used ${budgetUsed.toFixed(1)} / ${budget.toFixed(1)}
+            Budget used ${budgetUsed.toFixed(1)}M / ${budget.toFixed(1)}M
           </span>
           <span
             className={`font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
               remainingBudget >= 0 ? "text-[#e8fb25]" : "text-[#ff3b30]"
             }`}
           >
-            ${remainingBudget.toFixed(1)} left
+            ${remainingBudget.toFixed(1)}M left
           </span>
         </div>
         <div className="mt-2.5 h-2 w-full overflow-hidden rounded-[3px] bg-[#0d0d12]">

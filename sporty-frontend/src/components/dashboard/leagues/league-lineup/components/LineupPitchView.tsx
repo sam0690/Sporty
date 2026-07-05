@@ -255,6 +255,14 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
       >
         {player ? (
           <motion.div
+            // Keyed by player id (not just slot.id above) so a cross-position
+            // swap — which reshuffles row bucket sizes and can hand this same
+            // slot to a different occupant — unmounts the outgoing player's
+            // chip and mounts a fresh one instead of one instance silently
+            // reassigning its layoutId mid-flight (that's what caused the
+            // stuck/overlapping chip until a second interaction forced a
+            // clean re-render).
+            key={player.id}
             layoutId={
               prefersReducedMotion ? undefined : `pitch-player-${player.id}`
             }

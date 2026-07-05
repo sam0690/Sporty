@@ -77,7 +77,7 @@ export function CurrentRoster({
                   </p>
                   <p className="mt-0.5 truncate text-xs text-[#555560]">
                     {player.position}
-                    <span className="mx-1 text-[#33333a]">·</span>${player.price}M
+                    <span className="mx-1 text-[#33333a]">·</span>${player.price.toFixed(1)}M
                   </p>
                 </div>
 

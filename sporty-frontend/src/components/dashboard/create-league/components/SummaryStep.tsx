@@ -104,13 +104,6 @@ export function SummaryStep({
       <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
           <p className="section-label">Scoring Rules</p>
-          <button
-            type="button"
-            onClick={onBack}
-            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:text-[#f0ff45]"
-          >
-            Edit
-          </button>
         </div>
         <div className="space-y-3 px-4 py-3">
           {selectedSports.map((sport) => {

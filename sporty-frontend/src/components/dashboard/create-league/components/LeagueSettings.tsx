@@ -66,7 +66,6 @@ export function LeagueSettings({
   isPrivate,
   teamSize,
   competitionType,
-  draftDate,
   onSettingsChange,
 }: LeagueSettingsProps) {
   return (
@@ -130,6 +129,7 @@ export function LeagueSettings({
         </select>
       </div>
 
+      {/* Draft Date field hidden for now — re-enable once draft scheduling is supported.
       <div>
         <label htmlFor="draft-date" className={fieldLabel}>
           Draft Date (optional)
@@ -145,6 +145,7 @@ export function LeagueSettings({
           style={{ colorScheme: "dark" }}
         />
       </div>
+      */}
     </div>
   );
 }

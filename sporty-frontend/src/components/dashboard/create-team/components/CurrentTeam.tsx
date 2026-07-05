@@ -59,7 +59,7 @@ export function CurrentTeam({
                 </p>
                 <p className="mt-0.5 text-xs text-[#555560]">
                   {player.icon} {player.position} ·{" "}
-                  <span className="text-[#9a9aa5]">${player.price}</span>
+                  <span className="text-[#9a9aa5]">${player.price.toFixed(1)}M</span>
                 </p>
               </div>
               <button
@@ -79,7 +79,7 @@ export function CurrentTeam({
         <div className="flex items-center justify-between text-sm">
           <span className="section-label">Total</span>
           <span className="font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0] tabular-nums">
-            ${totalCost}
+            ${totalCost.toFixed(1)}M
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
@@ -89,7 +89,7 @@ export function CurrentTeam({
               overBudget ? "text-[#ff3b30]" : "text-[#e8fb25]"
             }`}
           >
-            ${remaining}
+            ${remaining.toFixed(1)}M
           </span>
         </div>
       </div>
