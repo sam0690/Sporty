@@ -65,6 +65,7 @@ class UserResponse(BaseModel):
     google_id: Optional[str] = None
     avatar_url: Optional[str] = None
     is_active: bool
+    role: str
     email_notifications_enabled: bool
     created_at: datetime
 

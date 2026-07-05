@@ -24,6 +24,7 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
+  role: string;
 }
 
 type AuthAction =
@@ -120,6 +121,7 @@ const toUser = (value: unknown): User => {
     name: username || email || "Sporty User",
     email,
     avatar,
+    role: readString(source, "role") || "user",
   };
 };
 

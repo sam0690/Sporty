@@ -511,6 +511,8 @@ def update_league_status(
     league_id: uuid.UUID,
     new_status: LeagueStatus,
     current_user: User,
+    *,
+    admin_override: bool = False,
 ) -> League:
     """Transition a league to a new lifecycle state.
 
@@ -527,12 +529,13 @@ def update_league_status(
     could do it, but trigger-based state machines are hard to debug
     and test. Service-layer enforcement is explicit and testable.
 
-    Only the league OWNER can change status.
+    Only the league OWNER can change status (admin_override=True bypasses
+    this for platform-admin use — see app/admin/services.py).
     Does NOT commit — caller owns the transaction.
     """
     league = _require_league(db, league_id)
 
-    if league.owner_id != current_user.id:
+    if not admin_override and league.owner_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the league owner can change the status",
@@ -796,15 +799,18 @@ def delete_league(
     db: Session,
     league_id: uuid.UUID,
     current_user: User,
+    *,
+    admin_override: bool = False,
 ) -> None:
     """Delete a league and all related data.
 
-    Only the league owner can delete the league. Related rows are removed
-    via existing FK and ORM cascades.
+    Only the league owner can delete the league (admin_override=True bypasses
+    this for platform-admin use — see app/admin/services.py). Related rows
+    are removed via existing FK and ORM cascades.
     """
     league = _require_league(db, league_id)
 
-    if league.owner_id != current_user.id:
+    if not admin_override and league.owner_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the league owner can delete this league",

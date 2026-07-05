@@ -6,7 +6,7 @@
  * NEVER hard-code route strings anywhere else.
  */
 
-export type ProtectionLevel = "public" | "protected" | "guest-only";
+export type ProtectionLevel = "public" | "protected" | "guest-only" | "admin";
 
 export interface RouteMeta {
   /** URL path (must match the Next.js file-system route) */
@@ -57,5 +57,25 @@ export const ROUTES: Record<string, RouteMeta> = {
     path: "/user/:id",
     name: "User Profile",
     protection: "protected",
+  },
+  ADMIN_DASHBOARD: {
+    path: "/admin",
+    name: "Admin",
+    protection: "admin",
+  },
+  ADMIN_USERS: {
+    path: "/admin/users",
+    name: "Admin Users",
+    protection: "admin",
+  },
+  ADMIN_LEAGUES: {
+    path: "/admin/leagues",
+    name: "Admin Leagues",
+    protection: "admin",
+  },
+  ADMIN_AUDIT_LOG: {
+    path: "/admin/audit-log",
+    name: "Admin Audit Log",
+    protection: "admin",
   },
 } as const;

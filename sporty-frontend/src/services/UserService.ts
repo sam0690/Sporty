@@ -12,6 +12,7 @@ export type TMe = {
   google_id: string | null;
   avatar_url: string | null;
   is_active: boolean;
+  role: string;
   email_notifications_enabled: boolean;
   created_at: string;
 };

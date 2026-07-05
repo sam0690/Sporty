@@ -137,4 +137,47 @@ export const API_PATHS = {
     LIST: "/matches",
     PUBLIC: "/matches/public",
   },
+
+  ADMIN: {
+    USERS: (opts?: {
+      page?: number;
+      pageSize?: number;
+      search?: string;
+      role?: string;
+      isActive?: boolean;
+    }) => {
+      const params = new URLSearchParams();
+      if (opts?.page != null) params.set("page", String(opts.page));
+      if (opts?.pageSize != null) params.set("page_size", String(opts.pageSize));
+      if (opts?.search) params.set("search", opts.search);
+      if (opts?.role) params.set("role", opts.role);
+      if (opts?.isActive != null) params.set("is_active", String(opts.isActive));
+      const query = params.toString();
+      return `/admin/users${query ? `?${query}` : ""}`;
+    },
+    USER_DETAIL: (id: string) => `/admin/users/${id}`,
+    USER_SUSPEND: (id: string) => `/admin/users/${id}/suspend`,
+    USER_REACTIVATE: (id: string) => `/admin/users/${id}/reactivate`,
+    USER_FORCE_LOGOUT: (id: string) => `/admin/users/${id}/force-logout`,
+    USER_ROLE: (id: string) => `/admin/users/${id}/role`,
+    LEAGUES: (opts?: { page?: number; pageSize?: number; search?: string; status?: string }) => {
+      const params = new URLSearchParams();
+      if (opts?.page != null) params.set("page", String(opts.page));
+      if (opts?.pageSize != null) params.set("page_size", String(opts.pageSize));
+      if (opts?.search) params.set("search", opts.search);
+      if (opts?.status) params.set("status", opts.status);
+      const query = params.toString();
+      return `/admin/leagues${query ? `?${query}` : ""}`;
+    },
+    LEAGUE_STATUS: (id: string) => `/admin/leagues/${id}/status`,
+    LEAGUE_DELETE: (id: string) => `/admin/leagues/${id}`,
+    LEAGUE_SETTINGS: (id: string) => `/admin/leagues/${id}/settings`,
+    AUDIT_LOG: (opts?: { page?: number; pageSize?: number }) => {
+      const params = new URLSearchParams();
+      if (opts?.page != null) params.set("page", String(opts.page));
+      if (opts?.pageSize != null) params.set("page_size", String(opts.pageSize));
+      const query = params.toString();
+      return `/admin/audit-log${query ? `?${query}` : ""}`;
+    },
+  },
 } as const;

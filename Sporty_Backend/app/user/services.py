@@ -380,8 +380,14 @@ def update_user(db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUI
     return user
 
 
-def delete_user(db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUID) -> None:
-    if target_user_id != acting_user_id:
+def delete_user(
+    db: Session,
+    target_user_id: uuid.UUID,
+    acting_user_id: uuid.UUID,
+    *,
+    admin_override: bool = False,
+) -> None:
+    if not admin_override and target_user_id != acting_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only delete your own account")
 
     user = get_user(db, target_user_id)

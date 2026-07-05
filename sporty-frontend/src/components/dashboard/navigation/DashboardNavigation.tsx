@@ -8,6 +8,7 @@ import {
   ArrowRightLeft,
   UserRound,
   CalendarDays,
+  Lock,
 } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
 import {
@@ -15,6 +16,7 @@ import {
   type DashboardNavItem,
 } from "@/components/dashboard/navigation/Sidebar";
 import { useMe } from "@/hooks/auth/useMe";
+import { isAdminRole } from "@/lib/roles";
 
 type DashboardNavigationProps = {
   children: React.ReactNode;
@@ -32,8 +34,9 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       { label: "Matches", href: "/matches", icon: CalendarDays },
       { label: "Transfers", href: "/transfers", icon: ArrowRightLeft },
       { label: "Profile", href: `/user/${userId}`, icon: UserRound },
+      ...(isAdminRole(me?.role) ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),
     ],
-    [userId],
+    [userId, me?.role],
   );
 
   return (

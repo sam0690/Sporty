@@ -23,3 +23,11 @@ export function isGuestOnlyRoute(pathname: string): boolean {
   const meta = getRouteMetaByPath(pathname);
   return meta?.protection === "guest-only";
 }
+
+/**
+ * Check whether a given path requires an admin role (support/admin/super_admin).
+ */
+export function isAdminRoute(pathname: string): boolean {
+  const meta = getRouteMetaByPath(pathname);
+  return meta?.protection === "admin";
+}

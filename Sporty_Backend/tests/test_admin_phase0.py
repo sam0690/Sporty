@@ -28,6 +28,9 @@ if str(_backend_root) not in sys.path:
 from app.database import Base, get_db
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import AuthProvider, User, UserRole
+import app.match.models  # noqa: F401
+import app.player.models  # noqa: F401
+import app.player.models_nba  # noqa: F401
 from app.admin.audit import record_admin_action
 from app.admin.dependencies import _ROLE_RANK, require_admin_role
 from app.admin.models import AdminActionType, AdminAuditLog
