@@ -233,6 +233,8 @@ def register(db: Session, data: RegisterRequest):
             "email": user.email,
             "auth_provider": user.auth_provider.value,
             "is_active": user.is_active,
+            "role": user.role.value,
+            "email_notifications_enabled": user.email_notifications_enabled,
             "created_at": user.created_at,
         }
 

@@ -27,19 +27,26 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
   const { data: me } = useMe();
   const userId = me?.id ?? "1";
 
-  const navItems = useMemo<DashboardNavItem[]>(
-    () => [
-      { label: "Overview", href: "/dashboard", icon: Home },
-      { label: "My Team", href: "/my-team", icon: Shield },
-      { label: "Leagues", href: "/leagues", icon: Trophy },
+  const navItems = useMemo<DashboardNavItem[]>(() => {
+    const isAdmin = isAdminRole(me?.role);
+
+    return [
+      // Pure admin/ops accounts don't play — these are noise pointing at
+      // empty states for them, so skip for any admin-tier role.
+      ...(isAdmin
+        ? []
+        : [
+            { label: "Overview", href: "/dashboard", icon: Home },
+            { label: "My Team", href: "/my-team", icon: Shield },
+            { label: "Leagues", href: "/leagues", icon: Trophy },
+            { label: "Transfers", href: "/transfers", icon: ArrowRightLeft },
+          ]),
       { label: "Matches", href: "/matches", icon: CalendarDays },
-      { label: "Transfers", href: "/transfers", icon: ArrowRightLeft },
       { label: "Profile", href: `/user/${userId}`, icon: UserRound },
       { label: "Support", href: "/support", icon: LifeBuoy },
-      ...(isAdminRole(me?.role) ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),
-    ],
-    [userId, me?.role],
-  );
+      ...(isAdmin ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),
+    ];
+  }, [userId, me?.role]);
 
   return (
     <div className="min-h-screen bg-background font-sans text-[#f0f0f0]">
