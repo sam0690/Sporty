@@ -266,3 +266,46 @@ class TicketUpdateRequest(BaseModel):
 class AdminTicketMessageCreateRequest(BaseModel):
     body: str = Field(min_length=1)
     is_internal_note: bool = False
+
+
+# ── Browse endpoints for the Scoring/Transactions pickers ──────────────────────
+
+class AdminTransferWindowItem(BaseModel):
+    id: uuid.UUID
+    number: int
+    start_at: datetime
+    end_at: datetime
+    transfers_locked: bool
+    lineup_locked: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminTradeItem(BaseModel):
+    id: uuid.UUID
+    from_team_name: str
+    to_team_name: str
+    status: str
+    offered_count: int
+    requested_count: int
+    created_at: datetime
+
+
+class AdminWaiverClaimItem(BaseModel):
+    id: uuid.UUID
+    team_name: str
+    add_player_name: str
+    drop_player_name: str
+    status: str
+    claim_priority: int
+    created_at: datetime
+
+
+class AdminTransferItem(BaseModel):
+    id: uuid.UUID
+    team_name: str
+    player_out_name: str
+    player_in_name: str
+    cost_at_transfer: float
+    reversed_at: datetime | None
+    created_at: datetime

@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
+import { AdminDetailSkeleton } from "@/components/dashboard/admin/AdminDetailSkeleton";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
+import { ConfirmDialog } from "@/components/dashboard/admin/ConfirmDialog";
 import { useSystemConfig, useToggleRealtimePipeline, useToggleLivePolling } from "@/hooks/admin/useAdminConfig";
 
 function flagEnabled(value: { enabled?: boolean } | undefined): boolean {
@@ -13,12 +17,31 @@ export function AdminConfig() {
   const { user: currentAdmin } = useAuth();
   const isSuperAdmin = hasMinRole(currentAdmin?.role, "super_admin");
 
-  const { data: config } = useSystemConfig();
+  const { data: config, isLoading, isError, refetch } = useSystemConfig();
   const togglePipeline = useToggleRealtimePipeline();
   const toggleLivePolling = useToggleLivePolling();
+  const [showEnablePipelineConfirm, setShowEnablePipelineConfirm] = useState(false);
 
   const pipelineRow = config?.find((c) => c.key === "realtime_pipeline_enabled");
   const livePollingRow = config?.find((c) => c.key === "live_polling_enabled");
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Config</h1>
+        <AdminDetailSkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Config</h1>
+        <AdminErrorState onRetry={() => refetch()} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -67,11 +90,7 @@ export function AdminConfig() {
               variant="danger"
               size="sm"
               disabled={togglePipeline.isPending}
-              onClick={() => {
-                if (window.confirm("Flip the realtime pipeline flag for the next backend restart?")) {
-                  togglePipeline.mutate({ enabled: true });
-                }
-              }}
+              onClick={() => setShowEnablePipelineConfirm(true)}
             >
               Enable
             </Button>
@@ -86,6 +105,19 @@ export function AdminConfig() {
           </div>
         </section>
       )}
+
+      <ConfirmDialog
+        isOpen={showEnablePipelineConfirm}
+        title="Enable Realtime Pipeline"
+        message="Flip the realtime pipeline flag for the next backend restart?"
+        confirmLabel="Enable"
+        variant="danger"
+        isPending={togglePipeline.isPending}
+        onClose={() => setShowEnablePipelineConfirm(false)}
+        onConfirm={() =>
+          togglePipeline.mutate({ enabled: true }, { onSuccess: () => setShowEnablePipelineConfirm(false) })
+        }
+      />
     </div>
   );
 }

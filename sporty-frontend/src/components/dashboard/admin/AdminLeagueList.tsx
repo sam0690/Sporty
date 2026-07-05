@@ -6,6 +6,8 @@ import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
+import { ConfirmDialog } from "@/components/dashboard/admin/ConfirmDialog";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import { useAdminLeagues, useOverrideDeleteLeague } from "@/hooks/admin/useAdminLeagues";
 import type { TAdminLeagueListItem } from "@/services/AdminService";
@@ -16,8 +18,9 @@ export function AdminLeagueList() {
   const { user: currentAdmin } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<TAdminLeagueListItem | null>(null);
 
-  const { data, isLoading } = useAdminLeagues({ page, pageSize: PAGE_SIZE, search: search || undefined });
+  const { data, isLoading, isError, refetch } = useAdminLeagues({ page, pageSize: PAGE_SIZE, search: search || undefined });
   const deleteLeague = useOverrideDeleteLeague();
 
   const canDelete = hasMinRole(currentAdmin?.role, "super_admin");
@@ -43,11 +46,7 @@ export function AdminLeagueList() {
             variant="danger"
             size="sm"
             disabled={deleteLeague.isPending}
-            onClick={() => {
-              if (window.confirm(`Force-delete league "${l.name}"? This cannot be undone.`)) {
-                deleteLeague.mutate(l.id);
-              }
-            }}
+            onClick={() => setDeleteTarget(l)}
           >
             Force Delete
           </Button>
@@ -72,9 +71,11 @@ export function AdminLeagueList() {
         className="w-full max-w-sm rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
       />
 
-      {isLoading || !data ? (
+      {isLoading ? (
         <TableSkeleton />
-      ) : (
+      ) : isError ? (
+        <AdminErrorState onRetry={() => refetch()} />
+      ) : data ? (
         <>
           <AdminDataTable columns={columns} rows={data.items} rowKey={(l) => l.id} />
           <Pagination
@@ -85,7 +86,22 @@ export function AdminLeagueList() {
             onPageChange={setPage}
           />
         </>
-      )}
+      ) : null}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Delete League"
+        message={`Force-delete league "${deleteTarget?.name}"? This cannot be undone.`}
+        confirmLabel="Force Delete"
+        variant="danger"
+        isPending={deleteLeague.isPending}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteLeague.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          }
+        }}
+      />
     </div>
   );
 }

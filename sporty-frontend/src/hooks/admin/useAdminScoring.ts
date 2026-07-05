@@ -1,6 +1,20 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApiMutation } from "@/hooks/api/useApiMutation";
-import { AdminService, type TScoringRecalculateResponse, type TWindowLockResponse } from "@/services/AdminService";
+import {
+  AdminService,
+  type TAdminTransferWindowItem,
+  type TScoringRecalculateResponse,
+  type TWindowLockResponse,
+} from "@/services/AdminService";
+
+export function useLeagueTransferWindows(leagueId: string) {
+  return useApiQuery<TAdminTransferWindowItem[]>(
+    ["admin", "leagues", leagueId, "transfer-windows"],
+    () => AdminService.getLeagueTransferWindows(leagueId),
+    { enabled: !!leagueId },
+  );
+}
 
 export function useRecalculateWindowScore() {
   const queryClient = useQueryClient();

@@ -4,24 +4,45 @@ import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
+import { ConfirmDialog } from "@/components/dashboard/admin/ConfirmDialog";
 import { useAdminLeagues } from "@/hooks/admin/useAdminLeagues";
 import {
   useRecalculateWindowScore,
   useRecalculateActiveWindows,
   useSetWindowLock,
+  useLeagueTransferWindows,
 } from "@/hooks/admin/useAdminScoring";
+
+function formatWindowLabel(w: { number: number; start_at: string; end_at: string }): string {
+  const start = new Date(w.start_at).toLocaleDateString();
+  const end = new Date(w.end_at).toLocaleDateString();
+  return `Window ${w.number} (${start} – ${end})`;
+}
 
 export function AdminScoring() {
   const { user: currentAdmin } = useAuth();
   const isSuperAdmin = hasMinRole(currentAdmin?.role, "super_admin");
 
-  const { data: leagues } = useAdminLeagues({ page: 1, pageSize: 100 });
+  const { data: leagues, isError: leaguesError, refetch: refetchLeagues } = useAdminLeagues({ page: 1, pageSize: 100 });
   const [leagueId, setLeagueId] = useState("");
   const [windowId, setWindowId] = useState("");
+  const [showRecalcAllConfirm, setShowRecalcAllConfirm] = useState(false);
+
+  const { data: windows, isLoading: windowsLoading } = useLeagueTransferWindows(leagueId);
 
   const recalculateWindow = useRecalculateWindowScore();
   const recalculateActive = useRecalculateActiveWindows();
   const setLock = useSetWindowLock();
+
+  if (leaguesError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Scoring</h1>
+        <AdminErrorState message="Couldn't load leagues." onRetry={() => refetchLeagues()} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -33,7 +54,10 @@ export function AdminScoring() {
         <div className="flex flex-wrap gap-3">
           <select
             value={leagueId}
-            onChange={(e) => setLeagueId(e.target.value)}
+            onChange={(e) => {
+              setLeagueId(e.target.value);
+              setWindowId("");
+            }}
             className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0]"
           >
             <option value="">Select a league…</option>
@@ -44,13 +68,20 @@ export function AdminScoring() {
             ))}
           </select>
 
-          <input
-            type="text"
+          <select
             value={windowId}
             onChange={(e) => setWindowId(e.target.value)}
-            placeholder="Transfer window ID"
-            className="w-72 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
-          />
+            disabled={!leagueId || windowsLoading}
+            className="w-72 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] disabled:opacity-50"
+          >
+            <option value="">{windowsLoading ? "Loading windows…" : "Select a window…"}</option>
+            {windows?.map((w) => (
+              <option key={w.id} value={w.id}>
+                {formatWindowLabel(w)}
+                {w.transfers_locked ? " · transfers locked" : ""}
+              </option>
+            ))}
+          </select>
 
           <Button
             variant="primary"
@@ -94,9 +125,6 @@ export function AdminScoring() {
             Unlock Lineups
           </Button>
         </div>
-        <p className="text-xs text-[#555560]">
-          Find a window ID via the league&apos;s dashboard or the audit log.
-        </p>
       </section>
 
       {isSuperAdmin && (
@@ -106,16 +134,23 @@ export function AdminScoring() {
             variant="danger"
             size="sm"
             disabled={recalculateActive.isPending}
-            onClick={() => {
-              if (window.confirm("Recalculate scoring for every active transfer window platform-wide?")) {
-                recalculateActive.mutate();
-              }
-            }}
+            onClick={() => setShowRecalcAllConfirm(true)}
           >
             Recalculate All Active Windows
           </Button>
         </section>
       )}
+
+      <ConfirmDialog
+        isOpen={showRecalcAllConfirm}
+        title="Recalculate All Active Windows"
+        message="Recalculate scoring for every active transfer window platform-wide?"
+        confirmLabel="Recalculate"
+        variant="danger"
+        isPending={recalculateActive.isPending}
+        onClose={() => setShowRecalcAllConfirm(false)}
+        onConfirm={() => recalculateActive.mutate(undefined, { onSuccess: () => setShowRecalcAllConfirm(false) })}
+      />
     </div>
   );
 }

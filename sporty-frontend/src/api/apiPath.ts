@@ -210,6 +210,14 @@ export const API_PATHS = {
     },
     TICKET_DETAIL: (id: string) => `/admin/tickets/${id}`,
     TICKET_MESSAGES: (id: string) => `/admin/tickets/${id}/messages`,
+
+    LEAGUE_TRANSFER_WINDOWS: (leagueId: string) => `/admin/leagues/${leagueId}/transfer-windows`,
+    LEAGUE_TRADES: (leagueId: string, onlyActionable = true) =>
+      `/admin/leagues/${leagueId}/trades?only_actionable=${onlyActionable}`,
+    LEAGUE_WAIVERS: (leagueId: string, onlyPending = true) =>
+      `/admin/leagues/${leagueId}/waivers?only_pending=${onlyPending}`,
+    LEAGUE_TRANSFERS: (leagueId: string, onlyReversible = false) =>
+      `/admin/leagues/${leagueId}/transfers?only_reversible=${onlyReversible}`,
   },
 
   SUPPORT: {

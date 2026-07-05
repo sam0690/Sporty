@@ -2,15 +2,25 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { AdminDetailSkeleton } from "@/components/dashboard/admin/AdminDetailSkeleton";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { useTicket, useAddTicketMessage } from "@/hooks/support/useSupportTickets";
 
 export function SupportTicketDetail({ ticketId }: { ticketId: string }) {
-  const { data: ticket, isLoading } = useTicket(ticketId);
+  const { data: ticket, isLoading, isError, refetch } = useTicket(ticketId);
   const addMessage = useAddTicketMessage(ticketId);
   const [reply, setReply] = useState("");
 
-  if (isLoading || !ticket) {
-    return <p className="text-sm text-[#555560]">Loading…</p>;
+  if (isLoading) {
+    return <AdminDetailSkeleton />;
+  }
+
+  if (isError) {
+    return <AdminErrorState onRetry={() => refetch()} />;
+  }
+
+  if (!ticket) {
+    return null;
   }
 
   return (

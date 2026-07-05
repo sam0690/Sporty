@@ -6,6 +6,7 @@ import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { useEditPlayer, useTriggerRepricing } from "@/hooks/admin/useAdminPlayers";
@@ -23,7 +24,7 @@ export function AdminPlayers() {
   const [editCost, setEditCost] = useState("");
   const [lookbackWindows, setLookbackWindows] = useState(3);
 
-  const { data, isLoading } = usePlayers({ search: search || undefined, page, page_size: PAGE_SIZE });
+  const { data, isLoading, isError, refetch } = usePlayers({ search: search || undefined, page, page_size: PAGE_SIZE });
   const editPlayer = useEditPlayer();
   const triggerRepricing = useTriggerRepricing();
 
@@ -134,9 +135,11 @@ export function AdminPlayers() {
         className="w-full max-w-sm rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
       />
 
-      {isLoading || !data ? (
+      {isLoading ? (
         <TableSkeleton />
-      ) : (
+      ) : isError ? (
+        <AdminErrorState onRetry={() => refetch()} />
+      ) : data ? (
         <>
           <AdminDataTable columns={columns} rows={data.items} rowKey={(p) => p.id} />
           <Pagination
@@ -147,7 +150,7 @@ export function AdminPlayers() {
             onPageChange={setPage}
           />
         </>
-      )}
+      ) : null}
     </div>
   );
 }

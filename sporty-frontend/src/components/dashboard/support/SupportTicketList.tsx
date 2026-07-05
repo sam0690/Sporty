@@ -5,13 +5,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { useMyTickets, useCreateTicket } from "@/hooks/support/useSupportTickets";
 import type { TTicket, TTicketCategory } from "@/services/SupportService";
 
 const CATEGORY_OPTIONS: TTicketCategory[] = ["account", "league_dispute", "transfer_dispute", "billing", "bug", "other"];
 
 export function SupportTicketList() {
-  const { data, isLoading } = useMyTickets();
+  const { data, isLoading, isError, refetch } = useMyTickets();
   const createTicket = useCreateTicket();
 
   const [showForm, setShowForm] = useState(false);
@@ -86,11 +87,13 @@ export function SupportTicketList() {
         </section>
       )}
 
-      {isLoading || !data ? (
+      {isLoading ? (
         <TableSkeleton />
-      ) : (
+      ) : isError ? (
+        <AdminErrorState onRetry={() => refetch()} />
+      ) : data ? (
         <AdminDataTable columns={columns} rows={data.items} rowKey={(t) => t.id} emptyMessage="No support tickets yet." />
-      )}
+      ) : null}
     </div>
   );
 }

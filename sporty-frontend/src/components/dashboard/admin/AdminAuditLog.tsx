@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import { useAdminAuditLog } from "@/hooks/admin/useAdminAuditLog";
 import type { TAdminAuditLogEntry } from "@/services/AdminService";
@@ -15,7 +16,7 @@ function formatAction(action: string): string {
 
 export function AdminAuditLog() {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useAdminAuditLog({ page, pageSize: PAGE_SIZE });
+  const { data, isLoading, isError, refetch } = useAdminAuditLog({ page, pageSize: PAGE_SIZE });
 
   const columns: AdminColumn<TAdminAuditLogEntry>[] = [
     {
@@ -37,9 +38,11 @@ export function AdminAuditLog() {
     <div className="space-y-4">
       <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Audit Log</h1>
 
-      {isLoading || !data ? (
+      {isLoading ? (
         <TableSkeleton />
-      ) : (
+      ) : isError ? (
+        <AdminErrorState onRetry={() => refetch()} />
+      ) : data ? (
         <>
           <AdminDataTable
             columns={columns}
@@ -55,7 +58,7 @@ export function AdminAuditLog() {
             onPageChange={setPage}
           />
         </>
-      )}
+      ) : null}
     </div>
   );
 }

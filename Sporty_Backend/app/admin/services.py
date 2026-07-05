@@ -17,6 +17,7 @@ from app.league.models import (
     League,
     LeagueStatus,
     TeamPlayer,
+    TradeOffer,
     Transfer,
     TransferWindow,
     WaiverClaim,
@@ -930,3 +931,113 @@ def add_ticket_message_admin(
     db.commit()
     db.refresh(message)
     return message
+
+
+# ── Browse endpoints for the Scoring/Transactions pickers ──────────────────────
+
+def list_transfer_windows_for_league(db: Session, league_id: uuid.UUID) -> list[TransferWindow]:
+    league = db.query(League).filter(League.id == league_id).first()
+    if not league:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    return (
+        db.query(TransferWindow)
+        .filter(TransferWindow.season_id == league.season_id)
+        .order_by(TransferWindow.number.asc())
+        .all()
+    )
+
+
+def list_trades_for_league(
+    db: Session, league_id: uuid.UUID, *, only_actionable: bool = True
+) -> list[dict]:
+    FromTeam = FantasyTeam
+    query = (
+        db.query(TradeOffer, FromTeam.name)
+        .join(FromTeam, FromTeam.id == TradeOffer.from_team_id)
+        .filter(TradeOffer.league_id == league_id)
+    )
+    if only_actionable:
+        query = query.filter(TradeOffer.status.in_(["proposed", "accepted"]))
+    rows = query.order_by(TradeOffer.created_at.desc()).all()
+
+    to_team_ids = {offer.to_team_id for offer, _ in rows}
+    to_team_names = {
+        t.id: t.name for t in db.query(FantasyTeam).filter(FantasyTeam.id.in_(to_team_ids))
+    } if to_team_ids else {}
+
+    return [
+        {
+            "id": offer.id,
+            "from_team_name": from_name,
+            "to_team_name": to_team_names.get(offer.to_team_id, ""),
+            "status": offer.status,
+            "offered_count": len(offer.offered_player_ids or []),
+            "requested_count": len(offer.requested_player_ids or []),
+            "created_at": offer.created_at,
+        }
+        for offer, from_name in rows
+    ]
+
+
+def list_waiver_claims_for_league(
+    db: Session, league_id: uuid.UUID, *, only_pending: bool = True
+) -> list[dict]:
+    from sqlalchemy.orm import aliased
+
+    AddPlayer = aliased(Player)
+    DropPlayer = aliased(Player)
+    query = (
+        db.query(WaiverClaim, FantasyTeam.name, AddPlayer.name, DropPlayer.name)
+        .join(FantasyTeam, FantasyTeam.id == WaiverClaim.fantasy_team_id)
+        .join(AddPlayer, AddPlayer.id == WaiverClaim.add_player_id)
+        .join(DropPlayer, DropPlayer.id == WaiverClaim.drop_player_id)
+        .filter(WaiverClaim.league_id == league_id)
+    )
+    if only_pending:
+        query = query.filter(WaiverClaim.status == "pending")
+    rows = query.order_by(WaiverClaim.created_at.desc()).all()
+
+    return [
+        {
+            "id": claim.id,
+            "team_name": team_name,
+            "add_player_name": add_name,
+            "drop_player_name": drop_name,
+            "status": claim.status,
+            "claim_priority": claim.claim_priority,
+            "created_at": claim.created_at,
+        }
+        for claim, team_name, add_name, drop_name in rows
+    ]
+
+
+def list_transfers_for_league(
+    db: Session, league_id: uuid.UUID, *, only_reversible: bool = False
+) -> list[dict]:
+    from sqlalchemy.orm import aliased
+
+    OutPlayer = aliased(Player)
+    InPlayer = aliased(Player)
+    query = (
+        db.query(Transfer, FantasyTeam.name, OutPlayer.name, InPlayer.name)
+        .join(FantasyTeam, FantasyTeam.id == Transfer.fantasy_team_id)
+        .join(OutPlayer, OutPlayer.id == Transfer.player_out_id)
+        .join(InPlayer, InPlayer.id == Transfer.player_in_id)
+        .filter(FantasyTeam.league_id == league_id)
+    )
+    if only_reversible:
+        query = query.filter(Transfer.reversed_at.is_(None))
+    rows = query.order_by(Transfer.created_at.desc()).limit(100).all()
+
+    return [
+        {
+            "id": transfer.id,
+            "team_name": team_name,
+            "player_out_name": out_name,
+            "player_in_name": in_name,
+            "cost_at_transfer": float(transfer.cost_at_transfer),
+            "reversed_at": transfer.reversed_at,
+            "created_at": transfer.created_at,
+        }
+        for transfer, team_name, out_name, in_name in rows
+    ]

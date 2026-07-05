@@ -1,5 +1,6 @@
 "use client";
 
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { useCeleryJobs, useKafkaJobs } from "@/hooks/admin/useAdminJobs";
 
 function StatusDot({ ok }: { ok: boolean }) {
@@ -11,9 +12,18 @@ function StatusDot({ ok }: { ok: boolean }) {
   );
 }
 
+function SectionSkeleton() {
+  return (
+    <div className="space-y-2">
+      <div className="h-4 w-48 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+      <div className="h-4 w-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+    </div>
+  );
+}
+
 export function AdminJobs() {
-  const { data: celery, isLoading: celeryLoading } = useCeleryJobs();
-  const { data: kafka, isLoading: kafkaLoading } = useKafkaJobs();
+  const { data: celery, isLoading: celeryLoading, isError: celeryError, refetch: refetchCelery } = useCeleryJobs();
+  const { data: kafka, isLoading: kafkaLoading, isError: kafkaError, refetch: refetchKafka } = useKafkaJobs();
 
   return (
     <div className="space-y-6">
@@ -22,9 +32,11 @@ export function AdminJobs() {
 
       <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
         <p className="section-label">Celery</p>
-        {celeryLoading || !celery ? (
-          <p className="text-sm text-[#555560]">Loading…</p>
-        ) : (
+        {celeryLoading ? (
+          <SectionSkeleton />
+        ) : celeryError ? (
+          <AdminErrorState onRetry={() => refetchCelery()} />
+        ) : celery ? (
           <>
             <div className="flex items-center gap-2 text-sm">
               <StatusDot ok={celery.inspect_reachable} />
@@ -50,14 +62,16 @@ export function AdminJobs() {
               </ul>
             </div>
           </>
-        )}
+        ) : null}
       </section>
 
       <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
         <p className="section-label">Kafka Consumers</p>
-        {kafkaLoading || !kafka ? (
-          <p className="text-sm text-[#555560]">Loading…</p>
-        ) : (
+        {kafkaLoading ? (
+          <SectionSkeleton />
+        ) : kafkaError ? (
+          <AdminErrorState onRetry={() => refetchKafka()} />
+        ) : kafka ? (
           <ul className="space-y-2">
             {kafka.workers.map((w) => (
               <li key={w.name} className="flex items-center gap-2 text-sm">
@@ -71,7 +85,7 @@ export function AdminJobs() {
               </li>
             ))}
           </ul>
-        )}
+        ) : null}
       </section>
     </div>
   );

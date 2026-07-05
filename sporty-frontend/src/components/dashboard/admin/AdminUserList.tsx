@@ -6,6 +6,7 @@ import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import {
   useAdminUsers,
@@ -24,7 +25,7 @@ export function AdminUserList() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useAdminUsers({ page, pageSize: PAGE_SIZE, search: search || undefined });
+  const { data, isLoading, isError, refetch } = useAdminUsers({ page, pageSize: PAGE_SIZE, search: search || undefined });
   const suspendUser = useSuspendUser();
   const reactivateUser = useReactivateUser();
   const forceLogoutUser = useForceLogoutUser();
@@ -121,9 +122,11 @@ export function AdminUserList() {
         className="w-full max-w-sm rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
       />
 
-      {isLoading || !data ? (
+      {isLoading ? (
         <TableSkeleton />
-      ) : (
+      ) : isError ? (
+        <AdminErrorState onRetry={() => refetch()} />
+      ) : data ? (
         <>
           <AdminDataTable columns={columns} rows={data.items} rowKey={(u) => u.id} />
           <Pagination
@@ -134,7 +137,7 @@ export function AdminUserList() {
             onPageChange={setPage}
           />
         </>
-      )}
+      ) : null}
     </div>
   );
 }

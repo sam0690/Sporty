@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { Button } from "@/components/ui/Button";
+import { AdminDetailSkeleton } from "@/components/dashboard/admin/AdminDetailSkeleton";
+import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { useAdminTicket, useUpdateTicket, useAddAdminTicketMessage } from "@/hooks/admin/useAdminTickets";
 import type { TTicketPriority, TTicketStatus } from "@/services/SupportService";
 
@@ -11,15 +13,23 @@ const PRIORITY_OPTIONS: TTicketPriority[] = ["low", "normal", "high", "urgent"];
 
 export function AdminTicketDetail({ ticketId }: { ticketId: string }) {
   const { user: currentAdmin } = useAuth();
-  const { data: ticket, isLoading } = useAdminTicket(ticketId);
+  const { data: ticket, isLoading, isError, refetch } = useAdminTicket(ticketId);
   const updateTicket = useUpdateTicket(ticketId);
   const addMessage = useAddAdminTicketMessage(ticketId);
 
   const [reply, setReply] = useState("");
   const [isInternalNote, setIsInternalNote] = useState(false);
 
-  if (isLoading || !ticket) {
-    return <p className="text-sm text-[#555560]">Loading…</p>;
+  if (isLoading) {
+    return <AdminDetailSkeleton />;
+  }
+
+  if (isError) {
+    return <AdminErrorState onRetry={() => refetch()} />;
+  }
+
+  if (!ticket) {
+    return null;
   }
 
   return (

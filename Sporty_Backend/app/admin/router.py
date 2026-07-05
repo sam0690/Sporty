@@ -16,8 +16,12 @@ from app.admin.schemas import (
     AdminTicketListItem,
     AdminTicketListResponse,
     AdminTicketMessageCreateRequest,
+    AdminTradeItem,
+    AdminTransferItem,
+    AdminTransferWindowItem,
     AdminUserDetail,
     AdminUserListResponse,
+    AdminWaiverClaimItem,
     CeleryJobsResponse,
     FeatureFlagToggleRequest,
     KafkaJobsResponse,
@@ -513,3 +517,60 @@ def add_ticket_message(
     return services.add_ticket_message_admin(
         db, current_user, ticket_id, data.body, is_internal_note=data.is_internal_note
     )
+
+
+# ── Browse endpoints for the Scoring/Transactions pickers ──────────────────────
+
+@router.get(
+    "/leagues/{league_id}/transfer-windows",
+    response_model=list[AdminTransferWindowItem],
+    summary="List a league's transfer windows (admin)",
+)
+def list_transfer_windows(
+    league: League = Depends(_get_league_or_404),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.list_transfer_windows_for_league(db, league.id)
+
+
+@router.get(
+    "/leagues/{league_id}/trades",
+    response_model=list[AdminTradeItem],
+    summary="List a league's trades, platform-wide (admin)",
+)
+def list_trades(
+    league: League = Depends(_get_league_or_404),
+    only_actionable: bool = Query(default=True),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.list_trades_for_league(db, league.id, only_actionable=only_actionable)
+
+
+@router.get(
+    "/leagues/{league_id}/waivers",
+    response_model=list[AdminWaiverClaimItem],
+    summary="List a league's waiver claims, platform-wide (admin)",
+)
+def list_waiver_claims(
+    league: League = Depends(_get_league_or_404),
+    only_pending: bool = Query(default=True),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.list_waiver_claims_for_league(db, league.id, only_pending=only_pending)
+
+
+@router.get(
+    "/leagues/{league_id}/transfers",
+    response_model=list[AdminTransferItem],
+    summary="List a league's transfers (admin)",
+)
+def list_transfers(
+    league: League = Depends(_get_league_or_404),
+    only_reversible: bool = Query(default=False),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.list_transfers_for_league(db, league.id, only_reversible=only_reversible)

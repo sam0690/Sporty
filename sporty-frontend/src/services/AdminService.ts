@@ -210,6 +210,45 @@ export type TTicketUpdateRequest = {
   reason?: string;
 };
 
+export type TAdminTransferWindowItem = {
+  id: string;
+  number: number;
+  start_at: string;
+  end_at: string;
+  transfers_locked: boolean;
+  lineup_locked: boolean;
+};
+
+export type TAdminTradeItem = {
+  id: string;
+  from_team_name: string;
+  to_team_name: string;
+  status: string;
+  offered_count: number;
+  requested_count: number;
+  created_at: string;
+};
+
+export type TAdminWaiverClaimItem = {
+  id: string;
+  team_name: string;
+  add_player_name: string;
+  drop_player_name: string;
+  status: string;
+  claim_priority: number;
+  created_at: string;
+};
+
+export type TAdminTransferItem = {
+  id: string;
+  team_name: string;
+  player_out_name: string;
+  player_in_name: string;
+  cost_at_transfer: number;
+  reversed_at: string | null;
+  created_at: string;
+};
+
 /**
  * Admin service — platform-admin API calls (user/league oversight, audit log).
  * Every call requires the caller to hold at least the "support" admin role;
@@ -389,6 +428,28 @@ export const AdminService = {
 
   async addTicketMessage(id: string, body: string, isInternalNote: boolean): Promise<TTicketMessage> {
     const res = await authApi.post(API_PATHS.ADMIN.TICKET_MESSAGES(id), { body, is_internal_note: isInternalNote });
+    return res.data;
+  },
+
+  // ── Browse endpoints for the Scoring/Transactions pickers ────────────────
+
+  async getLeagueTransferWindows(leagueId: string): Promise<TAdminTransferWindowItem[]> {
+    const res = await authApi.get(API_PATHS.ADMIN.LEAGUE_TRANSFER_WINDOWS(leagueId));
+    return res.data;
+  },
+
+  async getLeagueTrades(leagueId: string, onlyActionable = true): Promise<TAdminTradeItem[]> {
+    const res = await authApi.get(API_PATHS.ADMIN.LEAGUE_TRADES(leagueId, onlyActionable));
+    return res.data;
+  },
+
+  async getLeagueWaiverClaims(leagueId: string, onlyPending = true): Promise<TAdminWaiverClaimItem[]> {
+    const res = await authApi.get(API_PATHS.ADMIN.LEAGUE_WAIVERS(leagueId, onlyPending));
+    return res.data;
+  },
+
+  async getLeagueTransfers(leagueId: string, onlyReversible = false): Promise<TAdminTransferItem[]> {
+    const res = await authApi.get(API_PATHS.ADMIN.LEAGUE_TRANSFERS(leagueId, onlyReversible));
     return res.data;
   },
 };
