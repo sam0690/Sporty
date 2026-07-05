@@ -46,6 +46,7 @@ from app.league.schemas import LeagueCreate, LineupSlotCreate
 from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
 from app.player.models import Player, PlayerGameweekStat
 from app.services.budget_utils import calculate_refund
+from app.services.scoring.window_locator import find_equivalent_season_for_sport
 from app.core.config import settings
 from app.squad.services import (
     check_squad_constraints,
@@ -2516,14 +2517,21 @@ def _attach_player_points(
 
     Sets transient `total_points`, `avg_points`, and `gameweek_points` on every
     active TeamPlayer (read by TeamPlayerResponse via from_attributes). Points
-    come from PlayerGameweekStat.fantasy_points, scoped to the league's season:
+    come from PlayerGameweekStat.fantasy_points:
       - total_points   = sum of a player's fantasy points across season windows
       - avg_points     = total / number of gameweeks the player was scored in
       - gameweek_points = the active window's points (0 if no active window)
 
+    A multisport league's season_id is only ONE of its sports' schedules — so
+    for players of the league's OTHER sports, resolve THAT sport's own
+    equivalent season (see find_equivalent_season_for_sport) rather than
+    filtering everyone by the league's single season_id, which would leave
+    those players' points permanently invisible here.
+
     A player's fantasy points are season-wide (they don't depend on which team
-    owns them), so this is whole-season haul, not points-while-owned. Two grouped
-    queries regardless of roster size. Read helper — does not mutate the DB.
+    owns them), so this is whole-season haul, not points-while-owned. One pair
+    of grouped queries per sport present on the roster (at most a handful).
+    Read helper — does not mutate the DB.
     """
     rows = list(team.team_players or [])
     for team_player in rows:
@@ -2534,65 +2542,87 @@ def _attach_player_points(
     if not rows:
         return
 
-    season_id = (
-        db.query(League.season_id).filter(League.id == league_id).scalar()
+    league_season = (
+        db.query(Season)
+        .join(League, League.season_id == Season.id)
+        .filter(League.id == league_id)
+        .first()
     )
-    if season_id is None:
+    if league_season is None:
         return
 
     player_ids = [team_player.player_id for team_player in rows]
 
-    # Season total + gameweeks-scored per player, in one grouped query.
-    season_rows = (
-        db.query(
-            PlayerGameweekStat.player_id.label("player_id"),
-            func.coalesce(func.sum(PlayerGameweekStat.fantasy_points), 0).label(
-                "total"
-            ),
-            func.count(PlayerGameweekStat.id).label("gameweeks"),
-        )
-        .join(
-            TransferWindow,
-            TransferWindow.id == PlayerGameweekStat.transfer_window_id,
-        )
-        .filter(
-            TransferWindow.season_id == season_id,
-            PlayerGameweekStat.player_id.in_(player_ids),
-        )
-        .group_by(PlayerGameweekStat.player_id)
-        .all()
+    player_sport_map = dict(
+        db.query(Player.id, Player.sport_id).filter(Player.id.in_(player_ids)).all()
     )
-    totals_by_player = {
-        row.player_id: (Decimal(row.total), int(row.gameweeks))
-        for row in season_rows
-    }
+    roster_sport_ids = set(player_sport_map.values())
+    sport_season_ids: dict[uuid.UUID, uuid.UUID] = {}
+    for sport_id in roster_sport_ids:
+        equivalent_season = find_equivalent_season_for_sport(
+            db, season=league_season, sport_id=sport_id
+        )
+        if equivalent_season is not None:
+            sport_season_ids[sport_id] = equivalent_season.id
 
-    # The active window's points per player ("this gameweek").
-    now = datetime.now(timezone.utc)
-    active_window = (
-        db.query(TransferWindow)
-        .filter(
-            TransferWindow.season_id == season_id,
-            TransferWindow.start_at <= now,
-            TransferWindow.end_at >= now,
-        )
-        .order_by(TransferWindow.number.desc())
-        .first()
-    )
+    totals_by_player: dict[uuid.UUID, tuple[Decimal, int]] = {}
     gameweek_by_player: dict[uuid.UUID, Decimal] = {}
-    if active_window is not None:
-        for player_id, points in (
+    now = datetime.now(timezone.utc)
+
+    for sport_id, this_season_id in sport_season_ids.items():
+        sport_player_ids = [
+            pid for pid in player_ids if player_sport_map.get(pid) == sport_id
+        ]
+        if not sport_player_ids:
+            continue
+
+        # Season total + gameweeks-scored per player, in one grouped query.
+        season_rows = (
             db.query(
-                PlayerGameweekStat.player_id,
-                PlayerGameweekStat.fantasy_points,
+                PlayerGameweekStat.player_id.label("player_id"),
+                func.coalesce(func.sum(PlayerGameweekStat.fantasy_points), 0).label(
+                    "total"
+                ),
+                func.count(PlayerGameweekStat.id).label("gameweeks"),
+            )
+            .join(
+                TransferWindow,
+                TransferWindow.id == PlayerGameweekStat.transfer_window_id,
             )
             .filter(
-                PlayerGameweekStat.transfer_window_id == active_window.id,
-                PlayerGameweekStat.player_id.in_(player_ids),
+                TransferWindow.season_id == this_season_id,
+                PlayerGameweekStat.player_id.in_(sport_player_ids),
             )
+            .group_by(PlayerGameweekStat.player_id)
             .all()
-        ):
-            gameweek_by_player[player_id] = Decimal(points)
+        )
+        for row in season_rows:
+            totals_by_player[row.player_id] = (Decimal(row.total), int(row.gameweeks))
+
+        # This sport's active window's points per player ("this gameweek").
+        active_window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == this_season_id,
+                TransferWindow.start_at <= now,
+                TransferWindow.end_at >= now,
+            )
+            .order_by(TransferWindow.number.desc())
+            .first()
+        )
+        if active_window is not None:
+            for player_id, points in (
+                db.query(
+                    PlayerGameweekStat.player_id,
+                    PlayerGameweekStat.fantasy_points,
+                )
+                .filter(
+                    PlayerGameweekStat.transfer_window_id == active_window.id,
+                    PlayerGameweekStat.player_id.in_(sport_player_ids),
+                )
+                .all()
+            ):
+                gameweek_by_player[player_id] = Decimal(points)
 
     for team_player in rows:
         total, gameweeks = totals_by_player.get(
@@ -2778,7 +2808,12 @@ def get_gameweek_recap(
             detail="No gameweek available for this league yet",
         )
 
-    window_has_played = window.end_at <= datetime.now(timezone.utc)
+    # "Played" once the gameweek has STARTED (lineups lock start_at+1min, see
+    # scripts/reanchor_transfer_window_deadlines.py), not once it has fully
+    # ENDED — matches happen throughout the week, so this should read as a
+    # live, filling-in-as-it-goes recap (like real FPL), not a locked
+    # "not yet played" placeholder for the entire gameweek's duration.
+    window_has_played = window.start_at <= datetime.now(timezone.utc)
 
     slot_bounds = load_slot_bounds(db, league_id)
     rows = load_team_lineup_rows(

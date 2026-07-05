@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.redis import cache_delete
 from app.core.redis_lock import redis_lock
-from app.league.models import League, LeagueSport, LeagueStatus, Sport, TransferWindow
+from app.league.models import League, LeagueSport, LeagueStatus, Season, Sport, TransferWindow
 from app.services.scoring.player_scoring import (
     score_cricket_players_for_window,
     score_football_players_for_window,
@@ -16,6 +16,7 @@ from app.services.scoring.player_scoring import (
 )
 from app.services.scoring.ranking import apply_rankings_for_league_window
 from app.services.scoring.team_scoring import upsert_team_weekly_scores
+from app.services.scoring.window_locator import find_equivalent_window_for_sport
 
 
 logger = logging.getLogger(__name__)
@@ -42,6 +43,10 @@ def score_transfer_window_for_league(
         league = db.query(League).filter(League.id == league_id).first()
         if not league:
             raise ValueError(f"League {league_id} not found")
+
+        window = db.query(TransferWindow).filter(TransferWindow.id == transfer_window_id).first()
+        if not window:
+            raise ValueError(f"TransferWindow {transfer_window_id} not found")
 
         # Only a live league scores. Before ACTIVE (SETUP/DRAFTING) squads aren't
         # finalized, so there is nothing legitimate to score — skip so a shared
@@ -78,27 +83,40 @@ def score_transfer_window_for_league(
         if sport_ids:
             sports = db.query(Sport.id, Sport.name).filter(Sport.id.in_(sport_ids)).all()
             for sport_id, sport_name in sports:
+                # A multisport league's window is only the NATIVE window for
+                # whichever sport its season_id belongs to. Every other sport
+                # books its PlayerGameweekStat rows under its own season's
+                # window ids, so translate to that sport's equivalent window
+                # (same start_at/end_at) before scoring it — skip a sport this
+                # cycle if it has no window covering these dates.
+                sport_window = find_equivalent_window_for_sport(
+                    db, window=window, sport_id=sport_id
+                )
+                if sport_window is None:
+                    continue
+                sport_window_id = sport_window.id
+
                 slug = (sport_name or "").strip().lower()
                 if slug == "football":
                     updated_football += score_football_players_for_window(
                         db,
                         league_id=league_id,
                         sport_id=sport_id,
-                        transfer_window_id=transfer_window_id,
+                        transfer_window_id=sport_window_id,
                     )
                 elif slug == "cricket":
                     updated_cricket += score_cricket_players_for_window(
                         db,
                         league_id=league_id,
                         sport_id=sport_id,
-                        transfer_window_id=transfer_window_id,
+                        transfer_window_id=sport_window_id,
                     )
                 elif slug == "basketball":
                     updated_basketball += score_nba_players_for_window(
                         db,
                         league_id=league_id,
                         sport_id=sport_id,
-                        transfer_window_id=transfer_window_id,
+                        transfer_window_id=sport_window_id,
                     )
 
         upsert_team_weekly_scores(
@@ -127,16 +145,26 @@ def score_transfer_window_for_season_leagues(
     transfer_window_id: uuid.UUID,
     commit: bool = True,
 ) -> dict[str, int]:
-    # Algorithm: resolve season from transfer window, score every league in that season idempotently, then commit once.
+    # Algorithm: resolve the window's sport, score every league that plays that
+    # sport (via LeagueSport — NOT League.season_id, which is a single FK that
+    # only points at one of a multisport league's sports; matching on it alone
+    # would silently skip every league for every OTHER sport's windows), then
+    # commit once.
     try:
         window = db.query(TransferWindow).filter(TransferWindow.id == transfer_window_id).first()
         if not window:
             raise ValueError(f"TransferWindow {transfer_window_id} not found")
 
+        window_sport_id = db.query(Season.sport_id).filter(Season.id == window.season_id).scalar()
+
         league_ids = [
             league_id
             for (league_id,) in (
-                db.query(League.id).filter(League.season_id == window.season_id).all()
+                db.query(League.id)
+                .join(LeagueSport, LeagueSport.league_id == League.id)
+                .filter(LeagueSport.sport_id == window_sport_id)
+                .distinct()
+                .all()
             )
         ]
 
@@ -144,18 +172,30 @@ def score_transfer_window_for_season_leagues(
         total_cricket = 0
         total_basketball = 0
 
+        leagues_skipped = 0
         for league_id in league_ids:
-            result = score_transfer_window_for_league(
-                db,
-                league_id=league_id,
-                transfer_window_id=transfer_window_id,
-            )
+            try:
+                result = score_transfer_window_for_league(
+                    db,
+                    league_id=league_id,
+                    transfer_window_id=transfer_window_id,
+                )
+            except Exception:
+                # A single league failing (e.g. deleted mid-run, in a race with
+                # the league_ids query above) must not abort scoring for every
+                # other league sharing this window.
+                logger.exception(
+                    "Skipping league %s while scoring window %s", league_id, transfer_window_id
+                )
+                leagues_skipped += 1
+                continue
             total_football += int(result.get("football_players_updated", 0))
             total_cricket += int(result.get("cricket_players_updated", 0))
             total_basketball += int(result.get("basketball_players_updated", 0))
 
         output = {
-            "leagues_scored": len(league_ids),
+            "leagues_scored": len(league_ids) - leagues_skipped,
+            "leagues_skipped": leagues_skipped,
             "football_players_updated": total_football,
             "cricket_players_updated": total_cricket,
             "basketball_players_updated": total_basketball,

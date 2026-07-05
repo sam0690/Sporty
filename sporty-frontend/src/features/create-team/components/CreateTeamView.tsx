@@ -1,6 +1,7 @@
 "use client";
 
 import { CreateTeamHeader } from "@/components/dashboard/create-team/components/CreateTeamHeader";
+import { GameweekEntryNotice } from "@/components/dashboard/create-team/components/GameweekEntryNotice";
 import { CurrentTeam } from "@/components/dashboard/create-team/components/CurrentTeam";
 import { PlayerMarket } from "@/components/dashboard/create-team/components/PlayerMarket";
 import { TeamNameForm } from "@/components/dashboard/create-team/components/TeamNameForm";
@@ -26,6 +27,8 @@ export function CreateTeamView(
     leagueSport,
     isMultiSportLeague,
     isDraftLeague,
+    activeWindow,
+    editableWindow,
     playersPage,
     setPlayersPage,
     playersData,
@@ -248,6 +251,10 @@ export function CreateTeamView(
         {status === "active" || status === "completed" ? (
           draftedPlayers.length > 0 ? (
             <div className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
+              <GameweekEntryNotice
+                activeWindow={activeWindow}
+                editableWindow={editableWindow}
+              />
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="section-label">Final Team</p>
                 <button
@@ -305,6 +312,11 @@ export function CreateTeamView(
           selectedCount={(myTeam.team_players ?? myTeam.players ?? []).length}
           requiredCount={requiredPlayers}
           showBudget={!isDraftLeague}
+        />
+
+        <GameweekEntryNotice
+          activeWindow={activeWindow}
+          editableWindow={editableWindow}
         />
 
         <CurrentTeam

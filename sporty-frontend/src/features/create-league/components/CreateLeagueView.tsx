@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
 import { LeagueSettings } from "@/components/dashboard/create-league/components/LeagueSettings";
@@ -72,11 +73,14 @@ export function CreateLeagueView() {
   const { data: footballRules } = useDefaultScoringRules("football");
   const { data: basketballRules } = useDefaultScoringRules("basketball");
   const createMutation = useCreateLeague();
+  const prefersReducedMotion = useReducedMotion();
 
   const [step, setStep] = useState(1);
   const [leagueLogo, setLeagueLogo] = useState("");
   const [draftDate, setDraftDate] = useState("");
   const [seasonId, setSeasonId] = useState("");
+  // Drives the step-transition slide direction (Next → forward, Back → backward).
+  const [stepDirection, setStepDirection] = useState<1 | -1>(1);
 
   const {
     control,
@@ -287,11 +291,13 @@ export function CreateLeagueView() {
       }
     }
 
+    setStepDirection(1);
     setStep((prev) => Math.min(prev + 1, totalSteps));
   };
 
   const handlePreviousStep = () => {
     setError(null);
+    setStepDirection(-1);
     setStep((prev) => Math.max(prev - 1, 1));
   };
 
@@ -489,6 +495,9 @@ export function CreateLeagueView() {
         step={step}
         totalSteps={totalSteps}
         leagueName={leagueData.leagueName}
+        sport={leagueData.sport}
+        teamSize={step >= 2 ? leagueData.teamSize : undefined}
+        competitionType={step >= 2 ? leagueData.competitionType : undefined}
       />
 
       {displayError ? (
@@ -497,79 +506,105 @@ export function CreateLeagueView() {
         </div>
       ) : null}
 
-      <div className="animate-[fade-soft_0.2s_ease] rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 sm:p-8">
-        <div>
-          {step === 1 ? (
-            <LeagueBasicInfo
-              leagueName={leagueData.leagueName}
-              sport={leagueData.sport}
-              leagueLogo={leagueData.leagueLogo}
-              onLeagueNameChange={handleLeagueNameChange}
-              onSportChange={handleSportChange}
-              onLeagueLogoChange={(value) => setLeagueLogo(value)}
-            />
-          ) : null}
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 sm:p-8">
+        <AnimatePresence mode="wait" custom={stepDirection} initial={false}>
+          <motion.div
+            key={step}
+            custom={stepDirection}
+            variants={
+              prefersReducedMotion
+                ? undefined
+                : {
+                    enter: (direction: 1 | -1) => ({
+                      x: direction > 0 ? 24 : -24,
+                      opacity: 0,
+                    }),
+                    center: { x: 0, opacity: 1 },
+                    exit: (direction: 1 | -1) => ({
+                      x: direction > 0 ? -24 : 24,
+                      opacity: 0,
+                    }),
+                  }
+            }
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.22, ease: "easeOut" }}
+          >
+            {step === 1 ? (
+              <LeagueBasicInfo
+                leagueName={leagueData.leagueName}
+                sport={leagueData.sport}
+                leagueLogo={leagueData.leagueLogo}
+                onLeagueNameChange={handleLeagueNameChange}
+                onSportChange={handleSportChange}
+                onLeagueLogoChange={(value) => setLeagueLogo(value)}
+              />
+            ) : null}
 
-          {step === 2 ? (
-            <LeagueSettings
-              isPrivate={leagueData.isPrivate}
-              teamSize={leagueData.teamSize}
-              competitionType={leagueData.competitionType}
-              draftDate={leagueData.draftDate}
-              onSettingsChange={handleSettingsChange}
-            />
-          ) : null}
+            {step === 2 ? (
+              <LeagueSettings
+                isPrivate={leagueData.isPrivate}
+                teamSize={leagueData.teamSize}
+                competitionType={leagueData.competitionType}
+                draftDate={leagueData.draftDate}
+                onSettingsChange={handleSettingsChange}
+              />
+            ) : null}
 
-          {/* Scoring customization hidden for now — owners can't override
-              default scoring rules yet; re-enable this step when that's
-              ready.
-          {step === 3 ? (
-            <ScoringSettings
-              selectedSports={selectedSports}
-              scoringRulesBySport={scoringRulesBySport}
-              customScoringEnabledBySport={customScoringEnabledBySport}
-              onToggleSportCustomScoring={handleToggleSportCustomScoring}
-              onRuleToggle={handleRuleToggle}
-              onRulePointsChange={handleRulePointsChange}
-              minPoints={MIN_CUSTOM_POINTS}
-              maxPoints={MAX_CUSTOM_POINTS}
-            />
-          ) : null}
-          */}
+            {/* Scoring customization hidden for now — owners can't override
+                default scoring rules yet; re-enable this step when that's
+                ready.
+            {step === 3 ? (
+              <ScoringSettings
+                selectedSports={selectedSports}
+                scoringRulesBySport={scoringRulesBySport}
+                customScoringEnabledBySport={customScoringEnabledBySport}
+                onToggleSportCustomScoring={handleToggleSportCustomScoring}
+                onRuleToggle={handleRuleToggle}
+                onRulePointsChange={handleRulePointsChange}
+                minPoints={MIN_CUSTOM_POINTS}
+                maxPoints={MAX_CUSTOM_POINTS}
+              />
+            ) : null}
+            */}
 
-          {step === totalSteps ? (
-            <SummaryStep
-              leagueData={leagueData}
-              selectedSports={selectedSports}
-              scoringRulesBySport={scoringRulesBySport}
-              customScoringEnabledBySport={customScoringEnabledBySport}
-              onBack={handlePreviousStep}
-              onCreate={handleCreateLeague}
-              isLoading={createMutation.isPending}
-            />
-          ) : null}
-        </div>
+            {step === totalSteps ? (
+              <SummaryStep
+                leagueData={leagueData}
+                selectedSports={selectedSports}
+                scoringRulesBySport={scoringRulesBySport}
+                customScoringEnabledBySport={customScoringEnabledBySport}
+                onBack={handlePreviousStep}
+                onCreate={handleCreateLeague}
+                isLoading={createMutation.isPending}
+              />
+            ) : null}
+          </motion.div>
+        </AnimatePresence>
 
         {step < totalSteps ? (
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             {step > 1 ? (
-              <button
+              <motion.button
                 type="button"
                 onClick={handlePreviousStep}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
                 className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] sm:w-auto"
               >
                 Back
-              </button>
+              </motion.button>
             ) : (
               <div className="hidden sm:block" />
             )}
-            <button
+            <motion.button
               type="button"
               onClick={handleNextStep}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
               className="w-full rounded-[3px] bg-[#e8fb25] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] sm:w-auto"
             >
               Next
-            </button>
+            </motion.button>
           </div>
         ) : null}
       </div>

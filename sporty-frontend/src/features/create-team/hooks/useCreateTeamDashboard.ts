@@ -9,6 +9,8 @@ import { useMe } from "@/hooks/auth/useMe";
 import type { MarketPlayer } from "@/components/dashboard/create-team/components/PlayerCard";
 import {
   useLeague,
+  useActiveWindow,
+  useEditableWindow,
   useBuildTeam,
   useDiscardTeamPlayer,
   useDraftTurn,
@@ -63,6 +65,17 @@ export function useCreateTeamDashboard() {
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId || "");
   const { data: myTeam } = useMyTeam(leagueId || "");
+
+  // Only relevant once a team exists — tells the user whether their squad
+  // missed the in-progress gameweek's lineup deadline (see
+  // GameweekEntryNotice for why that happens and what it means).
+  const hasTeam = !!myTeam;
+  const { data: activeWindow } = useActiveWindow(leagueId || "", {
+    enabled: !!leagueId && hasTeam,
+  });
+  const { data: editableWindow } = useEditableWindow(leagueId || "", {
+    enabled: !!leagueId && hasTeam,
+  });
 
   const leagueSport = normalizeLeagueSport(league?.sports);
   const isMultiSportLeague = leagueSport === "multisport";
@@ -644,6 +657,8 @@ export function useCreateTeamDashboard() {
     leagueSport,
     isMultiSportLeague,
     isDraftLeague,
+    activeWindow,
+    editableWindow,
     playersPage,
     setPlayersPage,
     // players

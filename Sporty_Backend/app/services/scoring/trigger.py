@@ -31,6 +31,10 @@ def enqueue_scoring_for_finished_match(
 
     window_ids = find_transfer_window_ids_for_datetime(db, match_date=match_date, sport_id=sport_id)
     if not window_ids:
+        logger.warning(
+            "No transfer window covers match_date=%s (sport_id=%s) — scoring not enqueued",
+            match_date, sport_id,
+        )
         return 0
 
     redis = get_redis()

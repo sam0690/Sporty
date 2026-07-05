@@ -607,9 +607,15 @@ async def ingest_match_result(
 
     # R-5.5: a finished match folds its events into the gameweek stat tables and
     # triggers scoring immediately — don't wait for the daily cron.
+    #
+    # Re-runs on EVERY "finished" push, not just the first live→finished
+    # transition: persist_match_stats is idempotent per match (recomputes and
+    # assigns from that match's full live_events every time), so if the
+    # feeder's final events batch lands in a push after the one that first set
+    # status=finished, this still picks it up instead of silently dropping it.
     scoring_enqueued = 0
     stats_summary: dict = {}
-    if finished_now:
+    if payload.status == "finished":
         stats_summary = persist_match_stats(db, match=match, live_key=live_key, sport=payload.sport)
         db.commit()
         # Best-effort: stats are already booked and committed above, so a
@@ -626,8 +632,9 @@ async def ingest_match_result(
             )
             scoring_enqueued = 0
         logger.info(
-            "Feeder finished match %s: booked stats for %s player(s), enqueued scoring for %s window(s)",
+            "Feeder finished match %s (newly finished=%s): booked stats for %s player(s), enqueued scoring for %s window(s)",
             live_key,
+            finished_now,
             stats_summary.get("players", 0),
             scoring_enqueued,
         )

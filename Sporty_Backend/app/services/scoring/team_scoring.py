@@ -13,12 +13,14 @@ from app.league.models import (
     LeagueMembershipStatus,
     LeagueMembership,
     LineupSlot,
+    Sport,
     TeamGameweekLineup,
     TeamWeeklyScore,
     TransferWindow,
 )
 from app.player.models import Player, PlayerGameweekStat
 from app.services.scoring.auto_subs import LineupPlayer, resolve_effective_lineup
+from app.services.scoring.window_locator import find_equivalent_window_for_sport
 
 
 def apply_captain_vice_bonus(
@@ -267,6 +269,28 @@ def load_team_lineup_rows(
     if not team_ids:
         return {}
 
+    # A multisport league's lineup rows all carry ONE window id (whichever
+    # sport the league's season_id points to), including for players of the
+    # league's OTHER sports — but those sports book PlayerGameweekStat under
+    # their OWN season's window ids. Translate per player's sport to that
+    # sport's equivalent window (same start_at/end_at) instead of assuming
+    # the lineup's stored window id applies to every player directly.
+    window = db.query(TransferWindow).filter(TransferWindow.id == transfer_window_id).first()
+    if window is None:
+        return {}
+
+    sport_window_ids: dict[uuid.UUID, uuid.UUID] = {}
+    for (sport_id,) in db.query(Sport.id).all():
+        equivalent = find_equivalent_window_for_sport(db, window=window, sport_id=sport_id)
+        if equivalent is not None:
+            sport_window_ids[sport_id] = equivalent.id
+
+    stat_match_conditions = [
+        and_(Player.sport_id == sport_id, PlayerGameweekStat.transfer_window_id == window_id)
+        for sport_id, window_id in sport_window_ids.items()
+    ]
+    stat_match = or_(*stat_match_conditions) if stat_match_conditions else False
+
     rows = db.execute(
         select(
             TeamGameweekLineup.fantasy_team_id,
@@ -283,11 +307,7 @@ def load_team_lineup_rows(
         .join(Player, Player.id == TeamGameweekLineup.player_id)
         .outerjoin(
             PlayerGameweekStat,
-            and_(
-                PlayerGameweekStat.player_id == TeamGameweekLineup.player_id,
-                PlayerGameweekStat.transfer_window_id
-                == TeamGameweekLineup.transfer_window_id,
-            ),
+            and_(PlayerGameweekStat.player_id == TeamGameweekLineup.player_id, stat_match),
         )
         .where(TeamGameweekLineup.fantasy_team_id.in_(team_ids))
         .where(TeamGameweekLineup.transfer_window_id == transfer_window_id)

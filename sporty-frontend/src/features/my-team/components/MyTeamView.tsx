@@ -10,8 +10,10 @@ import type { MyTeamLeagueView, MyTeamPlayerView, LeagueOption } from "../types"
 function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
   const totalPoints = players.reduce((sum, p) => sum + p.totalPoints, 0);
   const squadValue = players.reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
+  // "Top Scorer" is this gameweek's leader, not the season leader — otherwise
+  // it just duplicates the "Total Points" stat next to it.
   const topScorer = players.reduce<MyTeamPlayerView | null>(
-    (best, p) => (best === null || p.totalPoints > best.totalPoints ? p : best),
+    (best, p) => (best === null || p.gameweekPoints > best.gameweekPoints ? p : best),
     null,
   );
 
@@ -21,7 +23,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
     { label: "Squad Value", value: `$${squadValue.toFixed(1)}M`, accent: "#f0f0f0" },
     {
       label: "Top Scorer",
-      value: topScorer ? `${Math.round(topScorer.totalPoints)}` : "—",
+      value: topScorer ? `${Math.round(topScorer.gameweekPoints)}` : "—",
       accent: "#e8fb25",
     },
   ];

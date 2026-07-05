@@ -152,38 +152,46 @@ def _get_or_create_base_stat(db: Session, player_id: uuid.UUID, window_id: uuid.
 
 
 def _apply_football_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
+    # Assignment, not +=: `counts` is always the FULL recount of this match's
+    # live_events (see _aggregate_match_events), so this must be idempotent —
+    # persist_match_stats can be called more than once for the same match
+    # (see its docstring) and must converge to the same result each time.
     child = db.query(FootballStat).filter(FootballStat.base_stat_id == base_stat.id).first()
     if child is None:
         child = FootballStat(base_stat_id=base_stat.id)
         db.add(child)
         db.flush()
-    child.goals += counts.get("goal", 0)
-    child.assists += counts.get("assist", 0)
-    child.yellow_cards += counts.get("yellow_card", 0)
-    child.red_cards += counts.get("red_card", 0)
+    child.goals = counts.get("goal", 0)
+    child.assists = counts.get("assist", 0)
+    child.yellow_cards = counts.get("yellow_card", 0)
+    child.red_cards = counts.get("red_card", 0)
 
 
 def _apply_basketball_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
+    # Assignment, not += — see _apply_football_counts.
     child = db.query(NBAStat).filter(NBAStat.base_stat_id == base_stat.id).first()
     if child is None:
         child = NBAStat(base_stat_id=base_stat.id)
         db.add(child)
         db.flush()
-    child.points += (
+    child.points = (
         counts.get("point_2", 0) * 2 + counts.get("point_3", 0) * 3 + counts.get("free_throw", 0)
     )
-    child.assists += counts.get("assist", 0)
-    child.rebounds += counts.get("rebound", 0)
-    child.steals += counts.get("steal", 0)
-    child.blocks += counts.get("block", 0)
+    child.assists = counts.get("assist", 0)
+    child.rebounds = counts.get("rebound", 0)
+    child.steals = counts.get("steal", 0)
+    child.blocks = counts.get("block", 0)
 
 
 def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str) -> dict:
     """Fold a finished simulated match's events into the gameweek stat tables.
 
-    Must only run on the live→finished transition (the caller guards this):
-    counts are accumulated, so re-running would double-book the match.
-    The caller owns the transaction (no commit here, repo convention).
+    Idempotent per match: counts are recomputed in full from this match's
+    live_events every call and assigned (not accumulated), so it's safe to
+    call again for the same match — e.g. if more events arrive after the
+    live→finished transition, a later "finished" push re-running this will
+    pick them up instead of silently dropping them. The caller owns the
+    transaction (no commit here, repo convention).
     """
     per_player = _aggregate_match_events(db, live_key)
     if not per_player:
@@ -222,7 +230,7 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
     for window_id in window_ids:
         for player_id in known_player_ids:
             base_stat = _get_or_create_base_stat(db, player_id, window_id)
-            base_stat.minutes_played += match_minutes
+            base_stat.minutes_played = match_minutes
             apply_counts(db, base_stat, per_player[player_id])
             booked += 1
 

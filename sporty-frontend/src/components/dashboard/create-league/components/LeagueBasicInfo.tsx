@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 type LeagueBasicInfoProps = {
   leagueName: string;
@@ -31,8 +32,9 @@ export function LeagueBasicInfo({
   onSportChange,
   onLeagueLogoChange,
 }: LeagueBasicInfoProps) {
+  const prefersReducedMotion = useReducedMotion();
   const helperText = useMemo(() => {
-    if (!sport) return "Select the sport to unlock scoring settings.";
+    if (!sport) return "Select a sport to get started.";
     const selected = sportOptions.find((option) => option.value === sport);
     return selected ? `Selected: ${selected.label}` : "";
   }, [sport]);
@@ -68,10 +70,13 @@ export function LeagueBasicInfo({
           {sportOptions.map((option) => {
             const isSelected = option.value === sport;
             return (
-              <button
+              <motion.button
                 key={option.value}
                 type="button"
                 onClick={() => onSportChange(option.value)}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+                animate={{ scale: isSelected ? 1.03 : 1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 24 }}
                 className={`rounded-[3px] border p-4 text-center transition-colors ${
                   isSelected
                     ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.08)]"
@@ -88,7 +93,7 @@ export function LeagueBasicInfo({
                 >
                   {option.label}
                 </span>
-              </button>
+              </motion.button>
             );
           })}
         </div>

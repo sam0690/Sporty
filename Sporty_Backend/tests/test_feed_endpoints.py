@@ -243,7 +243,7 @@ class TestMatchResult:
         assert "INSERT INTO live_events" in sql
         assert "ON CONFLICT (match_id, event_id) DO NOTHING" in sql
 
-    def test_finished_triggers_scoring_once(self, harness):
+    def test_finished_triggers_scoring(self, harness):
         response = harness.client.post(
             "/api/v1/feed/match-result",
             json=match_result_payload(status="finished", events=[]),
@@ -255,14 +255,18 @@ class TestMatchResult:
         assert match_date == harness.db.match.match_date
         assert sport_id == harness.db.match.sport_id
 
-        # Already finished: a replayed finished push must not re-trigger scoring.
+        # A replayed finished push re-runs booking/scoring too: persist_match_stats
+        # is idempotent per match (assigns full recomputed counts, doesn't
+        # accumulate), so this is safe and is what lets a late events batch that
+        # lands *after* the first finished push still get counted instead of
+        # silently dropped.
         again = harness.client.post(
             "/api/v1/feed/match-result",
             json=match_result_payload(status="finished", events=[]),
             headers=self.headers(),
         )
-        assert again.json()["scoring_enqueued"] == 0
-        assert len(harness.scoring_calls) == 1
+        assert again.json()["scoring_enqueued"] == 1
+        assert len(harness.scoring_calls) == 2
 
     def test_live_status_does_not_trigger_scoring(self, harness):
         harness.client.post("/api/v1/feed/match-result", json=match_result_payload(), headers=self.headers())
