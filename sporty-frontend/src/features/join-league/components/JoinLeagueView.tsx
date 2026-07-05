@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
 import { ErrorAlert } from "@/components/dashboard/join-league/components/ErrorAlert";
 import { JoinForm } from "@/components/dashboard/join-league/components/JoinForm";
@@ -22,10 +23,13 @@ export function JoinLeagueView() {
   const { data: discoverLeagues, isLoading: discoverLoading } =
     useDiscoverLeagues();
   const joinMutation = useJoinLeague();
+  const searchParams = useSearchParams();
+  const codeFromUrl = searchParams?.get("code") ?? "";
 
   const [successData, setSuccessData] = useState<JoinedLeague | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoJoinAttempted = useRef(false);
 
   const handleSubmit = async (inviteCode: string) => {
     setError(null);
@@ -50,6 +54,15 @@ export function JoinLeagueView() {
       setError("Unable to join league");
     }
   };
+
+  useEffect(() => {
+    if (!codeFromUrl || autoJoinAttempted.current) {
+      return;
+    }
+    autoJoinAttempted.current = true;
+    void handleSubmit(codeFromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [codeFromUrl]);
 
   const handleJoinPublicLeague = async (league: PublicLeague) => {
     if (league.requiresInviteCode) {
@@ -108,6 +121,7 @@ export function JoinLeagueView() {
           onSubmit={handleSubmit}
           isLoading={joinMutation.isPending}
           error={error}
+          defaultInviteCode={codeFromUrl}
         />
       )}
 

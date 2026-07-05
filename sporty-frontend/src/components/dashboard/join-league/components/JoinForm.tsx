@@ -9,9 +9,15 @@ type JoinFormProps = {
   onSubmit: (inviteCode: string) => Promise<void> | void;
   isLoading: boolean;
   error?: string | null;
+  defaultInviteCode?: string;
 };
 
-export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
+export function JoinForm({
+  onSubmit,
+  isLoading,
+  error,
+  defaultInviteCode,
+}: JoinFormProps) {
   const {
     register,
     handleSubmit,
@@ -19,7 +25,7 @@ export function JoinForm({ onSubmit, isLoading, error }: JoinFormProps) {
   } = useForm<JoinLeagueValues>({
     resolver: zodResolver(JoinLeagueSchema),
     defaultValues: {
-      invite_code: "",
+      invite_code: defaultInviteCode ?? "",
     },
     mode: "onSubmit",
   });

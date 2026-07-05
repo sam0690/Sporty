@@ -14,7 +14,7 @@ const LINK_GROUPS: { title: string; links: { label: string; href: string }[] }[]
     {
       title: "Support",
       links: [
-        { label: "Help Center", href: "/support" },
+        // { label: "Help Center", href: "/support" }, // disabled — not needed for users right now
         { label: "Terms", href: "/terms" },
         { label: "Privacy", href: "/privacy" },
       ],

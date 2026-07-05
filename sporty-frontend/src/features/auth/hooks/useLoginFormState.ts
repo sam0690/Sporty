@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/auth-context";
 import { LoginSchema, type LoginValues } from "@/lib/validations";
 import { toastifier } from "@/lib/toastifier";
+import { getSafeRedirectPath } from "@/lib/route.utils";
 
 export function useLoginFormState() {
   const router = useRouter();
@@ -29,7 +30,10 @@ export function useLoginFormState() {
       return;
     }
 
-    router.replace("/dashboard");
+    const redirect = getSafeRedirectPath(
+      new URLSearchParams(window.location.search).get("redirect"),
+    );
+    router.replace(redirect ?? "/dashboard");
   });
 
   return {

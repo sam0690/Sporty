@@ -9,7 +9,7 @@ import {
   UserRound,
   CalendarDays,
   Lock,
-  LifeBuoy,
+  // LifeBuoy, // unused while /support is disabled below
 } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
 import {
@@ -43,7 +43,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
           ]),
       { label: "Matches", href: "/matches", icon: CalendarDays },
       { label: "Profile", href: `/user/${userId}`, icon: UserRound },
-      { label: "Support", href: "/support", icon: LifeBuoy },
+      // { label: "Support", href: "/support", icon: LifeBuoy }, // disabled — not needed for users right now
       ...(isAdmin ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),
     ];
   }, [userId, me?.role]);

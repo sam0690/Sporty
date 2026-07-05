@@ -17,7 +17,7 @@ export const LANDING_FOOTER_BOTTOM: FooterBottomContent = {
   links: [
     { label: "Privacy", href: "/privacy" },
     { label: "Terms", href: "/terms" },
-    { label: "Support", href: "/support" },
+    // { label: "Support", href: "/support" }, // disabled — not needed for users right now
     { label: "Twitter", href: "https://twitter.com" },
   ],
   copyright: "© 2024 MultiSport Fantasy Platform. All rights reserved.",

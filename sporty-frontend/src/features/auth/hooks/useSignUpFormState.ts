@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/auth-context";
 import { RegisterSchema, type RegisterValues } from "@/lib/validations";
 import { toastifier } from "@/lib/toastifier";
+import { getSafeRedirectPath } from "@/lib/route.utils";
 
 export function useSignUpFormState() {
   const router = useRouter();
@@ -35,7 +36,10 @@ export function useSignUpFormState() {
     }
 
     toastifier.success("Account created! Welcome to Sporty.");
-    router.replace("/dashboard");
+    const redirect = getSafeRedirectPath(
+      new URLSearchParams(window.location.search).get("redirect"),
+    );
+    router.replace(redirect ?? "/dashboard");
   });
 
   return {

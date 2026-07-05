@@ -29,7 +29,7 @@ export function InviteFriends() {
       typeof window !== "undefined"
         ? window.location.origin
         : "https://sporty.app";
-    return `${origin}/join?code=${encodeURIComponent(inviteCode)}`;
+    return `${origin}/join-league?code=${encodeURIComponent(inviteCode)}`;
   }, [inviteCode]);
 
   return (

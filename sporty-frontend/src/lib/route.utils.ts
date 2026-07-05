@@ -31,3 +31,25 @@ export function isAdminRoute(pathname: string): boolean {
   const meta = getRouteMetaByPath(pathname);
   return meta?.protection === "admin";
 }
+
+/**
+ * Validate a `redirect` query param before navigating to it.
+ *
+ * Only same-origin relative paths are allowed (must start with a single "/",
+ * never "//" or a path containing "://") to prevent open-redirect attacks
+ * via a crafted login/signup link.
+ */
+export function getSafeRedirectPath(
+  redirect: string | null | undefined,
+): string | null {
+  if (!redirect) {
+    return null;
+  }
+  if (!redirect.startsWith("/") || redirect.startsWith("//")) {
+    return null;
+  }
+  if (redirect.includes("://")) {
+    return null;
+  }
+  return redirect;
+}

@@ -20,7 +20,10 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && !isAllowed) {
-      router.replace(redirectTo);
+      const currentPath = `${window.location.pathname}${window.location.search}`;
+      router.replace(
+        `${redirectTo}?redirect=${encodeURIComponent(currentPath)}`,
+      );
     }
   }, [isAllowed, isLoading, redirectTo, router]);
 

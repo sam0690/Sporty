@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { ROUTES } from "@/lib/route.config";
+import { getSafeRedirectPath } from "@/lib/route.utils";
 
 type GuestOnlyRouteProps = {
   children: ReactNode;
@@ -20,7 +21,10 @@ export function GuestOnlyRoute({
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.replace(redirectTo);
+      const redirect = getSafeRedirectPath(
+        new URLSearchParams(window.location.search).get("redirect"),
+      );
+      router.replace(redirect ?? redirectTo);
     }
   }, [isAuthenticated, isLoading, redirectTo, router]);
 
