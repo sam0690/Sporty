@@ -56,6 +56,9 @@ type LineupPitchViewProps = {
   benchOrder: string[];
   onReorderBench: (draggedId: string, targetId: string) => void;
   onToggleStarter: (playerId: string) => void;
+  /** Atomic bench↔starter swap — must be used instead of two onToggleStarter
+   * calls (see swapStarter's comment in LeagueLineup.tsx for why). */
+  onSwapStarter: (benchPlayerId: string, starterPlayerId: string) => void;
   onSetCaptain: (playerId: string) => void;
   onSetViceCaptain: (playerId: string) => void;
   starterLimitReached: boolean;
@@ -374,6 +377,7 @@ export function LineupPitchView({
   benchOrder,
   onReorderBench,
   onToggleStarter,
+  onSwapStarter,
   onSetCaptain,
   onSetViceCaptain,
   starterLimitReached,
@@ -640,8 +644,7 @@ export function LineupPitchView({
           return false;
         }
 
-        onToggleStarter(dragged.playerId);
-        onToggleStarter(occupant.playerId);
+        onSwapStarter(dragged.playerId, occupant.playerId);
         toastifier.info(`${dragged.name} ↔ ${occupant.name}`);
         return true;
       }
@@ -673,6 +676,7 @@ export function LineupPitchView({
       activeSportCounts,
       isMultiSport,
       layout.mode,
+      onSwapStarter,
       onToggleStarter,
       pitchPlayers,
       starterLimitReached,

@@ -497,6 +497,34 @@ export function LeagueLineup() {
     [lineupRules, lineupSport],
   );
 
+  // Atomic bench↔starter swap. Doing this as two sequential toggleStarter
+  // calls doesn't work: the promotion half runs its "already at N starters?"
+  // check before the demotion half has removed the outgoing starter, so it
+  // always sees the pre-swap (full) count and rejects the promotion — leaving
+  // the outgoing starter benched with no replacement. One combined update
+  // sidesteps the count check entirely, since total starters never changes.
+  const swapStarter = useCallback(
+    (benchPlayerId: string, starterPlayerId: string) => {
+      setEditablePlayers((current) =>
+        current.map((player) => {
+          if (player.playerId === benchPlayerId) {
+            return { ...player, isStarter: true };
+          }
+          if (player.playerId === starterPlayerId) {
+            return {
+              ...player,
+              isStarter: false,
+              isCaptain: false,
+              isViceCaptain: false,
+            };
+          }
+          return player;
+        }),
+      );
+    },
+    [],
+  );
+
   const setCaptain = useCallback((playerId: string) => {
     setEditablePlayers((current) =>
       current.map((player) => {
@@ -976,6 +1004,7 @@ export function LeagueLineup() {
           benchOrder={benchOrder}
           onReorderBench={handleReorderBench}
           onToggleStarter={toggleStarter}
+          onSwapStarter={swapStarter}
           onSetCaptain={setCaptain}
           onSetViceCaptain={setViceCaptain}
           starterLimitReached={startersCount >= lineupRules.starters}
