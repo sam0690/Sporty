@@ -77,6 +77,101 @@ export type TAdminLeagueListParams = {
   status?: string;
 };
 
+export type TScoringRecalculateResponse = {
+  football_players_updated: number;
+  cricket_players_updated: number;
+  basketball_players_updated: number;
+  skipped: boolean;
+  reason: string | null;
+};
+
+export type TWindowLockResponse = {
+  id: string;
+  transfers_locked: boolean;
+  lineup_locked: boolean;
+};
+
+export type TAdminPlayerDetail = {
+  id: string;
+  name: string;
+  position: string;
+  real_team: string;
+  cost: number;
+  is_available: boolean;
+  photo_url: string | null;
+};
+
+export type TAdminPlayerEditRequest = {
+  name?: string;
+  position?: string;
+  cost?: number;
+  is_available?: boolean;
+  photo_url?: string;
+  reason?: string;
+};
+
+export type TRepriceResponse = {
+  lookback_windows: number;
+  evaluated: number;
+  updated: number;
+  unchanged: number;
+};
+
+export type TTradeActionResponse = {
+  id: string;
+  status: string;
+};
+
+export type TWaiverClaimCancelResponse = {
+  id: string;
+  status: string;
+};
+
+export type TTransferReverseResponse = {
+  transfer_id: string;
+  reversed: boolean;
+};
+
+export type TCeleryTaskInfo = {
+  worker: string;
+  task: string | null;
+  id: string | null;
+};
+
+export type TCeleryBeatEntry = {
+  name: string;
+  task: string;
+  schedule: string;
+};
+
+export type TCeleryJobsResponse = {
+  workers_online: string[];
+  active: TCeleryTaskInfo[];
+  scheduled: TCeleryTaskInfo[];
+  reserved: TCeleryTaskInfo[];
+  beat_schedule: TCeleryBeatEntry[];
+  locks_held: string[];
+  inspect_reachable: boolean;
+};
+
+export type TKafkaWorkerStatus = {
+  name: string;
+  alive: boolean;
+  last_seen_seconds_ago: number | null;
+};
+
+export type TKafkaJobsResponse = {
+  workers: TKafkaWorkerStatus[];
+};
+
+export type TSystemConfigEntry = {
+  key: string;
+  value: { enabled?: boolean } & Record<string, unknown>;
+  description: string | null;
+  updated_by_user_id: string | null;
+  updated_at: string;
+};
+
 /**
  * Admin service — platform-admin API calls (user/league oversight, audit log).
  * Every call requires the caller to hold at least the "support" admin role;
@@ -143,6 +238,97 @@ export const AdminService = {
     pageSize?: number;
   }): Promise<TAdminAuditLogListResponse> {
     const res = await authApi.get(API_PATHS.ADMIN.AUDIT_LOG(params));
+    return res.data;
+  },
+
+  // ── Scoring ─────────────────────────────────────────────────────────────
+
+  async recalculateWindowScore(leagueId: string, windowId: string, reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.RECALCULATE_WINDOW_SCORE(leagueId, windowId), { reason });
+    return res.data as TScoringRecalculateResponse;
+  },
+
+  async recalculateActiveWindows(reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.RECALCULATE_ACTIVE_WINDOWS, { reason });
+    return res.data as TScoringRecalculateResponse;
+  },
+
+  async setWindowLock(
+    windowId: string,
+    data: { transfers_locked?: boolean; lineup_locked?: boolean; reason?: string },
+  ) {
+    const res = await authApi.post(API_PATHS.ADMIN.WINDOW_LOCK(windowId), data);
+    return res.data as TWindowLockResponse;
+  },
+
+  // ── Players / pricing ────────────────────────────────────────────────────
+
+  async getPlayer(id: string): Promise<TAdminPlayerDetail> {
+    const res = await authApi.get(API_PATHS.ADMIN.PLAYER_DETAIL(id));
+    return res.data;
+  },
+
+  async editPlayer(id: string, data: TAdminPlayerEditRequest): Promise<TAdminPlayerDetail> {
+    const res = await authApi.patch(API_PATHS.ADMIN.PLAYER_DETAIL(id), data);
+    return res.data;
+  },
+
+  async triggerRepricing(lookbackWindows: number, reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.PLAYER_REPRICE, {
+      lookback_windows: lookbackWindows,
+      reason,
+    });
+    return res.data as TRepriceResponse;
+  },
+
+  // ── Transactions (trades / waivers / transfers) ──────────────────────────
+
+  async vetoTrade(leagueId: string, tradeId: string, reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.TRADE_VETO(leagueId, tradeId), { reason });
+    return res.data as TTradeActionResponse;
+  },
+
+  async cancelTrade(leagueId: string, tradeId: string, reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.TRADE_CANCEL(leagueId, tradeId), { reason });
+    return res.data as TTradeActionResponse;
+  },
+
+  async cancelWaiverClaim(leagueId: string, claimId: string, reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.WAIVER_CANCEL(leagueId, claimId), { reason });
+    return res.data as TWaiverClaimCancelResponse;
+  },
+
+  async reverseTransfer(transferId: string, reason?: string) {
+    const res = await authApi.post(API_PATHS.ADMIN.TRANSFER_REVERSE(transferId), { reason });
+    return res.data as TTransferReverseResponse;
+  },
+
+  // ── Job visibility ────────────────────────────────────────────────────────
+
+  async getCeleryJobs(): Promise<TCeleryJobsResponse> {
+    const res = await authApi.get(API_PATHS.ADMIN.JOBS_CELERY);
+    return res.data;
+  },
+
+  async getKafkaJobs(): Promise<TKafkaJobsResponse> {
+    const res = await authApi.get(API_PATHS.ADMIN.JOBS_KAFKA);
+    return res.data;
+  },
+
+  // ── System config / feature flags ────────────────────────────────────────
+
+  async getSystemConfig(): Promise<TSystemConfigEntry[]> {
+    const res = await authApi.get(API_PATHS.ADMIN.CONFIG_LIST);
+    return res.data;
+  },
+
+  async toggleRealtimePipeline(enabled: boolean, reason?: string): Promise<TSystemConfigEntry> {
+    const res = await authApi.post(API_PATHS.ADMIN.CONFIG_REALTIME_PIPELINE, { enabled, reason });
+    return res.data;
+  },
+
+  async toggleLivePolling(enabled: boolean, reason?: string): Promise<TSystemConfigEntry> {
+    const res = await authApi.post(API_PATHS.ADMIN.CONFIG_LIVE_POLLING, { enabled, reason });
     return res.data;
   },
 };

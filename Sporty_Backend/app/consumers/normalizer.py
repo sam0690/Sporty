@@ -14,6 +14,7 @@ from app.core.influx import create_influx_client, write_stat_point
 from app.core.kafka import create_consumer
 from app.core.metrics import consumer_errors_total
 from app.core.redis import close_async_redis, get_async_redis
+from app.core.worker_heartbeat import start_heartbeat
 from app.models.schemas.events import NormalizedEvent
 
 logger = logging.getLogger(__name__)
@@ -27,6 +28,7 @@ async def _is_duplicate(match_id: str, event_id: str) -> bool:
 
 
 async def run() -> None:
+    start_heartbeat("normalizer")
     consumer = await create_consumer(settings.MATCH_EVENTS_TOPIC, group_id="normalizer")
     influx = await create_influx_client()
 

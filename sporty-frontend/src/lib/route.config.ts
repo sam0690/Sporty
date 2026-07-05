@@ -78,4 +78,29 @@ export const ROUTES: Record<string, RouteMeta> = {
     name: "Admin Audit Log",
     protection: "admin",
   },
+  ADMIN_SCORING: {
+    path: "/admin/scoring",
+    name: "Admin Scoring",
+    protection: "admin",
+  },
+  ADMIN_PLAYERS: {
+    path: "/admin/players",
+    name: "Admin Players",
+    protection: "admin",
+  },
+  ADMIN_TRANSACTIONS: {
+    path: "/admin/transactions",
+    name: "Admin Transactions",
+    protection: "admin",
+  },
+  ADMIN_JOBS: {
+    path: "/admin/jobs",
+    name: "Admin Jobs",
+    protection: "admin",
+  },
+  ADMIN_CONFIG: {
+    path: "/admin/config",
+    name: "Admin Config",
+    protection: "admin",
+  },
 } as const;

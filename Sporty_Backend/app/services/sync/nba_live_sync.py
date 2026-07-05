@@ -30,6 +30,7 @@ import httpx
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.admin.feature_flags import get_effective_flag
 from app.core.config import settings
 from app.core.redis import get_async_redis
 from app.league.models import Sport
@@ -97,7 +98,7 @@ def _decompose_points(delta: int) -> list[str]:
 
 
 async def sync_nba_live_matches(db: Session, season: int = 2024) -> str:
-    if not settings.LIVE_POLLING_ENABLED:
+    if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
         return "ok: live polling disabled (LIVE_POLLING_ENABLED=false); using simulator"
 
     if not settings.RAPIDAPI_NBA_KEY:

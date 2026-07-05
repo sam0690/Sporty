@@ -10,6 +10,31 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
 
 
+# ── System config (runtime feature-flag overrides) ─────────────────────────────
+
+class SystemConfig(Base):
+    """Runtime override layer on top of the env-driven Settings booleans in
+    app/core/config.py — NOT a replacement for them. app/admin/feature_flags.py
+    checks this table first and falls back to settings.<KEY> when no row
+    exists (or the DB is unreachable). Only flags that are actually read at
+    request/task time belong here — flags wired at process startup (e.g. the
+    Kafka producer/MatchScheduler lifespan block in app/main.py) can't take
+    effect from a DB row without a restart, so changing this table for those
+    only affects the *next* process start, not the current one."""
+
+    __tablename__ = "system_config"
+
+    key: Mapped[str] = mapped_column(String(100), primary_key=True)
+    value: Mapped[dict] = mapped_column(JSON, nullable=False)
+    description: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    updated_by_user_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
 # ── Admin action type enum ─────────────────────────────────────────────────────
 
 class AdminActionType(str, enum.Enum):

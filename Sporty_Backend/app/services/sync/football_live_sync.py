@@ -21,6 +21,7 @@ from datetime import datetime, timezone
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
+from app.admin.feature_flags import get_effective_flag
 from app.core.config import settings
 from app.core.redis import get_async_redis
 from app.external_apis.football_api import FootballAPIClient
@@ -59,7 +60,7 @@ def _map_event_type(event_type: str, detail: str) -> str | None:
 
 
 async def sync_football_live_matches(db: Session) -> str:
-    if not settings.LIVE_POLLING_ENABLED:
+    if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
         return "ok: live polling disabled (LIVE_POLLING_ENABLED=false); using simulator"
 
     sport = db.query(Sport).filter(Sport.name == "football").first()

@@ -13,6 +13,7 @@ from app.core.metrics import (
     realtime_retry_total,
 )
 from app.core.redis import close_async_redis, get_async_redis
+from app.core.worker_heartbeat import start_heartbeat
 from app.models.schemas.events import FantasyPointsDelta, NormalizedEvent, WSMessage
 from app.scoring.rules import POINTS_RULES
 
@@ -75,6 +76,7 @@ async def _publish_leaderboard_delta(redis, *, match_id: str, ts: int, player_id
 
 
 async def run() -> None:
+    start_heartbeat("points-engine")
     consumer = await create_consumer(
         settings.MATCH_EVENTS_TOPIC,
         settings.PLAYER_STATS_TOPIC,

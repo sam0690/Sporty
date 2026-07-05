@@ -10,11 +10,25 @@ from app.admin.schemas import (
     AdminAuditLogListResponse,
     AdminLeagueListItem,
     AdminLeagueListResponse,
+    AdminPlayerDetail,
+    AdminPlayerEditRequest,
     AdminUserDetail,
     AdminUserListResponse,
+    CeleryJobsResponse,
+    FeatureFlagToggleRequest,
+    KafkaJobsResponse,
     LeagueSettingsOverrideRequest,
     LeagueStatusOverrideRequest,
+    RepriceRequest,
+    RepriceResponse,
     RoleChangeRequest,
+    ScoringRecalculateResponse,
+    SystemConfigResponse,
+    TradeActionResponse,
+    TransferReverseResponse,
+    TransferWindowLockResponse,
+    WaiverClaimCancelResponse,
+    WindowLockRequest,
 )
 from app.auth.models import User, UserRole
 from app.database import get_db
@@ -191,3 +205,216 @@ def override_league_settings(
     return services.override_league_settings(
         db, current_user, league.id, name=data.name, is_public=data.is_public, reason=data.reason
     )
+
+
+# ── Scoring ─────────────────────────────────────────────────────────────────────
+
+@router.post(
+    "/leagues/{league_id}/transfer-windows/{window_id}/recalculate-score",
+    response_model=ScoringRecalculateResponse,
+    summary="Recalculate scoring for a league's transfer window (admin)",
+)
+def recalculate_window_score(
+    window_id: uuid.UUID,
+    data: AdminActionReason,
+    league: League = Depends(_get_league_or_404),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.recalculate_window_score(db, current_user, league.id, window_id, reason=data.reason)
+
+
+@router.post(
+    "/scoring/recalculate-active",
+    response_model=ScoringRecalculateResponse,
+    summary="Recalculate scoring for every active transfer window platform-wide (super admin)",
+)
+def recalculate_active_windows(
+    data: AdminActionReason,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPER_ADMIN)),
+):
+    return services.recalculate_active_windows(db, current_user, reason=data.reason)
+
+
+@router.post(
+    "/transfer-windows/{window_id}/lock",
+    response_model=TransferWindowLockResponse,
+    summary="Force-set a transfer window's lock flags (admin)",
+)
+def set_window_lock(
+    window_id: uuid.UUID,
+    data: WindowLockRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.set_window_lock(
+        db,
+        current_user,
+        window_id,
+        transfers_locked=data.transfers_locked,
+        lineup_locked=data.lineup_locked,
+        reason=data.reason,
+    )
+
+
+# ── Players / pricing ───────────────────────────────────────────────────────────
+
+@router.get("/players/{player_id}", response_model=AdminPlayerDetail, summary="Get a player (admin)")
+def get_player(
+    player_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.get_player_admin(db, player_id)
+
+
+@router.patch(
+    "/players/{player_id}",
+    response_model=AdminPlayerDetail,
+    summary="Edit a player's data directly (super admin)",
+)
+def edit_player(
+    player_id: uuid.UUID,
+    data: AdminPlayerEditRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPER_ADMIN)),
+):
+    return services.edit_player(
+        db,
+        current_user,
+        player_id,
+        name=data.name,
+        position=data.position,
+        cost=data.cost,
+        is_available=data.is_available,
+        photo_url=data.photo_url,
+        reason=data.reason,
+    )
+
+
+@router.post(
+    "/players/reprice",
+    response_model=RepriceResponse,
+    summary="Trigger a player repricing pass (admin)",
+)
+def trigger_repricing(
+    data: RepriceRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.trigger_repricing(db, current_user, lookback_windows=data.lookback_windows, reason=data.reason)
+
+
+# ── Transactions (trades / waivers / transfers) ─────────────────────────────────
+
+@router.post(
+    "/leagues/{league_id}/trades/{trade_id}/veto",
+    response_model=TradeActionResponse,
+    summary="Veto a trade regardless of league ownership (admin)",
+)
+def admin_veto_trade(
+    trade_id: uuid.UUID,
+    data: AdminActionReason,
+    league: League = Depends(_get_league_or_404),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.admin_veto_trade(db, current_user, league.id, trade_id, reason=data.reason)
+
+
+@router.post(
+    "/leagues/{league_id}/trades/{trade_id}/cancel",
+    response_model=TradeActionResponse,
+    summary="Force-cancel a trade regardless of who proposed it (admin)",
+)
+def admin_cancel_trade(
+    trade_id: uuid.UUID,
+    data: AdminActionReason,
+    league: League = Depends(_get_league_or_404),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.admin_cancel_trade(db, current_user, league.id, trade_id, reason=data.reason)
+
+
+@router.post(
+    "/leagues/{league_id}/waivers/{claim_id}/cancel",
+    response_model=WaiverClaimCancelResponse,
+    summary="Force-cancel a pending waiver claim (admin)",
+)
+def admin_cancel_waiver_claim(
+    claim_id: uuid.UUID,
+    data: AdminActionReason,
+    league: League = Depends(_get_league_or_404),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.admin_cancel_waiver_claim(db, current_user, league.id, claim_id, reason=data.reason)
+
+
+@router.post(
+    "/transfers/{transfer_id}/reverse",
+    response_model=TransferReverseResponse,
+    summary="Reverse a budget-mode transfer as a compensating entry (super admin)",
+)
+def admin_reverse_transfer(
+    transfer_id: uuid.UUID,
+    data: AdminActionReason,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPER_ADMIN)),
+):
+    transfer = services.admin_reverse_transfer(db, current_user, transfer_id, reason=data.reason)
+    return {"transfer_id": str(transfer.id), "reversed": transfer.reversed_at is not None}
+
+
+# ── Job visibility ───────────────────────────────────────────────────────────────
+
+@router.get("/jobs/celery", response_model=CeleryJobsResponse, summary="Celery worker/beat status (admin)")
+def get_celery_jobs(
+    _current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    return services.get_celery_jobs_status()
+
+
+@router.get("/jobs/kafka", response_model=KafkaJobsResponse, summary="Kafka consumer liveness (admin)")
+def get_kafka_jobs(
+    _current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    return services.get_kafka_jobs_status()
+
+
+# ── System config / feature flags ───────────────────────────────────────────────
+
+@router.get("/config", response_model=list[SystemConfigResponse], summary="List runtime feature-flag overrides (admin)")
+def list_system_config(
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.SUPPORT)),
+):
+    return services.list_system_config(db)
+
+
+@router.post(
+    "/config/realtime-pipeline",
+    response_model=SystemConfigResponse,
+    summary="Toggle the realtime Kafka pipeline flag — restart required (super admin)",
+)
+def toggle_realtime_pipeline(
+    data: FeatureFlagToggleRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPER_ADMIN)),
+):
+    return services.toggle_realtime_pipeline(db, current_user, data.enabled, reason=data.reason)
+
+
+@router.post(
+    "/config/live-polling",
+    response_model=SystemConfigResponse,
+    summary="Toggle live external-API polling for football/NBA (admin)",
+)
+def toggle_live_polling(
+    data: FeatureFlagToggleRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.toggle_live_polling(db, current_user, data.enabled, reason=data.reason)

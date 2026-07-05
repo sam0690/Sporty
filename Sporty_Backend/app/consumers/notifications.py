@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.kafka import create_consumer
 from app.core.metrics import consumer_errors_total
 from app.core.redis import close_async_redis, get_async_redis
+from app.core.worker_heartbeat import start_heartbeat
 from app.models.schemas.events import WSMessage
 from app.services.push_notifications import send_apns, send_fcm
 
@@ -25,6 +26,7 @@ class NotificationEvent(BaseModel):
 
 
 async def run() -> None:
+    start_heartbeat("notifications")
     consumer = await create_consumer(settings.NOTIFICATIONS_TOPIC, group_id="notifications")
     redis = await get_async_redis()
 

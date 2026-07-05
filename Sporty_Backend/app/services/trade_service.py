@@ -273,12 +273,21 @@ def cancel_trade(db: Session, league_id: uuid.UUID, trade_id: uuid.UUID, current
     return {"id": str(offer.id), "status": "cancelled"}
 
 
-def veto_trade(db: Session, league_id: uuid.UUID, trade_id: uuid.UUID, current_user: User) -> dict:
-    """Commissioner veto of an accepted trade before it finalises."""
+def veto_trade(
+    db: Session,
+    league_id: uuid.UUID,
+    trade_id: uuid.UUID,
+    current_user: User,
+    *,
+    admin_override: bool = False,
+) -> dict:
+    """Commissioner veto of an accepted trade before it finalises.
+    admin_override=True bypasses the commissioner check for platform-admin
+    use — see app/admin/services.py."""
     league = db.query(League).filter(League.id == league_id).first()
     if not league:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
-    if league.owner_id != current_user.id:
+    if not admin_override and league.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only the commissioner can veto")
     offer = _get_offer(db, league_id, trade_id)
     if offer.status != "accepted":

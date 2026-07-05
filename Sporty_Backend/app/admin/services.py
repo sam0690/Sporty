@@ -1,14 +1,30 @@
+import threading
 import uuid
+from datetime import datetime, timezone
+from decimal import Decimal
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.admin.models import AdminActionType, AdminAuditLog
+from app.admin.models import AdminActionType, AdminAuditLog, SystemConfig
 from app.admin.audit import record_admin_action
 from app.auth import services as auth_services
 from app.auth.models import User, UserRole
 from app.league import services as league_service
-from app.league.models import League, LeagueStatus
+from app.league.models import (
+    BudgetTransaction,
+    FantasyTeam,
+    League,
+    LeagueStatus,
+    TeamPlayer,
+    Transfer,
+    TransferWindow,
+    WaiverClaim,
+)
+from app.player.models import Player
+from app.services import trade_service
+from app.services.pricing.repricing import recalculate_player_prices
+from app.services.scoring.engine import score_active_transfer_windows, score_transfer_window_for_league
 from app.user import services as user_services
 
 
@@ -246,3 +262,566 @@ def override_league_settings(
     )
     db.commit()
     return league
+
+
+# ── Scoring ─────────────────────────────────────────────────────────────────────
+
+def recalculate_window_score(
+    db: Session,
+    actor: User,
+    league_id: uuid.UUID,
+    transfer_window_id: uuid.UUID,
+    reason: str | None = None,
+) -> dict:
+    result = score_transfer_window_for_league(
+        db, league_id=league_id, transfer_window_id=transfer_window_id
+    )
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.SCORING_RECALCULATE,
+        target_type="transfer_window",
+        target_id=transfer_window_id,
+        reason=reason,
+        metadata={"league_id": str(league_id), **result},
+    )
+    db.commit()
+    return result
+
+
+def recalculate_active_windows(db: Session, actor: User, reason: str | None = None) -> dict:
+    result = score_active_transfer_windows(db, commit=False)
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.SCORING_RECALCULATE,
+        target_type="platform",
+        target_id="active_windows",
+        reason=reason,
+        metadata=result,
+    )
+    db.commit()
+    return result
+
+
+def _require_transfer_window(db: Session, window_id: uuid.UUID) -> TransferWindow:
+    window = db.query(TransferWindow).filter(TransferWindow.id == window_id).first()
+    if not window:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transfer window not found")
+    return window
+
+
+def set_window_lock(
+    db: Session,
+    actor: User,
+    window_id: uuid.UUID,
+    *,
+    transfers_locked: bool | None = None,
+    lineup_locked: bool | None = None,
+    reason: str | None = None,
+) -> TransferWindow:
+    """Force-set a transfer window's lock flags — the same fields the
+    auto-lock Celery tasks (app/services/transfer_window_service.py) flip
+    once their respective deadlines pass."""
+    window = _require_transfer_window(db, window_id)
+    if transfers_locked is not None:
+        window.transfers_locked = transfers_locked
+    if lineup_locked is not None:
+        window.lineup_locked = lineup_locked
+
+    action = AdminActionType.SCORING_WINDOW_LOCK if (transfers_locked or lineup_locked) else AdminActionType.SCORING_WINDOW_UNLOCK
+    record_admin_action(
+        db,
+        actor=actor,
+        action=action,
+        target_type="transfer_window",
+        target_id=window_id,
+        reason=reason,
+        metadata={"transfers_locked": transfers_locked, "lineup_locked": lineup_locked},
+    )
+    db.commit()
+    db.refresh(window)
+    return window
+
+
+# ── Players / pricing ───────────────────────────────────────────────────────────
+
+def get_player_admin(db: Session, player_id: uuid.UUID) -> Player:
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if not player:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
+    return player
+
+
+def edit_player(
+    db: Session,
+    actor: User,
+    player_id: uuid.UUID,
+    *,
+    name: str | None = None,
+    position: str | None = None,
+    cost: float | None = None,
+    is_available: bool | None = None,
+    photo_url: str | None = None,
+    reason: str | None = None,
+) -> Player:
+    player = get_player_admin(db, player_id)
+    before = {
+        "name": player.name,
+        "position": player.position,
+        "cost": float(player.cost),
+        "is_available": player.is_available,
+    }
+
+    if name is not None:
+        player.name = name
+    if position is not None:
+        player.position = position
+    if cost is not None:
+        player.cost = Decimal(str(cost))
+    if is_available is not None:
+        player.is_available = is_available
+    if photo_url is not None:
+        player.photo_url = photo_url
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.PLAYER_DATA_EDIT,
+        target_type="player",
+        target_id=player_id,
+        reason=reason,
+        metadata={"before": before},
+    )
+    db.commit()
+    db.refresh(player)
+    return player
+
+
+def trigger_repricing(
+    db: Session,
+    actor: User,
+    lookback_windows: int = 3,
+    reason: str | None = None,
+) -> dict:
+    result = recalculate_player_prices(db, lookback_windows=lookback_windows)
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.PLAYER_PRICE_OVERRIDE,
+        target_type="platform",
+        target_id="repricing",
+        reason=reason,
+        metadata=result,
+    )
+    db.commit()
+    return result
+
+
+# ── Transactions (trades / waivers / transfers) ─────────────────────────────────
+
+def admin_veto_trade(
+    db: Session,
+    actor: User,
+    league_id: uuid.UUID,
+    trade_id: uuid.UUID,
+    reason: str | None = None,
+) -> dict:
+    result = trade_service.veto_trade(db, league_id, trade_id, actor, admin_override=True)
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.TRADE_VETO_OVERRIDE,
+        target_type="trade",
+        target_id=trade_id,
+        reason=reason,
+        metadata={"league_id": str(league_id)},
+    )
+    db.commit()
+    return result
+
+
+def admin_cancel_trade(
+    db: Session,
+    actor: User,
+    league_id: uuid.UUID,
+    trade_id: uuid.UUID,
+    reason: str | None = None,
+) -> dict:
+    """Force-cancel a trade regardless of which team proposed it — unlike
+    trade_service.cancel_trade, this doesn't require the actor to own a
+    team in the league (admins generally don't)."""
+    offer = trade_service._get_offer(db, league_id, trade_id)
+    if offer.status not in ("proposed", "accepted"):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Trade is {offer.status}",
+        )
+    offer.status = "cancelled"
+    db.flush()
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.TRADE_CANCEL_OVERRIDE,
+        target_type="trade",
+        target_id=trade_id,
+        reason=reason,
+        metadata={"league_id": str(league_id)},
+    )
+    db.commit()
+    return {"id": str(offer.id), "status": "cancelled"}
+
+
+def admin_cancel_waiver_claim(
+    db: Session,
+    actor: User,
+    league_id: uuid.UUID,
+    claim_id: uuid.UUID,
+    reason: str | None = None,
+) -> dict:
+    """Force-cancel any pending waiver claim — unlike
+    waiver_service.cancel_claim, this doesn't require the actor to own the
+    claiming team (admins generally don't)."""
+    claim = (
+        db.query(WaiverClaim)
+        .filter(WaiverClaim.id == claim_id, WaiverClaim.league_id == league_id)
+        .first()
+    )
+    if not claim:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Waiver claim not found")
+    if claim.status != "pending":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Only pending claims can be cancelled",
+        )
+    claim.status = "cancelled"
+    db.flush()
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.WAIVER_OVERRIDE,
+        target_type="waiver_claim",
+        target_id=claim_id,
+        reason=reason,
+        metadata={"league_id": str(league_id)},
+    )
+    db.commit()
+    return {"id": str(claim.id), "status": "cancelled"}
+
+
+def admin_reverse_transfer(
+    db: Session,
+    actor: User,
+    transfer_id: uuid.UUID,
+    reason: str | None = None,
+) -> Transfer:
+    """Undo a budget-mode transfer as a compensating entry: un-release the
+    player who went out, release the player who came in, and reverse the
+    exact budget delta this transfer applied — never mutating the original
+    Transfer/BudgetTransaction rows (immutable ledger).
+
+    Conservative by design: only reverses cleanly if the roster hasn't
+    moved on since (player_in still active, player_out not re-acquired).
+    """
+    transfer = db.query(Transfer).filter(Transfer.id == transfer_id).first()
+    if not transfer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Transfer not found")
+    if transfer.reversed_at is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Transfer already reversed")
+
+    team = db.query(FantasyTeam).filter(FantasyTeam.id == transfer.fantasy_team_id).first()
+    if not team:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+
+    released_row = (
+        db.query(TeamPlayer)
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.player_id == transfer.player_out_id,
+            TeamPlayer.released_window_id == transfer.transfer_window_id,
+        )
+        .first()
+    )
+    acquired_row = (
+        db.query(TeamPlayer)
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.player_id == transfer.player_in_id,
+            TeamPlayer.acquired_window_id == transfer.transfer_window_id,
+        )
+        .first()
+    )
+    if not released_row or not acquired_row:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Roster rows for this transfer no longer exist",
+        )
+    if acquired_row.released_window_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Player brought in has since been transferred away — cannot cleanly reverse",
+        )
+    already_reacquired = (
+        db.query(TeamPlayer)
+        .filter(
+            TeamPlayer.fantasy_team_id == team.id,
+            TeamPlayer.player_id == transfer.player_out_id,
+            TeamPlayer.released_window_id.is_(None),
+        )
+        .first()
+    )
+    if already_reacquired:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Player transferred out has since been re-acquired — cannot cleanly reverse",
+        )
+
+    refund_txn = (
+        db.query(BudgetTransaction)
+        .filter(
+            BudgetTransaction.fantasy_team_id == team.id,
+            BudgetTransaction.player_id == transfer.player_out_id,
+            BudgetTransaction.transfer_window_id == transfer.transfer_window_id,
+            BudgetTransaction.transaction_type == "transfer_out_refund",
+        )
+        .order_by(BudgetTransaction.created_at.desc())
+        .first()
+    )
+    cost_txn = (
+        db.query(BudgetTransaction)
+        .filter(
+            BudgetTransaction.fantasy_team_id == team.id,
+            BudgetTransaction.player_id == transfer.player_in_id,
+            BudgetTransaction.transfer_window_id == transfer.transfer_window_id,
+            BudgetTransaction.transaction_type == "transfer_in_cost",
+        )
+        .order_by(BudgetTransaction.created_at.desc())
+        .first()
+    )
+    refund_amount = refund_txn.amount if refund_txn else Decimal("0")
+    cost_amount = cost_txn.amount if cost_txn else transfer.cost_at_transfer
+
+    old_budget = team.current_budget
+    new_budget = old_budget + cost_amount - refund_amount
+    if new_budget < 0:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Reversal would result in negative budget")
+
+    released_row.released_window_id = None
+    acquired_row.released_window_id = transfer.transfer_window_id
+    team.current_budget = new_budget
+
+    # BudgetTransaction.transaction_type is DB-constrained to a closed set
+    # (ck_budget_tx_type_allowed) and amount must be non-negative
+    # (ck_budget_tx_amount_non_negative) — reuse the existing type values
+    # with their established sign convention (transfer_out_refund credits
+    # the budget, transfer_in_cost debits it) rather than adding new types.
+    # The admin_audit_logs entry below is what actually identifies these
+    # rows as a reversal, not the transaction_type.
+    db.add(
+        BudgetTransaction(
+            fantasy_team_id=team.id,
+            player_id=transfer.player_in_id,
+            transfer_window_id=transfer.transfer_window_id,
+            transaction_type="transfer_out_refund",
+            amount=cost_amount,
+            penalty_applied=Decimal("0.00"),
+        )
+    )
+    db.add(
+        BudgetTransaction(
+            fantasy_team_id=team.id,
+            player_id=transfer.player_out_id,
+            transfer_window_id=transfer.transfer_window_id,
+            transaction_type="transfer_in_cost",
+            amount=refund_amount,
+            penalty_applied=Decimal("0.00"),
+        )
+    )
+
+    transfer.reversed_at = datetime.now(timezone.utc)
+    db.flush()
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.TRANSFER_REVERSE,
+        target_type="transfer",
+        target_id=transfer_id,
+        reason=reason,
+        metadata={
+            "team_id": str(team.id),
+            "player_out_id": str(transfer.player_out_id),
+            "player_in_id": str(transfer.player_in_id),
+            "old_budget": str(old_budget),
+            "new_budget": str(new_budget),
+        },
+    )
+    db.commit()
+    db.refresh(transfer)
+    return transfer
+
+
+# ── Job visibility ───────────────────────────────────────────────────────────────
+
+_GLOBAL_LOCK_KEYS = [
+    "lock:score:active_windows",
+    "lock:live:football:poll",
+    "lock:live:nba:poll",
+    "lock:live:cricket:poll",
+]
+
+
+def get_celery_jobs_status() -> dict:
+    from app.core.celery_app import celery_app
+    from app.core.redis import get_redis
+    from app.tasks.celery_schedule import CELERY_BEAT_SCHEDULE
+
+    beat_schedule = [
+        {"name": name, "task": entry["task"], "schedule": str(entry["schedule"])}
+        for name, entry in CELERY_BEAT_SCHEDULE.items()
+    ]
+
+    def _flatten(by_worker: dict | None) -> list[dict]:
+        items: list[dict] = []
+        for worker, tasks in (by_worker or {}).items():
+            for t in tasks:
+                items.append({
+                    "worker": worker,
+                    "task": t.get("name") or (t.get("request") or {}).get("name"),
+                    "id": t.get("id"),
+                })
+        return items
+
+    active: dict | None = None
+    scheduled: dict | None = None
+    reserved: dict | None = None
+    inspect_reachable = True
+
+    # inspect(timeout=2) bounds the reply-collection wait, but not the
+    # initial broker connection/handshake — over a remote TLS Redis with no
+    # worker listening, that alone can take far longer than 2s. Run it on a
+    # daemon thread with a hard join deadline so a quiet broker degrades the
+    # dashboard instead of hanging the request for 30+ seconds; if the thread
+    # is still running when the deadline passes, we just stop waiting on it
+    # (it finishes on its own and gets discarded — nothing to cancel).
+    result: dict = {}
+
+    def _run_inspect() -> None:
+        try:
+            inspect = celery_app.control.inspect(timeout=2)
+            result["active"] = inspect.active()
+            result["scheduled"] = inspect.scheduled()
+            result["reserved"] = inspect.reserved()
+        except Exception:
+            pass
+
+    thread = threading.Thread(target=_run_inspect, daemon=True)
+    thread.start()
+    thread.join(timeout=5)
+
+    if thread.is_alive() or "active" not in result:
+        inspect_reachable = False
+    else:
+        active = result.get("active")
+        scheduled = result.get("scheduled")
+        reserved = result.get("reserved")
+
+    locks_held: list[str] = []
+    try:
+        redis = get_redis()
+        for key in _GLOBAL_LOCK_KEYS:
+            if redis.exists(key):
+                locks_held.append(key)
+    except Exception:
+        pass
+
+    return {
+        "workers_online": list((active or {}).keys()),
+        "active": _flatten(active),
+        "scheduled": _flatten(scheduled),
+        "reserved": _flatten(reserved),
+        "beat_schedule": beat_schedule,
+        "locks_held": locks_held,
+        "inspect_reachable": inspect_reachable,
+    }
+
+
+def get_kafka_jobs_status() -> dict:
+    from app.core.redis import get_redis
+    from app.core.worker_heartbeat import HEARTBEAT_TTL_SECONDS, heartbeat_key
+
+    worker_names = ["normalizer", "points-engine", "notifications"]
+    workers: list[dict] = []
+    try:
+        redis = get_redis()
+        for name in worker_names:
+            ttl = redis.ttl(heartbeat_key(name))
+            alive = ttl is not None and ttl > 0
+            workers.append({
+                "name": name,
+                "alive": alive,
+                "last_seen_seconds_ago": (HEARTBEAT_TTL_SECONDS - ttl) if alive else None,
+            })
+    except Exception:
+        workers = [{"name": name, "alive": False, "last_seen_seconds_ago": None} for name in worker_names]
+
+    return {"workers": workers}
+
+
+# ── System config / feature flags ────────────────────────────────────────────────
+
+def list_system_config(db: Session) -> list[SystemConfig]:
+    return db.query(SystemConfig).order_by(SystemConfig.key).all()
+
+
+def _upsert_system_config(
+    db: Session,
+    actor: User,
+    key: str,
+    value: dict,
+    description: str | None = None,
+) -> SystemConfig:
+    row = db.query(SystemConfig).filter(SystemConfig.key == key).first()
+    if row:
+        row.value = value
+        row.updated_by_user_id = actor.id
+    else:
+        row = SystemConfig(key=key, value=value, description=description, updated_by_user_id=actor.id)
+        db.add(row)
+    return row
+
+
+def toggle_realtime_pipeline(db: Session, actor: User, enabled: bool, reason: str | None = None) -> SystemConfig:
+    """Writes SystemConfig only — the Kafka producer/MatchScheduler are wired
+    at app/main.py's lifespan startup, so this has no live effect on the
+    current process. It sets the value the NEXT process start will read via
+    get_effective_flag (once main.py's startup block is updated to check it)."""
+    row = _upsert_system_config(
+        db, actor, "realtime_pipeline_enabled", {"enabled": enabled},
+        description="Kafka realtime pipeline — restart required to take effect (wired at process startup)",
+    )
+    record_admin_action(
+        db, actor=actor, action=AdminActionType.FEATURE_FLAG_TOGGLE,
+        target_type="system_config", target_id="realtime_pipeline_enabled",
+        reason=reason, metadata={"enabled": enabled},
+    )
+    db.commit()
+    db.refresh(row)
+    return row
+
+
+def toggle_live_polling(db: Session, actor: User, enabled: bool, reason: str | None = None) -> SystemConfig:
+    """Takes effect on the next football/NBA live-sync task run —
+    get_effective_flag is already wired into both sync functions."""
+    row = _upsert_system_config(
+        db, actor, "live_polling_enabled", {"enabled": enabled},
+        description="Live external-API polling for football/NBA (takes effect on next poll run)",
+    )
+    record_admin_action(
+        db, actor=actor, action=AdminActionType.FEATURE_FLAG_TOGGLE,
+        target_type="system_config", target_id="live_polling_enabled",
+        reason=reason, metadata={"enabled": enabled},
+    )
+    db.commit()
+    db.refresh(row)
+    return row

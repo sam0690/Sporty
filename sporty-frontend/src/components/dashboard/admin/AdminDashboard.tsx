@@ -60,6 +60,31 @@ export function AdminDashboard() {
           title="Audit Log"
           description="Every admin action, who did it, and why."
         />
+        <NavCard
+          href={ROUTES.ADMIN_SCORING.path}
+          title="Scoring"
+          description="Recalculate windows and lock/unlock transfers or lineups."
+        />
+        <NavCard
+          href={ROUTES.ADMIN_PLAYERS.path}
+          title="Players"
+          description="Edit player data and trigger repricing."
+        />
+        <NavCard
+          href={ROUTES.ADMIN_TRANSACTIONS.path}
+          title="Transactions"
+          description="Override trades, waivers, and reverse transfers."
+        />
+        <NavCard
+          href={ROUTES.ADMIN_JOBS.path}
+          title="Jobs"
+          description="Celery worker/beat status and Kafka consumer liveness."
+        />
+        <NavCard
+          href={ROUTES.ADMIN_CONFIG.path}
+          title="Config"
+          description="Runtime feature-flag overrides."
+        />
       </div>
     </div>
   );

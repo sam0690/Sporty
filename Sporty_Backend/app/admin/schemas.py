@@ -75,6 +75,133 @@ class AdminActionReason(BaseModel):
     reason: str | None = Field(default=None, max_length=1000)
 
 
+# ── Scoring ─────────────────────────────────────────────────────────────────────
+
+class ScoringRecalculateResponse(BaseModel):
+    football_players_updated: int = 0
+    cricket_players_updated: int = 0
+    basketball_players_updated: int = 0
+    skipped: bool = False
+    reason: str | None = None
+
+
+class WindowLockRequest(BaseModel):
+    transfers_locked: bool | None = None
+    lineup_locked: bool | None = None
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class TransferWindowLockResponse(BaseModel):
+    id: uuid.UUID
+    transfers_locked: bool
+    lineup_locked: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# ── Players / pricing ───────────────────────────────────────────────────────────
+
+class AdminPlayerDetail(BaseModel):
+    id: uuid.UUID
+    name: str
+    position: str
+    real_team: str
+    cost: float
+    is_available: bool
+    photo_url: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminPlayerEditRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=150)
+    position: str | None = Field(default=None, min_length=1, max_length=20)
+    cost: float | None = Field(default=None, gt=0)
+    is_available: bool | None = None
+    photo_url: str | None = Field(default=None, max_length=500)
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class RepriceRequest(BaseModel):
+    lookback_windows: int = Field(default=3, ge=1, le=10)
+    reason: str | None = Field(default=None, max_length=1000)
+
+
+class RepriceResponse(BaseModel):
+    lookback_windows: int
+    evaluated: int
+    updated: int
+    unchanged: int
+
+
+# ── Transactions (trades / waivers / transfers) ─────────────────────────────────
+
+class TradeActionResponse(BaseModel):
+    id: str
+    status: str
+
+
+class WaiverClaimCancelResponse(BaseModel):
+    id: str
+    status: str
+
+
+class TransferReverseResponse(BaseModel):
+    transfer_id: str
+    reversed: bool
+
+
+# ── Job visibility ───────────────────────────────────────────────────────────────
+
+class CeleryTaskInfo(BaseModel):
+    worker: str
+    task: str | None = None
+    id: str | None = None
+
+
+class CeleryBeatEntry(BaseModel):
+    name: str
+    task: str
+    schedule: str
+
+
+class CeleryJobsResponse(BaseModel):
+    workers_online: list[str]
+    active: list[CeleryTaskInfo]
+    scheduled: list[CeleryTaskInfo]
+    reserved: list[CeleryTaskInfo]
+    beat_schedule: list[CeleryBeatEntry]
+    locks_held: list[str]
+    inspect_reachable: bool
+
+
+class KafkaWorkerStatus(BaseModel):
+    name: str
+    alive: bool
+    last_seen_seconds_ago: float | None = None
+
+
+class KafkaJobsResponse(BaseModel):
+    workers: list[KafkaWorkerStatus]
+
+
+# ── System config / feature flags ───────────────────────────────────────────────
+
+class SystemConfigResponse(BaseModel):
+    key: str
+    value: dict
+    description: str | None = None
+    updated_by_user_id: uuid.UUID | None = None
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class FeatureFlagToggleRequest(BaseModel):
+    enabled: bool
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 class AdminAuditLogResponse(BaseModel):
     id: uuid.UUID
     actor_user_id: uuid.UUID

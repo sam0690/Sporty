@@ -179,5 +179,25 @@ export const API_PATHS = {
       const query = params.toString();
       return `/admin/audit-log${query ? `?${query}` : ""}`;
     },
+
+    RECALCULATE_WINDOW_SCORE: (leagueId: string, windowId: string) =>
+      `/admin/leagues/${leagueId}/transfer-windows/${windowId}/recalculate-score`,
+    RECALCULATE_ACTIVE_WINDOWS: "/admin/scoring/recalculate-active",
+    WINDOW_LOCK: (windowId: string) => `/admin/transfer-windows/${windowId}/lock`,
+
+    PLAYER_DETAIL: (id: string) => `/admin/players/${id}`,
+    PLAYER_REPRICE: "/admin/players/reprice",
+
+    TRADE_VETO: (leagueId: string, tradeId: string) => `/admin/leagues/${leagueId}/trades/${tradeId}/veto`,
+    TRADE_CANCEL: (leagueId: string, tradeId: string) => `/admin/leagues/${leagueId}/trades/${tradeId}/cancel`,
+    WAIVER_CANCEL: (leagueId: string, claimId: string) => `/admin/leagues/${leagueId}/waivers/${claimId}/cancel`,
+    TRANSFER_REVERSE: (transferId: string) => `/admin/transfers/${transferId}/reverse`,
+
+    JOBS_CELERY: "/admin/jobs/celery",
+    JOBS_KAFKA: "/admin/jobs/kafka",
+
+    CONFIG_LIST: "/admin/config",
+    CONFIG_REALTIME_PIPELINE: "/admin/config/realtime-pipeline",
+    CONFIG_LIVE_POLLING: "/admin/config/live-polling",
   },
 } as const;

@@ -952,6 +952,13 @@ class Transfer(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
+    # Set by an admin compensating-entry reversal (app/admin/services.py::admin_reverse_transfer).
+    # Never cleared once set — the original row stays untouched either way,
+    # this just flags it as superseded so it can't be reversed twice.
+    reversed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Relationships
     fantasy_team: Mapped["FantasyTeam"] = relationship(back_populates="transfers")
     transfer_window: Mapped["TransferWindow"] = relationship(foreign_keys=[transfer_window_id])
