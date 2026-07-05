@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui";
 import { toastifier } from "@/lib/toastifier";
+import { getSafeRedirectPath } from "@/lib/route.utils";
 
 export function SocialLogin() {
   const loginWithGoogle = () => {
@@ -11,6 +12,10 @@ export function SocialLogin() {
       return;
     }
 
+    const redirect = getSafeRedirectPath(
+      new URLSearchParams(window.location.search).get("redirect"),
+    );
+
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: "https://sporty-woad.vercel.app/auth/google/callback",
@@ -18,6 +23,7 @@ export function SocialLogin() {
       scope: "openid email profile",
       access_type: "offline",
       prompt: "consent",
+      ...(redirect ? { state: redirect } : {}),
     });
 
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;

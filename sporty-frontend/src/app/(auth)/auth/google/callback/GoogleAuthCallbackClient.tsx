@@ -6,6 +6,7 @@ import { Button } from "@/components/ui";
 import { GoogleAccountLinkModal } from "@/components/auth/google-link/components/GoogleAccountLinkModal";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/lib/toastifier";
+import { getSafeRedirectPath } from "@/lib/route.utils";
 
 export function GoogleAuthCallbackClient() {
   const router = useRouter();
@@ -25,9 +26,11 @@ export function GoogleAuthCallbackClient() {
     }
 
     if (user) {
-      window.location.replace("/dashboard");
+      window.location.replace(
+        getSafeRedirectPath(searchParams.get("state")) ?? "/dashboard",
+      );
     }
-  }, [isLoading, isLinkModalOpen, isReauthenticating, user]);
+  }, [isLoading, isLinkModalOpen, isReauthenticating, searchParams, user]);
 
   useEffect(() => {
     if (isLoading || hasStarted.current) {
@@ -52,7 +55,9 @@ export function GoogleAuthCallbackClient() {
       }
 
       if (result.success) {
-        window.location.replace("/dashboard");
+        window.location.replace(
+          getSafeRedirectPath(searchParams.get("state")) ?? "/dashboard",
+        );
         return;
       }
 
@@ -130,7 +135,7 @@ export function GoogleAuthCallbackClient() {
       setPendingLinkToken("");
       setPendingEmail(undefined);
       setLinkError(undefined);
-      router.replace("/dashboard");
+      router.replace(getSafeRedirectPath(searchParams.get("state")) ?? "/dashboard");
       return;
     }
 

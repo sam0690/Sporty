@@ -178,6 +178,45 @@ export const FOOTBALL_FORMATION_BOUNDS: Record<
   FWD: { min: 1, max: 3 },
 };
 
+/** Size of a full football starting XI — fixed regardless of formation shape
+ * (only the DEF/MID/FWD split varies). Used to decide how many *extra* empty
+ * placeholder slots to render per line so a bench player can always be
+ * dropped onto an open spot instead of being forced to swap onto an occupant. */
+const FOOTBALL_STARTING_XI_SIZE = 11;
+
+/** Football/basketball starters required from a multisport squad — mirrors
+ * MULTISPORT_STARTER_REQUIREMENTS in LeagueLineup.tsx/LineupPitchView.tsx
+ * (kept local here since formationEngine has no dependency on those files). */
+const MULTISPORT_FOOTBALL_STARTERS = 5;
+const MULTISPORT_BASKETBALL_STARTERS = 4;
+
+/** Basketball's starting five. */
+const BASKETBALL_STARTING_FIVE_SIZE = 5;
+
+/**
+ * A row's slot count used to be exactly `max(bucket.min, currentCount)` —
+ * enough to render the floor, but never more. Once a bucket reached its own
+ * floor (e.g. 4 defenders when the floor is 3), the row had zero spare slots,
+ * so benching one player and trying to drag a *different* bench player into
+ * that same line had nowhere to land except an occupied slot (forcing a
+ * swap instead of a simple add). This pads one extra empty slot onto any
+ * bucket that still has room to grow (below its own max) as long as the
+ * overall XI isn't full yet, so an open placeholder is always available.
+ */
+function paddedBucketCapacity(
+  count: number,
+  bounds: { min: number; max: number },
+  remainingRoom: number,
+): number {
+  if (count < bounds.min) {
+    return bounds.min;
+  }
+  if (remainingRoom > 0 && count < bounds.max) {
+    return count + 1;
+  }
+  return count;
+}
+
 const FORMATION_BUCKET_LABELS: Record<FootballFormationBucket, string> = {
   GK: "goalkeeper",
   DEF: "defender",
@@ -284,9 +323,10 @@ function basketballPositionWeight(position: string) {
 
 function buildBasketballFallbackRows<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
+  remainingRoom: number,
 ) {
   const count = players.length;
-  if (count === 0) return [];
+  if (count === 0 && remainingRoom <= 0) return [];
 
   // Spread players across 3 region rows for basketball
   const topTier = players.slice(0, Math.ceil(count / 3));
@@ -296,9 +336,15 @@ function buildBasketballFallbackRows<TPlayer extends FormationPlayerLike>(
   );
   const botTier = players.slice(Math.ceil((2 * count) / 3));
 
+  // Same fix as football's per-line padding: without this, each tier's
+  // capacity was exactly its current occupant count, so there was never an
+  // empty slot to drop a bench player onto (only occupied ones, forcing a
+  // swap) — see paddedBucketCapacity's comment for the full rationale.
+  const growth = remainingRoom > 0 ? 1 : 0;
+
   const rows: RowBlueprint<TPlayer>[] = [];
 
-  if (topTier.length > 0) {
+  if (topTier.length > 0 || growth > 0) {
     rows.push({
       id: "basketball:fallback-top",
       label: "B",
@@ -306,12 +352,12 @@ function buildBasketballFallbackRows<TPlayer extends FormationPlayerLike>(
       y: 0.2,
       xStart: 0.2,
       xEnd: 0.8,
-      capacity: topTier.length,
+      capacity: topTier.length + growth,
       players: topTier,
     });
   }
 
-  if (midTier.length > 0) {
+  if (midTier.length > 0 || growth > 0) {
     rows.push({
       id: "basketball:fallback-mid",
       label: "B",
@@ -319,12 +365,12 @@ function buildBasketballFallbackRows<TPlayer extends FormationPlayerLike>(
       y: 0.45,
       xStart: 0.15,
       xEnd: 0.85,
-      capacity: midTier.length,
+      capacity: midTier.length + growth,
       players: midTier,
     });
   }
 
-  if (botTier.length > 0) {
+  if (botTier.length > 0 || growth > 0) {
     rows.push({
       id: "basketball:fallback-bot",
       label: "B",
@@ -332,7 +378,7 @@ function buildBasketballFallbackRows<TPlayer extends FormationPlayerLike>(
       y: 0.7,
       xStart: 0.25,
       xEnd: 0.75,
-      capacity: botTier.length,
+      capacity: botTier.length + growth,
       players: botTier,
     });
   }
@@ -373,8 +419,10 @@ function buildSlots<TPlayer extends FormationPlayerLike>(
 
 function buildFootballRows<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
+  targetTotal: number = FOOTBALL_STARTING_XI_SIZE,
 ) {
   const sortedPlayers = sortPlayersByWeight(players, footballPositionWeight);
+  const remainingRoom = Math.max(0, targetTotal - sortedPlayers.length);
   const goalkeeperPlayers = sortedPlayers.filter(
     (player) => footballRoleBucket(player.position) === "goalkeeper",
   );
@@ -434,6 +482,23 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
   const lowerMidfieldPlayers = midfieldPool.slice(0, lowerMidfieldCapacity);
   const upperMidfieldPlayers = midfieldPool.slice(lowerMidfieldCapacity);
 
+  // Row capacities actually rendered — same counts as above, plus one growth
+  // slot per line while the XI still has room (see paddedBucketCapacity).
+  // Kept separate from lower/upperMidfieldCapacity so the template-label
+  // detection and player-slicing above stay based on real counts only.
+  const midRowCapacity = paddedBucketCapacity(
+    midfieldPool.length,
+    FOOTBALL_FORMATION_BOUNDS.MID,
+    remainingRoom,
+  );
+  const midGrowth = midRowCapacity - midfieldPool.length;
+  const lowerMidfieldRowCapacity = useSplitMidfield
+    ? lowerMidfieldCapacity
+    : midRowCapacity;
+  const upperMidfieldRowCapacity = useSplitMidfield
+    ? upperMidfieldCapacity + midGrowth
+    : 0;
+
   const templateLabel =
     defensePlayers.length === 4 &&
     lowerMidfieldCapacity === 2 &&
@@ -476,7 +541,11 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
       y: 0.68,
       xStart: 0.12,
       xEnd: 0.88,
-      capacity: Math.max(FOOTBALL_FORMATION_BOUNDS.DEF.min, defensePlayers.length),
+      capacity: paddedBucketCapacity(
+        defensePlayers.length,
+        FOOTBALL_FORMATION_BOUNDS.DEF,
+        remainingRoom,
+      ),
       players: defensePlayers,
     },
     {
@@ -486,7 +555,7 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
       y: useSplitMidfield ? 0.46 : 0.42,
       xStart: 0.15,
       xEnd: 0.85,
-      capacity: useSplitMidfield ? lowerMidfieldCapacity : midfieldPool.length,
+      capacity: lowerMidfieldRowCapacity,
       players: useSplitMidfield ? lowerMidfieldPlayers : midfieldPool,
     },
     ...(useSplitMidfield
@@ -498,7 +567,7 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
             y: 0.32,
             xStart: 0.1,
             xEnd: 0.9,
-            capacity: upperMidfieldCapacity,
+            capacity: upperMidfieldRowCapacity,
             players: upperMidfieldPlayers,
           } as RowBlueprint<TPlayer>,
         ]
@@ -510,7 +579,11 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
       y: 0.18,
       xStart: 0.24,
       xEnd: 0.76,
-      capacity: Math.max(FOOTBALL_FORMATION_BOUNDS.FWD.min, attackPlayers.length),
+      capacity: paddedBucketCapacity(
+        attackPlayers.length,
+        FOOTBALL_FORMATION_BOUNDS.FWD,
+        remainingRoom,
+      ),
       players: attackPlayers,
     },
   ];
@@ -523,6 +596,7 @@ function buildFootballRows<TPlayer extends FormationPlayerLike>(
 
 function buildBasketballRows<TPlayer extends FormationPlayerLike>(
   players: TPlayer[],
+  targetTotal: number = BASKETBALL_STARTING_FIVE_SIZE,
 ) {
   const sortedPlayers = sortPlayersByWeight(players, basketballPositionWeight);
 
@@ -547,9 +621,10 @@ function buildBasketballRows<TPlayer extends FormationPlayerLike>(
 
   // If most players are unknown, use the fallback spread layout
   if (unknownPlayers.length > sortedPlayers.length / 2) {
+    const remainingRoom = Math.max(0, targetTotal - sortedPlayers.length);
     return {
       formationLabel: "Balanced Spread",
-      rows: buildBasketballFallbackRows(sortedPlayers),
+      rows: buildBasketballFallbackRows(sortedPlayers, remainingRoom),
     };
   }
 
@@ -655,7 +730,8 @@ function buildMixedLayout<TPlayer extends FormationPlayerLike>(
 
   // Football at the TOP (scaled to top 50% of surface) — matches the pitch
   // half of multisport-court.png.
-  const fbRows = buildFootballRows(footballPlayers).rows;
+  const fbRows = buildFootballRows(footballPlayers, MULTISPORT_FOOTBALL_STARTERS)
+    .rows;
   const footballSlots = generateCoordinates(
     fbRows.map((row) => ({
       ...row,
@@ -665,7 +741,7 @@ function buildMixedLayout<TPlayer extends FormationPlayerLike>(
 
   // Basketball (and others) at the BOTTOM (scaled to bottom 45% of surface) —
   // matches the court half of multisport-court.png.
-  const bbRows = buildBasketballRows(bbPool).rows;
+  const bbRows = buildBasketballRows(bbPool, MULTISPORT_BASKETBALL_STARTERS).rows;
   const basketballSlots = generateCoordinates(
     bbRows.map((row) => ({
       ...row,
