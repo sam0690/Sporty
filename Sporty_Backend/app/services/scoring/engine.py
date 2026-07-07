@@ -22,31 +22,81 @@ from app.services.scoring.window_locator import find_equivalent_window_for_sport
 logger = logging.getLogger(__name__)
 
 
+def _score_player_stats_once_per_sport(
+    db: Session,
+    *,
+    league_ids: list[uuid.UUID],
+    window: TransferWindow,
+) -> dict[str, int]:
+    # Player-stat scoring has no per-league dimension (player_gameweek_stats
+    # has no league_id — it's one row per player+window, shared by every
+    # league playing that sport), so it must run exactly once per sport for
+    # this window, not once per league. Resolve the distinct sports played
+    # across all the leagues sharing this window, translate each to its own
+    # equivalent window (a multisport league's window id is only native for
+    # one sport — see find_equivalent_window_for_sport), and score it once.
+    totals = {"football_players_updated": 0, "cricket_players_updated": 0, "basketball_players_updated": 0}
+    if not league_ids:
+        return totals
+
+    sports = (
+        db.query(Sport.id, Sport.name)
+        .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+        .filter(LeagueSport.league_id.in_(league_ids))
+        .distinct()
+        .all()
+    )
+
+    for sport_id, sport_name in sports:
+        sport_window = find_equivalent_window_for_sport(db, window=window, sport_id=sport_id)
+        if sport_window is None:
+            continue
+        sport_window_id = sport_window.id
+        slug = (sport_name or "").strip().lower()
+        try:
+            if slug == "football":
+                totals["football_players_updated"] += score_football_players_for_window(
+                    db, sport_id=sport_id, transfer_window_id=sport_window_id,
+                )
+            elif slug == "cricket":
+                totals["cricket_players_updated"] += score_cricket_players_for_window(
+                    db, sport_id=sport_id, transfer_window_id=sport_window_id,
+                )
+            elif slug == "basketball":
+                totals["basketball_players_updated"] += score_nba_players_for_window(
+                    db, sport_id=sport_id, transfer_window_id=sport_window_id,
+                )
+        except Exception:
+            # score_*_players_for_window already retries transient deadlocks
+            # internally (via a SAVEPOINT) before raising, so by the time an
+            # exception reaches here the session is not poisoned — one sport
+            # failing must not block scoring the others sharing this window.
+            logger.exception(
+                "Skipping player-stat scoring for sport %s window %s", sport_id, window.id
+            )
+            continue
+
+    return totals
+
+
 def score_transfer_window_for_league(
     db: Session,
     *,
     league_id: uuid.UUID,
     transfer_window_id: uuid.UUID,
-) -> dict[str, int | bool | str]:
-    # Algorithm: lock (league,window), score player stats by sport rules, upsert team weekly scores, apply SQL RANK rankings, invalidate leaderboard cache key.
+) -> dict[str, bool | str]:
+    # Algorithm: lock (league,window), upsert team weekly scores from the
+    # already-scored player stats, apply SQL RANK rankings, invalidate the
+    # leaderboard cache key. Player-stat scoring itself happens once per
+    # sport before this is called — see _score_player_stats_once_per_sport.
     lock_key = f"lock:score:{league_id}:{transfer_window_id}"
     with redis_lock(lock_key, ttl_seconds=300) as acquired:
         if not acquired:
-            return {
-                "skipped": True,
-                "reason": "lock_held",
-                "football_players_updated": 0,
-                "cricket_players_updated": 0,
-                "basketball_players_updated": 0,
-            }
+            return {"skipped": True, "reason": "lock_held"}
 
         league = db.query(League).filter(League.id == league_id).first()
         if not league:
             raise ValueError(f"League {league_id} not found")
-
-        window = db.query(TransferWindow).filter(TransferWindow.id == transfer_window_id).first()
-        if not window:
-            raise ValueError(f"TransferWindow {transfer_window_id} not found")
 
         # Only a live league scores. Before ACTIVE (SETUP/DRAFTING) squads aren't
         # finalized, so there is nothing legitimate to score — skip so a shared
@@ -62,62 +112,7 @@ def score_transfer_window_for_league(
                 "skipped": True,
                 "reason": "league_not_active",
                 "league_status": league.status.value,
-                "football_players_updated": 0,
-                "cricket_players_updated": 0,
-                "basketball_players_updated": 0,
             }
-
-        sport_ids = [
-            sport_id
-            for (sport_id,) in (
-                db.query(LeagueSport.sport_id)
-                .filter(LeagueSport.league_id == league_id)
-                .all()
-            )
-        ]
-
-        updated_football = 0
-        updated_cricket = 0
-        updated_basketball = 0
-
-        if sport_ids:
-            sports = db.query(Sport.id, Sport.name).filter(Sport.id.in_(sport_ids)).all()
-            for sport_id, sport_name in sports:
-                # A multisport league's window is only the NATIVE window for
-                # whichever sport its season_id belongs to. Every other sport
-                # books its PlayerGameweekStat rows under its own season's
-                # window ids, so translate to that sport's equivalent window
-                # (same start_at/end_at) before scoring it — skip a sport this
-                # cycle if it has no window covering these dates.
-                sport_window = find_equivalent_window_for_sport(
-                    db, window=window, sport_id=sport_id
-                )
-                if sport_window is None:
-                    continue
-                sport_window_id = sport_window.id
-
-                slug = (sport_name or "").strip().lower()
-                if slug == "football":
-                    updated_football += score_football_players_for_window(
-                        db,
-                        league_id=league_id,
-                        sport_id=sport_id,
-                        transfer_window_id=sport_window_id,
-                    )
-                elif slug == "cricket":
-                    updated_cricket += score_cricket_players_for_window(
-                        db,
-                        league_id=league_id,
-                        sport_id=sport_id,
-                        transfer_window_id=sport_window_id,
-                    )
-                elif slug == "basketball":
-                    updated_basketball += score_nba_players_for_window(
-                        db,
-                        league_id=league_id,
-                        sport_id=sport_id,
-                        transfer_window_id=sport_window_id,
-                    )
 
         upsert_team_weekly_scores(
             db,
@@ -132,11 +127,7 @@ def score_transfer_window_for_league(
 
         cache_delete(f"leaderboard:{league_id}:{transfer_window_id}")
 
-        return {
-            "football_players_updated": updated_football,
-            "cricket_players_updated": updated_cricket,
-            "basketball_players_updated": updated_basketball,
-        }
+        return {}
 
 
 def score_transfer_window_for_season_leagues(
@@ -168,18 +159,24 @@ def score_transfer_window_for_season_leagues(
             )
         ]
 
-        total_football = 0
-        total_cricket = 0
-        total_basketball = 0
+        player_stat_totals = _score_player_stats_once_per_sport(
+            db, league_ids=league_ids, window=window
+        )
 
         leagues_skipped = 0
         for league_id in league_ids:
             try:
-                result = score_transfer_window_for_league(
-                    db,
-                    league_id=league_id,
-                    transfer_window_id=transfer_window_id,
-                )
+                # Each league gets its own SAVEPOINT: if this league's scoring
+                # raises (deadlock, deleted mid-run, etc.), only its savepoint
+                # rolls back — the outer transaction, and any prior leagues'
+                # already-computed scores within it, stay intact for the
+                # eventual commit below.
+                with db.begin_nested():
+                    score_transfer_window_for_league(
+                        db,
+                        league_id=league_id,
+                        transfer_window_id=transfer_window_id,
+                    )
             except Exception:
                 # A single league failing (e.g. deleted mid-run, in a race with
                 # the league_ids query above) must not abort scoring for every
@@ -189,16 +186,11 @@ def score_transfer_window_for_season_leagues(
                 )
                 leagues_skipped += 1
                 continue
-            total_football += int(result.get("football_players_updated", 0))
-            total_cricket += int(result.get("cricket_players_updated", 0))
-            total_basketball += int(result.get("basketball_players_updated", 0))
 
         output = {
             "leagues_scored": len(league_ids) - leagues_skipped,
             "leagues_skipped": leagues_skipped,
-            "football_players_updated": total_football,
-            "cricket_players_updated": total_cricket,
-            "basketball_players_updated": total_basketball,
+            **player_stat_totals,
         }
         if commit:
             db.commit()

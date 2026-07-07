@@ -6,7 +6,6 @@ import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { DangerZone } from "@/components/dashboard/leagues/league-settings/components/DangerZone";
 import { DeleteLeagueModal } from "@/components/dashboard/leagues/league-settings/components/DeleteLeagueModal";
-import { ScoringRulesEditor } from "@/components/dashboard/leagues/league-settings/components/ScoringRulesEditor";
 import {
   SettingsForm,
   type LeagueSettingsData,
@@ -36,12 +35,6 @@ import {
   getLifecycleStatusesForLeague,
   getLifecycleStatusLabel,
 } from "@/lib/league-lifecycle";
-import {
-  useDefaultScoringRules,
-  useDeleteScoringOverride,
-  useScoringOverrides,
-  useUpsertScoringOverride,
-} from "@/hooks/scoring/useScoring";
 import { useMe } from "@/hooks/auth/useMe";
 
 export function LeagueSettings() {
@@ -55,12 +48,7 @@ export function LeagueSettings() {
 
   const isCommissioner = league?.owner?.username === username;
   const { isBudgetMode, isDraftMode } = useLeagueCompetitionMode(league);
-  const selectedSport = league?.sports?.[0]?.sport.name ?? "football";
 
-  const { data: defaultRules } = useDefaultScoringRules(selectedSport);
-  const { data: overrides } = useScoringOverrides(leagueId);
-  const upsertOverride = useUpsertScoringOverride(leagueId);
-  const deleteOverride = useDeleteScoringOverride(leagueId);
   const updateStatus = useUpdateLeagueStatus(leagueId);
   const renewLeague = useRenewLeague(leagueId);
   const { data: seasonHistory } = useSeasonHistory(leagueId);
@@ -82,7 +70,6 @@ export function LeagueSettings() {
     allowMidseasonJoin: Boolean(league?.allow_midseason_join),
     showMidseasonJoinToggle: isBudgetMode,
   }));
-  const [scoringRules, setScoringRules] = useState<Record<string, number>>({});
 
   const lifecycleStatuses = useMemo(
     () => getLifecycleStatusesForLeague(league),
@@ -105,42 +92,6 @@ export function LeagueSettings() {
       allowMidseasonJoin: Boolean(league.allow_midseason_join),
       showMidseasonJoinToggle: isBudgetMode,
     });
-  }
-
-  // Merge default scoring rules with any league overrides into the editable
-  // map, re-syncing when either source changes. Same render-time pattern.
-  const scoringSyncKey = useMemo(() => {
-    if (!defaultRules) {
-      return null;
-    }
-    const defaultPart = defaultRules
-      .map((rule) => `${rule.action}=${rule.points}`)
-      .join(",");
-    const overridePart = (overrides ?? [])
-      .map((override) => `${override.action}=${override.points}`)
-      .sort()
-      .join(",");
-    return `${defaultPart}::${overridePart}`;
-  }, [defaultRules, overrides]);
-  const [lastScoringSyncKey, setLastScoringSyncKey] = useState<string | null>(
-    null,
-  );
-  if (defaultRules && scoringSyncKey !== lastScoringSyncKey) {
-    setLastScoringSyncKey(scoringSyncKey);
-    const overrideByAction = new Map(
-      (overrides ?? []).map((override) => [
-        override.action,
-        Number(override.points),
-      ]),
-    );
-    setScoringRules(
-      Object.fromEntries(
-        defaultRules.map((rule) => [
-          rule.action,
-          overrideByAction.get(rule.action) ?? Number(rule.points),
-        ]),
-      ),
-    );
   }
 
   const handleSave = async () => {
@@ -179,35 +130,6 @@ export function LeagueSettings() {
       ) {
         await updateMidseasonJoin.mutateAsync(data.allowMidseasonJoin);
         changed = true;
-      }
-
-      // 3. Scoring rule overrides — diff each rule against its default.
-      const sportObj = sports?.find((sport) => sport.name === selectedSport);
-      if (defaultRules?.length && sportObj?.id) {
-        for (const rule of defaultRules) {
-          const nextPoints = Number(scoringRules[rule.action]);
-          if (Number.isNaN(nextPoints)) {
-            continue;
-          }
-
-          if (Number(nextPoints) === Number(rule.points)) {
-            const existingOverride = (overrides ?? []).find(
-              (override) => override.action === rule.action,
-            );
-            if (existingOverride) {
-              await deleteOverride.mutateAsync(existingOverride.id);
-              changed = true;
-            }
-            continue;
-          }
-
-          await upsertOverride.mutateAsync({
-            sport_id: sportObj.id,
-            action: rule.action,
-            points: nextPoints,
-          });
-          changed = true;
-        }
       }
 
       if (!changed) {
@@ -449,11 +371,6 @@ export function LeagueSettings() {
             ))}
         </div>
       </SettingsSection>
-
-      <ScoringRulesEditor
-        scoringRules={scoringRules}
-        onChange={setScoringRules}
-      />
 
       <div className="flex justify-end">
         <button

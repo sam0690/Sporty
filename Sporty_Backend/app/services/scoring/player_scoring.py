@@ -1,14 +1,66 @@
 from __future__ import annotations
 
+import logging
+import random
+import time
 import uuid
 from decimal import Decimal
 
 from sqlalchemy import Numeric, cast, func, update
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
+from app.core.redis_lock import redis_lock
 from app.player.models import CricketStat, FootballStat, Player, PlayerGameweekStat
 from app.player.models_nba import NBAStat
 from app.services.scoring.rules import resolve_effective_rules, to_decimal
+
+
+logger = logging.getLogger(__name__)
+
+_DEADLOCK_PGCODE = "40P01"
+_MAX_ATTEMPTS = 3
+_BASE_BACKOFF_SECONDS = 0.25
+
+
+def _is_deadlock(exc: OperationalError) -> bool:
+    return getattr(getattr(exc, "orig", None), "pgcode", None) == _DEADLOCK_PGCODE
+
+
+def _execute_window_stat_update(db: Session, stmt, *, sport_id: uuid.UUID, transfer_window_id: uuid.UUID):
+    # The same (sport, window) player_gameweek_stats rows can be targeted at
+    # once by the Beat-scheduled active-window sweep and the ad-hoc
+    # match-finish trigger — they acquire non-overlapping Redis lock keys, so
+    # neither serializes against the other today. Serialize the actual write
+    # here (scoped to this sport+window only, not globally) so concurrent
+    # callers queue instead of racing, and retry the rare residual deadlock
+    # via SAVEPOINT rather than let two unordered bulk UPDATEs collide on
+    # Postgres row locks. begin_nested() means a failed attempt only rolls
+    # back to the savepoint, not the whole caller transaction (which may
+    # already hold other leagues' not-yet-committed work).
+    lock_key = f"lock:score:stats:{sport_id}:{transfer_window_id}"
+    for attempt in range(1, _MAX_ATTEMPTS + 1):
+        with redis_lock(lock_key, ttl_seconds=30, wait_seconds=10) as acquired:
+            if not acquired:
+                if attempt == _MAX_ATTEMPTS:
+                    raise RuntimeError(
+                        f"Could not acquire scoring lock for sport={sport_id} window={transfer_window_id}"
+                    )
+                time.sleep(_BASE_BACKOFF_SECONDS * attempt)
+                continue
+            try:
+                with db.begin_nested():
+                    return db.execute(stmt)
+            except OperationalError as exc:
+                if not _is_deadlock(exc) or attempt == _MAX_ATTEMPTS:
+                    raise
+                delay = _BASE_BACKOFF_SECONDS * (2 ** (attempt - 1)) + random.uniform(0, 0.1)
+                logger.warning(
+                    "Deadlock scoring sport=%s window=%s, retrying (attempt %d/%d) in %.2fs",
+                    sport_id, transfer_window_id, attempt, _MAX_ATTEMPTS, delay,
+                )
+                time.sleep(delay)
+    raise RuntimeError("unreachable")
 
 
 FOOTBALL_ACTIONS = {
@@ -66,14 +118,12 @@ def compute_nba_fantasy_points(
 def score_football_players_for_window(
     db: Session,
     *,
-    league_id: uuid.UUID,
     sport_id: uuid.UUID,
     transfer_window_id: uuid.UUID,
 ) -> int:
-    # Algorithm: update player_gameweek_stats fantasy_points using football child stats and effective rules for goal/assist/cards.
+    # Algorithm: update player_gameweek_stats fantasy_points using football child stats and default rules for goal/assist/cards.
     rules = resolve_effective_rules(
         db,
-        league_id=league_id,
         sport_id=sport_id,
         actions=FOOTBALL_ACTIONS.keys(),
         fallback_points=FOOTBALL_ACTIONS,
@@ -99,21 +149,19 @@ def score_football_players_for_window(
         )
         .execution_options(synchronize_session=False)
     )
-    result = db.execute(stmt)
+    result = _execute_window_stat_update(db, stmt, sport_id=sport_id, transfer_window_id=transfer_window_id)
     return int(result.rowcount or 0)
 
 
 def score_cricket_players_for_window(
     db: Session,
     *,
-    league_id: uuid.UUID,
     sport_id: uuid.UUID,
     transfer_window_id: uuid.UUID,
 ) -> int:
-    # Algorithm: update player_gameweek_stats fantasy_points using cricket child stats with coalesce and effective run/wicket/catch/run_out/maiden rules.
+    # Algorithm: update player_gameweek_stats fantasy_points using cricket child stats with coalesce and default run/wicket/catch/run_out/maiden rules.
     rules = resolve_effective_rules(
         db,
-        league_id=league_id,
         sport_id=sport_id,
         actions=CRICKET_ACTIONS,
     )
@@ -139,21 +187,19 @@ def score_cricket_players_for_window(
         )
         .execution_options(synchronize_session=False)
     )
-    result = db.execute(stmt)
+    result = _execute_window_stat_update(db, stmt, sport_id=sport_id, transfer_window_id=transfer_window_id)
     return int(result.rowcount or 0)
 
 
 def score_nba_players_for_window(
     db: Session,
     *,
-    league_id: uuid.UUID,
     sport_id: uuid.UUID,
     transfer_window_id: uuid.UUID,
 ) -> int:
     # Algorithm: update player_gameweek_stats fantasy_points using NBA fractional per-10 rules for points/assists and per-unit for rebounds/steals/blocks.
     rules = resolve_effective_rules(
         db,
-        league_id=league_id,
         sport_id=sport_id,
         actions=NBA_ACTIONS,
     )
@@ -182,5 +228,5 @@ def score_nba_players_for_window(
         )
         .execution_options(synchronize_session=False)
     )
-    result = db.execute(stmt)
+    result = _execute_window_stat_update(db, stmt, sport_id=sport_id, transfer_window_id=transfer_window_id)
     return int(result.rowcount or 0)

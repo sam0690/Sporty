@@ -31,7 +31,7 @@ from app.player.models import (  # noqa: F401
 from app.player.models_nba import NBAStat  # noqa: F401
 from app.ingestion.models import IngestionPlayer, IngestionTeam  # noqa: F401
 from app.notification.models import Notification  # noqa: F401
-from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+from app.scoring.models import DefaultScoringRule  # noqa: F401
 
 from app.core.config import settings
 from app.tasks.celery_schedule import CELERY_BEAT_SCHEDULE

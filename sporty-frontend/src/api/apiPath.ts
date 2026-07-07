@@ -119,9 +119,6 @@ export const API_PATHS = {
 
   SCORING: {
     RULES: (sport: string) => `/scoring/rules/${sport}`,
-    OVERRIDES: (id: string) => `/leagues/${id}/scoring-overrides`,
-    OVERRIDE_DETAIL: (id: string, overrideId: string) =>
-      `/leagues/${id}/scoring-overrides/${overrideId}`,
   },
 
   OPTIMIZATION: {

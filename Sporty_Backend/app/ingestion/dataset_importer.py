@@ -19,7 +19,7 @@ from app.league.models import Season, Sport, TransferWindow
 from app.match.models import Match  # noqa: F401
 from app.player.models import FootballStat, Player, PlayerGameweekStat, RealTeam
 from app.player.models_nba import NBAStat
-from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+from app.scoring.models import DefaultScoringRule  # noqa: F401
 
 logger = logging.getLogger(__name__)
 

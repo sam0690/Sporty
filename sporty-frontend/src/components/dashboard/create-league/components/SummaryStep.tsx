@@ -2,12 +2,10 @@
 
 type LeagueSportName = "football" | "basketball";
 
-type EditableScoringRule = {
+type ScoringRuleDisplay = {
   action: string;
   description: string;
-  defaultPoints: number;
   points: number;
-  enabled: boolean;
 };
 
 type SummaryStepProps = {
@@ -20,8 +18,7 @@ type SummaryStepProps = {
     draftDate: string;
   };
   selectedSports: LeagueSportName[];
-  scoringRulesBySport: Record<LeagueSportName, EditableScoringRule[]>;
-  customScoringEnabledBySport: Record<LeagueSportName, boolean>;
+  scoringRulesBySport: Record<LeagueSportName, ScoringRuleDisplay[]>;
   onBack: () => void;
   onCreate: () => void;
   isLoading: boolean;
@@ -42,7 +39,6 @@ export function SummaryStep({
   leagueData,
   selectedSports,
   scoringRulesBySport,
-  customScoringEnabledBySport,
   onBack,
   onCreate,
   isLoading,
@@ -108,10 +104,6 @@ export function SummaryStep({
         <div className="space-y-3 px-4 py-3">
           {selectedSports.map((sport) => {
             const rules = scoringRulesBySport[sport] ?? [];
-            const isCustomEnabled = customScoringEnabledBySport[sport];
-            const customRules = rules.filter(
-              (rule) => rule.enabled && rule.points !== rule.defaultPoints,
-            );
 
             return (
               <div
@@ -122,14 +114,10 @@ export function SummaryStep({
                   <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
                     {sportLabels[sport]}
                   </p>
-                  <p className="text-xs text-[#555560]">
-                    {isCustomEnabled
-                      ? `${customRules.length} custom rule(s)`
-                      : "Default scoring"}
-                  </p>
+                  <p className="text-xs text-[#555560]">Default scoring</p>
                 </div>
                 <div className="space-y-0">
-                  {(isCustomEnabled ? customRules : rules).map((rule) => (
+                  {rules.map((rule) => (
                     <div
                       key={`${sport}-${rule.action}`}
                       className="grid grid-cols-2 border-b border-[rgba(255,255,255,0.08)] px-3 py-2 last:border-b-0"
@@ -137,11 +125,7 @@ export function SummaryStep({
                       <p className="text-sm text-[#555560]">
                         {formatRuleLabel(rule.action)}
                       </p>
-                      <p className="text-sm text-[#f0f0f0]">
-                        {isCustomEnabled && rule.enabled
-                          ? `${rule.points} (default ${rule.defaultPoints})`
-                          : rule.defaultPoints}
-                      </p>
+                      <p className="text-sm text-[#f0f0f0]">{rule.points}</p>
                     </div>
                   ))}
                 </div>

@@ -7,35 +7,22 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { CreateLeagueHeader } from "@/components/dashboard/create-league/components/CreateLeagueHeader";
 import { LeagueBasicInfo } from "@/components/dashboard/create-league/components/LeagueBasicInfo";
 import { LeagueSettings } from "@/components/dashboard/create-league/components/LeagueSettings";
-// Scoring customization step hidden for now — see the commented-out render below.
-// import { ScoringSettings } from "@/components/dashboard/create-league/components/ScoringSettings";
 import { SummaryStep } from "@/components/dashboard/create-league/components/SummaryStep";
 import { SuccessModal } from "@/components/dashboard/create-league/components/SuccessModal";
 import { useDefaultScoringRules } from "@/hooks/scoring/useScoring";
-import {
-  useSeasons,
-  useCreateLeague,
-  useSports,
-} from "@/hooks/leagues/useLeagues";
+import { useSeasons, useCreateLeague } from "@/hooks/leagues/useLeagues";
 import { CreateLeagueSchema, type CreateLeagueValues } from "@/lib/validations";
-import { toastifier } from "@/lib/toastifier";
 import { LeagueService } from "@/services/LeagueService";
-import { ScoringService } from "@/services/ScoringService";
 import type { TCompetitionType } from "@/types";
 
 type SportKey = "football" | "basketball" | "multisport";
 type LeagueSportName = "football" | "basketball";
 
-type EditableScoringRule = {
+type ScoringRuleDisplay = {
   action: string;
   description: string;
-  defaultPoints: number;
   points: number;
-  enabled: boolean;
 };
-
-const MIN_CUSTOM_POINTS = -50;
-const MAX_CUSTOM_POINTS = 50;
 
 function mapSportSelectionToPayload(sport: SportKey): LeagueSportName[] {
   if (sport === "multisport") {
@@ -45,31 +32,18 @@ function mapSportSelectionToPayload(sport: SportKey): LeagueSportName[] {
   return [sport];
 }
 
-function formatRuleLabel(action: string): string {
-  return action
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 function normalizeScoringRules(
   rules?: { action: string; description: string; points: number | string }[],
-): EditableScoringRule[] {
-  return (rules ?? []).map((rule) => {
-    const points = Number(rule.points);
-
-    return {
-      action: rule.action,
-      description: rule.description,
-      defaultPoints: points,
-      points,
-      enabled: false,
-    };
-  });
+): ScoringRuleDisplay[] {
+  return (rules ?? []).map((rule) => ({
+    action: rule.action,
+    description: rule.description,
+    points: Number(rule.points),
+  }));
 }
 
 export function CreateLeagueView() {
   const { data: seasons } = useSeasons();
-  const { data: sports } = useSports();
   const { data: footballRules } = useDefaultScoringRules("football");
   const { data: basketballRules } = useDefaultScoringRules("basketball");
   const createMutation = useCreateLeague();
@@ -113,17 +87,6 @@ export function CreateLeagueView() {
   const draftMode = useWatch({ control, name: "draft_mode" }) ?? false;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
-  const [customScoringEnabledBySport, setCustomScoringEnabledBySport] =
-    useState<Record<LeagueSportName, boolean>>({
-      football: false,
-      basketball: false,
-    });
-  const [editableScoringRulesBySport, setEditableScoringRulesBySport] =
-    useState<Record<LeagueSportName, EditableScoringRule[]>>({
-      football: [],
-      basketball: [],
-    });
-
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdLeagueInfo, setCreatedLeagueInfo] = useState<{
     id: string;
@@ -133,9 +96,7 @@ export function CreateLeagueView() {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Scoring customization step is hidden for now (see the commented-out
-  // ScoringSettings render below), so the flow is Basic Info → Settings →
-  // Summary.
+  // Flow: Basic Info → Settings → Summary.
   const totalSteps = 3;
   const selectedSports = useMemo(() => {
     const currentSportIds = sportIds ?? ["football"];
@@ -192,52 +153,13 @@ export function CreateLeagueView() {
     ],
   );
 
-  const defaultScoringRulesBySport = useMemo(
+  const scoringRulesBySport: Record<LeagueSportName, ScoringRuleDisplay[]> = useMemo(
     () => ({
       football: normalizeScoringRules(footballRules),
       basketball: normalizeScoringRules(basketballRules),
     }),
     [basketballRules, footballRules],
   );
-
-  const scoringRulesBySport = useMemo(
-    () => ({
-      football:
-        editableScoringRulesBySport.football.length > 0
-          ? editableScoringRulesBySport.football
-          : defaultScoringRulesBySport.football,
-      basketball:
-        editableScoringRulesBySport.basketball.length > 0
-          ? editableScoringRulesBySport.basketball
-          : defaultScoringRulesBySport.basketball,
-    }),
-    [defaultScoringRulesBySport, editableScoringRulesBySport],
-  );
-
-  const customScoringValidationError = useMemo(() => {
-    for (const sport of selectedSports) {
-      if (!customScoringEnabledBySport[sport]) {
-        continue;
-      }
-
-      for (const rule of scoringRulesBySport[sport]) {
-        if (!rule.enabled) {
-          continue;
-        }
-
-        if (
-          Number.isNaN(rule.points) ||
-          rule.points < MIN_CUSTOM_POINTS ||
-          rule.points > MAX_CUSTOM_POINTS
-        ) {
-          const sportName = sport === "football" ? "Football" : "Basketball";
-          return `${sportName}: '${formatRuleLabel(rule.action)}' must be a number between ${MIN_CUSTOM_POINTS} and ${MAX_CUSTOM_POINTS}.`;
-        }
-      }
-    }
-
-    return null;
-  }, [selectedSports, customScoringEnabledBySport, scoringRulesBySport]);
 
   const schemaError =
     step === 1
@@ -250,24 +172,6 @@ export function CreateLeagueView() {
         : null;
 
   const displayError = schemaError || error;
-
-  const customOverrides = useMemo(
-    () =>
-      selectedSports.flatMap((sport) => {
-        if (!customScoringEnabledBySport[sport]) {
-          return [];
-        }
-
-        return scoringRulesBySport[sport]
-          .filter((rule) => rule.enabled && rule.points !== rule.defaultPoints)
-          .map((rule) => ({
-            sport,
-            action: rule.action,
-            points: rule.points,
-          }));
-      }),
-    [selectedSports, customScoringEnabledBySport, scoringRulesBySport],
-  );
 
   const handleNextStep = async () => {
     setError(null);
@@ -302,11 +206,6 @@ export function CreateLeagueView() {
   };
 
   const handleCreateLeague = handleSubmit(async (values) => {
-    if (customScoringValidationError) {
-      setError(customScoringValidationError);
-      return;
-    }
-
     setError(null);
     try {
       const competitionType = values.draft_mode ? "draft" : "budget";
@@ -324,40 +223,6 @@ export function CreateLeagueView() {
         transfers_per_window: 4,
         transfer_day: 1,
       });
-
-      if (customOverrides.length > 0) {
-        try {
-          const sportIdByName = new Map(
-            (sports ?? []).map((sport) => [sport.name, sport.id]),
-          );
-
-          const missingSportId = customOverrides.find(
-            (override) => !sportIdByName.get(override.sport),
-          );
-          if (missingSportId) {
-            throw new Error(
-              `Could not resolve sport id for ${missingSportId.sport} scoring overrides.`,
-            );
-          }
-
-          for (const override of customOverrides) {
-            const sportId = sportIdByName.get(override.sport);
-            if (!sportId) {
-              continue;
-            }
-
-            await ScoringService.upsertOverride(result.id, {
-              sport_id: sportId,
-              action: override.action,
-              points: override.points,
-            });
-          }
-        } catch {
-          toastifier.error(
-            "League created, but some sport/scoring customizations could not be applied.",
-          );
-        }
-      }
 
       setCreatedLeagueInfo({
         id: result.id,
@@ -413,51 +278,6 @@ export function CreateLeagueView() {
     });
 
     setSeasonId("");
-  };
-
-  const handleToggleSportCustomScoring = (
-    sport: LeagueSportName,
-    enabled: boolean,
-  ) => {
-    setCustomScoringEnabledBySport((prev) => ({ ...prev, [sport]: enabled }));
-  };
-
-  const handleRuleToggle = (
-    sport: LeagueSportName,
-    action: string,
-    enabled: boolean,
-  ) => {
-    setEditableScoringRulesBySport((prev) => ({
-      ...prev,
-      [sport]: prev[sport].map((rule) =>
-        rule.action === action
-          ? {
-              ...rule,
-              enabled,
-              points: enabled ? rule.points : rule.defaultPoints,
-            }
-          : rule,
-      ),
-    }));
-  };
-
-  const handleRulePointsChange = (
-    sport: LeagueSportName,
-    action: string,
-    points: number,
-  ) => {
-    setEditableScoringRulesBySport((prev) => ({
-      ...prev,
-      [sport]: prev[sport].map((rule) =>
-        rule.action === action
-          ? {
-              ...rule,
-              points,
-              enabled: true,
-            }
-          : rule,
-      ),
-    }));
   };
 
   const handleSettingsChange = (next: {
@@ -552,29 +372,11 @@ export function CreateLeagueView() {
               />
             ) : null}
 
-            {/* Scoring customization hidden for now — owners can't override
-                default scoring rules yet; re-enable this step when that's
-                ready.
-            {step === 3 ? (
-              <ScoringSettings
-                selectedSports={selectedSports}
-                scoringRulesBySport={scoringRulesBySport}
-                customScoringEnabledBySport={customScoringEnabledBySport}
-                onToggleSportCustomScoring={handleToggleSportCustomScoring}
-                onRuleToggle={handleRuleToggle}
-                onRulePointsChange={handleRulePointsChange}
-                minPoints={MIN_CUSTOM_POINTS}
-                maxPoints={MAX_CUSTOM_POINTS}
-              />
-            ) : null}
-            */}
-
             {step === totalSteps ? (
               <SummaryStep
                 leagueData={leagueData}
                 selectedSports={selectedSports}
                 scoringRulesBySport={scoringRulesBySport}
-                customScoringEnabledBySport={customScoringEnabledBySport}
                 onBack={handlePreviousStep}
                 onCreate={handleCreateLeague}
                 isLoading={createMutation.isPending}
