@@ -36,6 +36,7 @@ from app.models.db.live_event import LiveEvent
 from app.models.db.match_feed_cache import MatchFeedCache
 from app.models.schemas.events import WSMessage
 from app.player.models import Player, RealTeam
+from app.services import notification_service
 from app.services.feed_scoring import apply_live_points, persist_match_stats
 from app.auth.models import AuthProvider, User
 from app.core.security import hash_password
@@ -527,6 +528,7 @@ async def ingest_match_result(
     # player's external_api_id; key the lookup by the exact sporty_player_id so
     # resolution survives whatever case/form the feed sent.
     names: dict[str, dict] = {}
+    player_uuid_by_sporty_id: dict[str, uuid.UUID] = {}
     batch_ids = [e.sporty_player_id for e in payload.events if e.sporty_player_id]
     batch_ids += [e.related_sporty_player_id for e in payload.events if e.related_sporty_player_id]
     if batch_ids:
@@ -547,6 +549,32 @@ async def ingest_match_result(
             row = by_lower_id.get(pid.lower()) or by_ext.get(pid)
             if row:
                 names[pid] = {"name": row["name"], "team": row["real_team"]}
+                player_uuid_by_sporty_id[pid] = uuid.UUID(row["id"])
+
+    # Resolve each event's sporty_team_id to our internal RealTeam.id (same
+    # dual lookup as players above: feeder may send our own id or its own
+    # external_api_id) — needed so notify_favourite_event can match on the
+    # actual FK, not the feeder's opaque team identifier.
+    team_uuid_by_sporty_id: dict[str, uuid.UUID] = {}
+    team_batch_ids = list({e.sporty_team_id for e in payload.events if e.sporty_team_id})
+    if team_batch_ids:
+        lowered_teams = [tid.lower() for tid in team_batch_ids]
+        matched_teams = db.execute(
+            text(
+                """
+                SELECT id::text AS id, external_api_id
+                FROM real_teams
+                WHERE lower(id::text) = ANY(:lowered) OR external_api_id = ANY(:ids)
+                """
+            ),
+            {"lowered": lowered_teams, "ids": team_batch_ids},
+        ).mappings().all()
+        by_lower_team = {r["id"].lower(): r["id"] for r in matched_teams if r["id"]}
+        by_ext_team = {r["external_api_id"]: r["id"] for r in matched_teams if r["external_api_id"]}
+        for tid in team_batch_ids:
+            resolved = by_lower_team.get(tid.lower()) or by_ext_team.get(tid)
+            if resolved:
+                team_uuid_by_sporty_id[tid] = uuid.UUID(resolved)
 
     def _event_dict(event) -> dict:
         info = names.get(event.sporty_player_id or "")
@@ -598,6 +626,39 @@ async def ingest_match_result(
             },
         )
         await redis.publish(channel, lineup_message.model_dump_json())
+
+    # Favourite-team/player notifications (in-app + email) for goals in this
+    # batch. Best-effort and fully isolated from the rest of ingestion: a
+    # notification/email failure must never fail the feeder's request or
+    # block scoring below. On failure, roll back so this block's partial
+    # writes don't poison the session for the finished-match commit further
+    # down (same lesson as the scoring-engine deadlock fix elsewhere in this
+    # codebase — a caught exception without a rollback leaves the session
+    # unusable for whatever runs next).
+    goal_events = [e for e in payload.events if e.event_type == "goal"]
+    if goal_events:
+        try:
+            notified_any = False
+            for event in goal_events:
+                resolved_player_id = player_uuid_by_sporty_id.get(event.sporty_player_id or "")
+                resolved_team_id = team_uuid_by_sporty_id.get(event.sporty_team_id or "")
+                if resolved_player_id is None and resolved_team_id is None:
+                    continue
+                info = names.get(event.sporty_player_id or "")
+                scorer = info["name"] if info else "Your favourite player"
+                team_name = info["team"] if info else "your favourite team"
+                if notification_service.notify_favourite_event(
+                    db,
+                    player_id=resolved_player_id,
+                    team_id=resolved_team_id,
+                    message=f"⚽ Goal! {scorer} scored for {team_name}.",
+                ):
+                    notified_any = True
+            if notified_any:
+                db.commit()
+        except Exception:
+            logger.exception("Feeder match %s: favourite-event notification fanout failed", live_key)
+            db.rollback()
 
     # Live per-player fantasy deltas → Redis hashes + FANTASY_POINTS_DELTA so the
     # frontend PointsCard ticks up during the match (needs linked player ids).

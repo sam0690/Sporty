@@ -20,10 +20,12 @@ class Notification(Base):
         nullable=False,
         index=True,
     )
-    league_id: Mapped[uuid.UUID] = mapped_column(
+    # Nullable — favourite-team/player notifications (see
+    # notification_service.notify_favourite_event) aren't tied to any league.
+    league_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("leagues.id", ondelete="CASCADE"),
-        nullable=False,
+        nullable=True,
         index=True,
     )
     message: Mapped[str] = mapped_column(String(500), nullable=False)

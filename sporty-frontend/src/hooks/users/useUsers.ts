@@ -30,6 +30,8 @@ export function useUpdateUser(userId: string) {
       username?: string;
       avatar_url?: string | null;
       email_notifications_enabled?: boolean;
+      favourite_team_id?: string;
+      favourite_player_id?: string;
     }) => UserService.updateUser(userId, payload),
     {
       onSuccess: () => {

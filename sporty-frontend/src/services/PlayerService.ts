@@ -18,6 +18,16 @@ type BackendPlayer = {
   };
 };
 
+export type TTeamBrief = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  sport: {
+    name: string;
+    display_name: string;
+  };
+};
+
 type TPlayerStatsResponse = {
   player: {
     id: string;
@@ -113,5 +123,13 @@ export const PlayerService = {
       },
     });
     return res.data as TPlayerStatsResponse[];
+  },
+
+  /** List real teams (with crest), optionally filtered by sport */
+  async getTeams(sportName?: string): Promise<TTeamBrief[]> {
+    const res = await authApi.get(API_PATHS.PLAYERS.TEAMS, {
+      params: sportName ? { sport_name: sportName } : undefined,
+    });
+    return res.data as TTeamBrief[];
   },
 };

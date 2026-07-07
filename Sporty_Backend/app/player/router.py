@@ -16,12 +16,14 @@ Transaction convention:
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
 from app.database import get_db
+from app.league.models import Sport
 from app.player import services as player_service
+from app.player.models import RealTeam
 from app.player.schemas import (
     PlayerFilter,
     PlayerGameweekStatResponse,
@@ -29,6 +31,7 @@ from app.player.schemas import (
     PlayerPriceHistoryResponse,
     PlayerResponse,
 )
+from app.schemas.common import TeamBrief
 
 router = APIRouter(prefix="/players", tags=["Players"])
 
@@ -79,6 +82,31 @@ def get_players(
         page_size=filters.page_size,
         has_next=(filters.page * filters.page_size) < total,
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /players/teams — list real teams (favourite-team picker)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/teams",
+    response_model=list[TeamBrief],
+    summary="List real teams, optionally filtered by sport",
+)
+def list_real_teams(
+    sport_name: str | None = None,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Return every real-world team — a small reference table (dozens of
+    rows), no pagination needed. Used by the favourite-team picker."""
+    query = db.query(RealTeam).options(joinedload(RealTeam.sport))
+    if sport_name:
+        query = query.join(Sport, Sport.id == RealTeam.sport_id).filter(
+            Sport.name == sport_name.strip().lower()
+        )
+    return query.order_by(RealTeam.name).all()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

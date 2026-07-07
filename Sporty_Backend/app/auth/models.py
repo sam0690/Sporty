@@ -64,6 +64,19 @@ class User(Base):
         Boolean, default=True, nullable=False, server_default="true"
     )
 
+    # Favourites — drive personalized notifications when a goal happens for
+    # this team/player (see app/services/notification_service.py). SET NULL
+    # so a deleted team/player doesn't block deleting the row, it just
+    # silently unsets the user's favourite.
+    favourite_team_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("real_teams.id", ondelete="SET NULL"),
+        nullable=True, index=True,
+    )
+    favourite_player_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id", ondelete="SET NULL"),
+        nullable=True, index=True,
+    )
+
     # Issue 5: timezone-aware, server-side defaults via func.now()
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -89,6 +102,11 @@ class User(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+
+    # String-based targets (no import of player.models here) — same
+    # circular-import avoidance pattern used throughout this codebase.
+    favourite_team: Mapped["RealTeam | None"] = relationship(foreign_keys=[favourite_team_id])
+    favourite_player: Mapped["Player | None"] = relationship(foreign_keys=[favourite_player_id])
 
     # Issue 3: DB-level guard rails — prevent broken users
     __table_args__ = (

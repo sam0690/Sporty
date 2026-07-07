@@ -70,6 +70,16 @@ class PlayerBrief(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class TeamBrief(BaseModel):
+    """Minimal real-team info — used for favourite-team selection/display."""
+    id: uuid.UUID
+    name: str
+    logo_url: str | None = None
+    sport: SportBrief
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class TransferWindowBrief(BaseModel):
     """Minimal transfer window info — number is all you usually need in responses."""
     id: uuid.UUID

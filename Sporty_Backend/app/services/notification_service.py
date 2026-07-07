@@ -4,12 +4,13 @@ from datetime import datetime, timezone
 from collections.abc import Sequence
 
 from fastapi import HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session, joinedload
 
 from app.auth.models import User
 from app.league.models import League, LeagueMembership, TransferWindow
 from app.notification.models import Notification
-from app.services.email_service import send_transfer_window_open_email
+from app.services.email_service import send_favourite_event_email, send_transfer_window_open_email
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +73,42 @@ def notify_new_season_started(db: Session, league_ids: Sequence[uuid.UUID]) -> i
         league_ids,
         "{league_name} — a new season is ready! Join and set up your squad.",
     )
+
+
+def notify_favourite_event(
+    db: Session,
+    *,
+    player_id: uuid.UUID | None,
+    team_id: uuid.UUID | None,
+    message: str,
+) -> int:
+    """Notify (in-app + email) every user whose favourite player/team matches
+    this event. Not league-scoped — Notification.league_id is left None.
+
+    Best-effort by design: the caller (feed.py's live-event ingest) must wrap
+    this in its own try/except so a notification/email hiccup never blocks
+    match ingestion or scoring.
+    """
+    if player_id is None and team_id is None:
+        return 0
+
+    conditions = []
+    if player_id is not None:
+        conditions.append(User.favourite_player_id == player_id)
+    if team_id is not None:
+        conditions.append(User.favourite_team_id == team_id)
+
+    users = db.query(User).filter(User.is_active.is_(True), or_(*conditions)).all()
+    if not users:
+        return 0
+
+    for user in users:
+        db.add(Notification(user_id=user.id, league_id=None, message=message, is_read=False))
+        if user.email and user.email_notifications_enabled:
+            send_favourite_event_email(to_email=user.email, username=user.username, message=message)
+
+    db.flush()
+    return len(users)
 
 
 def get_user_notifications(db: Session, user_id: uuid.UUID) -> list[Notification]:

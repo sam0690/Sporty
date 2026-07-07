@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict
 class NotificationResponse(BaseModel):
     id: uuid.UUID
     user_id: uuid.UUID
-    league_id: uuid.UUID
+    league_id: uuid.UUID | None
     message: str
     is_read: bool
     created_at: datetime

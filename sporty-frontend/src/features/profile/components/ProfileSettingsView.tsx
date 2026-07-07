@@ -6,6 +6,7 @@ import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/lib/toastifier";
 import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
 import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
+import { FavouritesForm } from "@/components/dashboard/profile/components/FavouritesForm";
 import {
   ProfileForm,
   type ProfileUser,
@@ -14,6 +15,8 @@ import { ProfileHeader } from "@/components/dashboard/profile/components/Profile
 import { SettingsSkeleton } from "@/components/dashboard/profile/components/SettingsSkeleton";
 import { useUpdateUser, useUploadAvatar } from "@/hooks/users/useUsers";
 import { UserService } from "@/services/UserService";
+import type { TTeamBrief } from "@/services/PlayerService";
+import type { TFavouritePlayer } from "@/services/UserService";
 
 const mockUser = {
   id: "1",
@@ -86,6 +89,28 @@ export function ProfileSettingsView() {
     }
   };
 
+  const handleTeamChange = async (team: TTeamBrief): Promise<void> => {
+    if (!me?.id) {
+      return;
+    }
+    try {
+      await updateUser.mutateAsync({ favourite_team_id: team.id });
+    } catch {
+      toastifier.error("✕ Unable to update favourite team");
+    }
+  };
+
+  const handlePlayerChange = async (player: TFavouritePlayer): Promise<void> => {
+    if (!me?.id) {
+      return;
+    }
+    try {
+      await updateUser.mutateAsync({ favourite_player_id: player.id });
+    } catch {
+      toastifier.error("✕ Unable to update favourite player");
+    }
+  };
+
   const handleAvatarChange = async (file: File): Promise<void> => {
     if (!me?.id) {
       return;
@@ -135,6 +160,12 @@ export function ProfileSettingsView() {
         />
 
         <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
+        <FavouritesForm
+          favouriteTeam={me?.favourite_team ?? null}
+          favouritePlayer={me?.favourite_player ?? null}
+          onTeamChange={handleTeamChange}
+          onPlayerChange={handlePlayerChange}
+        />
         <DangerZone onDeleteAccount={handleDeleteAccount} />
       </div>
 

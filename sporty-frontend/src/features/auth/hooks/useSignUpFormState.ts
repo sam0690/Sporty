@@ -39,7 +39,13 @@ export function useSignUpFormState() {
     const redirect = getSafeRedirectPath(
       new URLSearchParams(window.location.search).get("redirect"),
     );
-    router.replace(redirect ?? "/dashboard");
+    // Route through a one-time "pick your favourites" step before landing
+    // wherever the user was actually headed — it's skippable there, not a
+    // hard gate on completing registration.
+    const onboardingUrl = redirect
+      ? `/onboarding/favourites?redirect=${encodeURIComponent(redirect)}`
+      : "/onboarding/favourites";
+    router.replace(onboardingUrl);
   });
 
   return {

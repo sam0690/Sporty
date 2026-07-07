@@ -3,7 +3,7 @@ import { authApi } from "@/api/auth-api-client";
 export type NotificationItem = {
   id: string;
   user_id: string;
-  league_id: string;
+  league_id: string | null;
   message: string;
   is_read: boolean;
   created_at: string;

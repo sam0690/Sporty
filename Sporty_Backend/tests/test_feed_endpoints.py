@@ -49,6 +49,7 @@ class _FakeDB:
         self.sport = sport
         self.statements = []
         self.commits = 0
+        self.rollbacks = 0
         self.added = []
 
     def query(self, model):
@@ -78,6 +79,9 @@ class _FakeDB:
 
     def commit(self):
         self.commits += 1
+
+    def rollback(self):
+        self.rollbacks += 1
 
 
 class _FakeRedis:
@@ -235,6 +239,61 @@ class TestMatchResult:
         assert data["data"]["minute"] == 67
         assert data["data"]["kind"] == "FEED_MATCH_RESULT"
         assert len(data["data"]["events"]) == 2
+
+    def test_favourite_notification_failure_does_not_break_ingest(self, harness, monkeypatch):
+        # notify_favourite_event is called for "goal" events (the default
+        # payload has one) once the event's player/team resolve to real ids.
+        # A hard failure there (bad email config, DB hiccup, etc.) must never
+        # fail the feeder's request or block scoring — it's wrapped in its
+        # own try/except with a rollback, isolated from everything else in
+        # this handler. The generic fake DB resolves raw-SQL lookups to no
+        # rows (see _FakeDB.execute), so make the player/real_team resolution
+        # queries specifically return a match — otherwise the notify call
+        # this test targets is never reached at all.
+        real_execute = harness.db.execute
+
+        def _execute_with_resolution(statement, params=None):
+            sql = str(statement)
+            if params and "FROM players" in sql:
+                return SimpleNamespace(
+                    mappings=lambda: SimpleNamespace(
+                        all=lambda: [
+                            {
+                                "id": str(uuid.uuid4()),
+                                "external_api_id": "p-uuid-1",
+                                "name": "Test Player",
+                                "real_team": "Test FC",
+                            }
+                        ]
+                    )
+                )
+            if params and "FROM real_teams" in sql:
+                return SimpleNamespace(
+                    mappings=lambda: SimpleNamespace(
+                        all=lambda: [{"id": str(uuid.uuid4()), "external_api_id": "t-uuid-1"}]
+                    )
+                )
+            return real_execute(statement, params)
+
+        monkeypatch.setattr(harness.db, "execute", _execute_with_resolution)
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("simulated notification fanout failure")
+
+        monkeypatch.setattr(
+            feed_module.notification_service, "notify_favourite_event", _boom
+        )
+
+        response = harness.client.post(
+            "/api/v1/feed/match-result", json=match_result_payload(), headers=self.headers()
+        )
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["events_received"] == 2
+        assert body["events_inserted"] == 2
+        assert harness.db.match.home_score == 2
+        assert harness.db.rollbacks == 1
 
     def test_event_upsert_is_idempotent_on_event_id(self, harness):
         harness.client.post("/api/v1/feed/match-result", json=match_result_payload(), headers=self.headers())

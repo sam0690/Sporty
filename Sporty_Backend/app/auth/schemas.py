@@ -4,6 +4,8 @@ from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.schemas.common import PlayerBrief, TeamBrief
+
 
 # ── Requests ──────────────────────────────────────────────────────────────────
 
@@ -67,6 +69,8 @@ class UserResponse(BaseModel):
     is_active: bool
     role: str
     email_notifications_enabled: bool
+    favourite_team: Optional[TeamBrief] = None
+    favourite_player: Optional[PlayerBrief] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

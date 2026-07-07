@@ -25,6 +25,13 @@ from app.player import models_nba as player_models_nba  # noqa: F401
 from app.scoring import models as scoring_models  # noqa: F401
 from app.admin import models as admin_models  # noqa: F401
 from app.support import models as support_models  # noqa: F401
+from app.notification import models as notification_models  # noqa: F401
+# These two were missing entirely — without them Alembic doesn't know these
+# tables exist and every autogenerate run proposes DROPPING live_events and
+# match_feed_cache (real, in-use tables), which had to be hand-trimmed out of
+# the last two migrations. Registering them here is the actual fix.
+from app.models.db import live_event as live_event_models  # noqa: F401
+from app.models.db import match_feed_cache as match_feed_cache_models  # noqa: F401
 
 # Alembic Config object
 config = context.config

@@ -41,7 +41,7 @@ from app.league.models import (  # noqa: F401
 )
 from app.match.models import Match  # noqa: F401
 from app.player.models import Player, PlayerGameweekStat, FootballStat, CricketStat  # noqa: F401
-from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+from app.scoring.models import DefaultScoringRule  # noqa: F401
 
 from app.services.sync.match_sync import (
     sync_basketball_games,

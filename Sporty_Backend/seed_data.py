@@ -48,7 +48,7 @@ from app.league.models import (  # noqa: F401
 from app.match.models import Match  # noqa: F401
 from app.player.models import CricketStat, FootballStat, Player, PlayerGameweekStat, RealTeam  # noqa: F401
 from app.player.models_nba import NBAStat  # noqa: F401
-from app.scoring.models import DefaultScoringRule, LeagueScoringOverride  # noqa: F401
+from app.scoring.models import DefaultScoringRule  # noqa: F401
 
 
 SEED = 20260406

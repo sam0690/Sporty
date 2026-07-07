@@ -4,6 +4,29 @@ import { API_PATHS } from "@/api/apiPath";
 import type { ApiResponse } from "@/types";
 import type { AxiosResponse } from "axios";
 
+export type TSportBrief = {
+  name: string;
+  display_name: string;
+};
+
+export type TFavouriteTeam = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  sport: TSportBrief;
+};
+
+export type TFavouritePlayer = {
+  id: string;
+  name: string;
+  position: string;
+  real_team: string;
+  photo_url: string | null;
+  real_team_logo_url: string | null;
+  cost: number;
+  sport: TSportBrief;
+};
+
 export type TMe = {
   id: string;
   username: string;
@@ -14,6 +37,8 @@ export type TMe = {
   is_active: boolean;
   role: string;
   email_notifications_enabled: boolean;
+  favourite_team: TFavouriteTeam | null;
+  favourite_player: TFavouritePlayer | null;
   created_at: string;
 };
 
@@ -184,6 +209,8 @@ export const UserService = {
       username?: string;
       avatar_url?: string | null;
       email_notifications_enabled?: boolean;
+      favourite_team_id?: string;
+      favourite_player_id?: string;
     },
   ): Promise<TUserProfile> {
     const res = await authApi.patch(API_PATHS.USERS.UPDATE(id), payload);

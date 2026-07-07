@@ -15,6 +15,7 @@ from app.league.models import (
     Transfer,
     TransferWindow,
 )
+from app.player.models import Player, RealTeam
 from app.user.schemas import UserUpdateRequest
 
 
@@ -26,7 +27,12 @@ def get_users(db: Session, page: int = 1, page_size: int = 20):
 
 
 def get_user(db: Session, user_id: uuid.UUID) -> User:
-    user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()
+    user = (
+        db.query(User)
+        .options(joinedload(User.favourite_team), joinedload(User.favourite_player))
+        .filter(User.id == user_id, User.is_active.is_(True))
+        .first()
+    )
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
@@ -374,6 +380,18 @@ def update_user(db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUI
 
     if data.email_notifications_enabled is not None:
         user.email_notifications_enabled = data.email_notifications_enabled
+
+    if data.favourite_team_id is not None:
+        team = db.query(RealTeam).filter(RealTeam.id == data.favourite_team_id).first()
+        if not team:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
+        user.favourite_team_id = team.id
+
+    if data.favourite_player_id is not None:
+        player = db.query(Player).filter(Player.id == data.favourite_player_id).first()
+        if not player:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
+        user.favourite_player_id = player.id
 
     db.commit()
     db.refresh(user)

@@ -104,6 +104,24 @@ def send_transfer_window_open_email(
     )
 
 
+def send_favourite_event_email(
+    *,
+    to_email: str,
+    username: str,
+    message: str,
+) -> bool:
+    """Send a favourite-team/player match-event email via Resend.
+
+    Returns True on success, False on soft failure.
+    """
+    html = f"<p>Hi {username},</p><p>{message}</p><p>Log in to Sporty for the live match.</p>"
+    return _send_email_via_resend(
+        to_email=to_email,
+        subject="Sporty: your favourite just made a move",
+        html=html,
+    )
+
+
 def send_password_reset_email(
     *,
     to_email: str,

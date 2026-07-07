@@ -115,6 +115,7 @@ export const API_PATHS = {
     DETAIL: (id: string) => `/players/${id}`,
     STATS: "/players/stats",
     STAT_DETAIL: (id: string, mwId: string) => `/players/${id}/stats/${mwId}`,
+    TEAMS: "/players/teams",
   },
 
   SCORING: {

@@ -62,10 +62,7 @@ from app.player.models import (  # noqa: E402,F401
     RealTeam,
 )
 from app.player.models_nba import NBAStat  # noqa: E402,F401
-from app.scoring.models import (  # noqa: E402,F401
-    DefaultScoringRule,
-    LeagueScoringOverride,
-)
+from app.scoring.models import DefaultScoringRule  # noqa: E402,F401
 
 
 def main() -> None:
