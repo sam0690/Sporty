@@ -2,7 +2,6 @@
 
 import { useMemo } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
 import type { TGameweekPoints } from "@/types/league";
 
 type GameweekBreakdownProps = {
@@ -28,39 +27,43 @@ export function GameweekBreakdown({
   }, [breakdown]);
 
   return (
-    <Card>
-      <CardHeader className="flex items-center justify-between gap-4">
-        <CardTitle>Gameweek Points</CardTitle>
+    <section className="pop-in overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
+      <div
+        aria-hidden
+        className="h-[2px] w-full"
+        style={{ background: "linear-gradient(90deg, #e8fb25, transparent 80%)" }}
+      />
+      <header className="flex items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
+          Gameweek Points
+        </h2>
         {rows.length > 0 && (
           <div className="flex items-center gap-5">
             <div className="text-right">
-              <p className="font-bebas text-xl leading-none tracking-[1px] text-[#9a9aa5]">
+              <p className="num font-bebas text-xl leading-none tracking-[1px] text-[#9a9aa5]">
                 {Math.round(average)}
               </p>
               <p className="section-label mt-1">Avg</p>
             </div>
             <div className="text-right">
-              <p className="font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
+              <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
                 {Math.round(total)}
               </p>
               <p className="section-label mt-1">Total</p>
             </div>
           </div>
         )}
-      </CardHeader>
+      </header>
 
-      <CardContent className="pt-4">
+      <div className="p-5">
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 3 }, (_, index) => (
-              <div
-                key={index}
-                className="h-10 animate-pulse rounded-[3px] bg-[#1d1d26]"
-              />
+              <div key={index} className="skeleton h-10 rounded-[8px]" />
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-4 text-sm text-[#555560]">
+          <div className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] p-4 text-sm text-[#777783]">
             No gameweeks scored yet. Points appear here once a gameweek finishes.
           </div>
         ) : (
@@ -79,23 +82,28 @@ export function GameweekBreakdown({
                     GW{row.gameweek}
                   </span>
 
-                  <div className="relative h-7 flex-1 overflow-hidden rounded-[3px] bg-[#1d1d26]">
+                  <div className="relative h-7 flex-1 overflow-hidden rounded-full bg-[#1a1a22]">
                     <div
-                      className="h-full rounded-[3px] transition-[width] duration-300"
+                      className="h-full rounded-full transition-[width] duration-300"
                       style={{
                         width: `${Math.max(widthPct, 3)}%`,
-                        background: isBest ? "#e8fb25" : "rgba(232,251,37,0.28)",
+                        background: isBest
+                          ? "linear-gradient(90deg, #e8fb25, #c8d85a)"
+                          : "rgba(232,251,37,0.25)",
+                        boxShadow: isBest
+                          ? "0 0 16px -2px rgba(232,251,37,0.55)"
+                          : "none",
                       }}
                     />
                     {row.rank != null && (
-                      <span className="absolute inset-y-0 right-2 flex items-center section-label">
+                      <span className="absolute inset-y-0 right-2.5 flex items-center section-label text-[#f0f0f0]/70">
                         Rank #{row.rank}
                       </span>
                     )}
                   </div>
 
                   <span
-                    className={`w-12 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] ${
+                    className={`num w-12 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] ${
                       isBest ? "text-[#e8fb25]" : "text-[#f0f0f0]"
                     }`}
                   >
@@ -106,7 +114,7 @@ export function GameweekBreakdown({
             })}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
 }

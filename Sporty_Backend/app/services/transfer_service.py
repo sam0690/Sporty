@@ -35,14 +35,6 @@ MULTISPORT_MAX_PLAYERS_BY_SPORT: dict[str, int] = {
 }
 
 
-def _safe_hget(redis: Redis, key: str, field: str) -> str | None:
-    try:
-        return redis.hget(key, field)
-    except Exception:
-        logger.exception("Redis hget failed key=%s field=%s", key, field)
-        return None
-
-
 def _safe_get(redis: Redis, key: str) -> str | None:
     try:
         return redis.get(key)
@@ -179,11 +171,15 @@ def _current_window_id(db: Session, league: League) -> uuid.UUID:
     return row[0]
 
 
-def _player_price(db: Session, redis: Redis, player_id: uuid.UUID) -> Decimal:
-    cached = _safe_hget(redis, "player:prices", str(player_id))
-    if cached is not None:
-        return Decimal(cached)
-
+def _player_price(db: Session, player_id: uuid.UUID) -> Decimal:
+    # Always read the live DB cost, never the `player:prices` Redis cache: that
+    # cache is only rebuilt by the once-daily cache-warming job and nothing
+    # invalidates it when repricing.py (or the dataset importer, or admin
+    # edits) changes Player.cost in between. A player repriced down since the
+    # last warm would still be checked against its old, higher cached price
+    # here, producing a false "Insufficient budget" for an affordably-priced
+    # player. confirm_transfers already reads Player.cost directly for the
+    # same reason — this keeps both paths on the one source of truth.
     row = db.query(Player.cost).filter(Player.id == player_id).first()
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
@@ -340,7 +336,7 @@ def stage_in(
     league, team = _require_league_and_team(db, league_id, current_user)
     is_multisport_league = _is_multisport_league(db, league_id)
     _ensure_player_allowed_for_league_pool(db, league_id, player_id)
-    price = _player_price(db, redis, player_id)
+    price = _player_price(db, player_id)
 
     league_sport = (
         db.query(LeagueSport)
