@@ -1,6 +1,11 @@
 "use client";
 
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import {
+  BasketballGlyph,
+  CricketGlyph,
+  FootballGlyph,
+} from "@/components/landing/sport-icons";
 
 type Sport = "football" | "basketball" | "cricket";
 
@@ -18,16 +23,10 @@ type PlayerCardProps = {
   teamName?: string;
 };
 
-const sportAccent: Record<Sport, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
-  cricket: "#00d4ff",
-};
-
-const sportLabel: Record<Sport, string> = {
-  football: "Football",
-  basketball: "Basketball",
-  cricket: "Cricket",
+const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
+  football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
+  basketball: { Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
+  cricket: { Icon: CricketGlyph, color: "#00d4ff", label: "Cricket" },
 };
 
 export function PlayerCard({
@@ -42,36 +41,38 @@ export function PlayerCard({
   avgPoints,
   gameweekPoints,
 }: PlayerCardProps) {
-  const accent = sportAccent[sport] ?? "#9a9aa5";
+  const meta = SPORT_META[sport];
+  const Icon = meta.Icon;
 
   return (
-    <article
-      style={{ borderLeft: `3px solid ${accent}` }}
-      className="card-fade-in flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.18)]"
-    >
+    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.16)]">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <PlayerAvatar name={name} photoUrl={photoUrl} size="md" className="shrink-0" />
-        <span
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
-          style={{ color: accent, background: `${accent}1f` }}
-        >
-          {position}
-        </span>
+
         <div className="min-w-0">
-          <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-            {name}
-          </p>
-          <p className="mt-1 flex items-center truncate text-xs text-[#555560]">
-            <span style={{ color: accent }}>{sportLabel[sport]}</span>
+          <div className="flex items-center gap-2">
+            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              {name}
+            </p>
+            <span className="shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-[#666671]">
+              {position}
+            </span>
+          </div>
+          <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-[#666671]">
+            <span className="inline-flex items-center gap-1.5" style={{ color: meta.color }}>
+              <Icon className="size-3 shrink-0" />
+              {meta.label}
+            </span>
             {realTeam ? (
-              <span className="ml-1.5 flex items-center gap-1.5 border-l border-[#33333a] pl-1.5">
+              <span className="flex items-center gap-1.5 border-l border-[#26262e] pl-1.5">
                 <TeamLogo teamName={realTeam} logoUrl={realTeamLogoUrl} size="sm" />
                 {realTeam}
               </span>
             ) : null}
             {cost ? (
               <>
-                <span className="mx-1.5 text-[#33333a]">·</span>${cost}M
+                <span className="text-[#33333a]">·</span>
+                <span className="num">${cost}M</span>
               </>
             ) : null}
           </p>
@@ -80,19 +81,19 @@ export function PlayerCard({
 
       <div className="flex shrink-0 items-center gap-4 text-right">
         <div>
-          <p className="font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
+          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
             {Math.round(totalPoints)}
           </p>
           <p className="section-label mt-1">Points</p>
         </div>
         <div>
-          <p className="font-bebas text-lg leading-none tracking-[1px] text-[#9a9aa5]">
+          <p className="num font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0]">
             {gameweekPoints > 0 ? `+${Math.round(gameweekPoints)}` : Math.round(gameweekPoints)}
           </p>
           <p className="section-label mt-1">GW</p>
         </div>
         <div>
-          <p className="font-bebas text-lg leading-none tracking-[1px] text-[#9a9aa5]">
+          <p className="num font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0]">
             {avgPoints.toFixed(1)}
           </p>
           <p className="section-label mt-1">Avg</p>

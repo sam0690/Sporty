@@ -4,6 +4,11 @@ import {
   PlayerCard,
   type Sport,
 } from "@/components/dashboard/my-team/components/PlayerCard";
+import {
+  BasketballGlyph,
+  CricketGlyph,
+  FootballGlyph,
+} from "@/components/landing/sport-icons";
 
 type LeaguePlayer = {
   id: string;
@@ -26,16 +31,10 @@ type LeagueGroupProps = {
   sports: Sport[];
 };
 
-const sportAccent: Record<Sport, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
-  cricket: "#00d4ff",
-};
-
-const sportLabel: Record<Sport, string> = {
-  football: "Football",
-  basketball: "Basketball",
-  cricket: "Cricket",
+const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
+  football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
+  basketball: { Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
+  cricket: { Icon: CricketGlyph, color: "#00d4ff", label: "Cricket" },
 };
 
 // Sensible team-sheet order across sports; unknown codes fall to the end.
@@ -75,16 +74,18 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-4">
           {sportCounts.map(({ sport, count }) => {
-            const accent = sportAccent[sport] ?? "#9a9aa5";
+            const meta = SPORT_META[sport];
+            const Icon = meta.Icon;
             return (
               <span
                 key={sport}
-                className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px]"
-                style={{ color: accent, background: `${accent}1f` }}
+                className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+                style={{ color: meta.color }}
               >
-                {sportLabel[sport]} · {count}
+                <Icon className="size-3.5 shrink-0" />
+                {meta.label} <span className="num text-[#666671]">{count}</span>
               </span>
             );
           })}
