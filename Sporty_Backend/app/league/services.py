@@ -394,7 +394,9 @@ def create_league(
 
 def get_league(db: Session, league_id: uuid.UUID) -> League:
     """Fetch a single league or raise 404."""
-    return _require_league(db, league_id, eager=True)
+    league = _require_league(db, league_id, eager=True)
+    _attach_midseason_join_info(db, league)
+    return league
 
 
 def get_leagues_for_user(db: Session, user_id: uuid.UUID) -> list[League]:
@@ -2129,6 +2131,55 @@ def add_lineup_slot(
     )
 
 
+def _attach_midseason_join_info(
+    db: Session, league: League, now: datetime | None = None
+) -> None:
+    """Compute and set the transient `joinable_now` / `midseason_entry_window_number`
+    / `midseason_join_message` attributes on a League instance.
+
+    Joinable means:
+        - SETUP status (standard join flow), or
+        - ACTIVE budget-mode with allow_midseason_join=True and at least
+          one upcoming transfer window.
+    Otherwise joinable_now is explicitly False (not left unset), so any
+    endpoint serialising a League gets a definitive answer rather than
+    the schema's None default.
+    """
+    now = now or datetime.now(timezone.utc)
+
+    if league.status == LeagueStatus.SETUP:
+        league.joinable_now = True
+        league.midseason_entry_window_number = None
+        league.midseason_join_message = "Join now. Build your team before kickoff."
+        return
+
+    if (
+        league.status == LeagueStatus.ACTIVE
+        and not league.draft_mode
+        and league.allow_midseason_join
+    ):
+        next_window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.start_at > now,
+            )
+            .order_by(TransferWindow.start_at.asc())
+            .first()
+        )
+        if next_window:
+            league.joinable_now = True
+            league.midseason_entry_window_number = next_window.number
+            league.midseason_join_message = (
+                f"Join now. Your team starts scoring from transfer window {next_window.number}."
+            )
+            return
+
+    league.joinable_now = False
+    league.midseason_entry_window_number = None
+    league.midseason_join_message = None
+
+
 def discover_public_leagues(db: Session) -> list[League]:
     """Return public leagues that are currently joinable.
 
@@ -2160,31 +2211,9 @@ def discover_public_leagues(db: Session) -> list[League]:
 
     filtered: list[League] = []
     for league in leagues:
-        if league.status == LeagueStatus.SETUP:
-            league.joinable_now = True
-            league.midseason_entry_window_number = None
-            league.midseason_join_message = "Join now. Build your team before kickoff."
+        _attach_midseason_join_info(db, league, now=now)
+        if league.joinable_now:
             filtered.append(league)
-            continue
-
-        next_window = (
-            db.query(TransferWindow)
-            .filter(
-                TransferWindow.season_id == league.season_id,
-                TransferWindow.start_at > now,
-            )
-            .order_by(TransferWindow.start_at.asc())
-            .first()
-        )
-        if not next_window:
-            continue
-
-        league.joinable_now = True
-        league.midseason_entry_window_number = next_window.number
-        league.midseason_join_message = (
-            f"Join now. Your team starts scoring from transfer window {next_window.number}."
-        )
-        filtered.append(league)
 
     return filtered
 
@@ -2394,7 +2423,8 @@ def build_initial_team(
     
     Guards:
       1. League must be budget-mode (draft_mode=False).
-      2. League must be in SETUP status.
+      2. League must be in SETUP status, OR ACTIVE with the user a midseason
+         joiner (membership.eligible_from_window_id set by join_league()).
       3. User must be a member.
       4. User must not already have a team.
       5. All players must exist, be available, and belong to league sports.
@@ -2412,15 +2442,19 @@ def build_initial_team(
             detail="Team building is only for budget-mode leagues (use draft instead)",
         )
     
-    if league.status != LeagueStatus.SETUP:
+    # Verify membership
+    membership = _require_membership(db, league_id, current_user.id)
+
+    is_midseason_joiner = (
+        league.status == LeagueStatus.ACTIVE
+        and membership.eligible_from_window_id is not None
+    )
+    if league.status != LeagueStatus.SETUP and not is_midseason_joiner:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Teams can only be built during SETUP status",
         )
-    
-    # Verify membership
-    _require_membership(db, league_id, current_user.id)
-    
+
     # Check if team already exists
     existing_team = (
         db.query(FantasyTeam)
@@ -2514,19 +2548,29 @@ def build_initial_team(
             detail=f"Total cost {total_cost} exceeds budget {league.budget_per_team}",
         )
     
-    # Get first transfer window (needed for acquired_window_id)
-    first_window = (
-        db.query(TransferWindow)
-        .filter(TransferWindow.season_id == league.season_id)
-        .order_by(TransferWindow.number)
-        .first()
-    )
+    # Get the acquisition window: the season's first window for a normal
+    # SETUP-phase build, or the joiner's eligible-from window for a
+    # midseason joiner (so acquisition history reflects when they actually
+    # entered, not the season start).
+    if is_midseason_joiner:
+        first_window = (
+            db.query(TransferWindow)
+            .filter(TransferWindow.id == membership.eligible_from_window_id)
+            .first()
+        )
+    else:
+        first_window = (
+            db.query(TransferWindow)
+            .filter(TransferWindow.season_id == league.season_id)
+            .order_by(TransferWindow.number)
+            .first()
+        )
     if not first_window:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="No transfer windows exist for this season",
         )
-    
+
     # Create fantasy team
     team = FantasyTeam(
         league_id=league_id,
