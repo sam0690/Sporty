@@ -149,6 +149,46 @@ export function StarIcon({ className }: IconProps) {
   );
 }
 
+export function FootballIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 8.2l3 2.2-1.1 3.4h-3.8L9 10.4z" />
+      <path d="M12 8.2V4.8M15 10.4l3.3-1.1M13.9 13.8l2 2.9M10.1 13.8l-2 2.9M9 10.4l-3.3-1.1" />
+    </Svg>
+  );
+}
+
+export function BasketballIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M3.5 12h17M12 3.5v17" />
+      <path d="M5.6 6.1c2 2 3 4 3 5.9s-1 3.9-3 5.9M18.4 6.1c-2 2-3 4-3 5.9s1 3.9 3 5.9" />
+    </Svg>
+  );
+}
+
+export function CricketIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <path d="M14.5 4.5L19.5 9.5" />
+      <path d="M13 6L4.5 14.5a2.1 2.1 0 0 0 3 3L16 9" />
+      <circle cx="18" cy="6" r="2" />
+      <path d="M5 19l-1.5 1.5" />
+    </Svg>
+  );
+}
+
+export function CalendarIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <rect x="4" y="5.5" width="16" height="15" rx="1.8" />
+      <path d="M4 10h16M8 3.5v3M16 3.5v3" />
+    </Svg>
+  );
+}
+
 // Maps a feeder event type to its icon + accent colour. Unknown types fall back
 // to a neutral dot so the timeline still renders every event gracefully.
 export type EventVisual = {

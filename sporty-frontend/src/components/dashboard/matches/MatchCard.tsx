@@ -4,22 +4,29 @@ import { useRouter } from "next/navigation";
 
 import { TeamLogo } from "@/components/ui";
 import type { TMatch } from "@/types/match";
+import {
+  BasketballIcon,
+  CricketIcon,
+  FootballIcon,
+  TrophyIcon,
+  type EventVisual,
+} from "@/components/live/icons";
 
 type SportConfig = {
-  emoji: string;
+  Icon: EventVisual["Icon"];
   label: string;
   accent: string;
   badge: string;
 };
 
 const SPORT_CONFIG: Record<string, SportConfig> = {
-  football: { emoji: "⚽", label: "Football", accent: "#4caf50", badge: "sport-badge-football" },
-  basketball: { emoji: "🏀", label: "Basketball", accent: "#ff6b00", badge: "sport-badge-basketball" },
-  cricket: { emoji: "🏏", label: "Cricket", accent: "#00d4ff", badge: "sport-badge-cricket" },
+  football: { Icon: FootballIcon, label: "Football", accent: "#4caf50", badge: "sport-badge-football" },
+  basketball: { Icon: BasketballIcon, label: "Basketball", accent: "#ff6b00", badge: "sport-badge-basketball" },
+  cricket: { Icon: CricketIcon, label: "Cricket", accent: "#00d4ff", badge: "sport-badge-cricket" },
 };
 
 const FALLBACK_SPORT: SportConfig = {
-  emoji: "🎯",
+  Icon: TrophyIcon,
   label: "Match",
   accent: "#e8fb25",
   badge: "sport-badge-multisport",
@@ -117,8 +124,8 @@ export function MatchCard({
 
       {/* Sport + chevron */}
       <div className="flex shrink-0 items-center gap-3">
-        <span aria-hidden style={{ color: sport.accent }} className="text-sm">
-          {sport.emoji}
+        <span aria-hidden style={{ color: sport.accent }}>
+          <sport.Icon className="size-4" />
         </span>
         <span className="section-label text-[#555560] transition-colors group-hover:text-[#e8fb25]">
           ›

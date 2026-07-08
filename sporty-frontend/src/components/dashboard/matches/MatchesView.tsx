@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { useMatches } from "@/hooks/matches/useMatches";
 import type { TMatch } from "@/types/match";
+import { CalendarIcon } from "@/components/live/icons";
 import { MatchCard, sportConfig } from "./MatchCard";
 
 function keyOf(date: Date): string {
@@ -53,8 +54,8 @@ function Chip({
       onClick={onClick}
       className={
         active
-          ? "rounded-full bg-[#e8fb25] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f]"
-          : "rounded-full border border-[rgba(255,255,255,0.12)] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
+          ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#e8fb25] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f]"
+          : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[rgba(255,255,255,0.12)] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
       }
     >
       {children}
@@ -63,7 +64,7 @@ function Chip({
 }
 
 export function MatchesView() {
-  const { data, isLoading, isError } = useMatches();
+  const { data, isLoading, isError, refetch, isRefetching } = useMatches();
   const [sportFilter, setSportFilter] = useState<string>("all");
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
 
@@ -142,15 +143,19 @@ export function MatchesView() {
           <Chip active={sportFilter === "all"} onClick={() => setSportFilter("all")}>
             All Sports
           </Chip>
-          {sports.map((sport) => (
-            <Chip
-              key={sport}
-              active={sportFilter === sport}
-              onClick={() => setSportFilter(sport)}
-            >
-              {sportConfig(sport).emoji} {sportConfig(sport).label}
-            </Chip>
-          ))}
+          {sports.map((sport) => {
+            const { Icon, label } = sportConfig(sport);
+            return (
+              <Chip
+                key={sport}
+                active={sportFilter === sport}
+                onClick={() => setSportFilter(sport)}
+              >
+                <Icon className="size-3.5" />
+                {label}
+              </Chip>
+            );
+          })}
         </div>
       )}
 
@@ -198,16 +203,32 @@ export function MatchesView() {
       )}
 
       {isError && (
-        <p className="text-sm text-[#ff8a8a]">
-          Couldn&apos;t load matches. Please try again.
-        </p>
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-4 py-3"
+        >
+          <p className="text-sm text-[#ff8a8a]">
+            Couldn&apos;t load matches. Please try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="inline-flex min-h-9 shrink-0 items-center rounded-[3px] border border-[rgba(255,138,138,0.35)] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#ff8a8a] transition-colors hover:border-[rgba(255,138,138,0.6)] disabled:opacity-50"
+          >
+            {isRefetching ? "Retrying…" : "Try again"}
+          </button>
+        </div>
       )}
 
       {!isLoading && !isError && days.length === 0 && (
         <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
-          <p className="text-3xl" aria-hidden>
-            📅
-          </p>
+          <span
+            aria-hidden
+            className="inline-grid size-11 place-items-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] text-[#555560]"
+          >
+            <CalendarIcon className="size-5" />
+          </span>
           <p className="mt-3 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
             No fixtures
           </p>
