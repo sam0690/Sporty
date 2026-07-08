@@ -331,7 +331,7 @@ export function TransfersView(props: Props) {
       <TransferConfirmation
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
-        onConfirm={confirmAllTransfers}
+        onConfirm={() => void confirmAllTransfers()}
         isLoading={confirmTransfersMutation.isPending}
         allowUnpaired={isMultiSportLeague}
         stagedOutPlayers={stagedOutPlayers}
