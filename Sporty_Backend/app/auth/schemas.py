@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.schemas.common import PlayerBrief, TeamBrief
 
@@ -75,6 +75,16 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("favourite_teams", mode="before")
+    @classmethod
+    def _unwrap_favourite_teams(cls, v):
+        return [fav.real_team for fav in v] if v else v
+
+    @field_validator("favourite_players", mode="before")
+    @classmethod
+    def _unwrap_favourite_players(cls, v):
+        return [fav.player for fav in v] if v else v
 
 
 class GoogleAccountLinkRequiredResponse(BaseModel):
