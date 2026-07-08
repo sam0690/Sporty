@@ -149,7 +149,7 @@ export function useTransfersDashboard() {
         sport: toSport(p.sport.name),
         position: p.position,
         price: Number(p.current_cost ?? p.cost ?? 0),
-        avgPoints: 0,
+        avgPoints: p.projected_points ?? 0,
         form: 0,
         realTeam: p.real_team,
       }));

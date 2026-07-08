@@ -12,6 +12,7 @@ type BackendPlayer = {
   cost: number;
   is_available: boolean;
   created_at: string;
+  projected_points?: number | null;
   sport: {
     name: string;
     display_name: string;
@@ -62,6 +63,8 @@ const mapBackendPlayer = (player: BackendPlayer): TPlayer => ({
   real_team_logo_url: player.real_team_logo_url ?? null,
   cost: Number(player.cost),
   current_cost: Number(player.cost),
+  projected_points:
+    player.projected_points != null ? Number(player.projected_points) : null,
   is_available: player.is_available,
   is_active: player.is_available,
   created_at: player.created_at,

@@ -65,4 +65,6 @@ class ConnectionManager:
     def _channel_type(channel: str) -> str:
         if channel.startswith("leaderboard:"):
             return "leaderboard"
+        if channel.startswith("league-chat:"):
+            return "league-chat"
         return "match"

@@ -8,8 +8,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from fastapi import HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.models import User
@@ -22,12 +24,18 @@ from app.league.models import (
     TeamPlayer,
 )
 from app.league.sportConfigs import derive_sport_type
-from app.player.models import Player
+from app.player.models import Player, PlayerGameweekStat
 from app.services import draft_roster_service as dr
 from app.squad.services import check_full_squad_constraints
 
 # Commissioner veto window after a trade is accepted, before it finalises.
 VETO_HOURS = 24
+
+# Fairness verdict threshold: if the lower side's value is more than this
+# fraction below the higher side's, flag the trade as lopsided. A rough
+# heads-up signal, not a judgment on trade legitimacy (e.g. sell-high/buy-low
+# and squad-need trades are legitimately "lopsided" by this measure).
+FAIRNESS_LOPSIDED_THRESHOLD = Decimal("0.25")
 
 
 def _team_by_id(db: Session, league_id: uuid.UUID, team_id: uuid.UUID) -> FantasyTeam:
@@ -99,6 +107,64 @@ def get_league_rosters(db: Session, league_id: uuid.UUID, current_user: User) ->
     ]
 
 
+def _player_value_map(db: Session, player_ids: list[uuid.UUID]) -> dict[uuid.UUID, Decimal]:
+    """Average historical fantasy_points per player — same "value" signal
+    used for squad auto-pick (app/league/auto_pick_service.py), duplicated
+    locally rather than imported so this module doesn't depend on an
+    optimizer-internal helper."""
+    if not player_ids:
+        return {}
+
+    rows = (
+        db.query(
+            PlayerGameweekStat.player_id.label("player_id"),
+            func.avg(PlayerGameweekStat.fantasy_points).label("avg_points"),
+        )
+        .filter(PlayerGameweekStat.player_id.in_(player_ids))
+        .group_by(PlayerGameweekStat.player_id)
+        .all()
+    )
+    return {player_id: Decimal(str(avg_points or 0)) for player_id, avg_points in rows}
+
+
+def compute_trade_fairness(
+    db: Session,
+    offered_player_ids: list[uuid.UUID],
+    requested_player_ids: list[uuid.UUID],
+) -> dict:
+    """Rough fairness signal: sum of each side's average historical fantasy
+    points. A heads-up, not a verdict on the trade's legitimacy."""
+    value_map = _player_value_map(db, [*offered_player_ids, *requested_player_ids])
+    offered_value = sum((value_map.get(pid, Decimal("0")) for pid in offered_player_ids), Decimal("0"))
+    requested_value = sum((value_map.get(pid, Decimal("0")) for pid in requested_player_ids), Decimal("0"))
+
+    higher = max(offered_value, requested_value)
+    lower = min(offered_value, requested_value)
+    ratio = Decimal("1") if higher == 0 else lower / higher
+    verdict = "lopsided" if (Decimal("1") - ratio) > FAIRNESS_LOPSIDED_THRESHOLD else "balanced"
+
+    return {
+        "offered_value": float(offered_value),
+        "requested_value": float(requested_value),
+        "ratio": float(ratio),
+        "verdict": verdict,
+    }
+
+
+def preview_trade_fairness(
+    db: Session,
+    league_id: uuid.UUID,
+    offered_player_ids: list[uuid.UUID],
+    requested_player_ids: list[uuid.UUID],
+    current_user: User,
+) -> dict:
+    """Live fairness preview while a manager is still building a trade —
+    same membership gate as every other trade action, no ownership checks
+    (those only matter once the trade is actually proposed)."""
+    dr._require_draft_team(db, league_id, current_user)
+    return compute_trade_fairness(db, offered_player_ids, requested_player_ids)
+
+
 def list_trades(db: Session, league_id: uuid.UUID, current_user: User) -> list[dict]:
     """Trades involving the current user's team (incoming + outgoing)."""
     from app.league.models import TradeOffer
@@ -139,6 +205,11 @@ def list_trades(db: Session, league_id: uuid.UUID, current_user: User) -> list[d
             "requested": _players(o.requested_player_ids),
             "status": o.status,
             "veto_deadline": o.veto_deadline.isoformat() if o.veto_deadline else None,
+            "fairness": compute_trade_fairness(
+                db,
+                [uuid.UUID(p) for p in o.offered_player_ids],
+                [uuid.UUID(p) for p in o.requested_player_ids],
+            ),
         }
         for o in offers
     ]

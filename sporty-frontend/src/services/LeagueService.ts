@@ -33,6 +33,8 @@ import type {
   TWaiverOrderEntry,
   TLeagueRoster,
   TTradeOffer,
+  TTradeFairness,
+  TPowerRankingEntry,
 } from "@/types/league";
 
 /**
@@ -227,6 +229,24 @@ export const LeagueService = {
     },
   ): Promise<{ id: string; status: string }> {
     const res = await authApi.post(API_PATHS.LEAGUES.TRADES(id), payload);
+    return res.data;
+  },
+
+  /** Rank movement, streaks, and Manager of the Week for the latest scored window */
+  async getPowerRankings(id: string): Promise<TPowerRankingEntry[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.POWER_RANKINGS(id));
+    return res.data;
+  },
+
+  /** Live fairness preview while building a trade (no side-effects) */
+  async getTradeFairnessPreview(
+    id: string,
+    payload: { offered_player_ids: string[]; requested_player_ids: string[] },
+  ): Promise<TTradeFairness> {
+    const res = await authApi.post(
+      API_PATHS.LEAGUES.TRADE_FAIRNESS_PREVIEW(id),
+      payload,
+    );
     return res.data;
   },
 

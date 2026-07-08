@@ -30,7 +30,7 @@ from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
 from app.league.auto_pick_service import auto_pick_team
 from app.league.models import FantasyTeam, League, TeamWeeklyScore
-from app.services import transfer_service, notification_service
+from app.services import power_rankings_service, transfer_service, notification_service
 from app.league.schemas import (
     AutoPickRequest,
     AutoPickSquadResponse,
@@ -56,6 +56,7 @@ from app.league.schemas import (
     MembershipResponse,
     LeagueSettingsUpdate,
     MidseasonJoinUpdate,
+    PowerRankingEntry,
     RenewLeagueRequest,
     SeasonHistoryItem,
     SeasonResponse,
@@ -128,6 +129,25 @@ def get_league_leaderboard(
     return league_service.get_league_leaderboard(
         db, league.id, window_id, historical, gameweek
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/{id}/power-rankings
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/{league_id}/power-rankings",
+    response_model=list[PowerRankingEntry],
+    summary="Get power rankings (rank movement, streaks, manager of the week)",
+)
+def get_power_rankings(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    """Most recent scored window's standings, enriched with rank movement vs
+    the previous window, a hot-streak badge, and Manager of the Week."""
+    return power_rankings_service.get_power_rankings(db, league.id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

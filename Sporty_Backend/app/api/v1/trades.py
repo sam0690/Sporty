@@ -19,6 +19,11 @@ class ProposeTradeRequest(BaseModel):
     requested_player_ids: list[uuid.UUID]
 
 
+class FairnessPreviewRequest(BaseModel):
+    offered_player_ids: list[uuid.UUID]
+    requested_player_ids: list[uuid.UUID]
+
+
 @router.get("")
 def list_trades(
     league_id: uuid.UUID,
@@ -35,6 +40,23 @@ def league_rosters(
     current_user: User = Depends(get_current_active_user),
 ):
     return trade_service.get_league_rosters(db, league_id, current_user)
+
+
+@router.post("/fairness-preview")
+def fairness_preview(
+    league_id: uuid.UUID,
+    payload: FairnessPreviewRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    # Read-only — no db.commit() needed.
+    return trade_service.preview_trade_fairness(
+        db,
+        league_id,
+        payload.offered_player_ids,
+        payload.requested_player_ids,
+        current_user,
+    )
 
 
 @router.post("")

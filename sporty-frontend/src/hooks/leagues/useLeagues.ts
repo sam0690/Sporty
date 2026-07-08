@@ -35,6 +35,8 @@ import {
   TWaiverOrderEntry,
   TLeagueRoster,
   TTradeOffer,
+  TTradeFairness,
+  TPowerRankingEntry,
   TSeasonHistoryItem,
 } from "@/types";
 import { toastifier } from "@/lib/toastifier";
@@ -379,6 +381,43 @@ export const useProposeTrade = (leagueId: string) => {
     },
     successMessage: "Trade proposed!",
   });
+};
+
+export const usePowerRankings = (leagueId: string, enabled = true) => {
+  return useApiQuery<TPowerRankingEntry[]>(
+    ["leagues", leagueId, "power-rankings"],
+    () => LeagueService.getPowerRankings(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useTradeFairnessPreview = (
+  leagueId: string,
+  offeredPlayerIds: string[],
+  requestedPlayerIds: string[],
+  enabled = true,
+) => {
+  return useApiQuery<TTradeFairness>(
+    [
+      "leagues",
+      leagueId,
+      "trade-fairness-preview",
+      [...offeredPlayerIds].sort(),
+      [...requestedPlayerIds].sort(),
+    ],
+    () =>
+      LeagueService.getTradeFairnessPreview(leagueId, {
+        offered_player_ids: offeredPlayerIds,
+        requested_player_ids: requestedPlayerIds,
+      }),
+    {
+      enabled:
+        !!leagueId &&
+        enabled &&
+        offeredPlayerIds.length > 0 &&
+        requestedPlayerIds.length > 0,
+    },
+  );
 };
 
 export const useTradeAction = (leagueId: string) => {

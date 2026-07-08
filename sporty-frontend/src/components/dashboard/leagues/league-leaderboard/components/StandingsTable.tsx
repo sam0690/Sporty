@@ -6,7 +6,26 @@ type StandingRow = {
   teamName: string;
   manager: string;
   points: number;
+  rankDelta?: number | null;
+  streak?: number;
+  isManagerOfTheWeek?: boolean;
 };
+
+function RankDeltaBadge({ delta }: { delta: number | null | undefined }) {
+  if (!delta) return null;
+  const isUp = delta > 0;
+  return (
+    <span
+      className={`ml-1.5 inline-flex items-center font-barlow-condensed text-[11px] font-700 ${
+        isUp ? "text-[#4caf50]" : "text-[#ff3b30]"
+      }`}
+      title={`${isUp ? "Up" : "Down"} ${Math.abs(delta)} rank vs last gameweek`}
+    >
+      {isUp ? "▲" : "▼"}
+      {Math.abs(delta)}
+    </span>
+  );
+}
 
 type StandingsTableProps = {
   standings: StandingRow[];
@@ -60,12 +79,29 @@ export function StandingsTable({
                     >
                       {team.rank}
                     </span>
+                    <RankDeltaBadge delta={team.rankDelta} />
                   </td>
                   <td className="px-5 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
                     {team.teamName}
                     {isUser && (
                       <span className="ml-2 section-label text-[#c8d85a]">You</span>
                     )}
+                    {team.isManagerOfTheWeek && (
+                      <span
+                        className="ml-2 text-xs"
+                        title="Manager of the Week — highest points last gameweek"
+                      >
+                        🔥
+                      </span>
+                    )}
+                    {team.streak && team.streak >= 2 ? (
+                      <span
+                        className="ml-1.5 text-xs text-[#9a9aa5]"
+                        title={`Top 3 for ${team.streak} gameweeks running`}
+                      >
+                        {team.streak}W
+                      </span>
+                    ) : null}
                   </td>
                   <td className="px-5 py-3 text-[#555560]">{team.manager}</td>
                   <td className="px-5 py-3 text-right">

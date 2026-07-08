@@ -44,6 +44,12 @@ class PlayerResponse(BaseModel):
     is_available: bool
     created_at: datetime
 
+    # Recency-weighted average of the last 3 gameweeks' fantasy_points — a
+    # smarter historical statistic, NOT a trained prediction (no opponent
+    # adjustment, no injury/availability signal). None if the player has no
+    # stats in that window yet. See app/services/scoring/projection.py.
+    projected_points: Decimal | None = None
+
     # Nested sport instead of raw sport_id
     sport: SportBrief
 

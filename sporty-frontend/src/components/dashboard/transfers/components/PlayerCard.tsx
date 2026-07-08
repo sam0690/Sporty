@@ -61,7 +61,9 @@ export function PlayerCard({
           <p className="mt-0.5 truncate text-xs text-[#555560]">
             <span style={{ color: accent }}>{label}</span>
             <span className="mx-1.5 text-[#33333a]">·</span>
-            Proj {avgPoints.toFixed(1)}
+            <span title="Weighted average of the last 3 gameweeks, not a prediction">
+              Proj {avgPoints.toFixed(1)}
+            </span>
             {form ? (
               <>
                 <span className="mx-1.5 text-[#33333a]">·</span>Form {form}/10

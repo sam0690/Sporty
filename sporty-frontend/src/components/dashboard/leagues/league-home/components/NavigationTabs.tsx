@@ -13,6 +13,7 @@ type TabKey =
   | "free-agents"
   | "waivers"
   | "trades"
+  | "chat"
   | "members"
   | "invite"
   | "settings";
@@ -31,6 +32,7 @@ const tabs: { key: TabKey; label: string }[] = [
   { key: "free-agents", label: "Free Agents" },
   { key: "waivers", label: "Waivers" },
   { key: "trades", label: "Trades" },
+  { key: "chat", label: "Chat" },
   { key: "members", label: "Members" },
   { key: "invite", label: "Invite" },
   { key: "settings", label: "Settings" },
@@ -54,6 +56,7 @@ export function NavigationTabs({
       "free-agents": `/leagues/${leagueId}/free-agents`,
       waivers:       `/leagues/${leagueId}/waivers`,
       trades:        `/leagues/${leagueId}/trades`,
+      chat:          `/leagues/${leagueId}/chat`,
       members:       `/leagues/${leagueId}/members`,
       invite:        `/leagues/${leagueId}/invite`,
       settings:      `/leagues/${leagueId}/settings`,

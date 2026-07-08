@@ -16,6 +16,9 @@ export type TPlayer = {
   is_available?: boolean;
   is_active: boolean;
   created_at: string;
+  // Recency-weighted average of the last 3 gameweeks — a smarter stat, not
+  // a trained prediction. null if the player has no stats in that window.
+  projected_points?: number | null;
 };
 
 export type TPlayerBrief = {

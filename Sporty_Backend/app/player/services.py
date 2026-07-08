@@ -16,8 +16,19 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.league.models import FantasyTeam, LeagueSport, Sport, TeamPlayer
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 from app.player.schemas import PlayerFilter
+from app.services.scoring.projection import compute_projected_points
 
 SUPPORTED_PLAYER_POOL_SPORTS = {"football", "basketball"}
+
+
+def _attach_projected_points(db: Session, players: list[Player]) -> list[Player]:
+    """Batch-compute and attach `projected_points` as a transient attribute
+    on each Player instance (not persisted — PlayerResponse picks it up via
+    from_attributes). One query for the whole page, not one per player."""
+    projections = compute_projected_points(db, [p.id for p in players])
+    for player in players:
+        player.projected_points = projections.get(player.id)
+    return players
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -193,7 +204,9 @@ def get_players(
         query = _exclude_owned_players(query, filters.league_id)
 
     query = _apply_filters(query, filters)
-    return _paginate(query, filters)
+    players, total = _paginate(query, filters)
+    _attach_projected_points(db, players)
+    return players, total
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -222,6 +235,7 @@ def get_player(db: Session, player_id: uuid.UUID) -> Player:
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Player not found",
         )
+    _attach_projected_points(db, [player])
     return player
 
 

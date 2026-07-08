@@ -387,6 +387,18 @@ class LeaderboardEntry(BaseModel):
     rank: int | None = None
 
 
+class PowerRankingEntry(BaseModel):
+    """GET /leagues/{id}/power-rankings — one row per team, most recent window."""
+
+    fantasy_team_id: uuid.UUID
+    team_name: str
+    rank: int
+    points: float
+    rank_delta: int | None = None
+    streak: int
+    manager_of_the_week: bool
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # League status update
 # ═══════════════════════════════════════════════════════════════════════════════

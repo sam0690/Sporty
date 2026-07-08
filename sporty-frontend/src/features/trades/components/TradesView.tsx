@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
@@ -11,11 +11,33 @@ import {
   useMyTeam,
   useProposeTrade,
   useTradeAction,
+  useTradeFairnessPreview,
   useTradeRosters,
   useTrades,
 } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
-import type { TRosterPlayer, TTradeOffer } from "@/types";
+import type { TRosterPlayer, TTradeFairness, TTradeOffer } from "@/types";
+
+function FairnessBadge({ fairness }: { fairness: TTradeFairness | undefined }) {
+  if (!fairness) return null;
+  const isLopsided = fairness.verdict === "lopsided";
+  return (
+    <div
+      className={`flex items-center justify-between gap-3 rounded-[3px] border px-3 py-2 text-xs ${
+        isLopsided
+          ? "border-[rgba(255,138,0,0.35)] bg-[rgba(255,138,0,0.08)] text-[#ff8a00]"
+          : "border-[rgba(76,175,80,0.35)] bg-[rgba(76,175,80,0.08)] text-[#4caf50]"
+      }`}
+    >
+      <span className="font-barlow-condensed font-700 uppercase tracking-[1px]">
+        {isLopsided ? "Lopsided trade" : "Balanced trade"}
+      </span>
+      <span className="text-[#9a9aa5]">
+        {fairness.offered_value.toFixed(1)} avg pts vs {fairness.requested_value.toFixed(1)} avg pts
+      </span>
+    </div>
+  );
+}
 
 const STATUS_COLORS: Record<string, string> = {
   proposed: "#e8fb25",
@@ -99,6 +121,24 @@ export function TradesView() {
     else next.add(id);
     setFn(next);
   };
+
+  // Debounce the fairness preview so it doesn't refetch on every single toggle.
+  const [debouncedOffered, setDebouncedOffered] = useState<string[]>([]);
+  const [debouncedRequested, setDebouncedRequested] = useState<string[]>([]);
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setDebouncedOffered([...offered]);
+      setDebouncedRequested([...requested]);
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [offered, requested]);
+
+  const { data: fairnessPreview } = useTradeFairnessPreview(
+    leagueId,
+    debouncedOffered,
+    debouncedRequested,
+    !!targetTeamId,
+  );
 
   const canSubmit =
     !!targetTeamId &&
@@ -210,6 +250,12 @@ export function TradesView() {
               </div>
             ) : null}
 
+            {targetTeamId && fairnessPreview ? (
+              <div className="mt-4">
+                <FairnessBadge fairness={fairnessPreview} />
+              </div>
+            ) : null}
+
             {targetTeamId ? (
               <div className="mt-4 flex items-center justify-between">
                 <p className="text-xs text-[#555560]">
@@ -297,6 +343,12 @@ function TradeRow({
         </span>{" "}
         {names(trade.direction === "incoming" ? trade.offered : trade.requested)}
       </p>
+
+      {trade.status === "proposed" || trade.status === "accepted" ? (
+        <div className="mt-2">
+          <FairnessBadge fairness={trade.fairness} />
+        </div>
+      ) : null}
 
       <div className="mt-2 flex flex-wrap gap-2">
         {trade.status === "proposed" && trade.direction === "incoming" ? (

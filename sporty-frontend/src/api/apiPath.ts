@@ -92,6 +92,7 @@ export const API_PATHS = {
     TRADE_ROSTERS: (id: string) => `/leagues/${id}/trades/rosters`,
     TRADE_ACTION: (id: string, tradeId: string, action: string) =>
       `/leagues/${id}/trades/${tradeId}/${action}`,
+    TRADE_FAIRNESS_PREVIEW: (id: string) => `/leagues/${id}/trades/fairness-preview`,
     LEADERBOARD: (
       id: string,
       windowId?: string,
@@ -108,6 +109,12 @@ export const API_PATHS = {
     ACTIVE_WINDOW: (id: string) => `/leagues/${id}/active-window`,
     EDITABLE_WINDOW: (id: string) => `/leagues/${id}/editable-window`,
     DASHBOARD_STATS: (id: string) => `/leagues/${id}/dashboard/stats`,
+    POWER_RANKINGS: (id: string) => `/leagues/${id}/power-rankings`,
+    CHAT_MESSAGES: (id: string) => `/leagues/${id}/chat/messages`,
+    CHAT_MESSAGE_DETAIL: (id: string, messageId: string) =>
+      `/leagues/${id}/chat/messages/${messageId}`,
+    CHAT_MESSAGE_REACTIONS: (id: string, messageId: string) =>
+      `/leagues/${id}/chat/messages/${messageId}/reactions`,
   },
 
   PLAYERS: {

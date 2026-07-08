@@ -405,6 +405,43 @@ export type TTradeStatus =
   | "vetoed"
   | "executed";
 
+export type TChatReaction = {
+  emoji: string;
+  count: number;
+  reacted_by_me: boolean;
+};
+
+export type TChatMessage = {
+  id: string;
+  league_id: string;
+  user: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
+  body: string;
+  created_at: string;
+  can_delete: boolean;
+  reactions: TChatReaction[];
+};
+
+export type TPowerRankingEntry = {
+  fantasy_team_id: string;
+  team_name: string;
+  rank: number;
+  points: number;
+  rank_delta: number | null;
+  streak: number;
+  manager_of_the_week: boolean;
+};
+
+export type TTradeFairness = {
+  offered_value: number;
+  requested_value: number;
+  ratio: number;
+  verdict: "balanced" | "lopsided";
+};
+
 export type TTradeOffer = {
   id: string;
   direction: "incoming" | "outgoing";
@@ -414,6 +451,7 @@ export type TTradeOffer = {
   requested: { id: string; name: string }[];
   status: TTradeStatus;
   veto_deadline: string | null;
+  fairness: TTradeFairness;
 };
 
 export type TFantasyTeam = {

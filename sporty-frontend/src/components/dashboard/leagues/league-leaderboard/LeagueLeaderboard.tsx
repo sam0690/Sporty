@@ -24,7 +24,9 @@ import {
   useLeague,
   useMyTeam,
   useActiveWindow,
+  usePowerRankings,
 } from "@/hooks/leagues/useLeagues";
+import type { TPowerRankingEntry } from "@/types";
 
 export function LeagueLeaderboard() {
   const params = useParams<{ id: string }>();
@@ -52,20 +54,39 @@ export function LeagueLeaderboard() {
 
   const isCommissioner = league?.owner?.username === username;
 
+  // Power rankings (rank movement/streak/MOTW) are only meaningful for the
+  // most recent scored window — don't attach them to an arbitrary past
+  // gameweek the user has scrolled back to.
+  const { data: powerRankings } = usePowerRankings(
+    leagueId,
+    selectedWeek === "overall",
+  );
+  const powerRankingsByTeam = useMemo(() => {
+    const map = new Map<string, TPowerRankingEntry>();
+    (powerRankings ?? []).forEach((entry) => map.set(entry.fantasy_team_id, entry));
+    return map;
+  }, [powerRankings]);
+
   const standings = useMemo<StandingRow[]>(() => {
     if (!leaderboard) return [];
     // Backend rank can be null until the ranking job runs (e.g. an in-progress
     // gameweek); fall back to points-sorted position so the table is sensible.
     return [...leaderboard.entries]
       .sort((a, b) => Number(b.points) - Number(a.points))
-      .map((entry, index) => ({
-        rank: entry.rank ?? index + 1,
-        teamId: entry.team_id,
-        teamName: entry.team_name,
-        manager: entry.owner_name,
-        points: Number(entry.points),
-      }));
-  }, [leaderboard]);
+      .map((entry, index) => {
+        const power = powerRankingsByTeam.get(entry.team_id);
+        return {
+          rank: entry.rank ?? index + 1,
+          teamId: entry.team_id,
+          teamName: entry.team_name,
+          manager: entry.owner_name,
+          points: Number(entry.points),
+          rankDelta: power?.rank_delta,
+          streak: power?.streak,
+          isManagerOfTheWeek: power?.manager_of_the_week,
+        };
+      });
+  }, [leaderboard, powerRankingsByTeam]);
 
   const userTeam = useMemo(() => {
     if (!myTeam || !standings.length) return null;

@@ -39,13 +39,40 @@ class _QueryStub:
         return [SimpleNamespace(id="player-1")]
 
 
+class _EmptyQueryStub:
+    """Stub for the extra queries get_players now issues to batch-compute
+    projected_points (app/services/scoring/projection.py) — the one
+    `db.query(Player)...` call under test still goes to _QueryStub; every
+    subsequent query (recent windows / stat rows) lands here and yields no
+    rows, so compute_projected_points degrades to an empty projection map."""
+
+    def filter(self, *criteria):
+        _ = criteria
+        return self
+
+    def order_by(self, *args):
+        _ = args
+        return self
+
+    def limit(self, value):
+        _ = value
+        return self
+
+    def all(self):
+        return []
+
+
 class _SessionStub:
     def __init__(self):
         self.query_obj = _QueryStub()
+        self._first_query_served = False
 
-    def query(self, model):
-        _ = model
-        return self.query_obj
+    def query(self, *entities):
+        _ = entities
+        if not self._first_query_served:
+            self._first_query_served = True
+            return self.query_obj
+        return _EmptyQueryStub()
 
 
 def test_player_filter_aliases_and_pagination_apply_together():
@@ -82,7 +109,10 @@ def test_player_filter_aliases_and_pagination_apply_together():
             rows, total = get_players(session, filters)
 
             assert total == 37
-            assert rows == [SimpleNamespace(id="player-1")]
+            # get_players batch-attaches projected_points (transient, not a
+            # real column) after fetching — compare ids, not full equality.
+            assert [r.id for r in rows] == ["player-1"]
+            assert rows[0].projected_points is None
             assert session.query_obj.offset_value == 30
             assert session.query_obj.limit_value == 15
             assert any(

@@ -52,6 +52,7 @@ from app.notification.models import Notification  # noqa: F401
 from app.scoring.models import DefaultScoringRule  # noqa: F401
 from app.admin.models import AdminAuditLog  # noqa: F401
 from app.support.models import SupportTicket, TicketMessage  # noqa: F401
+from app.league_chat.models import LeagueChatMessage, LeagueChatReaction  # noqa: F401
 from app.database import SessionLocal
 from app.core.redis import close_async_redis, get_redis
 from app.core.config import settings
@@ -80,6 +81,7 @@ from app.api.routes.websocket import router as realtime_websocket_router
 from app.api.routes.sse import router as realtime_sse_router
 from app.admin.router import router as admin_router
 from app.support.router import router as support_router
+from app.league_chat.router import router as league_chat_router
 
 logger = logging.getLogger(__name__)
 
@@ -536,6 +538,7 @@ app.include_router(trades_router, prefix="/api/v1")
 app.include_router(feed_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(support_router, prefix="/api/v1")
+app.include_router(league_chat_router, prefix="/api/v1")
 app.include_router(realtime_match_router, prefix="/api")
 app.include_router(realtime_websocket_router, prefix="/api")
 app.include_router(realtime_sse_router, prefix="/api")

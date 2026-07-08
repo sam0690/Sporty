@@ -11,6 +11,7 @@ from app.core.security import decode_access_token
 from app.core.config import settings
 from app.core.database import get_async_db
 from app.core.redis import create_redis_pool, get_async_redis
+from app.league.models import League, LeagueMembership, LeagueMembershipStatus
 from app.match.models import Match
 from app.services.connection_manager import ConnectionManager
 
@@ -124,6 +125,40 @@ async def require_match_access_ws(
     return await ensure_user_can_access_match(db, match_id=match_id)
 
 
+async def require_league_member_ws(
+    league_id: uuid.UUID,
+    ws: WebSocket,
+    db: AsyncSession = Depends(get_async_db),
+    current_user: User = Depends(get_current_active_user_ws),
+) -> League:
+    # Async-session mirror of app/league/dependencies.py::require_league_member
+    # — unlike the public match stream, league chat needs real membership
+    # auth, so this composes with get_current_active_user_ws rather than
+    # being public.
+    _ = ws
+    league = (
+        await db.execute(select(League).where(League.id == league_id))
+    ).scalar_one_or_none()
+    if league is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+
+    is_member = (
+        await db.execute(
+            select(LeagueMembership).where(
+                LeagueMembership.league_id == league_id,
+                LeagueMembership.user_id == current_user.id,
+                LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+            )
+        )
+    ).scalar_one_or_none()
+    if is_member is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not a member of this league",
+        )
+    return league
+
+
 __all__ = [
     "get_async_db",
     "get_connection_manager",
@@ -133,5 +168,6 @@ __all__ = [
     "ensure_user_can_access_match",
     "require_match_access",
     "require_match_access_ws",
+    "require_league_member_ws",
     "settings",
 ]
