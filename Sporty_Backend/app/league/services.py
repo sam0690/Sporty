@@ -28,6 +28,7 @@ from app.league.models import (
     DraftPick,
     FantasyTeam,
     FantasyTeamStatus,
+    RosterMove,
     TeamGameweekLineup,
     TransferWindow,
     League,
@@ -655,12 +656,21 @@ def renew_league(
     current_user: User,
     *,
     admin_override: bool = False,
+    dynasty: bool = False,
 ) -> League:
     """Start the next season of a completed league: a new League row, same
     lineage (season_group_id, season_number + 1), same settings/sports/slots,
-    members auto carried over. Squads are intentionally NOT copied — team
-    creation is already a separate step (start_draft / build_initial_team),
-    so the new league naturally starts with zero FantasyTeam rows.
+    members auto carried over.
+
+    dynasty=False (default): squads are NOT copied — team creation is a
+    separate step (start_draft / build_initial_team), so the new league
+    starts with zero FantasyTeam rows, same as before.
+
+    dynasty=True: every active member's active roster is copied wholesale
+    into a brand-new FantasyTeam in the new league (both draft- and
+    budget-mode leagues), no re-draft. See _carry_over_dynasty_rosters().
+    The new league skips DRAFTING and goes straight to ACTIVE, since squads
+    already exist — there's nothing left to draft or build.
 
     Only the league OWNER can renew (admin_override=True bypasses this for
     platform-admin use). Does NOT commit — caller owns the transaction.
@@ -754,7 +764,128 @@ def renew_league(
 
     db.flush()
 
+    if dynasty:
+        _carry_over_dynasty_rosters(db, source, new_league, target_season, active_members)
+
     return _require_league(db, new_id, eager=True)
+
+
+def _carry_over_dynasty_rosters(
+    db: Session,
+    source: League,
+    new_league: League,
+    target_season: Season,
+    active_members: list[LeagueMembership],
+) -> None:
+    """Copy every remaining member's active roster from `source` into a new
+    FantasyTeam in `new_league`, flat (no keeper cost), then activate the
+    league and seed its waiver order. Called only from renew_league(dynasty=True).
+
+    Budget-mode teams: current_budget is recomputed against the new season's
+    budget_per_team using each carried player's source cost_at_acquisition —
+    this can legitimately go negative if prices drifted since last season.
+    Acquisition paths already freeze a negative-budget team out of new
+    purchases until it drops back to >= 0 (see FantasyTeam.current_budget).
+
+    Draft-mode teams: league-wide active-player-ownership stays exclusive
+    automatically — it's a partial unique index scoped to (league_id,
+    player_id), and copying every source team's mutually-exclusive roster
+    into the same new league_id can't collide with itself.
+
+    Players/slots that no longer fit the new season (retired player, changed
+    LineupSlot config) are intentionally NOT blocked here — squad legality is
+    re-checked per team and any violation is logged for the owner to fix via
+    the normal transfer/waiver flow rather than blocking the whole renewal.
+    """
+    first_window = (
+        db.query(TransferWindow)
+        .filter(TransferWindow.season_id == target_season.id)
+        .order_by(TransferWindow.number)
+        .first()
+    )
+    if not first_window:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No transfer windows exist for the target season yet — "
+            "ask an admin to create them before starting a dynasty season",
+        )
+
+    active_user_ids = {m.user_id for m in active_members}
+    source_teams = (
+        db.query(FantasyTeam)
+        .filter(
+            FantasyTeam.league_id == source.id,
+            FantasyTeam.user_id.in_(active_user_ids),
+            FantasyTeam.status == FantasyTeamStatus.ACTIVE,
+        )
+        .all()
+    )
+
+    lineup_slots = db.query(LineupSlot).filter(LineupSlot.league_id == new_league.id).all()
+
+    for source_team in source_teams:
+        source_active_players = (
+            db.query(TeamPlayer)
+            .filter(
+                TeamPlayer.fantasy_team_id == source_team.id,
+                TeamPlayer.released_window_id.is_(None),
+            )
+            .all()
+        )
+        total_cost = sum((tp.cost_at_acquisition for tp in source_active_players), Decimal("0"))
+
+        new_team = FantasyTeam(
+            league_id=new_league.id,
+            user_id=source_team.user_id,
+            name=source_team.name,
+            current_budget=new_league.budget_per_team - total_cost,
+            starting_budget=new_league.budget_per_team,
+            starting_squad_size=new_league.squad_size,
+            status=FantasyTeamStatus.ACTIVE,
+        )
+        db.add(new_team)
+        db.flush()
+
+        new_team_players = []
+        for tp in source_active_players:
+            new_tp = TeamPlayer(
+                fantasy_team_id=new_team.id,
+                league_id=new_league.id,
+                is_draft=new_league.draft_mode,
+                player_id=tp.player_id,
+                sport_type=tp.sport_type,
+                acquired_window_id=first_window.id,
+                cost_at_acquisition=tp.cost_at_acquisition,
+            )
+            db.add(new_tp)
+            new_team_players.append(new_tp)
+            db.add(RosterMove(
+                league_id=new_league.id,
+                fantasy_team_id=new_team.id,
+                move_type="dynasty_carryover",
+                add_player_id=tp.player_id,
+                window_id=first_window.id,
+            ))
+        db.flush()
+
+        try:
+            validate_squad_size(new_team_players, new_league, sports=new_league.sports)
+            validate_position_slots(new_team_players, lineup_slots)
+        except ValueError as exc:
+            logger.warning(
+                "Dynasty carryover: team=%s in league=%s failed post-copy squad "
+                "validation (owner must fix via transfer/waiver): %s",
+                new_team.id, new_league.id, exc,
+            )
+
+    # Squads already exist — nothing left to draft or build. Skip DRAFTING.
+    new_league.status = LeagueStatus.ACTIVE
+    db.flush()
+
+    from app.services import waiver_service
+
+    waiver_service.init_waiver_order_from_standings(db, new_league, source.id)
+    db.flush()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

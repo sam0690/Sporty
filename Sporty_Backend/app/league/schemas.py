@@ -432,9 +432,13 @@ class RenewLeagueRequest(BaseModel):
     target_season_id is optional — if omitted, the service auto-selects the
     earliest active Season (for the league's sport) starting after the
     current league's end_date.
+
+    dynasty=True carries every team's active roster over into the new
+    season instead of starting fresh — see renew_league() for details.
     """
 
     target_season_id: uuid.UUID | None = None
+    dynasty: bool = False
 
 
 class SeasonHistoryItem(BaseModel):

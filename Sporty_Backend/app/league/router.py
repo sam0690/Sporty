@@ -491,10 +491,10 @@ def renew_league(
     Same settings, sports, and lineup slots; members are carried over
     automatically (they can leave if they don't want to continue). Squads
     are always built fresh in the new league via the normal draft/build-team
-    flow — nothing is copied there.
+    flow — nothing is copied there, unless dynasty=True (see renew_league()).
     """
     new_league = league_service.renew_league(
-        db, league.id, data.target_season_id, current_user,
+        db, league.id, data.target_season_id, current_user, dynasty=data.dynasty,
     )
     db.commit()
     notification_service.notify_new_season_started(db, [new_league.id])

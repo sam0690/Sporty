@@ -21,6 +21,7 @@ from app.league.models import (
     League,
     LeagueMembership,
     LeagueMembershipStatus,
+    TeamWeeklyScore,
     TransferWindow,
     WaiverClaim,
     WaiverOrder,
@@ -54,6 +55,48 @@ def init_waiver_order(db: Session, league: League) -> None:
     position = 1
     for member in members:
         team = teams.get(member.user_id)
+        if not team:
+            continue
+        db.add(
+            WaiverOrder(
+                league_id=league.id, fantasy_team_id=team.id, position=position
+            )
+        )
+        position += 1
+
+
+def init_waiver_order_from_standings(
+    db: Session, league: League, source_league_id: uuid.UUID
+) -> None:
+    """Seed waiver order for a dynasty-renewed league = REVERSE of the source
+    league's final standings (worst team picks first — standard dynasty
+    convention). Idempotent — a no-op if the order already exists.
+
+    Dynasty leagues never run a draft (rosters carry over from the source
+    league instead), so there's no draft_position to reverse the way
+    init_waiver_order does for fresh draft leagues — total points from the
+    completed source season is the substitute ranking signal.
+    """
+    if db.query(WaiverOrder).filter(WaiverOrder.league_id == league.id).first():
+        return
+
+    total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
+    source_standings = (
+        db.query(FantasyTeam.user_id, total_points.label("points"))
+        .outerjoin(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
+        .filter(FantasyTeam.league_id == source_league_id)
+        .group_by(FantasyTeam.user_id)
+        .order_by(total_points.asc())  # worst first
+        .all()
+    )
+
+    teams = {
+        t.user_id: t
+        for t in db.query(FantasyTeam).filter(FantasyTeam.league_id == league.id)
+    }
+    position = 1
+    for user_id, _points in source_standings:
+        team = teams.get(user_id)
         if not team:
             continue
         db.add(

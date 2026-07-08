@@ -779,9 +779,14 @@ class FantasyTeam(Base):
         passive_deletes=True,
     )
 
+    # current_budget may go negative for a dynasty-renewed team whose carried
+    # roster costs more than the new season's budget_per_team (player prices
+    # drifted between seasons). Acquisition paths (transfer, transfer_service)
+    # already compute their budget checks against the live current_budget, so
+    # a negative team is frozen out of new acquisitions until it drops enough
+    # to return to >= 0 — dropping is never blocked. See renew_league(dynasty=True).
     __table_args__ = (
         UniqueConstraint("league_id", "user_id", name="uq_team_league_user"),
-        CheckConstraint("current_budget >= 0", name="ck_team_budget_non_negative"),
     )
 
 
@@ -1369,7 +1374,7 @@ class RosterMove(Base):
         ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
         nullable=False, index=True,
     )
-    # draft | free_agent | waiver | trade
+    # draft | free_agent | waiver | trade | dynasty_carryover
     move_type: Mapped[str] = mapped_column(String(20), nullable=False)
 
     add_player_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -1394,7 +1399,7 @@ class RosterMove(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "move_type IN ('draft', 'free_agent', 'waiver', 'trade')",
+            "move_type IN ('draft', 'free_agent', 'waiver', 'trade', 'dynasty_carryover')",
             name="ck_roster_move_type",
         ),
     )
