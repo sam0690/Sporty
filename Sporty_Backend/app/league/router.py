@@ -936,6 +936,21 @@ def get_my_lineup(
     return league_service.get_current_lineup(db, league.id, current_user.id)
 
 
+@router.get(
+    "/{league_id}/my-team/live-lineup",
+    response_model=LineupResponse,
+    summary="Get user's lineup for the in-progress gameweek",
+)
+def get_my_live_lineup(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return the user's starters and captains for the gameweek that's
+    actually playing right now (not the upcoming one being set up)."""
+    return league_service.get_live_lineup(db, league.id, current_user.id)
+
+
 @router.patch(
     "/{league_id}/my-team/lineup",
     response_model=LineupResponse,

@@ -40,9 +40,14 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
     [leaguesQuery.data, selectedLeagueId],
   );
 
+  // Dashboard preview shows the gameweek that's actually playing right now,
+  // not the upcoming one being set up — both the roster and the badge number
+  // must come from the same (live) window, or they can point to different
+  // gameweeks. starting_lineup comes back empty when no window is live
+  // (e.g. between gameweeks).
   const lineupQuery = useApiQuery(
-    ["leagues", activeLeague?.id, "lineup"],
-    () => LeagueService.getLineup(activeLeague!.id),
+    ["leagues", activeLeague?.id, "live-lineup"],
+    () => LeagueService.getLiveLineup(activeLeague!.id),
     { enabled: Boolean(activeLeague?.id) },
   );
 

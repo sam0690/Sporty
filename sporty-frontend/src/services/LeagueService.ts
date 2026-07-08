@@ -411,9 +411,15 @@ export const LeagueService = {
     return res.data;
   },
 
-  /** Get the user's current lineup for a league */
+  /** Get the user's current (editable/upcoming) lineup for a league */
   async getLineup(id: string): Promise<TLineupResponse> {
     const res = await authApi.get(API_PATHS.LEAGUES.LINEUP(id));
+    return res.data;
+  },
+
+  /** Get the user's lineup for the in-progress (live) gameweek */
+  async getLiveLineup(id: string): Promise<TLineupResponse> {
+    const res = await authApi.get(API_PATHS.LEAGUES.LIVE_LINEUP(id));
     return res.data;
   },
 

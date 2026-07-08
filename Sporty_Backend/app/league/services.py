@@ -2669,7 +2669,22 @@ def get_current_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
     league = _require_league(db, league_id)
     # Show the lineup for the gameweek you're setting up (next not-yet-locked).
     window = _find_editable_transfer_window(db, league)
+    return _build_lineup_payload(db, team, window)
 
+
+def get_live_lineup(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) -> dict:
+    """Fetch the user's lineup for the in-progress gameweek (the one actually
+    playing right now), not the upcoming one being set up. starting_lineup is
+    empty when no window is currently live (e.g. between gameweeks)."""
+    team = _require_fantasy_team(db, league_id, user_id)
+    league = _require_league(db, league_id)
+    window = _find_transfer_window(db, league)
+    return _build_lineup_payload(db, team, window)
+
+
+def _build_lineup_payload(
+    db: Session, team: FantasyTeam, window: TransferWindow | None
+) -> dict:
     lineup_entries = (
         db.query(TeamGameweekLineup)
         .filter(

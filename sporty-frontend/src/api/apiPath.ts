@@ -54,6 +54,7 @@ export const API_PATHS = {
       `/leagues/${id}/sports/${sport}`,
     LINEUP_SLOTS: (id: string) => `/leagues/${id}/lineup-slots`,
     LINEUP: (id: string) => `/leagues/${id}/my-team/lineup`,
+    LIVE_LINEUP: (id: string) => `/leagues/${id}/my-team/live-lineup`,
     GAMEWEEK_RECAP: (id: string, windowId?: string, gameweek?: number) => {
       const params = new URLSearchParams();
       if (windowId) params.set("window_id", windowId);
