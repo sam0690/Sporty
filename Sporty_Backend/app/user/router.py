@@ -9,6 +9,8 @@ from app.database import get_db
 from app.services.storage_service import ALLOWED_AVATAR_CONTENT_TYPES, MAX_AVATAR_SIZE_BYTES, upload_avatar
 from app.user import services
 from app.user.schemas import (
+    SetFavouritePlayerRequest,
+    SetFavouriteTeamRequest,
     UserActivityResponse,
     UserListResponse,
     UserProfileResponse,
@@ -43,6 +45,60 @@ def get_my_activity(
     current_user: User = Depends(get_current_active_user),
 ):
     return services.get_user_activity(db, current_user.id, league_id=league_id)
+
+
+@router.post(
+    "/me/favourites/teams/{sport_name}",
+    response_model=UserProfileResponse,
+    summary="Set my favourite team for a sport",
+)
+def set_my_favourite_team(
+    sport_name: str,
+    data: SetFavouriteTeamRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return services.set_favourite_team(db, current_user.id, current_user.id, sport_name, data.team_id)
+
+
+@router.delete(
+    "/me/favourites/teams/{sport_name}",
+    response_model=UserProfileResponse,
+    summary="Remove my favourite team for a sport",
+)
+def remove_my_favourite_team(
+    sport_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return services.remove_favourite_team(db, current_user.id, current_user.id, sport_name)
+
+
+@router.post(
+    "/me/favourites/players/{sport_name}",
+    response_model=UserProfileResponse,
+    summary="Set my favourite player for a sport",
+)
+def set_my_favourite_player(
+    sport_name: str,
+    data: SetFavouritePlayerRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return services.set_favourite_player(db, current_user.id, current_user.id, sport_name, data.player_id)
+
+
+@router.delete(
+    "/me/favourites/players/{sport_name}",
+    response_model=UserProfileResponse,
+    summary="Remove my favourite player for a sport",
+)
+def remove_my_favourite_player(
+    sport_name: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    return services.remove_favourite_player(db, current_user.id, current_user.id, sport_name)
 
 
 @router.get("/{user_id}", response_model=UserProfileResponse, summary="Get user profile")

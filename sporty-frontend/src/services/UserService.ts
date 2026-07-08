@@ -37,8 +37,8 @@ export type TMe = {
   is_active: boolean;
   role: string;
   email_notifications_enabled: boolean;
-  favourite_team: TFavouriteTeam | null;
-  favourite_player: TFavouritePlayer | null;
+  favourite_teams: TFavouriteTeam[];
+  favourite_players: TFavouritePlayer[];
   created_at: string;
 };
 
@@ -209,11 +209,37 @@ export const UserService = {
       username?: string;
       avatar_url?: string | null;
       email_notifications_enabled?: boolean;
-      favourite_team_id?: string;
-      favourite_player_id?: string;
     },
   ): Promise<TUserProfile> {
     const res = await authApi.patch(API_PATHS.USERS.UPDATE(id), payload);
+    return unwrapResponseData(res.data);
+  },
+
+  /** Set (or replace) the current user's favourite team for a sport */
+  async setFavouriteTeam(sportName: string, teamId: string): Promise<TUserProfile> {
+    const res = await authApi.post(API_PATHS.USERS.FAVOURITE_TEAM(sportName), {
+      team_id: teamId,
+    });
+    return unwrapResponseData(res.data);
+  },
+
+  /** Remove the current user's favourite team for a sport */
+  async removeFavouriteTeam(sportName: string): Promise<TUserProfile> {
+    const res = await authApi.delete(API_PATHS.USERS.FAVOURITE_TEAM(sportName));
+    return unwrapResponseData(res.data);
+  },
+
+  /** Set (or replace) the current user's favourite player for a sport */
+  async setFavouritePlayer(sportName: string, playerId: string): Promise<TUserProfile> {
+    const res = await authApi.post(API_PATHS.USERS.FAVOURITE_PLAYER(sportName), {
+      player_id: playerId,
+    });
+    return unwrapResponseData(res.data);
+  },
+
+  /** Remove the current user's favourite player for a sport */
+  async removeFavouritePlayer(sportName: string): Promise<TUserProfile> {
+    const res = await authApi.delete(API_PATHS.USERS.FAVOURITE_PLAYER(sportName));
     return unwrapResponseData(res.data);
   },
 

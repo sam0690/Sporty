@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.auth.models import User
 from app.league.models import League, LeagueMembership, TransferWindow
 from app.notification.models import Notification
+from app.player.models import UserFavouritePlayer, UserFavouriteTeam
 from app.services.email_service import send_favourite_event_email, send_transfer_window_open_email
 
 logger = logging.getLogger(__name__)
@@ -83,7 +84,9 @@ def notify_favourite_event(
     message: str,
 ) -> int:
     """Notify (in-app + email) every user whose favourite player/team matches
-    this event. Not league-scoped — Notification.league_id is left None.
+    this event, on any sport (favourites are one row per sport now — see
+    app/player/models.py UserFavouriteTeam/Player). Not league-scoped —
+    Notification.league_id is left None.
 
     Best-effort by design: the caller (feed.py's live-event ingest) must wrap
     this in its own try/except so a notification/email hiccup never blocks
@@ -94,9 +97,9 @@ def notify_favourite_event(
 
     conditions = []
     if player_id is not None:
-        conditions.append(User.favourite_player_id == player_id)
+        conditions.append(User.favourite_players.any(UserFavouritePlayer.player_id == player_id))
     if team_id is not None:
-        conditions.append(User.favourite_team_id == team_id)
+        conditions.append(User.favourite_teams.any(UserFavouriteTeam.real_team_id == team_id))
 
     users = db.query(User).filter(User.is_active.is_(True), or_(*conditions)).all()
     if not users:

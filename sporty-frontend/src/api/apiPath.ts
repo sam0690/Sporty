@@ -29,6 +29,8 @@ export const API_PATHS = {
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
     UPLOAD_AVATAR: (id: string) => `/users/${id}/avatar`,
+    FAVOURITE_TEAM: (sportId: string) => `/users/me/favourites/teams/${sportId}`,
+    FAVOURITE_PLAYER: (sportId: string) => `/users/me/favourites/players/${sportId}`,
   },
 
   LEAGUES: {

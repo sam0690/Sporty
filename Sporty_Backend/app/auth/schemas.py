@@ -69,8 +69,9 @@ class UserResponse(BaseModel):
     is_active: bool
     role: str
     email_notifications_enabled: bool
-    favourite_team: Optional[TeamBrief] = None
-    favourite_player: Optional[PlayerBrief] = None
+    # One entry per sport (see app/player/models.py UserFavouriteTeam/Player).
+    favourite_teams: list[TeamBrief] = []
+    favourite_players: list[PlayerBrief] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

@@ -30,8 +30,6 @@ export function useUpdateUser(userId: string) {
       username?: string;
       avatar_url?: string | null;
       email_notifications_enabled?: boolean;
-      favourite_team_id?: string;
-      favourite_player_id?: string;
     }) => UserService.updateUser(userId, payload),
     {
       onSuccess: () => {
@@ -40,6 +38,48 @@ export function useUpdateUser(userId: string) {
       },
       successMessage: "Profile updated",
     },
+  );
+}
+
+function useFavouritesInvalidation(userId: string) {
+  const queryClient = useQueryClient();
+  return () => {
+    queryClient.invalidateQueries({ queryKey: ["users", userId] });
+    queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+  };
+}
+
+export function useSetFavouriteTeam(userId: string) {
+  const invalidate = useFavouritesInvalidation(userId);
+  return useApiMutation(
+    ({ sportName, teamId }: { sportName: string; teamId: string }) =>
+      UserService.setFavouriteTeam(sportName, teamId),
+    { onSuccess: invalidate, successMessage: "Favourite team updated" },
+  );
+}
+
+export function useRemoveFavouriteTeam(userId: string) {
+  const invalidate = useFavouritesInvalidation(userId);
+  return useApiMutation(
+    (sportName: string) => UserService.removeFavouriteTeam(sportName),
+    { onSuccess: invalidate, successMessage: "Favourite team removed" },
+  );
+}
+
+export function useSetFavouritePlayer(userId: string) {
+  const invalidate = useFavouritesInvalidation(userId);
+  return useApiMutation(
+    ({ sportName, playerId }: { sportName: string; playerId: string }) =>
+      UserService.setFavouritePlayer(sportName, playerId),
+    { onSuccess: invalidate, successMessage: "Favourite player updated" },
+  );
+}
+
+export function useRemoveFavouritePlayer(userId: string) {
+  const invalidate = useFavouritesInvalidation(userId);
+  return useApiMutation(
+    (sportName: string) => UserService.removeFavouritePlayer(sportName),
+    { onSuccess: invalidate, successMessage: "Favourite player removed" },
   );
 }
 

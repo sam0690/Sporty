@@ -13,10 +13,19 @@ import {
 } from "@/components/dashboard/profile/components/ProfileForm";
 import { ProfileHeader } from "@/components/dashboard/profile/components/ProfileHeader";
 import { SettingsSkeleton } from "@/components/dashboard/profile/components/SettingsSkeleton";
-import { useUpdateUser, useUploadAvatar } from "@/hooks/users/useUsers";
+import {
+  useRemoveFavouritePlayer,
+  useRemoveFavouriteTeam,
+  useSetFavouritePlayer,
+  useSetFavouriteTeam,
+  useUpdateUser,
+  useUploadAvatar,
+} from "@/hooks/users/useUsers";
 import { UserService } from "@/services/UserService";
 import type { TTeamBrief } from "@/services/PlayerService";
 import type { TFavouritePlayer } from "@/services/UserService";
+
+type SportName = "football" | "basketball";
 
 const mockUser = {
   id: "1",
@@ -39,6 +48,10 @@ export function ProfileSettingsView() {
   const { data: me, username } = useMe();
   const updateUser = useUpdateUser(me?.id ?? "");
   const uploadAvatar = useUploadAvatar(me?.id ?? "");
+  const setFavouriteTeam = useSetFavouriteTeam(me?.id ?? "");
+  const removeFavouriteTeam = useRemoveFavouriteTeam(me?.id ?? "");
+  const setFavouritePlayer = useSetFavouritePlayer(me?.id ?? "");
+  const removeFavouritePlayer = useRemoveFavouritePlayer(me?.id ?? "");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [userData, setUserData] = useState<ExtendedUser>({
@@ -89,25 +102,47 @@ export function ProfileSettingsView() {
     }
   };
 
-  const handleTeamChange = async (team: TTeamBrief): Promise<void> => {
+  const handleTeamChange = async (sport: SportName, team: TTeamBrief): Promise<void> => {
     if (!me?.id) {
       return;
     }
     try {
-      await updateUser.mutateAsync({ favourite_team_id: team.id });
+      await setFavouriteTeam.mutateAsync({ sportName: sport, teamId: team.id });
     } catch {
       toastifier.error("✕ Unable to update favourite team");
     }
   };
 
-  const handlePlayerChange = async (player: TFavouritePlayer): Promise<void> => {
+  const handleTeamClear = async (sport: SportName): Promise<void> => {
     if (!me?.id) {
       return;
     }
     try {
-      await updateUser.mutateAsync({ favourite_player_id: player.id });
+      await removeFavouriteTeam.mutateAsync(sport);
+    } catch {
+      toastifier.error("✕ Unable to clear favourite team");
+    }
+  };
+
+  const handlePlayerChange = async (sport: SportName, player: TFavouritePlayer): Promise<void> => {
+    if (!me?.id) {
+      return;
+    }
+    try {
+      await setFavouritePlayer.mutateAsync({ sportName: sport, playerId: player.id });
     } catch {
       toastifier.error("✕ Unable to update favourite player");
+    }
+  };
+
+  const handlePlayerClear = async (sport: SportName): Promise<void> => {
+    if (!me?.id) {
+      return;
+    }
+    try {
+      await removeFavouritePlayer.mutateAsync(sport);
+    } catch {
+      toastifier.error("✕ Unable to clear favourite player");
     }
   };
 
@@ -161,10 +196,12 @@ export function ProfileSettingsView() {
 
         <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
         <FavouritesForm
-          favouriteTeam={me?.favourite_team ?? null}
-          favouritePlayer={me?.favourite_player ?? null}
+          favouriteTeams={me?.favourite_teams ?? []}
+          favouritePlayers={me?.favourite_players ?? []}
           onTeamChange={handleTeamChange}
+          onTeamClear={handleTeamClear}
           onPlayerChange={handlePlayerChange}
+          onPlayerClear={handlePlayerClear}
         />
         <DangerZone onDeleteAccount={handleDeleteAccount} />
       </div>

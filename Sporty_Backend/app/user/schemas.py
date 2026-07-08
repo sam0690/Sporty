@@ -15,8 +15,9 @@ class UserProfileResponse(BaseModel):
     avatar_url: str | None = None
     is_active: bool
     email_notifications_enabled: bool
-    favourite_team: TeamBrief | None = None
-    favourite_player: PlayerBrief | None = None
+    # One entry per sport (see app/player/models.py UserFavouriteTeam/Player).
+    favourite_teams: list[TeamBrief] = []
+    favourite_players: list[PlayerBrief] = []
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -26,10 +27,14 @@ class UserUpdateRequest(BaseModel):
     username: str | None = Field(default=None, min_length=3, max_length=50)
     avatar_url: str | None = Field(default=None, max_length=500)
     email_notifications_enabled: bool | None = Field(default=None)
-    # None means "no change" (same convention as every other field here) —
-    # clearing an already-set favourite isn't supported in v1.
-    favourite_team_id: uuid.UUID | None = Field(default=None)
-    favourite_player_id: uuid.UUID | None = Field(default=None)
+
+
+class SetFavouriteTeamRequest(BaseModel):
+    team_id: uuid.UUID
+
+
+class SetFavouritePlayerRequest(BaseModel):
+    player_id: uuid.UUID
 
 
 class UserListResponse(BaseModel):

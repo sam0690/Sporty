@@ -501,3 +501,75 @@ class CricketStat(Base):
             name="ck_cr_run_outs",
         ),
     )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 5. User favourites — one team + one player per sport
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Replaces the old single User.favourite_team_id/favourite_player_id columns.
+# sport_id is denormalized onto the row (not just derivable via real_team/
+# player) so UNIQUE(user_id, sport_id) can enforce "one per sport" at the DB
+# level without a trigger. Deleting the favourited team/player deletes the
+# row entirely (CASCADE) — same "silently unset" behavior the old SET NULL
+# columns had, just as a row disappearing instead of a column going NULL.
+
+
+class UserFavouriteTeam(Base):
+    __tablename__ = "user_favourite_teams"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    sport_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sports.id"), nullable=False, index=True,
+    )
+    real_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("real_teams.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    user: Mapped["User"] = relationship(back_populates="favourite_teams", foreign_keys=[user_id])
+    sport: Mapped["Sport"] = relationship(foreign_keys=[sport_id])
+    real_team: Mapped["RealTeam"] = relationship(foreign_keys=[real_team_id])
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "sport_id", name="uq_user_favourite_team_sport"),
+    )
+
+
+class UserFavouritePlayer(Base):
+    __tablename__ = "user_favourite_players"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    sport_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sports.id"), nullable=False, index=True,
+    )
+    player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    user: Mapped["User"] = relationship(back_populates="favourite_players", foreign_keys=[user_id])
+    sport: Mapped["Sport"] = relationship(foreign_keys=[sport_id])
+    player: Mapped["Player"] = relationship(foreign_keys=[player_id])
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "sport_id", name="uq_user_favourite_player_sport"),
+    )

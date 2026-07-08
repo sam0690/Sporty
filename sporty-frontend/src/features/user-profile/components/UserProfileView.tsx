@@ -58,11 +58,11 @@ export function UserProfileView({ userId }: { userId?: string }) {
       {statsLoading ? (
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-1">
-            <div className="h-32 animate-pulse rounded-[3px] bg-[#1d1d26]" />
-            <div className="h-40 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div className="skeleton h-32 rounded-[12px]" />
+            <div className="skeleton h-40 rounded-[12px]" />
           </div>
           <div className="space-y-6 lg:col-span-2">
-            <div className="h-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div className="skeleton h-64 rounded-[12px]" />
           </div>
         </div>
       ) : (

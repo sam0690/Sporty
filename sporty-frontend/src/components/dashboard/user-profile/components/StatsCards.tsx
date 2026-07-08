@@ -11,32 +11,27 @@ export function StatsCards({
   totalLeagues,
   bestRank,
 }: StatsCardsProps) {
-  const stats: Array<{ label: string; value: string; accent: string }> = [
-    { label: "Total Points", value: String(Math.round(totalPoints)), accent: "#e8fb25" },
-    { label: "Leagues", value: String(totalLeagues), accent: "#f0f0f0" },
-    {
-      label: "Best Rank",
-      value: bestRank ? `#${bestRank}` : "—",
-      accent: "#e8fb25",
-    },
-  ];
-
   return (
-    <section className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:grid-cols-1">
-      {stats.map((stat) => (
-        <article
-          key={stat.label}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-4"
-        >
-          <p
-            className="font-bebas text-3xl leading-none tracking-[2px]"
-            style={{ color: stat.accent }}
-          >
-            {stat.value}
+    <section className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-5 py-4">
+      <p className="num font-bebas text-5xl leading-none tracking-[1px] text-[#e8fb25]">
+        {Math.round(totalPoints)}
+      </p>
+      <p className="section-label mt-1.5">Total Points</p>
+
+      <div className="mt-4 flex items-center gap-6 border-t border-[rgba(255,255,255,0.06)] pt-4">
+        <div>
+          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+            {totalLeagues}
           </p>
-          <p className="section-label mt-1.5">{stat.label}</p>
-        </article>
-      ))}
+          <p className="section-label mt-1.5">Leagues</p>
+        </div>
+        <div>
+          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+            {bestRank ? `#${bestRank}` : "—"}
+          </p>
+          <p className="section-label mt-1.5">Best Rank</p>
+        </div>
+      </div>
     </section>
   );
 }

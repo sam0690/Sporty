@@ -10,12 +10,13 @@ from app.auth.models import User
 from app.league.models import (
     FantasyTeam,
     LeagueMembership,
+    Sport,
     TeamGameweekLineup,
     TeamWeeklyScore,
     Transfer,
     TransferWindow,
 )
-from app.player.models import Player, RealTeam
+from app.player.models import Player, RealTeam, UserFavouritePlayer, UserFavouriteTeam
 from app.user.schemas import UserUpdateRequest
 
 
@@ -29,7 +30,10 @@ def get_users(db: Session, page: int = 1, page_size: int = 20):
 def get_user(db: Session, user_id: uuid.UUID) -> User:
     user = (
         db.query(User)
-        .options(joinedload(User.favourite_team), joinedload(User.favourite_player))
+        .options(
+            joinedload(User.favourite_teams).joinedload(UserFavouriteTeam.real_team).joinedload(RealTeam.sport),
+            joinedload(User.favourite_players).joinedload(UserFavouritePlayer.player).joinedload(Player.sport),
+        )
         .filter(User.id == user_id, User.is_active.is_(True))
         .first()
     )
@@ -381,21 +385,106 @@ def update_user(db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUI
     if data.email_notifications_enabled is not None:
         user.email_notifications_enabled = data.email_notifications_enabled
 
-    if data.favourite_team_id is not None:
-        team = db.query(RealTeam).filter(RealTeam.id == data.favourite_team_id).first()
-        if not team:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found")
-        user.favourite_team_id = team.id
-
-    if data.favourite_player_id is not None:
-        player = db.query(Player).filter(Player.id == data.favourite_player_id).first()
-        if not player:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found")
-        user.favourite_player_id = player.id
-
     db.commit()
     db.refresh(user)
     return user
+
+
+def _resolve_sport(db: Session, sport_name: str) -> Sport:
+    sport = db.query(Sport).filter(Sport.name == sport_name.strip().lower()).first()
+    if not sport:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sport not found")
+    return sport
+
+
+def set_favourite_team(
+    db: Session,
+    target_user_id: uuid.UUID,
+    acting_user_id: uuid.UUID,
+    sport_name: str,
+    team_id: uuid.UUID,
+) -> User:
+    """Set (or replace) the user's favourite team for a sport. One row per
+    (user, sport) — UNIQUE(user_id, sport_id) backs this as an upsert."""
+    if target_user_id != acting_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only update your own profile")
+
+    sport = _resolve_sport(db, sport_name)
+    team = db.query(RealTeam).filter(RealTeam.id == team_id, RealTeam.sport_id == sport.id).first()
+    if not team:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Team not found for this sport")
+
+    existing = (
+        db.query(UserFavouriteTeam)
+        .filter(UserFavouriteTeam.user_id == target_user_id, UserFavouriteTeam.sport_id == sport.id)
+        .first()
+    )
+    if existing:
+        existing.real_team_id = team.id
+    else:
+        db.add(UserFavouriteTeam(user_id=target_user_id, sport_id=sport.id, real_team_id=team.id))
+
+    db.commit()
+    return get_user(db, target_user_id)
+
+
+def remove_favourite_team(
+    db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUID, sport_name: str
+) -> User:
+    if target_user_id != acting_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only update your own profile")
+
+    sport = _resolve_sport(db, sport_name)
+    db.query(UserFavouriteTeam).filter(
+        UserFavouriteTeam.user_id == target_user_id, UserFavouriteTeam.sport_id == sport.id
+    ).delete()
+    db.commit()
+    return get_user(db, target_user_id)
+
+
+def set_favourite_player(
+    db: Session,
+    target_user_id: uuid.UUID,
+    acting_user_id: uuid.UUID,
+    sport_name: str,
+    player_id: uuid.UUID,
+) -> User:
+    """Set (or replace) the user's favourite player for a sport. One row per
+    (user, sport) — UNIQUE(user_id, sport_id) backs this as an upsert."""
+    if target_user_id != acting_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only update your own profile")
+
+    sport = _resolve_sport(db, sport_name)
+    player = db.query(Player).filter(Player.id == player_id, Player.sport_id == sport.id).first()
+    if not player:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Player not found for this sport")
+
+    existing = (
+        db.query(UserFavouritePlayer)
+        .filter(UserFavouritePlayer.user_id == target_user_id, UserFavouritePlayer.sport_id == sport.id)
+        .first()
+    )
+    if existing:
+        existing.player_id = player.id
+    else:
+        db.add(UserFavouritePlayer(user_id=target_user_id, sport_id=sport.id, player_id=player.id))
+
+    db.commit()
+    return get_user(db, target_user_id)
+
+
+def remove_favourite_player(
+    db: Session, target_user_id: uuid.UUID, acting_user_id: uuid.UUID, sport_name: str
+) -> User:
+    if target_user_id != acting_user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only update your own profile")
+
+    sport = _resolve_sport(db, sport_name)
+    db.query(UserFavouritePlayer).filter(
+        UserFavouritePlayer.user_id == target_user_id, UserFavouritePlayer.sport_id == sport.id
+    ).delete()
+    db.commit()
+    return get_user(db, target_user_id)
 
 
 def delete_user(

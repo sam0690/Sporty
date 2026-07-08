@@ -45,6 +45,8 @@ from app.player.models import (  # noqa: F401
   FootballStat,
   CricketStat,
   PlayerPriceHistory,
+  UserFavouriteTeam,
+  UserFavouritePlayer,
 )
 from app.player.models_nba import NBAStat  # noqa: F401
 from app.ingestion.models import IngestionPlayer, IngestionTeam  # noqa: F401
