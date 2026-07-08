@@ -122,7 +122,7 @@ export function CompetitionPanel({
           </span>
         )}
       </header>
-      <div className="divide-y divide-[rgba(255,255,255,0.05)]">
+      <div className="max-h-[420px] divide-y divide-[rgba(255,255,255,0.05)] overflow-y-auto">
         {group.matches.map((m) => (
           <MatchRow key={m.id} match={m} />
         ))}

@@ -102,7 +102,7 @@ export function PublicMatchesView() {
             <div className="mt-6 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {groups.map((g, i) => (
                 <CompetitionPanel
-                  key={g.competition}
+                  key={`${g.competition}::${g.sport}`}
                   group={g}
                   style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
                 />

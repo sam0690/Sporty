@@ -42,9 +42,10 @@ export type MatchGroup = {
 export function groupByCompetition(items: TMatch[]): MatchGroup[] {
   const map = new Map<string, MatchGroup>();
   for (const m of items) {
-    const key = m.competition || m.sport || "Fixtures";
+    const label = m.competition || m.sport || "Fixtures";
+    const key = `${label}::${m.sport}`;
     if (!map.has(key)) {
-      map.set(key, { competition: key, sport: m.sport, matches: [], live: 0 });
+      map.set(key, { competition: label, sport: m.sport, matches: [], live: 0 });
     }
     const g = map.get(key)!;
     g.matches.push(m);
