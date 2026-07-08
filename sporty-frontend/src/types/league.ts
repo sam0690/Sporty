@@ -267,7 +267,22 @@ export type TTransfer = {
     end_at: string;
   };
   cost_at_transfer: number | string;
+  // Set when this transfer covered a budget-mode overage with league
+  // points instead of being blocked. Absent/null otherwise.
+  points_charged?: number | string | null;
   created_at: string;
+};
+
+/** Structured 409 body for a budget-mode transfer that would go over budget
+ * (backend: app/league/services.py::make_transfer /
+ * app/services/transfer_service.py::confirm_transfers). `shortfall` is only
+ * present on the "insufficient_budget" variant (not "insufficient_points"). */
+export type TBudgetOverageDetail = {
+  error: "insufficient_budget" | "insufficient_points";
+  message: string;
+  shortfall?: string;
+  points_cost: string;
+  available_points: string;
 };
 
 export type TUserTransferLeagueGroup = {
@@ -330,17 +345,27 @@ export type TStageInRequest = {
 export type TStageInResponse = {
   currentBudget: number;
   transfersRemaining: number;
+  // Informational only — what confirming right now would cost in league
+  // points if the session stayed over budget (0 when not over budget).
+  // Staging never blocks on this; confirm_transfers is the real gate.
+  pointsCostIfConfirmed?: number;
 };
 
 export type TConfirmTransfersRequest = {
   league_id: string;
   gameweek_id: string;
+  // Retry flag: covers a budget shortfall with league points instead of
+  // the confirm being blocked. Only meaningful after a first attempt
+  // returned a TBudgetOverageDetail with error: "insufficient_budget".
+  pay_shortfall_with_points?: boolean;
 };
 
 export type TConfirmTransfersResponse = {
   success: boolean;
   newBudget: number;
   transfersRemaining: number;
+  // Points charged to cover a budget overage, or null if none was needed.
+  pointsCharged?: number | null;
 };
 
 export type TFreeAgent = {

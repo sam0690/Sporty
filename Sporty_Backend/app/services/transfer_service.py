@@ -9,12 +9,14 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.auth.models import User
+from app.core.config import settings
 from app.league.models import (
     BudgetTransaction,
     FantasyTeam,
     League,
     LeagueSport,
     LeagueStatus,
+    PointsPenalty,
     Sport,
     TeamPlayer,
     Transfer,
@@ -364,13 +366,31 @@ def stage_in(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Player already in your team")
 
     current_budget = Decimal(str(session["currentBudget"]))
-    if current_budget < price:
-        if is_multisport_league:
+    prospective_budget = current_budget - price
+    if prospective_budget < 0:
+        # Only a hard block when even paying with points can't cover it —
+        # nothing at confirm time can fix an unaffordable shortfall. When it
+        # IS coverable, staging proceeds (currentBudget goes negative in the
+        # session) and confirm_transfers() makes the actual charge decision.
+        from app.league.services import get_available_points_for_penalty
+
+        shortfall = abs(prospective_budget)
+        points_cost = (shortfall * settings.BUDGET_OVERAGE_POINTS_RATE).quantize(Decimal("0.01"))
+        available_points = get_available_points_for_penalty(db, team.id)
+        if points_cost > available_points:
+            detail = (
+                "Insufficient budget. Stage out a player first to free funds."
+                if is_multisport_league else "Insufficient budget"
+            )
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail="Insufficient budget. Stage out a player first to free funds.",
+                detail={
+                    "error": "insufficient_points",
+                    "message": detail,
+                    "points_cost": str(points_cost),
+                    "available_points": str(available_points),
+                },
             )
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Insufficient budget")
 
     transfers_allowed = int(session["transfersAllowed"])
     transfers_used = int(session["transfersUsed"])
@@ -425,13 +445,18 @@ def stage_in(
     if player_str not in session["pendingIn"]:
         session["pendingIn"].append(player_str)
     session["transfersUsed"] = transfers_used + 1
-    session["currentBudget"] = float(current_budget - price)
+    session["currentBudget"] = float(prospective_budget)
 
     save_session(redis, user_id, session)
+
+    points_cost_if_confirmed = (
+        max(Decimal("0"), -prospective_budget) * settings.BUDGET_OVERAGE_POINTS_RATE
+    ).quantize(Decimal("0.01"))
 
     return {
         "currentBudget": float(session["currentBudget"]),
         "transfersRemaining": int(session["transfersAllowed"]) - int(session["transfersUsed"]),
+        "pointsCostIfConfirmed": float(points_cost_if_confirmed),
     }
 
 
@@ -441,7 +466,9 @@ def confirm_transfers(
     league_id: uuid.UUID,
     gameweek_id: uuid.UUID,
     current_user: User,
-) -> dict[str, bool | float | int]:
+    *,
+    pay_shortfall_with_points: bool = False,
+) -> dict[str, bool | float | int | None]:
     league, team = _require_league_and_team(db, league_id, current_user)
     is_multisport_league = _is_multisport_league(db, league_id)
     window_id = _current_window_id(db, league)
@@ -548,8 +575,46 @@ def confirm_transfers(
             refunds_by_player_out[row.player_id] = refund
     costs = sum((price_map.get(pid, Decimal("0")) for pid in pending_in_ids), Decimal("0"))
     new_budget = Decimal(str(session["originalBudget"])) + refunds - costs
+
+    points_charge: Decimal | None = None
     if new_budget < 0:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Final budget would be negative")
+        from app.league.services import get_available_points_for_penalty
+
+        shortfall = abs(new_budget)
+        points_cost = (shortfall * settings.BUDGET_OVERAGE_POINTS_RATE).quantize(Decimal("0.01"))
+        available_points = get_available_points_for_penalty(db, team.id)
+
+        if not pay_shortfall_with_points:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "insufficient_budget",
+                    "message": (
+                        f"Final budget would be negative by {shortfall}. Retry with "
+                        "pay_shortfall_with_points=true to cover it with league points."
+                    ),
+                    "shortfall": str(shortfall),
+                    "points_cost": str(points_cost),
+                    "available_points": str(available_points),
+                },
+            )
+
+        if points_cost > available_points:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "insufficient_points",
+                    "message": (
+                        f"Covering this shortfall costs {points_cost} points, "
+                        f"but only {available_points} are available."
+                    ),
+                    "points_cost": str(points_cost),
+                    "available_points": str(available_points),
+                },
+            )
+
+        points_charge = points_cost
+        new_budget = Decimal("0")
 
     # Atomic transaction under request-scoped session.
     for pid_out in pending_out_ids:
@@ -607,22 +672,40 @@ def confirm_transfers(
 
     # Keep immutable transfer audit rows as swap pairs when possible.
     paired_count = min(len(pending_out_ids), len(pending_in_ids))
+    confirmed_transfers = []
     for index in range(paired_count):
         pid_out = pending_out_ids[index]
         pid_in = pending_in_ids[index]
 
-        db.add(
-            Transfer(
-                fantasy_team_id=team.id,
-                transfer_window_id=window_id,
-                player_out_id=pid_out,
-                player_in_id=pid_in,
-                cost_at_transfer=price_map.get(pid_in, Decimal("0")),
-            )
+        transfer = Transfer(
+            fantasy_team_id=team.id,
+            transfer_window_id=window_id,
+            player_out_id=pid_out,
+            player_in_id=pid_in,
+            cost_at_transfer=price_map.get(pid_in, Decimal("0")),
         )
+        db.add(transfer)
+        confirmed_transfers.append(transfer)
 
     team.current_budget = new_budget
     db.flush()
+
+    if points_charge is not None:
+        db.add(PointsPenalty(
+            league_id=league.id,
+            fantasy_team_id=team.id,
+            transfer_window_id=window_id,
+            # Best-effort link — an unbalanced multisport confirm can have
+            # more pending_in than paired Transfer rows (see paired_count
+            # above), so there may be no single Transfer this maps to.
+            transfer_id=confirmed_transfers[0].id if confirmed_transfers else None,
+            points_charged=points_charge,
+        ))
+        db.flush()
+        logger.info(
+            "confirm_transfers: team=%s charged %s points for budget overage",
+            team.id, points_charge,
+        )
 
     # Redis sync.
     try:
@@ -646,6 +729,7 @@ def confirm_transfers(
         "success": True,
         "newBudget": float(new_budget),
         "transfersRemaining": max(0, transfers_remaining),
+        "pointsCharged": float(points_charge) if points_charge is not None else None,
     }
 
 

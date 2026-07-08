@@ -885,11 +885,14 @@ def make_transfer(
       - League is ACTIVE.
       - Current gameweek exists and transfers aren't locked.
       - player_out is on your team; player_in is available.
-      - Budget is sufficient after refunding player_out's acquisition cost.
-      - Free transfer limit checked; point penalty applied if exceeded.
+      - Budget is sufficient after refunding player_out's acquisition cost —
+        or, if pay_shortfall_with_points is set, the shortfall is covered by
+        charging league points instead of blocking the transfer.
+      - Free transfer limit checked.
     """
     transfer = league_service.make_transfer(
         db, league.id, data.player_out_id, data.player_in_id, current_user,
+        pay_shortfall_with_points=data.pay_shortfall_with_points,
     )
     db.commit()
     return transfer

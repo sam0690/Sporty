@@ -17,8 +17,10 @@ import { useSmartEditableWindowSync } from "@/hooks/leagues/useSmartActiveWindow
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { toastifier } from "@/lib/toastifier";
+import { isApiError } from "@/utils/api-Error";
 import type { OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
+import type { TBudgetOverageDetail } from "@/types";
 
 const TRANSFER_POOL_PAGE_SIZE = 20;
 const EMPTY_POSITION_MINIMUMS: Record<string, number> = {};
@@ -111,6 +113,7 @@ export function useTransfersDashboard() {
 
   const [sessionBudget, setSessionBudget] = useState<number | null>(null);
   const [transfersRemaining, setTransfersRemaining] = useState<number | null>(null);
+  const [budgetOverage, setBudgetOverage] = useState<TBudgetOverageDetail | null>(null);
   const isMultiSportLeague = leagueSports.length > 1;
   // Mirror the backend transfer gate (validate_transfer_window_for_transfer):
   // a window containing "now" is not enough — transfers close at
@@ -345,7 +348,7 @@ export function useTransfersDashboard() {
     }
   }, [isTransfersOpen, ownedPlayers, stagedOutPlayers, selectedOutPlayer, cancelTransfersMutation, stageOutMutation, leagueId, activeWindow]);
 
-  const confirmAllTransfers = useCallback(async () => {
+  const confirmAllTransfers = useCallback(async (payWithPoints = false) => {
     if (!leagueId || !activeWindow?.id) return;
 
     if (stagedOutPlayers.length === 0 && stagedInPlayers.length === 0) {
@@ -359,7 +362,11 @@ export function useTransfersDashboard() {
     }
 
     try {
-      const confirmed = await confirmTransfersMutation.mutateAsync({ league_id: leagueId, gameweek_id: activeWindow.id });
+      const confirmed = await confirmTransfersMutation.mutateAsync({
+        league_id: leagueId,
+        gameweek_id: activeWindow.id,
+        pay_shortfall_with_points: payWithPoints,
+      });
 
       setSessionBudget(confirmed.newBudget);
       setTransfersRemaining(confirmed.transfersRemaining);
@@ -369,13 +376,42 @@ export function useTransfersDashboard() {
       setSessionBudget(null);
       setTransfersRemaining(null);
       setShowConfirmModal(false);
+      setBudgetOverage(null);
 
-      setToastState({ status: "success", message: "All staged transfers confirmed", token: Date.now() });
+      setToastState({
+        status: "success",
+        message: confirmed.pointsCharged
+          ? `All staged transfers confirmed — ${confirmed.pointsCharged} points charged for budget overage`
+          : "All staged transfers confirmed",
+        token: Date.now(),
+      });
     } catch (err: unknown) {
+      // Budget-overage confirmations get a structured 409 (see
+      // app/services/transfer_service.py::confirm_transfers) instead of a
+      // plain message — open a confirm dialog offering to pay with points
+      // rather than just toasting the generic failure.
+      const detail = isApiError(err)
+        ? (err.details as TBudgetOverageDetail | undefined)
+        : undefined;
+
+      if (detail?.error === "insufficient_budget" && !payWithPoints) {
+        setBudgetOverage(detail);
+        return;
+      }
+
+      setBudgetOverage(null);
       const message = err instanceof Error ? err.message : "Failed to confirm transfers";
       setToastState({ status: "error", message, token: Date.now() });
     }
   }, [leagueId, activeWindow, stagedOutPlayers, stagedInPlayers, isMultiSportLeague, confirmTransfersMutation]);
+
+  const confirmPayWithPoints = useCallback(() => {
+    void confirmAllTransfers(true);
+  }, [confirmAllTransfers]);
+
+  const dismissBudgetOverage = useCallback(() => {
+    setBudgetOverage(null);
+  }, []);
 
   const clearAllFilters = useCallback(() => {
     clearFilters();
@@ -421,6 +457,9 @@ export function useTransfersDashboard() {
     maxCostInput,
     showConfirmModal,
     setShowConfirmModal,
+    budgetOverage,
+    confirmPayWithPoints,
+    dismissBudgetOverage,
     handlePreviousPlayersPage,
     handleNextPlayersPage,
     handleSearchChange,

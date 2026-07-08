@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { BudgetOverageConfirmation } from "@/components/dashboard/transfers/components/BudgetOverageConfirmation";
 import { CurrentRoster } from "@/components/dashboard/transfers/components/CurrentRoster";
 import { FilterBar } from "@/components/dashboard/transfers/components/FilterBar";
 import { PlayerCard } from "@/components/dashboard/transfers/components/PlayerCard";
@@ -55,6 +56,9 @@ export function TransfersView(props: Props) {
     maxCostInput,
     showConfirmModal,
     setShowConfirmModal,
+    budgetOverage,
+    confirmPayWithPoints,
+    dismissBudgetOverage,
     handlePreviousPlayersPage,
     handleNextPlayersPage,
     handleSearchChange,
@@ -334,6 +338,13 @@ export function TransfersView(props: Props) {
         stagedInPlayers={stagedInPlayers}
         transfersOpen={isTransfersOpen}
         transferDeadlineAt={activeWindow?.transfer_deadline_at}
+      />
+
+      <BudgetOverageConfirmation
+        detail={budgetOverage}
+        onConfirm={confirmPayWithPoints}
+        onCancel={dismissBudgetOverage}
+        isLoading={confirmTransfersMutation.isPending}
       />
 
       <TransferSuccess

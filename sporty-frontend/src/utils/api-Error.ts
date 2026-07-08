@@ -18,6 +18,20 @@ function extractBackendMessage(data: unknown): string | null {
 
   const record = data as Record<string, unknown>;
 
+  // FastAPI structured 409s (e.g. budget-overage confirmations) nest a
+  // {message, ...} object under `detail` instead of a plain string — check
+  // that first so callers get the real message, not a generic Axios one.
+  if (
+    typeof record.detail === "object" &&
+    record.detail !== null &&
+    !Array.isArray(record.detail)
+  ) {
+    const nested = record.detail as Record<string, unknown>;
+    if (typeof nested.message === "string" && nested.message.trim()) {
+      return nested.message;
+    }
+  }
+
   const directMessage =
     (typeof record.detail === "string" && record.detail) ||
     (typeof record.message === "string" && record.message) ||
@@ -168,11 +182,21 @@ export function extractErrorInfo(error: AxiosErrorShape): {
       ? backendMessage
       : getErrorMessage(code, statusCode);
 
+  // Prefer an object-typed `detail` (FastAPI's structured-409 convention)
+  // as `details` directly, so callers checking e.g. error.details?.error
+  // don't have to know it's nested one level inside the raw response body.
+  const nestedDetail =
+    typeof responseRecord?.detail === "object" &&
+    responseRecord.detail !== null &&
+    !Array.isArray(responseRecord.detail)
+      ? (responseRecord.detail as Record<string, unknown>)
+      : undefined;
+
   return {
     code,
     statusCode,
     userMessage,
-    details: responseRecord?.details ?? responseData,
+    details: nestedDetail ?? responseRecord?.details ?? responseData,
   };
 }
 

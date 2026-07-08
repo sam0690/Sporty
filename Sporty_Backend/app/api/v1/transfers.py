@@ -29,6 +29,9 @@ class StageInRequest(BaseModel):
 class ConfirmRequest(BaseModel):
     league_id: uuid.UUID
     gameweek_id: uuid.UUID
+    # If the final budget would be negative, retry with this set to True to
+    # cover the shortfall with league points instead of being blocked.
+    pay_shortfall_with_points: bool = False
 
 
 class CancelRequest(BaseModel):
@@ -85,6 +88,7 @@ def confirm(
         league_id=payload.league_id,
         gameweek_id=payload.gameweek_id,
         current_user=current_user,
+        pay_shortfall_with_points=payload.pay_shortfall_with_points,
     )
     db.commit()
     return result

@@ -28,6 +28,7 @@ from app.league.models import (
     DraftPick,
     FantasyTeam,
     FantasyTeamStatus,
+    PointsPenalty,
     RosterMove,
     TeamGameweekLineup,
     TransferWindow,
@@ -1551,12 +1552,31 @@ def make_draft_pick(
 #    cost for simplicity in v1. Easy to change later — it's one line.
 
 
+def get_available_points_for_penalty(db: Session, fantasy_team_id: uuid.UUID) -> Decimal:
+    """Points a team can spend covering a budget-overage transfer: cumulative
+    finalized TeamWeeklyScore.points this season, minus penalties already
+    charged. Floors at 0 — never returns negative."""
+    total_points = (
+        db.query(func.coalesce(func.sum(TeamWeeklyScore.points), 0))
+        .filter(TeamWeeklyScore.fantasy_team_id == fantasy_team_id)
+        .scalar()
+    )
+    total_charged = (
+        db.query(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
+        .filter(PointsPenalty.fantasy_team_id == fantasy_team_id)
+        .scalar()
+    )
+    return max(Decimal("0"), Decimal(total_points) - Decimal(total_charged))
+
+
 def make_transfer(
     db: Session,
     league_id: uuid.UUID,
     player_out_id: uuid.UUID,
     player_in_id: uuid.UUID,
     current_user: User,
+    *,
+    pay_shortfall_with_points: bool = False,
 ) -> Transfer:
     """Execute a player swap: drop player_out, bring in player_in.
 
@@ -1578,6 +1598,12 @@ def make_transfer(
     creation: player ownership is scoped to the fantasy team, not the
     league. The only uniqueness enforced here is the active roster rule
     for the current team.
+
+    If the transfer would take current_budget negative, pay_shortfall_with_points
+    controls what happens: False (default) raises a structured 409 the caller
+    can use to show a confirm dialog; True charges the shortfall (converted
+    at settings.BUDGET_OVERAGE_POINTS_RATE) against the team's available
+    league points instead of blocking — see get_available_points_for_penalty().
 
     Does NOT commit — caller owns the transaction.
     """
@@ -1676,15 +1702,46 @@ def make_transfer(
     # Refund outgoing player with fixed transaction penalty.
     refund_amount, penalty = calculate_refund(team_player_out.cost_at_acquisition)
     budget_after = team.current_budget + refund_amount - player_in.cost
+
+    points_charge: Decimal | None = None
     if budget_after < 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=(
-                f"Insufficient budget: releasing gives back "
-                f"{refund_amount} (penalty {penalty}), incoming costs "
-                f"{player_in.cost}, shortfall of {abs(budget_after)}"
-            ),
-        )
+        shortfall = abs(budget_after)
+        points_cost = (shortfall * settings.BUDGET_OVERAGE_POINTS_RATE).quantize(Decimal("0.01"))
+        available_points = get_available_points_for_penalty(db, team.id)
+
+        if not pay_shortfall_with_points:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "insufficient_budget",
+                    "message": (
+                        f"Insufficient budget: releasing gives back {refund_amount} "
+                        f"(penalty {penalty}), incoming costs {player_in.cost}, "
+                        f"shortfall of {shortfall}. Retry with "
+                        "pay_shortfall_with_points=true to cover it with league points."
+                    ),
+                    "shortfall": str(shortfall),
+                    "points_cost": str(points_cost),
+                    "available_points": str(available_points),
+                },
+            )
+
+        if points_cost > available_points:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail={
+                    "error": "insufficient_points",
+                    "message": (
+                        f"Covering this shortfall costs {points_cost} points, "
+                        f"but only {available_points} are available."
+                    ),
+                    "points_cost": str(points_cost),
+                    "available_points": str(available_points),
+                },
+            )
+
+        points_charge = points_cost
+        budget_after = Decimal("0")
 
     # ── Max-per-club / position-minimum constraints ─────────────────
     current_roster = (
@@ -1755,18 +1812,36 @@ def make_transfer(
     db.add(transfer)
     db.flush()
 
+    if points_charge is not None:
+        db.add(PointsPenalty(
+            league_id=league_id,
+            fantasy_team_id=team.id,
+            transfer_window_id=window.id,
+            transfer_id=transfer.id,
+            points_charged=points_charge,
+        ))
+        db.flush()
+        logger.info(
+            "Transfer: team=%s charged %s points for budget overage (transfer=%s)",
+            team.id, points_charge, transfer.id,
+        )
+
     logger.info(
         "Transfer: team=%s out=%s in=%s window=%s",
         team.id, player_out_id, player_in_id, window.id,
     )
 
-    # Re-load with eager options for Transfer response serialisation
-    return (
+    # Re-load with eager options for Transfer response serialisation.
+    # points_charged is transient (not a mapped column) — TransferResponse
+    # reads it via getattr, defaulting to None when no penalty was charged.
+    reloaded = (
         db.query(Transfer)
         .options(*_TRANSFER_OPTIONS)
         .filter(Transfer.id == transfer.id)
         .first()
     )
+    reloaded.points_charged = points_charge
+    return reloaded
 
 
 def get_transfers(
@@ -3259,12 +3334,27 @@ def get_league_leaderboard(
             )
 
         # 1. Standing for a specific window
+        #
+        # Net out any budget-overage points penalties for this window — the
+        # raw TeamWeeklyScore.points stays untouched (the scoring engine
+        # freely overwrites it), the penalty is applied here at read time.
+        # rank_in_league is precomputed by ranking.py, which nets the same
+        # penalties out before ranking, so the two stay consistent.
+        window_penalty = (
+            select(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
+            .where(
+                PointsPenalty.fantasy_team_id == FantasyTeam.id,
+                PointsPenalty.transfer_window_id == window_id,
+            )
+            .correlate(FantasyTeam)
+            .scalar_subquery()
+        )
         query = (
             db.query(
                 FantasyTeam.id.label("team_id"),
                 FantasyTeam.name.label("team_name"),
                 User.username.label("owner_name"),
-                TeamWeeklyScore.points.label("points"),
+                (TeamWeeklyScore.points - window_penalty).label("points"),
                 TeamWeeklyScore.rank_in_league.label("rank"),
             )
             .select_from(TeamWeeklyScore)
@@ -3302,13 +3392,23 @@ def get_league_leaderboard(
         # 2. Total season standing (sum of points)
         now = datetime.now(timezone.utc)
         score_window = aliased(TransferWindow)
-        total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
+        raw_total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
+        # Season-wide penalty total (all windows), netted out at read time —
+        # see the window-specific branch above for why this doesn't touch
+        # TeamWeeklyScore.points directly.
+        season_penalty = (
+            select(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
+            .where(PointsPenalty.fantasy_team_id == FantasyTeam.id)
+            .correlate(FantasyTeam)
+            .scalar_subquery()
+        )
+        net_total_points = raw_total_points - season_penalty
         query = (
             db.query(
                 FantasyTeam.id.label("team_id"),
                 FantasyTeam.name.label("team_name"),
                 User.username.label("owner_name"),
-                total_points.label("points"),
+                net_total_points.label("points"),
             )
             .join(User, FantasyTeam.user_id == User.id)
             .join(
@@ -3346,7 +3446,7 @@ def get_league_leaderboard(
                 )
             )
             .group_by(FantasyTeam.id, User.username)
-            .order_by(total_points.desc())
+            .order_by(net_total_points.desc())
         )
     
     results = query.all()

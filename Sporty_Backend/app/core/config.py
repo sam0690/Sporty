@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic_settings import BaseSettings
 from typing import Optional
 from urllib.parse import urlparse
@@ -150,6 +152,12 @@ class Settings(BaseSettings):
 
     # League lifecycle safeguards
     LEAGUE_MIN_MEMBERS_TO_ACTIVATE: int = 2
+
+    # Budget-mode transfers: points charged per 1.0 budget unit a team goes
+    # over on a transfer when they opt to cover the shortfall with league
+    # points instead of being blocked. Global — applies to every budget-mode
+    # league. See app/league/services.py::make_transfer.
+    BUDGET_OVERAGE_POINTS_RATE: Decimal = Decimal("1.0")
 
     model_config = {
         "env_file": ".env",

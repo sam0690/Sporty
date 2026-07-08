@@ -212,6 +212,15 @@ export function UserTransferHistoryCarousel({
                             Window {transfer.transfer_window.number}
                             <span className="mx-1.5 text-[#33333a]">·</span>
                             Transfer cost {formatMoney(transfer.cost_at_transfer)}
+                            {transfer.points_charged ? (
+                              <>
+                                <span className="mx-1.5 text-[#33333a]">·</span>
+                                <span className="text-[#ffd86b]">
+                                  {formatMoney(transfer.points_charged)} pts charged
+                                  (budget overage)
+                                </span>
+                              </>
+                            ) : null}
                           </p>
                         </article>
                       );

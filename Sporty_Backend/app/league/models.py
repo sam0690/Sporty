@@ -1055,6 +1055,71 @@ class BudgetTransaction(Base):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# 9b. PointsPenalty — budget-mode "pay a budget overage with league points"
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# When a budget-mode transfer would take a team's current_budget negative,
+# the owner can opt to cover the shortfall with league points instead of
+# being blocked (settings.BUDGET_OVERAGE_POINTS_RATE converts budget units to
+# points). One row per transfer/staged-in event that triggers a charge.
+# Netted out of standings/rank at read time in get_league_leaderboard() and
+# app/services/scoring/ranking.py — never mutates the raw computed
+# TeamWeeklyScore.points, which the scoring engine freely overwrites.
+
+
+class PointsPenalty(Base):
+    __tablename__ = "points_penalties"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("leagues.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    fantasy_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("fantasy_teams.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    # The window the transfer was made in — this is where the penalty is
+    # netted out of standings/rank (see ranking.py).
+    transfer_window_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("transfer_windows.id"),
+        nullable=False, index=True,
+    )
+    # Nullable: staged-session penalties are written at confirm time, after
+    # the Transfer row(s) already exist, but a single confirm can pair
+    # multiple pending in/out moves into fewer Transfer rows than penalty
+    # events — so this is best-effort traceability, not a hard link.
+    transfer_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("transfers.id", ondelete="SET NULL"), nullable=True,
+    )
+
+    points_charged: Mapped[Decimal] = mapped_column(
+        Numeric(precision=8, scale=2), nullable=False
+    )
+    # 'budget_overage' for now — kept as a free string so future penalty
+    # reasons (if any) don't need a migration.
+    reason: Mapped[str] = mapped_column(String(30), nullable=False, default="budget_overage")
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    fantasy_team: Mapped["FantasyTeam"] = relationship(foreign_keys=[fantasy_team_id])
+    transfer_window: Mapped["TransferWindow"] = relationship(foreign_keys=[transfer_window_id])
+    transfer: Mapped["Transfer | None"] = relationship(foreign_keys=[transfer_id])
+
+    __table_args__ = (
+        CheckConstraint("points_charged > 0", name="ck_points_penalty_positive"),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # 10. TeamGameweekLineup
 # ═══════════════════════════════════════════════════════════════════════════════
 #

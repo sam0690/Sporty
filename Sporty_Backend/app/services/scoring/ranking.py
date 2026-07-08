@@ -7,7 +7,7 @@ from decimal import Decimal
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from app.league.models import FantasyTeam, TeamWeeklyScore
+from app.league.models import FantasyTeam, PointsPenalty, TeamWeeklyScore
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +35,25 @@ def apply_rankings_for_league_window(
     transfer_window_id: uuid.UUID,
 ) -> int:
     # Algorithm: compute rank_in_league with SQL RANK() OVER (ORDER BY points DESC) and update rows via UPDATE ... FROM ranked subquery.
+    #
+    # Net out budget-overage points penalties before ranking — same principle
+    # as get_league_leaderboard() in app/league/services.py: the raw
+    # TeamWeeklyScore.points column stays untouched (freely overwritten by
+    # the scoring engine on every rerun), the penalty only affects the
+    # read-time rank a team is credited.
+    penalty = (
+        select(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
+        .where(
+            PointsPenalty.fantasy_team_id == TeamWeeklyScore.fantasy_team_id,
+            PointsPenalty.transfer_window_id == TeamWeeklyScore.transfer_window_id,
+        )
+        .correlate(TeamWeeklyScore)
+        .scalar_subquery()
+    )
     ranked = (
         select(
             TeamWeeklyScore.id.label("score_id"),
-            func.rank().over(order_by=TeamWeeklyScore.points.desc()).label("computed_rank"),
+            func.rank().over(order_by=(TeamWeeklyScore.points - penalty).desc()).label("computed_rank"),
         )
         .join(FantasyTeam, FantasyTeam.id == TeamWeeklyScore.fantasy_team_id)
         .where(FantasyTeam.league_id == league_id)

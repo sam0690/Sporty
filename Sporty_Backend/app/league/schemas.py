@@ -521,9 +521,17 @@ class DraftTurnResponse(BaseModel):
 
 
 class TransferCreate(BaseModel):
-    """POST /leagues/{id}/transfers — swap one player out, one in."""
+    """POST /leagues/{id}/transfers — swap one player out, one in.
+
+    pay_shortfall_with_points: if the swap would take current_budget
+    negative, False (default) gets a structured 409 back (shortfall,
+    points_cost, available_points) instead of the transfer being applied.
+    Retry with this set to True to actually charge the shortfall against
+    league points rather than being blocked.
+    """
     player_out_id: uuid.UUID
     player_in_id: uuid.UUID
+    pay_shortfall_with_points: bool = False
 
 
 class TransferResponse(BaseModel):
@@ -531,9 +539,12 @@ class TransferResponse(BaseModel):
 
     Note what's exposed:
       ✅ id, player_out (nested), player_in (nested), fantasy_team (nested),
-         transfer_window (nested), cost_at_transfer, created_at
+         transfer_window (nested), cost_at_transfer, points_charged, created_at
       ❌ fantasy_team_id, transfer_window_id, player_out_id, player_in_id (raw FKs)
-      ❌ points_deducted (no longer used in budget-mode)
+
+    points_charged is populated from PointsPenalty when this transfer covered
+    a budget overage with league points (None otherwise) — set explicitly by
+    the router, not an ORM attribute on Transfer itself.
     """
     id: uuid.UUID
     fantasy_team: FantasyTeamResponse
@@ -541,6 +552,7 @@ class TransferResponse(BaseModel):
     player_out: PlayerBrief
     player_in: PlayerBrief
     cost_at_transfer: Decimal
+    points_charged: Decimal | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
