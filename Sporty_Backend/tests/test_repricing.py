@@ -1,0 +1,210 @@
+"""Tests for the merged performance+demand repricing algorithm
+(app/services/pricing/repricing.py). SQLite throwaway DB, same pattern as
+test_draft_waivers_trades.py."""
+from __future__ import annotations
+
+import os
+import sys
+import tempfile
+import uuid
+from contextlib import contextmanager
+from datetime import date, datetime, timezone
+from decimal import Decimal
+from pathlib import Path
+
+_temp_dir = tempfile.mkdtemp(prefix="sporty-repricing-tests-")
+os.environ["DATABASE_URL"] = f"sqlite+pysqlite:///{Path(_temp_dir) / 'rp.db'}"
+os.environ["JWT_SECRET_KEY"] = "x" * 32
+os.environ["GOOGLE_CLIENT_ID"] = "test-client"
+
+_backend_root = Path(__file__).resolve().parents[1]
+os.chdir(_temp_dir)
+if str(_backend_root) not in sys.path:
+    sys.path.insert(0, str(_backend_root))
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from app.database import Base  # noqa: E402
+from app.auth.models import AuthProvider, User  # noqa: E402
+import app.match.models  # noqa: F401,E402
+import app.player.models  # noqa: F401,E402
+import app.player.models_nba  # noqa: F401,E402
+from app.league import services as league_service  # noqa: E402
+from app.league.models import (  # noqa: E402
+    FantasyTeam,
+    League,
+    Season,
+    Sport,
+    Transfer,
+    TransferWindow,
+)
+from app.league.schemas import LeagueCreate  # noqa: E402
+from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory, RealTeam  # noqa: E402
+from app.services.pricing.repricing import SPORT_POLICIES, recalculate_player_prices  # noqa: E402
+
+ENGINE = create_engine(os.environ["DATABASE_URL"])
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
+
+
+@contextmanager
+def session_scope():
+    Base.metadata.drop_all(bind=ENGINE)
+    Base.metadata.create_all(bind=ENGINE)
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def _sport(db, name: str) -> Sport:
+    s = Sport(name=name, display_name=name.title())
+    db.add(s); db.flush(); return s
+
+
+def _season(db, sport: Sport) -> Season:
+    s = Season(sport_id=sport.id, name=f"S-{uuid.uuid4().hex[:6]}",
+               start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+    db.add(s); db.flush(); return s
+
+
+def _window(db, season: Season, end_at: datetime) -> TransferWindow:
+    from datetime import timedelta
+    start_at = end_at - timedelta(days=6)
+    w = TransferWindow(
+        season_id=season.id, number=1,
+        start_at=start_at, end_at=end_at,
+        transfer_deadline_at=start_at,
+        lineup_deadline_at=start_at + timedelta(days=1),
+    )
+    db.add(w); db.flush(); return w
+
+
+def _real_team(db, sport: Sport) -> RealTeam:
+    rt = RealTeam(sport_id=sport.id, name=f"RT-{uuid.uuid4().hex[:6]}",
+                  external_api_id=f"t:{uuid.uuid4().hex[:8]}")
+    db.add(rt); db.flush(); return rt
+
+
+def _player(db, sport: Sport, rt: RealTeam, cost: Decimal, name="P") -> Player:
+    p = Player(sport_id=sport.id, external_api_id=f"p:{uuid.uuid4().hex[:10]}",
+               name=f"{name}-{uuid.uuid4().hex[:6]}", position="MID",
+               real_team=rt.name, real_team_id=rt.id, cost=cost, is_available=True)
+    db.add(p); db.flush(); return p
+
+
+def _stat(db, player: Player, window: TransferWindow, fantasy_points: Decimal) -> None:
+    db.add(PlayerGameweekStat(player_id=player.id, transfer_window_id=window.id,
+                               fantasy_points=fantasy_points))
+    db.flush()
+
+
+def _user(db, name: str) -> User:
+    u = User(username=name, email=f"{name}@e.com",
+              auth_provider=AuthProvider.LOCAL, password_hash="h")
+    db.add(u); db.flush(); return u
+
+
+def _league_and_team(db, season: Season, sport_name: str) -> tuple[League, FantasyTeam]:
+    owner = _user(db, f"owner-{uuid.uuid4().hex[:6]}")
+    league = league_service.create_league(
+        db, LeagueCreate(name=f"L-{uuid.uuid4().hex[:6]}", season_id=season.id,
+                          sports=[sport_name]), owner,
+    )
+    team = FantasyTeam(league_id=league.id, user_id=owner.id, name="T",
+                        current_budget=league.budget_per_team,
+                        starting_budget=league.budget_per_team,
+                        starting_squad_size=league.squad_size)
+    db.add(team); db.flush()
+    return league, team
+
+
+def _transfer_in(db, team: FantasyTeam, window: TransferWindow, player_in: Player, player_out: Player) -> None:
+    db.add(Transfer(fantasy_team_id=team.id, transfer_window_id=window.id,
+                     player_out_id=player_out.id, player_in_id=player_in.id,
+                     cost_at_transfer=player_in.cost))
+    db.flush()
+
+
+def test_performance_only_delta_is_weighted_and_clamped() -> None:
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("10.00"))
+        _stat(db, player, window, Decimal("10"))  # baseline=6, factor=0.15 -> perf_delta=0.6
+
+        recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        # perf_delta(0.6) * performance_weight(0.70) = 0.42, no demand signal
+        assert player.cost == Decimal("10.42")
+        history = db.query(PlayerPriceHistory).filter(PlayerPriceHistory.player_id == player.id).one()
+        assert history.algorithm_version == "v2"
+
+
+def test_demand_only_delta_moves_price_with_flat_performance() -> None:
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("10.00"))
+        other = _player(db, sport, rt, cost=Decimal("5.00"), name="Out")
+        _stat(db, player, window, Decimal("6"))  # == baseline -> perf_delta = 0
+
+        league, team = _league_and_team(db, season, "football")
+        for _ in range(3):
+            _transfer_in(db, team, window, player_in=player, player_out=other)
+
+        recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        # demand_score=1.0 -> demand_delta=1.50 * demand_weight(0.30) = 0.45
+        assert player.cost == Decimal("10.45")
+
+
+def test_blended_delta_still_respects_max_cost_ceiling() -> None:
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("19.00"))
+        other = _player(db, sport, rt, cost=Decimal("5.00"), name="Out")
+        _stat(db, player, window, Decimal("50"))  # huge overperformance
+
+        league, team = _league_and_team(db, season, "football")
+        _transfer_in(db, team, window, player_in=player, player_out=other)
+
+        recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        policy = SPORT_POLICIES["football"]
+        # Both signals maxed would push well past max_cost — the per-sport
+        # ceiling must still be honored (this is exactly the bug the old
+        # demand-only algorithm had: it had no ceiling at all).
+        assert player.cost == policy.max_cost
+
+
+def test_basketball_post_fix_scale_gives_sane_delta() -> None:
+    """Regression guard for the season-totals-vs-per-game ingestion bug:
+    a realistic post-fix per-game fantasy_points value should move price by
+    a small, sane amount — not slam into the step cap every run."""
+    with session_scope() as db:
+        sport = _sport(db, "basketball")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("13.46"))
+        _stat(db, player, window, Decimal("12.00"))  # realistic per-game value, not season total
+
+        recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        policy = SPORT_POLICIES["basketball"]
+        delta = abs(player.cost - Decimal("13.46"))
+        assert delta < policy.max_step_per_run
+        assert player.cost == Decimal("13.80")

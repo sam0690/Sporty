@@ -756,18 +756,33 @@ class DatasetImporter:
                     abbreviation=team_abbreviation,
                 )
 
-                points = self._to_int(self._first_value(row, "PTS"))
-                assists = self._to_int(self._first_value(row, "AST"))
-                rebounds = self._to_int(self._first_value(row, "REB"))
-                steals = self._to_int(self._first_value(row, "STL"))
-                blocks = self._to_int(self._first_value(row, "BLK"))
-                raw_minutes_played = self._to_int(self._first_value(row, "MIN"))
+                games_played = self._to_int(self._first_value(row, "GP"))
+                if games_played <= 0:
+                    raise ValueError("GP must be > 0 to derive per-game stats")
+
+                # Source rows are season totals (PTS/AST/REB/STL/BLK/MIN summed
+                # across GP games played). _basketball_cost's divisors are
+                # calibrated for that season-total scale, so cost keeps using
+                # the totals directly. But each CSV row is stored as a single
+                # PlayerGameweekStat/NBAStat row — those need to read like one
+                # game's box score (matching football/cricket rows), so divide
+                # by GP before computing fantasy_points and persisting.
+                season_points = self._to_int(self._first_value(row, "PTS"))
+                season_assists = self._to_int(self._first_value(row, "AST"))
+                season_rebounds = self._to_int(self._first_value(row, "REB"))
+
+                points = season_points // games_played
+                assists = season_assists // games_played
+                rebounds = season_rebounds // games_played
+                steals = self._to_int(self._first_value(row, "STL")) // games_played
+                blocks = self._to_int(self._first_value(row, "BLK")) // games_played
+                raw_minutes_played = self._to_int(self._first_value(row, "MIN")) // games_played
                 minutes_played = self._cap_minutes(raw_minutes_played)
                 if raw_minutes_played != minutes_played and not any("minutes_played capped" in warning for warning in report.warnings):
                     report.warnings.append(
                         f"minutes_played capped to 120 for schema compatibility (first raw value: {raw_minutes_played})"
                     )
-                cost = self._basketball_cost(points, assists, rebounds)
+                cost = self._basketball_cost(season_points, season_assists, season_rebounds)
                 fantasy_points = self._basketball_fantasy_points(
                     points=points,
                     assists=assists,

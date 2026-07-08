@@ -11,21 +11,31 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 import uuid
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.league.models import TransferWindow
+from app.league.models import Transfer, TransferWindow
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 
 
 @dataclass(frozen=True)
 class PricingPolicy:
-    """Per-sport pricing parameters used by the repricing algorithm."""
+    """Per-sport pricing parameters used by the repricing algorithm.
+
+    Blends two signals into one bounded per-run delta: recent-form
+    performance (weighted_points vs baseline) and net-transfer demand.
+    Both are scaled into cost-delta terms before weighting, so
+    performance_weight/demand_weight are a genuine 0..1 blend rather than
+    two differently-scaled quantities being added together.
+    """
 
     min_cost: Decimal
     max_cost: Decimal
     baseline_points: Decimal
     points_to_cost_factor: Decimal
     max_step_per_run: Decimal
+    performance_weight: Decimal = Decimal("0.70")
+    demand_weight: Decimal = Decimal("0.30")
 
 
 DEFAULT_POLICY = PricingPolicy(
@@ -80,11 +90,37 @@ def _window_weights(window_ids: list[uuid.UUID]) -> dict[uuid.UUID, Decimal]:
     return weights
 
 
+def _demand_counts(
+    db: Session, window_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, tuple[int, int]]:
+    """Net transfers in/out per player over the given windows."""
+    in_rows = (
+        db.query(Transfer.player_in_id, func.count(Transfer.id))
+        .filter(Transfer.transfer_window_id.in_(window_ids))
+        .group_by(Transfer.player_in_id)
+        .all()
+    )
+    out_rows = (
+        db.query(Transfer.player_out_id, func.count(Transfer.id))
+        .filter(Transfer.transfer_window_id.in_(window_ids))
+        .group_by(Transfer.player_out_id)
+        .all()
+    )
+
+    counts: dict[uuid.UUID, list[int]] = defaultdict(lambda: [0, 0])
+    for player_id, count in in_rows:
+        counts[player_id][0] += count
+    for player_id, count in out_rows:
+        counts[player_id][1] += count
+
+    return {player_id: (in_count, out_count) for player_id, (in_count, out_count) in counts.items()}
+
+
 def recalculate_player_prices(
     db: Session,
     *,
     lookback_windows: int = 3,
-    algorithm_version: str = "v1",
+    algorithm_version: str = "v2",
 ) -> dict[str, int]:
     """Recompute player costs from recent form and persist price history.
 
@@ -110,6 +146,7 @@ def recalculate_player_prices(
     window_ids = [window.id for window in recent_windows]
     latest_window_id = recent_windows[0].id
     weights = _window_weights(window_ids)
+    demand_counts = _demand_counts(db, window_ids)
 
     stat_rows = (
         db.query(
@@ -159,8 +196,22 @@ def recalculate_player_prices(
         weighted_points = weighted_points_sum[player.id] / denominator
         policy = SPORT_POLICIES.get(player.sport.name, DEFAULT_POLICY)
 
-        raw_delta = (
+        performance_delta = (
             (weighted_points - policy.baseline_points) * policy.points_to_cost_factor
+        )
+
+        in_count, out_count = demand_counts.get(player.id, (0, 0))
+        transfer_volume = max(1, in_count + out_count)
+        demand_score = Decimal(in_count - out_count) / Decimal(transfer_volume)
+        # Scaled the same way performance_delta ultimately gets bounded, so a
+        # maximal demand skew alone can move price by up to max_step_per_run
+        # before weighting — the two signals are comparably scaled inputs to
+        # the blend rather than differently-sized quantities being summed.
+        demand_delta = demand_score * policy.max_step_per_run
+
+        raw_delta = (
+            (performance_delta * policy.performance_weight)
+            + (demand_delta * policy.demand_weight)
         )
         bounded_delta = _clamp(
             raw_delta,

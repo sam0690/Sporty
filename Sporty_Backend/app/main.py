@@ -59,7 +59,6 @@ from app.core.config import settings
 from app.services.league_status_service import auto_update_league_statuses
 from app.services.cache_warming_service import warm_cache
 from app.services.notification_service import check_and_notify_open_windows
-from app.services.price_update_service import update_player_prices
 from app.services.scoring.ranking import compute_and_store_rankings
 
 # Import routers AFTER models are registered
@@ -195,19 +194,6 @@ def _run_gameweek_ranking_job() -> None:
     db.close()
 
 
-def _run_price_update_job() -> None:
-  db = SessionLocal()
-  try:
-    redis = get_redis()
-    stats = asyncio.run(update_player_prices(db, redis))
-    logger.info("Price update job completed: %s", stats)
-  except Exception:
-    db.rollback()
-    logger.exception("Price update job failed")
-  finally:
-    db.close()
-
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # Lifespan — startup / shutdown hooks
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -247,14 +233,6 @@ async def lifespan(app: FastAPI):
       hour=0,
       minute=5,
       id="daily_cache_warming",
-      replace_existing=True,
-    )
-    scheduler.add_job(
-      _run_price_update_job,
-      trigger="cron",
-      hour="*/4",
-      minute=0,
-      id="price_update_every_4h",
       replace_existing=True,
     )
     scheduler.add_job(
