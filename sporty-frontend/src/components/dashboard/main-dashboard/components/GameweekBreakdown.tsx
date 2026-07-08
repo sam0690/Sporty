@@ -27,12 +27,7 @@ export function GameweekBreakdown({
   }, [breakdown]);
 
   return (
-    <section className="pop-in overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
-      <div
-        aria-hidden
-        className="h-[2px] w-full"
-        style={{ background: "linear-gradient(90deg, #e8fb25, transparent 80%)" }}
-      />
+    <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
       <header className="flex items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
         <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
           Gameweek Points

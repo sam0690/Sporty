@@ -2,7 +2,6 @@
 
 import { useDashboardMainState } from "@/features/dashboard";
 import { Topbar } from "@/components/dashboard/main-dashboard/components/Topbar";
-import { OverviewCards } from "@/components/dashboard/main-dashboard/components/OverviewCards";
 import { GameweekBreakdown } from "@/components/dashboard/main-dashboard/components/GameweekBreakdown";
 import { TeamPreview } from "@/components/dashboard/main-dashboard/components/TeamPreview";
 import { RecentActivity } from "@/components/dashboard/main-dashboard/components/RecentActivity";
@@ -37,8 +36,9 @@ export function DashboardMainContainer() {
           leagues={leagueOptions}
           selectedLeagueId={activeLeagueId}
           onLeagueChange={setSelectedLeagueId}
+          stats={stats}
+          statsLoading={statsLoading && hasLeagues}
         />
-        <OverviewCards stats={stats} isLoading={statsLoading && hasLeagues} />
 
         {hasLeagues && (
           <div className="mb-6">

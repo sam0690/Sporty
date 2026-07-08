@@ -38,64 +38,55 @@ export function RecentActivity({
   const nowMs = useRelativeTime({ refreshIntervalMs: 60_000 });
 
   return (
-    <section className="pop-in flex h-full flex-col overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
-      <div
-        aria-hidden
-        className="h-[2px] w-full"
-        style={{ background: "linear-gradient(90deg, #00d4ff, transparent 80%)" }}
-      />
+    <section className="flex h-full flex-col overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
       <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
         <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
           Recent Activity
         </h2>
       </header>
 
-      <div className="flex-1 p-5">
+      <div className="flex-1 px-5">
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-3 py-5">
             {Array.from({ length: 4 }, (_, index) => (
-              <div key={index} className="skeleton h-16 rounded-[10px]" />
+              <div key={index} className="skeleton h-11 rounded-[8px]" />
             ))}
           </div>
         ) : isError ? (
-          <div className="rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
+          <div className="my-5 rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
             Failed to load recent activity.
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] p-4 text-sm text-[#777783]">
+          <div className="my-5 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] p-4 text-sm text-[#777783]">
             No recent activities yet.
           </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="divide-y divide-[rgba(255,255,255,0.06)]">
             {items.map((item) => {
               const meta = ACTIVITY_META[item.type];
               const Icon = meta.Icon;
               return (
-                <li
-                  key={item.id}
-                  className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] px-4 py-3 transition-colors hover:border-[rgba(232,251,37,0.2)]"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span
-                        className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-[7px]"
-                        style={{ color: meta.color, background: `${meta.color}1a` }}
-                      >
-                        <Icon className="size-3.5" aria-hidden="true" />
+                <li key={item.id} className="group flex items-start gap-3 py-3.5">
+                  <Icon
+                    className="mt-0.5 size-4 shrink-0"
+                    style={{ color: meta.color }}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+                        {item.title}
+                      </p>
+                      <span className="shrink-0 section-label whitespace-nowrap text-[#666671] transition-colors group-hover:text-[#9a9aa5]">
+                        {formatRelativeTime(item.timestamp, nowMs)}
                       </span>
-                      <div className="min-w-0">
-                        <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-                          {item.title}
-                        </p>
-                        <p className="text-sm text-[#9a9aa5]">{item.detail}</p>
-                        {item.leagueName ? (
-                          <p className="mt-0.5 section-label">{item.leagueName}</p>
-                        ) : null}
-                      </div>
                     </div>
-                    <span className="shrink-0 section-label whitespace-nowrap">
-                      {formatRelativeTime(item.timestamp, nowMs)}
-                    </span>
+                    <p className="mt-0.5 truncate text-sm text-[#9a9aa5]">
+                      {item.detail}
+                    </p>
+                    {item.leagueName ? (
+                      <p className="mt-1 section-label">{item.leagueName}</p>
+                    ) : null}
                   </div>
                 </li>
               );
