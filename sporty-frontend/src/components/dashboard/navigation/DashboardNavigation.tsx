@@ -52,7 +52,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
     <div className="min-h-screen bg-background font-sans text-[#f0f0f0]">
       <Sidebar items={navItems} />
 
-      <div className="pb-24 pt-8 md:ml-64 md:pb-10 md:pt-10">
+      <div className="pb-24 pt-8 md:ml-[72px] md:pb-10 md:pt-10 lg:ml-64">
         <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">{children}</div>
       </div>
 

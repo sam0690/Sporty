@@ -31,7 +31,7 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex flex-1 flex-col items-center justify-center gap-1 transition-colors active:scale-95 hover:no-underline",
+                "relative flex flex-1 flex-col items-center justify-center gap-1 transition-colors active:scale-95 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#e8fb25]/60",
                 active
                   ? "text-[#e8fb25] border-t-2 border-[#e8fb25] -mt-0.5"
                   : "text-[#555560] border-t-2 border-transparent hover:text-[#f0f0f0]",
