@@ -1,6 +1,12 @@
 import { authApi } from "@/api/auth-api-client";
 import { API_PATHS } from "@/api/apiPath";
-import type { TPlayer, TPlayerListResponse, TPlayerFilter } from "@/types";
+import type {
+  TPlayer,
+  TPlayerListResponse,
+  TPlayerFilter,
+  TPlayerGameweekStat,
+  TPlayerRecentStatsResponse,
+} from "@/types";
 
 type BackendPlayer = {
   id: string;
@@ -13,6 +19,17 @@ type BackendPlayer = {
   is_available: boolean;
   created_at: string;
   projected_points?: number | null;
+  nationality?: string | null;
+  date_of_birth?: string | null;
+  height?: string | null;
+  weight?: string | null;
+  jersey_number?: number | null;
+  bio?: string | null;
+  wage?: string | null;
+  signing_fee?: string | null;
+  date_signed?: string | null;
+  agent?: string | null;
+  social_links?: Record<string, string> | null;
   sport: {
     name: string;
     display_name: string;
@@ -68,6 +85,17 @@ const mapBackendPlayer = (player: BackendPlayer): TPlayer => ({
   is_available: player.is_available,
   is_active: player.is_available,
   created_at: player.created_at,
+  nationality: player.nationality ?? null,
+  date_of_birth: player.date_of_birth ?? null,
+  height: player.height ?? null,
+  weight: player.weight ?? null,
+  jersey_number: player.jersey_number ?? null,
+  bio: player.bio ?? null,
+  wage: player.wage ?? null,
+  signing_fee: player.signing_fee ?? null,
+  date_signed: player.date_signed ?? null,
+  agent: player.agent ?? null,
+  social_links: player.social_links ?? null,
   sport: {
     name: player.sport.name,
     display_name: player.sport.display_name,
@@ -126,6 +154,21 @@ export const PlayerService = {
       },
     });
     return res.data as TPlayerStatsResponse[];
+  },
+
+  /** Get a player's recent gameweek-by-gameweek performance, newest first */
+  async getPlayerRecentStats(
+    id: string,
+    limit = 5,
+  ): Promise<TPlayerGameweekStat[]> {
+    const res = await authApi.get(API_PATHS.PLAYERS.RECENT_STATS(id), {
+      params: { limit },
+    });
+    const data = res.data as TPlayerRecentStatsResponse;
+    return data.items.map((item) => ({
+      ...item,
+      fantasy_points: Number(item.fantasy_points),
+    }));
   },
 
   /** List real teams (with crest), optionally filtered by sport */

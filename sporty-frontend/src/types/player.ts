@@ -19,6 +19,47 @@ export type TPlayer = {
   // Recency-weighted average of the last 3 gameweeks — a smarter stat, not
   // a trained prediction. null if the player has no stats in that window.
   projected_points?: number | null;
+  // Biographical enrichment (from TheSportsDB) - not every player has every field.
+  nationality?: string | null;
+  date_of_birth?: string | null;
+  height?: string | null;
+  weight?: string | null;
+  jersey_number?: number | null;
+  bio?: string | null;
+  wage?: string | null;
+  signing_fee?: string | null;
+  date_signed?: string | null;
+  agent?: string | null;
+  social_links?: Record<string, string> | null;
+};
+
+export type TPlayerGameweekStat = {
+  player: TPlayerBrief;
+  transfer_window: { id: string; number: number; start_at: string; end_at: string };
+  minutes_played: number;
+  fantasy_points: number;
+  football_stat?: {
+    goals: number;
+    assists: number;
+    clean_sheets: number;
+    yellow_cards: number;
+    red_cards: number;
+    own_goals: number;
+    penalties_saved: number;
+    penalties_missed: number;
+    saves: number;
+    goals_conceded: number;
+    bonus: number;
+  } | null;
+  cricket_stat?: {
+    runs_scored?: number | null;
+    balls_faced?: number | null;
+    wickets_taken?: number | null;
+    maidens?: number | null;
+    economy_rate?: number | null;
+    catches?: number | null;
+    run_outs?: number | null;
+  } | null;
 };
 
 export type TPlayerBrief = {
@@ -30,6 +71,10 @@ export type TPlayerBrief = {
   photo_url?: string | null;
   real_team_logo_url?: string | null;
   current_cost: number;
+};
+
+export type TPlayerRecentStatsResponse = {
+  items: TPlayerGameweekStat[];
 };
 
 export type TPlayerListResponse = {

@@ -10,6 +10,7 @@ import {
 type Sport = "football" | "basketball" | "cricket";
 
 type PlayerCardProps = {
+  id?: string;
   name: string;
   sport: Sport;
   position: string;
@@ -21,6 +22,7 @@ type PlayerCardProps = {
   avgPoints: number;
   gameweekPoints: number;
   teamName?: string;
+  onPlayerClick?: (id: string) => void;
 };
 
 const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
@@ -30,6 +32,7 @@ const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; lab
 };
 
 export function PlayerCard({
+  id,
   name,
   sport,
   position,
@@ -40,13 +43,20 @@ export function PlayerCard({
   totalPoints,
   avgPoints,
   gameweekPoints,
+  onPlayerClick,
 }: PlayerCardProps) {
   const meta = SPORT_META[sport];
   const Icon = meta.Icon;
+  const canOpenDetail = Boolean(id && onPlayerClick);
 
   return (
     <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.16)]">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <button
+        type="button"
+        disabled={!canOpenDetail}
+        onClick={() => id && onPlayerClick?.(id)}
+        className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+      >
         <PlayerAvatar name={name} photoUrl={photoUrl} size="md" className="shrink-0" />
 
         <div className="min-w-0">
@@ -77,7 +87,7 @@ export function PlayerCard({
             ) : null}
           </p>
         </div>
-      </div>
+      </button>
 
       <div className="flex shrink-0 items-center gap-4 text-right">
         <div>

@@ -1,19 +1,22 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     SmallInteger,
     String,
+    Text,
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -149,6 +152,27 @@ class Player(Base):
     # Can this player be picked / transferred in?
     # False = injured, suspended, or removed from the game.
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    # Biographical/profile enrichment (from TheSportsDB, not the sport's
+    # stats feed) - all nullable, populated by
+    # scripts/backfill_player_team_images.py alongside photo_url. Height/
+    # weight/wage/signing_fee are kept as TheSportsDB's raw display strings
+    # (e.g. "1.72 m (5 ft 8 in)", "£6,240,000") rather than parsed into
+    # numeric columns - formats vary enough across players that parsing
+    # would lose information for little query benefit; nothing filters or
+    # sorts by these today.
+    nationality: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    date_of_birth: Mapped[date | None] = mapped_column(Date, nullable=True)
+    height: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    weight: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    jersey_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    wage: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    signing_fee: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    date_signed: Mapped[date | None] = mapped_column(Date, nullable=True)
+    agent: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    # {"twitter": url, "instagram": url, "facebook": url, "youtube": url, "website": url}
+    social_links: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

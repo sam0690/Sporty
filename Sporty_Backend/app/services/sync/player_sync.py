@@ -173,6 +173,7 @@ async def sync_football_players(
 
                 player_id = player_info.get("id")
                 name = player_info.get("name")
+                photo = player_info.get("photo")
                 position = stats.get("games", {}).get("position", "Unknown")
                 team = stats.get("team", {}).get("name", "Unknown")
 
@@ -195,6 +196,7 @@ async def sync_football_players(
                     existing.real_team_id = team_row.id
                     existing.position = position
                     existing.is_available = True
+                    existing.photo_url = photo or existing.photo_url
                     total_updated += 1
                     print(f"  ♻️  Updated: {name} ({team})")
                 else:
@@ -203,6 +205,7 @@ async def sync_football_players(
                         sport_id=football.id,
                         external_api_id=str(player_id),
                         name=name,
+                        photo_url=photo,
                         real_team=team,
                         real_team_id=team_row.id,
                         position=position,

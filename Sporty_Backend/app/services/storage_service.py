@@ -76,6 +76,25 @@ def upload_avatar(user_id: uuid.UUID, file: UploadFile, contents: bytes) -> str:
     return f"{url}?v={int(time.time())}"
 
 
+def upload_player_photo(player_id: uuid.UUID, contents: bytes, content_type: str, extension: str) -> str:
+    """Upload a player photo to R2 and return its public URL.
+
+    Photos are effectively static once set, so cache them aggressively
+    instead of cache-busting on every read.
+    """
+    key = f"player-photos/{player_id}.{extension}"
+    try:
+        return _put_object(key, contents, content_type, cache_control="public, max-age=31536000, immutable")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to upload player photo for player %s", player_id)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to upload player photo",
+        )
+
+
 def upload_team_logo(team_id: uuid.UUID, contents: bytes, content_type: str, extension: str) -> str:
     """Upload a real-team logo to R2 and return its public URL.
 

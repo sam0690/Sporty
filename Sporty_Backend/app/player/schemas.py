@@ -11,7 +11,7 @@ Rules applied:
 """
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
@@ -43,6 +43,20 @@ class PlayerResponse(BaseModel):
     cost: Decimal
     is_available: bool
     created_at: datetime
+
+    # Biographical enrichment (from TheSportsDB) - all optional, not every
+    # player has every field populated. See scripts/backfill_player_team_images.py.
+    nationality: str | None = None
+    date_of_birth: date | None = None
+    height: str | None = None
+    weight: str | None = None
+    jersey_number: int | None = None
+    bio: str | None = None
+    wage: str | None = None
+    signing_fee: str | None = None
+    date_signed: date | None = None
+    agent: str | None = None
+    social_links: dict[str, str] | None = None
 
     # Recency-weighted average of the last 3 gameweeks' fantasy_points — a
     # smarter historical statistic, NOT a trained prediction (no opponent
@@ -287,3 +301,9 @@ class PlayerPriceHistoryResponse(BaseModel):
     """Recent player price history for market charts and audit views."""
 
     items: list[PlayerPriceHistoryItem]
+
+
+class PlayerRecentStatsResponse(BaseModel):
+    """Recent gameweek-by-gameweek performance for a player's detail view."""
+
+    items: list[PlayerGameweekStatResponse]

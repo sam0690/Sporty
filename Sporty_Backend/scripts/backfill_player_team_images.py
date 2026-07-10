@@ -6,9 +6,21 @@ directly from NBA's public CDN — no API call needed.
 
 Football: no such linkage exists (the CSV's own IDs were discarded
 during seeding), so team logos are fetched once from API-Football by
-name match and re-hosted in our own R2 bucket. Football player photos
-are intentionally left as-is — the frontend falls back to a
-placeholder for players with no photo_url.
+name match and re-hosted in our own R2 bucket (requires
+RAPIDAPI_FOOTBALL_KEY). Player photos instead come from two free,
+keyless sources, tried in order:
+
+  1. TheSportsDB - one bulk request per club roster (~19 requests
+     total, not one per player), so it's fast and barely touched by
+     rate limits. Primary source.
+  2. Wikipedia - found via the MediaWiki search API by name, one
+     request per player. Slower and more rate-limit-prone, so it only
+     runs against whatever TheSportsDB didn't match (e.g. Nottingham
+     Forest, whose name collides with an unrelated netball club in
+     TheSportsDB's search index).
+
+Coverage isn't 100% either way: fringe squad players missing from both
+sources are left with a placeholder (or a manual admin photo_url edit).
 
 Run manually:
     venv/bin/python scripts/backfill_player_team_images.py
@@ -16,9 +28,10 @@ Run manually:
 import asyncio
 import html
 import re
+from datetime import date
 
 import httpx
-from sqlalchemy import text
+from sqlalchemy import or_, text
 
 import app.main  # noqa: F401 — registers all model modules so relationships resolve
 
@@ -26,10 +39,15 @@ from app.database import SessionLocal
 from app.external_apis.football_api import FootballAPIClient
 from app.league.models import Sport
 from app.player.models import Player, RealTeam
-from app.services.storage_service import upload_team_logo
+from app.services.storage_service import upload_player_photo, upload_team_logo
 
 NBA_HEADSHOT_URL = "https://cdn.nba.com/headshots/nba/latest/1040x760/{id}.png"
 NBA_LOGO_URL = "https://cdn.nba.com/logos/nba/{id}/global/L/logo.svg"
+
+WIKIPEDIA_API = "https://en.wikipedia.org/w/api.php"
+# Wikimedia's API etiquette requires a descriptive User-Agent identifying the
+# application - https://meta.wikimedia.org/wiki/User-Agent_policy
+WIKIPEDIA_USER_AGENT = "SportyFantasyApp/1.0 (backfill script; contact via repo)"
 
 # API-Football's free tier only serves seasons 2022-2024, so newly
 # promoted 2025-26 clubs (Leeds United, Burnley, Sunderland) aren't
@@ -54,6 +72,39 @@ FOOTBALL_TEAM_NAME_MAP = {
     "west ham united": "West Ham",
     "wolverhampton": "Wolves",
 }
+
+# TheSportsDB team IDs, resolved via searchteams.php / search_all_teams.php
+# and verified by hand (a couple of club names collide with unrelated teams
+# in other sports there - e.g. plain "Wolverhampton" hits an amateur club,
+# and searchteams.php never surfaces the Nottingham Forest football club
+# over a same-named netball team no matter the query - its id below was
+# instead cross-referenced via known Forest players' searchplayers.php
+# results, which do return the correct idTeam - so this is a hardcoded map,
+# not a live search, same reasoning as FOOTBALL_TEAM_NAME_MAP above). Unlike
+# API-Football, TheSportsDB does have the newly-promoted 2025-26 clubs.
+SPORTSDB_TEAM_ID_MAP = {
+    "arsenal": "133604",
+    "aston villa": "133601",
+    "bournemouth": "134301",
+    "brentford": "134355",
+    "brighton hove albion": "133619",
+    "burnley": "133623",
+    "chelsea": "133610",
+    "crystal palace": "133632",
+    "everton": "133615",
+    "fulham": "133600",
+    "leeds united": "133635",
+    "liverpool": "133602",
+    "manchester city": "133613",
+    "manchester united": "133612",
+    "newcastle united": "134777",
+    "nottingham forest": "133720",
+    "sunderland": "133603",
+    "tottenham hotspur": "133616",
+    "west ham united": "133636",
+    "wolverhampton": "133599",
+}
+SPORTSDB_API = "https://www.thesportsdb.com/api/v1/json/3"
 
 
 def _normalize(name: str) -> str:
@@ -113,6 +164,247 @@ async def backfill_football_team_logos(db) -> None:
     print(f"Football: unmatched, left NULL for {len(unmatched)} teams: {unmatched}")
 
 
+MAX_RETRY_DELAY_SECONDS = 8.0
+
+
+async def _get_with_retry(http_client: httpx.AsyncClient, url: str, params: dict | None = None, retries: int = 3) -> httpx.Response:
+    """GET a URL, retrying on 429 with capped backoff.
+
+    Wikimedia's shared-IP rate limit applies to both the api.php lookups and
+    the upload.wikimedia.org image downloads, so both call sites route through
+    here. Retry-After is capped rather than trusted outright - a large
+    server-supplied value would otherwise stall this whole (unattended,
+    sequential) run on a single player. Better to skip a stubborn player fast
+    and pick it up on a later re-run (the backfill is idempotent) than block
+    for however long the server asks.
+    """
+    for attempt in range(retries):
+        resp = await http_client.get(url, params=params)
+        if resp.status_code != 429:
+            resp.raise_for_status()
+            return resp
+
+        delay = min(float(resp.headers.get("retry-after", 2 ** attempt)), MAX_RETRY_DELAY_SECONDS)
+        await asyncio.sleep(delay)
+
+    resp.raise_for_status()  # exhausted retries — raise the last 429
+    return resp
+
+
+def _parse_date(value: str | None) -> date | None:
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        return None
+
+
+def _apply_sportsdb_enrichment(player: Player, c: dict) -> None:
+    """Copy TheSportsDB's biographical fields onto a Player row."""
+    player.nationality = c.get("strNationality") or player.nationality
+    player.date_of_birth = _parse_date(c.get("dateBorn")) or player.date_of_birth
+    player.height = c.get("strHeight") or player.height
+    player.weight = c.get("strWeight") or player.weight
+    player.bio = c.get("strDescriptionEN") or player.bio
+    player.wage = c.get("strWage") or player.wage
+    player.signing_fee = c.get("strSigning") or player.signing_fee
+    player.date_signed = _parse_date(c.get("dateSigned")) or player.date_signed
+    player.agent = c.get("strAgent") or player.agent
+
+    number = c.get("strNumber")
+    if number:
+        try:
+            player.jersey_number = int(number)
+        except ValueError:
+            pass
+
+    social = dict(player.social_links or {})
+    for key, field in [
+        ("twitter", "strTwitter"), ("instagram", "strInstagram"),
+        ("facebook", "strFacebook"), ("youtube", "strYoutube"),
+        ("website", "strWebsite"),
+    ]:
+        value = c.get(field)
+        if value:
+            social[key] = value
+    if social:
+        player.social_links = social
+
+
+async def backfill_football_player_photos_sportsdb(db, force: bool = False) -> None:
+    """Per-player lookup via TheSportsDB, preferring the curated `strCutout` headshot.
+
+    Primary photo source - run before backfill_football_player_photos
+    (Wikipedia), which then only has to cover whatever this couldn't match.
+
+    Uses searchplayers.php (one request per player, not the bulk
+    lookup_all_players.php - that endpoint caps out at ~10 players per club
+    on the free tier, nowhere near a full squad). strCutout is a curated,
+    square, studio-style headshot - much more consistent than strThumb or a
+    random Wikipedia infobox photo, which can be anything from a great
+    photo-day headshot to an action shot where the player's face isn't even
+    visible.
+
+    searchplayers.php returns a single best-guess match per name query, no
+    team filter available - for short/common names (e.g. a player literally
+    named "Kevin") that guess can be an unrelated same-named player at a
+    different club, or a different sport, or retired. Validated by comparing
+    the result's idTeam against our club's known TheSportsDB id
+    (SPORTSDB_TEAM_ID_MAP) - a wrong-person photo is worse than no photo, so
+    mismatches are rejected rather than accepted. Clubs missing from that map
+    (Nottingham Forest, test rows) are skipped entirely and left to the
+    Wikipedia fallback.
+
+    Also fills in the biographical enrichment fields on Player (nationality,
+    date_of_birth, height, weight, jersey_number, bio, wage, signing_fee,
+    date_signed, agent, social_links) from the same response - no extra API
+    calls, this data comes back alongside the photo fields in one request.
+
+    force=True re-checks every player regardless of existing data (for a
+    full from-scratch redo); force=False (default) only attempts players
+    still missing a photo or missing enrichment (nationality as the marker -
+    it's set whenever a match succeeds, whether or not a photo was found).
+    """
+    sport = db.query(Sport).filter(Sport.name == "football").first()
+    if sport is None:
+        print("Football: no 'football' sport row found, skipping")
+        return
+
+    teams = db.query(RealTeam).filter(RealTeam.sport_id == sport.id).all()
+
+    matched: list[str] = []
+    unmatched: list[str] = []
+
+    async with httpx.AsyncClient(timeout=30) as http_client:
+        for team in teams:
+            expected_sportsdb_id = SPORTSDB_TEAM_ID_MAP.get(_normalize(team.name))
+            if not expected_sportsdb_id:
+                continue  # e.g. Nottingham Forest, or non-EPL rows
+
+            query = db.query(Player).filter(Player.real_team_id == team.id)
+            if not force:
+                query = query.filter(
+                    or_(Player.photo_url.is_(None), Player.nationality.is_(None))
+                )
+            players = query.all()
+
+            for i, player in enumerate(players, start=1):
+                try:
+                    resp = await _get_with_retry(
+                        http_client,
+                        f"{SPORTSDB_API}/searchplayers.php",
+                        params={"p": player.name},
+                    )
+                    candidates = resp.json().get("player") or []
+                    candidate = None
+                    for c in candidates:
+                        if c.get("strSport") != "Soccer" or c.get("idTeam") != expected_sportsdb_id:
+                            continue
+                        candidate = c
+                        break
+
+                    if not candidate:
+                        unmatched.append(player.name)
+                        continue
+
+                    _apply_sportsdb_enrichment(player, candidate)
+
+                    image_url = candidate.get("strCutout") or candidate.get("strThumb")
+                    if image_url:
+                        img_resp = await _get_with_retry(http_client, image_url)
+                        content_type = img_resp.headers.get("content-type", "image/png").split(";")[0]
+                        extension = content_type.split("/")[-1]
+                        player.photo_url = upload_player_photo(player.id, img_resp.content, content_type, extension)
+                    matched.append(player.name)
+                except httpx.HTTPError as e:
+                    print(f"  skip {player.name}: {e}")
+                    unmatched.append(player.name)
+
+                await asyncio.sleep(0.3)
+
+            db.commit()
+            print(f"  ...{team.name}: {len(players)} processed")
+
+    print(f"Football (TheSportsDB): uploaded photos for {len(matched)} players")
+    print(f"Football (TheSportsDB): no match, left NULL for {len(unmatched)} players: {unmatched}")
+
+
+async def _find_wikipedia_photo_url(http_client: httpx.AsyncClient, player_name: str) -> str | None:
+    """Find a player's Wikipedia page by name and return their infobox photo URL, if any.
+
+    Uses generator=search to resolve the search hit and its page image in a
+    single request instead of two, to stay further under Wikipedia's rate limit.
+    Requests a thumbnail rather than the full-resolution original - Wikimedia's
+    own 429 response tells automated clients to do exactly this (see
+    https://w.wiki/GHai), and a 500px thumbnail is plenty for an avatar anyway.
+    """
+    resp = await _get_with_retry(http_client, WIKIPEDIA_API, params={
+        "action": "query",
+        "generator": "search",
+        "gsrsearch": f"{player_name} footballer",
+        "gsrlimit": 1,
+        "prop": "pageimages",
+        "piprop": "thumbnail",
+        "pithumbsize": 500,
+        "format": "json",
+    })
+    pages = resp.json().get("query", {}).get("pages", {})
+    for page in pages.values():
+        thumbnail = page.get("thumbnail")
+        if thumbnail:
+            return thumbnail["source"]
+    return None
+
+
+async def backfill_football_player_photos(db, limit: int | None = None) -> None:
+    """Find each football player's Wikipedia photo by name and re-host it in R2."""
+    sport = db.query(Sport).filter(Sport.name == "football").first()
+    if sport is None:
+        print("Football: no 'football' sport row found, skipping")
+        return
+
+    query = db.query(Player).filter(Player.sport_id == sport.id, Player.photo_url.is_(None))
+    if limit:
+        query = query.limit(limit)
+    players = query.all()
+
+    matched: list[str] = []
+    unmatched: list[str] = []
+
+    async with httpx.AsyncClient(headers={"User-Agent": WIKIPEDIA_USER_AGENT}, timeout=30) as http_client:
+        for i, player in enumerate(players, start=1):
+            try:
+                image_url = await _find_wikipedia_photo_url(http_client, player.name)
+                if not image_url:
+                    unmatched.append(player.name)
+                    continue
+
+                resp = await _get_with_retry(http_client, image_url)
+                content_type = resp.headers.get("content-type", "image/jpeg").split(";")[0]
+                extension = content_type.split("/")[-1]
+
+                player.photo_url = upload_player_photo(player.id, resp.content, content_type, extension)
+                matched.append(player.name)
+            except httpx.HTTPError as e:
+                print(f"  skip {player.name}: {e}")
+                unmatched.append(player.name)
+
+            # Commit every 25 players (not just at the end) - this loop is
+            # slow (network + rate-limit backoff, easily 20-30 min for a full
+            # roster), so a crash or timeout partway through shouldn't lose
+            # everything found so far.
+            if i % 25 == 0:
+                db.commit()
+                print(f"  ...progress: {i}/{len(players)} processed, {len(matched)} matched so far")
+
+            await asyncio.sleep(0.5)  # ponytail: fixed delay + the 429 backoff in _wikipedia_get; swap for a proper rate limiter if this ever runs on a much bigger roster
+
+    db.commit()
+    print(f"Football: uploaded Wikipedia photos for {len(matched)} players")
+    print(f"Football: no match, left NULL for {len(unmatched)} players: {unmatched}")
+
+
 def sync_player_team_logos(db) -> None:
     """Copy each player's real team logo onto Player.real_team_logo_url.
 
@@ -134,6 +426,8 @@ def main() -> None:
     try:
         backfill_basketball(db)
         asyncio.run(backfill_football_team_logos(db))
+        asyncio.run(backfill_football_player_photos_sportsdb(db))
+        asyncio.run(backfill_football_player_photos(db))
         sync_player_team_logos(db)
     finally:
         db.close()

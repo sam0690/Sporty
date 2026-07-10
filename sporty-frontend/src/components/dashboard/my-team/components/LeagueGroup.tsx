@@ -29,6 +29,7 @@ type LeagueGroupProps = {
   leagueName: string;
   players: LeaguePlayer[];
   sports: Sport[];
+  onPlayerClick?: (id: string) => void;
 };
 
 const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
@@ -64,7 +65,7 @@ function groupByPosition(players: LeaguePlayer[]) {
     }));
 }
 
-export function LeagueGroup({ players, sports }: LeagueGroupProps) {
+export function LeagueGroup({ players, sports, onPlayerClick }: LeagueGroupProps) {
   const sportCounts = sports.map((sport) => ({
     sport,
     count: players.filter((player) => player.sport === sport).length,
@@ -111,6 +112,8 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
               {groupPlayers.map((player) => (
                 <PlayerCard
                   key={player.id}
+                  id={player.id}
+                  onPlayerClick={onPlayerClick}
                   name={player.name}
                   sport={player.sport}
                   position={player.position}

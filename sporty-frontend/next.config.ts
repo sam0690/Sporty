@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "cdn.nba.com" },
+      { protocol: "https", hostname: "media.api-sports.io" },
       { protocol: "https", hostname: "pub-a57fa79d95fd430987b84680cd11e457.r2.dev" },
       { protocol: "https", hostname: "lh3.googleusercontent.com" },
     ],

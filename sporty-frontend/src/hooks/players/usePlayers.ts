@@ -67,3 +67,13 @@ export const usePlayerStats = (id: string, windowId: string) => {
     },
   );
 };
+
+export const usePlayerRecentStats = (id: string, limit = 5) => {
+  return useApiQuery(
+    ["players", id, "recent-stats", limit],
+    () => PlayerService.getPlayerRecentStats(id, limit),
+    {
+      enabled: !!id,
+    },
+  );
+};

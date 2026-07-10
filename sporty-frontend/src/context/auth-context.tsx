@@ -42,6 +42,7 @@ type AuthResult = {
   code?: string;
   email?: string;
   linkToken?: string;
+  isNewUser?: boolean;
 };
 
 type PendingGoogleLink = {
@@ -289,12 +290,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (code: string): Promise<AuthResult> => {
       setLoading("google", true);
       try {
-        await publicApi.post(API_PATHS.AUTH.GOOGLE, {
+        const tokenResponse = await publicApi.post(API_PATHS.AUTH.GOOGLE, {
           code,
         });
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
         setUser(toUser(meResponse.data));
-        return { success: true };
+        return { success: true, isNewUser: Boolean(tokenResponse.data?.is_new_user) };
       } catch (error) {
         if (isApiError(error) && error.statusCode === 409) {
           const details =

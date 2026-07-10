@@ -272,6 +272,7 @@ def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONRes
     google_id = payload.sub
     email = payload.email
     avatar_url = payload.picture
+    is_new_user = False
 
     # 1. Try to find an existing user by google_id
     user = db.query(User).filter(User.google_id == google_id).first()
@@ -315,11 +316,13 @@ def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONRes
             )
             db.add(user)
             db.flush()  # assign user.id and persist defaults before token creation
+            is_new_user = True
 
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is disabled")
 
     response = _build_tokens(db, user)
+    response.is_new_user = is_new_user
     db.commit()
     return response
 

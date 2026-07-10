@@ -29,6 +29,7 @@ from app.player.schemas import (
     PlayerGameweekStatResponse,
     PlayerListResponse,
     PlayerPriceHistoryResponse,
+    PlayerRecentStatsResponse,
     PlayerResponse,
 )
 from app.schemas.common import TeamBrief
@@ -214,3 +215,19 @@ def get_player_price_history(
     """Return newest-first price change records for a player."""
     rows = player_service.get_player_price_history(db, player_id, limit=limit)
     return PlayerPriceHistoryResponse(items=rows)
+
+
+@router.get(
+    "/{player_id}/recent-stats",
+    response_model=PlayerRecentStatsResponse,
+    summary="Get a player's recent gameweek-by-gameweek performance",
+)
+def get_player_recent_stats(
+    player_id: uuid.UUID,
+    limit: int = 5,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Return newest-first gameweek stats for a player's detail view."""
+    rows = player_service.get_player_recent_stats(db, player_id, limit=limit)
+    return PlayerRecentStatsResponse(items=rows)

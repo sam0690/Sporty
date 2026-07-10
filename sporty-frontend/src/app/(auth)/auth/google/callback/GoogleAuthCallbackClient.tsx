@@ -55,8 +55,13 @@ export function GoogleAuthCallbackClient() {
       }
 
       if (result.success) {
+        const redirect = getSafeRedirectPath(searchParams.get("state"));
         window.location.replace(
-          getSafeRedirectPath(searchParams.get("state")) ?? "/dashboard",
+          result.isNewUser
+            ? redirect
+              ? `/onboarding/favourites?redirect=${encodeURIComponent(redirect)}`
+              : "/onboarding/favourites"
+            : redirect ?? "/dashboard",
         );
         return;
       }

@@ -379,3 +379,33 @@ def get_player_price_history(
         .limit(safe_limit)
         .all()
     )
+
+
+def get_player_recent_stats(
+    db: Session,
+    player_id: uuid.UUID,
+    *,
+    limit: int = 5,
+) -> list[PlayerGameweekStat]:
+    """Return newest-first gameweek stats for a player's detail view.
+
+    Mirrors get_player_price_history above: same 404-on-invalid-id guard,
+    same newest-first + limit shape. Eager-loads the same relationships as
+    get_player_stats so the detail view's stats section is one round-trip.
+    """
+    get_player(db, player_id)
+
+    safe_limit = max(1, min(limit, 50))
+    return (
+        db.query(PlayerGameweekStat)
+        .options(
+            joinedload(PlayerGameweekStat.player).joinedload(Player.sport),
+            joinedload(PlayerGameweekStat.transfer_window),
+            joinedload(PlayerGameweekStat.football_stat),
+            joinedload(PlayerGameweekStat.cricket_stat),
+        )
+        .filter(PlayerGameweekStat.player_id == player_id)
+        .order_by(PlayerGameweekStat.created_at.desc())
+        .limit(safe_limit)
+        .all()
+    )
