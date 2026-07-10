@@ -2976,6 +2976,7 @@ def _build_lineup_payload(
             "is_vice_captain": row.is_vice_captain,
             "is_starter": row.is_starter,
             "bench_order": row.bench_order,
+            "is_carried_forward": row.is_carried_forward,
             "player": row.player,
             "created_at": created_at_by_player_id.get(row.player_id, fallback_created_at),
         }

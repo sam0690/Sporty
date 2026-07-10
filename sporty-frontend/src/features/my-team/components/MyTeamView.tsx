@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { EmptyPlayers } from "@/components/ui/empty-states";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import { EmptyTeamState } from "@/components/dashboard/my-team/components/EmptyTeamState";
 import { LeagueGroup } from "@/components/dashboard/my-team/components/LeagueGroup";
 import { TeamHeader } from "@/components/dashboard/my-team/components/TeamHeader";
-import { PlayerDetailModal } from "@/components/shared/player-detail/PlayerDetailModal";
 import type { MyTeamLeagueView, MyTeamPlayerView, LeagueOption } from "../types";
 
 function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
@@ -90,8 +88,6 @@ export function MyTeamView({
   selectedTeamError,
   onLeagueChange,
 }: MyTeamViewProps) {
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
-
   const leagueSelector = hasLeagues ? (
     leagueOptions.length <= 4 ? (
       <div className="flex flex-wrap gap-2">
@@ -187,7 +183,6 @@ export function MyTeamView({
                 leagueName={teamLeague.leagueName}
                 players={teamLeague.players}
                 sports={teamLeague.sports}
-                onPlayerClick={setSelectedPlayerId}
               />
             </div>
           </section>
@@ -195,11 +190,6 @@ export function MyTeamView({
       ) : (
         <EmptyPlayers />
       )}
-
-      <PlayerDetailModal
-        playerId={selectedPlayerId}
-        onClose={() => setSelectedPlayerId(null)}
-      />
     </section>
   );
 }

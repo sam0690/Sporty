@@ -751,6 +751,10 @@ class LineupEntryResponse(BaseModel):
     is_vice_captain: bool
     is_starter: bool = True
     bench_order: int | None = None
+    # True when this row was written by the auto-carry-forward job because
+    # the user never submitted a lineup for this window (see
+    # app/services/lineup_carry_forward_service.py), not a manual save.
+    is_carried_forward: bool = False
     player: PlayerBrief
     created_at: datetime
 

@@ -1199,6 +1199,14 @@ class TeamGameweekLineup(Base):
     # NULL for starters.
     bench_order: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
 
+    # True when this row was written by the auto-carry-forward job (user
+    # never submitted a lineup for this window, so last window's was reused
+    # after being patched for squad changes) rather than a manual save via
+    # update_lineup(). See app/services/lineup_carry_forward_service.py.
+    is_carried_forward: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+
     # Relationships
     fantasy_team: Mapped["FantasyTeam"] = relationship(foreign_keys=[fantasy_team_id])
     transfer_window: Mapped["TransferWindow"] = relationship(foreign_keys=[transfer_window_id])

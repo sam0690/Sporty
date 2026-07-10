@@ -5,12 +5,15 @@ import { DashboardNavigation } from "@/components/dashboard/navigation/Dashboard
 
 export default function DashboardLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   return (
     <ProtectedRoute>
       <DashboardNavigation>{children}</DashboardNavigation>
+      {modal}
     </ProtectedRoute>
   );
 }

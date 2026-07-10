@@ -54,11 +54,13 @@ def validate_transfer_window_for_lineup(window: TransferWindow) -> None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Lineup is locked for this window")
 
 
-def auto_lock_expired_lineups(db: Session) -> dict[str, int]:
+def auto_lock_expired_lineups(db: Session) -> tuple[dict[str, int], List[TransferWindow]]:
     """Find transfer windows whose lineup_deadline_at has passed and set lineup_locked=True.
 
     Idempotent: only updates windows where lineup_locked is False.
-    Returns dict with counts for logging.
+    Returns (stats dict for logging, the windows just locked in this call) -
+    the caller uses the latter to trigger lineup carry-forward exactly once
+    per window, right as it locks (see app/tasks/transfer_tasks.py).
     """
     now = _now_utc()
     rows: List[TransferWindow] = (
@@ -68,7 +70,7 @@ def auto_lock_expired_lineups(db: Session) -> dict[str, int]:
     )
 
     if not rows:
-        return {"checked": 0, "locked": 0}
+        return {"checked": 0, "locked": 0}, []
 
     locked = 0
     for w in rows:
@@ -77,4 +79,4 @@ def auto_lock_expired_lineups(db: Session) -> dict[str, int]:
         logger.info("Auto-locking lineups for window=%s season=%s number=%s", w.id, w.season_id, w.number)
 
     db.flush()
-    return {"checked": len(rows), "locked": locked}
+    return {"checked": len(rows), "locked": locked}, rows

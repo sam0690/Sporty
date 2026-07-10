@@ -309,6 +309,22 @@ def validate_lineup_for_league_type(
             )
 
 
+def get_lineup_size_rules(sports: list[Any]) -> dict[str, int] | None:
+    """Public read of _LINEUP_SIZE_RULES for the sport-type derived from `sports`.
+
+    Lets callers outside this module (e.g. the lineup carry-forward service,
+    which needs to know how many starters to select *before* it can call
+    validate_lineup_for_league_type) read the same rule set without reaching
+    into the underscore-prefixed module constant directly.
+    """
+    return _LINEUP_SIZE_RULES.get(derive_sport_type(sports))
+
+
+def get_mixed_starter_requirements() -> dict[str, int]:
+    """Public read of _MIXED_STARTER_REQUIREMENTS (see get_lineup_size_rules)."""
+    return dict(_MIXED_STARTER_REQUIREMENTS)
+
+
 # ── Squad constraint checks (max-per-club, position minimums) ────────────────
 #
 # Shared by every entry point that adds a player to a roster — draft picks,

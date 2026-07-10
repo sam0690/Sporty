@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import {
   BasketballGlyph,
@@ -10,7 +11,7 @@ import {
 type Sport = "football" | "basketball" | "cricket";
 
 type PlayerCardProps = {
-  id?: string;
+  id: string;
   name: string;
   sport: Sport;
   position: string;
@@ -22,7 +23,6 @@ type PlayerCardProps = {
   avgPoints: number;
   gameweekPoints: number;
   teamName?: string;
-  onPlayerClick?: (id: string) => void;
 };
 
 const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
@@ -43,19 +43,15 @@ export function PlayerCard({
   totalPoints,
   avgPoints,
   gameweekPoints,
-  onPlayerClick,
 }: PlayerCardProps) {
   const meta = SPORT_META[sport];
   const Icon = meta.Icon;
-  const canOpenDetail = Boolean(id && onPlayerClick);
 
   return (
     <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.16)]">
-      <button
-        type="button"
-        disabled={!canOpenDetail}
-        onClick={() => id && onPlayerClick?.(id)}
-        className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-default"
+      <Link
+        href={`/players/${id}`}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121218]"
       >
         <PlayerAvatar name={name} photoUrl={photoUrl} size="md" className="shrink-0" />
 
@@ -87,7 +83,7 @@ export function PlayerCard({
             ) : null}
           </p>
         </div>
-      </button>
+      </Link>
 
       <div className="flex shrink-0 items-center gap-4 text-right">
         <div>
