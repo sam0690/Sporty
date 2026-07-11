@@ -5,6 +5,8 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
+import { LineupViewToggle } from "@/components/dashboard/leagues/league-lineup/components/LineupViewToggle";
+import { RecapPitchView } from "@/components/dashboard/leagues/gameweek-recap/components/RecapPitchView";
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import { useGameweekRecap, useLeague } from "@/hooks/leagues/useLeagues";
 import { useMe } from "@/hooks/auth/useMe";
@@ -83,10 +85,10 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
   const contributed = Number(p.contributed_points);
 
   return (
-    <li className="flex items-center gap-3 rounded-[8px] px-2.5 py-2.5 transition-colors hover:bg-[rgba(255,255,255,0.03)]">
+    <li className="flex items-center gap-3 rounded-[3px] px-2.5 py-2.5 transition-colors hover:bg-[rgba(255,255,255,0.03)]">
       <PlayerAvatar name={p.player.name} photoUrl={p.player.photo_url} size="sm" className="shrink-0" />
       <span
-        className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[6px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
+        className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[3px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
         style={{ color: accent, background: `${accent}17`, border: `1px solid ${accent}33` }}
       >
         {p.player.position}
@@ -117,7 +119,7 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
       </div>
 
       {p.captain_bonus && Number(p.captain_bonus) > 0 ? (
-        <span className="hidden shrink-0 rounded-full bg-[rgba(232,251,37,0.12)] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25] sm:inline">
+        <span className="hidden shrink-0 rounded-[3px] bg-[rgba(232,251,37,0.12)] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25] sm:inline">
           +{fmt(p.captain_bonus)} bonus
         </span>
       ) : null}
@@ -145,10 +147,10 @@ function Section({
 }) {
   if (players.length === 0) return null;
   return (
-    <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14]">
-      <header className="flex items-center justify-between border-b border-[rgba(255,255,255,0.07)] px-4 py-3">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <header className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
         <span className="section-label">{title}</span>
-        <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
+        <span className="rounded-[3px] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
           {count}
         </span>
       </header>
@@ -166,6 +168,7 @@ export function GameweekRecap() {
   const leagueId = String(params?.id ?? "");
   // null = "latest scored gameweek" (server default).
   const [gw, setGw] = useState<number | null>(null);
+  const [view, setView] = useState<"list" | "pitch">("pitch");
 
   const { data, isLoading, isError } = useGameweekRecap(
     leagueId,
@@ -214,19 +217,19 @@ export function GameweekRecap() {
             type="button"
             disabled={!canPrev}
             onClick={() => currentGw && setGw(currentGw - 1)}
-            className="grid size-11 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
+            className="grid size-11 place-items-center rounded-[3px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Previous gameweek"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-28 rounded-[8px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-2 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+          <span className="min-w-28 rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-2 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
             {currentGw != null ? `Gameweek ${currentGw}` : "—"}
           </span>
           <button
             type="button"
             disabled={!canNext}
             onClick={() => currentGw && setGw(currentGw + 1)}
-            className="grid size-11 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
+            className="grid size-11 place-items-center rounded-[3px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Next gameweek"
           >
             <ChevronRight className="h-4 w-4" />
@@ -236,13 +239,13 @@ export function GameweekRecap() {
 
       {isLoading && (
         <div className="space-y-3">
-          <div className="h-28 animate-pulse rounded-[14px] bg-[#14141b]" />
-          <div className="h-64 animate-pulse rounded-[12px] bg-[#14141b]" />
+          <div className="h-28 animate-pulse rounded-[3px] bg-[#111117]" />
+          <div className="h-64 animate-pulse rounded-[3px] bg-[#111117]" />
         </div>
       )}
 
       {isError && (
-        <p className="rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] px-4 py-3 text-sm text-[#ff8a8a]">
+        <p className="rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] px-4 py-3 text-sm text-[#ff8a8a]">
           Couldn&apos;t load this gameweek. It may not be scored yet.
         </p>
       )}
@@ -250,16 +253,8 @@ export function GameweekRecap() {
       {data && !isLoading && (
         <>
           {/* Summary scoreboard */}
-          <section className="relative overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.09)] bg-[#0b0b10] p-6 shadow-[0_24px_60px_-30px_rgba(0,0,0,1)]">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(70% 80% at 100% 0%, rgba(232,251,37,0.1), transparent 55%)",
-              }}
-            />
-            <div className="relative flex flex-wrap items-center justify-between gap-6">
+          <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
+            <div className="flex flex-wrap items-center justify-between gap-6">
               <div>
                 <p className="section-label">Total Points</p>
                 <p className="mt-1 font-bebas text-7xl leading-none tracking-[2px] text-[#e8fb25]">
@@ -280,11 +275,23 @@ export function GameweekRecap() {
             </div>
           </section>
 
-          <Section title="Starting XI" players={starters} count={starters.length} />
-          <Section title="Bench" players={bench} count={bench.length} />
+          {data.players.length > 0 && (
+            <div className="flex justify-end">
+              <LineupViewToggle value={view} onChange={setView} />
+            </div>
+          )}
+
+          {view === "pitch" ? (
+            data.players.length > 0 && <RecapPitchView players={data.players} />
+          ) : (
+            <>
+              <Section title="Starting XI" players={starters} count={starters.length} />
+              <Section title="Bench" players={bench} count={bench.length} />
+            </>
+          )}
 
           {data.players.length === 0 && (
-            <div className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#0f0f14] p-10 text-center">
+            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
               <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#9a9aa5]">
                 No lineup for this gameweek
               </p>
@@ -309,7 +316,7 @@ function Stat({
   accent?: boolean;
 }) {
   return (
-    <div className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] px-4 py-2.5 text-center">
+    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-center">
       <p className="section-label">{label}</p>
       <p
         className={`mt-1 font-bebas text-2xl leading-none tracking-[1px] tabular-nums ${
