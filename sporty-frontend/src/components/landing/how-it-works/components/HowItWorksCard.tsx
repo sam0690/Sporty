@@ -23,7 +23,7 @@ function StepIcon({ icon }: { icon: HowItWorksIcon }) {
 
 export function HowItWorksCard({ step, index }: HowItWorksCardProps) {
   return (
-    <article className="group relative overflow-hidden rounded-[14px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#16161d] to-[#0f0f14] p-7 shadow-[0_18px_40px_-24px_rgba(0,0,0,0.9)] transition-all duration-200 hover:-translate-y-1 hover:border-[rgba(232,251,37,0.35)]">
+    <article className="group relative overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-7 transition-colors duration-150 hover:border-[rgba(232,251,37,0.35)]">
       {/* watermark step number */}
       <span
         aria-hidden
@@ -33,7 +33,7 @@ export function HowItWorksCard({ step, index }: HowItWorksCardProps) {
       </span>
 
       <div className="relative flex items-center gap-3">
-        <span className="grid size-11 place-items-center rounded-[10px] bg-[rgba(232,251,37,0.1)] text-[#e8fb25] ring-1 ring-[rgba(232,251,37,0.25)]">
+        <span className="grid size-11 place-items-center rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]">
           <StepIcon icon={step.icon} />
         </span>
         <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560]">

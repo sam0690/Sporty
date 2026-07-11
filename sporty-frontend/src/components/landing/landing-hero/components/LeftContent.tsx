@@ -13,7 +13,7 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center gap-2 rounded-full border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[2px] text-[#e8fb25]">
+      <span className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[2px] text-[#e8fb25]">
         <span className="size-1.5 rounded-full bg-[#e8fb25] animate-live-pulse" />
         {content.badge}
       </span>
@@ -25,12 +25,10 @@ export function LeftContent({ content }: LeftContentProps) {
         {titleLines.map((line, idx) => (
           <span
             key={line}
-            className={cn("block", idx === titleLines.length - 1 && "text-transparent [-webkit-background-clip:text] [background-clip:text]")}
-            style={
-              idx === titleLines.length - 1
-                ? { backgroundImage: "linear-gradient(100deg, #e8fb25, #00ff88)" }
-                : undefined
-            }
+            className={cn(
+              "block",
+              idx === titleLines.length - 1 && "text-[#e8fb25]",
+            )}
           >
             {line}
           </span>
@@ -52,8 +50,6 @@ export function LeftContent({ content }: LeftContentProps) {
                 size="lg"
                 className={cn(
                   "h-12 min-w-40 px-6 text-sm font-700",
-                  isPrimary &&
-                    "shadow-[0_10px_30px_-10px_rgba(232,251,37,0.5)]",
                   !isPrimary &&
                     "border-white/20! text-[#f0f0f0]! hover:bg-[#1d1d26]! hover:text-[#f0f0f0]!",
                 )}
@@ -85,7 +81,7 @@ export function LeftContent({ content }: LeftContentProps) {
         {SPORT_GLYPHS.map(({ Icon, label, color }) => (
           <span
             key={label}
-            className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 py-1.5"
+            className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.1)] bg-[#111117] px-3 py-1.5"
           >
             <span style={{ color }}>
               <Icon className="size-4" />
@@ -102,7 +98,7 @@ export function LeftContent({ content }: LeftContentProps) {
           {content.stat.avatars.map((avatar) => (
             <span
               key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#0a0a0f] bg-[rgba(232,251,37,0.16)] font-barlow-condensed text-[10px] font-700 text-[#e8fb25]"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-[#0a0a0f] bg-[rgba(232,251,37,0.16)] font-barlow-condensed text-[10px] font-700 text-[#e8fb25]"
             >
               {avatar}
             </span>

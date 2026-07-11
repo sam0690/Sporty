@@ -9,15 +9,6 @@ export function HowItWorksContainer() {
       aria-labelledby="how-it-works-title"
       id="how-it-works"
     >
-      <div className="pointer-events-none absolute inset-0 opacity-[0.04]">
-        <div
-          className="h-full w-full bg-cover bg-center"
-          style={{
-            backgroundImage: "url('/images/landing/football-action.jpg')",
-          }}
-        />
-      </div>
-
       <div className="relative mx-auto w-full max-w-7xl px-4 py-18 sm:px-6 lg:px-8 lg:py-22">
         <HowItWorksHeader
           heading={HOW_IT_WORKS_CONTENT.heading}

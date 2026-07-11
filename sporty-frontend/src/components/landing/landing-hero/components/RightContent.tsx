@@ -20,17 +20,7 @@ const TIMELINE = [
 export function RightContent({ visual }: RightContentProps) {
   return (
     <div className="relative">
-      {/* ambient glow behind the card */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -inset-6 -z-10 opacity-70"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 30% 20%, rgba(255,59,92,0.22), transparent 60%), radial-gradient(60% 60% at 80% 80%, rgba(0,212,255,0.22), transparent 60%)",
-        }}
-      />
-
-      <div className="overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-[#0b0b10] shadow-[0_30px_70px_-30px_rgba(0,0,0,1)]">
+      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
         {/* team-colour accent bar */}
         <div
           className="h-1"
@@ -41,7 +31,7 @@ export function RightContent({ visual }: RightContentProps) {
 
         {/* status row */}
         <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-5 py-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
             <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
             Live
           </span>
@@ -70,7 +60,7 @@ export function RightContent({ visual }: RightContentProps) {
                 {AWAY.score}
               </span>
             </div>
-            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.28)] bg-[rgba(255,59,92,0.12)] px-2.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-[#ff3b5c]">
+            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.28)] bg-[rgba(255,59,92,0.12)] px-2.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-[#ff3b5c]">
               67:14
             </p>
           </div>
@@ -126,7 +116,7 @@ export function RightContent({ visual }: RightContentProps) {
             </span>
           </div>
           <div
-            className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.06)]"
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-[3px] bg-[rgba(255,255,255,0.06)]"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -134,7 +124,7 @@ export function RightContent({ visual }: RightContentProps) {
             aria-label="Next match progress"
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-[#e8fb25] to-[#00ff88] transition-all duration-500"
+              className="h-full bg-[#e8fb25] transition-all duration-500"
               style={{ width: `${visual.progressPercent}%` }}
             />
           </div>
@@ -151,12 +141,11 @@ function Crest({
 }) {
   return (
     <span
-      className="grid size-12 shrink-0 place-items-center rounded-[9px] font-bebas text-lg leading-none tracking-[1px]"
+      className="grid size-12 shrink-0 place-items-center rounded-[3px] font-bebas text-lg leading-none tracking-[1px]"
       style={{
         color: team.color,
-        background: `linear-gradient(160deg, ${team.color}2e, ${team.color}0d)`,
-        border: `1px solid ${team.color}59`,
-        boxShadow: `0 0 24px ${team.color}26`,
+        background: `${team.color}14`,
+        border: `1px solid ${team.color}40`,
       }}
       aria-label={team.name}
     >

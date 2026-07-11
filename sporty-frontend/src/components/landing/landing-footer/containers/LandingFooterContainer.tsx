@@ -32,31 +32,15 @@ const LINK_GROUPS: { title: string; links: { label: string; href: string }[] }[]
 export function LandingFooterContainer() {
   return (
     <footer
-      className="relative border-t border-[rgba(255,255,255,0.08)] bg-[#08080c]"
+      className="relative border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0f]"
       aria-labelledby="landing-footer-title"
       id="pricing"
     >
-      {/* top edge glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-px"
-        style={{
-          background:
-            "linear-gradient(90deg, transparent, rgba(232,251,37,0.4), transparent)",
-        }}
-      />
-
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-14 sm:px-6 lg:px-8 lg:pb-14 lg:pt-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-xs">
             <div className="flex items-center gap-2">
-              <span
-                className="grid size-8 place-items-center rounded-[7px] text-[#0a0a0f]"
-                style={{
-                  background: "linear-gradient(150deg, #f0ff45, #e8fb25)",
-                  boxShadow: "0 0 22px rgba(232,251,37,0.35)",
-                }}
-              >
+              <span className="grid size-8 place-items-center rounded-[3px] bg-[#e8fb25] text-[#0a0a0f]">
                 <BoltGlyph className="size-4" />
               </span>
               <span

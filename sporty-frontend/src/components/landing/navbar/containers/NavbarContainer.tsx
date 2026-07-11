@@ -31,7 +31,7 @@ export function NavbarContainer() {
     <header
       className={`sticky top-0 z-header transition-all duration-300 ${
         isScrolled
-          ? "border-b border-[rgba(255,255,255,0.08)] bg-[rgba(11,11,16,0.72)] shadow-[0_10px_30px_-20px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          ? "border-b border-[rgba(255,255,255,0.08)] bg-[#0a0a0f]"
           : "border-b border-transparent bg-transparent"
       }`}
     >
