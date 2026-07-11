@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui";
+import { Badge, StatTile } from "@/components/ui";
 
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
@@ -76,19 +76,14 @@ export function LeagueCard({
         </div>
 
         <div className="flex items-center justify-between border-t border-white/8 pt-3">
-          <div className="flex items-baseline gap-4">
-            <span className="flex items-baseline gap-1.5">
-              <span className="font-display text-2xl text-accent">
-                {yourRank > 0 ? `#${yourRank}` : "—"}
-              </span>
-              <span className="section-label">Rank</span>
-            </span>
-            <span className="flex items-baseline gap-1.5">
-              <span className="font-display text-2xl text-fg-1">
-                {points}
-              </span>
-              <span className="section-label">Pts</span>
-            </span>
+          <div className="flex items-center gap-4">
+            <StatTile
+              label="Rank"
+              value={yourRank > 0 ? `#${yourRank}` : "—"}
+              size="sm"
+              tone="accent"
+            />
+            <StatTile label="Pts" value={points} size="sm" tone="neutral" />
           </div>
           <span className="section-label flex items-center gap-1 text-fg-3 transition-colors group-hover:text-fg-1">
             View <ArrowRight className="h-3 w-3" />

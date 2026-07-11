@@ -1,12 +1,8 @@
-import { redirect } from "next/navigation";
+"use client";
 
-type LeagueCreateTeamPageProps = {
-  params: Promise<{ id: string }>;
-};
+import { CreateTeamView, useCreateTeamDashboard } from "@/features/create-team";
 
-export default async function LeagueCreateTeamPage({
-  params,
-}: LeagueCreateTeamPageProps) {
-  const { id } = await params;
-  redirect(`/create-team?leagueId=${id}`);
+export default function LeagueCreateTeamPage() {
+  const vm = useCreateTeamDashboard();
+  return <CreateTeamView {...vm} />;
 }

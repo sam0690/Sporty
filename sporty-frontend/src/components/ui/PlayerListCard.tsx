@@ -16,8 +16,10 @@ type PlayerListCardPlayer = {
 
 type PlayerListCardProps = {
   player: PlayerListCardPlayer;
-  actionLabel: string;
-  onAction: () => void;
+  /** Omit both to render a read-only row (e.g. a staged/pending summary with
+   * no safe undo action). */
+  actionLabel?: string;
+  onAction?: () => void;
   actionVariant?: "solid" | "outline";
   className?: string;
 };
@@ -63,17 +65,19 @@ export function PlayerListCard({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onAction}
-        className={`shrink-0 rounded-[3px] px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] transition-colors ${
-          actionVariant === "solid"
-            ? "bg-accent text-black hover:bg-accent-bright"
-            : "border border-accent/40 text-accent hover:bg-accent/8"
-        }`}
-      >
-        {actionLabel}
-      </button>
+      {actionLabel && onAction ? (
+        <button
+          type="button"
+          onClick={onAction}
+          className={`shrink-0 rounded-[3px] px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] transition-colors ${
+            actionVariant === "solid"
+              ? "bg-accent text-black hover:bg-accent-bright"
+              : "border border-accent/40 text-accent hover:bg-accent/8"
+          }`}
+        >
+          {actionLabel}
+        </button>
+      ) : null}
     </div>
   );
 }

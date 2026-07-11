@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 
 import { PageContainer } from "@/components/ui";
 import {
@@ -22,6 +22,12 @@ export default function LeagueLayout({
 }) {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
+  const pathname = usePathname();
+  // The draft-room entry point is a full-bleed flow (its own header, step
+  // indicators, live draft board) that doesn't belong in any of the league
+  // tabs — keep it living at this URL for a real deep link, but skip the
+  // shell chrome around it rather than showing a tab bar with nothing active.
+  const isCreateTeamRoute = pathname?.endsWith("/create-team") ?? false;
 
   const { data: league, isLoading, isError } = useLeague(leagueId);
   const { data: activeWindow } = useActiveWindow(leagueId);
@@ -57,6 +63,10 @@ export default function LeagueLayout({
         </div>
       </PageContainer>
     );
+  }
+
+  if (isCreateTeamRoute) {
+    return <>{children}</>;
   }
 
   return (

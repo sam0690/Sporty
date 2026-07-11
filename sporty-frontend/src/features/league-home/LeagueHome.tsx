@@ -148,9 +148,9 @@ export function LeagueHome() {
 
   // Draft rooms are member-scoped: once a draft league is DRAFTING, everyone
   // belongs in the draft screen. `replace` (not push) keeps the back button
-  // from bouncing users straight back into the redirect.
+  // from bouncing users straight back into the overview they're leaving.
   const goToDraftRoom = useCallback(() => {
-    router.replace(`/create-team?leagueId=${leagueId}`);
+    router.replace(`/leagues/${leagueId}/create-team`);
   }, [router, leagueId]);
 
   // Reload-safe guard: members AND the commissioner who land on (or reload) the
@@ -339,7 +339,7 @@ export function LeagueHome() {
                   router.push(
                     hasMyTeam
                       ? `/leagues/${league.id}/lineup`
-                      : `/create-team?leagueId=${league.id}`,
+                      : `/leagues/${league.id}/create-team`,
                   )
                 }
                 className="rounded-[3px] bg-accent px-5 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
@@ -351,7 +351,7 @@ export function LeagueHome() {
             <div className="flex justify-end">
               <button
                 type="button"
-                onClick={() => router.push(`/create-team?leagueId=${league.id}`)}
+                onClick={() => router.push(`/leagues/${league.id}/create-team`)}
                 className="rounded-[3px] bg-accent px-5 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
               >
                 Open Draft Screen

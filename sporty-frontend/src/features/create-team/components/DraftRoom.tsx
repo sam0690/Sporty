@@ -2,9 +2,11 @@
 
 import { CreateTeamHeader } from "./CreateTeamHeader";
 import { CurrentTeam } from "./CurrentTeam";
+import { DraftBoard } from "./DraftBoard";
 import { GameweekEntryNotice } from "./GameweekEntryNotice";
 import { PlayerMarket } from "./PlayerMarket";
 import { SquadValidationChecklist } from "./SquadValidationChecklist";
+import { useLeagueMembers } from "@/hooks/leagues/useLeagues";
 import type { CreateTeamViewModel } from "../hooks/useCreateTeamDashboard";
 
 type DraftRoomProps = Omit<CreateTeamViewModel, "league"> & {
@@ -50,8 +52,10 @@ export function DraftRoom({
   makeDraftPickMutation,
   activeWindow,
   editableWindow,
+  draftTurn,
 }: DraftRoomProps) {
   const status = league.status;
+  const { data: members } = useLeagueMembers(league.id);
 
   return (
     <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
@@ -139,55 +143,70 @@ export function DraftRoom({
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <div
-                className={`mb-3 rounded-[3px] border px-4 py-2.5 font-sans text-sm font-700 uppercase tracking-[1px] ${isMyDraftTurn ? "border-accent/30 bg-accent/10 text-accent" : "border-white/8 bg-surface-3 text-fg-2"}`}
-              >
-                {isMyDraftTurn
-                  ? "Your turn — choose a player now."
-                  : "Waiting for your turn. Player selection is locked."}
+          <div className="space-y-5">
+            {members && draftTurn ? (
+              <DraftBoard
+                members={members}
+                currentTurnUserId={draftTurn.current_turn_user_id}
+                roundNumber={draftTurn.round_number}
+                pickNumber={draftTurn.next_pick_number}
+              />
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <div
+                  className={`mb-3 flex items-center gap-2 rounded-[3px] border px-4 py-2.5 font-sans text-sm font-700 uppercase tracking-[1px] ${isMyDraftTurn ? "border-accent/30 bg-accent/10 text-accent" : "border-white/8 bg-surface-3 text-fg-2"}`}
+                >
+                  <span
+                    className={`size-2 shrink-0 animate-pulse rounded-full ${isMyDraftTurn ? "bg-accent" : "bg-fg-3"}`}
+                    aria-hidden
+                  />
+                  {isMyDraftTurn
+                    ? "Your turn — choose a player now."
+                    : "Waiting for your turn. Player selection is locked."}
+                </div>
+                <PlayerMarket
+                  players={marketPlayers}
+                  onAddPlayer={handleDraftPick}
+                  onRemovePlayer={() => {}}
+                  selectedPlayerIds={[]}
+                  sport={leagueSport}
+                  remainingBudget={Number(myTeam?.current_budget ?? budget)}
+                  searchQuery={searchQuery}
+                  selectedPosition={selectedPosition}
+                  selectedSport={selectedSport}
+                  minCost={minCostInput}
+                  maxCost={maxCostInput}
+                  onSearchQueryChange={handleSearchQueryChange}
+                  onPositionChange={handlePositionChange}
+                  onSportChange={handleSportChange}
+                  onMinCostChange={handleMinCostChange}
+                  onMaxCostChange={handleMaxCostChange}
+                  canAddPlayers={isMyDraftTurn}
+                  addDisabledReason="Waiting for your draft turn"
+                  currentPage={playersCurrentPage}
+                  totalPages={playersTotalPages}
+                  totalPlayers={playersTotal}
+                  hasNext={!!playersData?.has_next}
+                  isLoadingPage={isPlayersPageLoading}
+                  onPreviousPage={handlePreviousPlayersPage}
+                  onNextPage={handleNextPlayersPage}
+                />
               </div>
-              <PlayerMarket
-                players={marketPlayers}
-                onAddPlayer={handleDraftPick}
-                onRemovePlayer={() => {}}
-                selectedPlayerIds={[]}
-                sport={leagueSport}
-                remainingBudget={Number(myTeam?.current_budget ?? budget)}
-                searchQuery={searchQuery}
-                selectedPosition={selectedPosition}
-                selectedSport={selectedSport}
-                minCost={minCostInput}
-                maxCost={maxCostInput}
-                onSearchQueryChange={handleSearchQueryChange}
-                onPositionChange={handlePositionChange}
-                onSportChange={handleSportChange}
-                onMinCostChange={handleMinCostChange}
-                onMaxCostChange={handleMaxCostChange}
-                canAddPlayers={isMyDraftTurn}
-                addDisabledReason="Waiting for your draft turn"
-                currentPage={playersCurrentPage}
-                totalPages={playersTotalPages}
-                totalPlayers={playersTotal}
-                hasNext={!!playersData?.has_next}
-                isLoadingPage={isPlayersPageLoading}
-                onPreviousPage={handlePreviousPlayersPage}
-                onNextPage={handleNextPlayersPage}
-              />
-            </div>
-            <div className="space-y-6 lg:col-span-1">
-              <CurrentTeam
-                players={draftedPlayers}
-                onRemovePlayer={() => {}}
-                budget={budget}
-                totalCost={(draftedPlayers as { price: number }[]).reduce(
-                  (sum, p) => sum + p.price,
-                  0,
-                )}
-                requiredPlayers={requiredPlayers}
-              />
-              <SquadValidationChecklist rules={squadValidation} clubWarnings={clubCounts} />
+              <div className="space-y-6 lg:col-span-1">
+                <CurrentTeam
+                  players={draftedPlayers}
+                  onRemovePlayer={() => {}}
+                  budget={budget}
+                  totalCost={(draftedPlayers as { price: number }[]).reduce(
+                    (sum, p) => sum + p.price,
+                    0,
+                  )}
+                  requiredPlayers={requiredPlayers}
+                />
+                <SquadValidationChecklist rules={squadValidation} clubWarnings={clubCounts} />
+              </div>
             </div>
           </div>
         )

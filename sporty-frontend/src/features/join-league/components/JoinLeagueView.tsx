@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { useMe } from "@/hooks/auth/useMe";
 import { ErrorAlert } from "./ErrorAlert";
 import { JoinForm } from "./JoinForm";
 import {
@@ -19,7 +18,6 @@ import { useJoinLeague, useDiscoverLeagues } from "@/hooks/leagues/useLeagues";
 import type { TLeague } from "@/types";
 
 export function JoinLeagueView() {
-  const { username } = useMe();
   const { data: discoverLeagues, isLoading: discoverLoading } =
     useDiscoverLeagues();
   const joinMutation = useJoinLeague();
@@ -31,7 +29,14 @@ export function JoinLeagueView() {
   const [error, setError] = useState<string | null>(null);
   const autoJoinAttempted = useRef(false);
 
-  const handleSubmit = async (inviteCode: string) => {
+  // The join API only returns a membership, not the league's own details —
+  // so a real name/sport is only available when the caller already knows it
+  // (the public-leagues list has full details before the click); a blind
+  // invite-code join stays generic rather than guessing (see SuccessModal).
+  const handleSubmit = async (
+    inviteCode: string,
+    knownLeague?: Pick<PublicLeague, "id" | "name" | "sport">,
+  ) => {
     setError(null);
     if (!inviteCode) {
       setError("Invite code is required");
@@ -40,11 +45,7 @@ export function JoinLeagueView() {
 
     try {
       await joinMutation.mutateAsync(inviteCode);
-      setSuccessData({
-        name: "Joined League",
-        sport: "football",
-        teamName: `${username || "Sporty"} Team`,
-      });
+      setSuccessData(knownLeague ?? {});
       setShowSuccessModal(true);
     } catch (err: unknown) {
       if (err instanceof Error) {
@@ -74,7 +75,11 @@ export function JoinLeagueView() {
       return;
     }
     if (league.inviteCode) {
-      await handleSubmit(league.inviteCode);
+      await handleSubmit(league.inviteCode, {
+        id: league.id,
+        name: league.name,
+        sport: league.sport,
+      });
     }
   };
 

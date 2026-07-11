@@ -10,7 +10,7 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { PlayerAvatar } from "@/components/ui";
+import { PlayerListCard } from "@/components/ui";
 import { BudgetOverageConfirmation } from "./BudgetOverageConfirmation";
 import { CurrentRoster } from "./CurrentRoster";
 import { FilterBar } from "./FilterBar";
@@ -122,8 +122,9 @@ export function TransfersView(props: Props) {
     <section className="mx-auto max-w-7xl px-6 py-8 text-fg-1">
       <p className="mb-6 section-label">Manager: {username || "Sporty User"}</p>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="space-y-4 lg:col-span-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-[3fr_2fr_2fr] lg:gap-8">
+        {/* Market: browse and add players */}
+        <div className="space-y-4">
           <TransfersHeader
             budget={budget}
             leagueName={league?.name || "Loading..."}
@@ -138,86 +139,6 @@ export function TransfersView(props: Props) {
           {transfersRemaining !== null ? (
             <div className="rounded-[3px] border border-accent/20 bg-accent/8 px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent">
               {transfersRemaining} transfers remaining this session
-            </div>
-          ) : null}
-          <SquadValidationChecklist
-            title="Squad Rules"
-            rules={positionValidation}
-            clubWarnings={clubCounts}
-          />
-          {stagedOutPlayers.length > 0 || stagedInPlayers.length > 0 ? (
-            <div className="overflow-hidden rounded-[3px] border border-accent/20 bg-surface-1">
-              <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
-                <p className="section-label">Staged Transfers</p>
-                <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
-                  {stagedOutPlayers.length} out · {stagedInPlayers.length} in
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
-                <div>
-                  <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
-                    <ArrowDown className="h-3 w-3" /> Out
-                  </p>
-                  <div className="space-y-1.5">
-                    {stagedOutPlayers.length === 0 ? (
-                      <p className="text-xs text-fg-3">—</p>
-                    ) : (
-                      stagedOutPlayers.map((player) => (
-                        <div key={player.id} className="flex min-w-0 items-center gap-2">
-                          <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
-                          <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-                            {player.name}
-                          </p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-success">
-                    <ArrowUp className="h-3 w-3" /> In
-                  </p>
-                  <div className="space-y-1.5">
-                    {stagedInPlayers.length === 0 ? (
-                      <p className="text-xs text-fg-3">—</p>
-                    ) : (
-                      stagedInPlayers.map((player) => (
-                        <div key={player.id} className="flex min-w-0 items-center gap-2">
-                          <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
-                          <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-                            {player.name}
-                          </p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="px-4 pb-4">
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmModal(true)}
-                  disabled={
-                    confirmTransfersMutation.isPending ||
-                    (stagedOutPlayers.length === 0 &&
-                      stagedInPlayers.length === 0) ||
-                    (!isMultiSportLeague &&
-                      stagedOutPlayers.length !== stagedInPlayers.length) ||
-                    !isTransfersOpen
-                  }
-                  className="w-full rounded-[3px] bg-accent px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {confirmTransfersMutation.isPending
-                    ? "Confirming…"
-                    : "Confirm Staged Transfers"}
-                </button>
-                {isMultiSportLeague ? (
-                  <p className="mt-2 text-xs text-fg-3">
-                    Multisport: you can stage players in directly when budget and
-                    roster limits allow.
-                  </p>
-                ) : null}
-              </div>
             </div>
           ) : null}
           <SearchBar value={searchQuery} onSearch={handleSearchChange} />
@@ -310,7 +231,13 @@ export function TransfersView(props: Props) {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        {/* Your roster: stage players out */}
+        <div className="space-y-4">
+          <SquadValidationChecklist
+            title="Squad Rules"
+            rules={positionValidation}
+            clubWarnings={clubCounts}
+          />
           <CurrentRoster
             players={visibleOwnedPlayers as OwnedPlayer[]}
             onDrop={handleStageOut}
@@ -320,7 +247,7 @@ export function TransfersView(props: Props) {
             disabled={!isTransfersOpen}
           />
           {selectedOutPlayer && (
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-3">
               <div className="min-w-0">
                 <p className="section-label">Swapping Out</p>
                 <p className="mt-0.5 truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
@@ -341,20 +268,116 @@ export function TransfersView(props: Props) {
               </button>
             </div>
           )}
-          {selectedOutPlayer ? (
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  await cancelTransfersMutation.mutateAsync();
-                  setShowConfirmModal(false);
-                } catch {}
-              }}
-              className="mt-3 w-full rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
-            >
-              Cancel Staged Session
-            </button>
-          ) : null}
+        </div>
+
+        {/* Staged transfers: review and confirm */}
+        <div className="space-y-4 md:col-span-2 lg:col-span-1">
+          <div className="overflow-hidden rounded-[3px] border border-accent/20 bg-surface-1">
+            <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
+              <p className="section-label">Staged Transfers</p>
+              <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
+                {stagedOutPlayers.length} out · {stagedInPlayers.length} in
+              </span>
+            </div>
+
+            {stagedOutPlayers.length === 0 && stagedInPlayers.length === 0 ? (
+              <p className="p-4 text-sm text-fg-3">
+                Stage players out from your roster and in from the market to
+                build a transfer, then confirm below.
+              </p>
+            ) : (
+              <div className="space-y-4 p-4">
+                <div>
+                  <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
+                    <ArrowDown className="h-3 w-3" /> Out
+                  </p>
+                  <div className="space-y-1.5">
+                    {stagedOutPlayers.length === 0 ? (
+                      <p className="text-xs text-fg-3">—</p>
+                    ) : (
+                      stagedOutPlayers.map((player) => (
+                        <PlayerListCard
+                          key={player.id}
+                          player={{
+                            id: player.id,
+                            name: player.name,
+                            photoUrl: player.photoUrl,
+                            position: player.position,
+                            realTeam: player.realTeam,
+                            realTeamLogoUrl: player.realTeamLogoUrl,
+                          }}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-success">
+                    <ArrowUp className="h-3 w-3" /> In
+                  </p>
+                  <div className="space-y-1.5">
+                    {stagedInPlayers.length === 0 ? (
+                      <p className="text-xs text-fg-3">—</p>
+                    ) : (
+                      stagedInPlayers.map((player) => (
+                        <PlayerListCard
+                          key={player.id}
+                          player={{
+                            id: player.id,
+                            name: player.name,
+                            photoUrl: player.photoUrl,
+                            position: player.position,
+                            realTeam: player.realTeam,
+                            realTeamLogoUrl: player.realTeamLogoUrl,
+                          }}
+                        />
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="px-4 pb-4">
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(true)}
+                disabled={
+                  confirmTransfersMutation.isPending ||
+                  (stagedOutPlayers.length === 0 &&
+                    stagedInPlayers.length === 0) ||
+                  (!isMultiSportLeague &&
+                    stagedOutPlayers.length !== stagedInPlayers.length) ||
+                  !isTransfersOpen
+                }
+                className="w-full rounded-[3px] bg-accent px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {confirmTransfersMutation.isPending
+                  ? "Confirming…"
+                  : "Confirm Staged Transfers"}
+              </button>
+              {isMultiSportLeague ? (
+                <p className="mt-2 text-xs text-fg-3">
+                  Multisport: you can stage players in directly when budget and
+                  roster limits allow.
+                </p>
+              ) : null}
+              {selectedOutPlayer ? (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await cancelTransfersMutation.mutateAsync();
+                      setShowConfirmModal(false);
+                    } catch {}
+                  }}
+                  className="mt-2 w-full rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
+                >
+                  Cancel Staged Session
+                </button>
+              ) : null}
+            </div>
+          </div>
         </div>
       </div>
 

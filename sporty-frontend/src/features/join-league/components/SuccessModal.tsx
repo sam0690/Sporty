@@ -6,8 +6,11 @@ import { sportGlyph } from "@/components/landing/sport-icons";
 
 type JoinedLeague = {
   id?: string;
-  name: string;
-  sport: "football" | "basketball" | "cricket" | "multisport";
+  /** Only known when joined via the public-leagues list, which already has
+   * full league details; a blind invite-code join only gets a membership
+   * back from the API, so name/sport stay unset rather than guessed. */
+  name?: string;
+  sport?: "football" | "basketball" | "cricket" | "multisport";
   teamName?: string;
   requiresTeamCreation?: boolean;
 };
@@ -44,7 +47,7 @@ export function SuccessModal({
           variant: "primary",
           onClick: () => {
             if (leagueData.requiresTeamCreation && leagueData.id) {
-              router.push(`/create-team?leagueId=${leagueData.id}`);
+              router.push(`/leagues/${leagueData.id}/create-team`);
               return;
             }
             router.push(leagueData.id ? `/leagues/${leagueData.id}` : "/leagues");
@@ -63,23 +66,29 @@ export function SuccessModal({
       ]}
     >
       <div className="flex flex-col items-center text-center">
-        <div
-          className="inline-flex items-center gap-2 rounded-[3px] px-3 py-1.5"
-          style={{
-            color: glyph.color,
-            background: `${glyph.color}14`,
-            border: `1px solid ${glyph.color}3d`,
-          }}
-        >
-          <glyph.Icon className="size-4" />
-          <span className="font-sans text-sm font-700 uppercase tracking-[0.5px]">
-            {leagueData.name}
-          </span>
-        </div>
+        {leagueData.name ? (
+          <div
+            className="inline-flex items-center gap-2 rounded-[3px] px-3 py-1.5"
+            style={{
+              color: glyph.color,
+              background: `${glyph.color}14`,
+              border: `1px solid ${glyph.color}3d`,
+            }}
+          >
+            <glyph.Icon className="size-4" />
+            <span className="font-sans text-sm font-700 uppercase tracking-[0.5px]">
+              {leagueData.name}
+            </span>
+          </div>
+        ) : (
+          <p className="text-sm text-fg-2">
+            Your invite code was accepted — head to your leagues to see it.
+          </p>
+        )}
 
-        <p className="mt-3 text-sm text-fg-2">
-          Team: {leagueData.teamName ?? "Not assigned yet"}
-        </p>
+        {leagueData.teamName ? (
+          <p className="mt-3 text-sm text-fg-2">Team: {leagueData.teamName}</p>
+        ) : null}
       </div>
     </SuccessModalShell>
   );
