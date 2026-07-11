@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
+import Link from "next/link";
+import {
+  ArrowDown,
+  ArrowLeftRight,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  X,
+} from "lucide-react";
 import { PlayerAvatar } from "@/components/ui";
 import { BudgetOverageConfirmation } from "@/components/dashboard/transfers/components/BudgetOverageConfirmation";
 import { CurrentRoster } from "@/components/dashboard/transfers/components/CurrentRoster";
@@ -81,15 +90,22 @@ export function TransfersView(props: Props) {
       <div className="mx-auto max-w-7xl px-6 py-8 text-[#f0f0f0]">
         <p className="mb-6 section-label">Manager: {username || "Sporty User"}</p>
         <div className="mb-6 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-          <p className="text-2xl" aria-hidden>
-            🔄
-          </p>
-          <h2 className="mt-2 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] text-[#555560]">
+            <ArrowLeftRight className="h-5 w-5" aria-hidden />
+          </div>
+          <h2 className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
             Select a league to manage transfers
           </h2>
           <p className="mt-1 text-sm text-[#555560]">
-            Your transfer history is still available below.
+            Open transfers from one of your leagues. Your transfer history is
+            still available below.
           </p>
+          <Link
+            href="/leagues"
+            className="mt-5 inline-flex rounded-[3px] bg-[#e8fb25] px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
+          >
+            My Leagues
+          </Link>
         </div>
 
         <UserTransferHistoryCarousel
@@ -245,7 +261,9 @@ export function TransfersView(props: Props) {
               <button
                 type="button"
                 onClick={handleNextPlayersPage}
-                disabled={!playersTotalPages || isPlayersPageLoading}
+                disabled={
+                  playersCurrentPage >= playersTotalPages || isPlayersPageLoading
+                }
                 className="inline-flex items-center gap-1 rounded-[3px] bg-[#e8fb25] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next <ChevronRight className="h-4 w-4" />

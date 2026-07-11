@@ -127,6 +127,7 @@ export function TeamPreview({
                       name={slot.player.name}
                       position={slot.player.position}
                       sport={slot.player.sport}
+                      photoUrl={slot.player.photoUrl}
                       points={slot.player.points}
                       isCaptain={slot.player.isCaptain}
                       isViceCaptain={slot.player.isViceCaptain}

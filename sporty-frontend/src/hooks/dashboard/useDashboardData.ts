@@ -15,6 +15,7 @@ export type DashboardPitchPlayer = {
   position: string;
   sport: SportKind;
   team?: string;
+  photoUrl?: string | null;
   points: number | null;
   isStarter: boolean;
   isCaptain: boolean;
@@ -69,6 +70,7 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
         position: entry.player.position,
         sport: normalizeSport(entry.player.sport.name),
         team: entry.player.real_team ?? undefined,
+        photoUrl: entry.player.photo_url ?? null,
         points: null,
         isStarter: true,
         isCaptain: entry.is_captain,

@@ -1,13 +1,12 @@
-import {
-  getSportAccentClass,
-  getSportIcon,
-} from "@/components/dashboard/shared/formation/sportRegistry";
+import { PlayerAvatar } from "@/components/ui";
+import { getSportAccentClass } from "@/components/dashboard/shared/formation/sportRegistry";
 
 type PlayerMarkerProps = {
   name: string;
   position: string;
   sport?: string | null;
   team?: string | null;
+  photoUrl?: string | null;
   points?: number | null;
   isCaptain?: boolean;
   isViceCaptain?: boolean;
@@ -18,6 +17,7 @@ export function PlayerMarker({
   name,
   position,
   sport,
+  photoUrl,
   points,
   isCaptain = false,
   isViceCaptain = false,
@@ -28,11 +28,14 @@ export function PlayerMarker({
       className={`group flex flex-col items-center justify-center transition-all duration-300 ease-out ${className}`}
     >
       <div className="relative">
-        {/* Main Circle Marker */}
-        <div className="flex h-10 w-10 items-center justify-center rounded-[3px] border border-white/20 bg-white transition-transform duration-200 group-hover:scale-105 sm:h-12 sm:w-12">
-          <span className="text-lg sm:text-xl" aria-hidden="true">
-            {getSportIcon(sport)}
-          </span>
+        {/* Photo tile — same treatment as the lineup pitch markers */}
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-[3px] border border-white/20 bg-white transition-transform duration-200 group-hover:scale-105 sm:h-12 sm:w-12">
+          <PlayerAvatar
+            name={name}
+            photoUrl={photoUrl}
+            size="md"
+            className="!h-full !w-full !rounded-none !border-0 !bg-transparent"
+          />
         </div>
 
         {/* Small Floating Overlays (C/VC) - Top left */}

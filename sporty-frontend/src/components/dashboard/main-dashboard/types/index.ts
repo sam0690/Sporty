@@ -17,6 +17,7 @@ export type TeamPlayer = {
   position: string;
   sport: SportKind;
   team?: string;
+  photoUrl?: string | null;
   points: number | null;
   isStarter?: boolean;
   isCaptain?: boolean;
