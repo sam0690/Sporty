@@ -1,7 +1,14 @@
 "use client";
 
-import { Transfers } from "@/components/dashboard/transfers";
+import { useLeagueRedirect } from "@/lib/useLeagueRedirect";
+import { CardSkeleton } from "@/components/ui/skeletons";
 
-export default function TransfersPage() {
-  return <Transfers />;
+export default function TransfersRedirectPage() {
+  useLeagueRedirect("transfers");
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-4 py-8">
+      <CardSkeleton />
+    </div>
+  );
 }

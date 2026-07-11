@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowRight, Lock, X } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { DangerZone } from "@/components/dashboard/leagues/league-settings/components/DangerZone";
 import { DeleteLeagueModal } from "@/components/dashboard/leagues/league-settings/components/DeleteLeagueModal";
 import {
@@ -65,7 +64,6 @@ export function LeagueSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [data, setData] = useState<LeagueSettingsData>(() => ({
     leagueName: league?.name ?? "",
     isPrivate: !league?.is_public,
@@ -147,16 +145,10 @@ export function LeagueSettings() {
       return;
     }
 
-    if (deleteConfirmText.trim() !== league.name) {
-      toastifier.error("Type the exact league name to confirm deletion.");
-      return;
-    }
-
     setIsDeleting(true);
     try {
       await deleteLeague.mutateAsync(league.id);
       setShowDeleteModal(false);
-      setDeleteConfirmText("");
       router.push("/leagues");
     } finally {
       setIsDeleting(false);
@@ -208,12 +200,7 @@ export function LeagueSettings() {
 
   if (!isCommissioner) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-        <NavigationTabs
-          activeTab="settings"
-          leagueId={leagueId}
-          isCommissioner={isCommissioner}
-        />
+      <section className="space-y-6">
         <div className="card-surface p-8 text-center">
           <Lock className="mx-auto h-6 w-6 text-fg-3" aria-hidden />
           <p className="mt-2 font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
@@ -228,13 +215,7 @@ export function LeagueSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-      <NavigationTabs
-        activeTab="settings"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
+    <section className="space-y-6">
       <header className="border-b border-white/8 pb-6">
         <p className="section-label">{league?.name || "League"}</p>
         <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
@@ -393,13 +374,8 @@ export function LeagueSettings() {
       <DeleteLeagueModal
         isOpen={showDeleteModal}
         leagueName={data.leagueName}
-        confirmText={deleteConfirmText}
-        onConfirmTextChange={setDeleteConfirmText}
         isDeleting={isDeleting}
-        onClose={() => {
-          setShowDeleteModal(false);
-          setDeleteConfirmText("");
-        }}
+        onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
       />
     </section>

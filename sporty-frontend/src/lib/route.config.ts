@@ -48,16 +48,6 @@ export const ROUTES: Record<string, RouteMeta> = {
     name: "Profile",
     protection: "protected",
   },
-  SETTINGS: {
-    path: "/settings",
-    name: "Settings",
-    protection: "protected",
-  },
-  SUPPORT: {
-    path: "/support",
-    name: "Support",
-    protection: "protected",
-  },
   USER_PROFILE: {
     path: "/user/:id",
     name: "User Profile",

@@ -7,6 +7,8 @@ import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/context/auth-context";
 import { NotificationBell } from "@/components/dashboard/navigation/NotificationBell";
 import { LogoutConfirmationModal } from "@/components/dashboard/navigation/LogoutConfirmationModal";
+import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
+import { isActiveRoute } from "@/lib/route.utils";
 import { cn } from "@/utils/classUtils";
 
 export type DashboardNavItem = {
@@ -17,13 +19,12 @@ export type DashboardNavItem = {
 
 type SidebarProps = {
   items: DashboardNavItem[];
+  userId: string;
+  userName?: string;
+  avatarUrl?: string | null;
 };
 
-function isActiveRoute(href: string, path: string): boolean {
-  return path === href || path.startsWith(`${href}/`);
-}
-
-export function Sidebar({ items }: SidebarProps) {
+export function Sidebar({ items, userId, userName, avatarUrl }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, actionLoading } = useAuth();
@@ -34,10 +35,6 @@ export function Sidebar({ items }: SidebarProps) {
     if (result.success) {
       router.push("/login");
     }
-  };
-
-  const handleOpenSettings = () => {
-    router.push("/settings");
   };
 
   return (
@@ -96,15 +93,24 @@ export function Sidebar({ items }: SidebarProps) {
 
       {/* Bottom actions */}
       <div className="space-y-2 border-t border-white/8 p-3 lg:p-4">
-        <button
-          type="button"
-          onClick={handleOpenSettings}
+        <Link
+          href={`/user/${userId}`}
+          title={userName ? `View ${userName}'s profile` : "View profile"}
+          className="flex items-center justify-center gap-2 rounded-[3px] px-1 py-2 hover:no-underline lg:justify-start"
+        >
+          <PlayerAvatar name={userName || "Sporty User"} photoUrl={avatarUrl} size="sm" />
+          <span className="hidden truncate font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-1 lg:inline">
+            {userName || "Sporty User"}
+          </span>
+        </Link>
+        <Link
+          href="/profile"
           title="Settings"
-          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-sans font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 lg:justify-start"
+          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-sans font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 lg:justify-start"
         >
           <Settings className="h-4 w-4 shrink-0" />
           <span className="hidden lg:inline">Settings</span>
-        </button>
+        </Link>
         <button
           type="button"
           onClick={() => setShowLogoutModal(true)}

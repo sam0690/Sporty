@@ -1,5 +1,7 @@
 "use client";
 
+import { StatTile } from "@/components/ui";
+
 type StatsCardsProps = {
   totalPoints: number;
   totalLeagues: number;
@@ -13,24 +15,16 @@ export function StatsCards({
 }: StatsCardsProps) {
   return (
     <section className="card-surface px-5 py-4">
-      <p className="num font-display text-5xl leading-none tracking-[-0.02em] text-accent">
-        {Math.round(totalPoints)}
-      </p>
-      <p className="section-label mt-1.5">Total Points</p>
+      <StatTile label="Total Points" value={Math.round(totalPoints)} size="hero" />
 
       <div className="mt-4 flex items-center gap-6 border-t border-white/6 pt-4">
-        <div>
-          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
-            {totalLeagues}
-          </p>
-          <p className="section-label mt-1.5">Leagues</p>
-        </div>
-        <div>
-          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
-            {bestRank ? `#${bestRank}` : "—"}
-          </p>
-          <p className="section-label mt-1.5">Best Rank</p>
-        </div>
+        <StatTile label="Leagues" value={totalLeagues} size="sm" tone="neutral" />
+        <StatTile
+          label="Best Rank"
+          value={bestRank ? `#${bestRank}` : "—"}
+          size="sm"
+          tone="neutral"
+        />
       </div>
     </section>
   );

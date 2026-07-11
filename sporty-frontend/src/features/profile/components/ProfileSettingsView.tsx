@@ -8,6 +8,10 @@ import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUp
 import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
 import { FavouritesForm } from "@/components/dashboard/profile/components/FavouritesForm";
 import {
+  PreferencesForm,
+  type Preferences,
+} from "@/components/dashboard/profile/components/PreferencesForm";
+import {
   ProfileForm,
   type ProfileUser,
 } from "@/components/dashboard/profile/components/ProfileForm";
@@ -146,6 +150,19 @@ export function ProfileSettingsView() {
     await uploadAvatar.mutateAsync(file);
   };
 
+  const preferences: Preferences = {
+    emailNotifications: me?.email_notifications_enabled ?? true,
+  };
+
+  const handleUpdatePreferences = async (next: Preferences): Promise<void> => {
+    if (!me?.id) {
+      return;
+    }
+    await updateUser.mutateAsync({
+      email_notifications_enabled: next.emailNotifications,
+    });
+  };
+
   const handleDeleteAccount = async (): Promise<boolean> => {
     try {
       setIsDeleting(true);
@@ -187,6 +204,10 @@ export function ProfileSettingsView() {
         />
 
         <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
+        <PreferencesForm
+          preferences={preferences}
+          onUpdate={handleUpdatePreferences}
+        />
         <FavouritesForm
           favouriteTeams={me?.favourite_teams ?? []}
           favouritePlayers={me?.favourite_players ?? []}

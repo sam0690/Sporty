@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
-import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import { usePlayers } from "@/hooks/players/usePlayers";
@@ -41,7 +41,7 @@ export function AdminPlayers() {
     );
   };
 
-  const columns: AdminColumn<TPlayer>[] = [
+  const columns: TableColumn<TPlayer>[] = [
     { key: "name", header: "Player", render: (p) => p.display_name },
     { key: "position", header: "Position", render: (p) => p.position },
     { key: "team", header: "Team", render: (p) => p.real_team },
@@ -141,7 +141,7 @@ export function AdminPlayers() {
         <AdminErrorState onRetry={() => refetch()} />
       ) : data ? (
         <>
-          <AdminDataTable columns={columns} rows={data.items} rowKey={(p) => p.id} />
+          <Table columns={columns} rows={data.items} rowKey={(p) => p.id} />
           <Pagination
             page={data.page}
             pageSize={data.page_size}

@@ -1,10 +1,5 @@
 import { SportKind } from "@/components/dashboard/shared/formation/sportRegistry";
 
-export type DashboardNavItem = {
-  label: string;
-  href: string;
-};
-
 export type OverviewStat = {
   label: string;
   value: string;

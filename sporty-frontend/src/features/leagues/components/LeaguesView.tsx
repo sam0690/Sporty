@@ -1,14 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useMe } from "@/hooks/auth/useMe";
 import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import {
   LeagueCard,
   type Sport,
 } from "@/components/dashboard/leagues/components/LeagueCard";
-import { LeaguesHeader } from "@/components/dashboard/leagues/components/LeaguesHeader";
 import { StatsRow } from "@/components/dashboard/leagues/components/StatsRow";
-import { EmptyLeagues } from "@/components/ui/empty-states";
+import { EmptyState, PageHeader } from "@/components/ui";
+import { Trophy } from "lucide-react";
 import { LeagueCardSkeleton } from "@/components/ui/skeletons";
 
 export function LeaguesView() {
@@ -43,7 +44,27 @@ export function LeaguesView() {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 text-fg-1 sm:px-6 lg:px-8 lg:py-10">
-      <LeaguesHeader userName={userName} />
+      <PageHeader
+        eyebrow={`Welcome back, ${userName}`}
+        title="My Leagues"
+        subtitle="Your fantasy leagues at a glance"
+        actions={
+          <>
+            <Link
+              href="/join-league"
+              className="rounded-[3px] border border-accent/40 bg-transparent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-accent transition-colors hover:bg-accent/10"
+            >
+              Join League
+            </Link>
+            <Link
+              href="/create-league"
+              className="rounded-[3px] bg-accent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
+            >
+              Create League
+            </Link>
+          </>
+        }
+      />
 
       <div className="mt-8">
         <StatsRow
@@ -61,7 +82,15 @@ export function LeaguesView() {
             ))}
           </div>
         ) : leagues.length === 0 ? (
-          <EmptyLeagues />
+          <EmptyState
+            icon={Trophy}
+            title="No leagues yet"
+            description="Join a league to start playing"
+            actions={[
+              { label: "Join League", href: "/join-league", variant: "primary" },
+              { label: "Create League", href: "/create-league", variant: "secondary" },
+            ]}
+          />
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
             {leagues.map((league, index) => (

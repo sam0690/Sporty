@@ -3,15 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/utils/classUtils";
+import { isActiveRoute } from "@/lib/route.utils";
 import type { DashboardNavItem } from "@/components/dashboard/navigation/Sidebar";
 
 type MobileBottomNavProps = {
   items: DashboardNavItem[];
 };
-
-function isActiveRoute(href: string, path: string): boolean {
-  return path === href || path.startsWith(`${href}/`);
-}
 
 export function MobileBottomNav({ items }: MobileBottomNavProps) {
   const pathname = usePathname();

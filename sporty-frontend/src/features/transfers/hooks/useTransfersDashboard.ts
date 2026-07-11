@@ -32,9 +32,9 @@ const toSport = (value?: string): Exclude<Sport, "All"> => {
   return "football";
 };
 
-export function useTransfersDashboard() {
+export function useTransfersDashboard(leagueIdOverride?: string) {
   const searchParams = useSearchParams();
-  const leagueId = searchParams.get("leagueId") || "";
+  const leagueId = leagueIdOverride || searchParams.get("leagueId") || "";
   const { username } = useMe();
 
   const { data: league, isLoading: leagueLoading } = useLeague(leagueId);

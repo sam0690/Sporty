@@ -4,12 +4,10 @@ import { useParams } from "next/navigation";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { LineupViewToggle } from "@/components/dashboard/leagues/league-lineup/components/LineupViewToggle";
 import { RecapPitchView } from "@/components/dashboard/leagues/gameweek-recap/components/RecapPitchView";
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
-import { useGameweekRecap, useLeague } from "@/hooks/leagues/useLeagues";
-import { useMe } from "@/hooks/auth/useMe";
+import { useGameweekRecap } from "@/hooks/leagues/useLeagues";
 import type {
   TGameweekPlayerRecap,
   TGameweekPlayerStatus,
@@ -174,10 +172,6 @@ export function GameweekRecap() {
     leagueId,
     gw ?? undefined,
   );
-  const { data: league } = useLeague(leagueId);
-  const { username } = useMe();
-  const isCommissioner = league?.owner?.username === username;
-
   // Remember the newest scored gameweek (loaded when gw === null) so the stepper
   // knows its upper bound. Converges via the render-time setState pattern.
   const [maxGw, setMaxGw] = useState<number | null>(null);
@@ -193,13 +187,7 @@ export function GameweekRecap() {
   const bench = data?.players.filter((p) => !p.is_starter) ?? [];
 
   return (
-    <main className="mx-auto max-w-4xl space-y-6 px-4 py-8">
-      <NavigationTabs
-        activeTab="gameweek"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
+    <main className="mx-auto max-w-4xl space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
         <div>
           <p className="section-label">Gameweek Recap</p>

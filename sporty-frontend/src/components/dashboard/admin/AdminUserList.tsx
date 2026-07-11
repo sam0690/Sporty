@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth-context";
 import { hasMinRole } from "@/lib/roles";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
-import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import {
@@ -33,7 +33,7 @@ export function AdminUserList() {
 
   const canChangeRoles = hasMinRole(currentAdmin?.role, "super_admin");
 
-  const columns: AdminColumn<TAdminUserListItem>[] = [
+  const columns: TableColumn<TAdminUserListItem>[] = [
     { key: "username", header: "Username", render: (u) => u.username },
     { key: "email", header: "Email", render: (u) => u.email },
     {
@@ -128,7 +128,7 @@ export function AdminUserList() {
         <AdminErrorState onRetry={() => refetch()} />
       ) : data ? (
         <>
-          <AdminDataTable columns={columns} rows={data.items} rowKey={(u) => u.id} />
+          <Table columns={columns} rows={data.items} rowKey={(u) => u.id} />
           <Pagination
             page={data.page}
             pageSize={data.page_size}

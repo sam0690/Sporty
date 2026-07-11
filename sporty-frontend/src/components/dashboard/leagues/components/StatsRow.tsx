@@ -1,5 +1,7 @@
 "use client";
 
+import { StatTile } from "@/components/ui";
+
 type StatsRowProps = {
   totalLeagues: number;
   highestRank: number;
@@ -18,12 +20,12 @@ export function StatsRow({
         { label: "Best Rank", value: highestRank ? `#${highestRank}` : "—" },
         { label: "Total Pts", value: totalPoints },
       ].map(({ label, value }) => (
-        <div key={label} className="flex-1 px-5 py-4 text-center">
-          <p className="font-display text-3xl tracking-[-0.02em] text-accent">
-            {value}
-          </p>
-          <p className="section-label mt-1">{label}</p>
-        </div>
+        <StatTile
+          key={label}
+          label={label}
+          value={value}
+          className="flex-1 px-5 py-4 text-center"
+        />
       ))}
     </section>
   );

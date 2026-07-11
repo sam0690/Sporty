@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { useMe } from "@/hooks/auth/useMe";
-import { EmptyState } from "@/components/dashboard/leagues/league-lineup/components/EmptyState";
-import { ErrorState } from "@/components/dashboard/leagues/league-lineup/components/ErrorState";
+import { EmptyState, ErrorState } from "@/components/ui";
 import { LineupHeader } from "@/components/dashboard/leagues/league-lineup/components/LineupHeader";
 import { LineupContainer } from "@/components/dashboard/leagues/league-lineup/components/LineupContainer";
 import { LineupPitchView } from "@/components/dashboard/leagues/league-lineup/components/LineupPitchView";
@@ -12,7 +10,6 @@ import { LineupViewToggle } from "@/components/dashboard/leagues/league-lineup/c
 import { InitialLineupBoard } from "@/components/dashboard/leagues/league-lineup/components/InitialLineupBoard";
 import { LineupSkeleton } from "@/components/dashboard/leagues/league-lineup/components/LineupSkeleton";
 import { SaveLineupButton } from "@/components/dashboard/leagues/league-lineup/components/SaveLineupButton";
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { GameweekContextBar } from "@/components/dashboard/leagues/GameweekContextBar";
 import {
   useActiveWindow,
@@ -165,7 +162,6 @@ function StatChip({
 export function LeagueLineup() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
-  const { data: me } = useMe();
 
   const {
     data: league,
@@ -849,8 +845,6 @@ export function LeagueLineup() {
     lineupSport,
   ]);
 
-  const isCommissioner = league?.owner?.id === me?.id;
-
   const selectedLeague = useMemo(() => {
     if (!league) return null;
 
@@ -885,33 +879,30 @@ export function LeagueLineup() {
       leagueError?.message || lineupError?.message || windowError?.message;
 
     return (
-      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
-        <NavigationTabs
-          activeTab="lineup"
-          leagueId={leagueId}
-          isCommissioner={isCommissioner}
-        />
+      <section className="space-y-6">
         <ErrorState message={message} onRetry={refetchLineup} />
       </section>
     );
   }
 
   if (isEmpty) {
-    return <EmptyState leagueId={leagueId} />;
+    return (
+      <EmptyState
+        title="You don't have any players in this league yet"
+        description="Join a league or make transfers to add players"
+        actions={[
+          {
+            label: "Go to Transfers",
+            href: `/leagues/${leagueId}/transfers`,
+            variant: "primary",
+          },
+        ]}
+      />
+    );
   }
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
-      <p className="text-sm text-fg-3">
-        Manager: {me?.username || "Sporty User"}
-      </p>
-
-      <NavigationTabs
-        activeTab="lineup"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
+    <section className="space-y-6">
       <LineupHeader
         leagueName={selectedLeague.leagueName}
         teamName={selectedLeague.teamName}

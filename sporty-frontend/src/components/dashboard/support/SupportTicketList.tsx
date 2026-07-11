@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
-import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { useMyTickets, useCreateTicket } from "@/hooks/support/useSupportTickets";
 import type { TTicket, TTicketCategory } from "@/services/SupportService";
@@ -20,7 +20,7 @@ export function SupportTicketList() {
   const [category, setCategory] = useState<TTicketCategory>("other");
   const [body, setBody] = useState("");
 
-  const columns: AdminColumn<TTicket>[] = [
+  const columns: TableColumn<TTicket>[] = [
     {
       key: "subject",
       header: "Subject",
@@ -92,7 +92,7 @@ export function SupportTicketList() {
       ) : isError ? (
         <AdminErrorState onRetry={() => refetch()} />
       ) : data ? (
-        <AdminDataTable columns={columns} rows={data.items} rowKey={(t) => t.id} emptyMessage="No support tickets yet." />
+        <Table columns={columns} rows={data.items} rowKey={(t) => t.id} emptyMessage="No support tickets yet." />
       ) : null}
     </div>
   );

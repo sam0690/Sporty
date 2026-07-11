@@ -82,6 +82,16 @@ const nextConfig: NextConfig = {
         destination: "/leagues/:id/settings",
         permanent: false,
       },
+      {
+        source: "/settings",
+        destination: "/profile",
+        permanent: false,
+      },
+      {
+        source: "/support/:path*",
+        destination: "/dashboard",
+        permanent: false,
+      },
     ];
   },
 };

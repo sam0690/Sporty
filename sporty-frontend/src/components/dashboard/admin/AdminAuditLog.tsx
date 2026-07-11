@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
-import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import { useAdminAuditLog } from "@/hooks/admin/useAdminAuditLog";
@@ -18,7 +18,7 @@ export function AdminAuditLog() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, refetch } = useAdminAuditLog({ page, pageSize: PAGE_SIZE });
 
-  const columns: AdminColumn<TAdminAuditLogEntry>[] = [
+  const columns: TableColumn<TAdminAuditLogEntry>[] = [
     {
       key: "created_at",
       header: "When",
@@ -44,7 +44,7 @@ export function AdminAuditLog() {
         <AdminErrorState onRetry={() => refetch()} />
       ) : data ? (
         <>
-          <AdminDataTable
+          <Table
             columns={columns}
             rows={data.items}
             rowKey={(e) => e.id}

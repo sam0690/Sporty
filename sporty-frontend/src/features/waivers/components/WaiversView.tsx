@@ -4,10 +4,8 @@ import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { CardSkeleton } from "@/components/ui/skeletons";
-import { Modal, PlayerAvatar, TeamLogo } from "@/components/ui";
-import { useMe } from "@/hooks/auth/useMe";
+import { Modal, PlayerAvatar, PlayerListCard, TeamLogo } from "@/components/ui";
 import {
   useCancelWaiverClaim,
   useFreeAgents,
@@ -32,11 +30,9 @@ export function WaiversView() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
 
-  const { username } = useMe();
   const { data: league } = useLeague(leagueId);
   const { isDraftMode } = useLeagueCompetitionMode(league);
   const { data: myTeam } = useMyTeam(leagueId);
-  const isCommissioner = league?.owner?.username === username;
   const isActive = league?.status === "active";
   const enabled = isDraftMode && isActive;
 
@@ -103,8 +99,7 @@ export function WaiversView() {
 
   if (!isDraftMode) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-        <NavigationTabs activeTab="waivers" leagueId={leagueId} isCommissioner={isCommissioner} />
+      <section className="space-y-6">
         <div className="card-surface p-8 text-center text-sm text-fg-3">
           Waivers are only available in draft leagues.
         </div>
@@ -113,9 +108,7 @@ export function WaiversView() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
-      <NavigationTabs activeTab="waivers" leagueId={leagueId} isCommissioner={isCommissioner} />
-
+    <section className="space-y-5">
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
         <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
@@ -149,36 +142,20 @@ export function WaiversView() {
             ) : (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {filteredPool.map((p) => (
-                  <div
+                  <PlayerListCard
                     key={p.id}
-                    className="flex items-center justify-between card-surface p-3"
-                  >
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
-                      <div className="min-w-0">
-                        <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-                          {p.name}
-                        </p>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-3">
-                          <span>{p.position}</span>
-                          {p.real_team ? (
-                            <>
-                              <span className="text-white/20">·</span>
-                              <TeamLogo teamName={p.real_team} logoUrl={p.real_team_logo_url} size="sm" />
-                              <span>{p.real_team}</span>
-                            </>
-                          ) : null}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setAddTarget(p)}
-                      className="shrink-0 rounded-[3px] border border-accent/40 px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:bg-accent/8"
-                    >
-                      Claim
-                    </button>
-                  </div>
+                    player={{
+                      id: p.id,
+                      name: p.name,
+                      photoUrl: p.photo_url,
+                      position: p.position,
+                      realTeam: p.real_team,
+                      realTeamLogoUrl: p.real_team_logo_url,
+                    }}
+                    actionLabel="Claim"
+                    actionVariant="outline"
+                    onAction={() => setAddTarget(p)}
+                  />
                 ))}
               </div>
             )}

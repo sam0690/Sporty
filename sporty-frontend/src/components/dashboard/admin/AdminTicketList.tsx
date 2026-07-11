@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
-import { AdminDataTable, type AdminColumn } from "@/components/dashboard/admin/AdminDataTable";
+import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "@/components/dashboard/admin/AdminErrorState";
 import { Pagination } from "@/components/dashboard/admin/Pagination";
 import { useAdminTickets } from "@/hooks/admin/useAdminTickets";
@@ -18,7 +18,7 @@ export function AdminTicketList() {
 
   const { data, isLoading, isError, refetch } = useAdminTickets({ page, pageSize: PAGE_SIZE, status: statusFilter || undefined });
 
-  const columns: AdminColumn<TAdminTicketListItem>[] = [
+  const columns: TableColumn<TAdminTicketListItem>[] = [
     {
       key: "subject",
       header: "Subject",
@@ -61,7 +61,7 @@ export function AdminTicketList() {
         <AdminErrorState onRetry={() => refetch()} />
       ) : data ? (
         <>
-          <AdminDataTable columns={columns} rows={data.items} rowKey={(t) => t.id} emptyMessage="No tickets." />
+          <Table columns={columns} rows={data.items} rowKey={(t) => t.id} emptyMessage="No tickets." />
           <Pagination
             page={data.page}
             pageSize={data.page_size}

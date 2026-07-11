@@ -5,11 +5,9 @@ import {
   Home,
   Shield,
   Trophy,
-  ArrowRightLeft,
-  UserRound,
+  Users,
   CalendarDays,
   Lock,
-  // LifeBuoy, // unused while /support is disabled below
 } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
 import {
@@ -36,21 +34,24 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       ...(isAdmin
         ? []
         : [
-            { label: "Overview", href: "/dashboard", icon: Home },
-            { label: "My Team", href: "/my-team", icon: Shield },
+            { label: "Home", href: "/dashboard", icon: Home },
             { label: "Leagues", href: "/leagues", icon: Trophy },
-            { label: "Transfers", href: "/transfers", icon: ArrowRightLeft },
+            { label: "My Team", href: "/my-team", icon: Shield },
+            { label: "Matches", href: "/matches", icon: CalendarDays },
+            { label: "Players", href: "/players", icon: Users },
           ]),
-      { label: "Matches", href: "/matches", icon: CalendarDays },
-      { label: "Profile", href: `/user/${userId}`, icon: UserRound },
-      // { label: "Support", href: "/support", icon: LifeBuoy }, // disabled — not needed for users right now
       ...(isAdmin ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),
     ];
-  }, [userId, me?.role]);
+  }, [me?.role]);
 
   return (
     <div className="min-h-screen bg-background font-sans text-fg-1">
-      <Sidebar items={navItems} />
+      <Sidebar
+        items={navItems}
+        userId={userId}
+        userName={me?.username}
+        avatarUrl={me?.avatar_url}
+      />
 
       <div className="pb-24 pt-8 md:ml-[72px] md:pb-10 md:pt-10 lg:ml-64">
         <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">{children}</div>

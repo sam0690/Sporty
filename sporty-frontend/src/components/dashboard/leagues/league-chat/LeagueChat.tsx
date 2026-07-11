@@ -4,9 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { Trash2 } from "lucide-react";
 
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
-import { useMe } from "@/hooks/auth/useMe";
 import { useLeague } from "@/hooks/leagues/useLeagues";
 import {
   useChatMessages,
@@ -90,9 +88,7 @@ export function LeagueChat() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
 
-  const { username } = useMe();
   const { data: league } = useLeague(leagueId);
-  const isCommissioner = league?.owner?.username === username;
 
   const { data: messages, isLoading } = useChatMessages(leagueId);
   const postMessage = usePostChatMessage(leagueId);
@@ -119,9 +115,7 @@ export function LeagueChat() {
   };
 
   return (
-    <section className="mx-auto max-w-4xl space-y-5 px-6 py-8 text-fg-1">
-      <NavigationTabs activeTab="chat" leagueId={leagueId} isCommissioner={isCommissioner} />
-
+    <section className="mx-auto max-w-4xl space-y-5">
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
         <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">

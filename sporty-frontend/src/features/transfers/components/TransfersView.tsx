@@ -22,7 +22,8 @@ import { TransferSuccess } from "@/components/dashboard/transfers/components/Tra
 import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/components/UserTransferHistoryCarousel";
 import { SquadValidationChecklist } from "@/components/dashboard/create-team/components/SquadValidationChecklist";
 import { GameweekContextBar } from "@/components/dashboard/leagues/GameweekContextBar";
-import { EmptyTransfers } from "@/components/ui/empty-states";
+import { EmptyState } from "@/components/ui";
+import { SearchX } from "lucide-react";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 import type { OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
@@ -278,7 +279,14 @@ export function TransfersView(props: Props) {
                 <PlayerCardSkeleton key={index} />
               ))
             ) : availablePlayers.length === 0 ? (
-              <EmptyTransfers onClearFilters={clearAllFilters} />
+              <EmptyState
+                icon={SearchX}
+                title="No players found"
+                description="Try adjusting your filters"
+                actions={[
+                  { label: "Clear Filters", onClick: clearAllFilters, variant: "secondary" },
+                ]}
+              />
             ) : (
               availablePlayers.map((player, index) => (
                 <PlayerCard

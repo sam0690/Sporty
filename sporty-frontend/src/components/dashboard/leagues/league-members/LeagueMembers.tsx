@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Search } from "lucide-react";
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { KickMemberModal } from "@/components/dashboard/leagues/league-members/components/KickMemberModal";
 import { MemberList } from "@/components/dashboard/leagues/league-members/components/MemberList";
 import type { Member } from "@/components/dashboard/leagues/league-members/components/MemberCard";
@@ -83,13 +82,7 @@ export function LeagueMembers() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-      <NavigationTabs
-        activeTab="members"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
+    <section className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
         <div>
           <p className="section-label">{league?.name || "League"}</p>

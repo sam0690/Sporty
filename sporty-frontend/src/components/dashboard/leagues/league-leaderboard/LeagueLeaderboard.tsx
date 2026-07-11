@@ -2,17 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { useMe } from "@/hooks/auth/useMe";
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
-import { EmptyState } from "@/components/dashboard/leagues/league-leaderboard/components/EmptyState";
-import {
-  LeaderboardHeader,
-  type Sport,
-} from "@/components/dashboard/leagues/league-leaderboard/components/LeaderboardHeader";
+import { EmptyState, Tabs } from "@/components/ui";
 import {
   StandingsTable,
   type StandingRow,
-} from "@/components/dashboard/leagues/league-leaderboard/components/StandingsTable";
+} from "@/components/dashboard/leagues/components/StandingsTable";
 import { UserRankCard } from "@/components/dashboard/leagues/league-leaderboard/components/UserRankCard";
 import {
   WeekSelector,
@@ -36,7 +30,6 @@ export function LeagueLeaderboard() {
   const { data: myTeam, isLoading: isTeamLoading } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: isWindowLoading } =
     useActiveWindow(leagueId);
-  const { username } = useMe();
 
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek>("overall");
   const [historical, setHistorical] = useState(true);
@@ -52,7 +45,6 @@ export function LeagueLeaderboard() {
     selectedGameweek,
   );
 
-  const isCommissioner = league?.owner?.username === username;
 
   // Power rankings (rank movement/streak/MOTW) are only meaningful for the
   // most recent scored window — don't attach them to an arbitrary past
@@ -106,8 +98,7 @@ export function LeagueLeaderboard() {
 
   if (isLoading) {
     return (
-      <section className="mx-auto max-w-6xl space-y-4 px-6 py-8">
-        <div className="h-10 w-64 animate-pulse rounded-[3px] bg-surface-3" />
+      <section className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <CardSkeleton />
           <CardSkeleton />
@@ -119,27 +110,11 @@ export function LeagueLeaderboard() {
   }
 
   if (!league) {
-    return <EmptyState message="League not found." />;
+    return <EmptyState title="League not found." />;
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
-      <p className="section-label">Manager: {username || "Sporty User"}</p>
-
-      <NavigationTabs
-        activeTab="leaderboard"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
-      <LeaderboardHeader
-        leagueName={league.name}
-        sport={(league.sports[0]?.sport.name as Sport) || "football"}
-        seasonName={league.season?.name}
-        currentWeek={activeWindow?.number || 1}
-        totalWeeks={activeWindow?.total_number || 16}
-      />
-
+    <section className="space-y-5">
       {/* Filters bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 card-surface p-3">
         <div className="flex flex-wrap items-center gap-2">
@@ -152,23 +127,16 @@ export function LeagueLeaderboard() {
         </div>
 
         <div className="inline-flex rounded-[3px] border border-white/8 bg-surface-3 p-0.5">
-          {(["Historical", "Live"] as const).map((mode) => {
-            const isActive = mode === "Historical" ? historical : !historical;
-            return (
-              <button
-                key={mode}
-                type="button"
-                onClick={() => setHistorical(mode === "Historical")}
-                className={`rounded-[3px] px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[2px] transition-colors ${
-                  isActive
-                    ? "bg-accent text-surface-0"
-                    : "text-fg-3 hover:text-fg-1"
-                }`}
-              >
-                {mode}
-              </button>
-            );
-          })}
+          <Tabs
+            ariaLabel="Standings mode"
+            size="sm"
+            value={historical ? "historical" : "live"}
+            onChange={(key) => setHistorical(key === "historical")}
+            items={[
+              { key: "historical", label: "Historical" },
+              { key: "live", label: "Live" },
+            ]}
+          />
         </div>
       </div>
 
@@ -183,7 +151,7 @@ export function LeagueLeaderboard() {
 
       {standings.length === 0 ? (
         <EmptyState
-          message={
+          title={
             selectedWeek === "overall"
               ? "No standings available yet."
               : `No standings for gameweek ${selectedWeek} yet.`

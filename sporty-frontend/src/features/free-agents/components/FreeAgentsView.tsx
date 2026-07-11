@@ -3,10 +3,14 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { CardSkeleton } from "@/components/ui/skeletons";
-import { Modal, PlayerAvatar, TeamLogo } from "@/components/ui";
-import { useMe } from "@/hooks/auth/useMe";
+import {
+  Modal,
+  PlayerAvatar,
+  PlayerListCard,
+  Select,
+  TeamLogo,
+} from "@/components/ui";
 import {
   useClaimFreeAgent,
   useFreeAgents,
@@ -20,11 +24,9 @@ export function FreeAgentsView() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
 
-  const { username } = useMe();
   const { data: league } = useLeague(leagueId);
   const { isDraftMode } = useLeagueCompetitionMode(league);
   const { data: myTeam } = useMyTeam(leagueId);
-  const isCommissioner = league?.owner?.username === username;
 
   const [search, setSearch] = useState("");
   const [position, setPosition] = useState("");
@@ -71,12 +73,7 @@ export function FreeAgentsView() {
 
   if (!isDraftMode) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-        <NavigationTabs
-          activeTab="free-agents"
-          leagueId={leagueId}
-          isCommissioner={isCommissioner}
-        />
+      <section className="space-y-6">
         <div className="card-surface p-8 text-center text-sm text-fg-3">
           Free agents are only available in draft leagues.
         </div>
@@ -85,13 +82,7 @@ export function FreeAgentsView() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
-      <NavigationTabs
-        activeTab="free-agents"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
+    <section className="space-y-5">
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
         <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
@@ -116,19 +107,15 @@ export function FreeAgentsView() {
               placeholder="Search players…"
               className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
             />
-            <select
+            <Select
               value={position}
-              onChange={(e) => setPosition(e.target.value)}
-              className="rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none focus:border-accent"
-              style={{ colorScheme: "dark" }}
-            >
-              <option value="">All positions</option>
-              {positions.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
+              onChange={setPosition}
+              aria-label="Filter by position"
+              options={[
+                { value: "", label: "All positions" },
+                ...positions.map((p) => ({ value: p, label: p })),
+              ]}
+            />
           </div>
 
           {isLoading ? (
@@ -143,38 +130,20 @@ export function FreeAgentsView() {
           ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {data!.items.map((p) => (
-                <div
+                <PlayerListCard
                   key={p.id}
-                  className="flex items-center justify-between card-surface p-4"
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
-                    <div className="min-w-0">
-                      <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-                        {p.name}
-                      </p>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-3">
-                        <span>{p.position}</span>
-                        {p.real_team ? (
-                          <>
-                            <span className="text-white/20">·</span>
-                            <TeamLogo teamName={p.real_team} logoUrl={p.real_team_logo_url} size="sm" />
-                            <span>{p.real_team}</span>
-                          </>
-                        ) : null}
-                        <span className="text-white/20">·</span>
-                        <span>{p.sport}</span>
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setAddTarget(p)}
-                    className="shrink-0 rounded-[3px] bg-accent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
-                  >
-                    Add
-                  </button>
-                </div>
+                  player={{
+                    id: p.id,
+                    name: p.name,
+                    photoUrl: p.photo_url,
+                    position: p.position,
+                    realTeam: p.real_team,
+                    realTeamLogoUrl: p.real_team_logo_url,
+                    sport: p.sport,
+                  }}
+                  actionLabel="Add"
+                  onAction={() => setAddTarget(p)}
+                />
               ))}
             </div>
           )}

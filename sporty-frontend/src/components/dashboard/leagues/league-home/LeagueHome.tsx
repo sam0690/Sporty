@@ -4,16 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
-import { Modal } from "@/components/ui";
+import { ConfirmDialog, EmptyState } from "@/components/ui";
 import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
-import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
 import {
-  LeagueHeader,
-  type Sport,
-} from "@/components/dashboard/leagues/league-home/components/LeagueHeader";
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
-import { StandingsTable } from "@/components/dashboard/leagues/league-home/components/StandingsTable";
+  StandingsTable,
+  type StandingRow,
+} from "@/components/dashboard/leagues/components/StandingsTable";
 import { YourScoreCard } from "@/components/dashboard/leagues/league-home/components/YourScoreCard";
 import { TransferFields } from "@/components/dashboard/leagues/league-home/components/TransferFields";
 import { GameweekBreakdown } from "@/components/dashboard/main-dashboard/components/GameweekBreakdown";
@@ -65,6 +62,20 @@ export function LeagueHome() {
   // `gameweek`, resolved to the season's transfer window server-side.
   const { data: seasonBoard, isLoading: seasonBoardLoading } =
     useLeaderboard(leagueId);
+  // Backend rank can be null until the ranking job runs; fall back to
+  // position in points-sorted order so the list always shows a standing.
+  const standings = useMemo<StandingRow[]>(() => {
+    const entries = seasonBoard?.entries ?? [];
+    return [...entries]
+      .sort((a, b) => Number(b.points) - Number(a.points))
+      .map((entry, index) => ({
+        rank: entry.rank ?? index + 1,
+        teamId: entry.team_id,
+        teamName: entry.team_name,
+        manager: entry.owner_name,
+        points: Number(entry.points),
+      }));
+  }, [seasonBoard]);
   const { data: weekBoard } = useLeaderboard(
     leagueId,
     undefined,
@@ -119,10 +130,6 @@ export function LeagueHome() {
   const leagueStatus = league?.status;
   const isLoading =
     leagueLoading || teamLoading || windowLoading || transferWindowLoading;
-  const leagueSport: Sport =
-    league?.sports?.[0]?.sport.name === "basketball"
-      ? league.sports[0].sport.name
-      : "football";
 
   // Draft rooms are member-scoped: once a draft league is DRAFTING, everyone
   // belongs in the draft screen. `replace` (not push) keeps the back button
@@ -179,9 +186,7 @@ export function LeagueHome() {
 
   if (isLoading) {
     return (
-      <section className="mx-auto max-w-6xl space-y-4 px-6 py-8">
-        <div className="h-12 animate-pulse rounded-[3px] bg-surface-3" />
-        <div className="h-10 w-40 animate-pulse rounded-[3px] bg-surface-3" />
+      <section className="space-y-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2"><TableSkeleton /></div>
           <div className="space-y-4 lg:col-span-1">
@@ -194,22 +199,7 @@ export function LeagueHome() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
-      <p className="section-label">Manager: {username || "Sporty User"}</p>
-
-      <LeagueHeader
-        leagueName={league?.name || ""}
-        sport={leagueSport}
-        currentWeek={currentWeek}
-        totalWeeks={activeWindow?.total_number || 16}
-      />
-
-      <NavigationTabs
-        activeTab="overview"
-        leagueId={leagueId}
-        isCommissioner={isCommissioner}
-      />
-
+    <section className="space-y-5">
       {isBudgetMode ? (
         <TransferFields
           leagueId={leagueId}
@@ -278,7 +268,7 @@ export function LeagueHome() {
             </div>
             <div className="order-2 lg:order-1 lg:col-span-2">
               <StandingsTable
-                entries={seasonBoard?.entries ?? []}
+                standings={standings}
                 userTeamId={myTeam.id}
                 isLoading={seasonBoardLoading}
               />
@@ -355,42 +345,25 @@ export function LeagueHome() {
               </button>
             </div>
           ) : (
-            <EmptyState message="No team data found for this league" />
+            <EmptyState title="No team data found for this league" />
           )}
         </div>
       )}
 
-      <Modal
-        isOpen={showLeaveModal}
+      <ConfirmDialog
+        open={showLeaveModal}
         onClose={() => setShowLeaveModal(false)}
-        closeDisabled={isLeaving}
-      >
-        <h3 className="font-sans text-xl font-700 uppercase tracking-[2px] text-fg-1">
-          Leave League?
-        </h3>
-        <p className="mt-2 text-sm text-fg-3">
-          {isCommissioner
+        onConfirm={handleLeaveLeague}
+        loading={isLeaving}
+        confirmDisabled={isCommissioner}
+        title="Leave League?"
+        message={
+          isCommissioner
             ? "Commissioners cannot leave until they transfer league ownership."
-            : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
-        </p>
-        <div className="mt-6 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setShowLeaveModal(false)}
-            className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleLeaveLeague}
-            disabled={isLeaving || isCommissioner}
-            className="flex-1 rounded-[3px] bg-danger px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isLeaving ? "Leaving..." : "Confirm Leave"}
-          </button>
-        </div>
-      </Modal>
+            : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`
+        }
+        confirmLabel="Confirm Leave"
+      />
     </section>
   );
 }

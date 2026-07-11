@@ -3,8 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
-import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { PlayerAvatar, Select, TeamLogo } from "@/components/ui";
 import { useMe } from "@/hooks/auth/useMe";
 import {
   useLeague,
@@ -163,8 +162,7 @@ export function TradesView() {
 
   if (!isDraftMode) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-        <NavigationTabs activeTab="trades" leagueId={leagueId} isCommissioner={isCommissioner} />
+      <section className="space-y-6">
         <div className="card-surface p-8 text-center text-sm text-fg-3">
           Trades are only available in draft leagues.
         </div>
@@ -175,9 +173,7 @@ export function TradesView() {
   const actLabel = action.isPending ? "…" : null;
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
-      <NavigationTabs activeTab="trades" leagueId={leagueId} isCommissioner={isCommissioner} />
-
+    <section className="space-y-5">
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
         <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
@@ -198,22 +194,22 @@ export function TradesView() {
           {/* Propose */}
           <div className="card-surface p-5">
             <span className="section-label">Propose a Trade</span>
-            <select
+            <Select
               value={targetTeamId}
-              onChange={(e) => {
-                setTargetTeamId(e.target.value);
+              onChange={(next) => {
+                setTargetTeamId(next);
                 setRequested(new Set());
               }}
-              className="mt-3 w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none focus:border-accent"
-              style={{ colorScheme: "dark" }}
-            >
-              <option value="">Select a team to trade with…</option>
-              {otherTeams.map((t) => (
-                <option key={t.team_id} value={t.team_id}>
-                  {t.team_name}
-                </option>
-              ))}
-            </select>
+              className="mt-3 w-full"
+              aria-label="Select a team to trade with"
+              options={[
+                { value: "", label: "Select a team to trade with…" },
+                ...otherTeams.map((t) => ({
+                  value: t.team_id,
+                  label: t.team_name,
+                })),
+              ]}
+            />
 
             {targetTeamId ? (
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">

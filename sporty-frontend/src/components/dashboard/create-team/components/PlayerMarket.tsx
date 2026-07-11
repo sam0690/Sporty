@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Search } from "lucide-react";
-import { EmptyState } from "@/components/dashboard/create-team/components/EmptyState";
+import { ChevronLeft, ChevronRight, Loader2, Search, SearchX } from "lucide-react";
+import { EmptyState, Select } from "@/components/ui";
 import {
   PlayerCard,
   type MarketPlayer,
@@ -96,17 +96,15 @@ export function PlayerMarket({
       <div className="grid gap-3 md:grid-cols-3">
         <label className="space-y-1.5">
           <span className="section-label">Position</span>
-          <select
+          <Select
             value={selectedPosition}
-            onChange={(event) => onPositionChange(event.target.value)}
-            className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-3 py-2 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
-          >
-            {positions.map((position) => (
-              <option key={position} value={position}>
-                {position}
-              </option>
-            ))}
-          </select>
+            onChange={onPositionChange}
+            className="w-full"
+            options={positions.map((position) => ({
+              value: position,
+              label: position,
+            }))}
+          />
         </label>
 
         <label className="space-y-1.5">
@@ -202,7 +200,7 @@ export function PlayerMarket({
             Loading players...
           </div>
         ) : players.length === 0 ? (
-          <EmptyState message="No players found for the selected filters." />
+          <EmptyState icon={SearchX} title="No players found for the selected filters." />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {players.map((player) => {

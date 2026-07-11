@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Plus } from "lucide-react";
-import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { Badge, PlayerAvatar, TeamLogo } from "@/components/ui";
 
 type SportType = "football" | "basketball" | "cricket" | "multisport";
 
@@ -27,13 +27,6 @@ type PlayerCardProps = {
   showSportIcon?: boolean;
   canAddPlayer?: boolean;
   addDisabledReason?: string;
-};
-
-const sportBadgeClass: Record<SportType, string> = {
-  football: "sport-badge-football",
-  basketball: "sport-badge-basketball",
-  cricket: "sport-badge-cricket",
-  multisport: "sport-badge-multisport",
 };
 
 export function PlayerCard({
@@ -73,11 +66,9 @@ export function PlayerCard({
             ) : null}
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
-            <span
-              className={`rounded-[3px] px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
-            >
+            <Badge sport={player.sport} size="sm">
               {player.position}
-            </span>
+            </Badge>
             {player.realTeam ? (
               <span className="flex items-center gap-1.5 text-xs text-fg-3">
                 <TeamLogo teamName={player.realTeam} logoUrl={player.realTeamLogoUrl} size="sm" />

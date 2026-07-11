@@ -1,4 +1,7 @@
 "use client";
+
+import { Badge, Stepper } from "@/components/ui";
+
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
 type CreateTeamHeaderProps = {
@@ -14,18 +17,7 @@ type CreateTeamHeaderProps = {
   showBudget?: boolean;
 };
 
-const sportBadgeClass: Record<Sport, string> = {
-  football: "sport-badge-football",
-  basketball: "sport-badge-basketball",
-  cricket: "sport-badge-cricket",
-  multisport: "sport-badge-multisport",
-};
-
-function stepLabel(step: number): string {
-  if (step === 1) return "Pick Players";
-  if (step === 2) return "Name Your Team";
-  return "Confirmation";
-}
+const STEP_LABELS = ["Pick Players", "Name Your Team", "Confirmation"];
 
 export function CreateTeamHeader({
   leagueName,
@@ -52,16 +44,11 @@ export function CreateTeamHeader({
             <h1 className="font-display text-4xl leading-none tracking-[-0.02em] text-fg-1">
               {leagueName}
             </h1>
-            <span
-              className={`rounded-[3px] px-2.5 py-1 font-sans text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
-              aria-label={sport}
-            >
+            <Badge sport={sport}>
               {sport === "multisport" ? "Multi-Sport" : sport}
-            </span>
+            </Badge>
           </div>
-          <p className="section-label">
-            Step {step} of {totalSteps} · {stepLabel(step)}
-          </p>
+          <Stepper steps={STEP_LABELS.slice(0, totalSteps)} active={step} />
         </div>
 
         {showBudget ? (

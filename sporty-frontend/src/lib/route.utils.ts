@@ -33,6 +33,14 @@ export function isAdminRoute(pathname: string): boolean {
 }
 
 /**
+ * Whether a nav item's href should render as "active" for the current path:
+ * an exact match, or the current path is nested under it.
+ */
+export function isActiveRoute(href: string, pathname: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
  * Validate a `redirect` query param before navigating to it.
  *
  * Only same-origin relative paths are allowed (must start with a single "/",

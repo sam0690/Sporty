@@ -33,7 +33,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDownToLine, Crown, Plus, Shield, X } from "lucide-react";
-import { PlayerAvatar } from "@/components/ui";
+import { Badge, PlayerAvatar } from "@/components/ui";
 import { DropZone } from "@/components/dashboard/leagues/league-lineup/components/DropZone";
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
@@ -82,13 +82,6 @@ const MULTISPORT_STARTER_REQUIREMENTS = {
   football: 5,
   basketball: 4,
 } as const;
-
-const sportBadgeClass: Record<SportKind, string> = {
-  football: "sport-badge-football",
-  basketball: "sport-badge-basketball",
-  cricket: "sport-badge-cricket",
-  unknown: "sport-badge-multisport",
-};
 
 // Would this proposed starting XI still be legal? Football is bounds-checked
 // against FPL's own rule (GK=1, DEF 3-5, MID 2-5, FWD 1-3 — see
@@ -373,11 +366,9 @@ const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
         </span>
       </div>
       <div className="mt-1.5 flex items-center gap-2">
-        <span
-          className={`rounded-[3px] px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
-        >
+        <Badge sport={player.sport} size="sm">
           {player.position}
-        </span>
+        </Badge>
         <span className="font-display text-base leading-none tracking-[-0.02em] text-accent tabular-nums">
           {player.cost}
         </span>

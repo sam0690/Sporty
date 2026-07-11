@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Badge } from "@/components/ui";
 
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
@@ -22,13 +23,6 @@ const sportImages: Record<Sport, string> = {
   basketball: "/images/leagues/basketball-card.svg",
   cricket: "/images/leagues/cricket-card.svg",
   multisport: "/images/leagues/multisport-card.svg",
-};
-
-const sportBadgeClass: Record<Sport, string> = {
-  football: "sport-badge-football",
-  basketball: "sport-badge-basketball",
-  cricket: "sport-badge-cricket",
-  multisport: "sport-badge-multisport",
 };
 
 const sportAccentColor: Record<Sport, string> = {
@@ -66,11 +60,9 @@ export function LeagueCard({
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <div className="absolute inset-0 bg-black/40" />
-        <span
-          className={`absolute right-3 top-3 rounded-[3px] px-2 py-1 font-sans text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
-        >
+        <Badge sport={sport} className="absolute right-3 top-3">
           {sport}
-        </span>
+        </Badge>
       </div>
 
       <div className="space-y-3 p-4">

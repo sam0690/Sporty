@@ -1,5 +1,7 @@
 "use client";
 
+import { Badge } from "@/components/ui";
+
 type Sport = "football" | "basketball" | "cricket" | "multisport";
 
 type LineupHeaderProps = {
@@ -9,13 +11,6 @@ type LineupHeaderProps = {
   currentWeek: number;
   totalWeeks: number;
   deadline: string;
-};
-
-const sportBadgeClass: Record<Sport, string> = {
-  football: "sport-badge-football",
-  basketball: "sport-badge-basketball",
-  cricket: "sport-badge-cricket",
-  multisport: "sport-badge-multisport",
 };
 
 function formatCountdown(deadline: string): { label: string; locked: boolean } {
@@ -56,12 +51,7 @@ export function LineupHeader({
             <p className="section-label mt-1">Team: {teamName}</p>
           ) : null}
         </div>
-        <span
-          className={`rounded-[3px] px-2 py-1 font-sans text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
-          aria-label={sport}
-        >
-          {sport}
-        </span>
+        <Badge sport={sport}>{sport}</Badge>
       </div>
 
       <div className="flex items-center gap-3">

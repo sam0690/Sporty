@@ -1,6 +1,7 @@
 "use client";
 
-import { EmptyPlayers } from "@/components/ui/empty-states";
+import { Users } from "lucide-react";
+import { EmptyState, Select } from "@/components/ui";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import { EmptyTeamState } from "@/components/dashboard/my-team/components/EmptyTeamState";
 import { LeagueGroup } from "@/components/dashboard/my-team/components/LeagueGroup";
@@ -121,24 +122,18 @@ export function MyTeamView({
         })}
       </div>
     ) : (
-      <label className="block max-w-xl">
-        <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
-          Select league
-        </span>
-        <select
+      <div className="max-w-xl">
+        <Select
+          label="Select league"
           value={activeLeague?.id ?? ""}
-          onChange={(event) => onLeagueChange(event.target.value)}
-          className="w-full card-surface px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
-          style={{ colorScheme: "dark" }}
-          aria-label="Choose league"
-        >
-          {leagueOptions.map((league) => (
-            <option key={league.id} value={league.id}>
-              {league.label}
-            </option>
-          ))}
-        </select>
-      </label>
+          onChange={onLeagueChange}
+          className="w-full"
+          options={leagueOptions.map((league) => ({
+            value: league.id,
+            label: league.label,
+          }))}
+        />
+      </div>
     )
   ) : null;
 
@@ -188,7 +183,14 @@ export function MyTeamView({
           </section>
         </div>
       ) : (
-        <EmptyPlayers />
+        <EmptyState
+          icon={Users}
+          title="No players yet"
+          description="Make transfers to add players to your team"
+          actions={[
+            { label: "Browse Transfers", href: "/transfers", variant: "secondary" },
+          ]}
+        />
       )}
     </section>
   );
