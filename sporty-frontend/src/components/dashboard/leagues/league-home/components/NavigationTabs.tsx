@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { useLeague } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
@@ -43,25 +43,21 @@ export function NavigationTabs({
   leagueId,
   isCommissioner = false,
 }: NavigationTabsProps) {
-  const router = useRouter();
   const { data: league } = useLeague(leagueId);
   const { isDraftMode } = useLeagueCompetitionMode(league);
 
-  const goToTab = (tab: TabKey) => {
-    const routes: Record<TabKey, string> = {
-      overview:      `/leagues/${leagueId}`,
-      lineup:        `/leagues/${leagueId}/lineup`,
-      gameweek:      `/leagues/${leagueId}/gameweek`,
-      leaderboard:   `/leagues/${leagueId}/leaderboard`,
-      "free-agents": `/leagues/${leagueId}/free-agents`,
-      waivers:       `/leagues/${leagueId}/waivers`,
-      trades:        `/leagues/${leagueId}/trades`,
-      chat:          `/leagues/${leagueId}/chat`,
-      members:       `/leagues/${leagueId}/members`,
-      invite:        `/leagues/${leagueId}/invite`,
-      settings:      `/leagues/${leagueId}/settings`,
-    };
-    router.push(routes[tab]);
+  const routes: Record<TabKey, string> = {
+    overview:      `/leagues/${leagueId}`,
+    lineup:        `/leagues/${leagueId}/lineup`,
+    gameweek:      `/leagues/${leagueId}/gameweek`,
+    leaderboard:   `/leagues/${leagueId}/leaderboard`,
+    "free-agents": `/leagues/${leagueId}/free-agents`,
+    waivers:       `/leagues/${leagueId}/waivers`,
+    trades:        `/leagues/${leagueId}/trades`,
+    chat:          `/leagues/${leagueId}/chat`,
+    members:       `/leagues/${leagueId}/members`,
+    invite:        `/leagues/${leagueId}/invite`,
+    settings:      `/leagues/${leagueId}/settings`,
   };
 
   return (
@@ -81,18 +77,18 @@ export function NavigationTabs({
             const isActive = tab.key === activeTab;
 
             return (
-              <button
+              <Link
                 key={tab.key}
-                type="button"
-                onClick={() => goToTab(tab.key)}
-                className={`rounded-[3px] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
+                href={routes[tab.key]}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex min-h-11 items-center rounded-[3px] px-4 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 ${
                   isActive
                     ? "bg-[#e8fb25] text-[#0a0a0f]"
                     : "bg-transparent text-[#555560] hover:bg-[#1d1d26] hover:text-[#f0f0f0]"
                 }`}
               >
                 {tab.label}
-              </button>
+              </Link>
             );
           })}
       </div>

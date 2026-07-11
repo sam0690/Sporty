@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
@@ -213,10 +214,10 @@ export function GameweekRecap() {
             type="button"
             disabled={!canPrev}
             onClick={() => currentGw && setGw(currentGw - 1)}
-            className="grid size-9 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
+            className="grid size-11 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Previous gameweek"
           >
-            ‹
+            <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-28 rounded-[8px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-2 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
             {currentGw != null ? `Gameweek ${currentGw}` : "—"}
@@ -225,10 +226,10 @@ export function GameweekRecap() {
             type="button"
             disabled={!canNext}
             onClick={() => currentGw && setGw(currentGw + 1)}
-            className="grid size-9 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
+            className="grid size-11 place-items-center rounded-[8px] border border-[rgba(255,255,255,0.12)] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-30"
             aria-label="Next gameweek"
           >
-            ›
+            <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </header>

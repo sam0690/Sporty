@@ -20,8 +20,6 @@ const teamSizes = [4, 6, 8, 10, 12, 14, 16];
 
 const fieldLabel =
   "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]";
-const fieldControl =
-  "w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]";
 
 function RadioCard({
   selected,

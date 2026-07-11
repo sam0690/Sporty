@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { CardSkeleton } from "@/components/ui/skeletons";
-import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { Modal, PlayerAvatar, TeamLogo } from "@/components/ui";
 import { useMe } from "@/hooks/auth/useMe";
 import {
   useCancelWaiverClaim,
@@ -222,19 +223,19 @@ export function WaiversView() {
                                   type="button"
                                   disabled={i === 0 || reorder.isPending}
                                   onClick={() => movePending(i, -1)}
-                                  className="text-[#9a9aa5] hover:text-[#e8fb25] disabled:opacity-30"
+                                  className="flex h-8 w-8 items-center justify-center rounded-[3px] text-[#9a9aa5] transition-colors hover:text-[#e8fb25] disabled:opacity-30"
                                   aria-label="Move up"
                                 >
-                                  ▲
+                                  <ChevronUp className="h-4 w-4" />
                                 </button>
                                 <button
                                   type="button"
                                   disabled={i === pendingClaims.length - 1 || reorder.isPending}
                                   onClick={() => movePending(i, 1)}
-                                  className="text-[#9a9aa5] hover:text-[#e8fb25] disabled:opacity-30"
+                                  className="flex h-8 w-8 items-center justify-center rounded-[3px] text-[#9a9aa5] transition-colors hover:text-[#e8fb25] disabled:opacity-30"
                                   aria-label="Move down"
                                 >
-                                  ▼
+                                  <ChevronDown className="h-4 w-4" />
                                 </button>
                                 <span className="ml-1 text-[#555560] tabular-nums">
                                   #{i + 1}
@@ -293,62 +294,56 @@ export function WaiversView() {
         </div>
       )}
 
-      {addTarget ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !submit.isPending) setAddTarget(null);
-          }}
-        >
-          <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
-            <p className="section-label">Claim {addTarget.name}</p>
-            <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-[#f0f0f0]">
-              Drop a player if you win
-            </h3>
-            <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
-              {dropCandidates.length === 0 ? (
-                <p className="text-sm text-[#555560]">
-                  No droppable {addTarget.sport} players on your squad.
-                </p>
-              ) : (
-                dropCandidates.map((tp) => (
-                  <button
-                    key={tp.player.id}
-                    type="button"
-                    disabled={submit.isPending}
-                    onClick={() => handleSubmit(tp.player.id)}
-                    className="flex w-full items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-left transition-colors hover:border-[rgba(232,251,37,0.4)] disabled:opacity-50"
-                  >
-                    <span className="flex min-w-0 items-center gap-2">
-                      <PlayerAvatar name={tp.player.name} photoUrl={tp.player.photo_url} size="sm" />
-                      <span className="truncate text-sm text-[#f0f0f0]">{tp.player.name}</span>
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
-                      <span>{tp.player.position}</span>
-                      {tp.player.real_team ? (
-                        <>
-                          <span className="text-[#33333a]">·</span>
-                          <TeamLogo teamName={tp.player.real_team} logoUrl={tp.player.real_team_logo_url} size="sm" />
-                          <span>{tp.player.real_team}</span>
-                        </>
-                      ) : null}
-                    </span>
-                  </button>
-                ))
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setAddTarget(null)}
-              disabled={submit.isPending}
-              className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </div>
+      <Modal
+        isOpen={Boolean(addTarget)}
+        onClose={() => setAddTarget(null)}
+        closeDisabled={submit.isPending}
+      >
+        <p className="section-label">Claim {addTarget?.name}</p>
+        <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          Drop a player if you win
+        </h3>
+        <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
+          {dropCandidates.length === 0 ? (
+            <p className="text-sm text-[#555560]">
+              No droppable {addTarget?.sport} players on your squad.
+            </p>
+          ) : (
+            dropCandidates.map((tp) => (
+              <button
+                key={tp.player.id}
+                type="button"
+                disabled={submit.isPending}
+                onClick={() => handleSubmit(tp.player.id)}
+                className="flex w-full items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-left transition-colors hover:border-[rgba(232,251,37,0.4)] disabled:opacity-50"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <PlayerAvatar name={tp.player.name} photoUrl={tp.player.photo_url} size="sm" />
+                  <span className="truncate text-sm text-[#f0f0f0]">{tp.player.name}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
+                  <span>{tp.player.position}</span>
+                  {tp.player.real_team ? (
+                    <>
+                      <span className="text-[#33333a]">·</span>
+                      <TeamLogo teamName={tp.player.real_team} logoUrl={tp.player.real_team_logo_url} size="sm" />
+                      <span>{tp.player.real_team}</span>
+                    </>
+                  ) : null}
+                </span>
+              </button>
+            ))
+          )}
         </div>
-      ) : null}
+        <button
+          type="button"
+          onClick={() => setAddTarget(null)}
+          disabled={submit.isPending}
+          className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:opacity-50"
+        >
+          Cancel
+        </button>
+      </Modal>
     </section>
   );
 }

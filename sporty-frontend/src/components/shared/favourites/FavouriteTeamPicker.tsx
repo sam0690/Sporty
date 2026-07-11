@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, Shield, X } from "lucide-react";
 import { Loader, Popover, ScrollArea } from "@mantine/core";
+import { TeamLogo } from "@/components/ui";
 import { PlayerService, type TTeamBrief } from "@/services/PlayerService";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 
@@ -48,14 +49,7 @@ export function FavouriteTeamPicker({
             className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(232,251,37,0.4)]"
           >
             {value ? (
-              <img
-                src={value.logo_url ?? ""}
-                alt={`${value.name} crest`}
-                className="h-8 w-8 shrink-0 rounded-full object-contain bg-[#1a1a22]"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+              <TeamLogo teamName={value.name} logoUrl={value.logo_url} size="md" />
             ) : (
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a1a22] text-[#666671]">
                 <Shield size={16} aria-hidden />
@@ -116,14 +110,7 @@ export function FavouriteTeamPicker({
                         : "text-[#f0f0f0] hover:bg-[#1a1a22]"
                     }`}
                   >
-                    <img
-                      src={team.logo_url ?? ""}
-                      alt=""
-                      className="h-6 w-6 shrink-0 rounded-full object-contain bg-[#1a1a22]"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                    />
+                    <TeamLogo teamName={team.name} logoUrl={team.logo_url} size="md" />
                     <span className="truncate">{team.name}</span>
                   </button>
                 </li>

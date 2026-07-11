@@ -31,11 +31,15 @@ export function usePlayerFilters(initialSportName?: string) {
     };
   }, [searchQuery]);
 
-  useEffect(() => {
+  // Follow initialSportName when it changes (adjust-state-during-render,
+  // per https://react.dev/learn/you-might-not-need-an-effect).
+  const [prevInitialSport, setPrevInitialSport] = useState(initialSportName);
+  if (initialSportName !== prevInitialSport) {
+    setPrevInitialSport(initialSportName);
     if (initialSportName) {
       setSelectedSport(initialSportName);
     }
-  }, [initialSportName]);
+  }
 
   const filters = useMemo<TPlayerFilter>(() => {
     return {

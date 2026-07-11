@@ -124,6 +124,7 @@ export function useTransfersDashboard() {
     Boolean(activeWindow?.id) &&
     !activeWindow?.transfers_locked &&
     !!activeWindow?.transfer_deadline_at &&
+    // eslint-disable-next-line react-hooks/purity -- wall-clock deadline check; the confirm modal re-validates with a live countdown
     Date.now() <= new Date(activeWindow.transfer_deadline_at).getTime();
 
   const ownedPlayers: OwnedPlayer[] = useMemo(() => {
@@ -137,6 +138,8 @@ export function useTransfersDashboard() {
       avgPoints: 0,
       form: 0,
       realTeam: p.player.real_team,
+      photoUrl: p.player.photo_url,
+      realTeamLogoUrl: p.player.real_team_logo_url,
     }));
   }, [myTeam]);
 
@@ -155,6 +158,8 @@ export function useTransfersDashboard() {
         avgPoints: p.projected_points ?? 0,
         form: 0,
         realTeam: p.real_team,
+        photoUrl: p.photo_url,
+        realTeamLogoUrl: p.real_team_logo_url,
       }));
   }, [playersData, ownedPlayers, stagedInPlayers]);
 

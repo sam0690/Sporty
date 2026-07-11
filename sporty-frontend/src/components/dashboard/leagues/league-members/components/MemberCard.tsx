@@ -1,5 +1,8 @@
 "use client";
 
+import { Crown } from "lucide-react";
+import { PlayerAvatar } from "@/components/ui";
+
 type Member = {
   id: string;
   name: string;
@@ -7,6 +10,7 @@ type Member = {
   joinDate: string;
   status: "active" | "left";
   totalPoints?: number;
+  avatarUrl?: string | null;
 };
 
 type MemberCardProps = {
@@ -15,15 +19,6 @@ type MemberCardProps = {
   canKick: boolean;
   onKick: (member: Member) => void;
 };
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 export function MemberCard({
   member,
@@ -43,15 +38,7 @@ export function MemberCard({
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <div
-            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] font-bebas text-lg tracking-[1px] ${
-              isCommissionerMember
-                ? "bg-[rgba(232,251,37,0.18)] text-[#e8fb25]"
-                : "bg-[rgba(255,255,255,0.06)] text-[#f0f0f0]"
-            }`}
-          >
-            {initials(member.name)}
-          </div>
+          <PlayerAvatar name={member.name} photoUrl={member.avatarUrl} size="md" className="shrink-0" />
           <div className="min-w-0">
             <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
               {member.name}
@@ -61,7 +48,8 @@ export function MemberCard({
             </p>
             {isCommissionerMember ? (
               <span className="mt-1.5 inline-flex items-center gap-1 rounded-[3px] bg-[rgba(232,251,37,0.12)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
-                👑 Commissioner
+                <Crown className="h-3 w-3" />
+                Commissioner
               </span>
             ) : null}
           </div>

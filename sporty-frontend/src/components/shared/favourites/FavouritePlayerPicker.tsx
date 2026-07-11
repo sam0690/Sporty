@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { ChevronDown, Search, User as UserIcon, X } from "lucide-react";
 import { Loader, Popover, ScrollArea, TextInput } from "@mantine/core";
+import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import { PlayerService } from "@/services/PlayerService";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import type { TFavouritePlayer } from "@/services/UserService";
@@ -61,15 +62,8 @@ export function FavouritePlayerPicker({
             aria-expanded={opened}
             className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(232,251,37,0.4)]"
           >
-            {value?.photo_url ? (
-              <img
-                src={value.photo_url}
-                alt={`${value.name} photo`}
-                className="h-8 w-8 shrink-0 rounded-full object-cover bg-[#1a1a22]"
-                onError={(e) => {
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+            {value ? (
+              <PlayerAvatar name={value.name} photoUrl={value.photo_url} size="sm" />
             ) : (
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a1a22] text-[#666671]">
                 <UserIcon size={16} aria-hidden />
@@ -161,34 +155,22 @@ export function FavouritePlayerPicker({
                           : "text-[#f0f0f0] hover:bg-[#1a1a22]"
                       }`}
                     >
-                      {player.photo_url ? (
-                        <img
-                          src={player.photo_url}
-                          alt=""
-                          className="h-7 w-7 shrink-0 rounded-full object-cover bg-[#1a1a22]"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                      ) : (
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#1a1a22] text-[#666671]">
-                          <UserIcon size={14} aria-hidden />
-                        </span>
-                      )}
+                      <PlayerAvatar
+                        name={player.name ?? ""}
+                        photoUrl={player.photo_url}
+                        size="sm"
+                      />
                       <span className="min-w-0 flex-1 truncate">
                         {player.name}
                         <span className="ml-1.5 text-xs text-[#666671]">
                           {player.position} · {player.real_team}
                         </span>
                       </span>
-                      {player.real_team_logo_url ? (
-                        <img
-                          src={player.real_team_logo_url}
-                          alt=""
-                          className="h-5 w-5 shrink-0 rounded-full object-contain bg-[#1a1a22]"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
+                      {player.real_team ? (
+                        <TeamLogo
+                          teamName={player.real_team}
+                          logoUrl={player.real_team_logo_url}
+                          size="sm"
                         />
                       ) : null}
                     </button>

@@ -33,7 +33,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDownToLine, Crown, Plus, Shield, X } from "lucide-react";
-import { DropZone } from "@/components/dashboard/leagues/league-roster/components/DropZone";
+import { PlayerAvatar } from "@/components/ui";
+import { DropZone } from "@/components/dashboard/leagues/league-lineup/components/DropZone";
 import type { LineupPlayerCardModel } from "@/components/dashboard/leagues/league-lineup/hooks/useLeagueLineupData";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import {
@@ -74,6 +75,7 @@ type PitchPlayer = {
   realTeam: string;
   cost: string;
   isStarter: boolean;
+  photoUrl?: string | null;
 };
 
 const MULTISPORT_STARTER_REQUIREMENTS = {
@@ -134,11 +136,16 @@ function PlayerChip({
   return (
     <div className="relative">
       <div
-        className={`flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/25 bg-white shadow-lg sm:h-14 sm:w-14 ${
+        className={`flex h-12 w-12 items-center justify-center overflow-hidden rounded-[3px] border border-white/25 bg-white shadow-lg sm:h-14 sm:w-14 ${
           isSelected ? "ring-2 ring-accent-primary" : ""
         } ${elevated ? "shadow-2xl" : ""}`}
       >
-        <span className="text-xl">{getSportIcon(player.sport)}</span>
+        <PlayerAvatar
+          name={player.name}
+          photoUrl={player.photoUrl}
+          size="md"
+          className="!h-full !w-full !rounded-none !border-0 !bg-transparent"
+        />
       </div>
 
       {isCaptain ? (
@@ -402,6 +409,7 @@ export function LineupPitchView({
         realTeam: player.realTeam,
         cost: player.cost,
         isStarter: player.isStarter,
+        photoUrl: player.photoUrl,
       })),
     [allPlayers],
   );

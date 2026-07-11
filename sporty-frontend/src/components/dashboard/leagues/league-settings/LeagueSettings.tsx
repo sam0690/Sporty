@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { Lock, X } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { DangerZone } from "@/components/dashboard/leagues/league-settings/components/DangerZone";
@@ -213,9 +214,7 @@ export function LeagueSettings() {
           isCommissioner={isCommissioner}
         />
         <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-          <p className="text-2xl" aria-hidden>
-            🔒
-          </p>
+          <Lock className="mx-auto h-6 w-6 text-[#555560]" aria-hidden />
           <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
             Commissioner only
           </p>
@@ -347,9 +346,11 @@ export function LeagueSettings() {
               key={leagueSport.sport.name}
               type="button"
               onClick={() => removeSport.mutateAsync(leagueSport.sport.name)}
-              className={`${segmentBase} ${segmentActive}`}
+              aria-label={`Remove ${leagueSport.sport.display_name}`}
+              className={`inline-flex items-center gap-1.5 ${segmentBase} ${segmentActive}`}
             >
-              {leagueSport.sport.display_name} ✕
+              {leagueSport.sport.display_name}
+              <X className="h-3 w-3" aria-hidden />
             </button>
           ))}
           {(sports ?? [])

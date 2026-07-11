@@ -1,5 +1,7 @@
 "use client";
 
+import { Modal } from "@/components/ui";
+
 type KickMemberModalProps = {
   isOpen: boolean;
   memberName: string;
@@ -15,36 +17,33 @@ export function KickMemberModal({
   onClose,
   onConfirm,
 }: KickMemberModalProps) {
-  if (!isOpen) {
-    return null;
-  }
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0] ">
-        <h3 className="text-lg text-[#f0f0f0]">Kick Member?</h3>
-        <p className="mt-2 text-sm text-[#f0f0f0]/65">
-          Remove {memberName} from this league?
-        </p>
+    <Modal isOpen={isOpen} onClose={onClose} closeDisabled={isKicking}>
+      <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+        Kick Member?
+      </h3>
+      <p className="mt-2 text-sm text-[#555560]">
+        Remove {memberName} from this league? Their team will be permanently
+        removed.
+      </p>
 
-        <div className="mt-6 flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 text-[#f0f0f0] transition-colors hover:bg-[#1d1d26]"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={isKicking}
-            className="flex-1 rounded-[3px] border border-danger/30 bg-danger/5 px-4 py-2 text-danger hover:bg-danger/10 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isKicking ? "Removing..." : "Kick Member"}
-          </button>
-        </div>
+      <div className="mt-6 flex gap-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
+        >
+          Cancel
+        </button>
+        <button
+          type="button"
+          onClick={onConfirm}
+          disabled={isKicking}
+          className="flex-1 rounded-[3px] bg-[#ff3b30] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isKicking ? "Removing..." : "Kick Member"}
+        </button>
       </div>
-    </div>
+    </Modal>
   );
 }

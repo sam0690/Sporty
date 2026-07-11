@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 import { Carousel } from "@mantine/carousel";
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
 import type { TUserTransferLeagueGroup } from "@/types";
@@ -136,8 +138,8 @@ export function UserTransferHistoryCarousel({
 
                           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-3">
-                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
-                                ▼ Out
+                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30] flex items-center gap-1">
+                                <ChevronDown className="h-3 w-3" /> Out
                               </p>
                               <div className="mt-1.5 flex items-center gap-2">
                                 <PlayerAvatar
@@ -172,8 +174,8 @@ export function UserTransferHistoryCarousel({
                             </div>
 
                             <div className="rounded-[3px] border border-[rgba(76,175,80,0.2)] bg-[rgba(76,175,80,0.06)] p-3">
-                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
-                                ▲ In
+                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50] flex items-center gap-1">
+                                <ChevronUp className="h-3 w-3" /> In
                               </p>
                               <div className="mt-1.5 flex items-center gap-2">
                                 <PlayerAvatar

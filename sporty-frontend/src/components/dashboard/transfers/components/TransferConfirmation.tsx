@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
+
 import { useEffect, useState } from "react";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 import type { OwnedPlayer } from "./CurrentRoster";
@@ -100,8 +102,8 @@ export function TransferConfirmation({
         <div className="p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-4">
-              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
-                ▼ Out
+              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30] flex items-center gap-1">
+                <ChevronDown className="h-3 w-3" /> Out
               </p>
               <div className="mt-2 space-y-1">
                 {stagedOutPlayers.length === 0 ? (
@@ -120,8 +122,8 @@ export function TransferConfirmation({
             </div>
 
             <div className="rounded-[3px] border border-[rgba(76,175,80,0.2)] bg-[rgba(76,175,80,0.06)] p-4">
-              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
-                ▲ In
+              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50] flex items-center gap-1">
+                <ChevronUp className="h-3 w-3" /> In
               </p>
               <div className="mt-2 space-y-1">
                 {stagedInPlayers.length === 0 ? (

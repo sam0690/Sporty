@@ -20,7 +20,11 @@ export function LeaguesView() {
   const leagues = (leaguesData || []).map((l) => ({
     id: l.id,
     name: l.name,
-    sport: (l.sports?.[0]?.sport.name as Sport) || "multisport",
+    // A league with more than one sport is multisport, not its first sport.
+    sport:
+      (l.sports?.length ?? 0) > 1
+        ? ("multisport" as Sport)
+        : ((l.sports?.[0]?.sport.name as Sport) || "multisport"),
     memberCount: l.member_count,
     yourRank: l.my_team?.rank ?? 0,
     teamName: l.my_team?.name || "No Team",
@@ -69,6 +73,7 @@ export function LeaguesView() {
                 memberCount={league.memberCount}
                 yourRank={league.yourRank}
                 teamName={league.teamName}
+                points={league.points}
                 animationDelay={index * 70}
               />
             ))}

@@ -1,14 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type LeaguesHeaderProps = {
   userName: string;
 };
 
 export function LeaguesHeader({ userName }: LeaguesHeaderProps) {
-  const router = useRouter();
-
   return (
     <header className="flex flex-wrap items-end justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
       <div>
@@ -22,20 +20,18 @@ export function LeaguesHeader({ userName }: LeaguesHeaderProps) {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => router.push("/join-league")}
+        <Link
+          href="/join-league"
           className="rounded-[3px] border border-[rgba(232,251,37,0.4)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:bg-[#e8fb25]/10"
         >
           Join League
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push("/create-league")}
+        </Link>
+        <Link
+          href="/create-league"
           className="rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
         >
           Create League
-        </button>
+        </Link>
       </div>
     </header>
   );

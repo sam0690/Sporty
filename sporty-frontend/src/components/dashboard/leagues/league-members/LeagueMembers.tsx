@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { Search } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { KickMemberModal } from "@/components/dashboard/leagues/league-members/components/KickMemberModal";
@@ -42,6 +43,7 @@ export function LeagueMembers() {
           ? `Draft Position #${membership.draft_position}`
           : "Team pending",
         joinDate: new Date(membership.joined_at).toLocaleDateString(),
+        avatarUrl: membership.user.avatar_url,
       })),
     [memberships],
   );
@@ -113,13 +115,12 @@ export function LeagueMembers() {
       </header>
 
       <div className="relative">
-        <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-[#555560]">
-          ⌕
-        </span>
+        <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#555560]" aria-hidden />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by member or team name"
+          aria-label="Search members"
           className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] py-2.5 pl-10 pr-4 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
         />
       </div>

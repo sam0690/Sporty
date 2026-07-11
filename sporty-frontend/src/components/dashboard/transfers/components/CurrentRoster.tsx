@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { PlayerAvatar } from "@/components/ui";
 import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
 
 type OwnedPlayer = {
@@ -12,6 +13,8 @@ type OwnedPlayer = {
   avgPoints?: number;
   form?: number;
   realTeam?: string;
+  photoUrl?: string | null;
+  realTeamLogoUrl?: string | null;
 };
 
 type CurrentRosterProps = {
@@ -65,13 +68,15 @@ export function CurrentRoster({
               <div
                 key={player.id}
                 style={{ borderLeft: `3px solid ${accent}` }}
-                className={`flex items-center justify-between gap-2 rounded-[3px] border px-3 py-2 transition-colors ${
+                className={`flex items-center gap-2.5 rounded-[3px] border px-2.5 py-2 transition-colors ${
                   isSelected
                     ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)]"
                     : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26]"
                 }`}
               >
-                <div className="min-w-0">
+                <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
+
+                <div className="min-w-0 flex-1">
                   <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
                     {player.name}
                   </p>

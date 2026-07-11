@@ -12,7 +12,6 @@ import { SuccessModal } from "@/components/dashboard/create-league/components/Su
 import { useDefaultScoringRules } from "@/hooks/scoring/useScoring";
 import { useSeasons, useCreateLeague } from "@/hooks/leagues/useLeagues";
 import { CreateLeagueSchema, type CreateLeagueValues } from "@/lib/validations";
-import { LeagueService } from "@/services/LeagueService";
 import type { TCompetitionType } from "@/types";
 
 type SportKey = "football" | "basketball" | "multisport";
@@ -50,7 +49,6 @@ export function CreateLeagueView() {
   const prefersReducedMotion = useReducedMotion();
 
   const [step, setStep] = useState(1);
-  const [leagueLogo, setLeagueLogo] = useState("");
   const [draftDate, setDraftDate] = useState("");
   const [seasonId, setSeasonId] = useState("");
   // Drives the step-transition slide direction (Next → forward, Back → backward).
@@ -83,7 +81,6 @@ export function CreateLeagueView() {
   const leagueName = useWatch({ control, name: "name" }) ?? "";
   const sportIds = useWatch({ control, name: "sport_ids" });
   const maxTeams = useWatch({ control, name: "max_teams" }) ?? 10;
-  const squadSize = useWatch({ control, name: "squad_size" }) ?? 15;
   const draftMode = useWatch({ control, name: "draft_mode" }) ?? false;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
@@ -133,7 +130,6 @@ export function CreateLeagueView() {
           ? ("multisport" as SportKey)
           : ((selectedSports[0] as SportKey) ?? "football"),
       seasonId: effectiveSeasonId,
-      leagueLogo,
       isPrivate: !isPublic,
       teamSize: maxTeams,
       competitionType: draftMode
@@ -146,7 +142,6 @@ export function CreateLeagueView() {
       draftMode,
       isPublic,
       leagueName,
-      leagueLogo,
       effectiveSeasonId,
       selectedSports,
       maxTeams,
@@ -355,10 +350,8 @@ export function CreateLeagueView() {
               <LeagueBasicInfo
                 leagueName={leagueData.leagueName}
                 sport={leagueData.sport}
-                leagueLogo={leagueData.leagueLogo}
                 onLeagueNameChange={handleLeagueNameChange}
                 onSportChange={handleSportChange}
-                onLeagueLogoChange={(value) => setLeagueLogo(value)}
               />
             ) : null}
 

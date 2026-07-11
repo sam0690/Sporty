@@ -535,7 +535,7 @@ export function useCreateTeamDashboard() {
     } finally {
       setIsAutoPicking(false);
     }
-  }, [leagueId, router, selectedPlayers]);
+  }, [leagueId, leagueSport, selectedPlayers]);
 
   const handlePreviousPlayersPage = () => {
     setPlayersPage((current) => Math.max(1, current - 1));

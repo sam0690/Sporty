@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useMe } from "@/hooks/auth/useMe";
+import { Modal } from "@/components/ui";
 import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "@/components/dashboard/leagues/league-home/components/CurrentMatchup";
 import { EmptyState } from "@/components/dashboard/leagues/league-home/components/EmptyState";
@@ -107,6 +108,7 @@ export function LeagueHome() {
   const isTransferWindowActive = useMemo(() => {
     if (!editableWindow?.transfer_deadline_at) return false;
     if (editableWindow.transfers_locked) return false;
+    // eslint-disable-next-line react-hooks/purity -- wall-clock deadline check; intentionally re-evaluated when the window data changes
     return Date.now() <= new Date(editableWindow.transfer_deadline_at).getTime();
   }, [editableWindow]);
 
@@ -358,43 +360,37 @@ export function LeagueHome() {
         </div>
       )}
 
-      {showLeaveModal ? (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
-          role="presentation"
-          onMouseDown={(e) => {
-            if (e.target === e.currentTarget && !isLeaving) setShowLeaveModal(false);
-          }}
-        >
-          <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
-            <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
-              Leave League?
-            </h3>
-            <p className="mt-2 text-sm text-[#555560]">
-              {isCommissioner
-                ? "Commissioners cannot leave until they transfer league ownership."
-                : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
-            </p>
-            <div className="mt-6 flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowLeaveModal(false)}
-                className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleLeaveLeague}
-                disabled={isLeaving || isCommissioner}
-                className="flex-1 rounded-[3px] bg-[#ff3b30] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isLeaving ? "Leaving..." : "Confirm Leave"}
-              </button>
-            </div>
-          </div>
+      <Modal
+        isOpen={showLeaveModal}
+        onClose={() => setShowLeaveModal(false)}
+        closeDisabled={isLeaving}
+      >
+        <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+          Leave League?
+        </h3>
+        <p className="mt-2 text-sm text-[#555560]">
+          {isCommissioner
+            ? "Commissioners cannot leave until they transfer league ownership."
+            : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
+        </p>
+        <div className="mt-6 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setShowLeaveModal(false)}
+            className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleLeaveLeague}
+            disabled={isLeaving || isCommissioner}
+            className="flex-1 rounded-[3px] bg-[#ff3b30] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isLeaving ? "Leaving..." : "Confirm Leave"}
+          </button>
         </div>
-      ) : null}
+      </Modal>
     </section>
   );
 }

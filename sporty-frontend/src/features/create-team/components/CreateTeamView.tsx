@@ -6,9 +6,7 @@ import { CurrentTeam } from "@/components/dashboard/create-team/components/Curre
 import { PlayerMarket } from "@/components/dashboard/create-team/components/PlayerMarket";
 import { TeamNameForm } from "@/components/dashboard/create-team/components/TeamNameForm";
 import { SquadValidationChecklist } from "@/components/dashboard/create-team/components/SquadValidationChecklist";
-import type { MarketPlayer } from "@/components/dashboard/create-team/components/PlayerCard";
 import { MULTISPORT_MIN_BY_SPORT } from "../hooks/useCreateTeamDashboard";
-import { CardSkeleton } from "@/components/ui/skeletons";
 
 type CreateTeamProps = Record<string, unknown> & { leagueId?: string };
 type CreateTeamViewModel = ReturnType<
@@ -29,27 +27,20 @@ export function CreateTeamView(
     isDraftLeague,
     activeWindow,
     editableWindow,
-    playersPage,
-    setPlayersPage,
     playersData,
     playersLoading,
-    playersPageSize,
     playersTotal,
     playersCurrentPage,
     playersTotalPages,
     isPlayersPageLoading,
     marketPlayers,
     draftedPlayers,
-    control,
     setValue,
-    trigger,
-    handleSubmit,
     errors,
     teamName,
     step,
     setStep,
     selectedPlayers,
-    setSelectedPlayers,
     selectedPlayerIds,
     searchQuery,
     selectedPosition,
@@ -62,15 +53,11 @@ export function CreateTeamView(
     handleMinCostChange,
     handleMaxCostChange,
     error,
-    setError,
     pickHistory,
-    setPickHistory,
     selectedCountsBySport,
     totalCost,
     budget,
     requiredPlayers,
-    minPlayersRequired,
-    maxPlayersAllowed,
     remainingBudget,
     budgetUsed,
     budgetProgress,
@@ -93,8 +80,6 @@ export function CreateTeamView(
     isDraftComplete,
     buildTeamMutation,
     makeDraftPickMutation,
-    discardTeamPlayerMutation,
-    draftTurn,
   } = props as CreateTeamViewModel;
 
   if (leagueLoading || !league) {

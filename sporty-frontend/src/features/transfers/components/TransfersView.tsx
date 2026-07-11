@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { PlayerAvatar } from "@/components/ui";
 import { BudgetOverageConfirmation } from "@/components/dashboard/transfers/components/BudgetOverageConfirmation";
 import { CurrentRoster } from "@/components/dashboard/transfers/components/CurrentRoster";
 import { FilterBar } from "@/components/dashboard/transfers/components/FilterBar";
@@ -137,39 +138,39 @@ export function TransfersView(props: Props) {
               </div>
               <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-2 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
-                    ▼ Out
+                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
+                    <ArrowDown className="h-3 w-3" /> Out
                   </p>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {stagedOutPlayers.length === 0 ? (
                       <p className="text-xs text-[#555560]">—</p>
                     ) : (
                       stagedOutPlayers.map((player) => (
-                        <p
-                          key={player.id}
-                          className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
-                        >
-                          {player.name}
-                        </p>
+                        <div key={player.id} className="flex min-w-0 items-center gap-2">
+                          <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
+                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                            {player.name}
+                          </p>
+                        </div>
                       ))
                     )}
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
-                    ▲ In
+                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
+                    <ArrowUp className="h-3 w-3" /> In
                   </p>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {stagedInPlayers.length === 0 ? (
                       <p className="text-xs text-[#555560]">—</p>
                     ) : (
                       stagedInPlayers.map((player) => (
-                        <p
-                          key={player.id}
-                          className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
-                        >
-                          {player.name}
-                        </p>
+                        <div key={player.id} className="flex min-w-0 items-center gap-2">
+                          <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
+                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                            {player.name}
+                          </p>
+                        </div>
                       ))
                     )}
                   </div>
@@ -271,6 +272,9 @@ export function TransfersView(props: Props) {
                   price={player.price}
                   avgPoints={player.avgPoints}
                   form={player.form}
+                  photoUrl={player.photoUrl}
+                  realTeam={player.realTeam}
+                  realTeamLogoUrl={player.realTeamLogoUrl}
                   onAdd={handleAddPlayer}
                   animationDelay={index * 60}
                   disabled={!isTransfersOpen}

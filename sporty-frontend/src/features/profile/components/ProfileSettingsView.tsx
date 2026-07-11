@@ -54,27 +54,20 @@ export function ProfileSettingsView() {
   const removeFavouritePlayer = useRemoveFavouritePlayer(me?.id ?? "");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [userData, setUserData] = useState<ExtendedUser>({
+  // Everything except bio is derived from the `me` query (mutations invalidate
+  // it), so only bio lives in local state — the backend has no bio field.
+  const [bio, setBio] = useState(mockUser.bio);
+  const userData: ExtendedUser = {
     id: me?.id ?? mockUser.id,
     name: username || mockUser.name,
     email: me?.email ?? mockUser.email,
     avatar: me?.avatar_url ?? mockUser.avatar,
-    bio: mockUser.bio,
-  });
+    bio,
+  };
   useEffect(() => {
     const timeout = window.setTimeout(() => setIsLoading(false), 450);
     return () => window.clearTimeout(timeout);
   }, []);
-
-  useEffect(() => {
-    setUserData((prev) => ({
-      ...prev,
-      id: me?.id ?? prev.id,
-      name: username || prev.name,
-      email: me?.email ?? prev.email,
-      avatar: me?.avatar_url ?? prev.avatar,
-    }));
-  }, [me?.avatar_url, me?.email, me?.id, username]);
 
   const profileFormUser: ProfileUser = useMemo(
     () => ({
@@ -82,7 +75,7 @@ export function ProfileSettingsView() {
       email: userData.email,
       bio: userData.bio,
     }),
-    [userData],
+    [userData.name, userData.email, userData.bio],
   );
 
   const handleUpdateProfile = async (
@@ -94,7 +87,7 @@ export function ProfileSettingsView() {
           username: nextUser.name,
         });
       }
-      setUserData((prev) => ({ ...prev, ...nextUser }));
+      setBio(nextUser.bio);
       return true;
     } catch {
       toastifier.error("✕ Unable to update profile");
@@ -150,8 +143,7 @@ export function ProfileSettingsView() {
     if (!me?.id) {
       return;
     }
-    const updated = await uploadAvatar.mutateAsync(file);
-    setUserData((prev) => ({ ...prev, avatar: updated.avatar_url ?? "" }));
+    await uploadAvatar.mutateAsync(file);
   };
 
   const handleDeleteAccount = async (): Promise<boolean> => {

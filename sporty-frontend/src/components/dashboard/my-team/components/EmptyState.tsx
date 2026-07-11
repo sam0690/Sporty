@@ -3,9 +3,7 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 
-type EmptyStateProps = Record<string, never>;
-
-export function EmptyState(_: EmptyStateProps) {
+export function EmptyState() {
   return (
     <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] py-16 text-center ">
       <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] text-[#555560]">

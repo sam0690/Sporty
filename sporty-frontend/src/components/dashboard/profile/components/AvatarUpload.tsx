@@ -15,21 +15,18 @@ export function AvatarUpload({
   currentAvatar,
   onAvatarChange,
 }: AvatarUploadProps) {
-  const [preview, setPreview] = useState(currentAvatar);
+  const [blobPreview, setBlobPreview] = useState<string | null>(null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-
-  useEffect(() => {
-    setPreview(currentAvatar);
-  }, [currentAvatar]);
+  const preview = blobPreview ?? currentAvatar;
 
   useEffect(() => {
     return () => {
-      if (preview.startsWith("blob:")) {
-        URL.revokeObjectURL(preview);
+      if (blobPreview) {
+        URL.revokeObjectURL(blobPreview);
       }
     };
-  }, [preview]);
+  }, [blobPreview]);
 
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,7 +44,7 @@ export function AvatarUpload({
       return;
     }
 
-    setPreview(URL.createObjectURL(file));
+    setBlobPreview(URL.createObjectURL(file));
     setPendingFile(file);
   };
 
@@ -59,7 +56,9 @@ export function AvatarUpload({
     setIsUploading(true);
     try {
       await onAvatarChange(pendingFile);
+      // Parent has refreshed currentAvatar by now; drop the local blob preview.
       setPendingFile(null);
+      setBlobPreview(null);
     } finally {
       setIsUploading(false);
     }
@@ -73,6 +72,7 @@ export function AvatarUpload({
       <div className="flex flex-wrap items-center gap-4 p-5">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] text-[#555560]">
           {preview ? (
+            // eslint-disable-next-line @next/next/no-img-element -- preview is a blob: object URL; next/image can't optimize those
             <img
               src={preview}
               alt="Avatar preview"

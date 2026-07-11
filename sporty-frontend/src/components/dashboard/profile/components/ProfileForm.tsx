@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toastifier } from "@/lib/toastifier";
 
 type ProfileUser = {
@@ -20,9 +20,13 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
   const [form, setForm] = useState(user);
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
+  // Re-seed the form when the saved user changes (adjust-state-during-render,
+  // per https://react.dev/learn/you-might-not-need-an-effect).
+  const [prevUser, setPrevUser] = useState(user);
+  if (prevUser !== user) {
+    setPrevUser(user);
     setForm(user);
-  }, [user]);
+  }
 
   const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

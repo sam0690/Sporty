@@ -1,5 +1,6 @@
 "use client";
 
+import { Users } from "lucide-react";
 import {
   MemberCard,
   type Member,
@@ -23,9 +24,7 @@ export function MemberList({
   if (members.length === 0) {
     return (
       <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-        <p className="text-2xl" aria-hidden>
-          👥
-        </p>
+        <Users className="mx-auto h-6 w-6 text-[#555560]" aria-hidden />
         <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
           No members found
         </p>

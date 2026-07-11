@@ -8,11 +8,7 @@ import { useRouter } from "next/navigation";
 // Support is disabled for users right now — redirect back to the dashboard
 // instead of exposing the ticket UI. Re-enable by restoring the imports and
 // the commented-out body below.
-export default function SupportTicketPage({
-  params: _params,
-}: {
-  params: Promise<{ ticketId: string }>;
-}) {
+export default function SupportTicketPage() {
   const router = useRouter();
 
   useEffect(() => {

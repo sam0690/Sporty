@@ -6,10 +6,8 @@ import { motion, useReducedMotion } from "framer-motion";
 type LeagueBasicInfoProps = {
   leagueName: string;
   sport: string;
-  leagueLogo: string;
   onLeagueNameChange: (value: string) => void;
   onSportChange: (value: string) => void;
-  onLeagueLogoChange: (value: string) => void;
 };
 
 type SportOption = {
@@ -27,10 +25,8 @@ const sportOptions: SportOption[] = [
 export function LeagueBasicInfo({
   leagueName,
   sport,
-  leagueLogo,
   onLeagueNameChange,
   onSportChange,
-  onLeagueLogoChange,
 }: LeagueBasicInfoProps) {
   const prefersReducedMotion = useReducedMotion();
   const helperText = useMemo(() => {

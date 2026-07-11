@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui";
 
 type GoogleAccountLinkModalProps = {
@@ -12,8 +12,15 @@ type GoogleAccountLinkModalProps = {
   errorMessage?: string;
 };
 
-export function GoogleAccountLinkModal({
-  isOpen,
+export function GoogleAccountLinkModal(props: GoogleAccountLinkModalProps) {
+  // Mount the content only while open so the password state resets on close.
+  if (!props.isOpen) {
+    return null;
+  }
+  return <GoogleAccountLinkModalContent {...props} />;
+}
+
+function GoogleAccountLinkModalContent({
   email,
   isLoading = false,
   onClose,
@@ -21,16 +28,6 @@ export function GoogleAccountLinkModal({
   errorMessage,
 }: GoogleAccountLinkModalProps) {
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    if (isOpen) {
-      setPassword("");
-    }
-  }, [isOpen]);
-
-  if (!isOpen) {
-    return null;
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 ">

@@ -1,5 +1,6 @@
 "use client";
 
+import { Mail, MessageCircle, Send, X } from "lucide-react";
 import { CopyButton } from "@/components/dashboard/leagues/invite-friends/components/CopyButton";
 
 type ShareLinksProps = {
@@ -8,25 +9,25 @@ type ShareLinksProps = {
 
 const SHARE_TARGETS: Array<{
   label: string;
-  icon: string;
+  icon: typeof MessageCircle;
   href: (url: string) => string;
   hover: string;
 }> = [
   {
     label: "WhatsApp",
-    icon: "💬",
+    icon: MessageCircle,
     href: (url) => `https://wa.me/?text=${encodeURIComponent(url)}`,
     hover: "hover:border-[rgba(37,211,102,0.5)] hover:text-[#25d366]",
   },
   {
     label: "Telegram",
-    icon: "✈️",
+    icon: Send,
     href: (url) => `https://t.me/share/url?url=${encodeURIComponent(url)}`,
     hover: "hover:border-[rgba(0,136,204,0.5)] hover:text-[#37aee2]",
   },
   {
     label: "X",
-    icon: "𝕏",
+    icon: X,
     href: (url) =>
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         "Join my Sporty league! " + url,
@@ -35,7 +36,7 @@ const SHARE_TARGETS: Array<{
   },
   {
     label: "Email",
-    icon: "✉️",
+    icon: Mail,
     href: (url) =>
       `mailto:?subject=${encodeURIComponent(
         "Join my Sporty league",
@@ -58,7 +59,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {SHARE_TARGETS.map(({ label, icon, href, hover }) => (
+          {SHARE_TARGETS.map(({ label, icon: Icon, href, hover }) => (
             <a
               key={label}
               href={href(shareUrl)}
@@ -66,7 +67,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
               rel="noreferrer"
               className={`flex items-center justify-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5] transition-colors ${hover}`}
             >
-              <span aria-hidden>{icon}</span>
+              <Icon className="h-4 w-4" aria-hidden />
               {label}
             </a>
           ))}
