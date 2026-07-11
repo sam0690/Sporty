@@ -1114,16 +1114,38 @@ def delete_league(
     db.flush()
 
 
+def _deactivate_membership(
+    db: Session,
+    league_id: uuid.UUID,
+    membership: LeagueMembership,
+) -> None:
+    """Shared exit path for leave (self) and remove (kick by owner).
+
+    Marks membership as LEFT and archives the user's team (if present).
+    Team-scoped rows stay in place so the history can be restored on rejoin
+    (join_league reactivates a LEFT membership).
+    """
+    team = (
+        db.query(FantasyTeam)
+        .filter(
+            FantasyTeam.league_id == league_id,
+            FantasyTeam.user_id == membership.user_id,
+        )
+        .first()
+    )
+    if team:
+        team.status = FantasyTeamStatus.ARCHIVED
+
+    membership.status = LeagueMembershipStatus.LEFT
+    db.flush()
+
+
 def leave_league(
     db: Session,
     league_id: uuid.UUID,
     current_user: User,
 ) -> None:
-    """Leave a league for non-owner members.
-
-    Marks membership as LEFT and archives the user's team (if present).
-    Team-scoped rows stay in place so the history can be restored on rejoin.
-    """
+    """Leave a league for non-owner members."""
     league = _require_league(db, league_id)
     membership = _require_membership(db, league_id, current_user.id)
 
@@ -1133,19 +1155,59 @@ def leave_league(
             detail="League owner cannot leave the league",
         )
 
-    team = (
-        db.query(FantasyTeam)
+    _deactivate_membership(db, league_id, membership)
+
+
+def remove_member(
+    db: Session,
+    league_id: uuid.UUID,
+    membership_id: uuid.UUID,
+    current_user: User,
+) -> LeagueMembership:
+    """Remove (kick) a member from the league. Caller must be the owner —
+    enforced by the route's require_league_owner dependency.
+
+    Guards:
+      1. Membership must exist, be ACTIVE, and belong to this league.
+      2. The owner cannot be kicked (they can only delete the league).
+      3. Not during DRAFTING — draft_position ordering assumes every
+         member picks, so removing one mid-draft would corrupt the snake
+         order. Kick before the draft or after it completes.
+
+    Returns the membership so the router can clear the kicked user's
+    transfer session. Does NOT commit — caller owns the transaction.
+    """
+    league = _require_league(db, league_id)
+
+    membership = (
+        db.query(LeagueMembership)
         .filter(
-            FantasyTeam.league_id == league_id,
-            FantasyTeam.user_id == current_user.id,
+            LeagueMembership.id == membership_id,
+            LeagueMembership.league_id == league_id,
+            LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
         )
         .first()
     )
-    if team:
-        team.status = FantasyTeamStatus.ARCHIVED
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Member not found in this league",
+        )
 
-    membership.status = LeagueMembershipStatus.LEFT
-    db.flush()
+    if membership.user_id == league.owner_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The league owner cannot be removed",
+        )
+
+    if league.status == LeagueStatus.DRAFTING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot remove a member while the draft is in progress",
+        )
+
+    _deactivate_membership(db, league_id, membership)
+    return membership
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

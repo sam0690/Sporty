@@ -489,40 +489,59 @@
   gap: 0.75rem;
   pointer-events: none;
 }
+/* Flat broadcast-system toast: solid surface (fully opaque so it reads over
+   any content), 3px radius, type-coloured left accent bar + tinted icon chip.
+   Message text stays white for contrast; colour is the accent, not the copy. */
 .sporty-toast {
   display: flex;
   align-items: center;
   gap: 0.625rem;
   min-width: 260px;
   max-width: 340px;
-  border-radius: var(--radius);
+  border-radius: 3px;
   padding: 0.75rem 1rem;
-  background: color-mix(in oklab, #ffffff 7%, transparent);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid color-mix(in oklab, #ffffff 14%, transparent);
-  color: var(--foreground);
+  background: #111117;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left-width: 3px;
+  color: #f0f0f0;
   font-family: var(--font-sans);
   font-size: 0.875rem;
-  font-weight: 700;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
   opacity: 0;
   transform: translateY(-6px);
   animation: fadeInScale 0.18s ease-out forwards;
 }
-.sporty-toast-success { border-color: color-mix(in oklab, var(--football) 50%, transparent); color: var(--football); }
-.sporty-toast-error   { border-color: color-mix(in oklab, var(--danger) 50%, transparent); color: var(--danger); }
-.sporty-toast-info    { border-color: color-mix(in oklab, var(--cricket) 50%, transparent); color: var(--cricket); }
-.sporty-toast-warning { border-color: color-mix(in oklab, var(--gold) 50%, transparent); color: var(--gold); }
+.sporty-toast-success { border-left-color: var(--football); }
+.sporty-toast-error   { border-left-color: var(--danger); }
+.sporty-toast-info    { border-left-color: var(--cricket); }
+.sporty-toast-warning { border-left-color: var(--gold); }
 .sporty-toast-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: calc(var(--radius) - 4px);
-  font-size: 0.75rem;
-  font-weight: 700;
+  flex-shrink: 0;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-radius: 3px;
+  padding: 0.1875rem;
+}
+.sporty-toast-icon svg { width: 100%; height: 100%; }
+.sporty-toast-success .sporty-toast-icon {
+  color: var(--football);
+  background: color-mix(in oklab, var(--football) 12%, transparent);
+}
+.sporty-toast-error .sporty-toast-icon {
+  color: var(--danger);
+  background: color-mix(in oklab, var(--danger) 12%, transparent);
+}
+.sporty-toast-info .sporty-toast-icon {
+  color: var(--cricket);
+  background: color-mix(in oklab, var(--cricket) 12%, transparent);
+}
+.sporty-toast-warning .sporty-toast-icon {
+  color: var(--gold);
+  background: color-mix(in oklab, var(--gold) 12%, transparent);
 }
 
 .alert-deadline {

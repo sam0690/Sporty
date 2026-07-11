@@ -268,6 +268,11 @@ export const LeagueService = {
     return res.data;
   },
 
+  /** Remove a member from a league (owner only) */
+  async removeMember(id: string, membershipId: string): Promise<void> {
+    await authApi.delete(API_PATHS.LEAGUES.MEMBER(id, membershipId));
+  },
+
   /** Add a sport to a league */
   async addSport(id: string, sportName: string): Promise<TLeagueSport> {
     const res = await authApi.post(API_PATHS.LEAGUES.LEAGUE_SPORTS(id), {

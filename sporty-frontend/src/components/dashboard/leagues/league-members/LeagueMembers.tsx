@@ -3,12 +3,15 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Search } from "lucide-react";
-import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { KickMemberModal } from "@/components/dashboard/leagues/league-members/components/KickMemberModal";
 import { MemberList } from "@/components/dashboard/leagues/league-members/components/MemberList";
 import type { Member } from "@/components/dashboard/leagues/league-members/components/MemberCard";
-import { useLeague, useLeagueMembers } from "@/hooks/leagues/useLeagues";
+import {
+  useKickMember,
+  useLeague,
+  useLeagueMembers,
+} from "@/hooks/leagues/useLeagues";
 import { useMe } from "@/hooks/auth/useMe";
 
 export function LeagueMembers() {
@@ -30,8 +33,8 @@ export function LeagueMembers() {
     )?.id ?? "";
 
   const [query, setQuery] = useState("");
-  const [isKicking, setIsKicking] = useState(false);
   const [targetMember, setTargetMember] = useState<Member | null>(null);
+  const kickMember = useKickMember(leagueId);
 
   const members: Member[] = useMemo(
     () =>
@@ -71,13 +74,12 @@ export function LeagueMembers() {
       return;
     }
 
-    setIsKicking(true);
-    await new Promise((resolve) => setTimeout(resolve, 650));
-    setIsKicking(false);
-    toastifier.info(
-      "Member removal endpoint is not implemented yet in backend",
-    );
-    setTargetMember(null);
+    try {
+      await kickMember.mutateAsync(targetMember.id);
+      setTargetMember(null);
+    } catch {
+      // shared mutation toast surfaces the error; keep the modal open
+    }
   };
 
   return (
@@ -147,7 +149,7 @@ export function LeagueMembers() {
       <KickMemberModal
         isOpen={Boolean(targetMember)}
         memberName={targetMember?.name ?? ""}
-        isKicking={isKicking}
+        isKicking={kickMember.isPending}
         onClose={() => setTargetMember(null)}
         onConfirm={confirmKick}
       />

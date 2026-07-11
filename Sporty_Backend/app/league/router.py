@@ -30,7 +30,12 @@ from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
 from app.league.auto_pick_service import auto_pick_team
 from app.league.models import FantasyTeam, League, TeamWeeklyScore
-from app.services import power_rankings_service, transfer_service, notification_service
+from app.services import (
+    power_rankings_service,
+    transfer_service,
+    transfer_session_service,
+    notification_service,
+)
 from app.league.schemas import (
     AutoPickRequest,
     AutoPickSquadResponse,
@@ -432,6 +437,37 @@ def leave_league(
     db.commit()
     transfer_service.cancel_session(get_redis(), current_user)
     return {"message": "Left league successfully"}
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# DELETE /leagues/{league_id}/members/{membership_id} — kick a member (owner)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.delete(
+    "/{league_id}/members/{membership_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a member from the league",
+)
+def remove_member(
+    membership_id: UUID,
+    league: League = Depends(require_league_owner),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Kick a member out of the league (commissioner only).
+
+    Same effect as the member leaving voluntarily: membership → LEFT,
+    their team → ARCHIVED. They can rejoin with the invite code while
+    the league still accepts joins.
+    """
+    membership = league_service.remove_member(
+        db, league.id, membership_id, current_user,
+    )
+    db.commit()
+    # Drop any in-flight transfer session the kicked user had open.
+    transfer_session_service.clear_session(get_redis(), str(membership.user_id))
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

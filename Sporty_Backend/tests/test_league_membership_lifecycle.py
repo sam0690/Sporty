@@ -299,3 +299,78 @@ def test_rejoin_rejects_archived_team_when_configuration_is_incompatible() -> No
         db.refresh(team)
         assert membership.status == LeagueMembershipStatus.LEFT
         assert team.status == FantasyTeamStatus.ARCHIVED
+
+
+def test_remove_member_kicks_and_archives_team() -> None:
+    with session_scope() as db:
+        owner = _create_user(db, "owner")
+        member = _create_user(db, "member")
+        league = _create_league(db, owner)
+
+        membership = league_service.join_league(db, league.invite_code, member)
+        team = FantasyTeam(
+            league_id=league.id,
+            user_id=member.id,
+            name="Member FC",
+            current_budget=league.budget_per_team,
+            starting_budget=league.budget_per_team,
+            starting_squad_size=league.squad_size,
+        )
+        db.add(team)
+        db.flush()
+
+        removed = league_service.remove_member(db, league.id, membership.id, owner)
+
+        assert removed.id == membership.id
+        assert membership.status == LeagueMembershipStatus.LEFT
+        assert team.status == FantasyTeamStatus.ARCHIVED
+
+        # Kicked member can rejoin with the invite code (same as leave).
+        rejoined = league_service.join_league(db, league.invite_code, member)
+        assert rejoined.id == membership.id
+        assert rejoined.status == LeagueMembershipStatus.ACTIVE
+
+
+def test_remove_member_guards() -> None:
+    with session_scope() as db:
+        owner = _create_user(db, "owner")
+        member = _create_user(db, "member")
+        league = _create_league(db, owner)
+        membership = league_service.join_league(db, league.invite_code, member)
+
+        owner_membership = (
+            db.query(LeagueMembership)
+            .filter(
+                LeagueMembership.league_id == league.id,
+                LeagueMembership.user_id == owner.id,
+            )
+            .one()
+        )
+
+        # The owner cannot be kicked.
+        with pytest.raises(HTTPException) as exc:
+            league_service.remove_member(db, league.id, owner_membership.id, owner)
+        assert exc.value.status_code == 403
+
+        # Unknown membership id → 404.
+        with pytest.raises(HTTPException) as exc:
+            league_service.remove_member(db, league.id, uuid.uuid4(), owner)
+        assert exc.value.status_code == 404
+
+        # No kicks while the draft is running — it would corrupt draft order.
+        league.status = LeagueStatus.DRAFTING
+        db.flush()
+        with pytest.raises(HTTPException) as exc:
+            league_service.remove_member(db, league.id, membership.id, owner)
+        assert exc.value.status_code == 409
+
+        league.status = LeagueStatus.ACTIVE
+        db.flush()
+        league_service.remove_member(db, league.id, membership.id, owner)
+        assert membership.status == LeagueMembershipStatus.LEFT
+
+        # Already-left membership → 404 (not idempotent 204: the row is gone
+        # from the ACTIVE set, so a second kick means a stale UI).
+        with pytest.raises(HTTPException) as exc:
+            league_service.remove_member(db, league.id, membership.id, owner)
+        assert exc.value.status_code == 404

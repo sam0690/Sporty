@@ -602,6 +602,23 @@ export function useLeagueMembers(leagueId: string) {
   );
 }
 
+export function useKickMember(leagueId: string) {
+  const queryClient = useQueryClient();
+  return useApiMutation(
+    (membershipId: string) => LeagueService.removeMember(leagueId, membershipId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "members"],
+        });
+        // member_count on the league changes too
+        queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
+      },
+      successMessage: "Member removed from league",
+    },
+  );
+}
+
 export function useTransfers(leagueId: string) {
   return useApiQuery<TTransfer[]>(
     ["leagues", leagueId, "transfers"],

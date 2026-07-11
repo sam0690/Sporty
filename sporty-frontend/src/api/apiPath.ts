@@ -49,6 +49,8 @@ export const API_PATHS = {
     SEASON_HISTORY: (id: string) => `/leagues/${id}/seasons`,
     UPDATE_MIDSEASON_JOIN: (id: string) => `/leagues/${id}/midseason-join`,
     MEMBERS: (id: string) => `/leagues/${id}/members`,
+    MEMBER: (id: string, membershipId: string) =>
+      `/leagues/${id}/members/${membershipId}`,
     MY_TRANSFERS: "/leagues/me/transfers",
     MY_TEAM: (id: string) => `/leagues/${id}/my-team`,
     LEAGUE_SPORTS: (id: string) => `/leagues/${id}/sports`,
