@@ -5,6 +5,7 @@ import Image from "next/image";
 
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
+import { Badge } from "@/components/ui";
 import { SignalIcon } from "./icons";
 
 type Phase = "pre" | "live" | "post";
@@ -127,10 +128,10 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
       <div className="relative">
         <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3 sm:px-6">
           {phase === "live" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[2px] text-danger">
+            <Badge tone="danger" className="gap-1.5 text-[10px] tracking-[2px]">
               <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
               Live
-            </span>
+            </Badge>
           ) : (
             <span className="section-label">{label}</span>
           )}
@@ -199,10 +200,13 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               </span>
             </div>
             {phase === "live" && matchClock ? (
-              <p className="mt-3.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-3 py-1 font-sans text-xs font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
+              <Badge
+                tone="danger"
+                className="mt-3.5 gap-1.5 tracking-[1.5px] tabular-nums"
+              >
                 <span className="size-1 rounded-full bg-danger animate-live-pulse" />
                 {matchClock}
-              </p>
+              </Badge>
             ) : (
               <p className="section-label mt-3.5">{label}</p>
             )}

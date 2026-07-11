@@ -1,13 +1,20 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
+import { Badge } from "@/components/ui";
 import type { TMatch } from "@/types/match";
 import { teamIdentity } from "@/lib/teamIdentity";
 import { sportGlyph } from "@/components/landing/sport-icons";
 import { TeamBadge } from "./TeamBadge";
 import { isToday, kickoffTime, shortDate, statusMeta } from "./matchFormat";
 
-export function FeaturedMatch({ match }: { match: TMatch }) {
+export function FeaturedMatch({
+  match,
+  basePath,
+}: {
+  match: TMatch;
+  basePath: string;
+}) {
   const { isLive, isFinished } = statusMeta(match.status);
   const home = teamIdentity(match.home_team);
   const away = teamIdentity(match.away_team);
@@ -16,7 +23,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
 
   return (
     <Link
-      href={`/fixtures/${match.id}`}
+      href={`${basePath}/${match.id}`}
       className="group relative block overflow-hidden card-surface transition-colors duration-150 hover:border-white/18 hover:no-underline"
     >
       <div
@@ -35,10 +42,10 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
           {match.competition}
         </span>
         {isLive ? (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/32 bg-danger/10 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[2px] text-danger">
+          <Badge tone="danger" className="gap-1.5 text-[10px] tracking-[2px]">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             Live
-          </span>
+          </Badge>
         ) : (
           <span className="section-label">
             {isFinished

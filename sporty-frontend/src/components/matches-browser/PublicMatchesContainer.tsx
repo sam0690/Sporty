@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 
-import { useMatches } from "@/hooks/matches/useMatches";
-import { MatchesBrowser } from "@/components/matches-browser/MatchesBrowser";
+import { usePublicMatches } from "@/hooks/matches/usePublicMatches";
+import { MatchesBrowser } from "./MatchesBrowser";
 
-export function MatchesView() {
+export function PublicMatchesContainer() {
   const [sport, setSport] = useState<string>("all");
-  const { data, isLoading, isError } = useMatches({
+  const { data, isLoading, isError } = usePublicMatches({
     sport_name: sport === "all" ? undefined : sport,
     limit: 40,
   });
@@ -15,7 +15,7 @@ export function MatchesView() {
 
   return (
     <MatchesBrowser
-      variant="dashboard"
+      variant="public"
       items={items}
       isLoading={isLoading}
       isError={isError}

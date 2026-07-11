@@ -3,12 +3,12 @@ import Link from "next/link";
 import type { TMatch } from "@/types/match";
 import { teamIdentity } from "@/lib/teamIdentity";
 
-function TickerItem({ match }: { match: TMatch }) {
+function TickerItem({ match, basePath }: { match: TMatch; basePath: string }) {
   const home = teamIdentity(match.home_team);
   const away = teamIdentity(match.away_team);
   return (
     <Link
-      href={`/fixtures/${match.id}`}
+      href={`${basePath}/${match.id}`}
       className="flex shrink-0 items-center gap-3 border-r border-white/8 px-5 py-2.5 transition-colors hover:bg-white/3 hover:no-underline"
     >
       <span className="size-1.5 shrink-0 rounded-full bg-danger animate-live-pulse" />
@@ -34,7 +34,13 @@ function TickerItem({ match }: { match: TMatch }) {
   );
 }
 
-export function LiveTicker({ matches }: { matches: TMatch[] }) {
+export function LiveTicker({
+  matches,
+  basePath,
+}: {
+  matches: TMatch[];
+  basePath: string;
+}) {
   if (matches.length === 0) {
     return null;
   }
@@ -45,7 +51,7 @@ export function LiveTicker({ matches }: { matches: TMatch[] }) {
     <div className="overflow-hidden rounded-[3px] border border-danger/25 bg-danger/5">
       <div className="marquee-track flex w-max items-center">
         {loop.map((m, i) => (
-          <TickerItem key={`${m.id}-${i}`} match={m} />
+          <TickerItem key={`${m.id}-${i}`} match={m} basePath={basePath} />
         ))}
       </div>
     </div>

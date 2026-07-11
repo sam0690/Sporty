@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";
 
-import { usePublicMatches } from "@/hooks/matches/usePublicMatches";
 import { ClockIcon } from "@/components/live/icons";
+import type { TMatch } from "@/types/match";
 import { CompetitionPanel } from "./CompetitionPanel";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { FixturesHero } from "./FixturesHero";
@@ -27,14 +27,46 @@ function SkeletonGrid() {
   );
 }
 
-export function PublicMatchesView() {
-  const [sport, setSport] = useState<string>("all");
-  const { data, isLoading, isError } = usePublicMatches({
-    sport_name: sport === "all" ? undefined : sport,
-    limit: 40,
-  });
+type MatchesBrowserVariant = "public" | "dashboard";
 
-  const items = useMemo(() => data?.items ?? [], [data]);
+type MatchesBrowserProps = {
+  items: TMatch[];
+  isLoading: boolean;
+  isError: boolean;
+  sport: string;
+  onSportChange: (sport: string) => void;
+  variant: MatchesBrowserVariant;
+};
+
+const VARIANT_COPY: Record<
+  MatchesBrowserVariant,
+  { basePath: string; eyebrow: string; title: string; description: string }
+> = {
+  public: {
+    basePath: "/fixtures",
+    eyebrow: "Matchday",
+    title: "Fixtures & Results",
+    description:
+      "Live scores, upcoming kickoffs and recent results across football, basketball and cricket — free to browse, no account needed.",
+  },
+  dashboard: {
+    basePath: "/matches",
+    eyebrow: "Matchday Centre",
+    title: "Matches",
+    description: "Live scores and upcoming kickoffs across every sport.",
+  },
+};
+
+export function MatchesBrowser({
+  items,
+  isLoading,
+  isError,
+  sport,
+  onSportChange,
+  variant,
+}: MatchesBrowserProps) {
+  const copy = VARIANT_COPY[variant];
+
   const liveMatches = useMemo(
     () => items.filter((m) => statusMeta(m.status).isLive),
     [items],
@@ -47,6 +79,9 @@ export function PublicMatchesView() {
     <div className="relative overflow-hidden">
       <main className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <FixturesHero
+          eyebrow={copy.eyebrow}
+          title={copy.title}
+          description={copy.description}
           totalFixtures={items.length}
           totalLive={totalLive}
           totalCompetitions={groups.length}
@@ -54,12 +89,12 @@ export function PublicMatchesView() {
 
         {liveMatches.length > 1 && (
           <div className="mt-5">
-            <LiveTicker matches={liveMatches} />
+            <LiveTicker matches={liveMatches} basePath={copy.basePath} />
           </div>
         )}
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
-          <SportFilterChips active={sport} onChange={setSport} />
+          <SportFilterChips active={sport} onChange={onSportChange} />
         </div>
 
         {isLoading && (
@@ -96,7 +131,7 @@ export function PublicMatchesView() {
           <>
             {featured && (
               <div className="mt-8">
-                <FeaturedMatch match={featured} />
+                <FeaturedMatch match={featured} basePath={copy.basePath} />
               </div>
             )}
 
@@ -105,26 +140,29 @@ export function PublicMatchesView() {
                 <CompetitionPanel
                   key={`${g.competition}::${g.sport}`}
                   group={g}
+                  basePath={copy.basePath}
                   style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
                 />
               ))}
             </div>
 
-            <div className="mt-10 flex flex-col items-center gap-3 rounded-[3px] border border-accent/22 bg-accent/4 p-8 text-center sm:p-12">
-              <p className="font-display text-3xl tracking-[-0.02em] text-fg-1 sm:text-4xl">
-                Turn these fixtures into points
-              </p>
-              <p className="max-w-md text-sm text-fg-2">
-                Build a fantasy squad, set your lineup, and score from every
-                match — across football, basketball and cricket.
-              </p>
-              <Link
-                href="/register"
-                className="mt-1 inline-flex items-center gap-1.5 rounded-[3px] bg-accent px-6 py-3 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright hover:no-underline"
-              >
-                Get Started Free <ArrowRight className="size-3.5" />
-              </Link>
-            </div>
+            {variant === "public" && (
+              <div className="mt-10 flex flex-col items-center gap-3 rounded-[3px] border border-accent/22 bg-accent/4 p-8 text-center sm:p-12">
+                <p className="font-display text-3xl tracking-[-0.02em] text-fg-1 sm:text-4xl">
+                  Turn these fixtures into points
+                </p>
+                <p className="max-w-md text-sm text-fg-2">
+                  Build a fantasy squad, set your lineup, and score from every
+                  match — across football, basketball and cricket.
+                </p>
+                <Link
+                  href="/register"
+                  className="mt-1 inline-flex items-center gap-1.5 rounded-[3px] bg-accent px-6 py-3 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright hover:no-underline"
+                >
+                  Get Started Free <ArrowRight className="size-3.5" />
+                </Link>
+              </div>
+            )}
           </>
         )}
       </main>

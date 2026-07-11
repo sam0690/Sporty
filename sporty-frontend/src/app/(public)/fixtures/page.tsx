@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { PublicMatchesView } from "@/components/public-matches/PublicMatchesView";
+import { PublicMatchesContainer } from "@/components/matches-browser/PublicMatchesContainer";
 
 export const metadata: Metadata = {
   title: "Fixtures & Results | Sporty",
@@ -9,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function FixturesPage() {
-  return <PublicMatchesView />;
+  return <PublicMatchesContainer />;
 }

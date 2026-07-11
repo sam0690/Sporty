@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 
+import { Badge } from "@/components/ui";
 import { sportGlyph } from "@/components/landing/sport-icons";
 import type { TMatch } from "@/types/match";
 import type { MatchGroup } from "./matchFormat";
@@ -31,13 +32,13 @@ function TeamRow({
   );
 }
 
-function MatchRow({ match }: { match: TMatch }) {
+function MatchRow({ match, basePath }: { match: TMatch; basePath: string }) {
   const { isLive, isFinished } = statusMeta(match.status);
   const hasScore = match.home_score != null && match.away_score != null;
 
   return (
     <Link
-      href={`/fixtures/${match.id}`}
+      href={`${basePath}/${match.id}`}
       className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/3 hover:no-underline"
       style={isLive ? { borderLeft: "2px solid #ff3b5c", background: "rgba(255,59,92,0.03)" } : undefined}
     >
@@ -85,9 +86,11 @@ function MatchRow({ match }: { match: TMatch }) {
 
 export function CompetitionPanel({
   group,
+  basePath,
   style,
 }: {
   group: MatchGroup;
+  basePath: string;
   style?: React.CSSProperties;
 }) {
   const glyph = sportGlyph(group.sport);
@@ -111,10 +114,10 @@ export function CompetitionPanel({
           </span>
         </div>
         {group.live > 0 ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
+          <Badge tone="danger" size="sm" className="shrink-0 gap-1.5">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             {group.live} Live
-          </span>
+          </Badge>
         ) : (
           <span className="shrink-0 font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
             {group.matches.length} {group.matches.length === 1 ? "match" : "matches"}
@@ -123,7 +126,7 @@ export function CompetitionPanel({
       </header>
       <div className="max-h-[420px] divide-y divide-white/5 overflow-y-auto">
         {group.matches.map((m) => (
-          <MatchRow key={m.id} match={m} />
+          <MatchRow key={m.id} match={m} basePath={basePath} />
         ))}
       </div>
     </section>
