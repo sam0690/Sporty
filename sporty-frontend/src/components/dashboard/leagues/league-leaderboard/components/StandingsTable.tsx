@@ -14,7 +14,7 @@ type StandingRow = {
 };
 
 const MEDAL_STYLE: Record<number, string> = {
-  1: "bg-[rgba(255,216,107,0.15)] text-[#ffd86b] border-[rgba(255,216,107,0.4)]",
+  1: "bg-warning/15 text-warning border-warning/40",
   2: "bg-[rgba(200,208,220,0.12)] text-[#c8d0dc] border-[rgba(200,208,220,0.35)]",
   3: "bg-[rgba(205,127,50,0.15)] text-[#cd7f32] border-[rgba(205,127,50,0.4)]",
 };
@@ -50,14 +50,14 @@ export function StandingsTable({
   pointsLabel = "Points",
 }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] animate-fade-soft">
-      <div className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-fade-soft">
+      <div className="border-b border-white/8 px-5 py-3">
         <h2 className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-[#666]">
           {pointsLabel}
         </h2>
       </div>
 
-      <div className="divide-y divide-[rgba(255,255,255,0.06)]">
+      <div className="divide-y divide-white/6">
         {standings.map((team) => {
           const isUser = team.teamId === userTeamId;
           const medalClass = MEDAL_STYLE[team.rank];
@@ -65,16 +65,16 @@ export function StandingsTable({
           return (
             <div
               key={team.teamId}
-              className={`flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-[#1d1d26] ${
+              className={`flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-3 ${
                 isUser
-                  ? "border-l-2 border-[#e8fb25] bg-[rgba(232,251,37,0.05)]"
+                  ? "border-l-2 border-accent bg-accent/5"
                   : "border-l-2 border-transparent"
               }`}
             >
               <div className="flex shrink-0 flex-col items-center gap-0.5">
                 <span
                   className={`flex h-9 w-9 items-center justify-center rounded-[3px] border font-bebas text-lg tracking-[1px] ${
-                    medalClass ?? "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5]"
+                    medalClass ?? "border-white/8 bg-surface-3 text-fg-2"
                   }`}
                 >
                   {team.rank}
@@ -83,10 +83,10 @@ export function StandingsTable({
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                   {team.teamName}
                   {isUser && (
-                    <span className="ml-2 section-label text-[#c8d85a]">You</span>
+                    <span className="ml-2 section-label text-accent-dim">You</span>
                   )}
                   {team.isManagerOfTheWeek && (
                     <span
@@ -98,17 +98,17 @@ export function StandingsTable({
                   )}
                   {team.streak && team.streak >= 2 ? (
                     <span
-                      className="ml-1.5 text-xs text-[#9a9aa5]"
+                      className="ml-1.5 text-xs text-fg-2"
                       title={`Top 3 for ${team.streak} gameweeks running`}
                     >
                       {team.streak}W
                     </span>
                   ) : null}
                 </p>
-                <p className="mt-0.5 truncate text-xs text-[#555560]">{team.manager}</p>
+                <p className="mt-0.5 truncate text-xs text-fg-3">{team.manager}</p>
               </div>
 
-              <span className="num shrink-0 font-bebas text-2xl tracking-[1px] text-[#e8fb25]">
+              <span className="num shrink-0 font-bebas text-2xl tracking-[1px] text-accent">
                 {Math.round(team.points)}
               </span>
             </div>

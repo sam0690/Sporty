@@ -84,7 +84,7 @@ export function CreateTeamView(
 
   if (leagueLoading || !league) {
     return (
-      <section className="mx-auto max-w-7xl px-6 py-8 text-sm text-[#555560]">
+      <section className="mx-auto max-w-7xl px-6 py-8 text-sm text-fg-3">
         Loading team setup...
       </section>
     );
@@ -94,10 +94,10 @@ export function CreateTeamView(
     const status = league.status;
 
     return (
-      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
         <div className="flex items-center justify-between">
           <p className="section-label">Manager: {username || "Sporty User"}</p>
-          <span className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+          <span className="rounded-[3px] border border-accent/30 bg-accent/10 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent">
             Draft Mode
           </span>
         </div>
@@ -121,18 +121,18 @@ export function CreateTeamView(
         ) : null}
 
         {status === "setup" ? (
-          <div className="space-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
-            <h2 className="font-bebas text-2xl tracking-[1px] text-[#f0f0f0]">
+          <div className="space-y-3 rounded-[3px] border border-white/8 bg-surface-1 p-6">
+            <h2 className="font-bebas text-2xl tracking-[1px] text-fg-1">
               Draft Not Started
             </h2>
-            <p className="text-sm text-[#9a9aa5]">
+            <p className="text-sm text-fg-2">
               This is a draft league. Team creation happens only through the
               draft process.
             </p>
             <button
               type="button"
               onClick={() => router.push(`/leagues/${league.id}`)}
-              className="rounded-[3px] bg-[#e8fb25] px-5 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+              className="rounded-[3px] bg-accent px-5 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
             >
               Go to League
             </button>
@@ -147,7 +147,7 @@ export function CreateTeamView(
                   <span className="section-label text-[#4caf50]">
                     Draft Complete
                   </span>
-                  <p className="mt-1 text-sm text-[#9a9aa5]">
+                  <p className="mt-1 text-sm text-fg-2">
                     Your squad is set. Head to the lineup to pick your starters
                     and captain.
                   </p>
@@ -155,7 +155,7 @@ export function CreateTeamView(
                 <button
                   type="button"
                   onClick={handleGoToLineup}
-                  className="shrink-0 rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+                  className="shrink-0 rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
                 >
                   Set Lineup
                 </button>
@@ -182,7 +182,7 @@ export function CreateTeamView(
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div className="lg:col-span-2">
                 <div
-                  className={`mb-3 rounded-[3px] border px-4 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] ${isMyDraftTurn ? "border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]" : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5]"}`}
+                  className={`mb-3 rounded-[3px] border px-4 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] ${isMyDraftTurn ? "border-accent/30 bg-accent/10 text-accent" : "border-white/8 bg-surface-3 text-fg-2"}`}
                 >
                   {isMyDraftTurn
                     ? "Your turn — choose a player now."
@@ -235,7 +235,7 @@ export function CreateTeamView(
 
         {status === "active" || status === "completed" ? (
           draftedPlayers.length > 0 ? (
-            <div className="space-y-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6">
+            <div className="space-y-4 rounded-[3px] border border-white/8 bg-surface-1 p-6">
               <GameweekEntryNotice
                 activeWindow={activeWindow}
                 editableWindow={editableWindow}
@@ -245,7 +245,7 @@ export function CreateTeamView(
                 <button
                   type="button"
                   onClick={handleGoToLineup}
-                  className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+                  className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
                 >
                   Set Lineup
                 </button>
@@ -262,7 +262,7 @@ export function CreateTeamView(
               />
             </div>
           ) : (
-            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-sm text-[#9a9aa5]">
+            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
               Draft is complete, but your team was not found.
             </div>
           )
@@ -279,10 +279,10 @@ export function CreateTeamView(
     const canDiscardInSetup = league.status === "setup" && !isDraftLeague;
 
     return (
-      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
         <div className="flex items-center justify-between">
           <p className="section-label">Manager: {username || "Sporty User"}</p>
-          <span className="rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+          <span className="rounded-[3px] border border-accent/30 bg-accent/10 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent">
             Team Ready
           </span>
         </div>
@@ -321,7 +321,7 @@ export function CreateTeamView(
           <button
             type="button"
             onClick={() => router.push(`/leagues/${league.id}`)}
-            className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+            className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
           >
             Go to League
           </button>
@@ -331,10 +331,10 @@ export function CreateTeamView(
   }
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
       <div className="flex items-center justify-between">
         <p className="section-label">Manager: {username || "Sporty User"}</p>
-        <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+        <span className="rounded-[3px] border border-white/8 bg-surface-3 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
           {league.sports[0]?.sport.display_name || "Multisport"}
         </span>
       </div>
@@ -356,23 +356,23 @@ export function CreateTeamView(
         </p>
       ) : null}
 
-      <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
         <div className="flex items-center justify-between">
           <span className="section-label">
             Budget used ${budgetUsed.toFixed(1)}M / ${budget.toFixed(1)}M
           </span>
           <span
             className={`font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
-              remainingBudget >= 0 ? "text-[#e8fb25]" : "text-[#ff3b30]"
+              remainingBudget >= 0 ? "text-accent" : "text-[#ff3b30]"
             }`}
           >
             ${remainingBudget.toFixed(1)}M left
           </span>
         </div>
-        <div className="mt-2.5 h-2 w-full overflow-hidden rounded-[3px] bg-[#0d0d12]">
+        <div className="mt-2.5 h-2 w-full overflow-hidden rounded-[3px] bg-surface-2">
           <div
             className={`h-2 rounded-[3px] transition-[width] duration-300 ${
-              remainingBudget >= 0 ? "bg-[#e8fb25]" : "bg-[#ff3b30]"
+              remainingBudget >= 0 ? "bg-accent" : "bg-[#ff3b30]"
             }`}
             style={{ width: `${budgetProgress}%` }}
           />
@@ -396,7 +396,7 @@ export function CreateTeamView(
           type="button"
           onClick={handleAutoPickSquad}
           disabled={isAutoPicking}
-          className="rounded-[3px] border border-[rgba(232,251,37,0.35)] bg-[rgba(232,251,37,0.1)] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] border border-accent/35 bg-accent/10 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:bg-accent/18 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isAutoPicking ? "Auto Picking…" : "Auto Pick Squad"}
         </button>
@@ -404,7 +404,7 @@ export function CreateTeamView(
           type="button"
           onClick={handleUndoLastPick}
           disabled={pickHistory.length === 0 || isAutoPicking}
-          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Undo Last Pick
         </button>
@@ -458,7 +458,7 @@ export function CreateTeamView(
               type="button"
               onClick={handleNextStep}
               disabled={selectedPlayers.length !== requiredPlayers}
-              className="rounded-[3px] bg-[#e8fb25] px-10 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:bg-[#1d1d26] disabled:text-[#555560]"
+              className="rounded-[3px] bg-accent px-10 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
             >
               Review Team &amp; Name
             </button>

@@ -208,18 +208,18 @@ export function LeagueSettings() {
 
   if (!isCommissioner) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs
           activeTab="settings"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-          <Lock className="mx-auto h-6 w-6 text-[#555560]" aria-hidden />
-          <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center">
+          <Lock className="mx-auto h-6 w-6 text-fg-3" aria-hidden />
+          <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
             Commissioner only
           </p>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-fg-3">
             Only the league commissioner can change these settings.
           </p>
         </div>
@@ -228,19 +228,19 @@ export function LeagueSettings() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
       <NavigationTabs
         activeTab="settings"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="border-b border-white/8 pb-6">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Settings
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-fg-3">
           Manage your league&apos;s configuration and scoring
         </p>
       </header>
@@ -303,14 +303,14 @@ export function LeagueSettings() {
                   key={season.id}
                   className={`flex items-center justify-between rounded-[3px] border px-4 py-2 text-sm ${
                     season.id === leagueId
-                      ? "border-[#e8fb25]/40 bg-[#e8fb25]/5"
-                      : "border-[rgba(255,255,255,0.08)]"
+                      ? "border-accent/40 bg-accent/5"
+                      : "border-white/8"
                   }`}
                 >
-                  <span className="font-barlow-condensed uppercase tracking-[1px] text-[#f0f0f0]">
+                  <span className="font-barlow-condensed uppercase tracking-[1px] text-fg-1">
                     Season {season.season_number}
                   </span>
-                  <span className="text-[#555560]">
+                  <span className="text-fg-3">
                     {getLifecycleStatusLabel(
                       season.status as
                         | "setup"
@@ -323,7 +323,7 @@ export function LeagueSettings() {
                   {season.id !== leagueId && (
                     <Link
                       href={`/leagues/${season.id}/settings`}
-                      className="flex items-center gap-1 text-xs uppercase tracking-[1px] text-[#e8fb25] hover:underline"
+                      className="flex items-center gap-1 text-xs uppercase tracking-[1px] text-accent hover:underline"
                     >
                       View <ArrowRight className="h-3 w-3" aria-hidden />
                     </Link>
@@ -332,7 +332,7 @@ export function LeagueSettings() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-[#555560]">No past seasons yet.</p>
+            <p className="text-sm text-fg-3">No past seasons yet.</p>
           )}
         </SettingsSection>
       )}
@@ -379,7 +379,7 @@ export function LeagueSettings() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Save Changes"}
         </button>

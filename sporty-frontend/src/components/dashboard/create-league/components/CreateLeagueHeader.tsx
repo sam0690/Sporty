@@ -30,7 +30,7 @@ function PreviewChip({ children }: { children: React.ReactNode }) {
       initial={prefersReducedMotion ? false : { opacity: 0, y: -4, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#e8fb25]"
+      className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/8 px-3 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-accent"
     >
       {children}
     </motion.span>
@@ -52,7 +52,7 @@ export function CreateLeagueHeader({
   return (
     <div>
       <p className="section-label">Create League</p>
-      <h1 className="mt-2 truncate font-bebas text-4xl tracking-[3px] text-[#f0f0f0] sm:text-5xl">
+      <h1 className="mt-2 truncate font-bebas text-4xl tracking-[3px] text-fg-1 sm:text-5xl">
         {leagueName ? leagueName : "New League"}
       </h1>
 
@@ -90,10 +90,10 @@ export function CreateLeagueHeader({
                   transition={{ type: "spring", stiffness: 420, damping: 26 }}
                   className={`grid size-7 shrink-0 place-items-center rounded-full border font-bebas text-sm leading-none ${
                     isDone
-                      ? "border-[#e8fb25] bg-[#e8fb25] text-[#0a0a0f]"
+                      ? "border-accent bg-accent text-surface-0"
                       : isActive
-                        ? "border-[#e8fb25] bg-[rgba(232,251,37,0.12)] text-[#e8fb25]"
-                        : "border-[rgba(255,255,255,0.12)] bg-[#1d1d26] text-[#555560]"
+                        ? "border-accent bg-accent/12 text-accent"
+                        : "border-white/12 bg-surface-3 text-fg-3"
                   }`}
                 >
                   {isDone ? <Check size={14} strokeWidth={3} /> : n}
@@ -101,19 +101,19 @@ export function CreateLeagueHeader({
                 <span
                   className={`hidden font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] sm:inline ${
                     isActive
-                      ? "text-[#e8fb25]"
+                      ? "text-accent"
                       : isDone
-                        ? "text-[#f0f0f0]"
-                        : "text-[#555560]"
+                        ? "text-fg-1"
+                        : "text-fg-3"
                   }`}
                 >
                   {label}
                 </span>
               </div>
               {index < steps.length - 1 && (
-                <span className="relative mx-2 h-px flex-1 overflow-hidden bg-[rgba(255,255,255,0.1)]">
+                <span className="relative mx-2 h-px flex-1 overflow-hidden bg-white/10">
                   <motion.span
-                    className="absolute inset-y-0 left-0 w-full origin-left bg-[rgba(232,251,37,0.4)]"
+                    className="absolute inset-y-0 left-0 w-full origin-left bg-accent/40"
                     initial={false}
                     animate={{ scaleX: isDone ? 1 : 0 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}

@@ -51,7 +51,7 @@ function TeamColumn({
           )}
         </span>
         <div className={`min-w-0 ${isRight ? "text-right" : ""}`}>
-          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
             {teamName}
           </p>
           <p className="section-label mt-0.5">{players.length} players</p>
@@ -62,7 +62,7 @@ function TeamColumn({
         {players.map((p) => (
           <li
             key={p.player_id}
-            className={`flex items-center gap-2.5 rounded-[3px] px-1.5 py-1.5 transition-colors hover:bg-[rgba(255,255,255,0.04)] ${
+            className={`flex items-center gap-2.5 rounded-[3px] px-1.5 py-1.5 transition-colors hover:bg-white/4 ${
               isRight ? "flex-row-reverse text-right" : ""
             }`}
           >

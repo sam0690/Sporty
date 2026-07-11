@@ -96,13 +96,13 @@ export function JoinLeagueView() {
   const isLoading = discoverLoading || joinMutation.isPending;
 
   return (
-    <section className="mx-auto max-w-4xl space-y-8 px-4 py-10 text-[#f0f0f0] sm:px-6 sm:py-12">
+    <section className="mx-auto max-w-4xl space-y-8 px-4 py-10 text-fg-1 sm:px-6 sm:py-12">
       <header className="text-center">
         <span className="section-label">Leagues</span>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Join a League
         </h1>
-        <p className="mt-2 text-sm text-[#9a9aa5]">
+        <p className="mt-2 text-sm text-fg-2">
           Enter an invite code, or pick a public league to jump straight in.
         </p>
       </header>
@@ -112,9 +112,9 @@ export function JoinLeagueView() {
       ) : null}
 
       {isLoading ? (
-        <div className="mx-auto max-w-md space-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8">
+        <div className="mx-auto max-w-md space-y-3 rounded-[3px] border border-white/8 bg-surface-1 p-8">
           <CardSkeleton />
-          <div className="h-11 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+          <div className="h-11 animate-pulse rounded-[3px] bg-surface-3" />
         </div>
       ) : (
         <JoinForm
@@ -126,11 +126,11 @@ export function JoinLeagueView() {
       )}
 
       <div className="mx-auto flex max-w-2xl items-center gap-4">
-        <div className="h-px flex-1 bg-[rgba(255,255,255,0.1)]" />
-        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#555560]">
+        <div className="h-px flex-1 bg-white/10" />
+        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-fg-3">
           or browse public leagues
         </span>
-        <div className="h-px flex-1 bg-[rgba(255,255,255,0.1)]" />
+        <div className="h-px flex-1 bg-white/10" />
       </div>
 
       <PublicLeaguesList
@@ -141,7 +141,7 @@ export function JoinLeagueView() {
       <div className="text-center">
         <Link
           href="/create-league"
-          className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#e8fb25] hover:no-underline"
+          className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-accent hover:no-underline"
         >
           Don&apos;t have a league? Create one →
         </Link>

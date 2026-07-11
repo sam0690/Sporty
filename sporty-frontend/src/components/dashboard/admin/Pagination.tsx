@@ -14,8 +14,8 @@ export function Pagination({ page, pageSize, total, hasNext, onPageChange }: Pag
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="flex items-center justify-between border-t border-[rgba(255,255,255,0.08)] px-5 py-3">
-      <span className="font-barlow-condensed text-xs uppercase tracking-[2px] text-[#555560]">
+    <div className="flex items-center justify-between border-t border-white/8 px-5 py-3">
+      <span className="font-barlow-condensed text-xs uppercase tracking-[2px] text-fg-3">
         Page {page} of {totalPages} &middot; {total} total
       </span>
       <div className="flex gap-2">

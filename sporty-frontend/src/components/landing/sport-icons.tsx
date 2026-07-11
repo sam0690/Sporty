@@ -84,7 +84,7 @@ const SPORT_GLYPH_MAP: Record<string, SportGlyph> = {
 const MULTISPORT_GLYPH: SportGlyph = {
   Icon: BoltGlyph,
   label: "Multi-sport",
-  color: "#e8fb25",
+  color: "#e2c368",
 };
 
 // Resolve a sport name (from the API) to its glyph; unknown / mixed leagues

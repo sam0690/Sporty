@@ -27,21 +27,21 @@ export function GameweekBreakdown({
   }, [breakdown]);
 
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="flex items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <header className="flex items-center justify-between gap-4 border-b border-white/7 px-5 py-4">
         <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
           Gameweek Points
         </h2>
         {rows.length > 0 && (
           <div className="flex items-center gap-5">
             <div className="text-right">
-              <p className="num font-bebas text-xl leading-none tracking-[1px] text-[#9a9aa5]">
+              <p className="num font-bebas text-xl leading-none tracking-[1px] text-fg-2">
                 {Math.round(average)}
               </p>
               <p className="section-label mt-1">Avg</p>
             </div>
             <div className="text-right">
-              <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
+              <p className="num font-bebas text-2xl leading-none tracking-[1px] text-accent">
                 {Math.round(total)}
               </p>
               <p className="section-label mt-1">Total</p>
@@ -58,7 +58,7 @@ export function GameweekBreakdown({
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-sm text-[#777783]">
+          <div className="rounded-[3px] border border-white/8 bg-surface-2 p-4 text-sm text-fg-2">
             No gameweeks scored yet. Points appear here once a gameweek finishes.
           </div>
         ) : (
@@ -73,20 +73,20 @@ export function GameweekBreakdown({
                   key={row.transfer_window_id}
                   className="flex items-center gap-3"
                 >
-                  <span className="w-12 shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+                  <span className="w-12 shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2">
                     GW{row.gameweek}
                   </span>
 
-                  <div className="relative h-7 flex-1 overflow-hidden rounded-[3px] bg-[#0d0d12]">
+                  <div className="relative h-7 flex-1 overflow-hidden rounded-[3px] bg-surface-2">
                     <div
                       className="h-full rounded-[3px] transition-[width] duration-300"
                       style={{
                         width: `${Math.max(widthPct, 3)}%`,
-                        background: isBest ? "#e8fb25" : "rgba(232,251,37,0.25)",
+                        background: isBest ? "#e2c368" : "rgba(226,195,104,0.25)",
                       }}
                     />
                     {row.rank != null && (
-                      <span className="absolute inset-y-0 right-2.5 flex items-center section-label text-[#f0f0f0]/70">
+                      <span className="absolute inset-y-0 right-2.5 flex items-center section-label text-fg-1/70">
                         Rank #{row.rank}
                       </span>
                     )}
@@ -94,7 +94,7 @@ export function GameweekBreakdown({
 
                   <span
                     className={`num w-12 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] ${
-                      isBest ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                      isBest ? "text-accent" : "text-fg-1"
                     }`}
                   >
                     {Math.round(value)}

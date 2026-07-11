@@ -18,7 +18,7 @@ type FavouritesFormProps = {
 };
 
 const fieldLabel =
-  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]";
+  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
 
 const SPORTS: Array<{ sport: SportName; Icon: typeof FootballGlyph; color: string; label: string }> = [
   { sport: "football", Icon: FootballGlyph, color: "#00ff88", label: "Football" },
@@ -34,13 +34,13 @@ export function FavouritesForm({
   onPlayerClear,
 }: FavouritesFormProps) {
   return (
-    <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+    <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <header className="border-b border-white/7 px-5 py-4">
         <p className="section-label">Favourites</p>
       </header>
 
       <div className="space-y-6 p-5">
-        <p className="text-sm text-[#9a9aa5]">
+        <p className="text-sm text-fg-2">
           Pick a favourite team and player per sport to get notified when they score.
         </p>
 
@@ -49,7 +49,7 @@ export function FavouritesForm({
           const player = favouritePlayers.find((p) => p.sport.name === sport) ?? null;
 
           return (
-            <div key={sport} className="space-y-4 border-t border-[rgba(255,255,255,0.06)] pt-5 first:border-t-0 first:pt-0">
+            <div key={sport} className="space-y-4 border-t border-white/6 pt-5 first:border-t-0 first:pt-0">
               <div className="flex items-center gap-2" style={{ color }}>
                 <Icon className="size-4 shrink-0" />
                 <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px]">

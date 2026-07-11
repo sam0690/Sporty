@@ -89,12 +89,12 @@ export function TransferConfirmation({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-      <div className="w-full max-w-md overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] animate-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-6 py-4">
-          <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+      <div className="w-full max-w-md overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
+          <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-fg-1">
             Confirm Transfers
           </h3>
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
             {stagedOutPlayers.length} out · {stagedInPlayers.length} in
           </span>
         </div>
@@ -107,12 +107,12 @@ export function TransferConfirmation({
               </p>
               <div className="mt-2 space-y-1">
                 {stagedOutPlayers.length === 0 ? (
-                  <p className="text-xs text-[#555560]">—</p>
+                  <p className="text-xs text-fg-3">—</p>
                 ) : (
                   stagedOutPlayers.map((player) => (
                     <p
                       key={player.id}
-                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
+                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1"
                     >
                       {player.name}
                     </p>
@@ -127,12 +127,12 @@ export function TransferConfirmation({
               </p>
               <div className="mt-2 space-y-1">
                 {stagedInPlayers.length === 0 ? (
-                  <p className="text-xs text-[#555560]">—</p>
+                  <p className="text-xs text-fg-3">—</p>
                 ) : (
                   stagedInPlayers.map((player) => (
                     <p
                       key={player.id}
-                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]"
+                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1"
                     >
                       {player.name}
                     </p>
@@ -143,20 +143,20 @@ export function TransferConfirmation({
           </div>
 
           {transfersOpen && formattedCountdown ? (
-            <p className="mt-5 text-center text-xs text-[#555560]">
+            <p className="mt-5 text-center text-xs text-fg-3">
               Window closes in{" "}
-              <span className="font-bebas text-base tracking-[1px] text-[#e8fb25]">
+              <span className="font-bebas text-base tracking-[1px] text-accent">
                 {formattedCountdown}
               </span>
             </p>
           ) : (
-            <p className="mt-5 text-center text-sm text-[#555560]">
+            <p className="mt-5 text-center text-sm text-fg-3">
               Confirming applies all staged transfers at once.
             </p>
           )}
 
           {!transfersOpen ? (
-            <div className="mt-5 rounded-[3px] border border-[rgba(255,216,107,0.25)] bg-[rgba(255,216,107,0.08)] px-3 py-2.5 text-sm text-[#ffd86b]">
+            <div className="mt-5 rounded-[3px] border border-warning/25 bg-warning/8 px-3 py-2.5 text-sm text-warning">
               Transfers are closed for this window.
               {formattedCountdown ? (
                 <span className="ml-2 font-bebas tracking-[1px]">
@@ -171,7 +171,7 @@ export function TransferConfirmation({
               type="button"
               onClick={onConfirm}
               disabled={confirmDisabled}
-              className="w-full rounded-[3px] bg-[#e8fb25] py-3 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-[3px] bg-accent py-3 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Processing…" : "Confirm Transfers"}
             </button>
@@ -179,7 +179,7 @@ export function TransferConfirmation({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-[3px] border border-white/8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>

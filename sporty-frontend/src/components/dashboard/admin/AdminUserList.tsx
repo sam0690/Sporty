@@ -47,7 +47,7 @@ export function AdminUserList() {
             onChange={(e) =>
               changeUserRole.mutate({ id: u.id, role: e.target.value })
             }
-            className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-2 py-1 text-xs uppercase tracking-[1px] text-[#f0f0f0]"
+            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-2 py-1 text-xs uppercase tracking-[1px] text-fg-1"
           >
             {ROLE_OPTIONS.map((role) => (
               <option key={role} value={role}>
@@ -109,7 +109,7 @@ export function AdminUserList() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Users</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Users</h1>
 
       <input
         type="text"
@@ -119,7 +119,7 @@ export function AdminUserList() {
           setPage(1);
         }}
         placeholder="Search by username or email…"
-        className="w-full max-w-sm rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
+        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
       />
 
       {isLoading ? (

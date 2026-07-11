@@ -54,8 +54,8 @@ function Chip({
       onClick={onClick}
       className={
         active
-          ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#e8fb25] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f]"
-          : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[rgba(255,255,255,0.12)] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
+          ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0"
+          : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/12 px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:border-white/28 hover:text-fg-1"
       }
     >
       {children}
@@ -128,12 +128,12 @@ export function MatchesView() {
 
   return (
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6">
+      <header className="border-b border-white/8 pb-6">
         <p className="section-label">Matchday Centre</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Matches
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-fg-3">
           Fixtures across every sport, day by day.
         </p>
       </header>
@@ -171,18 +171,18 @@ export function MatchesView() {
                 onClick={() => setSelectedDayKey(day.key)}
                 className={`shrink-0 rounded-[3px] border px-3.5 py-2 text-center transition-colors ${
                   active
-                    ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)]"
-                    : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] hover:border-[rgba(255,255,255,0.18)]"
+                    ? "border-accent/40 bg-accent/10"
+                    : "border-white/8 bg-surface-3 hover:border-white/18"
                 }`}
               >
                 <span
                   className={`block font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${
-                    active ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                    active ? "text-accent" : "text-fg-1"
                   }`}
                 >
                   {relativeDayLabel(day.date)}
                 </span>
-                <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] text-[#555560]">
+                <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] text-fg-3">
                   {day.liveCount > 0 && (
                     <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
                   )}
@@ -197,7 +197,7 @@ export function MatchesView() {
       {isLoading && (
         <div className="space-y-2">
           {Array.from({ length: 5 }, (_, i) => (
-            <div key={i} className="h-16 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+            <div key={i} className="h-16 animate-pulse rounded-[3px] bg-surface-3" />
           ))}
         </div>
       )}
@@ -207,14 +207,14 @@ export function MatchesView() {
           role="alert"
           className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-4 py-3"
         >
-          <p className="text-sm text-[#ff8a8a]">
+          <p className="text-sm text-danger-soft">
             Couldn&apos;t load matches. Please try again.
           </p>
           <button
             type="button"
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="inline-flex min-h-9 shrink-0 items-center rounded-[3px] border border-[rgba(255,138,138,0.35)] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#ff8a8a] transition-colors hover:border-[rgba(255,138,138,0.6)] disabled:opacity-50"
+            className="inline-flex min-h-9 shrink-0 items-center rounded-[3px] border border-[rgba(255,138,138,0.35)] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-danger-soft transition-colors hover:border-[rgba(255,138,138,0.6)] disabled:opacity-50"
           >
             {isRefetching ? "Retrying…" : "Try again"}
           </button>
@@ -222,17 +222,17 @@ export function MatchesView() {
       )}
 
       {!isLoading && !isError && days.length === 0 && (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-10 text-center">
           <span
             aria-hidden
-            className="inline-grid size-11 place-items-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] text-[#555560]"
+            className="inline-grid size-11 place-items-center rounded-full border border-white/8 bg-white/2 text-fg-3"
           >
             <CalendarIcon className="size-5" />
           </span>
-          <p className="mt-3 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          <p className="mt-3 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
             No fixtures
           </p>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-fg-3">
             {items.length === 0
               ? "Fixtures appear here as soon as they're scheduled."
               : "No matches for this sport."}
@@ -242,7 +242,7 @@ export function MatchesView() {
 
       {activeDay && (
         <section className="space-y-3">
-          <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+          <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-2">
             {fullDayLabel(activeDay.date)}
           </h2>
           <div className="space-y-2">

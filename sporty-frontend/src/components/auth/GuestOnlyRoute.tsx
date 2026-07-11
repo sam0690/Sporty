@@ -30,7 +30,7 @@ export function GuestOnlyRoute({
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#111117]-50">
+      <div className="flex min-h-screen items-center justify-center bg-surface-1-50">
         <div className="h-8 w-8 animate-spin rounded-[3px] border-2 border-primary border-t-transparent" />
       </div>
     );

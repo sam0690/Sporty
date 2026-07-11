@@ -32,7 +32,7 @@ const LINK_GROUPS: { title: string; links: { label: string; href: string }[] }[]
 export function LandingFooterContainer() {
   return (
     <footer
-      className="relative border-t border-[rgba(255,255,255,0.08)] bg-[#0a0a0f]"
+      className="relative border-t border-white/8 bg-surface-0"
       aria-labelledby="landing-footer-title"
       id="pricing"
     >
@@ -40,17 +40,17 @@ export function LandingFooterContainer() {
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-xs">
             <div className="flex items-center gap-2">
-              <span className="grid size-8 place-items-center rounded-[3px] bg-[#e8fb25] text-[#0a0a0f]">
+              <span className="grid size-8 place-items-center rounded-[3px] bg-accent text-surface-0">
                 <BoltGlyph className="size-4" />
               </span>
               <span
                 id="landing-footer-title"
-                className="font-bebas text-2xl leading-none tracking-[3px] text-[#f0f0f0]"
+                className="font-bebas text-2xl leading-none tracking-[3px] text-fg-1"
               >
                 SPORTY
               </span>
             </div>
-            <p className="mt-4 text-sm leading-6 text-[#8a8a95]">
+            <p className="mt-4 text-sm leading-6 text-fg-2">
               Run fantasy teams across football, basketball, and cricket — one
               squad, every matchday.
             </p>
@@ -59,12 +59,12 @@ export function LandingFooterContainer() {
           {LINK_GROUPS.map((group) => (
             <div key={group.title}>
               <h4 className="section-label">{group.title}</h4>
-              <ul className="mt-4 space-y-2.5 text-sm text-[#8a8a95]">
+              <ul className="mt-4 space-y-2.5 text-sm text-fg-2">
                 {group.links.map((link) => (
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="transition-colors hover:text-[#e8fb25] hover:no-underline"
+                      className="transition-colors hover:text-accent hover:no-underline"
                     >
                       {link.label}
                     </Link>
@@ -75,7 +75,7 @@ export function LandingFooterContainer() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-[rgba(255,255,255,0.06)] pt-6 text-sm text-[#555560] sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/6 pt-6 text-sm text-fg-3 sm:flex-row">
           <p>© 2026 Sporty. All rights reserved.</p>
           <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px]">
             Football · Basketball · Cricket

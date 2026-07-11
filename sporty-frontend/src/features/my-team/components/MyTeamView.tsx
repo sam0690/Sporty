@@ -18,26 +18,26 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
   );
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-5 py-4 sm:px-6 sm:py-5">
+    <section className="rounded-[3px] border border-white/8 bg-surface-1 px-5 py-4 sm:px-6 sm:py-5">
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div>
-          <p className="num font-bebas text-5xl leading-none tracking-[1px] text-[#e8fb25] sm:text-6xl">
+          <p className="num font-bebas text-5xl leading-none tracking-[1px] text-accent sm:text-6xl">
             {Math.round(totalPoints)}
           </p>
           <p className="section-label mt-1.5">Total Points</p>
         </div>
 
-        <span className="hidden h-10 w-px bg-[rgba(255,255,255,0.08)] sm:block" />
+        <span className="hidden h-10 w-px bg-white/8 sm:block" />
 
         <div>
-          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
             {players.length}
           </p>
           <p className="section-label mt-1.5">Players</p>
         </div>
 
         <div>
-          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
             ${squadValue.toFixed(1)}M
           </p>
           <p className="section-label mt-1.5">Squad Value</p>
@@ -45,11 +45,11 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
 
         {topScorer && (
           <div>
-            <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+            <p className="num font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
               {Math.round(topScorer.gameweekPoints)}
             </p>
             <p className="section-label mt-1.5">
-              Top Scorer <span className="text-[#666671] normal-case">· {topScorer.name}</span>
+              Top Scorer <span className="text-fg-3 normal-case">· {topScorer.name}</span>
             </p>
           </div>
         )}
@@ -101,19 +101,19 @@ export function MyTeamView({
               onClick={() => onLeagueChange(league.id)}
               className={`rounded-[3px] border px-4 py-2.5 text-left transition-colors ${
                 isActive
-                  ? "border-[rgba(232,251,37,0.35)] bg-[rgba(232,251,37,0.08)]"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#111117] hover:border-[rgba(255,255,255,0.16)]"
+                  ? "border-accent/35 bg-accent/8"
+                  : "border-white/8 bg-surface-1 hover:border-white/16"
               }`}
               aria-pressed={isActive}
             >
               <span
                 className={`block font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
-                  isActive ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+                  isActive ? "text-accent" : "text-fg-1"
                 }`}
               >
                 {league.name}
               </span>
-              <span className="block text-xs text-[#666671]">
+              <span className="block text-xs text-fg-3">
                 {league.teamName ?? "No team yet"}
               </span>
             </button>
@@ -122,13 +122,13 @@ export function MyTeamView({
       </div>
     ) : (
       <label className="block max-w-xl">
-        <span className="mb-2 block font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+        <span className="mb-2 block font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
           Select league
         </span>
         <select
           value={activeLeague?.id ?? ""}
           onChange={(event) => onLeagueChange(event.target.value)}
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-white/8 bg-surface-1 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
           style={{ colorScheme: "dark" }}
           aria-label="Choose league"
         >
@@ -143,7 +143,7 @@ export function MyTeamView({
   ) : null;
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
       <TeamHeader
         totalPlayers={totals.totalPlayers}
         leagueName={selectedLeagueName}
@@ -159,11 +159,11 @@ export function MyTeamView({
           ))}
         </div>
       ) : leaguesError || selectedTeamError ? (
-        <div className="rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
+        <div className="rounded-[3px] border border-danger/25 bg-danger/6 p-4 text-sm text-danger">
           Failed to load team data. Please try again.
         </div>
       ) : !hasLeagues ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#666671]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
           You are not part of any leagues yet.
         </div>
       ) : isEmptyTeam ? (
@@ -171,10 +171,10 @@ export function MyTeamView({
       ) : teamLeague && teamLeague.players.length > 0 ? (
         <div className="space-y-6">
           <SquadStats players={teamLeague.players} />
-          <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+          <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
               <span className="section-label">Squad</span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#666671]">
+              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
                 {teamLeague.teamName}
               </span>
             </header>

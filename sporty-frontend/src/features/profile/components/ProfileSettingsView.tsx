@@ -173,7 +173,7 @@ export function ProfileSettingsView() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-3xl px-6 py-8 text-fg-1">
       <ProfileHeader
         userName={userData.name}
         userEmail={userData.email}
@@ -199,7 +199,7 @@ export function ProfileSettingsView() {
       </div>
 
       {isDeleting ? (
-        <p className="mt-4 text-sm text-[#555560]">
+        <p className="mt-4 text-sm text-fg-3">
           Processing account deletion...
         </p>
       ) : null}

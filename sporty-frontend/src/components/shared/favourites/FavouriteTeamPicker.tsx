@@ -40,34 +40,34 @@ export function FavouriteTeamPicker({
       withinPortal
     >
       <Popover.Target>
-        <div className="flex w-full min-h-[56px] items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] pr-2 transition-colors hover:border-white/15">
+        <div className="flex w-full min-h-[56px] items-center gap-2 rounded-[3px] border border-white/8 bg-surface-1 pr-2 transition-colors hover:border-white/15">
           <button
             type="button"
             onClick={() => setOpened((v) => !v)}
             aria-haspopup="listbox"
             aria-expanded={opened}
-            className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(232,251,37,0.4)]"
+            className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {value ? (
               <TeamLogo teamName={value.name} logoUrl={value.logo_url} size="md" />
             ) : (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0d0d12] text-[#666671]">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-fg-3">
                 <Shield size={16} aria-hidden />
               </span>
             )}
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm text-[#f0f0f0]">
+              <span className="block truncate text-sm text-fg-1">
                 {value ? value.name : `Choose your favourite ${sport} team`}
               </span>
             </span>
-            <ChevronDown size={16} className="shrink-0 text-[#666671]" aria-hidden />
+            <ChevronDown size={16} className="shrink-0 text-fg-3" aria-hidden />
           </button>
           {value && onClear ? (
             <button
               type="button"
               onClick={onClear}
               aria-label="Clear favourite team"
-              className="grid size-8 shrink-0 place-items-center rounded-full text-[#666671] transition-colors hover:bg-[rgba(255,59,92,0.1)] hover:text-[#ff3b5c]"
+              className="grid size-8 shrink-0 place-items-center rounded-full text-fg-3 transition-colors hover:bg-danger/10 hover:text-danger"
             >
               <X size={15} aria-hidden />
             </button>
@@ -85,10 +85,10 @@ export function FavouriteTeamPicker({
       >
         {isLoading ? (
           <div className="flex justify-center py-6">
-            <Loader size="sm" color="#e8fb25" />
+            <Loader size="sm" color="#e2c368" />
           </div>
         ) : !teams || teams.length === 0 ? (
-          <p className="py-6 text-center text-sm text-[#666671]">
+          <p className="py-6 text-center text-sm text-fg-3">
             No teams found for this sport.
           </p>
         ) : (
@@ -106,8 +106,8 @@ export function FavouriteTeamPicker({
                     }}
                     className={`flex min-h-[44px] w-full items-center gap-3 rounded-[3px] px-3 py-2 text-left text-sm transition-colors ${
                       value?.id === team.id
-                        ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-                        : "text-[#f0f0f0] hover:bg-[#1d1d26]"
+                        ? "bg-accent/10 text-accent"
+                        : "text-fg-1 hover:bg-surface-3"
                     }`}
                   >
                     <TeamLogo teamName={team.name} logoUrl={team.logo_url} size="md" />

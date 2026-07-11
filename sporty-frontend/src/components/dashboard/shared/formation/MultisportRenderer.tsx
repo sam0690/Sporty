@@ -12,7 +12,7 @@ export function MultisportRenderer({
 }: MultisportRendererProps) {
   return (
     <div
-      className={`relative mx-auto aspect-331/594 w-full overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0c1f18] ${className}`}
+      className={`relative mx-auto aspect-331/594 w-full overflow-hidden rounded-[3px] border border-white/8 bg-[#0c1f18] ${className}`}
     >
       <Image
         src="/images/courts/multisport-court.png"

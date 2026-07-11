@@ -8,9 +8,9 @@ import { useAdminAuditLog } from "@/hooks/admin/useAdminAuditLog";
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
+    <div className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
       <p className="section-label">{label}</p>
-      <p className="mt-2 font-bebas text-5xl tracking-[2px] text-[#e8fb25]">{value}</p>
+      <p className="mt-2 font-bebas text-5xl tracking-[2px] text-accent">{value}</p>
     </div>
   );
 }
@@ -19,12 +19,12 @@ function NavCard({ href, title, description }: { href: string; title: string; de
   return (
     <Link
       href={href}
-      className="block rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 transition-colors hover:border-white/25 hover:no-underline"
+      className="block rounded-[3px] border border-white/8 bg-surface-1 p-5 transition-colors hover:border-white/25 hover:no-underline"
     >
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
         {title}
       </p>
-      <p className="mt-1 text-xs text-[#555560]">{description}</p>
+      <p className="mt-1 text-xs text-fg-3">{description}</p>
     </Link>
   );
 }
@@ -36,7 +36,7 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Admin</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Admin</h1>
 
       <div className="grid grid-cols-2 gap-3 xl:grid-cols-3">
         <StatCard label="Total Users" value={users?.total ?? "—"} />

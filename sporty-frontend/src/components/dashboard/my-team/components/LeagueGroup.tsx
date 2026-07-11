@@ -85,12 +85,12 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
                 style={{ color: meta.color }}
               >
                 <Icon className="size-3.5 shrink-0" />
-                {meta.label} <span className="num text-[#666671]">{count}</span>
+                {meta.label} <span className="num text-fg-3">{count}</span>
               </span>
             );
           })}
         </div>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
           {players.length} players
         </span>
       </div>
@@ -99,13 +99,13 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
         {positionGroups.map(({ position, players: groupPlayers }) => (
           <div key={position} className="space-y-2">
             <div className="flex items-center gap-2">
-              <h3 className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]">
+              <h3 className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2">
                 {position}
               </h3>
-              <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+              <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
                 {groupPlayers.length}
               </span>
-              <span className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
+              <span className="h-px flex-1 bg-white/6" />
             </div>
             <div className="space-y-2">
               {groupPlayers.map((player) => (

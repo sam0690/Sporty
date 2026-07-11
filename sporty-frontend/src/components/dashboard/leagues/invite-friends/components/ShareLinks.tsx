@@ -32,7 +32,7 @@ const SHARE_TARGETS: Array<{
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(
         "Join my Sporty league! " + url,
       )}`,
-    hover: "hover:border-[rgba(255,255,255,0.4)] hover:text-[#f0f0f0]",
+    hover: "hover:border-white/40 hover:text-fg-1",
   },
   {
     label: "Email",
@@ -41,20 +41,20 @@ const SHARE_TARGETS: Array<{
       `mailto:?subject=${encodeURIComponent(
         "Join my Sporty league",
       )}&body=${encodeURIComponent(url)}`,
-    hover: "hover:border-[rgba(232,251,37,0.5)] hover:text-[#e8fb25]",
+    hover: "hover:border-accent/50 hover:text-accent",
   },
 ];
 
 export function ShareLinks({ shareUrl }: ShareLinksProps) {
   return (
-    <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] animate-fade-soft">
-      <div className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-fade-soft">
+      <div className="border-b border-white/8 px-5 py-3">
         <p className="section-label">Share Link</p>
       </div>
 
       <div className="space-y-4 p-5">
-        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-3">
-          <span className="truncate text-sm text-[#9a9aa5]">{shareUrl}</span>
+        <div className="flex items-center justify-between gap-3 rounded-[3px] border border-white/8 bg-surface-3 px-4 py-3">
+          <span className="truncate text-sm text-fg-2">{shareUrl}</span>
           <CopyButton value={shareUrl} label="Share link" />
         </div>
 
@@ -65,7 +65,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
               href={href(shareUrl)}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center justify-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5] transition-colors ${hover}`}
+              className={`flex items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors ${hover}`}
             >
               <Icon className="h-4 w-4" aria-hidden />
               {label}

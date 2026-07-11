@@ -15,9 +15,9 @@ export function DangerZone({ leagueName, onDeleteClick }: DangerZoneProps) {
       tone="danger"
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-[#9a9aa5]">
+        <p className="text-sm text-fg-2">
           Delete{" "}
-          <span className="font-600 text-[#f0f0f0]">{leagueName}</span>{" "}
+          <span className="font-600 text-fg-1">{leagueName}</span>{" "}
           permanently. This cannot be undone.
         </p>
         <button

@@ -26,7 +26,7 @@ export function ModelMetricsCard({ metrics }: ModelMetricsCardProps) {
       title="Model Track Record"
       icon={<ChartIcon className="size-3.5" />}
       action={
-        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
           {metrics.finished_matches_scored} matches scored
         </span>
       }
@@ -35,22 +35,22 @@ export function ModelMetricsCard({ metrics }: ModelMetricsCardProps) {
         {versions.map(([version, m]) => (
           <div
             key={version}
-            className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.06)] pb-3 last:border-b-0 last:pb-0"
+            className="flex items-center justify-between gap-3 border-b border-white/6 pb-3 last:border-b-0 last:pb-0"
           >
             <div className="min-w-0">
-              <p className="truncate font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+              <p className="truncate font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-fg-2">
                 {version}
               </p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-[#555560]">
+              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-fg-3">
                 {m.n} prediction{m.n === 1 ? "" : "s"} · log loss{" "}
                 {m.log_loss.toFixed(3)}
               </p>
             </div>
             <div className="text-right">
-              <p className="font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+              <p className="font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
                 {Math.round(m.accuracy * 100)}%
               </p>
-              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-[#555560]">
+              <p className="mt-0.5 text-[10px] uppercase tracking-wider text-fg-3">
                 correct
               </p>
             </div>
@@ -58,7 +58,7 @@ export function ModelMetricsCard({ metrics }: ModelMetricsCardProps) {
         ))}
       </div>
 
-      <div className="mt-4 border-t border-[rgba(255,255,255,0.06)] pt-2.5 text-right text-[10px] uppercase tracking-wider text-[#555560]">
+      <div className="mt-4 border-t border-white/6 pt-2.5 text-right text-[10px] uppercase tracking-wider text-fg-3">
         Updated {new Date(metrics.generated_at).toLocaleString()}
       </div>
     </Panel>

@@ -20,7 +20,7 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
 
   const homeColor = teamIdentity(homeTeam ?? "Home").color;
   const awayColor = teamIdentity(awayTeam ?? "Away").color;
-  const drawColor = "#555560";
+  const drawColor = "#71717d";
 
   const segments = [
     { key: "home", label: "Home", color: homeColor, value: prediction.home_win_prob },
@@ -39,13 +39,13 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
       title="Outcome Prediction"
       icon={<ChartIcon className="size-3.5" />}
       action={
-        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#555560]">
+        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
           {favourite.label} favoured
         </span>
       }
     >
       {/* Single stacked probability bar */}
-      <div className="flex h-3 w-full overflow-hidden rounded-[3px] bg-[rgba(255,255,255,0.05)]">
+      <div className="flex h-3 w-full overflow-hidden rounded-[3px] bg-white/5">
         {segments.map((s) => (
           <div
             key={s.key}
@@ -67,18 +67,18 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
                 className="size-2 rounded-full"
                 style={{ background: s.color }}
               />
-              <span className="font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+              <span className="font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-fg-2">
                 {s.label}
               </span>
             </div>
-            <p className="mt-1 font-bebas text-2xl leading-none tracking-[1px] text-[#f0f0f0]">
+            <p className="mt-1 font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
               {pct(s.value)}%
             </p>
           </div>
         ))}
       </div>
 
-      <div className="mt-4 border-t border-[rgba(255,255,255,0.06)] pt-2.5 text-right text-[10px] uppercase tracking-wider text-[#555560]">
+      <div className="mt-4 border-t border-white/6 pt-2.5 text-right text-[10px] uppercase tracking-wider text-fg-3">
         Model {prediction.model_version}
       </div>
     </Panel>

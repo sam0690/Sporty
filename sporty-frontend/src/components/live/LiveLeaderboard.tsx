@@ -98,7 +98,7 @@ export function LiveLeaderboard() {
             return (
               <li
                 key={row.playerId}
-                className="pop-in flex items-center gap-3 rounded-[3px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                className="pop-in flex items-center gap-3 rounded-[3px] px-2 py-2 transition-colors hover:bg-white/4"
                 style={{
                   animationDelay: `${idx * 40}ms`,
                   background: idx === 0 ? "rgba(255,216,107,0.05)" : undefined,
@@ -106,14 +106,14 @@ export function LiveLeaderboard() {
               >
                 <span
                   className="w-5 shrink-0 text-center font-bebas text-lg leading-none tabular-nums"
-                  style={{ color: medal ?? "#555560" }}
+                  style={{ color: medal ?? "#71717d" }}
                 >
                   {idx + 1}
                 </span>
                 <span
                   className="grid size-8 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-[11px] font-700 tracking-[0.5px]"
                   style={{
-                    color: medal ?? "#9a9aa5",
+                    color: medal ?? "#a0a0aa",
                     background: medal ? `${medal}1f` : "rgba(255,255,255,0.05)",
                     border: `1px solid ${medal ? `${medal}59` : "rgba(255,255,255,0.08)"}`,
                   }}
@@ -121,21 +121,21 @@ export function LiveLeaderboard() {
                   {initialsOf(row.name)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {row.name}
                   </p>
                   {(row.goals > 0 || row.assists > 0) && (
                     <p className="mt-0.5 flex gap-2 text-[10px] font-700 uppercase tracking-[1px]">
                       {row.goals > 0 && (
-                        <span className="text-[#00ff88]">{row.goals}G</span>
+                        <span className="text-success">{row.goals}G</span>
                       )}
                       {row.assists > 0 && (
-                        <span className="text-[#00d4ff]">{row.assists}A</span>
+                        <span className="text-info">{row.assists}A</span>
                       )}
                     </p>
                   )}
                 </div>
-                <span className="shrink-0 font-bebas text-xl leading-none tracking-[1px] tabular-nums text-[#e8fb25]">
+                <span className="shrink-0 font-bebas text-xl leading-none tracking-[1px] tabular-nums text-accent">
                   {row.points.toFixed(1)}
                 </span>
               </li>

@@ -80,13 +80,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
           label={unreadCount > 9 ? "9+" : unreadCount}
           disabled={unreadCount === 0}
           size={16}
-          color="#e8fb25"
+          color="#e2c368"
         >
           <ActionIcon
             variant="transparent"
             aria-label="Notifications"
             className={cn(
-              "border border-[rgba(255,255,255,0.08)] bg-transparent text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0]",
+              "border border-white/8 bg-transparent text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1",
               className,
             )}
             onClick={() => setOpened((value) => !value)}
@@ -111,18 +111,18 @@ export function NotificationBell({ className }: NotificationBellProps) {
             fontFamily: "var(--font-barlow-condensed)",
             textTransform: "uppercase",
             letterSpacing: "2px",
-            color: "#f0f0f0",
+            color: "#f2f2f0",
           }}
         >
           Notifications
         </Text>
 
         {loading ? (
-          <Text size="sm" style={{ color: "#555560" }}>
+          <Text size="sm" style={{ color: "#71717d" }}>
             Loading notifications...
           </Text>
         ) : items.length === 0 ? (
-          <Text size="sm" style={{ color: "#555560" }}>
+          <Text size="sm" style={{ color: "#71717d" }}>
             No notifications yet.
           </Text>
         ) : (
@@ -136,12 +136,12 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   className={cn(
                     "w-full rounded-[3px] border px-3 py-2 text-left text-sm transition-colors",
                     item.is_read
-                      ? "border-[rgba(255,255,255,0.08)] bg-transparent text-[#555560] hover:border-white/15 hover:text-[#f0f0f0]"
-                      : "border-[rgba(232,251,37,0.2)] bg-[#1a1a10] text-[#f0f0f0] hover:border-[rgba(232,251,37,0.4)]",
+                      ? "border-white/8 bg-transparent text-fg-3 hover:border-white/15 hover:text-fg-1"
+                      : "border-accent/20 bg-[#1a1a10] text-fg-1 hover:border-accent/40",
                   )}
                 >
                   <p>{item.message}</p>
-                  <p className="mt-1 text-xs text-[#555560]">
+                  <p className="mt-1 text-xs text-fg-3">
                     {new Date(item.created_at).toLocaleString()}
                   </p>
                 </button>

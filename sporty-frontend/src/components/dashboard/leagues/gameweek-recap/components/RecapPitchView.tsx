@@ -41,7 +41,7 @@ function fmtPoints(n: number): string {
 }
 
 function SubArrowOverlay({ dir }: { dir: "in" | "out" }) {
-  const color = dir === "in" ? "#00ff88" : "#ff3b5c";
+  const color = dir === "in" ? "#00e07f" : "#ff3b5c";
   const d =
     dir === "in" ? "M12 19V5M12 5l-5 5M12 5l5 5" : "M12 5v14M12 19l-5-5M12 19l5-5";
   return (
@@ -76,7 +76,7 @@ function RecapMarker({ p }: { p: RecapPitchPlayer }) {
       <div className="relative">
         <div
           className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-[3px] border bg-white sm:h-12 sm:w-12 ${
-            didNotPlay ? "border-[rgba(255,59,92,0.6)] opacity-60" : "border-white/20"
+            didNotPlay ? "border-danger/60 opacity-60" : "border-white/20"
           }`}
         >
           <PlayerAvatar
@@ -107,7 +107,7 @@ function RecapMarker({ p }: { p: RecapPitchPlayer }) {
         </p>
         <p
           className={`mt-0.5 rounded-sm bg-black/60 px-1.5 font-bebas text-sm leading-tight tracking-[1px] tabular-nums sm:text-base ${
-            p.counted ? "text-[#e8fb25]" : "text-[#7a7a85]"
+            p.counted ? "text-accent" : "text-[#7a7a85]"
           }`}
         >
           {p.points > 0 ? "+" : ""}
@@ -137,16 +137,16 @@ export function RecapPitchView({
           slot.player ? (
             <RecapMarker p={slot.player} />
           ) : (
-            <div className="h-10 w-10 rounded-[3px] border border-dashed border-[rgba(255,255,255,0.15)] bg-white/[0.03] sm:h-12 sm:w-12" />
+            <div className="h-10 w-10 rounded-[3px] border border-dashed border-white/15 bg-white/[0.03] sm:h-12 sm:w-12" />
           )
         }
       />
 
       {bench.length > 0 ? (
-        <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-          <header className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+        <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+          <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
             <span className="section-label">Bench</span>
-            <span className="rounded-[3px] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
+            <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">
               {bench.length}
             </span>
           </header>

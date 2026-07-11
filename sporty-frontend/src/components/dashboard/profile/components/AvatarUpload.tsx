@@ -65,12 +65,12 @@ export function AvatarUpload({
   };
 
   return (
-    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <section className="card-fade-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <header className="border-b border-white/8 px-5 py-3">
         <p className="section-label">Avatar</p>
       </header>
       <div className="flex flex-wrap items-center gap-4 p-5">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] text-[#555560]">
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-white/8 bg-surface-2 text-fg-3">
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element -- preview is a blob: object URL; next/image can't optimize those
             <img
@@ -96,7 +96,7 @@ export function AvatarUpload({
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+            className="rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
           >
             Upload New
           </button>
@@ -106,7 +106,7 @@ export function AvatarUpload({
               type="button"
               onClick={saveAvatar}
               disabled={isUploading}
-              className="rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-[3px] bg-accent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isUploading ? "Saving…" : "Save"}
             </button>

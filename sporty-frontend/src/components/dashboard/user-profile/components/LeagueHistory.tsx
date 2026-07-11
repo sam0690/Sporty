@@ -26,21 +26,21 @@ const SPORT_META: Record<
   football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
   basketball: { Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
   cricket: { Icon: CricketGlyph, color: "#00d4ff", label: "Cricket" },
-  multisport: { Icon: BoltGlyph, color: "#e8fb25", label: "Multi-Sport" },
+  multisport: { Icon: BoltGlyph, color: "#e2c368", label: "Multi-Sport" },
 };
 
 export function LeagueHistory({ leagues }: LeagueHistoryProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <header className="border-b border-white/7 px-5 py-4">
         <p className="section-label">League History</p>
       </header>
 
       <div className="px-5">
         {leagues.length === 0 ? (
-          <p className="py-5 text-sm text-[#666671]">Not in any leagues yet.</p>
+          <p className="py-5 text-sm text-fg-3">Not in any leagues yet.</p>
         ) : (
-          <ul className="divide-y divide-[rgba(255,255,255,0.06)]">
+          <ul className="divide-y divide-white/6">
             {leagues.map((league) => {
               const meta = SPORT_META[league.sport];
               const Icon = meta.Icon;
@@ -52,7 +52,7 @@ export function LeagueHistory({ leagues }: LeagueHistoryProps) {
                   <div className="flex min-w-0 items-center gap-3" style={{ color: meta.color }}>
                     <Icon className="size-4 shrink-0" />
                     <div className="min-w-0">
-                      <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                      <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                         {league.name}
                       </p>
                       <p className="mt-0.5 text-xs">{meta.label}</p>
@@ -60,13 +60,13 @@ export function LeagueHistory({ leagues }: LeagueHistoryProps) {
                   </div>
                   <div className="flex shrink-0 items-center gap-4 text-right">
                     <div>
-                      <p className="num font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0]">
+                      <p className="num font-bebas text-lg leading-none tracking-[1px] text-fg-1">
                         {league.rank > 0 ? `#${league.rank}` : "—"}
                       </p>
                       <p className="section-label mt-1">Rank</p>
                     </div>
                     <div>
-                      <p className="num font-bebas text-lg leading-none tracking-[1px] text-[#e8fb25]">
+                      <p className="num font-bebas text-lg leading-none tracking-[1px] text-accent">
                         {Math.round(league.points)}
                       </p>
                       <p className="section-label mt-1">Pts</p>

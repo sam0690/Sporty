@@ -7,7 +7,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="landing-shell flex min-h-screen flex-col bg-background text-[#f0f0f0]">
+    <div className="landing-shell flex min-h-screen flex-col bg-background text-fg-1">
       <Navbar />
       <main className="flex-1">{children}</main>
       <LandingFooter />

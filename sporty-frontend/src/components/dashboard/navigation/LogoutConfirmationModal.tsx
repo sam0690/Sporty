@@ -35,18 +35,18 @@ export function LogoutConfirmationModal({
         if (event.target === event.currentTarget && !isLoading) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-[#f0f0f0]">
-        <div className="inline-flex rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[#1a1a10] px-3 py-1">
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#c8d85a]">
+      <div className="w-full max-w-md rounded-[3px] border border-white/8 bg-surface-1 p-6 text-fg-1">
+        <div className="inline-flex rounded-[3px] border border-accent/25 bg-[#1a1a10] px-3 py-1">
+          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
             Logout Confirmation
           </span>
         </div>
 
-        <h2 className="mt-4 font-bebas text-4xl uppercase tracking-[2px] text-[#f0f0f0]">
+        <h2 className="mt-4 font-bebas text-4xl uppercase tracking-[2px] text-fg-1">
           Do you want to log out?
         </h2>
 
-        <p className="mt-3 text-sm leading-6 text-[#555560]">
+        <p className="mt-3 text-sm leading-6 text-fg-3">
           You&apos;ll be signed out of your account and redirected to the login
           screen. Choose Cancel to stay logged in.
         </p>
@@ -56,7 +56,7 @@ export function LogoutConfirmationModal({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0] disabled:opacity-50 sm:w-auto"
+            className="w-full rounded-[3px] border border-white/8 bg-transparent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>

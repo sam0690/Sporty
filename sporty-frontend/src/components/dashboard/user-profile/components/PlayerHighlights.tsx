@@ -12,8 +12,8 @@ type PlayerHighlightsProps = {
 
 export function PlayerHighlights({ topPlayers }: PlayerHighlightsProps) {
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 ">
-      <h3 className="text-base text-[#f0f0f0]">
+    <section className="rounded-[3px] border border-white/8 bg-surface-3 p-5 ">
+      <h3 className="text-base text-fg-1">
         Player Highlights
       </h3>
 
@@ -21,15 +21,15 @@ export function PlayerHighlights({ topPlayers }: PlayerHighlightsProps) {
         {topPlayers.map((player) => (
           <article
             key={`${player.name}-${player.league}`}
-            className="flex items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-3"
+            className="flex items-center justify-between gap-3 rounded-[3px] border border-white/8 bg-surface-3 p-3"
           >
             <div>
-              <p className="text-sm text-[#f0f0f0]">
+              <p className="text-sm text-fg-1">
                 {player.name}
               </p>
-              <p className="text-xs text-[#555560]">{player.league}</p>
+              <p className="text-xs text-fg-3">{player.league}</p>
             </div>
-            <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-1 text-xs text-[#f0f0f0]">
+            <span className="rounded-[3px] border border-white/8 bg-surface-3 px-3 py-1 text-xs text-fg-1">
               {player.points} pts
             </span>
           </article>

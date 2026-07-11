@@ -22,9 +22,9 @@ const ACTIVITY_META: Record<
   ActivityItem["type"],
   { Icon: LucideIcon; color: string }
 > = {
-  transfer: { Icon: ArrowLeftRight, color: "#e8fb25" },
+  transfer: { Icon: ArrowLeftRight, color: "#e2c368" },
   lineup: { Icon: ClipboardList, color: "#00d4ff" },
-  points: { Icon: Star, color: "#00ff88" },
+  points: { Icon: Star, color: "#00e07f" },
   rank: { Icon: TrendingUp, color: "#ff6b00" },
   league_joined: { Icon: UserPlus, color: "#9b59b6" },
   league_created: { Icon: Trophy, color: "#ffd86b" },
@@ -38,8 +38,8 @@ export function RecentActivity({
   const nowMs = useRelativeTime({ refreshIntervalMs: 60_000 });
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <header className="border-b border-white/7 px-5 py-4">
         <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
           Recent Activity
         </h2>
@@ -53,15 +53,15 @@ export function RecentActivity({
             ))}
           </div>
         ) : isError ? (
-          <div className="my-5 rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
+          <div className="my-5 rounded-[3px] border border-danger/25 bg-danger/6 p-4 text-sm text-danger">
             Failed to load recent activity.
           </div>
         ) : items.length === 0 ? (
-          <div className="my-5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-sm text-[#777783]">
+          <div className="my-5 rounded-[3px] border border-white/8 bg-surface-2 p-4 text-sm text-fg-2">
             No recent activities yet.
           </div>
         ) : (
-          <ul className="divide-y divide-[rgba(255,255,255,0.06)]">
+          <ul className="divide-y divide-white/6">
             {items.map((item) => {
               const meta = ACTIVITY_META[item.type];
               const Icon = meta.Icon;
@@ -74,14 +74,14 @@ export function RecentActivity({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+                      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
                         {item.title}
                       </p>
-                      <span className="shrink-0 section-label whitespace-nowrap text-[#666671] transition-colors group-hover:text-[#9a9aa5]">
+                      <span className="shrink-0 section-label whitespace-nowrap text-fg-3 transition-colors group-hover:text-fg-2">
                         {formatRelativeTime(item.timestamp, nowMs)}
                       </span>
                     </div>
-                    <p className="mt-0.5 truncate text-sm text-[#9a9aa5]">
+                    <p className="mt-0.5 truncate text-sm text-fg-2">
                       {item.detail}
                     </p>
                     {item.leagueName ? (

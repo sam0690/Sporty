@@ -32,16 +32,16 @@ export function SuccessModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] text-center">
+      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 text-center">
         {/* volt accent strip */}
-        <div className="h-1 bg-[#e8fb25]" />
+        <div className="h-1 bg-accent" />
         <div className="p-8">
           <div className="flex justify-center">
             <span
-              className="grid size-16 place-items-center rounded-full text-[#00ff88]"
+              className="grid size-16 place-items-center rounded-full text-success"
               style={{
-                background: "rgba(0,255,136,0.1)",
-                border: "1px solid rgba(0,255,136,0.35)",
+                background: "rgba(0,224,127,0.1)",
+                border: "1px solid rgba(0,224,127,0.35)",
               }}
             >
               <svg
@@ -60,7 +60,7 @@ export function SuccessModal({
           </div>
 
           <span className="section-label mt-5 block">You&apos;re in</span>
-          <h2 className="mt-2 font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">
+          <h2 className="mt-2 font-bebas text-4xl tracking-[2px] text-fg-1">
             Successfully Joined!
           </h2>
 
@@ -78,7 +78,7 @@ export function SuccessModal({
             </span>
           </div>
 
-          <p className="mt-3 text-sm text-[#9a9aa5]">
+          <p className="mt-3 text-sm text-fg-2">
             Team: {leagueData.teamName ?? "Not assigned yet"}
           </p>
 
@@ -96,7 +96,7 @@ export function SuccessModal({
                 }
                 router.push(`/leagues`);
               }}
-              className="w-full rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+              className="w-full rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
             >
               Go to League
             </button>
@@ -110,7 +110,7 @@ export function SuccessModal({
                 }
                 router.push(`/leagues`);
               }}
-              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-[#f0f0f0] transition-colors hover:border-[rgba(232,251,37,0.3)]"
+              className="w-full rounded-[3px] border border-white/8 bg-surface-3 px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-fg-1 transition-colors hover:border-accent/30"
             >
               Set Lineup
             </button>
@@ -118,7 +118,7 @@ export function SuccessModal({
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-[3px] px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#555560] transition-colors hover:text-[#9a9aa5]"
+              className="w-full rounded-[3px] px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-3 transition-colors hover:text-fg-2"
             >
               Close
             </button>

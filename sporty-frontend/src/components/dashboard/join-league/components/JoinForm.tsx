@@ -37,11 +37,11 @@ export function JoinForm({
   return (
     <form
       onSubmit={submit}
-      className="animate-fade-in mx-auto max-w-md overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8"
+      className="animate-fade-in mx-auto max-w-md overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-8"
     >
       {/* key badge */}
       <div className="flex justify-center">
-        <span className="grid size-12 place-items-center rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]">
+        <span className="grid size-12 place-items-center rounded-[3px] border border-accent/25 bg-accent/10 text-accent">
           <svg
             viewBox="0 0 24 24"
             className="size-6"
@@ -61,24 +61,24 @@ export function JoinForm({
       <div className="mt-5">
         <label
           htmlFor="invite-code"
-          className="mb-2 block text-center font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]"
+          className="mb-2 block text-center font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2"
         >
           Invite Code
         </label>
         <Input
           id="invite-code"
           placeholder="e.g. j4YEA1lf"
-          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[#0d0d12] px-4 py-3 text-center font-mono text-lg tracking-[0.2em] text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25] focus:ring-2 focus:ring-[rgba(232,251,37,0.15)]"
+          className="w-full rounded-[3px] border border-white/12 bg-surface-2 px-4 py-3 text-center font-mono text-lg tracking-[0.2em] text-fg-1 outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
           error={errors.invite_code?.message}
           {...register("invite_code")}
         />
-        <p className="mt-2 text-center text-xs text-[#555560]">
+        <p className="mt-2 text-center text-xs text-fg-3">
           Invite codes are case-sensitive.
         </p>
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
+        <p className="mt-4 rounded-[3px] border border-danger/25 bg-danger/8 px-3 py-2 text-sm text-danger-soft">
           {error}
         </p>
       ) : null}
@@ -86,11 +86,11 @@ export function JoinForm({
       <button
         type="submit"
         disabled={isLoading}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#e8fb25] px-8 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-accent px-8 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? (
           <>
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#0a0a0f]/30 border-t-[#0a0a0f]" />
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-surface-0/30 border-t-surface-0" />
             Joining...
           </>
         ) : (

@@ -30,7 +30,7 @@ function LeagueSelect({
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-64 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0]"
+      className="w-64 rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1"
     >
       <option value="">Select a league…</option>
       {leagues?.map((l) => (
@@ -69,7 +69,7 @@ export function AdminTransactions() {
   if (leaguesError) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Transactions</h1>
+        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Transactions</h1>
         <AdminErrorState message="Couldn't load leagues." onRetry={() => refetchLeagues()} />
       </div>
     );
@@ -77,9 +77,9 @@ export function AdminTransactions() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Transactions</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Transactions</h1>
 
-      <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
         <p className="section-label">Trades</p>
         <div className="flex flex-wrap items-center gap-3">
           <LeagueSelect
@@ -94,7 +94,7 @@ export function AdminTransactions() {
             value={tradeId}
             onChange={(e) => setTradeId(e.target.value)}
             disabled={!tradeLeagueId || tradesLoading}
-            className="w-96 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] disabled:opacity-50"
+            className="w-96 rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 disabled:opacity-50"
           >
             <option value="">{tradesLoading ? "Loading trades…" : "Select a trade…"}</option>
             {trades?.map((t) => (
@@ -104,7 +104,7 @@ export function AdminTransactions() {
             ))}
           </select>
           {trades?.length === 0 && !tradesLoading && (
-            <span className="text-xs text-[#555560]">No actionable trades in this league.</span>
+            <span className="text-xs text-fg-3">No actionable trades in this league.</span>
           )}
         </div>
         <div className="flex gap-2">
@@ -127,7 +127,7 @@ export function AdminTransactions() {
         </div>
       </section>
 
-      <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
         <p className="section-label">Waivers</p>
         <div className="flex flex-wrap items-center gap-3">
           <LeagueSelect
@@ -142,7 +142,7 @@ export function AdminTransactions() {
             value={claimId}
             onChange={(e) => setClaimId(e.target.value)}
             disabled={!waiverLeagueId || claimsLoading}
-            className="w-96 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] disabled:opacity-50"
+            className="w-96 rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 disabled:opacity-50"
           >
             <option value="">{claimsLoading ? "Loading claims…" : "Select a pending claim…"}</option>
             {claims?.map((c) => (
@@ -152,7 +152,7 @@ export function AdminTransactions() {
             ))}
           </select>
           {claims?.length === 0 && !claimsLoading && (
-            <span className="text-xs text-[#555560]">No pending claims in this league.</span>
+            <span className="text-xs text-fg-3">No pending claims in this league.</span>
           )}
         </div>
         <Button
@@ -166,7 +166,7 @@ export function AdminTransactions() {
       </section>
 
       {isSuperAdmin && (
-        <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+        <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
           <p className="section-label">Transfers</p>
           <div className="flex flex-wrap items-center gap-3">
             <LeagueSelect
@@ -181,7 +181,7 @@ export function AdminTransactions() {
               value={transferId}
               onChange={(e) => setTransferId(e.target.value)}
               disabled={!transferLeagueId || transfersLoading}
-              className="w-96 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] disabled:opacity-50"
+              className="w-96 rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 disabled:opacity-50"
             >
               <option value="">{transfersLoading ? "Loading transfers…" : "Select a reversible transfer…"}</option>
               {transfers?.map((t) => (
@@ -191,7 +191,7 @@ export function AdminTransactions() {
               ))}
             </select>
             {transfers?.length === 0 && !transfersLoading && (
-              <span className="text-xs text-[#555560]">No reversible transfers in this league.</span>
+              <span className="text-xs text-fg-3">No reversible transfers in this league.</span>
             )}
           </div>
           <Button

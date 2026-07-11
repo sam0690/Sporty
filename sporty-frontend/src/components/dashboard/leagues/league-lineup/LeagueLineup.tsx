@@ -134,8 +134,8 @@ function parseNumericCost(value: string): number {
 type ChipTone = "neutral" | "volt" | "gold" | "football" | "basketball";
 
 const CHIP_TONES: Record<ChipTone, { border: string; value: string }> = {
-  neutral: { border: "rgba(255,255,255,0.08)", value: "#f0f0f0" },
-  volt: { border: "rgba(232,251,37,0.25)", value: "#e8fb25" },
+  neutral: { border: "rgba(255,255,255,0.08)", value: "#f2f2f0" },
+  volt: { border: "rgba(226,195,104,0.25)", value: "#e2c368" },
   gold: { border: "rgba(255,216,107,0.25)", value: "#ffd86b" },
   football: { border: "rgba(76,175,80,0.3)", value: "#4caf50" },
   basketball: { border: "rgba(255,107,0,0.3)", value: "#ff6b00" },
@@ -153,10 +153,10 @@ function StatChip({
   const colors = CHIP_TONES[tone];
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-[3px] border bg-[#0d0d12] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+      className="inline-flex items-center gap-1.5 rounded-[3px] border bg-surface-2 px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
       style={{ borderColor: colors.border }}
     >
-      <span className="text-[#555560]">{label}</span>
+      <span className="text-fg-3">{label}</span>
       <span style={{ color: colors.value }}>{value}</span>
     </span>
   );
@@ -885,7 +885,7 @@ export function LeagueLineup() {
       leagueError?.message || lineupError?.message || windowError?.message;
 
     return (
-      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs
           activeTab="lineup"
           leagueId={leagueId}
@@ -901,8 +901,8 @@ export function LeagueLineup() {
   }
 
   return (
-    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-[#f0f0f0]">
-      <p className="text-sm text-[#555560]">
+    <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
+      <p className="text-sm text-fg-3">
         Manager: {me?.username || "Sporty User"}
       </p>
 
@@ -930,13 +930,13 @@ export function LeagueLineup() {
 
       <LineupViewToggle value={viewMode} onChange={setViewMode} />
 
-      <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+      <div className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
         <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"
             onClick={handleOptimizeLineup}
             disabled={isOptimizing || updateLineup.isPending}
-            className="rounded-[3px] border border-[rgba(232,251,37,0.35)] bg-[rgba(232,251,37,0.1)] px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.18)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-[3px] border border-accent/35 bg-accent/10 px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:bg-accent/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isOptimizing ? "Optimizing…" : "Auto-Optimize Lineup"}
           </button>
@@ -972,7 +972,7 @@ export function LeagueLineup() {
           ) : null}
         </div>
         {selectionErrorMessage ? (
-          <p className="mt-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-[#ff8a8a]">
+          <p className="mt-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-danger-soft">
             {selectionErrorMessage}
           </p>
         ) : null}

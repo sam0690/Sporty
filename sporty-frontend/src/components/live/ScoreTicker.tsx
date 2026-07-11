@@ -102,9 +102,9 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
 
   if (loading) {
     return (
-      <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-        <div className="h-1 bg-[#1d1d26]" />
-        <div className="skeleton h-12 border-b border-[rgba(255,255,255,0.06)]" />
+      <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+        <div className="h-1 bg-surface-3" />
+        <div className="skeleton h-12 border-b border-white/6" />
         <div className="flex items-center justify-center gap-6 px-6 py-16">
           <div className="skeleton h-16 w-40 rounded-[3px]" />
           <div className="skeleton h-16 w-28 rounded-[3px]" />
@@ -115,7 +115,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
   }
 
   return (
-    <section className="pop-in relative overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+    <section className="pop-in relative overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
       {/* team-colour split accent, blended in the middle */}
       <div
         className="h-1"
@@ -125,10 +125,10 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
       />
 
       <div className="relative">
-        <div className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-5 py-3 sm:px-6">
+        <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3 sm:px-6">
           {phase === "live" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
-              <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-danger">
+              <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
               Live
             </span>
           ) : (
@@ -139,7 +139,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
             {phase === "live" && (
               <span
                 className={`inline-flex items-center gap-1.5 ${
-                  socketStatus === "live" ? "text-[#00ff88]" : "text-[#ffd86b]"
+                  socketStatus === "live" ? "text-success" : "text-warning"
                 }`}
               >
                 <SignalIcon className="size-3.5" />
@@ -151,7 +151,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               </span>
             )}
             {agoSec != null && phase !== "pre" && (
-              <span className="text-[#555560]">
+              <span className="text-fg-3">
                 {agoSec < 2 ? "Just now" : `${agoSec}s ago`}
               </span>
             )}
@@ -166,7 +166,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
             }`}
           >
             <div className="min-w-0 text-right">
-              <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-4xl">
+              <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {homeTeam ?? "Home"}
               </p>
               <p className="section-label mt-1.5">
@@ -199,8 +199,8 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               </span>
             </div>
             {phase === "live" && matchClock ? (
-              <p className="mt-3.5 inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.28)] bg-[rgba(255,59,92,0.12)] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] tabular-nums text-[#ff3b5c]">
-                <span className="size-1 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+              <p className="mt-3.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
+                <span className="size-1 rounded-full bg-danger animate-live-pulse" />
                 {matchClock}
               </p>
             ) : (
@@ -221,7 +221,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               logoUrl={awayTeamLogoUrl}
             />
             <div className="min-w-0 text-left">
-              <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-[#f0f0f0] sm:text-4xl">
+              <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {awayTeam ?? "Away"}
               </p>
               <p className="section-label mt-1.5">

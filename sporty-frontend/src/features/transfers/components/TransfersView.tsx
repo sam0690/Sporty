@@ -87,22 +87,22 @@ export function TransfersView(props: Props) {
 
   if (!leagueId) {
     return (
-      <div className="mx-auto max-w-7xl px-6 py-8 text-[#f0f0f0]">
+      <div className="mx-auto max-w-7xl px-6 py-8 text-fg-1">
         <p className="mb-6 section-label">Manager: {username || "Sporty User"}</p>
-        <div className="mb-6 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center">
-          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] text-[#555560]">
+        <div className="mb-6 rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center">
+          <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/8 text-fg-3">
             <ArrowLeftRight className="h-5 w-5" aria-hidden />
           </div>
-          <h2 className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          <h2 className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
             Select a league to manage transfers
           </h2>
-          <p className="mt-1 text-sm text-[#555560]">
+          <p className="mt-1 text-sm text-fg-3">
             Open transfers from one of your leagues. Your transfer history is
             still available below.
           </p>
           <Link
             href="/leagues"
-            className="mt-5 inline-flex rounded-[3px] bg-[#e8fb25] px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
+            className="mt-5 inline-flex rounded-[3px] bg-accent px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
           >
             My Leagues
           </Link>
@@ -118,7 +118,7 @@ export function TransfersView(props: Props) {
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-7xl px-6 py-8 text-fg-1">
       <p className="mb-6 section-label">Manager: {username || "Sporty User"}</p>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
@@ -135,7 +135,7 @@ export function TransfersView(props: Props) {
             deadlineField="transfer_deadline_at"
           />
           {transfersRemaining !== null ? (
-            <div className="rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.08)] px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+            <div className="rounded-[3px] border border-accent/20 bg-accent/8 px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent">
               {transfersRemaining} transfers remaining this session
             </div>
           ) : null}
@@ -145,10 +145,10 @@ export function TransfersView(props: Props) {
             clubWarnings={clubCounts}
           />
           {stagedOutPlayers.length > 0 || stagedInPlayers.length > 0 ? (
-            <div className="overflow-hidden rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[#111117]">
-              <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-4 py-3">
+            <div className="overflow-hidden rounded-[3px] border border-accent/20 bg-surface-1">
+              <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
                 <p className="section-label">Staged Transfers</p>
-                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
                   {stagedOutPlayers.length} out · {stagedInPlayers.length} in
                 </span>
               </div>
@@ -159,12 +159,12 @@ export function TransfersView(props: Props) {
                   </p>
                   <div className="space-y-1.5">
                     {stagedOutPlayers.length === 0 ? (
-                      <p className="text-xs text-[#555560]">—</p>
+                      <p className="text-xs text-fg-3">—</p>
                     ) : (
                       stagedOutPlayers.map((player) => (
                         <div key={player.id} className="flex min-w-0 items-center gap-2">
                           <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
-                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                             {player.name}
                           </p>
                         </div>
@@ -178,12 +178,12 @@ export function TransfersView(props: Props) {
                   </p>
                   <div className="space-y-1.5">
                     {stagedInPlayers.length === 0 ? (
-                      <p className="text-xs text-[#555560]">—</p>
+                      <p className="text-xs text-fg-3">—</p>
                     ) : (
                       stagedInPlayers.map((player) => (
                         <div key={player.id} className="flex min-w-0 items-center gap-2">
                           <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
-                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                             {player.name}
                           </p>
                         </div>
@@ -204,14 +204,14 @@ export function TransfersView(props: Props) {
                       stagedOutPlayers.length !== stagedInPlayers.length) ||
                     !isTransfersOpen
                   }
-                  className="w-full rounded-[3px] bg-[#e8fb25] px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-[3px] bg-accent px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {confirmTransfersMutation.isPending
                     ? "Confirming…"
                     : "Confirm Staged Transfers"}
                 </button>
                 {isMultiSportLeague ? (
-                  <p className="mt-2 text-xs text-[#555560]">
+                  <p className="mt-2 text-xs text-fg-3">
                     Multisport: you can stage players in directly when budget and
                     roster limits allow.
                   </p>
@@ -234,16 +234,16 @@ export function TransfersView(props: Props) {
             onMaxCostChange={handleMaxCostChange}
           />
 
-          <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2 text-sm text-[#555560]">
-              <span className="font-barlow-condensed font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          <div className="flex flex-col gap-3 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
+              <span className="font-barlow-condensed font-700 uppercase tracking-[1px] text-fg-1">
                 Page {playersCurrentPage}
               </span>
               <span>/ {playersTotalPages}</span>
               <span className="hidden sm:inline">•</span>
               <span>{playersTotal} players</span>
               {isPlayersPageLoading ? (
-                <span className="inline-flex items-center gap-1 rounded-[3px] bg-[rgba(232,251,37,0.1)] px-2.5 py-1 text-xs text-[#e8fb25]">
+                <span className="inline-flex items-center gap-1 rounded-[3px] bg-accent/10 px-2.5 py-1 text-xs text-accent">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading…
                 </span>
               ) : null}
@@ -254,7 +254,7 @@ export function TransfersView(props: Props) {
                 type="button"
                 onClick={handlePreviousPlayersPage}
                 disabled={playersCurrentPage <= 1 || isPlayersPageLoading}
-                className="inline-flex items-center gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" /> Prev
               </button>
@@ -264,7 +264,7 @@ export function TransfersView(props: Props) {
                 disabled={
                   playersCurrentPage >= playersTotalPages || isPlayersPageLoading
                 }
-                className="inline-flex items-center gap-1 rounded-[3px] bg-[#e8fb25] px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-[3px] bg-accent px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </button>
@@ -312,10 +312,10 @@ export function TransfersView(props: Props) {
             disabled={!isTransfersOpen}
           />
           {selectedOutPlayer && (
-            <div className="mt-4 flex items-center justify-between gap-3 rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[rgba(232,251,37,0.08)] px-4 py-3">
+            <div className="mt-4 flex items-center justify-between gap-3 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-3">
               <div className="min-w-0">
                 <p className="section-label">Swapping Out</p>
-                <p className="mt-0.5 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                <p className="mt-0.5 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                   {selectedOutPlayer.name}
                 </p>
               </div>
@@ -326,7 +326,7 @@ export function TransfersView(props: Props) {
                     await cancelTransfersMutation.mutateAsync();
                   } catch {}
                 }}
-                className="shrink-0 text-[#555560] transition-colors hover:text-[#f0f0f0]"
+                className="shrink-0 text-fg-3 transition-colors hover:text-fg-1"
                 aria-label="Cancel swap"
               >
                 <X className="h-4 w-4" />
@@ -342,7 +342,7 @@ export function TransfersView(props: Props) {
                   setShowConfirmModal(false);
                 } catch {}
               }}
-              className="mt-3 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+              className="mt-3 w-full rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
             >
               Cancel Staged Session
             </button>

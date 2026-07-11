@@ -32,7 +32,7 @@ export function LeagueHeader({
 
   return (
     <header
-      className="relative overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] p-6 sm:p-8"
+      className="relative overflow-hidden rounded-[3px] border border-white/8 p-6 sm:p-8"
       style={{ background: `linear-gradient(135deg, ${glow}14 0%, #0d0d12 60%)` }}
     >
       <div
@@ -50,7 +50,7 @@ export function LeagueHeader({
           >
             {sport}
           </span>
-          <h1 className="mt-3 truncate font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-7xl">
+          <h1 className="mt-3 truncate font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-7xl">
             {leagueName}
           </h1>
         </div>
@@ -58,14 +58,14 @@ export function LeagueHeader({
         <div className="min-w-[220px] shrink-0">
           <div className="flex items-center justify-between gap-3">
             <span className="section-label">Season Progress</span>
-            <span className="font-bebas text-xl tracking-[1px] text-[#e8fb25]">
+            <span className="font-bebas text-xl tracking-[1px] text-accent">
               GW {currentWeek}
-              <span className="text-[#555560]">/{totalWeeks}</span>
+              <span className="text-fg-3">/{totalWeeks}</span>
             </span>
           </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-[rgba(255,255,255,0.08)]">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
             <div
-              className="h-full rounded-full bg-[#e8fb25] transition-all duration-300"
+              className="h-full rounded-full bg-accent transition-all duration-300"
               style={{ width: `${progressPercent}%` }}
             />
           </div>

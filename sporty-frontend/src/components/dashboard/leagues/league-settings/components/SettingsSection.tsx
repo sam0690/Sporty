@@ -22,11 +22,11 @@ export function SettingsSection({
   const border =
     tone === "danger"
       ? "border-[rgba(255,59,48,0.25)]"
-      : "border-[rgba(255,255,255,0.08)]";
+      : "border-white/8";
 
   return (
     <section
-      className={`overflow-hidden rounded-[3px] border ${border} bg-[#111117] animate-fade-soft`}
+      className={`overflow-hidden rounded-[3px] border ${border} bg-surface-1 animate-fade-soft`}
     >
       <header
         className={`flex flex-wrap items-center justify-between gap-3 border-b ${border} px-5 py-3`}
@@ -39,7 +39,7 @@ export function SettingsSection({
             {title}
           </p>
           {description ? (
-            <p className="mt-1 text-xs text-[#555560]">{description}</p>
+            <p className="mt-1 text-xs text-fg-3">{description}</p>
           ) : null}
         </div>
         {action}
@@ -53,8 +53,8 @@ export function SettingsSection({
 export const segmentBase =
   "rounded-[3px] border px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] transition-colors";
 export const segmentActive =
-  "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]";
+  "border-accent/40 bg-accent/10 text-accent";
 export const segmentIdle =
-  "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]";
+  "border-white/8 bg-surface-3 text-fg-2 hover:text-fg-1";
 export const settingsInput =
-  "w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]";
+  "w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent";

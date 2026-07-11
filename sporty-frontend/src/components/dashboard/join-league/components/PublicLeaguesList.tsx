@@ -68,7 +68,7 @@ function LeagueCard({
 
   return (
     <article
-      className="animate-fade-soft group flex flex-col overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 transition-colors hover:border-[rgba(255,255,255,0.18)]"
+      className="animate-fade-soft group flex flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-5 transition-colors hover:border-white/18"
       style={{ borderLeft: `3px solid ${glyph.color}` }}
     >
       <div className="flex items-start gap-3">
@@ -83,11 +83,11 @@ function LeagueCard({
           <Glyph className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+          <h3 className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[0.5px] text-fg-1">
             {league.name}
           </h3>
-          <p className="mt-1 flex items-center gap-1.5 text-xs text-[#9a9aa5]">
-            <UsersIcon className="size-3.5 text-[#555560]" />
+          <p className="mt-1 flex items-center gap-1.5 text-xs text-fg-2">
+            <UsersIcon className="size-3.5 text-fg-3" />
             {league.memberCount}{" "}
             {league.memberCount === 1 ? "member" : "members"}
           </p>
@@ -97,29 +97,29 @@ function LeagueCard({
       {/* status pill */}
       <div className="mt-4">
         {league.requiresInviteCode ? (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-white/12 bg-white/4 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
             <LockIcon className="size-3" />
             Invite only
           </span>
         ) : league.joinableNow === false ? (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,216,107,0.25)] bg-[rgba(255,216,107,0.08)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ffd86b]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-warning/25 bg-warning/8 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-warning">
             Closed
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(0,255,136,0.28)] bg-[rgba(0,255,136,0.08)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#00ff88]">
-            <span className="size-1.5 rounded-full bg-[#00ff88]" />
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-success/28 bg-success/8 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success">
+            <span className="size-1.5 rounded-full bg-success" />
             Open to join
           </span>
         )}
       </div>
 
       {league.joinMessage ? (
-        <p className="mt-3 text-xs leading-5 text-[#8a8a95]">
+        <p className="mt-3 text-xs leading-5 text-fg-2">
           {league.joinMessage}
         </p>
       ) : null}
       {league.midseasonEntryWindowNumber ? (
-        <p className="mt-2 text-xs text-[#ffd86b]">
+        <p className="mt-2 text-xs text-warning">
           Scoring starts from transfer window{" "}
           {league.midseasonEntryWindowNumber}
         </p>
@@ -129,7 +129,7 @@ function LeagueCard({
         type="button"
         disabled={disabled}
         onClick={() => onJoin(league)}
-        className="mt-4 inline-flex w-full items-center justify-center rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:bg-[rgba(255,255,255,0.06)] disabled:text-[#555560]"
+        className="mt-4 inline-flex w-full items-center justify-center rounded-[3px] bg-accent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-white/6 disabled:text-fg-3"
       >
         {disabled ? "Unavailable" : "Join League"}
       </button>
@@ -139,14 +139,14 @@ function LeagueCard({
 
 function EmptyState() {
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
-      <span className="mx-auto grid size-11 place-items-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] text-[#555560]">
+    <div className="rounded-[3px] border border-white/8 bg-surface-1 p-10 text-center">
+      <span className="mx-auto grid size-11 place-items-center rounded-full border border-white/8 bg-white/2 text-fg-3">
         <UsersIcon className="size-5" />
       </span>
-      <p className="mt-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+      <p className="mt-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-2">
         No public leagues
       </p>
-      <p className="mt-1 text-xs text-[#555560]">
+      <p className="mt-1 text-xs text-fg-3">
         Ask for an invite code above, or create your own league.
       </p>
     </div>

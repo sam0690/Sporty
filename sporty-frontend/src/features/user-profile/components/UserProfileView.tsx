@@ -50,7 +50,7 @@ export function UserProfileView({ userId }: { userId?: string }) {
   );
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto w-full max-w-7xl px-6 py-8 text-fg-1">
       <p className="mb-6 section-label">
         {targetUserId === me?.id ? "Your Profile" : "Player Profile"}
       </p>

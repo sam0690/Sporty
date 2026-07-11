@@ -180,8 +180,8 @@ export function LeagueHome() {
   if (isLoading) {
     return (
       <section className="mx-auto max-w-6xl space-y-4 px-6 py-8">
-        <div className="h-12 animate-pulse rounded-[3px] bg-[#1d1d26]" />
-        <div className="h-10 w-40 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+        <div className="h-12 animate-pulse rounded-[3px] bg-surface-3" />
+        <div className="h-10 w-40 animate-pulse rounded-[3px] bg-surface-3" />
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <div className="lg:col-span-2"><TableSkeleton /></div>
           <div className="space-y-4 lg:col-span-1">
@@ -194,7 +194,7 @@ export function LeagueHome() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
       <p className="section-label">Manager: {username || "Sporty User"}</p>
 
       <LeagueHeader
@@ -218,10 +218,10 @@ export function LeagueHome() {
           window={editableWindow}
         />
       ) : (
-        <section className="flex flex-col gap-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="flex flex-col gap-3 rounded-[3px] border border-white/8 bg-surface-1 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <span className="section-label">Roster Moves</span>
-            <p className="mt-2 text-sm text-[#9a9aa5]">
+            <p className="mt-2 text-sm text-fg-2">
               {leagueStatus === "active"
                 ? "Pick up unowned players from the free-agent pool (add one, drop one)."
                 : "No budget transfers in a draft league. Free agents open once the season is underway."}
@@ -230,7 +230,7 @@ export function LeagueHome() {
           {leagueStatus === "active" ? (
             <Link
               href={`/leagues/${leagueId}/free-agents`}
-              className="inline-flex shrink-0 items-center justify-center rounded-[3px] bg-[#e8fb25] px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+              className="inline-flex shrink-0 items-center justify-center rounded-[3px] bg-accent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
             >
               Free Agents
             </Link>
@@ -300,25 +300,25 @@ export function LeagueHome() {
                     type="button"
                     onClick={handleStartDraft}
                     disabled={startDraft.isPending}
-                    className="shrink-0 rounded-[3px] bg-[#e8fb25] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="shrink-0 rounded-[3px] bg-accent px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {startDraft.isPending ? "Starting…" : "Start Draft"}
                   </button>
                 ) : null}
               </div>
             ) : leagueStatus === "drafting" ? (
-              <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(0,212,255,0.3)] bg-[#1a1a2a] p-5 text-sm text-[#00d4ff] sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-[3px] border border-info/30 bg-[#1a1a2a] p-5 text-sm text-info sm:flex-row sm:items-center sm:justify-between">
                 <span>Draft is in progress. Make your picks from the draft screen.</span>
                 <button
                   type="button"
                   onClick={goToDraftRoom}
-                  className="shrink-0 rounded-[3px] bg-[#00d4ff] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#4de0ff]"
+                  className="shrink-0 rounded-[3px] bg-info px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-[#4de0ff]"
                 >
                   Enter Draft Room
                 </button>
               </div>
             ) : (
-              <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-5 text-sm text-[#555560]">
+              <div className="rounded-[3px] border border-white/8 bg-surface-3 p-5 text-sm text-fg-3">
                 Draft is complete, but your team is not available yet.
               </div>
             )
@@ -339,7 +339,7 @@ export function LeagueHome() {
                       : `/create-team?leagueId=${league.id}`,
                   )
                 }
-                className="rounded-[3px] bg-[#e8fb25] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
+                className="rounded-[3px] bg-accent px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
               >
                 {hasMyTeam ? "View Team" : "Build Team"}
               </button>
@@ -349,7 +349,7 @@ export function LeagueHome() {
               <button
                 type="button"
                 onClick={() => router.push(`/create-team?leagueId=${league.id}`)}
-                className="rounded-[3px] bg-[#e8fb25] px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
+                className="rounded-[3px] bg-accent px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
               >
                 Open Draft Screen
               </button>
@@ -365,10 +365,10 @@ export function LeagueHome() {
         onClose={() => setShowLeaveModal(false)}
         closeDisabled={isLeaving}
       >
-        <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+        <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-fg-1">
           Leave League?
         </h3>
-        <p className="mt-2 text-sm text-[#555560]">
+        <p className="mt-2 text-sm text-fg-3">
           {isCommissioner
             ? "Commissioners cannot leave until they transfer league ownership."
             : `Leave ${league?.name || "this league"}? Your team will be permanently removed.`}
@@ -377,7 +377,7 @@ export function LeagueHome() {
           <button
             type="button"
             onClick={() => setShowLeaveModal(false)}
-            className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
+            className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1"
           >
             Cancel
           </button>

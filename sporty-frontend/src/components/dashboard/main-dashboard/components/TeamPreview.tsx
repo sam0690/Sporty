@@ -16,7 +16,7 @@ type TeamPreviewProps = {
 
 function LoadingPitch() {
   return (
-    <div className="skeleton relative mx-auto aspect-3/4 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)]">
+    <div className="skeleton relative mx-auto aspect-3/4 overflow-hidden rounded-[3px] border border-white/8">
       {[
         "left-[35%] top-[10%]",
         "right-[35%] top-[10%]",
@@ -41,7 +41,7 @@ function LoadingPitch() {
 
 function EmptyPanel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-sm text-[#777783]">
+    <div className="rounded-[3px] border border-white/8 bg-surface-2 p-4 text-sm text-fg-2">
       {children}
     </div>
   );
@@ -63,9 +63,9 @@ export function TeamPreview({
   const Glyph = glyph.Icon;
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
       <div aria-hidden className="h-[2px] w-full" style={{ background: glyph.color }} />
-      <header className="flex items-center gap-2.5 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
+      <header className="flex items-center gap-2.5 border-b border-white/7 px-5 py-4">
         <span
           className="grid size-6 shrink-0 place-items-center rounded-[3px]"
           style={{ color: glyph.color, background: `${glyph.color}1a` }}
@@ -82,7 +82,7 @@ export function TeamPreview({
           <LoadingPitch />
         ) : isError ? (
           <EmptyPanel>
-            <span className="text-[#ff3b5c]">Failed to load team previews.</span>
+            <span className="text-danger">Failed to load team previews.</span>
           </EmptyPanel>
         ) : !hasLeagues ? (
           <EmptyPanel>You have not joined a league yet.</EmptyPanel>
@@ -94,17 +94,17 @@ export function TeamPreview({
             onClick={() =>
               router.push(`/leagues/${activeSlide.leagueId}/lineup`)
             }
-            className="group w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] p-3 text-left transition-colors hover:border-[rgba(232,251,37,0.3)]"
+            className="group w-full rounded-[3px] border border-white/8 p-3 text-left transition-colors hover:border-accent/30"
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
                 {activeSlide.leagueName}
               </p>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[rgba(232,251,37,0.08)] px-2.5 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#c8d85a]">
+                <span className="rounded-[3px] border border-accent/25 bg-accent/8 px-2.5 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-accent-dim">
                   {activeSlide.gameweek ? `GW ${activeSlide.gameweek}` : "Current GW"}
                 </span>
-                <ChevronRight className="size-4 text-[#555560] transition-colors group-hover:text-[#e8fb25]" />
+                <ChevronRight className="size-4 text-fg-3 transition-colors group-hover:text-accent" />
               </div>
             </div>
 
@@ -115,7 +115,7 @@ export function TeamPreview({
                 renderSlot={({ slot }) => {
                   if (!slot.player) {
                     return (
-                      <div className="h-10 w-10 rounded-[3px] border border-dashed border-[rgba(255,255,255,0.15)] bg-white/[0.03] sm:h-14 sm:w-14" />
+                      <div className="h-10 w-10 rounded-[3px] border border-dashed border-white/15 bg-white/[0.03] sm:h-14 sm:w-14" />
                     );
                   }
                   return (

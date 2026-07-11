@@ -12,7 +12,7 @@ export function CourtRenderer({
 }: CourtRendererProps) {
   return (
     <div
-      className={`relative mx-auto aspect-19/34 w-full overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#09152e] ${className}`}
+      className={`relative mx-auto aspect-19/34 w-full overflow-hidden rounded-[3px] border border-white/8 bg-[#09152e] ${className}`}
     >
       <Image
         src="/images/courts/basketball-court.png"

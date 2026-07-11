@@ -71,13 +71,13 @@ export function FreeAgentsView() {
 
   if (!isDraftMode) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs
           activeTab="free-agents"
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#555560]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
           Free agents are only available in draft leagues.
         </div>
       </section>
@@ -85,25 +85,25 @@ export function FreeAgentsView() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
       <NavigationTabs
         activeTab="free-agents"
         leagueId={leagueId}
         isCommissioner={isCommissioner}
       />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-4">
+      <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Free Agents
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-fg-3">
           Add an unowned player and drop one of your own to make room.
         </p>
       </header>
 
       {!isActive ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-sm text-[#9a9aa5]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
           Free agents open once the season is active.
         </div>
       ) : (
@@ -114,12 +114,12 @@ export function FreeAgentsView() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search players…"
-              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+              className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
             />
             <select
               value={position}
               onChange={(e) => setPosition(e.target.value)}
-              className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none focus:border-[#e8fb25]"
+              className="rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none focus:border-accent"
               style={{ colorScheme: "dark" }}
             >
               <option value="">All positions</option>
@@ -137,7 +137,7 @@ export function FreeAgentsView() {
               <CardSkeleton />
             </div>
           ) : (data?.items.length ?? 0) === 0 ? (
-            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#555560]">
+            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
               No available free agents match your filters.
             </div>
           ) : (
@@ -145,15 +145,15 @@ export function FreeAgentsView() {
               {data!.items.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4"
+                  className="flex items-center justify-between rounded-[3px] border border-white/8 bg-surface-1 p-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
                     <div className="min-w-0">
-                      <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                      <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                         {p.name}
                       </p>
-                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#555560]">
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-3">
                         <span>{p.position}</span>
                         {p.real_team ? (
                           <>
@@ -170,7 +170,7 @@ export function FreeAgentsView() {
                   <button
                     type="button"
                     onClick={() => setAddTarget(p)}
-                    className="shrink-0 rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
+                    className="shrink-0 rounded-[3px] bg-accent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
                   >
                     Add
                   </button>
@@ -187,12 +187,12 @@ export function FreeAgentsView() {
         closeDisabled={claim.isPending}
       >
         <p className="section-label">Add {addTarget?.name}</p>
-        <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-fg-1">
           Drop a player to make room
         </h3>
         <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
           {dropCandidates.length === 0 ? (
-            <p className="text-sm text-[#555560]">
+            <p className="text-sm text-fg-3">
               No droppable {addTarget?.sport} players on your squad.
             </p>
           ) : (
@@ -202,13 +202,13 @@ export function FreeAgentsView() {
                 type="button"
                 disabled={claim.isPending}
                 onClick={() => handleConfirmDrop(tp.player.id)}
-                className="flex w-full items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-left transition-colors hover:border-[rgba(255,59,48,0.4)] disabled:opacity-50"
+                className="flex w-full items-center justify-between rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-left transition-colors hover:border-[rgba(255,59,48,0.4)] disabled:opacity-50"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <PlayerAvatar name={tp.player.name} photoUrl={tp.player.photo_url} size="sm" />
-                  <span className="truncate text-sm text-[#f0f0f0]">{tp.player.name}</span>
+                  <span className="truncate text-sm text-fg-1">{tp.player.name}</span>
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
+                <span className="flex shrink-0 items-center gap-1.5 text-xs text-fg-3">
                   <span>{tp.player.position}</span>
                   {tp.player.real_team ? (
                     <>
@@ -226,7 +226,7 @@ export function FreeAgentsView() {
           type="button"
           onClick={() => setAddTarget(null)}
           disabled={claim.isPending}
-          className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:opacity-50"
+          className="mt-4 w-full rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 disabled:opacity-50"
         >
           Cancel
         </button>

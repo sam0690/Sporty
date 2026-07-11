@@ -8,7 +8,7 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={cn(
-        "rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] text-[#f0f0f0] transition-colors duration-150",
+        "rounded-[3px] border border-white/8 bg-surface-1 text-fg-1 transition-colors duration-150",
         className,
       )}
       {...props}
@@ -21,7 +21,7 @@ const CardHeader = forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("px-6 py-4 border-b border-[rgba(255,255,255,0.08)]", className)}
+      className={cn("px-6 py-4 border-b border-white/8", className)}
       {...props}
     />
   ),
@@ -35,7 +35,7 @@ const CardTitle = forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "font-barlow-condensed text-lg font-700 uppercase tracking-[2px] leading-none text-[#f0f0f0]",
+      "font-barlow-condensed text-lg font-700 uppercase tracking-[2px] leading-none text-fg-1",
       className,
     )}
     {...props}
@@ -47,7 +47,7 @@ const CardContent = forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("px-6 py-5 text-[#f0f0f0]", className)}
+      className={cn("px-6 py-5 text-fg-1", className)}
       {...props}
     />
   ),
@@ -59,7 +59,7 @@ const CardFooter = forwardRef<HTMLDivElement, CardProps>(
     <div
       ref={ref}
       className={cn(
-        "flex items-center px-6 py-4 border-t border-[rgba(255,255,255,0.08)]",
+        "flex items-center px-6 py-4 border-t border-white/8",
         className,
       )}
       {...props}

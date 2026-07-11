@@ -29,18 +29,18 @@ function BioField({ label, value }: { label: string; value: string | number | nu
   return (
     <div>
       <div className="micro-label text-[#6b6b76]">{label}</div>
-      <div className="mt-1 text-sm text-[#f0f0f0]">{value}</div>
+      <div className="mt-1 text-sm text-fg-1">{value}</div>
     </div>
   );
 }
 
 function RecentStatRow({ stat }: { stat: TPlayerGameweekStat }) {
   return (
-    <div className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.06)] bg-[#16161d] px-3 py-2">
+    <div className="flex items-center justify-between rounded-[3px] border border-white/6 bg-[#16161d] px-3 py-2">
       <div className="micro-label text-[#6b6b76]">
         GW {stat.transfer_window.number}
       </div>
-      <div className="flex items-center gap-4 text-xs text-[#9a9aa5]">
+      <div className="flex items-center gap-4 text-xs text-fg-2">
         <span>{stat.minutes_played}&apos;</span>
         {stat.football_stat && (
           <>
@@ -55,7 +55,7 @@ function RecentStatRow({ stat }: { stat: TPlayerGameweekStat }) {
           </>
         )}
       </div>
-      <div className="num text-sm font-700 text-[#00ff88]">
+      <div className="num text-sm font-700 text-success">
         {stat.fantasy_points} pts
       </div>
     </div>
@@ -79,7 +79,7 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
   if (isError || !player) {
     return (
       <div className="p-6 text-center">
-        <p className="text-sm text-[#f0f0f0]/65">
+        <p className="text-sm text-fg-1/65">
           Couldn&apos;t load this player. Try again.
         </p>
       </div>
@@ -92,24 +92,24 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
         <div className="flex items-start gap-4">
           <PlayerAvatar name={player.display_name} photoUrl={player.photo_url} size="lg" />
           <div className="min-w-0 flex-1 pt-1">
-            <h2 className="truncate text-lg font-700 text-[#f0f0f0]">
+            <h2 className="truncate text-lg font-700 text-fg-1">
               {player.display_name}
             </h2>
             <div className="mt-1 flex items-center gap-2">
               <TeamLogo teamName={player.real_team} logoUrl={player.real_team_logo_url} size="sm" />
-              <span className="text-sm text-[#9a9aa5]">{player.real_team}</span>
-              <span className="micro-label rounded-[3px] border border-[rgba(0,255,136,0.3)] bg-[rgba(0,255,136,0.08)] px-1.5 py-0.5 text-[#00ff88]">
+              <span className="text-sm text-fg-2">{player.real_team}</span>
+              <span className="micro-label rounded-[3px] border border-success/30 bg-success/8 px-1.5 py-0.5 text-success">
                 {player.position}
               </span>
             </div>
-            <div className="num mt-2 text-2xl font-700 text-[#f0f0f0]">
+            <div className="num mt-2 text-2xl font-700 text-fg-1">
               £{player.current_cost.toFixed(1)}m
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 border-t border-[rgba(255,255,255,0.06)] px-6 py-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 border-t border-white/6 px-6 py-4 sm:grid-cols-3">
         <BioField label="Nationality" value={player.nationality} />
         <BioField
           label="Age"
@@ -122,15 +122,15 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
       </div>
 
       {player.bio && (
-        <div className="border-t border-[rgba(255,255,255,0.06)] px-6 py-4">
+        <div className="border-t border-white/6 px-6 py-4">
           <div className="micro-label text-[#6b6b76]">About</div>
-          <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-[#9a9aa5]">
+          <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-fg-2">
             {player.bio}
           </p>
         </div>
       )}
 
-      <div className="border-t border-[rgba(255,255,255,0.06)] px-6 py-4">
+      <div className="border-t border-white/6 px-6 py-4">
         <div className="micro-label mb-3 text-[#6b6b76]">Recent Performance</div>
         {statsLoading && (
           <div className="space-y-2">
@@ -139,7 +139,7 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
           </div>
         )}
         {!statsLoading && (!recentStats || recentStats.length === 0) && (
-          <p className="text-sm text-[#9a9aa5]">No recent gameweek data yet.</p>
+          <p className="text-sm text-fg-2">No recent gameweek data yet.</p>
         )}
         {!statsLoading && recentStats && recentStats.length > 0 && (
           <div className="space-y-2">

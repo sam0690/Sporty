@@ -16,7 +16,7 @@ type PanelProps = {
 export function Panel({
   title,
   icon,
-  accent = "#e8fb25",
+  accent = "#e2c368",
   action,
   children,
   className = "",
@@ -24,9 +24,9 @@ export function Panel({
 }: PanelProps) {
   return (
     <section
-      className={`pop-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] transition-colors duration-150 hover:border-[rgba(255,255,255,0.13)] ${className}`}
+      className={`pop-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 transition-colors duration-150 hover:border-white/13 ${className}`}
     >
-      <header className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+      <header className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3">
         <div className="flex items-center gap-2.5">
           {icon && (
             <span
@@ -61,13 +61,13 @@ export function PanelEmpty({
 }) {
   return (
     <div className="flex flex-col items-center gap-2.5 py-10 text-center">
-      <span className="grid size-11 place-items-center rounded-[3px] border border-[rgba(255,255,255,0.08)] text-[#555560]">
+      <span className="grid size-11 place-items-center rounded-[3px] border border-white/8 text-fg-3">
         {icon}
       </span>
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#9a9aa5]">
+      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-2">
         {title}
       </p>
-      {hint && <p className="max-w-[24ch] text-xs text-[#555560]">{hint}</p>}
+      {hint && <p className="max-w-[24ch] text-xs text-fg-3">{hint}</p>}
     </div>
   );
 }

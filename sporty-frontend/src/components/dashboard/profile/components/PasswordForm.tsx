@@ -83,15 +83,15 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
     strength === "Strong" ? "100%" : strength === "Medium" ? "66%" : "33%";
 
   const fieldLabel =
-    "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]";
+    "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
   const fieldInput =
-    "w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]";
+    "w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent";
   const toggleBtn =
-    "shrink-0 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-3 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]";
+    "shrink-0 rounded-[3px] border border-white/8 bg-surface-3 px-3 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors hover:text-fg-1";
 
   return (
-    <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <header className="border-b border-[rgba(255,255,255,0.08)] px-5 py-3">
+    <section className="card-fade-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <header className="border-b border-white/8 px-5 py-3">
         <p className="section-label">Security</p>
       </header>
 
@@ -142,7 +142,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
           </div>
           {newPassword ? (
             <div className="mt-2 space-y-1">
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#1d1d26]">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-3">
                 <div
                   className="h-full rounded-full transition-all duration-200"
                   style={{ width: strengthWidth, background: strengthColor }}
@@ -185,7 +185,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
         <button
           type="submit"
           disabled={isSaving}
-          className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Update Password"}
         </button>

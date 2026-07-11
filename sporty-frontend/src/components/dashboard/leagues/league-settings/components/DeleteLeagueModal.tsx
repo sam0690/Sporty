@@ -28,8 +28,8 @@ export function DeleteLeagueModal({
       <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#ff3b30]">
         Delete League
       </h3>
-      <p className="mt-2 text-sm text-[#9a9aa5]">
-        Type <span className="font-600 text-[#f0f0f0]">{leagueName}</span> to
+      <p className="mt-2 text-sm text-fg-2">
+        Type <span className="font-600 text-fg-1">{leagueName}</span> to
         confirm permanent deletion.
       </p>
 
@@ -37,14 +37,14 @@ export function DeleteLeagueModal({
         value={confirmText}
         onChange={(event) => onConfirmTextChange(event.target.value)}
         placeholder="League name"
-        className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#ff3b30]"
+        className="mt-4 w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-[#ff3b30]"
       />
 
       <div className="mt-6 flex gap-2">
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+          className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1"
         >
           Cancel
         </button>

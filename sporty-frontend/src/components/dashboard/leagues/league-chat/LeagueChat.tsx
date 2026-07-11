@@ -43,8 +43,8 @@ function ReactionBar({
           aria-pressed={reaction.reacted_by_me}
           className={`flex min-h-[28px] items-center gap-1 rounded-[3px] border px-2 py-0.5 text-xs transition-colors ${
             reaction.reacted_by_me
-              ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-              : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+              ? "border-accent/40 bg-accent/10 text-accent"
+              : "border-white/8 bg-surface-3 text-fg-2 hover:text-fg-1"
           }`}
         >
           <span aria-hidden>{reaction.emoji}</span>
@@ -59,12 +59,12 @@ function ReactionBar({
           aria-haspopup="true"
           aria-expanded={pickerOpen}
           aria-label="Add reaction"
-          className="flex h-7 min-w-[28px] items-center justify-center rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-1.5 text-xs text-[#9a9aa5] transition-colors hover:text-[#f0f0f0]"
+          className="flex h-7 min-w-[28px] items-center justify-center rounded-[3px] border border-white/8 bg-surface-3 px-1.5 text-xs text-fg-2 transition-colors hover:text-fg-1"
         >
           +
         </button>
         {pickerOpen ? (
-          <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1.5 shadow-xl">
+          <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-[3px] border border-white/8 bg-surface-1 p-1.5 shadow-xl">
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
@@ -74,7 +74,7 @@ function ReactionBar({
                   setPickerOpen(false);
                 }}
                 aria-label={`React with ${emoji}`}
-                className="flex h-8 w-8 items-center justify-center rounded-[3px] text-base transition-colors hover:bg-[#1d1d26]"
+                className="flex h-8 w-8 items-center justify-center rounded-[3px] text-base transition-colors hover:bg-surface-3"
               >
                 {emoji}
               </button>
@@ -119,22 +119,22 @@ export function LeagueChat() {
   };
 
   return (
-    <section className="mx-auto max-w-4xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-4xl space-y-5 px-6 py-8 text-fg-1">
       <NavigationTabs activeTab="chat" leagueId={leagueId} isCommissioner={isCommissioner} />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-4">
+      <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Chat
         </h1>
       </header>
 
-      <div className="flex h-[60vh] min-h-[420px] flex-col overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <div className="flex h-[60vh] min-h-[420px] flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-5">
           {isLoading ? (
-            <p className="text-sm text-[#555560]">Loading messages…</p>
+            <p className="text-sm text-fg-3">Loading messages…</p>
           ) : !messages || messages.length === 0 ? (
-            <p className="text-sm text-[#555560]">
+            <p className="text-sm text-fg-3">
               No messages yet — say hello to your league.
             </p>
           ) : (
@@ -148,10 +148,10 @@ export function LeagueChat() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+                    <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
                       {message.user.username}
                     </span>
-                    <span className="text-xs text-[#555560]">
+                    <span className="text-xs text-fg-3">
                       {formatTime(message.created_at)}
                     </span>
                     {message.can_delete ? (
@@ -159,7 +159,7 @@ export function LeagueChat() {
                         type="button"
                         onClick={() => deleteMessage.mutate(message.id)}
                         aria-label="Delete message"
-                        className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] text-[#555560] transition-colors hover:text-[#ff3b30]"
+                        className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] text-fg-3 transition-colors hover:text-[#ff3b30]"
                       >
                         <Trash2 size={14} aria-hidden />
                       </button>
@@ -180,7 +180,7 @@ export function LeagueChat() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 border-t border-[rgba(255,255,255,0.08)] p-3">
+        <div className="flex items-center gap-2 border-t border-white/8 p-3">
           <label htmlFor="chat-message-input" className="sr-only">
             Message
           </label>
@@ -195,13 +195,13 @@ export function LeagueChat() {
               }
             }}
             placeholder="Message your league…"
-            className="min-h-[44px] flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+            className="min-h-[44px] flex-1 rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
           />
           <button
             type="button"
             onClick={handleSend}
             disabled={!draft.trim() || postMessage.isPending}
-            className="min-h-[44px] rounded-[3px] bg-[#e8fb25] px-5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-[44px] rounded-[3px] bg-accent px-5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"
           >
             Send
           </button>

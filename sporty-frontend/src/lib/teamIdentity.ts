@@ -6,7 +6,7 @@ const TEAM_PALETTE = [
   "#4caf50", // football green
   "#ff6b00", // basketball orange
   "#00d4ff", // cricket cyan
-  "#e8fb25", // volt
+  "#e2c368", // volt
   "#9b59b6", // playoff purple
   "#37aee2", // sky
   "#ffd86b", // gold
@@ -29,7 +29,7 @@ export type TeamIdentity = {
 export function teamIdentity(name?: string | null): TeamIdentity {
   const clean = (name ?? "").trim();
   if (!clean) {
-    return { color: "#9a9aa5", initials: "?" };
+    return { color: "#a0a0aa", initials: "?" };
   }
   const color = TEAM_PALETTE[hashString(clean.toLowerCase()) % TEAM_PALETTE.length];
   const initials = clean

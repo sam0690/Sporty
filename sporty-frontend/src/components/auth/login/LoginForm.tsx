@@ -10,9 +10,9 @@ import { Divider } from "./components/Divider";
 import { SocialLogin } from "./components/SocialLogin";
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[#0d0d12] px-4 text-sm text-[#f0f0f0] placeholder:text-[#555560] transition-colors focus:border-[#e8fb25] focus:outline-none focus:ring-2 focus:ring-[rgba(232,251,37,0.15)]";
+  "h-11 w-full rounded-[3px] border border-white/12 bg-surface-2 px-4 text-sm text-fg-1 placeholder:text-fg-3 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15";
 const LABEL_CLASS =
-  "mb-1.5 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]";
+  "mb-1.5 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2";
 
 export function LoginForm() {
   const {
@@ -41,18 +41,18 @@ export function LoginForm() {
       <div className="mx-auto w-full max-w-md">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] hover:no-underline"
+          className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 hover:no-underline"
         >
           ← Back to Home
         </Link>
 
-        <div className="animate-fade-in mt-5 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+        <div className="animate-fade-in mt-5 overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
           <div className="space-y-2.5 p-8 pb-4">
             <span className="section-label">Sign In</span>
-            <h1 className="font-bebas text-5xl leading-none tracking-[3px] text-[#f0f0f0]">
+            <h1 className="font-bebas text-5xl leading-none tracking-[3px] text-fg-1">
               Sign In
             </h1>
-            <p className="text-sm text-[#9a9aa5]">
+            <p className="text-sm text-fg-2">
               Sign in to your fantasy sports account.
             </p>
           </div>
@@ -72,7 +72,7 @@ export function LoginForm() {
                   className={FIELD_CLASS}
                 />
                 {formState.errors.identifier?.message && (
-                  <span className="mt-1 block text-xs text-[#ff3b5c]">
+                  <span className="mt-1 block text-xs text-danger">
                     {formState.errors.identifier.message}
                   </span>
                 )}
@@ -94,7 +94,7 @@ export function LoginForm() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#555560] transition-colors hover:text-[#e8fb25]"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-fg-3 transition-colors hover:text-accent"
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
                     {showPassword ? (
@@ -105,7 +105,7 @@ export function LoginForm() {
                   </button>
                 </div>
                 {formState.errors.password?.message && (
-                  <span className="mt-1 block text-xs text-[#ff3b5c]">
+                  <span className="mt-1 block text-xs text-danger">
                     {formState.errors.password.message}
                   </span>
                 )}
@@ -114,7 +114,7 @@ export function LoginForm() {
               <div className="flex justify-end">
                 <Link
                   href="/forgot-password"
-                  className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] transition-colors hover:text-[#f0ff45] hover:no-underline"
+                  className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent transition-colors hover:text-accent-bright hover:no-underline"
                 >
                   Forgot password?
                 </Link>
@@ -127,7 +127,7 @@ export function LoginForm() {
               >
                 {isSubmitting ? (
                   <span className="inline-flex items-center gap-2">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#0a0a0f]/30 border-t-[#0a0a0f]" />
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-surface-0/30 border-t-surface-0" />
                     Please wait
                   </span>
                 ) : (
@@ -139,11 +139,11 @@ export function LoginForm() {
             <Divider />
             <SocialLogin />
 
-            <div className="border-t border-[rgba(255,255,255,0.08)] pt-4 text-center text-sm text-[#9a9aa5]">
+            <div className="border-t border-white/8 pt-4 text-center text-sm text-fg-2">
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25] hover:text-[#f0ff45] hover:no-underline"
+                className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent hover:text-accent-bright hover:no-underline"
               >
                 Create account
               </Link>

@@ -49,7 +49,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
   }, [userId, me?.role]);
 
   return (
-    <div className="min-h-screen bg-background font-sans text-[#f0f0f0]">
+    <div className="min-h-screen bg-background font-sans text-fg-1">
       <Sidebar items={navItems} />
 
       <div className="pb-24 pt-8 md:ml-[72px] md:pb-10 md:pt-10 lg:ml-64">

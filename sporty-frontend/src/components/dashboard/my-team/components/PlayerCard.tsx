@@ -48,23 +48,23 @@ export function PlayerCard({
   const Icon = meta.Icon;
 
   return (
-    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.16)]">
+    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 transition-colors hover:border-white/16">
       <Link
         href={`/players/${id}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111117]"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-1"
       >
         <PlayerAvatar name={name} photoUrl={photoUrl} size="md" className="shrink-0" />
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
               {name}
             </p>
-            <span className="shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-[#666671]">
+            <span className="shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-fg-3">
               {position}
             </span>
           </div>
-          <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-[#666671]">
+          <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-fg-3">
             <span className="inline-flex items-center gap-1.5" style={{ color: meta.color }}>
               <Icon className="size-3 shrink-0" />
               {meta.label}
@@ -87,19 +87,19 @@ export function PlayerCard({
 
       <div className="flex shrink-0 items-center gap-4 text-right">
         <div>
-          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-[#e8fb25]">
+          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-accent">
             {Math.round(totalPoints)}
           </p>
           <p className="section-label mt-1">Points</p>
         </div>
         <div>
-          <p className="num font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0]">
+          <p className="num font-bebas text-lg leading-none tracking-[1px] text-fg-1">
             {gameweekPoints > 0 ? `+${Math.round(gameweekPoints)}` : Math.round(gameweekPoints)}
           </p>
           <p className="section-label mt-1">GW</p>
         </div>
         <div>
-          <p className="num font-bebas text-lg leading-none tracking-[1px] text-[#f0f0f0]">
+          <p className="num font-bebas text-lg leading-none tracking-[1px] text-fg-1">
             {avgPoints.toFixed(1)}
           </p>
           <p className="section-label mt-1">Avg</p>

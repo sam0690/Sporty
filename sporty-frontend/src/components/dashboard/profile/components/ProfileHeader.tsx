@@ -25,19 +25,19 @@ export function ProfileHeader({
   avatarUrl,
 }: ProfileHeaderProps) {
   return (
-    <header className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <div className="border-b border-[rgba(255,255,255,0.08)] px-6 py-5">
+    <header className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="border-b border-white/8 px-6 py-5">
         <p className="section-label">Account</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Profile
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-fg-3">
           Manage your account and preferences
         </p>
       </div>
 
       <div className="flex flex-wrap items-center gap-5 p-6">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-[rgba(232,251,37,0.2)] bg-[rgba(232,251,37,0.1)] font-bebas text-3xl tracking-[2px] text-[#e8fb25]">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-accent/20 bg-accent/10 font-bebas text-3xl tracking-[2px] text-accent">
           {avatarUrl ? (
             <Image
               src={avatarUrl}
@@ -52,14 +52,14 @@ export function ProfileHeader({
         </div>
 
         <div className="min-w-0">
-          <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+          <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[1px] text-fg-1">
             {userName}
           </p>
-          <p className="truncate text-sm text-[#555560]">{userEmail}</p>
+          <p className="truncate text-sm text-fg-3">{userEmail}</p>
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="mt-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:text-[#f0ff45]"
+            className="mt-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:text-accent-bright"
           >
             Change Avatar
           </button>

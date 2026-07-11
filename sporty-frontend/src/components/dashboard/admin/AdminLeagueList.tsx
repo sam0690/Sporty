@@ -51,14 +51,14 @@ export function AdminLeagueList() {
             Force Delete
           </Button>
         ) : (
-          <span className="text-xs text-[#555560]">Super admin only</span>
+          <span className="text-xs text-fg-3">Super admin only</span>
         ),
     },
   ];
 
   return (
     <div className="space-y-4">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Leagues</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Leagues</h1>
 
       <input
         type="text"
@@ -68,7 +68,7 @@ export function AdminLeagueList() {
           setPage(1);
         }}
         placeholder="Search by league name…"
-        className="w-full max-w-sm rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
+        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
       />
 
       {isLoading ? (

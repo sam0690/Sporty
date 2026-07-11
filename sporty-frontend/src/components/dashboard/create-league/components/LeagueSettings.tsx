@@ -19,7 +19,7 @@ type LeagueSettingsProps = {
 const teamSizes = [4, 6, 8, 10, 12, 14, 16];
 
 const fieldLabel =
-  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5]";
+  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
 
 function RadioCard({
   selected,
@@ -42,8 +42,8 @@ function RadioCard({
       whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
       className={`flex items-start gap-3 rounded-[3px] border p-4 text-left transition-colors ${
         selected
-          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.08)]"
-          : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.18)]"
+          ? "border-accent/40 bg-accent/8"
+          : "border-white/8 bg-surface-2 hover:border-white/18"
       }`}
     >
       {icon ? (
@@ -53,21 +53,21 @@ function RadioCard({
       ) : (
         <span
           className={`mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border ${
-            selected ? "border-[#e8fb25]" : "border-[rgba(255,255,255,0.25)]"
+            selected ? "border-accent" : "border-white/25"
           }`}
         >
-          {selected && <span className="size-2 rounded-full bg-[#e8fb25]" />}
+          {selected && <span className="size-2 rounded-full bg-accent" />}
         </span>
       )}
       <span>
         <p
           className={`font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
-            selected ? "text-[#e8fb25]" : "text-[#f0f0f0]"
+            selected ? "text-accent" : "text-fg-1"
           }`}
         >
           {title}
         </p>
-        <p className="mt-1 text-xs text-[#555560]">{desc}</p>
+        <p className="mt-1 text-xs text-fg-3">{desc}</p>
       </span>
     </motion.button>
   );
@@ -92,8 +92,8 @@ function TeamSizeChip({
       transition={{ type: "spring", stiffness: 420, damping: 24 }}
       className={`rounded-full border px-4 py-2 font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] transition-colors ${
         selected
-          ? "border-[#e8fb25] bg-[#e8fb25] text-[#0a0a0f]"
-          : "border-[rgba(255,255,255,0.12)] bg-[#0d0d12] text-[#9a9aa5] hover:border-[rgba(255,255,255,0.25)] hover:text-[#f0f0f0]"
+          ? "border-accent bg-accent text-surface-0"
+          : "border-white/12 bg-surface-2 text-fg-2 hover:border-white/25 hover:text-fg-1"
       }`}
       aria-pressed={selected}
     >
@@ -140,7 +140,7 @@ export function LeagueSettings({
             />
           ))}
         </div>
-        <p className="mt-2 text-xs text-[#555560]">{teamSize} teams in this league.</p>
+        <p className="mt-2 text-xs text-fg-3">{teamSize} teams in this league.</p>
       </div>
 
       <div>

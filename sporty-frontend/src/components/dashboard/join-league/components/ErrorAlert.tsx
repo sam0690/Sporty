@@ -7,7 +7,7 @@ type ErrorAlertProps = {
 
 export function ErrorAlert({ message, onDismiss }: ErrorAlertProps) {
   return (
-    <section className="animate-fade-soft mx-auto flex max-w-md items-start justify-between gap-3 rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.07)] p-4 text-[#ff8a8a]">
+    <section className="animate-fade-soft mx-auto flex max-w-md items-start justify-between gap-3 rounded-[3px] border border-danger/25 bg-danger/7 p-4 text-danger-soft">
       <div className="flex items-start gap-2.5">
         <svg
           viewBox="0 0 24 24"
@@ -27,7 +27,7 @@ export function ErrorAlert({ message, onDismiss }: ErrorAlertProps) {
       <button
         type="button"
         onClick={onDismiss}
-        className="grid size-6 shrink-0 place-items-center rounded-[3px] text-[#ff8a8a] transition-colors hover:bg-[rgba(255,59,92,0.12)]"
+        className="grid size-6 shrink-0 place-items-center rounded-[3px] text-danger-soft transition-colors hover:bg-danger/12"
         aria-label="Dismiss error"
       >
         <svg

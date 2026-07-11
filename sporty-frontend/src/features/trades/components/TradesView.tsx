@@ -32,7 +32,7 @@ function FairnessBadge({ fairness }: { fairness: TTradeFairness | undefined }) {
       <span className="font-barlow-condensed font-700 uppercase tracking-[1px]">
         {isLopsided ? "Lopsided trade" : "Balanced trade"}
       </span>
-      <span className="text-[#9a9aa5]">
+      <span className="text-fg-2">
         {fairness.offered_value.toFixed(1)} avg pts vs {fairness.requested_value.toFixed(1)} avg pts
       </span>
     </div>
@@ -40,11 +40,11 @@ function FairnessBadge({ fairness }: { fairness: TTradeFairness | undefined }) {
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  proposed: "#e8fb25",
+  proposed: "#e2c368",
   accepted: "#00d4ff",
   executed: "#4caf50",
   rejected: "#ff3b30",
-  cancelled: "#555560",
+  cancelled: "#71717d",
   vetoed: "#ff8a8a",
 };
 
@@ -63,15 +63,15 @@ function PlayerToggle({
       onClick={onToggle}
       className={`flex w-full items-center justify-between rounded-[3px] border px-3 py-2 text-left text-sm transition-colors ${
         selected
-          ? "border-[rgba(232,251,37,0.5)] bg-[rgba(232,251,37,0.08)] text-[#e8fb25]"
-          : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] text-[#f0f0f0] hover:border-[rgba(255,255,255,0.2)]"
+          ? "border-accent/50 bg-accent/8 text-accent"
+          : "border-white/8 bg-surface-2 text-fg-1 hover:border-white/20"
       }`}
     >
       <span className="flex min-w-0 items-center gap-2">
         <PlayerAvatar name={player.name} photoUrl={player.photo_url} size="sm" className="shrink-0" />
         <span className="truncate">{player.name}</span>
       </span>
-      <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
+      <span className="flex shrink-0 items-center gap-1.5 text-xs text-fg-3">
         <span>{player.position}</span>
         {player.real_team ? (
           <TeamLogo teamName={player.real_team} logoUrl={player.real_team_logo_url} size="sm" />
@@ -163,9 +163,9 @@ export function TradesView() {
 
   if (!isDraftMode) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs activeTab="trades" leagueId={leagueId} isCommissioner={isCommissioner} />
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#555560]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
           Trades are only available in draft leagues.
         </div>
       </section>
@@ -175,28 +175,28 @@ export function TradesView() {
   const actLabel = action.isPending ? "…" : null;
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
       <NavigationTabs activeTab="trades" leagueId={leagueId} isCommissioner={isCommissioner} />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-4">
+      <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Trades
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-fg-3">
           Propose an even swap with another manager. Accepted trades finalise after
           a commissioner veto window.
         </p>
       </header>
 
       {!isActive ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-sm text-[#9a9aa5]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
           Trading opens once the season is active.
         </div>
       ) : (
         <>
           {/* Propose */}
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
+          <div className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
             <span className="section-label">Propose a Trade</span>
             <select
               value={targetTeamId}
@@ -204,7 +204,7 @@ export function TradesView() {
                 setTargetTeamId(e.target.value);
                 setRequested(new Set());
               }}
-              className="mt-3 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none focus:border-[#e8fb25]"
+              className="mt-3 w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none focus:border-accent"
               style={{ colorScheme: "dark" }}
             >
               <option value="">Select a team to trade with…</option>
@@ -233,7 +233,7 @@ export function TradesView() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#00d4ff]">
+                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-info">
                     You receive ({requested.size})
                   </p>
                   <div className="space-y-1.5">
@@ -258,14 +258,14 @@ export function TradesView() {
 
             {targetTeamId ? (
               <div className="mt-4 flex items-center justify-between">
-                <p className="text-xs text-[#555560]">
+                <p className="text-xs text-fg-3">
                   Trades must be even — same number of players each way.
                 </p>
                 <button
                   type="button"
                   onClick={handlePropose}
                   disabled={!canSubmit}
-                  className="rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {propose.isPending ? "Proposing…" : "Propose Trade"}
                 </button>
@@ -274,10 +274,10 @@ export function TradesView() {
           </div>
 
           {/* My trades */}
-          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
+          <div className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
             <span className="section-label">My Trades</span>
             {(trades?.length ?? 0) === 0 ? (
-              <p className="mt-3 text-sm text-[#555560]">No trades yet.</p>
+              <p className="mt-3 text-sm text-fg-3">No trades yet.</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {trades!.map((t) => (
@@ -317,28 +317,28 @@ function TradeRow({
     "rounded-[3px] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:opacity-50";
 
   return (
-    <li className="rounded-[3px] border border-[rgba(255,255,255,0.06)] bg-[#0d0d12] p-3">
+    <li className="rounded-[3px] border border-white/6 bg-surface-2 p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-[#555560]">
+        <span className="text-xs text-fg-3">
           {trade.direction === "incoming"
             ? `From ${trade.from_team.name}`
             : `To ${trade.to_team.name}`}
         </span>
         <span
           className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
-          style={{ color: STATUS_COLORS[trade.status] ?? "#9a9aa5" }}
+          style={{ color: STATUS_COLORS[trade.status] ?? "#a0a0aa" }}
         >
           {trade.status}
         </span>
       </div>
-      <p className="mt-1.5 text-sm text-[#f0f0f0]">
+      <p className="mt-1.5 text-sm text-fg-1">
         <span className="text-[#4caf50]">
           {trade.direction === "incoming" ? "You get" : "You give"}:
         </span>{" "}
         {names(trade.direction === "incoming" ? trade.requested : trade.offered)}
       </p>
-      <p className="text-sm text-[#f0f0f0]">
-        <span className="text-[#00d4ff]">
+      <p className="text-sm text-fg-1">
+        <span className="text-info">
           {trade.direction === "incoming" ? "You give" : "You get"}:
         </span>{" "}
         {names(trade.direction === "incoming" ? trade.offered : trade.requested)}
@@ -357,7 +357,7 @@ function TradeRow({
               type="button"
               disabled={disabled}
               onClick={() => onAction("accept")}
-              className={`${btn} bg-[#e8fb25] text-black hover:bg-[#f2ff5a]`}
+              className={`${btn} bg-accent text-black hover:bg-accent-bright`}
             >
               {actLabel ?? "Accept"}
             </button>
@@ -376,7 +376,7 @@ function TradeRow({
             type="button"
             disabled={disabled}
             onClick={() => onAction("cancel")}
-            className={`${btn} border border-[rgba(255,255,255,0.1)] text-[#9a9aa5] hover:text-[#f0f0f0]`}
+            className={`${btn} border border-white/10 text-fg-2 hover:text-fg-1`}
           >
             Cancel
           </button>
@@ -392,7 +392,7 @@ function TradeRow({
           </button>
         ) : null}
         {trade.status === "accepted" ? (
-          <span className="self-center text-xs text-[#555560]">
+          <span className="self-center text-xs text-fg-3">
             Finalises after the veto window
           </span>
         ) : null}

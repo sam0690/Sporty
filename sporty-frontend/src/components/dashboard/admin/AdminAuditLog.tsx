@@ -36,7 +36,7 @@ export function AdminAuditLog() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Audit Log</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Audit Log</h1>
 
       {isLoading ? (
         <TableSkeleton />

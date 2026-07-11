@@ -23,7 +23,7 @@ export function AdminTicketList() {
       key: "subject",
       header: "Subject",
       render: (t) => (
-        <Link href={`/admin/tickets/${t.id}`} className="text-[#f0f0f0] hover:underline">
+        <Link href={`/admin/tickets/${t.id}`} className="text-fg-1 hover:underline">
           {t.subject}
         </Link>
       ),
@@ -38,7 +38,7 @@ export function AdminTicketList() {
 
   return (
     <div className="space-y-4">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Tickets</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Tickets</h1>
 
       <select
         value={statusFilter}
@@ -46,7 +46,7 @@ export function AdminTicketList() {
           setStatusFilter(e.target.value);
           setPage(1);
         }}
-        className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0]"
+        className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1"
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>

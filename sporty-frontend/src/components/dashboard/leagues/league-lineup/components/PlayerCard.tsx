@@ -26,12 +26,12 @@ export function PlayerCard({
   starterToggleDisabled = false,
   disabled = false,
 }: PlayerCardProps) {
-  const accentColor = sportAccentColor[player.sportName] ?? "#555560";
+  const accentColor = sportAccentColor[player.sportName] ?? "#71717d";
 
   return (
     <article
       style={{ borderLeft: `3px solid ${accentColor}` }}
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.15)]"
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 transition-colors hover:border-white/15"
     >
       {/* Identity */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -45,21 +45,21 @@ export function PlayerCard({
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
               {player.name}
             </p>
             {player.isCaptain ? (
-              <span className="shrink-0 rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.1)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+              <span className="shrink-0 rounded-[3px] border border-accent/30 bg-accent/10 px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-accent">
                 C
               </span>
             ) : null}
             {player.isViceCaptain ? (
-              <span className="shrink-0 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#1d1d26] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+              <span className="shrink-0 rounded-[3px] border border-white/15 bg-surface-3 px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-1">
                 VC
               </span>
             ) : null}
           </div>
-          <p className="mt-0.5 flex items-center truncate text-xs text-[#555560]">
+          <p className="mt-0.5 flex items-center truncate text-xs text-fg-3">
             {player.realTeam ? (
               <span className="flex items-center gap-1.5">
                 <TeamLogo teamName={player.realTeam} logoUrl={player.realTeamLogoUrl} size="sm" />
@@ -83,8 +83,8 @@ export function PlayerCard({
               disabled={disabled}
               className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 player.isCaptain
-                  ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.12)] text-[#e8fb25]"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#e8fb25]"
+                  ? "border-accent/40 bg-accent/12 text-accent"
+                  : "border-white/8 bg-surface-3 text-fg-2 hover:text-accent"
               }`}
             >
               {player.isCaptain ? "Captain" : "Set C"}
@@ -95,8 +95,8 @@ export function PlayerCard({
               disabled={disabled}
               className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 player.isViceCaptain
-                  ? "border-[rgba(255,255,255,0.25)] bg-[#1d1d26] text-[#f0f0f0]"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#9a9aa5] hover:text-[#f0f0f0]"
+                  ? "border-white/25 bg-surface-3 text-fg-1"
+                  : "border-white/8 bg-surface-3 text-fg-2 hover:text-fg-1"
               }`}
             >
               {player.isViceCaptain ? "Vice" : "Set VC"}
@@ -112,7 +112,7 @@ export function PlayerCard({
             player.isStarter
               ? "border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.16)]"
               : starterToggleDisabled
-                ? "border-[rgba(255,255,255,0.08)] bg-[#1d1d26] text-[#555560]"
+                ? "border-white/8 bg-surface-3 text-fg-3"
                 : "border-[rgba(76,175,80,0.35)] bg-[rgba(76,175,80,0.1)] text-[#4caf50] hover:bg-[rgba(76,175,80,0.2)]"
           }`}
         >

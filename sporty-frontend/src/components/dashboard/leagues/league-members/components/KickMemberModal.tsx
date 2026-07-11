@@ -19,10 +19,10 @@ export function KickMemberModal({
 }: KickMemberModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} closeDisabled={isKicking}>
-      <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-[#f0f0f0]">
+      <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-fg-1">
         Kick Member?
       </h3>
-      <p className="mt-2 text-sm text-[#555560]">
+      <p className="mt-2 text-sm text-fg-3">
         Remove {memberName} from this league? Their team will be permanently
         removed.
       </p>
@@ -31,7 +31,7 @@ export function KickMemberModal({
         <button
           type="button"
           onClick={onClose}
-          className="flex-1 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0]"
+          className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1"
         >
           Cancel
         </button>

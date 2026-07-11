@@ -47,11 +47,11 @@ export function Topbar({
   const gwPoints = stats.find((s) => s.label === "Gameweek Points");
 
   return (
-    <header className="mb-6 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-5 py-5 sm:px-8 sm:py-7">
+    <header className="mb-6 overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 px-5 py-5 sm:px-8 sm:py-7">
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0">
           <p className="section-label">Welcome back</p>
-          <h1 className="mt-1.5 truncate font-bebas text-3xl leading-none tracking-[1.5px] text-[#f8f8f8] sm:text-4xl">
+          <h1 className="mt-1.5 truncate font-bebas text-3xl leading-none tracking-[1.5px] text-fg-1 sm:text-4xl">
             {userName}
           </h1>
         </div>
@@ -59,13 +59,13 @@ export function Topbar({
         <div className="flex flex-wrap items-center gap-2.5">
           {budget && (
             <div
-              className="rounded-[3px] border border-[rgba(255,255,255,0.1)] px-3.5 py-2 text-right"
+              className="rounded-[3px] border border-white/10 px-3.5 py-2 text-right"
               title="Available budget"
             >
-              <span className="num font-barlow-condensed text-sm font-700 text-[#f0f0f0]">
+              <span className="num font-barlow-condensed text-sm font-700 text-fg-1">
                 {statsLoading ? "—" : budget.value}
               </span>
-              <span className="ml-1.5 text-[10px] uppercase tracking-[1px] text-[#666671]">
+              <span className="ml-1.5 text-[10px] uppercase tracking-[1px] text-fg-3">
                 budget
               </span>
             </div>
@@ -75,7 +75,7 @@ export function Topbar({
             value={selectedLeagueId ?? ""}
             onChange={(event) => onLeagueChange(event.target.value)}
             disabled={leagues.length === 0}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.1)] bg-transparent px-3.5 py-2 font-barlow-condensed text-sm font-600 uppercase tracking-[0.5px] text-[#f0f0f0] transition-colors focus:border-[#e8fb25]/50 focus:outline-none disabled:opacity-50"
+            className="rounded-[3px] border border-white/10 bg-transparent px-3.5 py-2 font-barlow-condensed text-sm font-600 uppercase tracking-[0.5px] text-fg-1 transition-colors focus:border-accent/50 focus:outline-none disabled:opacity-50"
             aria-label="Choose active league"
           >
             {leagues.map((league) => (
@@ -88,7 +88,7 @@ export function Topbar({
           <button
             type="button"
             onClick={() => router.push(`/user/${userId}`)}
-            className="group flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.1)] p-1 pr-3 transition-colors hover:border-[rgba(232,251,37,0.3)]"
+            className="group flex items-center gap-2 rounded-[3px] border border-white/10 p-1 pr-3 transition-colors hover:border-accent/30"
             aria-label="Open public profile"
           >
             {avatar ? (
@@ -101,19 +101,19 @@ export function Topbar({
                 className="h-[30px] w-[30px] rounded-full object-cover"
               />
             ) : (
-              <span className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-[rgba(232,251,37,0.1)] font-bebas text-sm text-[#e8fb25]">
+              <span className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent/10 font-bebas text-sm text-accent">
                 {initial}
               </span>
             )}
-            <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5] group-hover:text-[#f0f0f0]">
+            <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 group-hover:text-fg-1">
               Profile
             </span>
-            <ChevronRight className="size-3.5 text-[#555560] transition-colors group-hover:text-[#e8fb25]" />
+            <ChevronRight className="size-3.5 text-fg-3 transition-colors group-hover:text-accent" />
           </button>
         </div>
       </div>
 
-      <div className="my-5 h-px bg-[rgba(255,255,255,0.06)]" />
+      <div className="my-5 h-px bg-white/6" />
 
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         {statsLoading ? (
@@ -126,7 +126,7 @@ export function Topbar({
           <>
             {totalPoints && (
               <div>
-                <p className="num font-bebas text-6xl leading-none tracking-[1px] text-[#e8fb25] sm:text-7xl">
+                <p className="num font-bebas text-6xl leading-none tracking-[1px] text-accent sm:text-7xl">
                   {totalPoints.value}
                 </p>
                 <div className="mt-1.5 flex items-baseline gap-2">
@@ -134,8 +134,8 @@ export function Topbar({
                   <p
                     className={`text-[11px] font-600 ${
                       isPositiveChange(totalPoints.change)
-                        ? "text-[#00ff88]"
-                        : "text-[#666671]"
+                        ? "text-success"
+                        : "text-fg-3"
                     }`}
                   >
                     {totalPoints.change}
@@ -145,12 +145,12 @@ export function Topbar({
             )}
 
             {(rank || gwPoints) && (
-              <span className="hidden h-11 w-px bg-[rgba(255,255,255,0.08)] sm:block" />
+              <span className="hidden h-11 w-px bg-white/8 sm:block" />
             )}
 
             {rank && (
               <div>
-                <p className="num font-bebas text-3xl leading-none tracking-[1px] text-[#f0f0f0]">
+                <p className="num font-bebas text-3xl leading-none tracking-[1px] text-fg-1">
                   {rank.value}
                 </p>
                 <p className="section-label mt-1.5">Rank</p>
@@ -159,7 +159,7 @@ export function Topbar({
 
             {gwPoints && (
               <div>
-                <p className="num font-bebas text-3xl leading-none tracking-[1px] text-[#f0f0f0]">
+                <p className="num font-bebas text-3xl leading-none tracking-[1px] text-fg-1">
                   {gwPoints.value}
                 </p>
                 <p className="section-label mt-1.5">This Gameweek</p>

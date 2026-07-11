@@ -23,10 +23,10 @@ export function AdminDataTable<T>({
   emptyMessage = "No results.",
 }: AdminDataTableProps<T>) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-[#1d1d26]">
+          <thead className="bg-surface-3">
             <tr>
               {columns.map((col) => (
                 <th
@@ -40,23 +40,23 @@ export function AdminDataTable<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[rgba(255,255,255,0.05)]">
+          <tbody className="divide-y divide-white/5">
             {rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-5 py-8 text-center text-sm text-[#555560]"
+                  className="px-5 py-8 text-center text-sm text-fg-3"
                 >
                   {emptyMessage}
                 </td>
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={rowKey(row)} className="text-sm transition-colors hover:bg-[#1d1d26]">
+                <tr key={rowKey(row)} className="text-sm transition-colors hover:bg-surface-3">
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`px-5 py-3 text-[#f0f0f0] ${col.align === "right" ? "text-right" : ""}`}
+                      className={`px-5 py-3 text-fg-1 ${col.align === "right" ? "text-right" : ""}`}
                     >
                       {col.render(row)}
                     </td>

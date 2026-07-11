@@ -62,7 +62,7 @@ export function NavigationTabs({
 
   return (
     <nav
-      className="mb-6 overflow-x-auto rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-1"
+      className="mb-6 overflow-x-auto rounded-[3px] border border-white/8 bg-surface-1 p-1"
       aria-label="League Navigation Tabs"
     >
       <div className="flex min-w-max gap-1">
@@ -81,10 +81,10 @@ export function NavigationTabs({
                 key={tab.key}
                 href={routes[tab.key]}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex min-h-11 items-center rounded-[3px] px-4 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 ${
+                className={`flex min-h-11 items-center rounded-[3px] px-4 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
                   isActive
-                    ? "bg-[#e8fb25] text-[#0a0a0f]"
-                    : "bg-transparent text-[#555560] hover:bg-[#1d1d26] hover:text-[#f0f0f0]"
+                    ? "bg-accent text-surface-0"
+                    : "bg-transparent text-fg-3 hover:bg-surface-3 hover:text-fg-1"
                 }`}
               >
                 {tab.label}

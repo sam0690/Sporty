@@ -50,11 +50,11 @@ export function FormationRenderer<TPlayer extends FormationPlayerLike>({
           {showSectionLabels ? (
             <div className="flex items-center justify-between gap-2 px-1 text-xs text-white/70">
               <div className="flex items-center gap-2">
-                <span className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-2 py-1 font-600 text-[#f0f0f0]">
+                <span className="rounded-[3px] border border-white/8 bg-surface-3 px-2 py-1 font-600 text-fg-1">
                   {section.title}
                 </span>
                 {section.formationLabel ? (
-                  <span className="rounded-[3px] border border-accent-primary/25 bg-[rgba(232,251,37,0.1)] px-2 py-1 font-600 text-[#e8fb25]">
+                  <span className="rounded-[3px] border border-accent/25 bg-accent/10 px-2 py-1 font-600 text-accent">
                     {section.formationLabel}
                   </span>
                 ) : null}

@@ -6,7 +6,7 @@ import { RedirectIfAuthenticated } from "@/components/auth/RedirectIfAuthenticat
 
 export default function HomePage() {
   return (
-    <div className="landing-shell min-h-screen bg-background text-[#f0f0f0]">
+    <div className="landing-shell min-h-screen bg-background text-fg-1">
       <RedirectIfAuthenticated />
       <Navbar />
       <main>

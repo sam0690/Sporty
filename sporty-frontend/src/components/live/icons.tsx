@@ -202,8 +202,8 @@ const EVENT_VISUALS: Record<string, EventVisual> = {
   assist: { Icon: AssistIcon, color: "#00d4ff", label: "Assist" },
   yellow_card: { Icon: CardIcon, color: "#ffd86b", label: "Yellow Card" },
   red_card: { Icon: CardIcon, color: "#ff3b5c", label: "Red Card" },
-  substitution: { Icon: SubIcon, color: "#9a9aa5", label: "Substitution" },
-  penalty: { Icon: PenaltyIcon, color: "#e8fb25", label: "Penalty" },
+  substitution: { Icon: SubIcon, color: "#a0a0aa", label: "Substitution" },
+  penalty: { Icon: PenaltyIcon, color: "#e2c368", label: "Penalty" },
   own_goal: { Icon: GoalIcon, color: "#ff3b5c", label: "Own Goal" },
   clean_sheet: { Icon: ShieldIcon, color: "#00d4ff", label: "Clean Sheet" },
 };
@@ -217,7 +217,7 @@ export function eventVisual(type: string): EventVisual {
   return (
     EVENT_VISUALS[key] ?? {
       Icon: WhistleIcon,
-      color: "#9a9aa5",
+      color: "#a0a0aa",
       label: titleCase(type),
     }
   );

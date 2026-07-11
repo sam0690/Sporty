@@ -25,7 +25,7 @@ export function SupportTicketList() {
       key: "subject",
       header: "Subject",
       render: (t) => (
-        <Link href={`/support/${t.id}`} className="text-[#f0f0f0] hover:underline">
+        <Link href={`/support/${t.id}`} className="text-fg-1 hover:underline">
           {t.subject}
         </Link>
       ),
@@ -38,25 +38,25 @@ export function SupportTicketList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Support</h1>
+        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Support</h1>
         <Button variant="primary" size="sm" onClick={() => setShowForm((v) => !v)}>
           {showForm ? "Cancel" : "New Ticket"}
         </Button>
       </div>
 
       {showForm && (
-        <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+        <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Subject"
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
+            className="w-full rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as TTicketCategory)}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0]"
+            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1"
           >
             {CATEGORY_OPTIONS.map((c) => (
               <option key={c} value={c}>
@@ -69,7 +69,7 @@ export function SupportTicketList() {
             onChange={(e) => setBody(e.target.value)}
             placeholder="Describe the issue…"
             rows={4}
-            className="w-full rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] placeholder:text-[#555560]"
+            className="w-full rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
           />
           <Button
             variant="primary"

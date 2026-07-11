@@ -53,10 +53,10 @@ export function UserTransferHistoryCarousel({
   isError,
 }: UserTransferHistoryCarouselProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
-      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-6 py-4">
+    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
         <p className="section-label">Your Transfer History</p>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
           Grouped by league
         </span>
       </div>
@@ -67,16 +67,16 @@ export function UserTransferHistoryCarousel({
           {Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
-              className="h-20 animate-pulse rounded-[3px] bg-[#1d1d26]"
+              className="h-20 animate-pulse rounded-[3px] bg-surface-3"
             />
           ))}
         </div>
       ) : isError ? (
-        <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-[#ff8a8a]">
+        <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] p-4 text-sm text-danger-soft">
           Could not load your transfer history.
         </div>
       ) : groups.length === 0 ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] p-6 text-center text-sm text-[#555560]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-3 p-6 text-center text-sm text-fg-3">
           No transfers yet. Once you confirm moves, they will appear here.
         </div>
       ) : (
@@ -90,7 +90,7 @@ export function UserTransferHistoryCarousel({
             const sportBadges = (group.league.sports ?? []).map(
               (leagueSport) => {
                 const sportName = leagueSport.sport.name;
-                const accent = sportAccentByName[sportName] ?? "#9a9aa5";
+                const accent = sportAccentByName[sportName] ?? "#a0a0aa";
                 return (
                   <span
                     key={`${group.league.id}-${sportName}`}
@@ -106,12 +106,12 @@ export function UserTransferHistoryCarousel({
 
             return (
               <Carousel.Slide key={group.league.id}>
-                <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 sm:p-5">
+                <div className="rounded-[3px] border border-white/8 bg-surface-2 p-4 sm:p-5">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+                    <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
                       {group.league.name}
                     </p>
-                    <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#555560]">
+                    <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
                       {group.transfers.length} transfer
                       {group.transfers.length === 1 ? "" : "s"}
                     </span>
@@ -123,14 +123,14 @@ export function UserTransferHistoryCarousel({
                     {group.transfers.map((transfer) => {
                       const outAccent =
                         sportAccentByName[transfer.player_out.sport?.name] ??
-                        "#9a9aa5";
+                        "#a0a0aa";
                       const inAccent =
                         sportAccentByName[transfer.player_in.sport?.name] ??
-                        "#9a9aa5";
+                        "#a0a0aa";
                       return (
                         <article
                           key={transfer.id}
-                          className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4"
+                          className="rounded-[3px] border border-white/8 bg-surface-1 p-4"
                         >
                           <p className="section-label">
                             {formatTransferTime(transfer.created_at)}
@@ -148,11 +148,11 @@ export function UserTransferHistoryCarousel({
                                   size="sm"
                                   className="shrink-0"
                                 />
-                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                                   {resolvePlayerName(transfer.player_out)}
                                 </p>
                               </div>
-                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#555560]">
+                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-fg-3">
                                 <span style={{ color: outAccent }}>
                                   {transfer.player_out.position}
                                 </span>
@@ -168,7 +168,7 @@ export function UserTransferHistoryCarousel({
                                   </>
                                 ) : null}
                               </p>
-                              <p className="mt-1 font-bebas tracking-[1px] text-[#e8fb25]">
+                              <p className="mt-1 font-bebas tracking-[1px] text-accent">
                                 ${formatMoney(transfer.player_out.cost)}
                               </p>
                             </div>
@@ -184,11 +184,11 @@ export function UserTransferHistoryCarousel({
                                   size="sm"
                                   className="shrink-0"
                                 />
-                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                                   {resolvePlayerName(transfer.player_in)}
                                 </p>
                               </div>
-                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#555560]">
+                              <p className="mt-1.5 flex items-center gap-1.5 text-xs text-fg-3">
                                 <span style={{ color: inAccent }}>
                                   {transfer.player_in.position}
                                 </span>
@@ -204,20 +204,20 @@ export function UserTransferHistoryCarousel({
                                   </>
                                 ) : null}
                               </p>
-                              <p className="mt-1 font-bebas tracking-[1px] text-[#e8fb25]">
+                              <p className="mt-1 font-bebas tracking-[1px] text-accent">
                                 ${formatMoney(transfer.player_in.cost)}
                               </p>
                             </div>
                           </div>
 
-                          <p className="mt-3 text-xs text-[#555560]">
+                          <p className="mt-3 text-xs text-fg-3">
                             Window {transfer.transfer_window.number}
                             <span className="mx-1.5 text-[#33333a]">·</span>
                             Transfer cost {formatMoney(transfer.cost_at_transfer)}
                             {transfer.points_charged ? (
                               <>
                                 <span className="mx-1.5 text-[#33333a]">·</span>
-                                <span className="text-[#ffd86b]">
+                                <span className="text-warning">
                                   {formatMoney(transfer.points_charged)} pts charged
                                   (budget overage)
                                 </span>

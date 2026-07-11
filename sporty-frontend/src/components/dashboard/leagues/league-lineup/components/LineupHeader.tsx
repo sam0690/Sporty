@@ -46,10 +46,10 @@ export function LineupHeader({
   const countdown = formatCountdown(deadline);
 
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.08)] pb-5">
+    <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/8 pb-5">
       <div className="flex items-center gap-3">
         <div>
-          <h1 className="font-bebas text-5xl tracking-[3px] text-[#f0f0f0]">
+          <h1 className="font-bebas text-5xl tracking-[3px] text-fg-1">
             {leagueName}
           </h1>
           {teamName ? (
@@ -65,9 +65,9 @@ export function LineupHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-3 py-1.5">
-          <span className="section-label !text-[#e8fb25]">Editing ▸</span>
-          <span className="font-bebas text-xl tracking-[2px] text-[#e8fb25]">{currentWeek}</span>
+        <div className="flex items-center gap-1.5 rounded-[3px] border border-white/8 bg-surface-1 px-3 py-1.5">
+          <span className="section-label !text-accent">Editing ▸</span>
+          <span className="font-bebas text-xl tracking-[2px] text-accent">{currentWeek}</span>
           <span className="section-label">/ {totalWeeks}</span>
         </div>
         <span

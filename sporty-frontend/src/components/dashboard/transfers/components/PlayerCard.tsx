@@ -41,11 +41,11 @@ export function PlayerCard({
   animationDelay = 0,
   disabled = false,
 }: PlayerCardProps) {
-  const accent = sport === "All" ? "#555560" : sportAccentColor[sport];
+  const accent = sport === "All" ? "#71717d" : sportAccentColor[sport];
 
   return (
     <article
-      className="card-fade-in group flex items-center gap-4 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-[rgba(255,255,255,0.16)] hover:bg-[#15151c]"
+      className="card-fade-in group flex items-center gap-4 rounded-[3px] border border-white/8 bg-surface-1 p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-white/16 hover:bg-[#15151c]"
       style={{ animationDelay: `${animationDelay}ms`, borderLeft: `3px solid ${accent}` }}
     >
       <div className="relative shrink-0">
@@ -59,10 +59,10 @@ export function PlayerCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
           {name}
         </p>
-        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-[#666671]">
+        <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-fg-3">
           {realTeam ? (
             <>
               <TeamLogo teamName={realTeam} logoUrl={realTeamLogoUrl} size="sm" className="shrink-0" />
@@ -84,7 +84,7 @@ export function PlayerCard({
 
       <div className="flex shrink-0 items-center gap-3">
         <div className="text-right">
-          <p className="num font-bebas text-xl leading-none tracking-[1px] text-[#e8fb25]">
+          <p className="num font-bebas text-xl leading-none tracking-[1px] text-accent">
             ${price.toFixed(1)}M
           </p>
           <p className="section-label mt-1">Cost</p>
@@ -94,7 +94,7 @@ export function PlayerCard({
           disabled={disabled}
           onClick={() => onAdd(id)}
           aria-label={`Add ${name}`}
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] border border-[rgba(232,251,37,0.4)] bg-transparent text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[3px] border border-accent/40 bg-transparent text-accent transition-colors hover:bg-accent/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Plus className="h-5 w-5" />
         </button>

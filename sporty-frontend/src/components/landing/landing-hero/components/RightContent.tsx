@@ -12,15 +12,15 @@ const HOME = { name: "Arsenal", initials: "ARS", color: "#ff3b5c", score: 2 };
 const AWAY = { name: "Chelsea", initials: "CHE", color: "#00d4ff", score: 1 };
 
 const TIMELINE = [
-  { minute: "67'", label: "Goal", who: "Saka", color: "#00ff88" },
+  { minute: "67'", label: "Goal", who: "Saka", color: "#00e07f" },
   { minute: "54'", label: "Yellow Card", who: "Caicedo", color: "#ffd86b" },
-  { minute: "39'", label: "Goal", who: "Ødegaard", color: "#00ff88" },
+  { minute: "39'", label: "Goal", who: "Ødegaard", color: "#00e07f" },
 ];
 
 export function RightContent({ visual }: RightContentProps) {
   return (
     <div className="relative">
-      <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
+      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
         {/* team-colour accent bar */}
         <div
           className="h-1"
@@ -30,9 +30,9 @@ export function RightContent({ visual }: RightContentProps) {
         />
 
         {/* status row */}
-        <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.06)] px-5 py-3">
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
-            <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
+        <div className="flex items-center justify-between border-b border-white/6 px-5 py-3">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-danger">
+            <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             Live
           </span>
           <span className="section-label">Premier League</span>
@@ -42,7 +42,7 @@ export function RightContent({ visual }: RightContentProps) {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7">
           <div className="flex items-center justify-end gap-3 text-right">
             <div className="min-w-0">
-              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                 {HOME.name}
               </p>
               <p className="section-label mt-1">Home</p>
@@ -60,7 +60,7 @@ export function RightContent({ visual }: RightContentProps) {
                 {AWAY.score}
               </span>
             </div>
-            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.28)] bg-[rgba(255,59,92,0.12)] px-2.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-[#ff3b5c]">
+            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-2.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
               67:14
             </p>
           </div>
@@ -68,7 +68,7 @@ export function RightContent({ visual }: RightContentProps) {
           <div className="flex items-center justify-start gap-3">
             <Crest team={AWAY} />
             <div className="min-w-0">
-              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                 {AWAY.name}
               </p>
               <p className="section-label mt-1">Away</p>
@@ -77,12 +77,12 @@ export function RightContent({ visual }: RightContentProps) {
         </div>
 
         {/* mini event timeline */}
-        <div className="border-t border-[rgba(255,255,255,0.06)] px-5 py-4">
+        <div className="border-t border-white/6 px-5 py-4">
           <p className="section-label">Match Events</p>
           <ul className="mt-3 space-y-2.5">
             {TIMELINE.map((e) => (
               <li key={e.minute} className="flex items-center gap-3">
-                <span className="w-8 text-right font-bebas text-base leading-none tabular-nums text-[#9a9aa5]">
+                <span className="w-8 text-right font-bebas text-base leading-none tabular-nums text-fg-2">
                   {e.minute}
                 </span>
                 <span
@@ -95,7 +95,7 @@ export function RightContent({ visual }: RightContentProps) {
                 >
                   <FootballGlyph className="size-3.5" />
                 </span>
-                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
                   {e.label}
                 </span>
                 <span className="text-xs text-[#6a6a76]">· {e.who}</span>
@@ -105,18 +105,18 @@ export function RightContent({ visual }: RightContentProps) {
         </div>
 
         {/* next matchday progress */}
-        <div className="border-t border-[rgba(255,255,255,0.06)] px-5 py-4">
+        <div className="border-t border-white/6 px-5 py-4">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#9a9aa5]">
-              <CricketGlyph className="size-4 text-[#00d4ff]" />
+            <span className="inline-flex items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2">
+              <CricketGlyph className="size-4 text-info" />
               {visual.nextMatchLabel}
             </span>
-            <span className="font-bebas text-sm tracking-[1px] text-[#e8fb25]">
+            <span className="font-bebas text-sm tracking-[1px] text-accent">
               {visual.progressPercent}%
             </span>
           </div>
           <div
-            className="mt-2 h-1.5 w-full overflow-hidden rounded-[3px] bg-[rgba(255,255,255,0.06)]"
+            className="mt-2 h-1.5 w-full overflow-hidden rounded-[3px] bg-white/6"
             role="progressbar"
             aria-valuemin={0}
             aria-valuemax={100}
@@ -124,7 +124,7 @@ export function RightContent({ visual }: RightContentProps) {
             aria-label="Next match progress"
           >
             <div
-              className="h-full bg-[#e8fb25] transition-all duration-500"
+              className="h-full bg-accent transition-all duration-500"
               style={{ width: `${visual.progressPercent}%` }}
             />
           </div>

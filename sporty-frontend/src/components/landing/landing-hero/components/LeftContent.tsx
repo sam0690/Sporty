@@ -13,21 +13,21 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(232,251,37,0.3)] bg-[rgba(232,251,37,0.08)] px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[2px] text-[#e8fb25]">
-        <span className="size-1.5 rounded-full bg-[#e8fb25] animate-live-pulse" />
+      <span className="inline-flex items-center gap-2 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[2px] text-accent">
+        <span className="size-1.5 rounded-full bg-accent animate-live-pulse" />
         {content.badge}
       </span>
 
       <h1
         id="landing-hero-title"
-        className="mt-6 font-bebas text-6xl leading-[0.92] tracking-[3px] text-[#f0f0f0] md:text-8xl"
+        className="mt-6 font-bebas text-6xl leading-[0.92] tracking-[3px] text-fg-1 md:text-8xl"
       >
         {titleLines.map((line, idx) => (
           <span
             key={line}
             className={cn(
               "block",
-              idx === titleLines.length - 1 && "text-[#e8fb25]",
+              idx === titleLines.length - 1 && "text-accent",
             )}
           >
             {line}
@@ -35,7 +35,7 @@ export function LeftContent({ content }: LeftContentProps) {
         ))}
       </h1>
 
-      <p className="mt-5 max-w-xl text-base leading-7 text-[#9a9aa5] md:text-lg">
+      <p className="mt-5 max-w-xl text-base leading-7 text-fg-2 md:text-lg">
         {content.description}
       </p>
 
@@ -51,7 +51,7 @@ export function LeftContent({ content }: LeftContentProps) {
                 className={cn(
                   "h-12 min-w-40 px-6 text-sm font-700",
                   !isPrimary &&
-                    "border-white/20! text-[#f0f0f0]! hover:bg-[#1d1d26]! hover:text-[#f0f0f0]!",
+                    "border-white/20! text-fg-1! hover:bg-surface-3! hover:text-fg-1!",
                 )}
               >
                 {!isPrimary ? (
@@ -81,7 +81,7 @@ export function LeftContent({ content }: LeftContentProps) {
         {SPORT_GLYPHS.map(({ Icon, label, color }) => (
           <span
             key={label}
-            className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.1)] bg-[#111117] px-3 py-1.5"
+            className="inline-flex items-center gap-2 rounded-[3px] border border-white/10 bg-surface-1 px-3 py-1.5"
           >
             <span style={{ color }}>
               <Icon className="size-4" />
@@ -93,12 +93,12 @@ export function LeftContent({ content }: LeftContentProps) {
         ))}
       </div>
 
-      <div className="mt-8 flex items-center gap-4 text-sm text-[#9a9aa5]">
+      <div className="mt-8 flex items-center gap-4 text-sm text-fg-2">
         <div className="flex -space-x-2" aria-hidden="true">
           {content.stat.avatars.map((avatar) => (
             <span
               key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-[#0a0a0f] bg-[rgba(232,251,37,0.16)] font-barlow-condensed text-[10px] font-700 text-[#e8fb25]"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-surface-0 bg-accent/16 font-barlow-condensed text-[10px] font-700 text-accent"
             >
               {avatar}
             </span>

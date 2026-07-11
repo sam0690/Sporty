@@ -41,21 +41,21 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[72px] flex-col border-r border-[rgba(255,255,255,0.08)] bg-[#0d0d14] md:flex lg:w-64">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[72px] flex-col border-r border-white/8 bg-[#0d0d14] md:flex lg:w-64">
       {/* Logo */}
-      <div className="flex items-center justify-between border-b border-[rgba(255,255,255,0.08)] px-3 py-5 lg:px-6">
+      <div className="flex items-center justify-between border-b border-white/8 px-3 py-5 lg:px-6">
         <Link
           href="/dashboard"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d14] lg:w-auto lg:justify-start"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d14] lg:w-auto lg:justify-start"
         >
-          <span className="font-bebas text-2xl tracking-[3px] text-[#e8fb25] lg:hidden">
+          <span className="font-bebas text-2xl tracking-[3px] text-accent lg:hidden">
             S
           </span>
-          <span className="hidden font-bebas text-2xl tracking-[3px] text-[#e8fb25] lg:inline">
+          <span className="hidden font-bebas text-2xl tracking-[3px] text-accent lg:inline">
             SPORTY
           </span>
         </Link>
-        <NotificationBell className="hidden text-[#555560] transition-colors hover:text-[#f0f0f0] lg:block" />
+        <NotificationBell className="hidden text-fg-3 transition-colors hover:text-fg-1 lg:block" />
       </div>
 
       {/* Nav items */}
@@ -73,17 +73,17 @@ export function Sidebar({ items }: SidebarProps) {
               href={item.href}
               title={item.label}
               className={cn(
-                "group flex items-center justify-center gap-3 rounded-r-[3px] border-l-2 py-3 text-sm transition-all duration-150 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#e8fb25]/60 lg:justify-start lg:pl-[10px] lg:pr-3",
+                "group flex items-center justify-center gap-3 rounded-r-[3px] border-l-2 py-3 text-sm transition-all duration-150 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60 lg:justify-start lg:pl-[10px] lg:pr-3",
                 active
-                  ? "border-[#e8fb25] bg-[#1d1d26] text-[#f0f0f0]"
-                  : "border-transparent text-[#555560] hover:bg-[#1d1d26] hover:text-[#f0f0f0]",
+                  ? "border-accent bg-surface-3 text-fg-1"
+                  : "border-transparent text-fg-3 hover:bg-surface-3 hover:text-fg-1",
               )}
               aria-current={active ? "page" : undefined}
             >
               <Icon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors",
-                  active ? "text-[#e8fb25]" : "text-[#555560] group-hover:text-[#f0f0f0]",
+                  active ? "text-accent" : "text-fg-3 group-hover:text-fg-1",
                 )}
               />
               <span className="hidden font-barlow-condensed text-xs font-700 uppercase tracking-[2px] lg:inline">
@@ -95,12 +95,12 @@ export function Sidebar({ items }: SidebarProps) {
       </nav>
 
       {/* Bottom actions */}
-      <div className="space-y-2 border-t border-[rgba(255,255,255,0.08)] p-3 lg:p-4">
+      <div className="space-y-2 border-t border-white/8 p-3 lg:p-4">
         <button
           type="button"
           onClick={handleOpenSettings}
           title="Settings"
-          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-white/15 hover:text-[#f0f0f0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 lg:justify-start"
+          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 lg:justify-start"
         >
           <Settings className="h-4 w-4 shrink-0" />
           <span className="hidden lg:inline">Settings</span>
@@ -110,7 +110,7 @@ export function Sidebar({ items }: SidebarProps) {
           onClick={() => setShowLogoutModal(true)}
           disabled={actionLoading.logout}
           title="Log out"
-          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:border-[#ff3b30]/40 hover:text-[#ff3b30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff3b30]/50 disabled:opacity-50 lg:justify-start"
+          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-[#ff3b30]/40 hover:text-[#ff3b30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff3b30]/50 disabled:opacity-50 lg:justify-start"
           aria-label="Log out"
         >
           <LogOut className="h-4 w-4 shrink-0" />

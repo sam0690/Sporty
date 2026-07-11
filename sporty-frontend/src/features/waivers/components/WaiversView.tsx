@@ -22,10 +22,10 @@ import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMo
 import type { TFreeAgent, TTeamPlayer } from "@/types";
 
 const STATUS_COLORS: Record<string, string> = {
-  pending: "#e8fb25",
+  pending: "#e2c368",
   success: "#4caf50",
   failed: "#ff3b30",
-  cancelled: "#555560",
+  cancelled: "#71717d",
 };
 
 export function WaiversView() {
@@ -103,9 +103,9 @@ export function WaiversView() {
 
   if (!isDraftMode) {
     return (
-      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-[#f0f0f0]">
+      <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs activeTab="waivers" leagueId={leagueId} isCommissioner={isCommissioner} />
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#555560]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
           Waivers are only available in draft leagues.
         </div>
       </section>
@@ -113,22 +113,22 @@ export function WaiversView() {
   }
 
   return (
-    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-[#f0f0f0]">
+    <section className="mx-auto max-w-6xl space-y-5 px-6 py-8 text-fg-1">
       <NavigationTabs activeTab="waivers" leagueId={leagueId} isCommissioner={isCommissioner} />
 
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-4">
+      <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-[#f0f0f0] sm:text-6xl">
+        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
           Waiver Wire
         </h1>
-        <p className="mt-1 text-sm text-[#555560]">
+        <p className="mt-1 text-sm text-fg-3">
           Claims are resolved in waiver order before the next gameweek. Win one and
           you drop to the back of the queue.
         </p>
       </header>
 
       {!isActive ? (
-        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6 text-sm text-[#9a9aa5]">
+        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
           Waivers open once the season is active.
         </div>
       ) : (
@@ -140,10 +140,10 @@ export function WaiversView() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search available players…"
-              className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+              className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
             />
             {(filteredPool.length ?? 0) === 0 ? (
-              <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#555560]">
+              <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
                 No available players.
               </div>
             ) : (
@@ -151,15 +151,15 @@ export function WaiversView() {
                 {filteredPool.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-3"
+                    className="flex items-center justify-between rounded-[3px] border border-white/8 bg-surface-1 p-3"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
                       <div className="min-w-0">
-                        <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+                        <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                           {p.name}
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-[#555560]">
+                        <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-3">
                           <span>{p.position}</span>
                           {p.real_team ? (
                             <>
@@ -174,7 +174,7 @@ export function WaiversView() {
                     <button
                       type="button"
                       onClick={() => setAddTarget(p)}
-                      className="shrink-0 rounded-[3px] border border-[rgba(232,251,37,0.4)] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25] transition-colors hover:bg-[rgba(232,251,37,0.08)]"
+                      className="shrink-0 rounded-[3px] border border-accent/40 px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:bg-accent/8"
                     >
                       Claim
                     </button>
@@ -186,36 +186,36 @@ export function WaiversView() {
 
           {/* Right: waiver order + my pending claims */}
           <div className="space-y-5 lg:col-span-1">
-            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
               <span className="section-label">Waiver Order</span>
               <ol className="mt-3 space-y-1.5">
                 {(order ?? []).map((o) => (
                   <li key={o.fantasy_team_id} className="flex items-center gap-2 text-sm">
-                    <span className="w-5 text-[#555560] tabular-nums">{o.position}.</span>
-                    <span className="truncate text-[#f0f0f0]">{o.team_name}</span>
+                    <span className="w-5 text-fg-3 tabular-nums">{o.position}.</span>
+                    <span className="truncate text-fg-1">{o.team_name}</span>
                   </li>
                 ))}
               </ol>
             </div>
 
-            <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
               <span className="section-label">My Claims</span>
               {claimsLoading ? (
                 <CardSkeleton />
               ) : (claims?.length ?? 0) === 0 ? (
-                <p className="mt-3 text-sm text-[#555560]">No claims yet.</p>
+                <p className="mt-3 text-sm text-fg-3">No claims yet.</p>
               ) : (
                 <>
                   {pendingClaims.length > 0 ? (
                     <>
-                      <p className="mt-3 text-[10px] uppercase tracking-[1px] text-[#555560]">
+                      <p className="mt-3 text-[10px] uppercase tracking-[1px] text-fg-3">
                         Pending — processed top to bottom
                       </p>
                       <ul className="mt-1.5 space-y-2">
                         {pendingClaims.map((c, i) => (
                           <li
                             key={c.id}
-                            className="rounded-[3px] border border-[rgba(255,255,255,0.06)] bg-[#0d0d12] p-2.5 text-xs"
+                            className="rounded-[3px] border border-white/6 bg-surface-2 p-2.5 text-xs"
                           >
                             <div className="flex items-center justify-between gap-2">
                               <span className="flex items-center gap-1">
@@ -223,7 +223,7 @@ export function WaiversView() {
                                   type="button"
                                   disabled={i === 0 || reorder.isPending}
                                   onClick={() => movePending(i, -1)}
-                                  className="flex h-8 w-8 items-center justify-center rounded-[3px] text-[#9a9aa5] transition-colors hover:text-[#e8fb25] disabled:opacity-30"
+                                  className="flex h-8 w-8 items-center justify-center rounded-[3px] text-fg-2 transition-colors hover:text-accent disabled:opacity-30"
                                   aria-label="Move up"
                                 >
                                   <ChevronUp className="h-4 w-4" />
@@ -232,12 +232,12 @@ export function WaiversView() {
                                   type="button"
                                   disabled={i === pendingClaims.length - 1 || reorder.isPending}
                                   onClick={() => movePending(i, 1)}
-                                  className="flex h-8 w-8 items-center justify-center rounded-[3px] text-[#9a9aa5] transition-colors hover:text-[#e8fb25] disabled:opacity-30"
+                                  className="flex h-8 w-8 items-center justify-center rounded-[3px] text-fg-2 transition-colors hover:text-accent disabled:opacity-30"
                                   aria-label="Move down"
                                 >
                                   <ChevronDown className="h-4 w-4" />
                                 </button>
-                                <span className="ml-1 text-[#555560] tabular-nums">
+                                <span className="ml-1 text-fg-3 tabular-nums">
                                   #{i + 1}
                                 </span>
                               </span>
@@ -249,10 +249,10 @@ export function WaiversView() {
                                 Cancel
                               </button>
                             </div>
-                            <p className="mt-1 text-[#9a9aa5]">
+                            <p className="mt-1 text-fg-2">
                               <span className="text-[#4caf50]">IN</span>{" "}
                               {nameById.get(c.add_player_id) ?? "Player"} ·{" "}
-                              <span className="text-[#ff8a8a]">OUT</span>{" "}
+                              <span className="text-danger-soft">OUT</span>{" "}
                               {nameById.get(c.drop_player_id) ?? "Player"}
                             </p>
                           </li>
@@ -266,22 +266,22 @@ export function WaiversView() {
                       {historyClaims.map((c) => (
                         <li
                           key={c.id}
-                          className="rounded-[3px] border border-[rgba(255,255,255,0.06)] bg-[#0d0d12] p-2.5 text-xs"
+                          className="rounded-[3px] border border-white/6 bg-surface-2 p-2.5 text-xs"
                         >
                           <span
                             className="font-barlow-condensed font-700 uppercase tracking-[1px]"
-                            style={{ color: STATUS_COLORS[c.status] ?? "#9a9aa5" }}
+                            style={{ color: STATUS_COLORS[c.status] ?? "#a0a0aa" }}
                           >
                             {c.status}
                           </span>
-                          <p className="mt-1 text-[#9a9aa5]">
+                          <p className="mt-1 text-fg-2">
                             <span className="text-[#4caf50]">IN</span>{" "}
                             {nameById.get(c.add_player_id) ?? "Player"} ·{" "}
-                            <span className="text-[#ff8a8a]">OUT</span>{" "}
+                            <span className="text-danger-soft">OUT</span>{" "}
                             {nameById.get(c.drop_player_id) ?? "Player"}
                           </p>
                           {c.failure_reason ? (
-                            <p className="mt-1 text-[#ff8a8a]">{c.failure_reason}</p>
+                            <p className="mt-1 text-danger-soft">{c.failure_reason}</p>
                           ) : null}
                         </li>
                       ))}
@@ -300,12 +300,12 @@ export function WaiversView() {
         closeDisabled={submit.isPending}
       >
         <p className="section-label">Claim {addTarget?.name}</p>
-        <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-[#f0f0f0]">
+        <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-fg-1">
           Drop a player if you win
         </h3>
         <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
           {dropCandidates.length === 0 ? (
-            <p className="text-sm text-[#555560]">
+            <p className="text-sm text-fg-3">
               No droppable {addTarget?.sport} players on your squad.
             </p>
           ) : (
@@ -315,13 +315,13 @@ export function WaiversView() {
                 type="button"
                 disabled={submit.isPending}
                 onClick={() => handleSubmit(tp.player.id)}
-                className="flex w-full items-center justify-between rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-4 py-2.5 text-left transition-colors hover:border-[rgba(232,251,37,0.4)] disabled:opacity-50"
+                className="flex w-full items-center justify-between rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-left transition-colors hover:border-accent/40 disabled:opacity-50"
               >
                 <span className="flex min-w-0 items-center gap-2">
                   <PlayerAvatar name={tp.player.name} photoUrl={tp.player.photo_url} size="sm" />
-                  <span className="truncate text-sm text-[#f0f0f0]">{tp.player.name}</span>
+                  <span className="truncate text-sm text-fg-1">{tp.player.name}</span>
                 </span>
-                <span className="flex shrink-0 items-center gap-1.5 text-xs text-[#555560]">
+                <span className="flex shrink-0 items-center gap-1.5 text-xs text-fg-3">
                   <span>{tp.player.position}</span>
                   {tp.player.real_team ? (
                     <>
@@ -339,7 +339,7 @@ export function WaiversView() {
           type="button"
           onClick={() => setAddTarget(null)}
           disabled={submit.isPending}
-          className="mt-4 w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#555560] transition-colors hover:text-[#f0f0f0] disabled:opacity-50"
+          className="mt-4 w-full rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 disabled:opacity-50"
         >
           Cancel
         </button>

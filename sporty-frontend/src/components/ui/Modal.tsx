@@ -40,7 +40,7 @@ export function Modal({
       onMouseDown={handleBackdropMouseDown}
     >
       <div
-        className={`w-full ${maxWidthClassName} rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-6`}
+        className={`w-full ${maxWidthClassName} rounded-[3px] border border-white/8 bg-surface-1 p-6`}
       >
         {children}
       </div>

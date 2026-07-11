@@ -30,7 +30,7 @@ export function ProfileHeader({
   const initial = name.slice(0, 1).toUpperCase();
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
+    <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
       <div className="flex items-center gap-4">
         {avatar ? (
           <Image
@@ -41,21 +41,21 @@ export function ProfileHeader({
             className="h-16 w-16 shrink-0 rounded-full object-cover"
           />
         ) : (
-          <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[rgba(232,251,37,0.1)] font-bebas text-3xl tracking-[2px] text-[#e8fb25]">
+          <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bebas text-3xl tracking-[2px] text-accent">
             {initial}
           </span>
         )}
 
         <div className="min-w-0">
           <p className="section-label">Public Profile</p>
-          <h2 className="mt-1 truncate font-bebas text-3xl tracking-[2px] text-[#f0f0f0]">
+          <h2 className="mt-1 truncate font-bebas text-3xl tracking-[2px] text-fg-1">
             {name}
           </h2>
-          <p className="text-xs text-[#666671]">Joined {formatDate(joinDate)}</p>
+          <p className="text-xs text-fg-3">Joined {formatDate(joinDate)}</p>
         </div>
       </div>
 
-      {bio ? <p className="mt-4 text-sm text-[#9a9aa5]">{bio}</p> : null}
+      {bio ? <p className="mt-4 text-sm text-fg-2">{bio}</p> : null}
     </section>
   );
 }

@@ -37,7 +37,7 @@ export function SquadValidationChecklist({
   if (rules.length === 0 && clubWarnings.length === 0) return null;
 
   return (
-    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-4">
+    <section className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
       <span className="section-label">{title}</span>
       {clubWarnings.length > 0 ? (
         <ul className="mt-3 space-y-1">
@@ -65,14 +65,14 @@ export function SquadValidationChecklist({
                 className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] font-700 ${
                   rule.satisfied
                     ? "bg-[rgba(76,175,80,0.15)] text-[#4caf50]"
-                    : "bg-[rgba(255,255,255,0.06)] text-[#555560]"
+                    : "bg-white/6 text-fg-3"
                 }`}
               >
                 {rule.satisfied ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : null}
               </span>
               <span
                 className={`font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${
-                  rule.satisfied ? "text-[#f0f0f0]" : "text-[#9a9aa5]"
+                  rule.satisfied ? "text-fg-1" : "text-fg-2"
                 }`}
               >
                 {rule.label}
@@ -80,7 +80,7 @@ export function SquadValidationChecklist({
             </span>
             <span
               className={`font-bebas text-sm tracking-[1px] tabular-nums ${
-                rule.satisfied ? "text-[#e8fb25]" : "text-[#9a9aa5]"
+                rule.satisfied ? "text-accent" : "text-fg-2"
               }`}
             >
               {rule.detail}

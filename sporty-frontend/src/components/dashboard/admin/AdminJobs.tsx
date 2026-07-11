@@ -15,8 +15,8 @@ function StatusDot({ ok }: { ok: boolean }) {
 function SectionSkeleton() {
   return (
     <div className="space-y-2">
-      <div className="h-4 w-48 animate-pulse rounded-[3px] bg-[#1d1d26]" />
-      <div className="h-4 w-64 animate-pulse rounded-[3px] bg-[#1d1d26]" />
+      <div className="h-4 w-48 animate-pulse rounded-[3px] bg-surface-3" />
+      <div className="h-4 w-64 animate-pulse rounded-[3px] bg-surface-3" />
     </div>
   );
 }
@@ -27,10 +27,10 @@ export function AdminJobs() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Jobs</h1>
-      <p className="text-xs text-[#555560]">Refreshes automatically every 10 seconds.</p>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Jobs</h1>
+      <p className="text-xs text-fg-3">Refreshes automatically every 10 seconds.</p>
 
-      <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
         <p className="section-label">Celery</p>
         {celeryLoading ? (
           <SectionSkeleton />
@@ -42,21 +42,21 @@ export function AdminJobs() {
               <StatusDot ok={celery.inspect_reachable} />
               <span>{celery.inspect_reachable ? "Broker reachable" : "Broker unreachable"}</span>
             </div>
-            <p className="text-xs text-[#555560]">
+            <p className="text-xs text-fg-3">
               Workers online: {celery.workers_online.length ? celery.workers_online.join(", ") : "none"}
             </p>
-            <p className="text-xs text-[#555560]">
+            <p className="text-xs text-fg-3">
               Active: {celery.active.length} · Scheduled: {celery.scheduled.length} · Reserved: {celery.reserved.length}
             </p>
             {celery.locks_held.length > 0 && (
-              <p className="text-xs text-[#e8fb25]">Locks held: {celery.locks_held.join(", ")}</p>
+              <p className="text-xs text-accent">Locks held: {celery.locks_held.join(", ")}</p>
             )}
             <div className="pt-2">
               <p className="section-label mb-2">Beat schedule</p>
-              <ul className="space-y-1 text-xs text-[#555560]">
+              <ul className="space-y-1 text-xs text-fg-3">
                 {celery.beat_schedule.map((entry) => (
                   <li key={entry.name}>
-                    <span className="text-[#f0f0f0]">{entry.task}</span> — {entry.schedule}
+                    <span className="text-fg-1">{entry.task}</span> — {entry.schedule}
                   </li>
                 ))}
               </ul>
@@ -65,7 +65,7 @@ export function AdminJobs() {
         ) : null}
       </section>
 
-      <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
         <p className="section-label">Kafka Consumers</p>
         {kafkaLoading ? (
           <SectionSkeleton />
@@ -76,8 +76,8 @@ export function AdminJobs() {
             {kafka.workers.map((w) => (
               <li key={w.name} className="flex items-center gap-2 text-sm">
                 <StatusDot ok={w.alive} />
-                <span className="text-[#f0f0f0]">{w.name}</span>
-                <span className="text-xs text-[#555560]">
+                <span className="text-fg-1">{w.name}</span>
+                <span className="text-xs text-fg-3">
                   {w.alive
                     ? `last seen ~${Math.round(w.last_seen_seconds_ago ?? 0)}s ago`
                     : "not running"}

@@ -38,7 +38,7 @@ export function AdminScoring() {
   if (leaguesError) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Scoring</h1>
+        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Scoring</h1>
         <AdminErrorState message="Couldn't load leagues." onRetry={() => refetchLeagues()} />
       </div>
     );
@@ -46,9 +46,9 @@ export function AdminScoring() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-[#f0f0f0]">Scoring</h1>
+      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Scoring</h1>
 
-      <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-4">
+      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-4">
         <p className="section-label">Recalculate a transfer window</p>
 
         <div className="flex flex-wrap gap-3">
@@ -58,7 +58,7 @@ export function AdminScoring() {
               setLeagueId(e.target.value);
               setWindowId("");
             }}
-            className="rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0]"
+            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1"
           >
             <option value="">Select a league…</option>
             {leagues?.items.map((l) => (
@@ -72,7 +72,7 @@ export function AdminScoring() {
             value={windowId}
             onChange={(e) => setWindowId(e.target.value)}
             disabled={!leagueId || windowsLoading}
-            className="w-72 rounded-[3px] border border-[rgba(255,255,255,0.15)] bg-[#0d0d14] px-3 py-2 text-sm text-[#f0f0f0] disabled:opacity-50"
+            className="w-72 rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 disabled:opacity-50"
           >
             <option value="">{windowsLoading ? "Loading windows…" : "Select a window…"}</option>
             {windows?.map((w) => (
@@ -128,7 +128,7 @@ export function AdminScoring() {
       </section>
 
       {isSuperAdmin && (
-        <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 space-y-3">
+        <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
           <p className="section-label">Platform-wide</p>
           <Button
             variant="danger"

@@ -37,7 +37,7 @@ function EventRow({
         />
       )}
 
-      <span className="w-8 shrink-0 pt-1.5 text-right font-bebas text-lg leading-none tracking-[1px] tabular-nums text-[#9a9aa5]">
+      <span className="w-8 shrink-0 pt-1.5 text-right font-bebas text-lg leading-none tracking-[1px] tabular-nums text-fg-2">
         {event.minute != null ? `${event.minute}'` : "—"}
       </span>
 
@@ -53,18 +53,18 @@ function EventRow({
       </span>
 
       <div className="min-w-0 flex-1 pt-0.5">
-        <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#f0f0f0]">
+        <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
           {label}
         </div>
         <div className="mt-0.5 truncate text-xs text-[#6a6a76]">
           {event.type === "substitution" ? (
-            <span className="text-[#9a9aa5]">
+            <span className="text-fg-2">
               {event.player_name ?? "Unknown player"}
               {" on for "}
               {event.related_player_name ?? "Unknown player"}
             </span>
           ) : (
-            <span className="text-[#9a9aa5]">
+            <span className="text-fg-2">
               {event.player_name ?? "Unknown player"}
             </span>
           )}
@@ -95,7 +95,7 @@ export function EventFeed() {
       icon={<ListIcon className="size-3.5" />}
       action={
         ordered.length > 0 ? (
-          <span className="rounded-[3px] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
+          <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">
             {ordered.length}
           </span>
         ) : null
