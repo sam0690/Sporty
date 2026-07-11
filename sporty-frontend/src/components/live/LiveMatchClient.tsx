@@ -19,7 +19,6 @@ import {
   fetchModelMetrics,
 } from "@/lib/realtimeApi";
 import { useMatchStore } from "@/store/matchStore";
-import { teamIdentity } from "@/lib/teamIdentity";
 import type { MatchPrediction, MatchRatings, ModelMetrics } from "@/types/events";
 
 type LiveMatchClientProps = {
@@ -37,10 +36,6 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   const status = useMatchStore((s) => s.status);
   const lineup = useMatchStore((s) => s.lineup);
   const hasLineupChanges = Object.keys(lineup).length > 0;
-  const homeTeam = useMatchStore((s) => s.homeTeam);
-  const awayTeam = useMatchStore((s) => s.awayTeam);
-  const homeColor = teamIdentity(homeTeam).color;
-  const awayColor = teamIdentity(awayTeam).color;
 
   useEffect(() => {
     let mounted = true;
@@ -145,18 +140,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   useMatchSocket(matchId, !loading && phase !== "post");
 
   return (
-    <div className="relative isolate overflow-hidden">
-      <div
-        aria-hidden
-        className="glow-orb -left-24 -top-24 size-96 opacity-[0.06]"
-        style={{ background: homeColor }}
-      />
-      <div
-        aria-hidden
-        className="glow-orb -right-24 top-32 size-96 opacity-[0.06]"
-        style={{ background: awayColor }}
-      />
-
+    <div className="relative">
       <main className="relative mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
         <ScoreTicker loading={loading} />
 

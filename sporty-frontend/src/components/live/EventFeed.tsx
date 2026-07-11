@@ -47,7 +47,6 @@ function EventRow({
           color,
           borderColor: `${color}59`,
           background: `${color}17`,
-          boxShadow: `0 0 14px ${color}22`,
         }}
       >
         <Icon className="size-[1.05rem]" />
@@ -96,7 +95,7 @@ export function EventFeed() {
       icon={<ListIcon className="size-3.5" />}
       action={
         ordered.length > 0 ? (
-          <span className="rounded-full bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
+          <span className="rounded-[3px] bg-[rgba(255,255,255,0.06)] px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-[#9a9aa5]">
             {ordered.length}
           </span>
         ) : null

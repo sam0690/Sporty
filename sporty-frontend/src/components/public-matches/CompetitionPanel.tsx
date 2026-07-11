@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 import { sportGlyph } from "@/components/landing/sport-icons";
 import type { TMatch } from "@/types/match";
@@ -77,9 +78,7 @@ function MatchRow({ match }: { match: TMatch }) {
         />
       </div>
 
-      <span className="section-label shrink-0 text-[#555560] transition-colors group-hover:text-[#e8fb25]">
-        ›
-      </span>
+      <ChevronRight className="size-4 shrink-0 text-[#555560] transition-colors group-hover:text-[#e8fb25]" />
     </Link>
   );
 }
@@ -95,14 +94,14 @@ export function CompetitionPanel({
   const Glyph = glyph.Icon;
   return (
     <section
-      className="pop-in overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]"
+      className="pop-in overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]"
       style={style}
     >
       <div aria-hidden className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, ${glyph.color}, transparent 80%)` }} />
       <header className="flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.07)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-2.5">
           <span
-            className="grid size-6 shrink-0 place-items-center rounded-[6px]"
+            className="grid size-6 shrink-0 place-items-center rounded-[3px]"
             style={{ color: glyph.color, background: `${glyph.color}1a` }}
           >
             <Glyph className="size-3.5" />
@@ -112,7 +111,7 @@ export function CompetitionPanel({
           </span>
         </div>
         {group.live > 0 ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b5c]">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.3)] bg-[rgba(255,59,92,0.1)] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b5c]">
             <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
             {group.live} Live
           </span>

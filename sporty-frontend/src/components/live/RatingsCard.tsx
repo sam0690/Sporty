@@ -26,9 +26,9 @@ function RatingRow({
   const pct = Math.max(6, Math.min(100, (row.rating / 10) * 100));
   return (
     <div
-      className={`pop-in relative overflow-hidden rounded-[8px] border px-3.5 py-3 transition-colors ${
+      className={`pop-in relative overflow-hidden rounded-[3px] border px-3.5 py-3 transition-colors ${
         isMotm
-          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.05)] shadow-[0_0_24px_-10px_rgba(232,251,37,0.5)]"
+          ? "border-[rgba(232,251,37,0.4)] bg-[rgba(232,251,37,0.05)]"
           : "border-[rgba(255,255,255,0.08)] bg-[#0d0d12] hover:border-[rgba(255,255,255,0.16)]"
       }`}
       style={{ animationDelay: `${Math.min(index, 12) * 40}ms` }}
@@ -40,7 +40,7 @@ function RatingRow({
               {row.name ?? row.sporty_player_id ?? "Unknown"}
             </span>
             {isMotm && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-[4px] bg-[rgba(232,251,37,0.16)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-[3px] bg-[rgba(232,251,37,0.16)] px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#e8fb25]">
                 <StarIcon className="size-2.5" />
                 MOTM
               </span>
@@ -56,7 +56,7 @@ function RatingRow({
           )}
         </div>
         <span
-          className="grid size-11 shrink-0 place-items-center rounded-[7px] font-bebas text-2xl leading-none tracking-[1px]"
+          className="grid size-11 shrink-0 place-items-center rounded-[3px] font-bebas text-2xl leading-none tracking-[1px]"
           style={{ color, background: `${color}14`, border: `1px solid ${color}3d` }}
         >
           {row.rating.toFixed(1)}

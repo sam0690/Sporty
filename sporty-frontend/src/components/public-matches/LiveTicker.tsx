@@ -42,7 +42,7 @@ export function LiveTicker({ matches }: { matches: TMatch[] }) {
   const loop = [...matches, ...matches];
 
   return (
-    <div className="overflow-hidden rounded-full border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.05)]">
+    <div className="overflow-hidden rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.05)]">
       <div className="marquee-track flex w-max items-center">
         {loop.map((m, i) => (
           <TickerItem key={`${m.id}-${i}`} match={m} />

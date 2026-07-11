@@ -25,7 +25,7 @@ export function LineupCard() {
           return (
             <li
               key={teamId}
-              className="pop-in rounded-[8px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3.5 py-3"
+              className="pop-in rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-3.5 py-3"
               style={{ animationDelay: `${idx * 50}ms` }}
             >
               <div className="flex items-center justify-between">

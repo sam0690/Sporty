@@ -30,11 +30,11 @@ function TeamColumn({
         className={`flex items-center gap-2.5 ${isRight ? "flex-row-reverse text-right" : ""}`}
       >
         <span
-          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[7px] font-bebas text-sm leading-none tracking-[1px]"
+          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[3px] font-bebas text-sm leading-none tracking-[1px]"
           style={{
             color,
-            background: `linear-gradient(160deg, ${color}2e, ${color}0d)`,
-            border: `1px solid ${color}59`,
+            background: `${color}14`,
+            border: `1px solid ${color}40`,
           }}
         >
           {showImage ? (
@@ -62,12 +62,12 @@ function TeamColumn({
         {players.map((p) => (
           <li
             key={p.player_id}
-            className={`flex items-center gap-2.5 rounded-[6px] px-1.5 py-1.5 transition-colors hover:bg-[rgba(255,255,255,0.04)] ${
+            className={`flex items-center gap-2.5 rounded-[3px] px-1.5 py-1.5 transition-colors hover:bg-[rgba(255,255,255,0.04)] ${
               isRight ? "flex-row-reverse text-right" : ""
             }`}
           >
             <span
-              className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[5px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
+              className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[3px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
               style={{
                 color,
                 background: `${color}17`,

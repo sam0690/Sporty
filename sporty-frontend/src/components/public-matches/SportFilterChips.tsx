@@ -20,8 +20,8 @@ function Chip({
       onClick={onClick}
       className={
         active
-          ? "inline-flex items-center gap-2 rounded-full bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] shadow-[0_8px_20px_-6px_rgba(232,251,37,0.55)] transition-transform hover:scale-[1.03]"
-          : "inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.02)] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
+          ? "inline-flex items-center gap-2 rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45]"
+          : "inline-flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors hover:border-[rgba(255,255,255,0.28)] hover:text-[#f0f0f0]"
       }
     >
       {children}

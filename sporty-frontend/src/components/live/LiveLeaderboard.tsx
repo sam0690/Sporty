@@ -98,7 +98,7 @@ export function LiveLeaderboard() {
             return (
               <li
                 key={row.playerId}
-                className="pop-in flex items-center gap-3 rounded-[8px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
+                className="pop-in flex items-center gap-3 rounded-[3px] px-2 py-2 transition-colors hover:bg-[rgba(255,255,255,0.04)]"
                 style={{
                   animationDelay: `${idx * 40}ms`,
                   background: idx === 0 ? "rgba(255,216,107,0.05)" : undefined,
@@ -111,7 +111,7 @@ export function LiveLeaderboard() {
                   {idx + 1}
                 </span>
                 <span
-                  className="grid size-8 shrink-0 place-items-center rounded-full font-barlow-condensed text-[11px] font-700 tracking-[0.5px]"
+                  className="grid size-8 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-[11px] font-700 tracking-[0.5px]"
                   style={{
                     color: medal ?? "#9a9aa5",
                     background: medal ? `${medal}1f` : "rgba(255,255,255,0.05)",

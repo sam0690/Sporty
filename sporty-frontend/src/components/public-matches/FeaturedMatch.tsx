@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 import type { TMatch } from "@/types/match";
 import { teamIdentity } from "@/lib/teamIdentity";
@@ -16,20 +17,17 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
   return (
     <Link
       href={`/fixtures/${match.id}`}
-      className="group relative isolate block overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.09)] bg-gradient-to-b from-[#14141b] to-[#0c0c11] shadow-[0_24px_60px_-30px_rgba(0,0,0,1)] transition-all duration-300 hover:-translate-y-0.5 hover:border-[rgba(255,255,255,0.18)] hover:no-underline"
+      className="group relative block overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] transition-colors duration-150 hover:border-[rgba(255,255,255,0.18)] hover:no-underline"
     >
       <div
         aria-hidden
-        className="glow-orb -left-10 top-1/2 size-56 -translate-y-1/2 opacity-[0.16]"
-        style={{ background: home.color }}
-      />
-      <div
-        aria-hidden
-        className="glow-orb -right-10 top-1/2 size-56 -translate-y-1/2 opacity-[0.16]"
-        style={{ background: away.color }}
+        className="h-1"
+        style={{
+          background: `linear-gradient(90deg, ${home.color}, ${home.color} 42%, ${away.color} 58%, ${away.color})`,
+        }}
       />
 
-      <div className="relative flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.06)] px-5 py-3 sm:px-8">
+      <div className="relative flex items-center justify-between gap-3 border-b border-[rgba(255,255,255,0.08)] px-5 py-3 sm:px-8">
         <span className="inline-flex items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]">
           <span style={{ color: glyph.color }}>
             <glyph.Icon className="size-3.5" />
@@ -37,7 +35,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
           {match.competition}
         </span>
         {isLive ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,59,92,0.32)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,59,92,0.32)] bg-[rgba(255,59,92,0.1)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-[#ff3b5c]">
             <span className="size-1.5 rounded-full bg-[#ff3b5c] animate-live-pulse" />
             Live
           </span>
@@ -84,9 +82,9 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center gap-1.5 border-t border-[rgba(255,255,255,0.06)] px-5 py-3 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors group-hover:text-[#e8fb25]">
+      <div className="relative flex items-center justify-center gap-1.5 border-t border-[rgba(255,255,255,0.08)] px-5 py-3 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5] transition-colors group-hover:text-[#e8fb25]">
         View live coverage
-        <span className="transition-transform group-hover:translate-x-0.5">›</span>
+        <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
       </div>
     </Link>
   );
