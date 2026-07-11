@@ -10,8 +10,7 @@ import {
 } from "@/hooks/dashboard/useDashboardData";
 import { useLocalStorage } from "@/hooks/general/useLocalStorage";
 import { LocalStorageKeys } from "@/lib/storage.keys";
-import { OVERVIEW_STATS } from "../constants/dashboardData";
-import type { ActivityItem } from "../types";
+import type { ActivityItem, OverviewStat } from "../types";
 
 export function useDashboardMainState() {
   const { data: me, username } = useMe();
@@ -62,31 +61,32 @@ export function useDashboardMainState() {
 
   const userName = username || "Sporty Manager";
 
-  const stats = [...OVERVIEW_STATS];
   const selectedLeagueName =
     leagueOptions.find((league) => league.id === activeLeagueId)?.name ??
     "League";
 
-  stats[0] = {
-    label: "Total Points",
-    value: Math.round(dashboardStats?.total_points ?? 0).toString(),
-    change: selectedLeagueName,
-  };
-  stats[1] = {
-    label: "Rank",
-    value: dashboardStats?.rank ? `#${dashboardStats.rank}` : "-",
-    change: selectedLeagueName,
-  };
-  stats[2] = {
-    label: "Budget",
-    value: `$${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`,
-    change: "Current budget",
-  };
-  stats[3] = {
-    label: "Gameweek Points",
-    value: Math.round(dashboardStats?.gameweek_points ?? 0).toString(),
-    change: selectedLeagueName,
-  };
+  const stats: OverviewStat[] = [
+    {
+      label: "Total Points",
+      value: Math.round(dashboardStats?.total_points ?? 0).toString(),
+      change: selectedLeagueName,
+    },
+    {
+      label: "Rank",
+      value: dashboardStats?.rank ? `#${dashboardStats.rank}` : "-",
+      change: selectedLeagueName,
+    },
+    {
+      label: "Budget",
+      value: `$${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`,
+      change: "Current budget",
+    },
+    {
+      label: "Gameweek Points",
+      value: Math.round(dashboardStats?.gameweek_points ?? 0).toString(),
+      change: selectedLeagueName,
+    },
+  ];
 
   const mappedActivity: ActivityItem[] = (recentActivityData ?? []).map(
     (item) => ({

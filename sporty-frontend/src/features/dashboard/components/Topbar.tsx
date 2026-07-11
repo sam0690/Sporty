@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -14,10 +15,6 @@ type TopbarProps = {
   stats: OverviewStat[];
   statsLoading?: boolean;
 };
-
-function isPositiveChange(change: string): boolean {
-  return change.trim().startsWith("+") || /^up\b/i.test(change.trim());
-}
 
 function StatSkeleton({ wide = false }: { wide?: boolean }) {
   return (
@@ -75,7 +72,7 @@ export function Topbar({
             value={selectedLeagueId ?? ""}
             onChange={(event) => onLeagueChange(event.target.value)}
             disabled={leagues.length === 0}
-            className="rounded-[3px] border border-white/10 bg-transparent px-3.5 py-2 font-sans text-sm font-600 uppercase tracking-[0.5px] text-fg-1 transition-colors focus:border-accent/50 focus:outline-none disabled:opacity-50"
+            className="rounded-[3px] border border-white/10 bg-transparent px-3.5 py-2 font-sans text-sm font-600 uppercase tracking-[0.5px] text-fg-1 transition-colors focus:border-accent/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-50"
             aria-label="Choose active league"
           >
             {leagues.map((league) => (
@@ -84,6 +81,16 @@ export function Topbar({
               </option>
             ))}
           </select>
+
+          {selectedLeagueId && (
+            <Link
+              href={`/leagues/${selectedLeagueId}`}
+              className="group flex items-center gap-1.5 rounded-[3px] border border-accent/25 bg-accent/8 px-3.5 py-2 font-sans text-xs font-700 uppercase tracking-[1px] text-accent-dim transition-colors hover:border-accent/40 hover:text-accent"
+            >
+              Open Workspace
+              <ChevronRight className="size-3.5 transition-colors group-hover:translate-x-0.5" />
+            </Link>
+          )}
 
           <button
             type="button"
@@ -131,13 +138,7 @@ export function Topbar({
                 </p>
                 <div className="mt-1.5 flex items-baseline gap-2">
                   <p className="section-label">Total Points</p>
-                  <p
-                    className={`text-[11px] font-600 ${
-                      isPositiveChange(totalPoints.change)
-                        ? "text-success"
-                        : "text-fg-3"
-                    }`}
-                  >
+                  <p className="text-[11px] font-600 text-fg-3">
                     {totalPoints.change}
                   </p>
                 </div>

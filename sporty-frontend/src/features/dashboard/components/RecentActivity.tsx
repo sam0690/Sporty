@@ -1,6 +1,7 @@
 import {
   ArrowLeftRight,
   ClipboardList,
+  Inbox,
   Star,
   TrendingUp,
   UserPlus,
@@ -8,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+import { EmptyState, ErrorState } from "@/components/ui";
 import type { ActivityItem } from "../types";
 import { useRelativeTime } from "@/hooks/general/useRelativeTime";
 import { formatRelativeTime } from "@/utils/dateUtils";
@@ -53,13 +55,17 @@ export function RecentActivity({
             ))}
           </div>
         ) : isError ? (
-          <div className="my-5 rounded-[3px] border border-danger/25 bg-danger/6 p-4 text-sm text-danger">
-            Failed to load recent activity.
-          </div>
+          <ErrorState
+            className="my-5"
+            title="Failed to load recent activity"
+          />
         ) : items.length === 0 ? (
-          <div className="my-5 rounded-[3px] border border-white/8 bg-surface-2 p-4 text-sm text-fg-2">
-            No recent activities yet.
-          </div>
+          <EmptyState
+            className="my-5 !border-transparent !bg-transparent !py-8 !shadow-none"
+            icon={Inbox}
+            title="No recent activity yet"
+            description="Transfers, lineup changes, and league updates will show up here."
+          />
         ) : (
           <ul className="divide-y divide-white/6">
             {items.map((item) => {
