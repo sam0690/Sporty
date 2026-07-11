@@ -40,7 +40,7 @@ export function FavouriteTeamPicker({
       withinPortal
     >
       <Popover.Target>
-        <div className="flex w-full min-h-[56px] items-center gap-2 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#121218] pr-2 transition-colors hover:border-white/15">
+        <div className="flex w-full min-h-[56px] items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] pr-2 transition-colors hover:border-white/15">
           <button
             type="button"
             onClick={() => setOpened((v) => !v)}
@@ -51,7 +51,7 @@ export function FavouriteTeamPicker({
             {value ? (
               <TeamLogo teamName={value.name} logoUrl={value.logo_url} size="md" />
             ) : (
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#1a1a22] text-[#666671]">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0d0d12] text-[#666671]">
                 <Shield size={16} aria-hidden />
               </span>
             )}
@@ -77,7 +77,7 @@ export function FavouriteTeamPicker({
 
       <Popover.Dropdown
         style={{
-          background: "#121218",
+          background: "#111117",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: "10px",
           padding: "12px",
@@ -104,10 +104,10 @@ export function FavouriteTeamPicker({
                       onChange(team);
                       setOpened(false);
                     }}
-                    className={`flex min-h-[44px] w-full items-center gap-3 rounded-[8px] px-3 py-2 text-left text-sm transition-colors ${
+                    className={`flex min-h-[44px] w-full items-center gap-3 rounded-[3px] px-3 py-2 text-left text-sm transition-colors ${
                       value?.id === team.id
                         ? "bg-[rgba(232,251,37,0.1)] text-[#e8fb25]"
-                        : "text-[#f0f0f0] hover:bg-[#1a1a22]"
+                        : "text-[#f0f0f0] hover:bg-[#1d1d26]"
                     }`}
                   >
                     <TeamLogo teamName={team.name} logoUrl={team.logo_url} size="md" />

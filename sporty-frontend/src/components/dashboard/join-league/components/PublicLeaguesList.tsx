@@ -68,15 +68,15 @@ function LeagueCard({
 
   return (
     <article
-      className="animate-fade-soft group flex flex-col overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-gradient-to-b from-[#16161d] to-[#0f0f14] p-5 transition-colors hover:border-[rgba(255,255,255,0.18)]"
+      className="animate-fade-soft group flex flex-col overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5 transition-colors hover:border-[rgba(255,255,255,0.18)]"
       style={{ borderLeft: `3px solid ${glyph.color}` }}
     >
       <div className="flex items-start gap-3">
         <span
-          className="grid size-10 shrink-0 place-items-center rounded-[9px]"
+          className="grid size-10 shrink-0 place-items-center rounded-[3px]"
           style={{
             color: glyph.color,
-            background: `linear-gradient(160deg, ${glyph.color}2e, ${glyph.color}0d)`,
+            background: `${glyph.color}1a`,
             border: `1px solid ${glyph.color}59`,
           }}
         >
@@ -97,16 +97,16 @@ function LeagueCard({
       {/* status pill */}
       <div className="mt-4">
         {league.requiresInviteCode ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[rgba(255,255,255,0.04)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#9a9aa5]">
             <LockIcon className="size-3" />
             Invite only
           </span>
         ) : league.joinableNow === false ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(255,216,107,0.25)] bg-[rgba(255,216,107,0.08)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ffd86b]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(255,216,107,0.25)] bg-[rgba(255,216,107,0.08)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ffd86b]">
             Closed
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(0,255,136,0.28)] bg-[rgba(0,255,136,0.08)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#00ff88]">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-[rgba(0,255,136,0.28)] bg-[rgba(0,255,136,0.08)] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#00ff88]">
             <span className="size-1.5 rounded-full bg-[#00ff88]" />
             Open to join
           </span>
@@ -129,7 +129,7 @@ function LeagueCard({
         type="button"
         disabled={disabled}
         onClick={() => onJoin(league)}
-        className="mt-4 inline-flex w-full items-center justify-center rounded-[9px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:bg-[rgba(255,255,255,0.06)] disabled:text-[#555560]"
+        className="mt-4 inline-flex w-full items-center justify-center rounded-[3px] bg-[#e8fb25] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] disabled:cursor-not-allowed disabled:bg-[rgba(255,255,255,0.06)] disabled:text-[#555560]"
       >
         {disabled ? "Unavailable" : "Join League"}
       </button>
@@ -139,7 +139,7 @@ function LeagueCard({
 
 function EmptyState() {
   return (
-    <div className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#0f0f14] p-10 text-center">
+    <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-10 text-center">
       <span className="mx-auto grid size-11 place-items-center rounded-full border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.02)] text-[#555560]">
         <UsersIcon className="size-5" />
       </span>

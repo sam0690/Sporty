@@ -22,8 +22,8 @@ function isPositiveChange(change: string): boolean {
 function StatSkeleton({ wide = false }: { wide?: boolean }) {
   return (
     <div>
-      <div className={`skeleton h-9 rounded-[6px] ${wide ? "w-24" : "w-14"}`} />
-      <div className="skeleton mt-2 h-2.5 w-16 rounded-[4px]" />
+      <div className={`skeleton h-9 rounded-[3px] ${wide ? "w-24" : "w-14"}`} />
+      <div className="skeleton mt-2 h-2.5 w-16 rounded-[3px]" />
     </div>
   );
 }
@@ -47,7 +47,7 @@ export function Topbar({
   const gwPoints = stats.find((s) => s.label === "Gameweek Points");
 
   return (
-    <header className="mb-6 overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-5 py-5 sm:px-8 sm:py-7">
+    <header className="mb-6 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-5 py-5 sm:px-8 sm:py-7">
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0">
           <p className="section-label">Welcome back</p>
@@ -59,7 +59,7 @@ export function Topbar({
         <div className="flex flex-wrap items-center gap-2.5">
           {budget && (
             <div
-              className="rounded-full border border-[rgba(255,255,255,0.1)] px-3.5 py-2 text-right"
+              className="rounded-[3px] border border-[rgba(255,255,255,0.1)] px-3.5 py-2 text-right"
               title="Available budget"
             >
               <span className="num font-barlow-condensed text-sm font-700 text-[#f0f0f0]">
@@ -75,7 +75,7 @@ export function Topbar({
             value={selectedLeagueId ?? ""}
             onChange={(event) => onLeagueChange(event.target.value)}
             disabled={leagues.length === 0}
-            className="rounded-full border border-[rgba(255,255,255,0.1)] bg-transparent px-3.5 py-2 font-barlow-condensed text-sm font-600 uppercase tracking-[0.5px] text-[#f0f0f0] transition-colors focus:border-[#e8fb25]/50 focus:outline-none disabled:opacity-50"
+            className="rounded-[3px] border border-[rgba(255,255,255,0.1)] bg-transparent px-3.5 py-2 font-barlow-condensed text-sm font-600 uppercase tracking-[0.5px] text-[#f0f0f0] transition-colors focus:border-[#e8fb25]/50 focus:outline-none disabled:opacity-50"
             aria-label="Choose active league"
           >
             {leagues.map((league) => (
@@ -88,7 +88,7 @@ export function Topbar({
           <button
             type="button"
             onClick={() => router.push(`/user/${userId}`)}
-            className="group flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] p-1 pr-3 transition-colors hover:border-[rgba(232,251,37,0.3)]"
+            className="group flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.1)] p-1 pr-3 transition-colors hover:border-[rgba(232,251,37,0.3)]"
             aria-label="Open public profile"
           >
             {avatar ? (

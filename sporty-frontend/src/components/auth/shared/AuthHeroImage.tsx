@@ -17,7 +17,7 @@ export function AuthHeroImage({
   bullets = [],
 }: AuthHeroImageProps) {
   return (
-    <div className="relative h-full min-h-[520px] overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-gradient-to-b from-[#14141b] to-[#0b0b10] shadow-[0_30px_70px_-30px_rgba(0,0,0,1)]">
+    <div className="relative h-full min-h-[520px] overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
       {/* accent bar + ambient glow */}
       <div
         className="h-1"
@@ -39,7 +39,7 @@ export function AuthHeroImage({
         {/* brand */}
         <div className="flex items-center gap-2.5">
           <span
-            className="grid size-9 place-items-center rounded-[8px] text-[#0a0a0f]"
+            className="grid size-9 place-items-center rounded-[3px] text-[#0a0a0f]"
             style={{
               background: "linear-gradient(150deg, #f0ff45, #e8fb25)",
               boxShadow: "0 0 24px rgba(232,251,37,0.4)",
@@ -93,7 +93,7 @@ export function AuthHeroImage({
           {SPORT_GLYPHS.map(({ Icon, label, color }) => (
             <span
               key={label}
-              className="inline-flex items-center gap-2 rounded-full border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 py-1.5"
+              className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.1)] bg-[rgba(255,255,255,0.03)] px-3 py-1.5"
             >
               <span style={{ color }}>
                 <Icon className="size-4" />

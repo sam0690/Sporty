@@ -90,14 +90,14 @@ export function FavouritesOnboardingView() {
         <button
           type="button"
           onClick={() => router.replace(continuePath)}
-          className="w-full rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] sm:w-auto"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5] transition-colors hover:text-[#f0f0f0] sm:w-auto"
         >
           Skip for now
         </button>
         <button
           type="button"
           onClick={() => router.replace(continuePath)}
-          className="w-full rounded-[10px] bg-[#e8fb25] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] sm:w-auto"
+          className="w-full rounded-[3px] bg-[#e8fb25] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#0a0a0f] transition-colors hover:bg-[#f0ff45] sm:w-auto"
         >
           Continue
         </button>

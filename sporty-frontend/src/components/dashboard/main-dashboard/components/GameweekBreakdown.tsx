@@ -27,7 +27,7 @@ export function GameweekBreakdown({
   }, [breakdown]);
 
   return (
-    <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
       <header className="flex items-center justify-between gap-4 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
         <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
           Gameweek Points
@@ -54,11 +54,11 @@ export function GameweekBreakdown({
         {isLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="skeleton h-10 rounded-[8px]" />
+              <div key={index} className="skeleton h-10 rounded-[3px]" />
             ))}
           </div>
         ) : rows.length === 0 ? (
-          <div className="rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] p-4 text-sm text-[#777783]">
+          <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-sm text-[#777783]">
             No gameweeks scored yet. Points appear here once a gameweek finishes.
           </div>
         ) : (
@@ -77,17 +77,12 @@ export function GameweekBreakdown({
                     GW{row.gameweek}
                   </span>
 
-                  <div className="relative h-7 flex-1 overflow-hidden rounded-full bg-[#1a1a22]">
+                  <div className="relative h-7 flex-1 overflow-hidden rounded-[3px] bg-[#0d0d12]">
                     <div
-                      className="h-full rounded-full transition-[width] duration-300"
+                      className="h-full rounded-[3px] transition-[width] duration-300"
                       style={{
                         width: `${Math.max(widthPct, 3)}%`,
-                        background: isBest
-                          ? "linear-gradient(90deg, #e8fb25, #c8d85a)"
-                          : "rgba(232,251,37,0.25)",
-                        boxShadow: isBest
-                          ? "0 0 16px -2px rgba(232,251,37,0.55)"
-                          : "none",
+                        background: isBest ? "#e8fb25" : "rgba(232,251,37,0.25)",
                       }}
                     />
                     {row.rank != null && (

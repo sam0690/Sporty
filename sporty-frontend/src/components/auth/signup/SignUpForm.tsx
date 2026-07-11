@@ -11,7 +11,7 @@ import { Divider } from "@/components/auth/login/components/Divider";
 import { SocialLogin } from "@/components/auth/login/components/SocialLogin";
 
 const FIELD_CLASS =
-  "h-11 w-full rounded-[8px] border border-[rgba(255,255,255,0.12)] bg-[#0d0d12] pl-10 pr-12 text-sm text-[#f0f0f0] placeholder:text-[#555560] transition-colors focus:border-[#e8fb25] focus:outline-none focus:ring-2 focus:ring-[rgba(232,251,37,0.15)]";
+  "h-11 w-full rounded-[3px] border border-[rgba(255,255,255,0.12)] bg-[#0d0d12] pl-10 pr-12 text-sm text-[#f0f0f0] placeholder:text-[#555560] transition-colors focus:border-[#e8fb25] focus:outline-none focus:ring-2 focus:ring-[rgba(232,251,37,0.15)]";
 const LABEL_CLASS =
   "mb-1.5 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#9a9aa5]";
 const ICON_CLASS =
@@ -52,7 +52,7 @@ export function SignUpForm() {
           ← Back to Home
         </Link>
 
-        <div className="animate-fade-in mt-5 overflow-hidden rounded-[16px] border border-[rgba(255,255,255,0.1)] bg-gradient-to-b from-[#14141b] to-[#0f0f14] shadow-[0_30px_70px_-30px_rgba(0,0,0,1)]">
+        <div className="animate-fade-in mt-5 overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
           <div className="space-y-2.5 p-8 pb-4">
             <span className="section-label">Create Account</span>
             <h1 className="font-bebas text-5xl leading-none tracking-[3px] text-[#f0f0f0]">
@@ -184,7 +184,7 @@ export function SignUpForm() {
 
               <Button
                 type="submit"
-                className="h-11 w-full rounded-[8px] shadow-[0_10px_30px_-10px_rgba(232,251,37,0.5)] active:scale-[0.98] disabled:opacity-60"
+                className="h-11 w-full rounded-[3px] active:scale-[0.98] disabled:opacity-60"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

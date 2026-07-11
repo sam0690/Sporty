@@ -30,7 +30,7 @@ export function ProfileHeader({
   const initial = name.slice(0, 1).toUpperCase();
 
   return (
-    <section className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] p-5">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-5">
       <div className="flex items-center gap-4">
         {avatar ? (
           <Image

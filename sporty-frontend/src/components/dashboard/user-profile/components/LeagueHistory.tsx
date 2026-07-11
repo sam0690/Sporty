@@ -31,7 +31,7 @@ const SPORT_META: Record<
 
 export function LeagueHistory({ leagues }: LeagueHistoryProps) {
   return (
-    <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218]">
+    <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
       <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
         <p className="section-label">League History</p>
       </header>

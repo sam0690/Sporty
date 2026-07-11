@@ -34,7 +34,7 @@ export function FavouritesForm({
   onPlayerClear,
 }: FavouritesFormProps) {
   return (
-    <div className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218]">
+    <div className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
       <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
         <p className="section-label">Favourites</p>
       </header>

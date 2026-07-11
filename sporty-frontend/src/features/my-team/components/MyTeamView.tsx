@@ -18,7 +18,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
   );
 
   return (
-    <section className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-5 py-4 sm:px-6 sm:py-5">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-5 py-4 sm:px-6 sm:py-5">
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div>
           <p className="num font-bebas text-5xl leading-none tracking-[1px] text-[#e8fb25] sm:text-6xl">
@@ -99,10 +99,10 @@ export function MyTeamView({
               key={league.id}
               type="button"
               onClick={() => onLeagueChange(league.id)}
-              className={`rounded-[10px] border px-4 py-2.5 text-left transition-colors ${
+              className={`rounded-[3px] border px-4 py-2.5 text-left transition-colors ${
                 isActive
                   ? "border-[rgba(232,251,37,0.35)] bg-[rgba(232,251,37,0.08)]"
-                  : "border-[rgba(255,255,255,0.08)] bg-[#121218] hover:border-[rgba(255,255,255,0.16)]"
+                  : "border-[rgba(255,255,255,0.08)] bg-[#111117] hover:border-[rgba(255,255,255,0.16)]"
               }`}
               aria-pressed={isActive}
             >
@@ -128,7 +128,7 @@ export function MyTeamView({
         <select
           value={activeLeague?.id ?? ""}
           onChange={(event) => onLeagueChange(event.target.value)}
-          className="w-full rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
+          className="w-full rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-2.5 text-sm text-[#f0f0f0] outline-none transition-colors focus:border-[#e8fb25]"
           style={{ colorScheme: "dark" }}
           aria-label="Choose league"
         >
@@ -159,11 +159,11 @@ export function MyTeamView({
           ))}
         </div>
       ) : leaguesError || selectedTeamError ? (
-        <div className="rounded-[12px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
+        <div className="rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
           Failed to load team data. Please try again.
         </div>
       ) : !hasLeagues ? (
-        <div className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] p-8 text-center text-sm text-[#666671]">
+        <div className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] p-8 text-center text-sm text-[#666671]">
           You are not part of any leagues yet.
         </div>
       ) : isEmptyTeam ? (
@@ -171,7 +171,7 @@ export function MyTeamView({
       ) : teamLeague && teamLeague.players.length > 0 ? (
         <div className="space-y-6">
           <SquadStats players={teamLeague.players} />
-          <section className="overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218]">
+          <section className="overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
               <span className="section-label">Squad</span>
               <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#666671]">

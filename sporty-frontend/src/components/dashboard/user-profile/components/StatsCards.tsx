@@ -12,7 +12,7 @@ export function StatsCards({
   bestRank,
 }: StatsCardsProps) {
   return (
-    <section className="rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-5 py-4">
+    <section className="rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-5 py-4">
       <p className="num font-bebas text-5xl leading-none tracking-[1px] text-[#e8fb25]">
         {Math.round(totalPoints)}
       </p>

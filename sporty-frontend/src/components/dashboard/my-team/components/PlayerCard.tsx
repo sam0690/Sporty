@@ -48,10 +48,10 @@ export function PlayerCard({
   const Icon = meta.Icon;
 
   return (
-    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#121218] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.16)]">
+    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117] px-4 py-3 transition-colors hover:border-[rgba(255,255,255,0.16)]">
       <Link
         href={`/players/${id}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#121218]"
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e8fb25]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111117]"
       >
         <PlayerAvatar name={name} photoUrl={photoUrl} size="md" className="shrink-0" />
 

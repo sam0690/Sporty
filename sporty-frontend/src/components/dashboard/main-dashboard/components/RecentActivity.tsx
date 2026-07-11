@@ -38,7 +38,7 @@ export function RecentActivity({
   const nowMs = useRelativeTime({ refreshIntervalMs: 60_000 });
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-[12px] border border-[rgba(255,255,255,0.08)] bg-[#121218] shadow-[0_1px_0_rgba(255,255,255,0.03)_inset,0_18px_40px_-26px_rgba(0,0,0,0.9)]">
+    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#111117]">
       <header className="border-b border-[rgba(255,255,255,0.07)] px-5 py-4">
         <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
           Recent Activity
@@ -49,15 +49,15 @@ export function RecentActivity({
         {isLoading ? (
           <div className="space-y-3 py-5">
             {Array.from({ length: 4 }, (_, index) => (
-              <div key={index} className="skeleton h-11 rounded-[8px]" />
+              <div key={index} className="skeleton h-11 rounded-[3px]" />
             ))}
           </div>
         ) : isError ? (
-          <div className="my-5 rounded-[10px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
+          <div className="my-5 rounded-[3px] border border-[rgba(255,59,92,0.25)] bg-[rgba(255,59,92,0.06)] p-4 text-sm text-[#ff3b5c]">
             Failed to load recent activity.
           </div>
         ) : items.length === 0 ? (
-          <div className="my-5 rounded-[10px] border border-[rgba(255,255,255,0.08)] bg-[#1a1a22] p-4 text-sm text-[#777783]">
+          <div className="my-5 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#0d0d12] p-4 text-sm text-[#777783]">
             No recent activities yet.
           </div>
         ) : (
