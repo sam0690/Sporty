@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { Lock, X } from "lucide-react";
+import { ArrowRight, Lock, X } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
 import { NavigationTabs } from "@/components/dashboard/leagues/league-home/components/NavigationTabs";
 import { DangerZone } from "@/components/dashboard/leagues/league-settings/components/DangerZone";
@@ -320,12 +321,12 @@ export function LeagueSettings() {
                     )}
                   </span>
                   {season.id !== leagueId && (
-                    <a
+                    <Link
                       href={`/leagues/${season.id}/settings`}
-                      className="text-xs uppercase tracking-[1px] text-[#e8fb25] hover:underline"
+                      className="flex items-center gap-1 text-xs uppercase tracking-[1px] text-[#e8fb25] hover:underline"
                     >
-                      View →
-                    </a>
+                      View <ArrowRight className="h-3 w-3" aria-hidden />
+                    </Link>
                   )}
                 </div>
               ))}

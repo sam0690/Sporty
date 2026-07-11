@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { Wallet } from "lucide-react";
 
 type TransfersHeaderProps = {
   budget: number;
@@ -38,7 +39,7 @@ export function TransfersHeader({
         </div>
 
         <div className="inline-flex items-center gap-2 rounded-[3px] border border-[rgba(232,251,37,0.25)] bg-[rgba(232,251,37,0.08)] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#e8fb25]">
-          <span aria-hidden="true">💰</span>
+          <Wallet className="h-4 w-4" aria-hidden="true" />
           <span>${budget.toFixed(1)}M remaining</span>
         </div>
       </div>

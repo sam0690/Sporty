@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { ArrowRight, Check, ListChecks, X } from "lucide-react";
 
 type SuccessModalProps = {
@@ -16,8 +16,6 @@ export function SuccessModal({
   leagueId,
   teamName,
 }: SuccessModalProps) {
-  const router = useRouter();
-
   if (!isOpen) {
     return null;
   }
@@ -42,22 +40,20 @@ export function SuccessModal({
           </p>
 
           <div className="mt-6 space-y-2">
-            <button
-              type="button"
-              onClick={() => router.push(`/leagues/${leagueId}`)}
+            <Link
+              href={`/leagues/${leagueId}`}
               className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#e8fb25] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-[#f2ff5a]"
             >
               Go to League
               <ArrowRight size={16} />
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push(`/leagues/${leagueId}/lineup`)}
+            </Link>
+            <Link
+              href={`/leagues/${leagueId}/lineup`}
               className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-[rgba(255,255,255,0.08)] bg-[#1d1d26] px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-[#f0f0f0] transition-colors hover:border-[rgba(232,251,37,0.3)]"
             >
               <ListChecks size={15} />
               Set Lineup
-            </button>
+            </Link>
             <button
               type="button"
               onClick={onClose}

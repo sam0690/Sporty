@@ -218,7 +218,7 @@ export function TradesView() {
             {targetTeamId ? (
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-2 text-xs font-700 uppercase tracking-[1px] text-[#4caf50]">
+                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#4caf50]">
                     You give ({offered.size})
                   </p>
                   <div className="space-y-1.5">
@@ -233,7 +233,7 @@ export function TradesView() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-700 uppercase tracking-[1px] text-[#00d4ff]">
+                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#00d4ff]">
                     You receive ({requested.size})
                   </p>
                   <div className="space-y-1.5">

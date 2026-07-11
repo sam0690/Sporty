@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
 import { PlayerAvatar } from "@/components/ui";
 import { BudgetOverageConfirmation } from "@/components/dashboard/transfers/components/BudgetOverageConfirmation";
 import { CurrentRoster } from "@/components/dashboard/transfers/components/CurrentRoster";
@@ -311,7 +311,7 @@ export function TransfersView(props: Props) {
                 className="shrink-0 text-[#555560] transition-colors hover:text-[#f0f0f0]"
                 aria-label="Cancel swap"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
           )}

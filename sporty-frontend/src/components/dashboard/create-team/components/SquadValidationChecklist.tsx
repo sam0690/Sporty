@@ -1,5 +1,7 @@
 "use client";
 
+import { Check } from "lucide-react";
+
 export type SquadValidationRule = {
   key: string;
   label: string;
@@ -66,7 +68,7 @@ export function SquadValidationChecklist({
                     : "bg-[rgba(255,255,255,0.06)] text-[#555560]"
                 }`}
               >
-                {rule.satisfied ? "✓" : ""}
+                {rule.satisfied ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : null}
               </span>
               <span
                 className={`font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${

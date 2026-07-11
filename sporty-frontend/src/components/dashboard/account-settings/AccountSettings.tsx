@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
 import {
   PreferencesForm,
@@ -79,8 +80,8 @@ export function AccountSettings() {
               Edit your avatar, display name and bio, or delete your account
             </p>
           </div>
-          <span className="shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
-            Open →
+          <span className="flex shrink-0 items-center gap-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#e8fb25]">
+            Open <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </Link>
       </div>
