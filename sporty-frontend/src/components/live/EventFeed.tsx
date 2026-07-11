@@ -56,7 +56,7 @@ function EventRow({
         <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
           {label}
         </div>
-        <div className="mt-0.5 truncate text-xs text-[#6a6a76]">
+        <div className="mt-0.5 truncate text-xs text-fg-3">
           {event.type === "substitution" ? (
             <span className="text-fg-2">
               {event.player_name ?? "Unknown player"}

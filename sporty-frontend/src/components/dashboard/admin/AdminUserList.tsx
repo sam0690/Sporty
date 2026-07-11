@@ -47,7 +47,7 @@ export function AdminUserList() {
             onChange={(e) =>
               changeUserRole.mutate({ id: u.id, role: e.target.value })
             }
-            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-2 py-1 text-xs uppercase tracking-[1px] text-fg-1"
+            className="rounded-[3px] border border-white/15 bg-surface-2 px-2 py-1 text-xs uppercase tracking-[1px] text-fg-1"
           >
             {ROLE_OPTIONS.map((role) => (
               <option key={role} value={role}>
@@ -63,7 +63,7 @@ export function AdminUserList() {
       key: "status",
       header: "Status",
       render: (u) => (
-        <span className={u.is_active ? "text-[#4ade80]" : "text-[#ff3b30]"}>
+        <span className={u.is_active ? "text-success" : "text-danger"}>
           {u.is_active ? "Active" : "Suspended"}
         </span>
       ),
@@ -119,7 +119,7 @@ export function AdminUserList() {
           setPage(1);
         }}
         placeholder="Search by username or email…"
-        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
       />
 
       {isLoading ? (

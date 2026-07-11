@@ -21,7 +21,7 @@ export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
         <ArrowLeft className="h-4 w-4" />
         Back
       </button>
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 text-fg-1">
+      <div className="overflow-hidden card-surface text-fg-1">
         <PlayerDetailContent playerId={playerId} />
       </div>
     </div>

@@ -20,7 +20,7 @@ const TIMELINE = [
 export function RightContent({ visual }: RightContentProps) {
   return (
     <div className="relative">
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="overflow-hidden card-surface">
         {/* team-colour accent bar */}
         <div
           className="h-1"
@@ -55,7 +55,7 @@ export function RightContent({ visual }: RightContentProps) {
               <span style={{ color: HOME.color }} className="tabular-nums">
                 {HOME.score}
               </span>
-              <span className="px-2 text-[#3a3a42]">:</span>
+              <span className="px-2 text-white/20">:</span>
               <span style={{ color: AWAY.color }} className="tabular-nums">
                 {AWAY.score}
               </span>
@@ -98,7 +98,7 @@ export function RightContent({ visual }: RightContentProps) {
                 <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
                   {e.label}
                 </span>
-                <span className="text-xs text-[#6a6a76]">· {e.who}</span>
+                <span className="text-xs text-fg-3">· {e.who}</span>
               </li>
             ))}
           </ul>

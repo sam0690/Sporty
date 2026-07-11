@@ -89,7 +89,7 @@ export function TransfersView(props: Props) {
     return (
       <div className="mx-auto max-w-7xl px-6 py-8 text-fg-1">
         <p className="mb-6 section-label">Manager: {username || "Sporty User"}</p>
-        <div className="mb-6 rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center">
+        <div className="mb-6 card-surface p-8 text-center">
           <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/8 text-fg-3">
             <ArrowLeftRight className="h-5 w-5" aria-hidden />
           </div>
@@ -154,7 +154,7 @@ export function TransfersView(props: Props) {
               </div>
               <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
+                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
                     <ArrowDown className="h-3 w-3" /> Out
                   </p>
                   <div className="space-y-1.5">
@@ -173,7 +173,7 @@ export function TransfersView(props: Props) {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50]">
+                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success">
                     <ArrowUp className="h-3 w-3" /> In
                   </p>
                   <div className="space-y-1.5">
@@ -234,7 +234,7 @@ export function TransfersView(props: Props) {
             onMaxCostChange={handleMaxCostChange}
           />
 
-          <div className="flex flex-col gap-3 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 card-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
               <span className="font-barlow-condensed font-700 uppercase tracking-[1px] text-fg-1">
                 Page {playersCurrentPage}
@@ -264,7 +264,7 @@ export function TransfersView(props: Props) {
                 disabled={
                   playersCurrentPage >= playersTotalPages || isPlayersPageLoading
                 }
-                className="inline-flex items-center gap-1 rounded-[3px] bg-accent px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </button>

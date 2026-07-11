@@ -28,7 +28,7 @@ function BioField({ label, value }: { label: string; value: string | number | nu
   }
   return (
     <div>
-      <div className="micro-label text-[#6b6b76]">{label}</div>
+      <div className="micro-label text-fg-3">{label}</div>
       <div className="mt-1 text-sm text-fg-1">{value}</div>
     </div>
   );
@@ -37,7 +37,7 @@ function BioField({ label, value }: { label: string; value: string | number | nu
 function RecentStatRow({ stat }: { stat: TPlayerGameweekStat }) {
   return (
     <div className="flex items-center justify-between rounded-[3px] border border-white/6 bg-[#16161d] px-3 py-2">
-      <div className="micro-label text-[#6b6b76]">
+      <div className="micro-label text-fg-3">
         GW {stat.transfer_window.number}
       </div>
       <div className="flex items-center gap-4 text-xs text-fg-2">
@@ -123,7 +123,7 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
 
       {player.bio && (
         <div className="border-t border-white/6 px-6 py-4">
-          <div className="micro-label text-[#6b6b76]">About</div>
+          <div className="micro-label text-fg-3">About</div>
           <p className="mt-2 line-clamp-4 text-sm leading-relaxed text-fg-2">
             {player.bio}
           </p>
@@ -131,7 +131,7 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
       )}
 
       <div className="border-t border-white/6 px-6 py-4">
-        <div className="micro-label mb-3 text-[#6b6b76]">Recent Performance</div>
+        <div className="micro-label mb-3 text-fg-3">Recent Performance</div>
         {statsLoading && (
           <div className="space-y-2">
             <div className="skeleton h-10 rounded-[3px]" />

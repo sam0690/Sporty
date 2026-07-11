@@ -26,7 +26,7 @@ export function CurrentTeam({
   );
 
   return (
-    <aside className="sticky top-4 rounded-[3px] border border-white/8 bg-surface-1 p-4">
+    <aside className="sticky top-4 card-surface p-4">
       <div className="flex items-baseline justify-between">
         <p className="section-label">Your Team</p>
         <p className="font-bebas text-xl leading-none tracking-[1px] text-fg-1 tabular-nums">
@@ -65,7 +65,7 @@ export function CurrentTeam({
               <button
                 type="button"
                 onClick={() => onRemovePlayer(player.id)}
-                className="grid size-7 shrink-0 place-items-center rounded-[3px] text-fg-3 transition-colors hover:bg-[rgba(255,59,48,0.1)] hover:text-[#ff3b30]"
+                className="grid size-7 shrink-0 place-items-center rounded-[3px] text-fg-3 transition-colors hover:bg-[rgba(255,59,48,0.1)] hover:text-danger"
                 aria-label={`Remove ${player.name}`}
               >
                 <X size={14} />
@@ -86,7 +86,7 @@ export function CurrentTeam({
           <span className="section-label">Remaining</span>
           <span
             className={`font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
-              overBudget ? "text-[#ff3b30]" : "text-accent"
+              overBudget ? "text-danger" : "text-accent"
             }`}
           >
             ${remaining.toFixed(1)}M

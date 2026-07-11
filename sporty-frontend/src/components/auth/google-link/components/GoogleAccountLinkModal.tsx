@@ -31,7 +31,7 @@ function GoogleAccountLinkModalContent({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 ">
-      <div className="w-full max-w-md rounded-[3px] border border-white/8 bg-surface-1 p-6 text-fg-1  ">
+      <div className="w-full max-w-md card-surface p-6 text-fg-1  ">
         <div className="inline-flex rounded-[3px] border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-600 uppercase tracking-[0.18em] text-cyan-200">
           Account linking required
         </div>

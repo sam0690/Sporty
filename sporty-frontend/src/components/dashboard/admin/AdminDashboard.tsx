@@ -8,7 +8,7 @@ import { useAdminAuditLog } from "@/hooks/admin/useAdminAuditLog";
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
+    <div className="card-surface p-5">
       <p className="section-label">{label}</p>
       <p className="mt-2 font-bebas text-5xl tracking-[2px] text-accent">{value}</p>
     </div>
@@ -19,7 +19,7 @@ function NavCard({ href, title, description }: { href: string; title: string; de
   return (
     <Link
       href={href}
-      className="block rounded-[3px] border border-white/8 bg-surface-1 p-5 transition-colors hover:border-white/25 hover:no-underline"
+      className="block card-surface p-5 transition-colors hover:border-white/25 hover:no-underline"
     >
       <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
         {title}

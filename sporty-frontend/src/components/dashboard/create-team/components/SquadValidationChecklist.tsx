@@ -37,7 +37,7 @@ export function SquadValidationChecklist({
   if (rules.length === 0 && clubWarnings.length === 0) return null;
 
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
+    <section className="card-surface p-4">
       <span className="section-label">{title}</span>
       {clubWarnings.length > 0 ? (
         <ul className="mt-3 space-y-1">
@@ -46,10 +46,10 @@ export function SquadValidationChecklist({
               key={warning.club}
               className="flex items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-2.5 py-1.5"
             >
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#ff3b30]">
+              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-danger">
                 {warning.club} at club limit
               </span>
-              <span className="font-bebas text-sm tracking-[1px] tabular-nums text-[#ff3b30]">
+              <span className="font-bebas text-sm tracking-[1px] tabular-nums text-danger">
                 {warning.count}/{warning.max}
               </span>
             </li>
@@ -64,7 +64,7 @@ export function SquadValidationChecklist({
                 aria-hidden
                 className={`grid h-4 w-4 shrink-0 place-items-center rounded-full text-[10px] font-700 ${
                   rule.satisfied
-                    ? "bg-[rgba(76,175,80,0.15)] text-[#4caf50]"
+                    ? "bg-success/15 text-success"
                     : "bg-white/6 text-fg-3"
                 }`}
               >

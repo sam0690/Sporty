@@ -30,7 +30,7 @@ export function PlayerDetailModalRoute({ playerId }: PlayerDetailModalRouteProps
       onClick={close}
     >
       <div
-        className="pop-in max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-[3px] border border-white/8 bg-surface-1 text-fg-1"
+        className="pop-in max-h-[85vh] w-full max-w-lg overflow-y-auto card-surface text-fg-1"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative">

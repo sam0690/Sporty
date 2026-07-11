@@ -88,8 +88,8 @@ export function GameweekContextBar({
           href={`/leagues/${leagueId}`}
           className="group flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-surface-2"
         >
-          <span className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#ff3b30]">
-            <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
+          <span className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-danger">
+            <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             GW{activeWindow!.number} is live now
           </span>
           <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3 group-hover:text-fg-2">

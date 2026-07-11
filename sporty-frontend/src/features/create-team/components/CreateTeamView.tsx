@@ -115,13 +115,13 @@ export function CreateTeamView(
         />
 
         {error ? (
-          <p className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] px-4 py-2.5 text-sm text-[#ff3b30]">
+          <p className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] px-4 py-2.5 text-sm text-danger">
             {error}
           </p>
         ) : null}
 
         {status === "setup" ? (
-          <div className="space-y-3 rounded-[3px] border border-white/8 bg-surface-1 p-6">
+          <div className="space-y-3 card-surface p-6">
             <h2 className="font-bebas text-2xl tracking-[1px] text-fg-1">
               Draft Not Started
             </h2>
@@ -142,9 +142,9 @@ export function CreateTeamView(
         {status === "drafting" ? (
           isRosterComplete || isDraftComplete ? (
             <div className="space-y-5">
-              <div className="flex flex-col gap-3 rounded-[3px] border border-[rgba(76,175,80,0.3)] bg-[#131a13] p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 rounded-[3px] border border-success/30 bg-success/8 p-5 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <span className="section-label text-[#4caf50]">
+                  <span className="section-label text-success">
                     Draft Complete
                   </span>
                   <p className="mt-1 text-sm text-fg-2">
@@ -235,7 +235,7 @@ export function CreateTeamView(
 
         {status === "active" || status === "completed" ? (
           draftedPlayers.length > 0 ? (
-            <div className="space-y-4 rounded-[3px] border border-white/8 bg-surface-1 p-6">
+            <div className="space-y-4 card-surface p-6">
               <GameweekEntryNotice
                 activeWindow={activeWindow}
                 editableWindow={editableWindow}
@@ -262,7 +262,7 @@ export function CreateTeamView(
               />
             </div>
           ) : (
-            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
+            <div className="card-surface p-6 text-sm text-fg-2">
               Draft is complete, but your team was not found.
             </div>
           )
@@ -351,19 +351,19 @@ export function CreateTeamView(
       />
 
       {error ? (
-        <p className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] px-4 py-2.5 text-sm text-[#ff3b30]">
+        <p className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] px-4 py-2.5 text-sm text-danger">
           {error}
         </p>
       ) : null}
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
+      <section className="card-surface p-4">
         <div className="flex items-center justify-between">
           <span className="section-label">
             Budget used ${budgetUsed.toFixed(1)}M / ${budget.toFixed(1)}M
           </span>
           <span
             className={`font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
-              remainingBudget >= 0 ? "text-accent" : "text-[#ff3b30]"
+              remainingBudget >= 0 ? "text-accent" : "text-danger"
             }`}
           >
             ${remainingBudget.toFixed(1)}M left
@@ -372,7 +372,7 @@ export function CreateTeamView(
         <div className="mt-2.5 h-2 w-full overflow-hidden rounded-[3px] bg-surface-2">
           <div
             className={`h-2 rounded-[3px] transition-[width] duration-300 ${
-              remainingBudget >= 0 ? "bg-accent" : "bg-[#ff3b30]"
+              remainingBudget >= 0 ? "bg-accent" : "bg-danger"
             }`}
             style={{ width: `${budgetProgress}%` }}
           />

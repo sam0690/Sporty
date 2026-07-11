@@ -37,7 +37,7 @@ export function JoinForm({
   return (
     <form
       onSubmit={submit}
-      className="animate-fade-in mx-auto max-w-md overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-8"
+      className="animate-fade-in mx-auto max-w-md overflow-hidden card-surface p-8"
     >
       {/* key badge */}
       <div className="flex justify-center">

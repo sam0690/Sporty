@@ -45,18 +45,18 @@ export function SupportTicketList() {
       </div>
 
       {showForm && (
-        <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+        <section className="card-surface p-5 space-y-3">
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="Subject"
-            className="w-full rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+            className="w-full rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
           />
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as TTicketCategory)}
-            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1"
+            className="rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1"
           >
             {CATEGORY_OPTIONS.map((c) => (
               <option key={c} value={c}>
@@ -69,7 +69,7 @@ export function SupportTicketList() {
             onChange={(e) => setBody(e.target.value)}
             placeholder="Describe the issue…"
             rows={4}
-            className="w-full rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+            className="w-full rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
           />
           <Button
             variant="primary"

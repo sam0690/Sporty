@@ -24,7 +24,7 @@ export function Panel({
 }: PanelProps) {
   return (
     <section
-      className={`pop-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 transition-colors duration-150 hover:border-white/13 ${className}`}
+      className={`pop-in overflow-hidden card-surface transition-colors duration-150 hover:border-white/13 ${className}`}
     >
       <header className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3">
         <div className="flex items-center gap-2.5">

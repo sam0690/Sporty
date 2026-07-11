@@ -15,7 +15,7 @@ export function TransfersHeader({
   currentWeek,
 }: TransfersHeaderProps) {
   return (
-    <header className="relative overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-5">
+    <header className="relative overflow-hidden card-surface p-5">
       <div className="pointer-events-none absolute inset-0 opacity-18">
         <Image
           src="/images/leagues/multisport-card.svg"

@@ -5,7 +5,7 @@ import { Trophy } from "lucide-react";
 
 export function EmptyLeagues() {
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 py-16 text-center">
+    <section className="card-surface py-16 text-center">
       <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/8 text-fg-3">
         <Trophy className="h-5 w-5" />
       </div>

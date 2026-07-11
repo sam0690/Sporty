@@ -21,7 +21,7 @@ export function TeamNameForm({
   error,
 }: TeamNameFormProps) {
   return (
-    <section className="mx-auto max-w-md space-y-5 rounded-[3px] border border-white/8 bg-surface-1 p-6">
+    <section className="mx-auto max-w-md space-y-5 card-surface p-6">
       <div>
         <p className="section-label">Step 2</p>
         <h2 className="mt-1 font-bebas text-3xl leading-none tracking-[2px] text-fg-1">

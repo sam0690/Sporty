@@ -24,14 +24,14 @@ const SPORT_META: Record<
   { Icon: typeof FootballGlyph; color: string; label: string }
 > = {
   football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
-  basketball: { Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
+  basketball: { Icon: BasketballGlyph, color: "#ff6b35", label: "Basketball" },
   cricket: { Icon: CricketGlyph, color: "#00d4ff", label: "Cricket" },
   multisport: { Icon: BoltGlyph, color: "#e2c368", label: "Multi-Sport" },
 };
 
 export function LeagueHistory({ leagues }: LeagueHistoryProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="overflow-hidden card-surface">
       <header className="border-b border-white/7 px-5 py-4">
         <p className="section-label">League History</p>
       </header>

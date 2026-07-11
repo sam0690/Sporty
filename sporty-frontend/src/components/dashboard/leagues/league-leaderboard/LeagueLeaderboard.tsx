@@ -141,7 +141,7 @@ export function LeagueLeaderboard() {
       />
 
       {/* Filters bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[3px] border border-white/8 bg-surface-1 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 card-surface p-3">
         <div className="flex flex-wrap items-center gap-2">
           <WeekSelector
             currentWeek={activeWindow?.number || 1}

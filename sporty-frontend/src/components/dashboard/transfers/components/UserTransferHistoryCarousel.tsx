@@ -19,8 +19,8 @@ const sportIconByName: Record<string, string> = {
 };
 
 const sportAccentByName: Record<string, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
+  football: "#00e07f",
+  basketball: "#ff6b35",
   cricket: "#00d4ff",
 };
 
@@ -53,7 +53,7 @@ export function UserTransferHistoryCarousel({
   isError,
 }: UserTransferHistoryCarouselProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="overflow-hidden card-surface">
       <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
         <p className="section-label">Your Transfer History</p>
         <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
@@ -130,7 +130,7 @@ export function UserTransferHistoryCarousel({
                       return (
                         <article
                           key={transfer.id}
-                          className="rounded-[3px] border border-white/8 bg-surface-1 p-4"
+                          className="card-surface p-4"
                         >
                           <p className="section-label">
                             {formatTransferTime(transfer.created_at)}
@@ -138,7 +138,7 @@ export function UserTransferHistoryCarousel({
 
                           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-3">
-                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30] flex items-center gap-1">
+                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger flex items-center gap-1">
                                 <ChevronDown className="h-3 w-3" /> Out
                               </p>
                               <div className="mt-1.5 flex items-center gap-2">
@@ -158,7 +158,7 @@ export function UserTransferHistoryCarousel({
                                 </span>
                                 {transfer.player_out.real_team ? (
                                   <>
-                                    <span className="text-[#33333a]">·</span>
+                                    <span className="text-white/20">·</span>
                                     <TeamLogo
                                       teamName={transfer.player_out.real_team}
                                       logoUrl={transfer.player_out.real_team_logo_url}
@@ -173,8 +173,8 @@ export function UserTransferHistoryCarousel({
                               </p>
                             </div>
 
-                            <div className="rounded-[3px] border border-[rgba(76,175,80,0.2)] bg-[rgba(76,175,80,0.06)] p-3">
-                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50] flex items-center gap-1">
+                            <div className="rounded-[3px] border border-success/20 bg-success/06 p-3">
+                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success flex items-center gap-1">
                                 <ChevronUp className="h-3 w-3" /> In
                               </p>
                               <div className="mt-1.5 flex items-center gap-2">
@@ -194,7 +194,7 @@ export function UserTransferHistoryCarousel({
                                 </span>
                                 {transfer.player_in.real_team ? (
                                   <>
-                                    <span className="text-[#33333a]">·</span>
+                                    <span className="text-white/20">·</span>
                                     <TeamLogo
                                       teamName={transfer.player_in.real_team}
                                       logoUrl={transfer.player_in.real_team_logo_url}
@@ -212,11 +212,11 @@ export function UserTransferHistoryCarousel({
 
                           <p className="mt-3 text-xs text-fg-3">
                             Window {transfer.transfer_window.number}
-                            <span className="mx-1.5 text-[#33333a]">·</span>
+                            <span className="mx-1.5 text-white/20">·</span>
                             Transfer cost {formatMoney(transfer.cost_at_transfer)}
                             {transfer.points_charged ? (
                               <>
-                                <span className="mx-1.5 text-[#33333a]">·</span>
+                                <span className="mx-1.5 text-white/20">·</span>
                                 <span className="text-warning">
                                   {formatMoney(transfer.points_charged)} pts charged
                                   (budget overage)

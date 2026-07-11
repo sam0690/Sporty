@@ -65,7 +65,7 @@ export function AvatarUpload({
   };
 
   return (
-    <section className="card-fade-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="card-fade-in overflow-hidden card-surface">
       <header className="border-b border-white/8 px-5 py-3">
         <p className="section-label">Avatar</p>
       </header>

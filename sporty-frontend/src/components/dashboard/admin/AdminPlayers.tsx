@@ -57,7 +57,7 @@ export function AdminPlayers() {
             step="0.1"
             value={editCost}
             onChange={(e) => setEditCost(e.target.value)}
-            className="w-20 rounded-[3px] border border-white/15 bg-[#0d0d14] px-2 py-1 text-xs text-fg-1"
+            className="w-20 rounded-[3px] border border-white/15 bg-surface-2 px-2 py-1 text-xs text-fg-1"
           />
         ) : (
           `£${p.current_cost.toFixed(1)}m`
@@ -98,7 +98,7 @@ export function AdminPlayers() {
     <div className="space-y-6">
       <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Players</h1>
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+      <section className="card-surface p-5 space-y-3">
         <p className="section-label">Repricing</p>
         <div className="flex items-center gap-3">
           <label className="text-xs text-fg-3" htmlFor="lookback">
@@ -111,7 +111,7 @@ export function AdminPlayers() {
             max={10}
             value={lookbackWindows}
             onChange={(e) => setLookbackWindows(Number(e.target.value))}
-            className="w-20 rounded-[3px] border border-white/15 bg-[#0d0d14] px-2 py-1 text-sm text-fg-1"
+            className="w-20 rounded-[3px] border border-white/15 bg-surface-2 px-2 py-1 text-sm text-fg-1"
           />
           <Button
             variant="primary"
@@ -132,7 +132,7 @@ export function AdminPlayers() {
           setPage(1);
         }}
         placeholder="Search players by name…"
-        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
       />
 
       {isLoading ? (

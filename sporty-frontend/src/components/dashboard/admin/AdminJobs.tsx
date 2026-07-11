@@ -6,7 +6,7 @@ import { useCeleryJobs, useKafkaJobs } from "@/hooks/admin/useAdminJobs";
 function StatusDot({ ok }: { ok: boolean }) {
   return (
     <span
-      className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-[#4ade80]" : "bg-[#ff3b30]"}`}
+      className={`inline-block h-2 w-2 rounded-full ${ok ? "bg-success" : "bg-danger"}`}
       aria-hidden
     />
   );
@@ -30,7 +30,7 @@ export function AdminJobs() {
       <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Jobs</h1>
       <p className="text-xs text-fg-3">Refreshes automatically every 10 seconds.</p>
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+      <section className="card-surface p-5 space-y-3">
         <p className="section-label">Celery</p>
         {celeryLoading ? (
           <SectionSkeleton />
@@ -65,7 +65,7 @@ export function AdminJobs() {
         ) : null}
       </section>
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+      <section className="card-surface p-5 space-y-3">
         <p className="section-label">Kafka Consumers</p>
         {kafkaLoading ? (
           <SectionSkeleton />

@@ -26,7 +26,7 @@ function RankDeltaBadge({ delta }: { delta: number | null | undefined }) {
   return (
     <span
       className={`inline-flex items-center font-barlow-condensed text-[11px] font-700 ${
-        isUp ? "text-[#4caf50]" : "text-[#ff3b30]"
+        isUp ? "text-success" : "text-danger"
       }`}
       title={`${isUp ? "Up" : "Down"} ${Math.abs(delta)} rank vs last gameweek`}
     >
@@ -50,7 +50,7 @@ export function StandingsTable({
   pointsLabel = "Points",
 }: StandingsTableProps) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-fade-soft">
+    <section className="overflow-hidden card-surface animate-fade-soft">
       <div className="border-b border-white/8 px-5 py-3">
         <h2 className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-[#666]">
           {pointsLabel}

@@ -26,7 +26,7 @@ function FairnessBadge({ fairness }: { fairness: TTradeFairness | undefined }) {
       className={`flex items-center justify-between gap-3 rounded-[3px] border px-3 py-2 text-xs ${
         isLopsided
           ? "border-[rgba(255,138,0,0.35)] bg-[rgba(255,138,0,0.08)] text-[#ff8a00]"
-          : "border-[rgba(76,175,80,0.35)] bg-[rgba(76,175,80,0.08)] text-[#4caf50]"
+          : "border-success/35 bg-success/08 text-success"
       }`}
     >
       <span className="font-barlow-condensed font-700 uppercase tracking-[1px]">
@@ -42,8 +42,8 @@ function FairnessBadge({ fairness }: { fairness: TTradeFairness | undefined }) {
 const STATUS_COLORS: Record<string, string> = {
   proposed: "#e2c368",
   accepted: "#00d4ff",
-  executed: "#4caf50",
-  rejected: "#ff3b30",
+  executed: "#00e07f",
+  rejected: "#ff3b5c",
   cancelled: "#71717d",
   vetoed: "#ff8a8a",
 };
@@ -165,7 +165,7 @@ export function TradesView() {
     return (
       <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs activeTab="trades" leagueId={leagueId} isCommissioner={isCommissioner} />
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
+        <div className="card-surface p-8 text-center text-sm text-fg-3">
           Trades are only available in draft leagues.
         </div>
       </section>
@@ -190,13 +190,13 @@ export function TradesView() {
       </header>
 
       {!isActive ? (
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
+        <div className="card-surface p-6 text-sm text-fg-2">
           Trading opens once the season is active.
         </div>
       ) : (
         <>
           {/* Propose */}
-          <div className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
+          <div className="card-surface p-5">
             <span className="section-label">Propose a Trade</span>
             <select
               value={targetTeamId}
@@ -218,7 +218,7 @@ export function TradesView() {
             {targetTeamId ? (
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#4caf50]">
+                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-success">
                     You give ({offered.size})
                   </p>
                   <div className="space-y-1.5">
@@ -274,7 +274,7 @@ export function TradesView() {
           </div>
 
           {/* My trades */}
-          <div className="rounded-[3px] border border-white/8 bg-surface-1 p-5">
+          <div className="card-surface p-5">
             <span className="section-label">My Trades</span>
             {(trades?.length ?? 0) === 0 ? (
               <p className="mt-3 text-sm text-fg-3">No trades yet.</p>
@@ -332,7 +332,7 @@ function TradeRow({
         </span>
       </div>
       <p className="mt-1.5 text-sm text-fg-1">
-        <span className="text-[#4caf50]">
+        <span className="text-success">
           {trade.direction === "incoming" ? "You get" : "You give"}:
         </span>{" "}
         {names(trade.direction === "incoming" ? trade.requested : trade.offered)}
@@ -365,7 +365,7 @@ function TradeRow({
               type="button"
               disabled={disabled}
               onClick={() => onAction("reject")}
-              className={`${btn} border border-[rgba(255,59,48,0.4)] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.1)]`}
+              className={`${btn} border border-[rgba(255,59,48,0.4)] text-danger hover:bg-[rgba(255,59,48,0.1)]`}
             >
               Reject
             </button>
@@ -386,7 +386,7 @@ function TradeRow({
             type="button"
             disabled={disabled}
             onClick={() => onAction("veto")}
-            className={`${btn} border border-[rgba(255,59,48,0.4)] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.1)]`}
+            className={`${btn} border border-[rgba(255,59,48,0.4)] text-danger hover:bg-[rgba(255,59,48,0.1)]`}
           >
             Veto
           </button>

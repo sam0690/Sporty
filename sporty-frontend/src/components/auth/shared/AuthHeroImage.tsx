@@ -17,7 +17,7 @@ export function AuthHeroImage({
   bullets = [],
 }: AuthHeroImageProps) {
   return (
-    <div className="relative h-full min-h-[520px] overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <div className="relative h-full min-h-[520px] overflow-hidden card-surface">
       {/* accent bar + ambient glow */}
       <div
         className="h-1"
@@ -79,7 +79,7 @@ export function AuthHeroImage({
                       <path d="M20 6L9 17l-5-5" />
                     </svg>
                   </span>
-                  <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-[#d7d7de]">
+                  <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {item}
                   </span>
                 </li>
@@ -98,7 +98,7 @@ export function AuthHeroImage({
               <span style={{ color }}>
                 <Icon className="size-4" />
               </span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#d7d7de]">
+              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-1">
                 {label}
               </span>
             </span>

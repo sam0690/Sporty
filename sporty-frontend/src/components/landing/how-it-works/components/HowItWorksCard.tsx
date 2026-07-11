@@ -23,7 +23,7 @@ function StepIcon({ icon }: { icon: HowItWorksIcon }) {
 
 export function HowItWorksCard({ step, index }: HowItWorksCardProps) {
   return (
-    <article className="group relative overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-7 transition-colors duration-150 hover:border-accent/35">
+    <article className="group relative overflow-hidden card-surface p-7 transition-colors duration-150 hover:border-accent/35">
       {/* watermark step number */}
       <span
         aria-hidden

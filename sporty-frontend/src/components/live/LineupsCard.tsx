@@ -76,7 +76,7 @@ function TeamColumn({
             >
               {p.position ?? "—"}
             </span>
-            <span className="truncate text-sm text-[#d7d7de]">
+            <span className="truncate text-sm text-fg-1">
               {p.name ?? "Unknown"}
             </span>
           </li>

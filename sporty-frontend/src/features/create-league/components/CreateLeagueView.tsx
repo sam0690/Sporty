@@ -321,7 +321,7 @@ export function CreateLeagueView() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-6 sm:p-8">
+      <div className="overflow-hidden card-surface p-6 sm:p-8">
         <AnimatePresence mode="wait" custom={stepDirection} initial={false}>
           <motion.div
             key={step}

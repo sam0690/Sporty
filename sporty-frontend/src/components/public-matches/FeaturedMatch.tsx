@@ -17,7 +17,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
   return (
     <Link
       href={`/fixtures/${match.id}`}
-      className="group relative block overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 transition-colors duration-150 hover:border-white/18 hover:no-underline"
+      className="group relative block overflow-hidden card-surface transition-colors duration-150 hover:border-white/18 hover:no-underline"
     >
       <div
         aria-hidden
@@ -64,7 +64,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
               <span style={{ color: home.color }} className="min-w-[1.1ch] text-right tabular-nums">
                 {match.home_score}
               </span>
-              <span className="px-1.5 text-[#3a3a42] sm:px-3">:</span>
+              <span className="px-1.5 text-white/20 sm:px-3">:</span>
               <span style={{ color: away.color }} className="min-w-[1.1ch] text-left tabular-nums">
                 {match.away_score}
               </span>

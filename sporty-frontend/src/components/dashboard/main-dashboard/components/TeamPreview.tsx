@@ -63,7 +63,7 @@ export function TeamPreview({
   const Glyph = glyph.Icon;
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="flex h-full flex-col overflow-hidden card-surface">
       <div aria-hidden className="h-[2px] w-full" style={{ background: glyph.color }} />
       <header className="flex items-center gap-2.5 border-b border-white/7 px-5 py-4">
         <span
@@ -72,7 +72,7 @@ export function TeamPreview({
         >
           <Glyph className="size-3.5" />
         </span>
-        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
+        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Team Preview
         </h2>
       </header>

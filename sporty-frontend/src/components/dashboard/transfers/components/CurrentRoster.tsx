@@ -27,8 +27,8 @@ type CurrentRosterProps = {
 };
 
 const sportAccentColor: Record<Exclude<Sport, "All">, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
+  football: "#00e07f",
+  basketball: "#ff6b35",
   cricket: "#00d4ff",
 };
 
@@ -43,7 +43,7 @@ export function CurrentRoster({
   const progressPercent = Math.min((players.length / maxPlayers) * 100, 100);
 
   return (
-    <aside className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 lg:sticky lg:top-24">
+    <aside className="overflow-hidden card-surface lg:sticky lg:top-24">
       <div className="flex items-center justify-between border-b border-white/8 px-5 py-3">
         <p className="section-label">Your Squad</p>
         <span className="font-bebas text-lg leading-none tracking-[1px] text-accent">
@@ -82,7 +82,7 @@ export function CurrentRoster({
                   </p>
                   <p className="mt-0.5 truncate text-xs text-fg-3">
                     {player.position}
-                    <span className="mx-1 text-[#33333a]">·</span>${player.price.toFixed(1)}M
+                    <span className="mx-1 text-white/20">·</span>${player.price.toFixed(1)}M
                   </p>
                 </div>
 
@@ -93,7 +93,7 @@ export function CurrentRoster({
                   className={`shrink-0 rounded-[3px] border p-1.5 transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                     isSelected
                       ? "border-accent/40 text-accent"
-                      : "border-white/8 text-fg-3 hover:border-[rgba(255,59,48,0.3)] hover:text-[#ff3b30]"
+                      : "border-white/8 text-fg-3 hover:border-[rgba(255,59,48,0.3)] hover:text-danger"
                   }`}
                   aria-label={`Stage out ${player.name}`}
                   title={isSelected ? "Staged out" : "Stage out"}

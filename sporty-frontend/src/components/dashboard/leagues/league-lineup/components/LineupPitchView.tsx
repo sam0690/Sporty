@@ -959,7 +959,7 @@ export function LineupPitchView({
         onDragCancel={handleDragCancel}
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
-          <section className="space-y-4 rounded-[3px] border border-white/8 bg-surface-1 p-4">
+          <section className="space-y-4 card-surface p-4">
             <div className="flex items-center justify-between gap-2">
               <p className="section-label">Bench Players</p>
             </div>
@@ -1069,7 +1069,7 @@ export function LineupPitchView({
         </DragOverlay>
       </DndContext>
 
-      <section className="space-y-4 rounded-[3px] border border-white/8 bg-surface-1 p-5">
+      <section className="space-y-4 card-surface p-5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="section-label">Selected Player</p>
           {selectedPitchPlayer ? (
@@ -1151,7 +1151,7 @@ export function LineupPitchView({
                   type="button"
                   onClick={() => benchPlayer(selectedPitchPlayer.id)}
                   disabled={disabled}
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-[rgba(255,59,48,0.3)] px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-[#ff3b30] transition-colors hover:bg-[rgba(255,59,48,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-[rgba(255,59,48,0.3)] px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ArrowDownToLine size={14} />
                   Move to Bench

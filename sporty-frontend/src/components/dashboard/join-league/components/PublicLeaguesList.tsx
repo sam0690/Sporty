@@ -68,7 +68,7 @@ function LeagueCard({
 
   return (
     <article
-      className="animate-fade-soft group flex flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-5 transition-colors hover:border-white/18"
+      className="animate-fade-soft group flex flex-col overflow-hidden card-surface p-5 transition-colors hover:border-white/18"
       style={{ borderLeft: `3px solid ${glyph.color}` }}
     >
       <div className="flex items-start gap-3">
@@ -139,7 +139,7 @@ function LeagueCard({
 
 function EmptyState() {
   return (
-    <div className="rounded-[3px] border border-white/8 bg-surface-1 p-10 text-center">
+    <div className="card-surface p-10 text-center">
       <span className="mx-auto grid size-11 place-items-center rounded-full border border-white/8 bg-white/2 text-fg-3">
         <UsersIcon className="size-5" />
       </span>

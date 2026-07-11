@@ -2,7 +2,7 @@
 
 export function TableSkeleton() {
   return (
-    <div className="rounded-[3px] border border-white/8 bg-surface-1 overflow-hidden">
+    <div className="card-surface overflow-hidden">
       <div className="h-10 border-b border-white/8 bg-surface-3 animate-pulse" />
       <div className="divide-y divide-white/8">
         {Array.from({ length: 5 }, (_, index) => (

@@ -16,7 +16,7 @@ const sportBadgeClass: Record<Sport, string> = {
 
 const sportGlow: Record<Sport, string> = {
   football: "#00ff88",
-  basketball: "#ff6b00",
+  basketball: "#ff6b35",
 };
 
 export function LeagueHeader({

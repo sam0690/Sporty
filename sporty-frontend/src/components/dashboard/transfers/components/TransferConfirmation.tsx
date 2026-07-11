@@ -89,7 +89,7 @@ export function TransferConfirmation({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-      <div className="w-full max-w-md overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-md overflow-hidden card-surface animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
           <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-fg-1">
             Confirm Transfers
@@ -102,7 +102,7 @@ export function TransferConfirmation({
         <div className="p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-4">
-              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#ff3b30] flex items-center gap-1">
+              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger flex items-center gap-1">
                 <ChevronDown className="h-3 w-3" /> Out
               </p>
               <div className="mt-2 space-y-1">
@@ -121,8 +121,8 @@ export function TransferConfirmation({
               </div>
             </div>
 
-            <div className="rounded-[3px] border border-[rgba(76,175,80,0.2)] bg-[rgba(76,175,80,0.06)] p-4">
-              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-[#4caf50] flex items-center gap-1">
+            <div className="rounded-[3px] border border-success/20 bg-success/06 p-4">
+              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success flex items-center gap-1">
                 <ChevronUp className="h-3 w-3" /> In
               </p>
               <div className="mt-2 space-y-1">

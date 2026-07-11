@@ -77,7 +77,7 @@ export function FreeAgentsView() {
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
+        <div className="card-surface p-8 text-center text-sm text-fg-3">
           Free agents are only available in draft leagues.
         </div>
       </section>
@@ -103,7 +103,7 @@ export function FreeAgentsView() {
       </header>
 
       {!isActive ? (
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
+        <div className="card-surface p-6 text-sm text-fg-2">
           Free agents open once the season is active.
         </div>
       ) : (
@@ -137,7 +137,7 @@ export function FreeAgentsView() {
               <CardSkeleton />
             </div>
           ) : (data?.items.length ?? 0) === 0 ? (
-            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
+            <div className="card-surface p-8 text-center text-sm text-fg-3">
               No available free agents match your filters.
             </div>
           ) : (
@@ -145,7 +145,7 @@ export function FreeAgentsView() {
               {data!.items.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between rounded-[3px] border border-white/8 bg-surface-1 p-4"
+                  className="flex items-center justify-between card-surface p-4"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
@@ -157,12 +157,12 @@ export function FreeAgentsView() {
                         <span>{p.position}</span>
                         {p.real_team ? (
                           <>
-                            <span className="text-[#33333a]">·</span>
+                            <span className="text-white/20">·</span>
                             <TeamLogo teamName={p.real_team} logoUrl={p.real_team_logo_url} size="sm" />
                             <span>{p.real_team}</span>
                           </>
                         ) : null}
-                        <span className="text-[#33333a]">·</span>
+                        <span className="text-white/20">·</span>
                         <span>{p.sport}</span>
                       </p>
                     </div>
@@ -212,7 +212,7 @@ export function FreeAgentsView() {
                   <span>{tp.player.position}</span>
                   {tp.player.real_team ? (
                     <>
-                      <span className="text-[#33333a]">·</span>
+                      <span className="text-white/20">·</span>
                       <TeamLogo teamName={tp.player.real_team} logoUrl={tp.player.real_team_logo_url} size="sm" />
                       <span>{tp.player.real_team}</span>
                     </>

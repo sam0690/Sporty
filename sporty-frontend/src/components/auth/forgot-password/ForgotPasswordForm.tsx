@@ -36,7 +36,7 @@ export function ForgotPasswordForm() {
         />
       }
     >
-      <Card className="animate-fade-in mx-auto w-full max-w-md rounded-[3px] border border-white/8 bg-surface-1 ">
+      <Card className="animate-fade-in mx-auto w-full max-w-md card-surface ">
         <CardHeader className="space-y-2 p-8 pb-4 sm:p-10 sm:pb-4">
           <div className="flex items-center gap-2 text-primary">
             <span className="text-lg" aria-hidden="true">

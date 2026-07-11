@@ -18,7 +18,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
   );
 
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 px-5 py-4 sm:px-6 sm:py-5">
+    <section className="card-surface px-5 py-4 sm:px-6 sm:py-5">
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div>
           <p className="num font-bebas text-5xl leading-none tracking-[1px] text-accent sm:text-6xl">
@@ -128,7 +128,7 @@ export function MyTeamView({
         <select
           value={activeLeague?.id ?? ""}
           onChange={(event) => onLeagueChange(event.target.value)}
-          className="w-full rounded-[3px] border border-white/8 bg-surface-1 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
+          className="w-full card-surface px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
           style={{ colorScheme: "dark" }}
           aria-label="Choose league"
         >
@@ -163,7 +163,7 @@ export function MyTeamView({
           Failed to load team data. Please try again.
         </div>
       ) : !hasLeagues ? (
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
+        <div className="card-surface p-8 text-center text-sm text-fg-3">
           You are not part of any leagues yet.
         </div>
       ) : isEmptyTeam ? (
@@ -171,7 +171,7 @@ export function MyTeamView({
       ) : teamLeague && teamLeague.players.length > 0 ? (
         <div className="space-y-6">
           <SquadStats players={teamLeague.players} />
-          <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+          <section className="overflow-hidden card-surface">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
               <span className="section-label">Squad</span>
               <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">

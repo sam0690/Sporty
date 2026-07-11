@@ -145,7 +145,7 @@ export function RecentActivity({
   }, [activeFilter, recentActivity]);
 
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="overflow-hidden card-surface">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/7 px-5 py-4">
         <p className="section-label">Recent Activity</p>
         <div className="flex flex-wrap gap-1.5">

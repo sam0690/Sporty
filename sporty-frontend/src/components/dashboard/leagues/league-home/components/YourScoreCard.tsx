@@ -12,7 +12,7 @@ export function YourScoreCard({
   pointsBehind,
 }: YourScoreCardProps) {
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 text-center animate-fade-soft">
+    <section className="card-surface p-5 text-center animate-fade-soft">
       <p className="section-label">Your Score</p>
       <p className="mt-2 font-bebas text-6xl tracking-[3px] text-accent">
         {yourScore}

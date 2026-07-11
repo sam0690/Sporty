@@ -38,7 +38,7 @@ export function ConfirmDialog({
       >
         <h3
           className={`font-barlow-condensed text-xl font-700 uppercase tracking-[2px] ${
-            isDanger ? "text-[#ff3b30]" : "text-accent"
+            isDanger ? "text-danger" : "text-accent"
           }`}
         >
           {title}
@@ -60,7 +60,7 @@ export function ConfirmDialog({
             onClick={onConfirm}
             className={`flex-1 rounded-[3px] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
               isDanger
-                ? "bg-[#ff3b30] text-white hover:bg-[#ff5548]"
+                ? "bg-danger text-white hover:bg-danger/85"
                 : "bg-accent text-surface-0 hover:bg-accent-bright"
             }`}
           >

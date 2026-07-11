@@ -31,7 +31,7 @@ export function BudgetOverageConfirmation({
         <div className="p-6">
           <p className="text-sm text-fg-2">
             This transfer goes{" "}
-            <span className="font-bebas tracking-[1px] text-[#ff3b30]">
+            <span className="font-bebas tracking-[1px] text-danger">
               {detail.shortfall}
             </span>{" "}
             over budget. You can cover it with league points instead of

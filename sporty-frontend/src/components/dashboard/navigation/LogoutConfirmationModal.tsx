@@ -35,8 +35,8 @@ export function LogoutConfirmationModal({
         if (event.target === event.currentTarget && !isLoading) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-[3px] border border-white/8 bg-surface-1 p-6 text-fg-1">
-        <div className="inline-flex rounded-[3px] border border-accent/25 bg-[#1a1a10] px-3 py-1">
+      <div className="w-full max-w-md card-surface p-6 text-fg-1">
+        <div className="inline-flex rounded-[3px] border border-accent/25 bg-accent/8 px-3 py-1">
           <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
             Logout Confirmation
           </span>
@@ -64,7 +64,7 @@ export function LogoutConfirmationModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-[#ff3b30] px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:opacity-60 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-danger px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:opacity-60 sm:w-auto"
           >
             <LogOut className="h-3.5 w-3.5" />
             {isLoading ? "Logging out..." : "Logout"}

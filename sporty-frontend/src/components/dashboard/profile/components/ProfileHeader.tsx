@@ -25,7 +25,7 @@ export function ProfileHeader({
   avatarUrl,
 }: ProfileHeaderProps) {
   return (
-    <header className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <header className="overflow-hidden card-surface">
       <div className="border-b border-white/8 px-6 py-5">
         <p className="section-label">Account</p>
         <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">

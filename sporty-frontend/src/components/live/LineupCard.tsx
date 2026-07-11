@@ -54,7 +54,7 @@ export function LineupCard() {
                       <path d="M12 19V5M12 5l-5 5M12 5l5 5" />
                     </svg>
                   </span>
-                  <span className="truncate text-[#d7d7de]">
+                  <span className="truncate text-fg-1">
                     {change.player_in_name ?? nameFor(change.player_in)}
                   </span>
                 </div>

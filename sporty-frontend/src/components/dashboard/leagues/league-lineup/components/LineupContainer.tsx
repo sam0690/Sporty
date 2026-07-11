@@ -74,7 +74,7 @@ export function LineupContainer({
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="overflow-hidden card-surface">
         <header className="border-b border-white/8 px-5 py-3">
           <p className="section-label">Starting Lineup</p>
         </header>
@@ -98,7 +98,7 @@ export function LineupContainer({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="overflow-hidden card-surface">
         <header className="border-b border-white/8 px-5 py-3">
           <p className="section-label">Bench</p>
         </header>

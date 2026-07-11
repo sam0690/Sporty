@@ -22,7 +22,7 @@ type PlayerCardProps = {
 
 const sportAccentColor: Record<Exclude<Sport, "All">, string> = {
   football: "#00ff88",
-  basketball: "#ff6b00",
+  basketball: "#ff6b35",
   cricket: "#00d4ff",
 };
 
@@ -45,7 +45,7 @@ export function PlayerCard({
 
   return (
     <article
-      className="card-fade-in group flex items-center gap-4 rounded-[3px] border border-white/8 bg-surface-1 p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-white/16 hover:bg-[#15151c]"
+      className="card-fade-in group flex items-center gap-4 card-surface p-3 transition-all duration-150 hover:-translate-y-0.5 hover:border-white/16 hover:bg-[#15151c]"
       style={{ animationDelay: `${animationDelay}ms`, borderLeft: `3px solid ${accent}` }}
     >
       <div className="relative shrink-0">
@@ -67,7 +67,7 @@ export function PlayerCard({
             <>
               <TeamLogo teamName={realTeam} logoUrl={realTeamLogoUrl} size="sm" className="shrink-0" />
               <span className="truncate">{realTeam}</span>
-              <span className="text-[#33333a]">·</span>
+              <span className="text-white/20">·</span>
             </>
           ) : null}
           <span title="Weighted average of the last 3 gameweeks, not a prediction">
@@ -75,7 +75,7 @@ export function PlayerCard({
           </span>
           {form ? (
             <>
-              <span className="text-[#33333a]">·</span>
+              <span className="text-white/20">·</span>
               <span>Form {form}/10</span>
             </>
           ) : null}

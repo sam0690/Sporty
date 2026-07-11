@@ -21,7 +21,7 @@ export function FixturesHero({
   totalCompetitions,
 }: FixturesHeroProps) {
   return (
-    <header className="relative overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 px-5 py-9 sm:px-10 sm:py-12">
+    <header className="relative overflow-hidden card-surface px-5 py-9 sm:px-10 sm:py-12">
       <div className="relative flex flex-wrap items-start justify-between gap-6">
         <div className="max-w-xl">
           <p className="section-label">Matchday</p>

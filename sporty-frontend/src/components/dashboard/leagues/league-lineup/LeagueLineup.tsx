@@ -137,8 +137,8 @@ const CHIP_TONES: Record<ChipTone, { border: string; value: string }> = {
   neutral: { border: "rgba(255,255,255,0.08)", value: "#f2f2f0" },
   volt: { border: "rgba(226,195,104,0.25)", value: "#e2c368" },
   gold: { border: "rgba(255,216,107,0.25)", value: "#ffd86b" },
-  football: { border: "rgba(76,175,80,0.3)", value: "#4caf50" },
-  basketball: { border: "rgba(255,107,0,0.3)", value: "#ff6b00" },
+  football: { border: "rgba(76,175,80,0.3)", value: "#00e07f" },
+  basketball: { border: "rgba(255,107,0,0.3)", value: "#ff6b35" },
 };
 
 function StatChip({
@@ -930,7 +930,7 @@ export function LeagueLineup() {
 
       <LineupViewToggle value={viewMode} onChange={setViewMode} />
 
-      <div className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
+      <div className="card-surface p-4">
         <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
           <button
             type="button"

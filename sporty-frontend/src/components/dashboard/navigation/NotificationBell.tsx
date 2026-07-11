@@ -137,7 +137,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                     "w-full rounded-[3px] border px-3 py-2 text-left text-sm transition-colors",
                     item.is_read
                       ? "border-white/8 bg-transparent text-fg-3 hover:border-white/15 hover:text-fg-1"
-                      : "border-accent/20 bg-[#1a1a10] text-fg-1 hover:border-accent/40",
+                      : "border-accent/20 bg-accent/8 text-fg-1 hover:border-accent/40",
                   )}
                 >
                   <p>{item.message}</p>

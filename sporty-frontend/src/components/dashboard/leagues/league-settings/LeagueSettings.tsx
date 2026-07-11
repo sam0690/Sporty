@@ -214,7 +214,7 @@ export function LeagueSettings() {
           leagueId={leagueId}
           isCommissioner={isCommissioner}
         />
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center">
+        <div className="card-surface p-8 text-center">
           <Lock className="mx-auto h-6 w-6 text-fg-3" aria-hidden />
           <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
             Commissioner only

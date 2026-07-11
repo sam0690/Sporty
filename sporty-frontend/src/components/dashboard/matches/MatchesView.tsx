@@ -184,7 +184,7 @@ export function MatchesView() {
                 </span>
                 <span className="mt-0.5 flex items-center justify-center gap-1.5 text-[10px] text-fg-3">
                   {day.liveCount > 0 && (
-                    <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
+                    <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
                   )}
                   {day.matches.length} {day.matches.length === 1 ? "match" : "matches"}
                 </span>
@@ -222,7 +222,7 @@ export function MatchesView() {
       )}
 
       {!isLoading && !isError && days.length === 0 && (
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-10 text-center">
+        <div className="card-surface p-10 text-center">
           <span
             aria-hidden
             className="inline-grid size-11 place-items-center rounded-full border border-white/8 bg-white/2 text-fg-3"

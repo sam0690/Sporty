@@ -94,7 +94,7 @@ export function CompetitionPanel({
   const Glyph = glyph.Icon;
   return (
     <section
-      className="pop-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1"
+      className="pop-in overflow-hidden card-surface"
       style={style}
     >
       <div aria-hidden className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, ${glyph.color}, transparent 80%)` }} />
@@ -106,7 +106,7 @@ export function CompetitionPanel({
           >
             <Glyph className="size-3.5" />
           </span>
-          <span className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#d7d7de]">
+          <span className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-1">
             {group.competition}
           </span>
         </div>

@@ -3,8 +3,8 @@
 // assets or backend changes. Palette is drawn from the system's accent family.
 
 const TEAM_PALETTE = [
-  "#4caf50", // football green
-  "#ff6b00", // basketball orange
+  "#00e07f", // football green
+  "#ff6b35", // basketball orange
   "#00d4ff", // cricket cyan
   "#e2c368", // volt
   "#9b59b6", // playoff purple

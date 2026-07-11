@@ -22,7 +22,7 @@ const fieldLabel =
 
 const SPORTS: Array<{ sport: SportName; Icon: typeof FootballGlyph; color: string; label: string }> = [
   { sport: "football", Icon: FootballGlyph, color: "#00ff88", label: "Football" },
-  { sport: "basketball", Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
+  { sport: "basketball", Icon: BasketballGlyph, color: "#ff6b35", label: "Basketball" },
 ];
 
 export function FavouritesForm({
@@ -34,7 +34,7 @@ export function FavouritesForm({
   onPlayerClear,
 }: FavouritesFormProps) {
   return (
-    <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <div className="overflow-hidden card-surface">
       <header className="border-b border-white/7 px-5 py-4">
         <p className="section-label">Favourites</p>
       </header>

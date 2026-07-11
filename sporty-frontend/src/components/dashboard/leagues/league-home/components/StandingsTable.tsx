@@ -26,7 +26,7 @@ export function StandingsTable({
     .map((entry, index) => ({ ...entry, displayRank: entry.rank ?? index + 1 }));
 
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-fade-soft">
+    <section className="overflow-hidden card-surface animate-fade-soft">
       <div className="border-b border-white/8 px-5 py-3">
         <h2 className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-[#666]">
           Standings

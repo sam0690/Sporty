@@ -102,7 +102,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
 
   if (loading) {
     return (
-      <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <section className="overflow-hidden card-surface">
         <div className="h-1 bg-surface-3" />
         <div className="skeleton h-12 border-b border-white/6" />
         <div className="flex items-center justify-center gap-6 px-6 py-16">
@@ -115,7 +115,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
   }
 
   return (
-    <section className="pop-in relative overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="pop-in relative overflow-hidden card-surface">
       {/* team-colour split accent, blended in the middle */}
       <div
         className="h-1"
@@ -190,7 +190,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               >
                 {score.home}
               </span>
-              <span className="px-2 text-[#3a3a42] sm:px-4">:</span>
+              <span className="px-2 text-white/20 sm:px-4">:</span>
               <span
                 style={{ color: away.color }}
                 className="min-w-[1.1ch] text-left tabular-nums"

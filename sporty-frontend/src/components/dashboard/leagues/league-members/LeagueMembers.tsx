@@ -123,7 +123,7 @@ export function LeagueMembers() {
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by member or team name"
           aria-label="Search members"
-          className="w-full rounded-[3px] border border-white/8 bg-surface-1 py-2.5 pl-10 pr-4 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
+          className="w-full card-surface py-2.5 pl-10 pr-4 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
         />
       </div>
 

@@ -12,7 +12,7 @@ export function StatsRow({
   totalPoints,
 }: StatsRowProps) {
   return (
-    <section className="flex flex-wrap items-center gap-0 rounded-[3px] border border-white/8 bg-surface-1 divide-x divide-white/8">
+    <section className="flex flex-wrap items-center gap-0 card-surface divide-x divide-white/8">
       {[
         { label: "Leagues", value: totalLeagues },
         { label: "Best Rank", value: highestRank ? `#${highestRank}` : "—" },

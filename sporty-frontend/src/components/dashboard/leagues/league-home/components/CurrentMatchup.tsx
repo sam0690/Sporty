@@ -27,7 +27,7 @@ export function CurrentMatchup({
   if (!hasOpponent) {
     const isLeadingSolo = youAreLeader || yourScore > 0;
     return (
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 text-center animate-fade-soft">
+      <section className="card-surface p-5 text-center animate-fade-soft">
         <p className="section-label mb-4">This Week</p>
         <p className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-1">
           {yourTeamName}
@@ -40,7 +40,7 @@ export function CurrentMatchup({
           <span
             className={
               isLeadingSolo
-                ? "rounded-[3px] border border-accent/25 bg-[#1a1a10] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim"
+                ? "rounded-[3px] border border-accent/25 bg-accent/8 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim"
                 : "rounded-[3px] border border-white/8 bg-surface-3 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2"
             }
           >
@@ -56,7 +56,7 @@ export function CurrentMatchup({
   const leading = diff >= 0;
 
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 animate-fade-soft">
+    <section className="card-surface p-5 animate-fade-soft">
       <p className="section-label mb-4">
         {youAreLeader ? "You vs Runner-Up" : "You vs Leader"}
       </p>
@@ -91,11 +91,11 @@ export function CurrentMatchup({
 
       <div className="mt-4 flex justify-center">
         {youAreLeader && leading ? (
-          <span className="rounded-[3px] border border-accent/25 bg-[#1a1a10] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
+          <span className="rounded-[3px] border border-accent/25 bg-accent/8 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
             Top of the league
           </span>
         ) : leading ? (
-          <span className="rounded-[3px] border border-accent/25 bg-[#1a1a10] px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
+          <span className="rounded-[3px] border border-accent/25 bg-accent/8 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
             Ahead by {Math.abs(diff)} this week
           </span>
         ) : (

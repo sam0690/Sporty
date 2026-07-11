@@ -65,7 +65,7 @@ export function LineupHeader({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 rounded-[3px] border border-white/8 bg-surface-1 px-3 py-1.5">
+        <div className="flex items-center gap-1.5 card-surface px-3 py-1.5">
           <span className="section-label !text-accent">Editing ▸</span>
           <span className="font-bebas text-xl tracking-[2px] text-accent">{currentWeek}</span>
           <span className="section-label">/ {totalWeeks}</span>
@@ -73,7 +73,7 @@ export function LineupHeader({
         <span
           className={`rounded-[3px] border px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] ${
             countdown.locked
-              ? "border-[rgba(255,59,48,0.3)] bg-[#2a1010] text-[#ff3b30]"
+              ? "border-[rgba(255,59,48,0.3)] bg-[#2a1010] text-danger"
               : "alert-deadline"
           }`}
         >

@@ -27,7 +27,7 @@ type PlayerCardProps = {
 
 const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
   football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
-  basketball: { Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
+  basketball: { Icon: BasketballGlyph, color: "#ff6b35", label: "Basketball" },
   cricket: { Icon: CricketGlyph, color: "#00d4ff", label: "Cricket" },
 };
 
@@ -48,7 +48,7 @@ export function PlayerCard({
   const Icon = meta.Icon;
 
   return (
-    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 transition-colors hover:border-white/16">
+    <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 card-surface px-4 py-3 transition-colors hover:border-white/16">
       <Link
         href={`/players/${id}`}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-1"
@@ -77,7 +77,7 @@ export function PlayerCard({
             ) : null}
             {cost ? (
               <>
-                <span className="text-[#33333a]">·</span>
+                <span className="text-white/20">·</span>
                 <span className="num">${cost}M</span>
               </>
             ) : null}

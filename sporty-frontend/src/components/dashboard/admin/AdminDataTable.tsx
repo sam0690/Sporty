@@ -23,7 +23,7 @@ export function AdminDataTable<T>({
   emptyMessage = "No results.",
 }: AdminDataTableProps<T>) {
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="overflow-hidden card-surface">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead className="bg-surface-3">

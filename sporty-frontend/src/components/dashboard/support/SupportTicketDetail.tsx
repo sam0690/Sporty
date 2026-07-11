@@ -35,7 +35,7 @@ export function SupportTicketDetail({ ticketId }: { ticketId: string }) {
 
       <section className="space-y-3">
         {ticket.messages.map((m) => (
-          <div key={m.id} className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
+          <div key={m.id} className="card-surface p-4">
             <p className="text-xs text-fg-3 mb-1">{new Date(m.created_at).toLocaleString()}</p>
             <p className="text-sm text-fg-1 whitespace-pre-wrap">{m.body}</p>
           </div>
@@ -43,13 +43,13 @@ export function SupportTicketDetail({ ticketId }: { ticketId: string }) {
       </section>
 
       {ticket.status !== "closed" && (
-        <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+        <section className="card-surface p-5 space-y-3">
           <textarea
             value={reply}
             onChange={(e) => setReply(e.target.value)}
             placeholder="Add a reply…"
             rows={3}
-            className="w-full rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+            className="w-full rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
           />
           <Button
             variant="primary"

@@ -80,7 +80,7 @@ export function PlayerMarket({
   );
 
   return (
-    <section className="space-y-4 rounded-[3px] border border-white/8 bg-surface-1 p-4">
+    <section className="space-y-4 card-surface p-4">
       <p className="section-label">Player Market</p>
 
       <label className="relative block">

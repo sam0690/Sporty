@@ -47,7 +47,7 @@ const SHARE_TARGETS: Array<{
 
 export function ShareLinks({ shareUrl }: ShareLinksProps) {
   return (
-    <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 animate-fade-soft">
+    <div className="overflow-hidden card-surface animate-fade-soft">
       <div className="border-b border-white/8 px-5 py-3">
         <p className="section-label">Share Link</p>
       </div>

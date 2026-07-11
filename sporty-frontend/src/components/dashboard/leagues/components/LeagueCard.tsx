@@ -32,8 +32,8 @@ const sportBadgeClass: Record<Sport, string> = {
 };
 
 const sportAccentColor: Record<Sport, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
+  football: "#00e07f",
+  basketball: "#ff6b35",
   cricket: "#00d4ff",
   multisport: "#e2c368",
 };
@@ -51,7 +51,7 @@ export function LeagueCard({
   return (
     <Link
       href={`/leagues/${id}`}
-      className="group block overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 opacity-0 transition-colors duration-150 hover:border-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 animate-fade-soft"
+      className="group block overflow-hidden card-surface opacity-0 transition-colors duration-150 hover:border-white/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 animate-fade-soft"
       style={{
         animationDelay: `${animationDelay}ms`,
         borderLeft: `3px solid ${sportAccentColor[sport]}`,

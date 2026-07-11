@@ -4,7 +4,7 @@ import { Shirt } from "lucide-react";
 
 export function EmptyTeamState() {
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 px-6 py-14 text-center">
+    <section className="card-surface px-6 py-14 text-center">
       <div className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-full border border-white/8 text-fg-3">
         <Shirt className="size-5" aria-hidden="true" />
       </div>

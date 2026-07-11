@@ -10,7 +10,7 @@ type AdminErrorStateProps = {
 export function AdminErrorState({ message = "Something went wrong loading this data.", onRetry }: AdminErrorStateProps) {
   return (
     <div className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-surface-1 p-5 flex items-center justify-between gap-4">
-      <p className="text-sm text-[#ff3b30]">{message}</p>
+      <p className="text-sm text-danger">{message}</p>
       <Button variant="outline" size="sm" onClick={onRetry}>
         Retry
       </Button>

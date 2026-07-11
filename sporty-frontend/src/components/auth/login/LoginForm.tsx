@@ -46,7 +46,7 @@ export function LoginForm() {
           ← Back to Home
         </Link>
 
-        <div className="animate-fade-in mt-5 overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+        <div className="animate-fade-in mt-5 overflow-hidden card-surface">
           <div className="space-y-2.5 p-8 pb-4">
             <span className="section-label">Sign In</span>
             <h1 className="font-bebas text-5xl leading-none tracking-[3px] text-fg-1">

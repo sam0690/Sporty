@@ -112,7 +112,7 @@ export function JoinLeagueView() {
       ) : null}
 
       {isLoading ? (
-        <div className="mx-auto max-w-md space-y-3 rounded-[3px] border border-white/8 bg-surface-1 p-8">
+        <div className="mx-auto max-w-md space-y-3 card-surface p-8">
           <CardSkeleton />
           <div className="h-11 animate-pulse rounded-[3px] bg-surface-3" />
         </div>

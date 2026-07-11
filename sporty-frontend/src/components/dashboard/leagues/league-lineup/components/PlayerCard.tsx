@@ -13,8 +13,8 @@ type PlayerCardProps = {
 };
 
 const sportAccentColor: Record<string, string> = {
-  football: "#4caf50",
-  basketball: "#ff6b00",
+  football: "#00e07f",
+  basketball: "#ff6b35",
   cricket: "#00d4ff",
 };
 
@@ -31,7 +31,7 @@ export function PlayerCard({
   return (
     <article
       style={{ borderLeft: `3px solid ${accentColor}` }}
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 transition-colors hover:border-white/15"
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 card-surface px-4 py-3 transition-colors hover:border-white/15"
     >
       {/* Identity */}
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -66,9 +66,9 @@ export function PlayerCard({
                 {player.realTeam}
               </span>
             ) : null}
-            <span className="mx-1.5 text-[#33333a]">·</span>
+            <span className="mx-1.5 text-white/20">·</span>
             <span style={{ color: accentColor }}>{player.sportDisplayName}</span>
-            <span className="mx-1.5 text-[#33333a]">·</span>${player.cost}
+            <span className="mx-1.5 text-white/20">·</span>${player.cost}
           </p>
         </div>
       </div>
@@ -110,10 +110,10 @@ export function PlayerCard({
           disabled={disabled || starterToggleDisabled}
           className={`rounded-[3px] border px-3.5 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
             player.isStarter
-              ? "border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] text-[#ff3b30] hover:bg-[rgba(255,59,48,0.16)]"
+              ? "border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] text-danger hover:bg-[rgba(255,59,48,0.16)]"
               : starterToggleDisabled
                 ? "border-white/8 bg-surface-3 text-fg-3"
-                : "border-[rgba(76,175,80,0.35)] bg-[rgba(76,175,80,0.1)] text-[#4caf50] hover:bg-[rgba(76,175,80,0.2)]"
+                : "border-success/35 bg-success/10 text-success hover:bg-success/20"
           }`}
         >
           {player.isStarter

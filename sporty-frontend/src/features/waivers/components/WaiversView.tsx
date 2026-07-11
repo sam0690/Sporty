@@ -23,8 +23,8 @@ import type { TFreeAgent, TTeamPlayer } from "@/types";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "#e2c368",
-  success: "#4caf50",
-  failed: "#ff3b30",
+  success: "#00e07f",
+  failed: "#ff3b5c",
   cancelled: "#71717d",
 };
 
@@ -105,7 +105,7 @@ export function WaiversView() {
     return (
       <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
         <NavigationTabs activeTab="waivers" leagueId={leagueId} isCommissioner={isCommissioner} />
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
+        <div className="card-surface p-8 text-center text-sm text-fg-3">
           Waivers are only available in draft leagues.
         </div>
       </section>
@@ -128,7 +128,7 @@ export function WaiversView() {
       </header>
 
       {!isActive ? (
-        <div className="rounded-[3px] border border-white/8 bg-surface-1 p-6 text-sm text-fg-2">
+        <div className="card-surface p-6 text-sm text-fg-2">
           Waivers open once the season is active.
         </div>
       ) : (
@@ -143,7 +143,7 @@ export function WaiversView() {
               className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
             />
             {(filteredPool.length ?? 0) === 0 ? (
-              <div className="rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center text-sm text-fg-3">
+              <div className="card-surface p-8 text-center text-sm text-fg-3">
                 No available players.
               </div>
             ) : (
@@ -151,7 +151,7 @@ export function WaiversView() {
                 {filteredPool.map((p) => (
                   <div
                     key={p.id}
-                    className="flex items-center justify-between rounded-[3px] border border-white/8 bg-surface-1 p-3"
+                    className="flex items-center justify-between card-surface p-3"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
@@ -163,7 +163,7 @@ export function WaiversView() {
                           <span>{p.position}</span>
                           {p.real_team ? (
                             <>
-                              <span className="text-[#33333a]">·</span>
+                              <span className="text-white/20">·</span>
                               <TeamLogo teamName={p.real_team} logoUrl={p.real_team_logo_url} size="sm" />
                               <span>{p.real_team}</span>
                             </>
@@ -186,7 +186,7 @@ export function WaiversView() {
 
           {/* Right: waiver order + my pending claims */}
           <div className="space-y-5 lg:col-span-1">
-            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
+            <div className="card-surface p-4">
               <span className="section-label">Waiver Order</span>
               <ol className="mt-3 space-y-1.5">
                 {(order ?? []).map((o) => (
@@ -198,7 +198,7 @@ export function WaiversView() {
               </ol>
             </div>
 
-            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-4">
+            <div className="card-surface p-4">
               <span className="section-label">My Claims</span>
               {claimsLoading ? (
                 <CardSkeleton />
@@ -244,13 +244,13 @@ export function WaiversView() {
                               <button
                                 type="button"
                                 onClick={() => cancel.mutate(c.id)}
-                                className="text-[#ff3b30] hover:underline"
+                                className="text-danger hover:underline"
                               >
                                 Cancel
                               </button>
                             </div>
                             <p className="mt-1 text-fg-2">
-                              <span className="text-[#4caf50]">IN</span>{" "}
+                              <span className="text-success">IN</span>{" "}
                               {nameById.get(c.add_player_id) ?? "Player"} ·{" "}
                               <span className="text-danger-soft">OUT</span>{" "}
                               {nameById.get(c.drop_player_id) ?? "Player"}
@@ -275,7 +275,7 @@ export function WaiversView() {
                             {c.status}
                           </span>
                           <p className="mt-1 text-fg-2">
-                            <span className="text-[#4caf50]">IN</span>{" "}
+                            <span className="text-success">IN</span>{" "}
                             {nameById.get(c.add_player_id) ?? "Player"} ·{" "}
                             <span className="text-danger-soft">OUT</span>{" "}
                             {nameById.get(c.drop_player_id) ?? "Player"}
@@ -325,7 +325,7 @@ export function WaiversView() {
                   <span>{tp.player.position}</span>
                   {tp.player.real_team ? (
                     <>
-                      <span className="text-[#33333a]">·</span>
+                      <span className="text-white/20">·</span>
                       <TeamLogo teamName={tp.player.real_team} logoUrl={tp.player.real_team_logo_url} size="sm" />
                       <span>{tp.player.real_team}</span>
                     </>

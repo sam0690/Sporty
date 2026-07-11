@@ -46,7 +46,7 @@ export function AdminTicketList() {
           setStatusFilter(e.target.value);
           setPage(1);
         }}
-        className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1"
+        className="rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1"
       >
         {STATUS_OPTIONS.map((s) => (
           <option key={s} value={s}>

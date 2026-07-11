@@ -20,8 +20,8 @@ type SportConfig = {
 };
 
 const SPORT_CONFIG: Record<string, SportConfig> = {
-  football: { Icon: FootballIcon, label: "Football", accent: "#4caf50", badge: "sport-badge-football" },
-  basketball: { Icon: BasketballIcon, label: "Basketball", accent: "#ff6b00", badge: "sport-badge-basketball" },
+  football: { Icon: FootballIcon, label: "Football", accent: "#00e07f", badge: "sport-badge-football" },
+  basketball: { Icon: BasketballIcon, label: "Basketball", accent: "#ff6b35", badge: "sport-badge-basketball" },
   cricket: { Icon: CricketIcon, label: "Cricket", accent: "#00d4ff", badge: "sport-badge-cricket" },
 };
 
@@ -70,14 +70,14 @@ export function MatchCard({
         }
       }}
       style={{ animationDelay: `${animationDelay}ms`, borderLeft: `3px solid ${sport.accent}` }}
-      className="group flex cursor-pointer items-center gap-4 rounded-[3px] border border-white/8 bg-surface-1 px-4 py-3 transition-colors hover:border-white/18 animate-fade-soft"
+      className="group flex cursor-pointer items-center gap-4 card-surface px-4 py-3 transition-colors hover:border-white/18 animate-fade-soft"
     >
       {/* Time / status rail */}
       <div className="w-16 shrink-0 text-center">
         {isLive ? (
           <span className="inline-flex flex-col items-center gap-0.5">
-            <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-[#ff3b30]">
-              <span className="size-1.5 rounded-full bg-[#ff3b30] animate-live-pulse" />
+            <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-danger">
+              <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
               Live
             </span>
           </span>

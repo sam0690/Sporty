@@ -40,7 +40,7 @@ export function FavouriteTeamPicker({
       withinPortal
     >
       <Popover.Target>
-        <div className="flex w-full min-h-[56px] items-center gap-2 rounded-[3px] border border-white/8 bg-surface-1 pr-2 transition-colors hover:border-white/15">
+        <div className="flex w-full min-h-[56px] items-center gap-2 card-surface pr-2 transition-colors hover:border-white/15">
           <button
             type="button"
             onClick={() => setOpened((v) => !v)}

@@ -18,7 +18,7 @@ import type {
 const SPORT_ACCENT: Record<string, string> = {
   football: "#00ff88",
   soccer: "#00ff88",
-  basketball: "#ff6b00",
+  basketball: "#ff6b35",
   cricket: "#00d4ff",
 };
 
@@ -104,16 +104,16 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
           {p.status === "subbed_in" && <SubArrow dir="in" />}
           {p.status === "subbed_out" && <SubArrow dir="out" />}
         </div>
-        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#6a6a76]">
+        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-fg-3">
           {p.player.real_team ? (
             <span className="flex items-center gap-1.5 truncate">
               <TeamLogo teamName={p.player.real_team} logoUrl={p.player.real_team_logo_url} size="sm" />
               {p.player.real_team}
             </span>
           ) : null}
-          <span className="text-[#33333a]">·</span>
+          <span className="text-white/20">·</span>
           <span style={{ color: status.color }}>{status.label}</span>
-          <span className="text-[#33333a]">·</span>
+          <span className="text-white/20">·</span>
           <span>{p.minutes_played}&apos;</span>
         </div>
       </div>
@@ -147,7 +147,7 @@ function Section({
 }) {
   if (players.length === 0) return null;
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="overflow-hidden card-surface">
       <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
         <span className="section-label">{title}</span>
         <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">
@@ -253,7 +253,7 @@ export function GameweekRecap() {
       {data && !isLoading && (
         <>
           {/* Summary scoreboard */}
-          <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 p-6">
+          <section className="overflow-hidden card-surface p-6">
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div>
                 <p className="section-label">Total Points</p>
@@ -291,7 +291,7 @@ export function GameweekRecap() {
           )}
 
           {data.players.length === 0 && (
-            <div className="rounded-[3px] border border-white/8 bg-surface-1 p-10 text-center">
+            <div className="card-surface p-10 text-center">
               <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-2">
                 No lineup for this gameweek
               </p>

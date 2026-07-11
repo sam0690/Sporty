@@ -64,7 +64,7 @@ function ReactionBar({
           +
         </button>
         {pickerOpen ? (
-          <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 rounded-[3px] border border-white/8 bg-surface-1 p-1.5 shadow-xl">
+          <div className="absolute bottom-full left-0 z-10 mb-1 flex gap-1 card-surface p-1.5 shadow-xl">
             {REACTION_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
@@ -129,7 +129,7 @@ export function LeagueChat() {
         </h1>
       </header>
 
-      <div className="flex h-[60vh] min-h-[420px] flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="flex h-[60vh] min-h-[420px] flex-col overflow-hidden card-surface">
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-5">
           {isLoading ? (
             <p className="text-sm text-fg-3">Loading messages…</p>
@@ -159,7 +159,7 @@ export function LeagueChat() {
                         type="button"
                         onClick={() => deleteMessage.mutate(message.id)}
                         aria-label="Delete message"
-                        className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] text-fg-3 transition-colors hover:text-[#ff3b30]"
+                        className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-[3px] text-fg-3 transition-colors hover:text-danger"
                       >
                         <Trash2 size={14} aria-hidden />
                       </button>

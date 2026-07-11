@@ -5,7 +5,7 @@ import { Users } from "lucide-react";
 
 export function EmptyPlayers() {
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 py-16 text-center">
+    <section className="card-surface py-16 text-center">
       <div className="mx-auto mb-4 inline-flex size-12 items-center justify-center rounded-full border border-white/8 text-fg-3">
         <Users className="size-5" aria-hidden="true" />
       </div>

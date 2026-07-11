@@ -86,7 +86,7 @@ export function LeftContent({ content }: LeftContentProps) {
             <span style={{ color }}>
               <Icon className="size-4" />
             </span>
-            <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-[#d7d7de]">
+            <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-1">
               {label}
             </span>
           </span>

@@ -6,7 +6,7 @@ export default function NotFoundPage() {
       <div className="pointer-events-none absolute inset-0 opacity-40 auth-dot-pattern" />
 
       <section className="mx-auto flex min-h-[78vh] w-full max-w-5xl items-center justify-center px-6 py-16">
-        <div className="w-full max-w-2xl rounded-[3px] border border-white/8 bg-surface-1 p-8 text-center sm:p-12">
+        <div className="w-full max-w-2xl card-surface p-8 text-center sm:p-12">
           <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-fg-3">
             404 Error
           </p>

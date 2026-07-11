@@ -47,11 +47,11 @@ export function AdminConfig() {
     <div className="space-y-6">
       <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Config</h1>
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+      <section className="card-surface p-5 space-y-3">
         <p className="section-label">Live external-API polling (football / NBA)</p>
         <p className="text-xs text-fg-3">
           Takes effect on the next scheduled poll run. Currently:{" "}
-          <span className={flagEnabled(livePollingRow?.value) ? "text-[#4ade80]" : "text-[#ff3b30]"}>
+          <span className={flagEnabled(livePollingRow?.value) ? "text-success" : "text-danger"}>
             {flagEnabled(livePollingRow?.value) ? "Enabled" : "Disabled"}
           </span>
         </p>
@@ -76,12 +76,12 @@ export function AdminConfig() {
       </section>
 
       {isSuperAdmin && (
-        <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+        <section className="card-surface p-5 space-y-3">
           <p className="section-label">Realtime Kafka pipeline</p>
           <p className="text-xs text-fg-3">
             Wired at process startup — toggling this here does not affect the currently running backend
             process, only the next restart. Currently:{" "}
-            <span className={flagEnabled(pipelineRow?.value) ? "text-[#4ade80]" : "text-[#ff3b30]"}>
+            <span className={flagEnabled(pipelineRow?.value) ? "text-success" : "text-danger"}>
               {flagEnabled(pipelineRow?.value) ? "Enabled" : "Disabled"}
             </span>
           </p>

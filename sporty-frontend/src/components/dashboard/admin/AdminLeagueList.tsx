@@ -68,7 +68,7 @@ export function AdminLeagueList() {
           setPage(1);
         }}
         placeholder="Search by league name…"
-        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+        className="w-full max-w-sm rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
       />
 
       {isLoading ? (

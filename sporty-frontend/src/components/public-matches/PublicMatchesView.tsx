@@ -79,7 +79,7 @@ export function PublicMatchesView() {
         )}
 
         {!isLoading && !isError && groups.length === 0 && (
-          <div className="mt-8 flex flex-col items-center gap-3 rounded-[3px] border border-white/8 bg-surface-1 p-14 text-center">
+          <div className="mt-8 flex flex-col items-center gap-3 card-surface p-14 text-center">
             <span className="grid size-11 place-items-center rounded-[3px] border border-white/8 text-fg-3">
               <ClockIcon className="size-5" />
             </span>

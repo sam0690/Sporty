@@ -39,7 +39,7 @@ export function KickMemberModal({
           type="button"
           onClick={onConfirm}
           disabled={isKicking}
-          className="flex-1 rounded-[3px] bg-[#ff3b30] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 rounded-[3px] bg-danger px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isKicking ? "Removing..." : "Kick Member"}
         </button>

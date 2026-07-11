@@ -34,7 +34,7 @@ export function SettingsSection({
         <div>
           <p
             className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.2em]"
-            style={{ color: tone === "danger" ? "#ff3b30" : "rgba(255,255,255,0.5)" }}
+            style={{ color: tone === "danger" ? "#ff3b5c" : "rgba(255,255,255,0.5)" }}
           >
             {title}
           </p>

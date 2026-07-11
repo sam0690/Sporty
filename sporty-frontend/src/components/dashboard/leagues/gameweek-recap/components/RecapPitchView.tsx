@@ -143,7 +143,7 @@ export function RecapPitchView({
       />
 
       {bench.length > 0 ? (
-        <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+        <section className="overflow-hidden card-surface">
           <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
             <span className="section-label">Bench</span>
             <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">

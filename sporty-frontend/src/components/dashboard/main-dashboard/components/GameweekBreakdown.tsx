@@ -27,9 +27,9 @@ export function GameweekBreakdown({
   }, [breakdown]);
 
   return (
-    <section className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="overflow-hidden card-surface">
       <header className="flex items-center justify-between gap-4 border-b border-white/7 px-5 py-4">
-        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
+        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Gameweek Points
         </h2>
         {rows.length > 0 && (

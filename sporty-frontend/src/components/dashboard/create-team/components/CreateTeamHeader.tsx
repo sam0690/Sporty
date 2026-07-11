@@ -45,7 +45,7 @@ export function CreateTeamHeader({
   const overBudget = remainingBudget < 0;
 
   return (
-    <header className="space-y-4 rounded-[3px] border border-white/8 bg-surface-1 p-5">
+    <header className="space-y-4 card-surface p-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
@@ -69,7 +69,7 @@ export function CreateTeamHeader({
             <p className="section-label">Budget ${budget.toFixed(1)}M</p>
             <p
               className={`mt-1 font-bebas text-2xl tracking-[1px] tabular-nums ${
-                overBudget ? "text-[#ff3b30]" : "text-accent"
+                overBudget ? "text-danger" : "text-accent"
               }`}
             >
               ${remainingBudget.toFixed(1)}M left

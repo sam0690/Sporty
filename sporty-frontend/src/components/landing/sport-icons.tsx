@@ -72,7 +72,7 @@ export type SportGlyph = {
 
 export const SPORT_GLYPHS: SportGlyph[] = [
   { Icon: FootballGlyph, label: "Football", color: "#00ff88" },
-  { Icon: BasketballGlyph, label: "Basketball", color: "#ff6b00" },
+  { Icon: BasketballGlyph, label: "Basketball", color: "#ff6b35" },
 ];
 
 const SPORT_GLYPH_MAP: Record<string, SportGlyph> = {

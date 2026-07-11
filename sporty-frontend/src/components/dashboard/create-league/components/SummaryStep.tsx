@@ -45,7 +45,7 @@ export function SummaryStep({
 }: SummaryStepProps) {
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="overflow-hidden card-surface">
         <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
           <p className="section-label">League Details</p>
           <button
@@ -97,7 +97,7 @@ export function SummaryStep({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="overflow-hidden card-surface">
         <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
           <p className="section-label">Scoring Rules</p>
         </div>

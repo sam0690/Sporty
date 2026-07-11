@@ -62,7 +62,7 @@ export function NavigationTabs({
 
   return (
     <nav
-      className="mb-6 overflow-x-auto rounded-[3px] border border-white/8 bg-surface-1 p-1"
+      className="mb-6 overflow-x-auto card-surface p-1"
       aria-label="League Navigation Tabs"
     >
       <div className="flex min-w-max gap-1">

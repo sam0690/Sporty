@@ -70,7 +70,7 @@ export function AccountSettings() {
         {/* Identity (avatar, name, bio, delete account) lives on the profile page. */}
         <Link
           href="/profile"
-          className="flex items-center justify-between gap-4 rounded-[3px] border border-white/8 bg-surface-1 px-5 py-4 transition-colors hover:border-accent/20 hover:no-underline"
+          className="flex items-center justify-between gap-4 card-surface px-5 py-4 transition-colors hover:border-accent/20 hover:no-underline"
         >
           <div>
             <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">

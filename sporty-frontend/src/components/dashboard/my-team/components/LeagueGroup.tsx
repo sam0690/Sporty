@@ -33,7 +33,7 @@ type LeagueGroupProps = {
 
 const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
   football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
-  basketball: { Icon: BasketballGlyph, color: "#ff6b00", label: "Basketball" },
+  basketball: { Icon: BasketballGlyph, color: "#ff6b35", label: "Basketball" },
   cricket: { Icon: CricketGlyph, color: "#00d4ff", label: "Cricket" },
 };
 

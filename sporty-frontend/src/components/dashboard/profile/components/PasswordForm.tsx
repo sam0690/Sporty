@@ -74,10 +74,10 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
 
   const strengthColor =
     strength === "Strong"
-      ? "#4caf50"
+      ? "#00e07f"
       : strength === "Medium"
         ? "#ffd86b"
-        : "#ff3b30";
+        : "#ff3b5c";
 
   const strengthWidth =
     strength === "Strong" ? "100%" : strength === "Medium" ? "66%" : "33%";
@@ -90,7 +90,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
     "shrink-0 rounded-[3px] border border-white/8 bg-surface-3 px-3 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors hover:text-fg-1";
 
   return (
-    <section className="card-fade-in overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="card-fade-in overflow-hidden card-surface">
       <header className="border-b border-white/8 px-5 py-3">
         <p className="section-label">Security</p>
       </header>

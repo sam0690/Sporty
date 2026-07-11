@@ -47,7 +47,7 @@ export function Topbar({
   const gwPoints = stats.find((s) => s.label === "Gameweek Points");
 
   return (
-    <header className="mb-6 overflow-hidden rounded-[3px] border border-white/8 bg-surface-1 px-5 py-5 sm:px-8 sm:py-7">
+    <header className="mb-6 overflow-hidden card-surface px-5 py-5 sm:px-8 sm:py-7">
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0">
           <p className="section-label">Welcome back</p>

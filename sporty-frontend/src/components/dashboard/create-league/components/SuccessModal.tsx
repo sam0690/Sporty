@@ -41,7 +41,7 @@ export function SuccessModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <div className="animate-fade-in-scale w-full max-w-md overflow-hidden card-surface">
         {/* volt accent strip */}
         <div className="h-1 bg-accent" />
 

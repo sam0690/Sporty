@@ -41,13 +41,13 @@ export function AdminTicketDetail({ ticketId }: { ticketId: string }) {
         </p>
       </div>
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 flex flex-wrap items-center gap-4">
+      <section className="card-surface p-5 flex flex-wrap items-center gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-fg-3">Status</label>
           <select
             value={ticket.status}
             onChange={(e) => updateTicket.mutate({ status: e.target.value as TTicketStatus })}
-            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-2 py-1 text-sm text-fg-1"
+            className="rounded-[3px] border border-white/15 bg-surface-2 px-2 py-1 text-sm text-fg-1"
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
@@ -62,7 +62,7 @@ export function AdminTicketDetail({ ticketId }: { ticketId: string }) {
           <select
             value={ticket.priority}
             onChange={(e) => updateTicket.mutate({ priority: e.target.value as TTicketPriority })}
-            className="rounded-[3px] border border-white/15 bg-[#0d0d14] px-2 py-1 text-sm text-fg-1"
+            className="rounded-[3px] border border-white/15 bg-surface-2 px-2 py-1 text-sm text-fg-1"
           >
             {PRIORITY_OPTIONS.map((p) => (
               <option key={p} value={p}>
@@ -108,13 +108,13 @@ export function AdminTicketDetail({ ticketId }: { ticketId: string }) {
         ))}
       </section>
 
-      <section className="rounded-[3px] border border-white/8 bg-surface-1 p-5 space-y-3">
+      <section className="card-surface p-5 space-y-3">
         <textarea
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           placeholder="Reply…"
           rows={3}
-          className="w-full rounded-[3px] border border-white/15 bg-[#0d0d14] px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
+          className="w-full rounded-[3px] border border-white/15 bg-surface-2 px-3 py-2 text-sm text-fg-1 placeholder:text-fg-3"
         />
         <label className="flex items-center gap-2 text-xs text-fg-3">
           <input

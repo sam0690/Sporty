@@ -50,7 +50,7 @@ export function TransferFields({
 
   if (isLoading) {
     return (
-      <section className="flex overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+      <section className="flex overflow-hidden card-surface">
         <div className="w-1 bg-surface-3" />
         <div className="flex-1 p-4">
           <div className="h-2 w-28 animate-pulse rounded bg-surface-3" />
@@ -60,13 +60,13 @@ export function TransferFields({
     );
   }
 
-  const accent = isOpen ? "#e2c368" : "#33333a";
+  const accent = isOpen ? "#e2c368" : "#71717d";
   const deadlineMs = editableWindow?.transfer_deadline_at
     ? new Date(editableWindow.transfer_deadline_at).getTime()
     : null;
 
   return (
-    <section className="flex overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="flex overflow-hidden card-surface">
       <div className="w-1 shrink-0" style={{ background: accent }} />
 
       <div className="flex flex-1 flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">

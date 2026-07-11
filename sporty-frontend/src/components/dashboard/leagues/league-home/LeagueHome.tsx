@@ -218,7 +218,7 @@ export function LeagueHome() {
           window={editableWindow}
         />
       ) : (
-        <section className="flex flex-col gap-3 rounded-[3px] border border-white/8 bg-surface-1 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <section className="flex flex-col gap-3 card-surface p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <span className="section-label">Roster Moves</span>
             <p className="mt-2 text-sm text-fg-2">
@@ -230,7 +230,7 @@ export function LeagueHome() {
           {leagueStatus === "active" ? (
             <Link
               href={`/leagues/${leagueId}/free-agents`}
-              className="inline-flex shrink-0 items-center justify-center rounded-[3px] bg-accent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
+              className="inline-flex shrink-0 items-center justify-center rounded-[3px] border border-white/12 px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-1 transition-colors hover:border-accent/40 hover:text-accent"
             >
               Free Agents
             </Link>
@@ -248,7 +248,7 @@ export function LeagueHome() {
               ? "Commissioner cannot leave — delete league or transfer ownership"
               : "Leave this league"
           }
-          className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-[#ff3b30] transition-colors hover:bg-[rgba(255,59,48,0.1)] disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.1)] disabled:cursor-not-allowed disabled:opacity-50"
         >
           Leave League
         </button>
@@ -323,7 +323,7 @@ export function LeagueHome() {
               </div>
             )
           ) : (
-            <div className="rounded-[3px] border border-[rgba(76,175,80,0.3)] bg-[#1a2a1a] p-5 text-sm text-[#4caf50]">
+            <div className="rounded-[3px] border border-success/30 bg-[#1a2a1a] p-5 text-sm text-success">
               Build your team to start competing in this budget league.
             </div>
           )}
@@ -385,7 +385,7 @@ export function LeagueHome() {
             type="button"
             onClick={handleLeaveLeague}
             disabled={isLeaving || isCommissioner}
-            className="flex-1 rounded-[3px] bg-[#ff3b30] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-[#ff5548] disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-[3px] bg-danger px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLeaving ? "Leaving..." : "Confirm Leave"}
           </button>

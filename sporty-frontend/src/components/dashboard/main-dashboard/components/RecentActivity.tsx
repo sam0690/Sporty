@@ -25,7 +25,7 @@ const ACTIVITY_META: Record<
   transfer: { Icon: ArrowLeftRight, color: "#e2c368" },
   lineup: { Icon: ClipboardList, color: "#00d4ff" },
   points: { Icon: Star, color: "#00e07f" },
-  rank: { Icon: TrendingUp, color: "#ff6b00" },
+  rank: { Icon: TrendingUp, color: "#ff6b35" },
   league_joined: { Icon: UserPlus, color: "#9b59b6" },
   league_created: { Icon: Trophy, color: "#ffd86b" },
 };
@@ -38,9 +38,9 @@ export function RecentActivity({
   const nowMs = useRelativeTime({ refreshIntervalMs: 60_000 });
 
   return (
-    <section className="flex h-full flex-col overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+    <section className="flex h-full flex-col overflow-hidden card-surface">
       <header className="border-b border-white/7 px-5 py-4">
-        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-[#d7d7de]">
+        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Recent Activity
         </h2>
       </header>

@@ -18,7 +18,7 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/8 bg-[#0d0d14] md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 border-t border-white/8 bg-surface-2 md:hidden"
       aria-label="Mobile Dashboard Navigation"
     >
       <div className="flex h-16 items-stretch">

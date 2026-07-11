@@ -8,7 +8,7 @@ type EmptyTransfersProps = {
 
 export function EmptyTransfers({ onClearFilters }: EmptyTransfersProps) {
   return (
-    <section className="rounded-[3px] border border-white/8 bg-surface-1 py-16 text-center">
+    <section className="card-surface py-16 text-center">
       <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/8 text-fg-3">
         <SearchX className="h-5 w-5" aria-hidden />
       </div>

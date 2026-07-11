@@ -41,12 +41,12 @@ export function Sidebar({ items }: SidebarProps) {
   };
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[72px] flex-col border-r border-white/8 bg-[#0d0d14] md:flex lg:w-64">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[72px] flex-col border-r border-white/8 bg-surface-2 md:flex lg:w-64">
       {/* Logo */}
       <div className="flex items-center justify-between border-b border-white/8 px-3 py-5 lg:px-6">
         <Link
           href="/dashboard"
-          className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d14] lg:w-auto lg:justify-start"
+          className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-2 lg:w-auto lg:justify-start"
         >
           <span className="font-bebas text-2xl tracking-[3px] text-accent lg:hidden">
             S
@@ -110,7 +110,7 @@ export function Sidebar({ items }: SidebarProps) {
           onClick={() => setShowLogoutModal(true)}
           disabled={actionLoading.logout}
           title="Log out"
-          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-[#ff3b30]/40 hover:text-[#ff3b30] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ff3b30]/50 disabled:opacity-50 lg:justify-start"
+          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-danger/40 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 disabled:opacity-50 lg:justify-start"
           aria-label="Log out"
         >
           <LogOut className="h-4 w-4 shrink-0" />
