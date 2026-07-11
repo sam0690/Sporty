@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/lib/toastifier";
@@ -31,14 +31,6 @@ import type { TFavouritePlayer } from "@/services/UserService";
 
 type SportName = "football" | "basketball";
 
-const mockUser = {
-  id: "1",
-  name: "John Doe",
-  email: "john@example.com",
-  avatar: "",
-  bio: "Fantasy sports enthusiast since 2020",
-};
-
 type ExtendedUser = {
   id: string;
   name: string;
@@ -49,29 +41,24 @@ type ExtendedUser = {
 
 export function ProfileSettingsView() {
   const { logout } = useAuth();
-  const { data: me, username } = useMe();
+  const { data: me, username, isLoading } = useMe();
   const updateUser = useUpdateUser(me?.id ?? "");
   const uploadAvatar = useUploadAvatar(me?.id ?? "");
   const setFavouriteTeam = useSetFavouriteTeam(me?.id ?? "");
   const removeFavouriteTeam = useRemoveFavouriteTeam(me?.id ?? "");
   const setFavouritePlayer = useSetFavouritePlayer(me?.id ?? "");
   const removeFavouritePlayer = useRemoveFavouritePlayer(me?.id ?? "");
-  const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   // Everything except bio is derived from the `me` query (mutations invalidate
   // it), so only bio lives in local state — the backend has no bio field.
-  const [bio, setBio] = useState(mockUser.bio);
+  const [bio, setBio] = useState("");
   const userData: ExtendedUser = {
-    id: me?.id ?? mockUser.id,
-    name: username || mockUser.name,
-    email: me?.email ?? mockUser.email,
-    avatar: me?.avatar_url ?? mockUser.avatar,
+    id: me?.id ?? "",
+    name: username,
+    email: me?.email ?? "",
+    avatar: me?.avatar_url ?? "",
     bio,
   };
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setIsLoading(false), 450);
-    return () => window.clearTimeout(timeout);
-  }, []);
 
   const profileFormUser: ProfileUser = useMemo(
     () => ({

@@ -1,7 +1,6 @@
 "use client";
 
-import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
-import { TeamLogo } from "@/components/ui/TeamLogo";
+import { Badge, PlayerAvatar, StatTile, TeamLogo } from "@/components/ui";
 import { usePlayer, usePlayerRecentStats } from "@/hooks/players/usePlayers";
 import type { TPlayerGameweekStat } from "@/types";
 
@@ -98,13 +97,16 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
             <div className="mt-1 flex items-center gap-2">
               <TeamLogo teamName={player.real_team} logoUrl={player.real_team_logo_url} size="sm" />
               <span className="text-sm text-fg-2">{player.real_team}</span>
-              <span className="micro-label rounded-[3px] border border-success/30 bg-success/8 px-1.5 py-0.5 text-success">
+              <Badge tone="success" size="sm">
                 {player.position}
-              </span>
+              </Badge>
             </div>
-            <div className="num mt-2 text-2xl font-700 text-fg-1">
-              £{player.current_cost.toFixed(1)}m
-            </div>
+            <StatTile
+              className="mt-2"
+              label="Price"
+              value={`£${player.current_cost.toFixed(1)}m`}
+              size="sm"
+            />
           </div>
         </div>
       </div>

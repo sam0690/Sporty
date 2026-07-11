@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 
 type ProfileHeaderProps = {
@@ -24,6 +25,9 @@ export function ProfileHeader({
   userEmail,
   avatarUrl,
 }: ProfileHeaderProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = Boolean(avatarUrl) && !imageFailed;
+
   return (
     <header className="overflow-hidden card-surface">
       <div className="border-b border-white/8 px-6 py-5">
@@ -38,13 +42,14 @@ export function ProfileHeader({
 
       <div className="flex flex-wrap items-center gap-5 p-6">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-[3px] border border-accent/20 bg-accent/10 font-display text-3xl tracking-[-0.02em] text-accent">
-          {avatarUrl ? (
+          {showImage ? (
             <Image
               src={avatarUrl}
               alt={`${userName} avatar`}
               width={80}
               height={80}
               className="h-full w-full object-cover"
+              onError={() => setImageFailed(true)}
             />
           ) : (
             getInitials(userName)

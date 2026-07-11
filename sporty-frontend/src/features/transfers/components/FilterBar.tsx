@@ -1,6 +1,10 @@
 "use client";
 
-type Sport = "All" | "football" | "basketball" | "cricket";
+import {
+  POSITION_MAP,
+  SPORT_LABELS,
+  type PlayerFilterSport as Sport,
+} from "@/lib/playerPositions";
 
 type FilterBarProps = {
   selectedSport: Sport;
@@ -20,19 +24,6 @@ const defaultSports: Exclude<Sport, "All">[] = [
   "basketball",
   "cricket",
 ];
-
-const sportLabels: Record<Sport, string> = {
-  All: "All",
-  football: "⚽ Football",
-  basketball: "🏀 Basketball",
-  cricket: "🏏 Cricket",
-};
-
-const positionMap: Record<Exclude<Sport, "All">, string[]> = {
-  football: ["All", "Forward", "Midfielder", "Defender", "Goalkeeper"],
-  basketball: ["All", "Guard", "Forward", "Center"],
-  cricket: ["All", "Batter", "Bowler", "All-Rounder", "Wicketkeeper"],
-};
 
 export function FilterBar({
   selectedSport,
@@ -63,7 +54,7 @@ export function FilterBar({
       ? positionOptionsBySport[selectedSport]!
       : selectedSport === "All"
         ? dynamicAllPositions
-        : positionMap[selectedSport];
+        : POSITION_MAP[selectedSport];
 
   const positionOptions =
     selectedSport === "All" ? dynamicAllPositions : dynamicSportPositions;
@@ -91,7 +82,7 @@ export function FilterBar({
             }}
             className={chip(selectedSport === sport)}
           >
-            {sportLabels[sport]}
+            {SPORT_LABELS[sport]}
           </button>
         ))}
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui";
 import { toastifier } from "@/lib/toastifier";
 
 type ProfileUser = {
@@ -56,8 +57,8 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
 
   const fieldLabel =
     "mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
-  const fieldInput =
-    "w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent";
+  const textareaField =
+    "w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/60";
 
   return (
     <form
@@ -73,13 +74,12 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
           <label htmlFor="display-name" className={fieldLabel}>
             Display Name
           </label>
-          <input
+          <Input
             id="display-name"
             value={form.name}
             onChange={(event) =>
               setForm((prev) => ({ ...prev, name: event.target.value }))
             }
-            className={fieldInput}
             required
           />
         </div>
@@ -89,14 +89,14 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
             Email
             <span className="ml-2 text-fg-3">(read-only)</span>
           </label>
-          <input
+          <Input
             id="email"
             type="email"
             value={form.email}
             onChange={(event) =>
               setForm((prev) => ({ ...prev, email: event.target.value }))
             }
-            className={`${fieldInput} cursor-not-allowed text-fg-2`}
+            className="cursor-not-allowed text-fg-2"
             required
             readOnly
           />
@@ -116,7 +116,7 @@ export function ProfileForm({ user, onUpdate }: ProfileFormProps) {
                 bio: event.target.value.slice(0, 160),
               }))
             }
-            className={fieldInput}
+            className={textareaField}
             maxLength={160}
           />
           <p className="mt-1 text-right text-xs text-fg-3">

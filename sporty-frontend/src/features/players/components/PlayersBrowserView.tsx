@@ -10,6 +10,7 @@ import { useSports } from "@/hooks/leagues/useLeagues";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { PlayerBrowserCard } from "@/features/players/components/PlayerBrowserCard";
+import { POSITION_MAP, type PlayerFilterSport } from "@/lib/playerPositions";
 
 const PAGE_SIZE = 24;
 
@@ -23,8 +24,18 @@ export function PlayersBrowserView() {
     setSelectedPosition,
     selectedSport,
     setSelectedSport,
+    minCostInput,
+    setMinCostInput,
+    maxCostInput,
+    setMaxCostInput,
     filters,
   } = usePlayerFilters();
+
+  const positionOptions =
+    selectedSport === "All"
+      ? ["All"]
+      : (POSITION_MAP[selectedSport as Exclude<PlayerFilterSport, "All">] ??
+        ["All"]);
 
   const { data, isLoading, isFetching } = usePlayers({
     ...filters,
@@ -48,46 +59,75 @@ export function PlayersBrowserView() {
         subtitle="Browse every player across your sports"
       />
 
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-3"
-            aria-hidden
+      <div className="mb-6 space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-3"
+              aria-hidden
+            />
+            <Input
+              value={searchQuery}
+              onChange={(e) => handleFilterChange(setSearchQuery)(e.target.value)}
+              placeholder="Search players…"
+              className="pl-10"
+              aria-label="Search players"
+            />
+          </div>
+
+          <Select
+            value={selectedSport}
+            onChange={(value) => {
+              handleFilterChange(setSelectedSport)(value);
+              setSelectedPosition("All");
+            }}
+            aria-label="Filter by sport"
+            options={[
+              { value: "All", label: "All Sports" },
+              ...(sports ?? []).map((sport) => ({
+                value: sport.name,
+                label: sport.display_name,
+              })),
+            ]}
           />
-          <Input
-            value={searchQuery}
-            onChange={(e) => handleFilterChange(setSearchQuery)(e.target.value)}
-            placeholder="Search players…"
-            className="pl-10"
-            aria-label="Search players"
+
+          <Select
+            value={selectedPosition}
+            onChange={handleFilterChange(setSelectedPosition)}
+            aria-label="Filter by position"
+            options={positionOptions.map((position) => ({
+              value: position,
+              label: position === "All" ? "All Positions" : position,
+            }))}
           />
         </div>
 
-        <Select
-          value={selectedSport}
-          onChange={handleFilterChange(setSelectedSport)}
-          aria-label="Filter by sport"
-          options={[
-            { value: "All", label: "All Sports" },
-            ...(sports ?? []).map((sport) => ({
-              value: sport.name,
-              label: sport.display_name,
-            })),
-          ]}
-        />
-
-        <Select
-          value={selectedPosition}
-          onChange={handleFilterChange(setSelectedPosition)}
-          aria-label="Filter by position"
-          options={[
-            { value: "All", label: "All Positions" },
-            { value: "GK", label: "GK" },
-            { value: "DEF", label: "DEF" },
-            { value: "MID", label: "MID" },
-            { value: "FWD", label: "FWD" },
-          ]}
-        />
+        <div className="grid grid-cols-2 gap-3 sm:max-w-xs">
+          <label className="space-y-1.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+            <span>Min cost</span>
+            <Input
+              type="number"
+              min="0"
+              step="0.1"
+              value={minCostInput}
+              onChange={(e) => handleFilterChange(setMinCostInput)(e.target.value)}
+              placeholder="0"
+              aria-label="Minimum cost"
+            />
+          </label>
+          <label className="space-y-1.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+            <span>Max cost</span>
+            <Input
+              type="number"
+              min="0"
+              step="0.1"
+              value={maxCostInput}
+              onChange={(e) => handleFilterChange(setMaxCostInput)(e.target.value)}
+              placeholder="Any"
+              aria-label="Maximum cost"
+            />
+          </label>
+        </div>
       </div>
 
       {isLoading ? (
