@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { UserProfile } from "@/components/dashboard/user-profile";
+import { UserProfileView, useUserProfileDashboard } from "@/features/user-profile";
 
 export default function UserProfilePage({
   params
@@ -9,5 +9,6 @@ export default function UserProfilePage({
   params: Promise<{ id: string }>
 }) {
   const resolvedParams = use(params);
-  return <UserProfile userId={resolvedParams.id} />;
+  const vm = useUserProfileDashboard();
+  return <UserProfileView {...vm} userId={resolvedParams.id} />;
 }

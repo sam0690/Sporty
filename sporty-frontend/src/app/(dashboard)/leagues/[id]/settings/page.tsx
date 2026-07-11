@@ -1,6 +1,6 @@
 "use client";
 
-import { LeagueSettings } from "@/components/dashboard/leagues/league-settings";
+import { LeagueSettings } from "@/features/league-settings";
 
 export default function LeagueSettingsPage() {
   return <LeagueSettings />;

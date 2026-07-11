@@ -1,6 +1,6 @@
 "use client";
 
-import { LeagueMembers } from "@/components/dashboard/leagues/league-members";
+import { LeagueMembers } from "@/features/league-members";
 
 export default function LeagueMembersPage() {
   return <LeagueMembers />;

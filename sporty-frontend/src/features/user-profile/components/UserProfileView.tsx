@@ -4,12 +4,12 @@ import { useMemo } from "react";
 import {
   LeagueHistory,
   type LeagueRow,
-} from "@/components/dashboard/user-profile/components/LeagueHistory";
-import { ProfileHeader } from "@/components/dashboard/user-profile/components/ProfileHeader";
+} from "./LeagueHistory";
+import { ProfileHeader } from "./ProfileHeader";
 import {
   RecentActivity,
-} from "@/components/dashboard/user-profile/components/RecentActivity";
-import { StatsCards } from "@/components/dashboard/user-profile/components/StatsCards";
+} from "./RecentActivity";
+import { StatsCards } from "./StatsCards";
 import { useMe } from "@/hooks/auth/useMe";
 import { useUserActivity, useUserPublicStats } from "@/hooks/users/useUsers";
 

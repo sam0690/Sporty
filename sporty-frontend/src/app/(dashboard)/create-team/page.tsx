@@ -1,7 +1,8 @@
 "use client";
 
-import { CreateTeam } from "@/components/dashboard/create-team";
+import { CreateTeamView, useCreateTeamDashboard } from "@/features/create-team";
 
 export default function CreateTeamPage() {
-  return <CreateTeam />;
+  const vm = useCreateTeamDashboard();
+  return <CreateTeamView {...vm} />;
 }

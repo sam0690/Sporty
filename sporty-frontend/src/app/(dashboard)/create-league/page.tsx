@@ -1,7 +1,11 @@
 "use client";
 
-import { CreateLeague } from "@/components/dashboard/create-league";
+import {
+  CreateLeagueView,
+  useCreateLeagueDashboard,
+} from "@/features/create-league";
 
 export default function CreateLeaguePage() {
-  return <CreateLeague />;
+  const vm = useCreateLeagueDashboard();
+  return <CreateLeagueView {...vm} />;
 }

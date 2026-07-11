@@ -1,7 +1,8 @@
 "use client";
 
-import { ProfileSettings } from "@/components/dashboard/profile";
+import { ProfileSettingsView, useProfileDashboard } from "@/features/profile";
 
 export default function ProfilePage() {
-  return <ProfileSettings />;
+  const vm = useProfileDashboard();
+  return <ProfileSettingsView {...vm} />;
 }

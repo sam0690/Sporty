@@ -4,19 +4,19 @@ import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/lib/toastifier";
-import { AvatarUpload } from "@/components/dashboard/profile/components/AvatarUpload";
-import { DangerZone } from "@/components/dashboard/profile/components/DangerZone";
-import { FavouritesForm } from "@/components/dashboard/profile/components/FavouritesForm";
+import { AvatarUpload } from "./AvatarUpload";
+import { DangerZone } from "./DangerZone";
+import { FavouritesForm } from "./FavouritesForm";
 import {
   PreferencesForm,
   type Preferences,
-} from "@/components/dashboard/profile/components/PreferencesForm";
+} from "./PreferencesForm";
 import {
   ProfileForm,
   type ProfileUser,
-} from "@/components/dashboard/profile/components/ProfileForm";
-import { ProfileHeader } from "@/components/dashboard/profile/components/ProfileHeader";
-import { SettingsSkeleton } from "@/components/dashboard/profile/components/SettingsSkeleton";
+} from "./ProfileForm";
+import { ProfileHeader } from "./ProfileHeader";
+import { SettingsSkeleton } from "./SettingsSkeleton";
 import {
   useRemoveFavouritePlayer,
   useRemoveFavouriteTeam,

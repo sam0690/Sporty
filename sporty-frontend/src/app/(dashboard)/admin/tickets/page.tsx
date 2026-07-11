@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminTicketList } from "@/components/dashboard/admin/AdminTicketList";
+import { AdminTicketList } from "@/features/admin/components/AdminTicketList";
 
 export default function AdminTicketsPage() {
   return <AdminTicketList />;

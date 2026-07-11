@@ -6,8 +6,8 @@ import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import {
   LeagueCard,
   type Sport,
-} from "@/components/dashboard/leagues/components/LeagueCard";
-import { StatsRow } from "@/components/dashboard/leagues/components/StatsRow";
+} from "@/features/leagues/components/LeagueCard";
+import { StatsRow } from "@/features/leagues/components/StatsRow";
 import { EmptyState, PageHeader } from "@/components/ui";
 import { Trophy } from "lucide-react";
 import { LeagueCardSkeleton } from "@/components/ui/skeletons";

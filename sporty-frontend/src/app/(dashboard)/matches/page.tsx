@@ -1,6 +1,6 @@
 "use client";
 
-import { MatchesView } from "@/components/dashboard/matches";
+import { MatchesView } from "@/features/matches";
 
 export default function MatchesPage() {
   return <MatchesView />;

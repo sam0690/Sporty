@@ -10,8 +10,8 @@ import {
 } from "@/hooks/dashboard/useDashboardData";
 import { useLocalStorage } from "@/hooks/general/useLocalStorage";
 import { LocalStorageKeys } from "@/lib/storage.keys";
-import { OVERVIEW_STATS } from "@/components/dashboard/main-dashboard/constants/dashboardData";
-import type { ActivityItem } from "@/components/dashboard/main-dashboard/types";
+import { OVERVIEW_STATS } from "../constants/dashboardData";
+import type { ActivityItem } from "../types";
 
 export function useDashboardMainState() {
   const { data: me, username } = useMe();

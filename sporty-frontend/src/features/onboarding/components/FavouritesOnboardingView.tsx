@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { FavouritesForm } from "@/components/dashboard/profile/components/FavouritesForm";
+import { FavouritesForm } from "@/features/profile/components/FavouritesForm";
 import { useMe } from "@/hooks/auth/useMe";
 import {
   useRemoveFavouritePlayer,

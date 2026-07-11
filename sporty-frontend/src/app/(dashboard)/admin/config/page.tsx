@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminConfig } from "@/components/dashboard/admin/AdminConfig";
+import { AdminConfig } from "@/features/admin/components/AdminConfig";
 
 export default function AdminConfigPage() {
   return <AdminConfig />;

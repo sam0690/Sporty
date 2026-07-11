@@ -1,5 +1,5 @@
-import { DashboardMain } from "@/components/dashboard/main-dashboard";
+import { DashboardMainContainer } from "@/features/dashboard";
 
 export default function DashboardPage() {
-    return <DashboardMain />;
+    return <DashboardMainContainer />;
 }

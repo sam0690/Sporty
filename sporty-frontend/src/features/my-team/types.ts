@@ -1,4 +1,4 @@
-import type { Sport } from "@/components/dashboard/my-team/components/PlayerCard";
+import type { Sport } from "./components/PlayerCard";
 
 export type LeagueOption = {
   id: string;

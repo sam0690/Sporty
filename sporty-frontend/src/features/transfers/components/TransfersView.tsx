@@ -11,22 +11,22 @@ import {
   X,
 } from "lucide-react";
 import { PlayerAvatar } from "@/components/ui";
-import { BudgetOverageConfirmation } from "@/components/dashboard/transfers/components/BudgetOverageConfirmation";
-import { CurrentRoster } from "@/components/dashboard/transfers/components/CurrentRoster";
-import { FilterBar } from "@/components/dashboard/transfers/components/FilterBar";
-import { PlayerCard } from "@/components/dashboard/transfers/components/PlayerCard";
-import { SearchBar } from "@/components/dashboard/transfers/components/SearchBar";
-import { TransferConfirmation } from "@/components/dashboard/transfers/components/TransferConfirmation";
-import { TransfersHeader } from "@/components/dashboard/transfers/components/TransfersHeader";
-import { TransferSuccess } from "@/components/dashboard/transfers/components/TransferSuccess";
-import { UserTransferHistoryCarousel } from "@/components/dashboard/transfers/components/UserTransferHistoryCarousel";
-import { SquadValidationChecklist } from "@/components/dashboard/create-team/components/SquadValidationChecklist";
-import { GameweekContextBar } from "@/components/dashboard/leagues/GameweekContextBar";
+import { BudgetOverageConfirmation } from "./BudgetOverageConfirmation";
+import { CurrentRoster } from "./CurrentRoster";
+import { FilterBar } from "./FilterBar";
+import { PlayerCard } from "./PlayerCard";
+import { SearchBar } from "./SearchBar";
+import { TransferConfirmation } from "./TransferConfirmation";
+import { TransfersHeader } from "./TransfersHeader";
+import { TransferSuccess } from "./TransferSuccess";
+import { UserTransferHistoryCarousel } from "./UserTransferHistoryCarousel";
+import { SquadValidationChecklist } from "@/features/create-team/components/SquadValidationChecklist";
+import { GameweekContextBar } from "@/features/leagues/components/GameweekContextBar";
 import { EmptyState } from "@/components/ui";
 import { SearchX } from "lucide-react";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
-import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
-import type { OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
+import type { Sport } from "./FilterBar";
+import type { OwnedPlayer } from "./CurrentRoster";
 
 type Props = ReturnType<
   typeof import("../hooks/useTransfersDashboard").useTransfersDashboard

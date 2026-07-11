@@ -1,6 +1,6 @@
 "use client";
 
-import { InviteFriends } from "@/components/dashboard/leagues/invite-friends";
+import { InviteFriends } from "@/features/invite-friends";
 
 export default function InviteFriendsPage() {
   return <InviteFriends />;

@@ -1,6 +1,6 @@
 "use client";
 
-import { LeagueLeaderboard } from "@/components/dashboard/leagues/league-leaderboard";
+import { LeagueLeaderboard } from "@/features/league-leaderboard";
 
 export default function LeagueLeaderboardPage() {
   return <LeagueLeaderboard />;

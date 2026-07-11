@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { AdminTicketDetail } from "@/components/dashboard/admin/AdminTicketDetail";
+import { AdminTicketDetail } from "@/features/admin/components/AdminTicketDetail";
 
 export default function AdminTicketPage({
   params,

@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminLeagueList } from "@/components/dashboard/admin/AdminLeagueList";
+import { AdminLeagueList } from "@/features/admin/components/AdminLeagueList";
 
 export default function AdminLeaguesPage() {
   return <AdminLeagueList />;

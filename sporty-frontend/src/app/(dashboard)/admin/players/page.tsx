@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminPlayers } from "@/components/dashboard/admin/AdminPlayers";
+import { AdminPlayers } from "@/features/admin/components/AdminPlayers";
 
 export default function AdminPlayersPage() {
   return <AdminPlayers />;

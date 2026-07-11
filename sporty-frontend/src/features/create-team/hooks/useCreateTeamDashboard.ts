@@ -6,7 +6,7 @@ import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMe } from "@/hooks/auth/useMe";
-import type { MarketPlayer } from "@/components/dashboard/create-team/components/PlayerCard";
+import type { MarketPlayer } from "../components/PlayerCard";
 import {
   useLeague,
   useActiveWindow,

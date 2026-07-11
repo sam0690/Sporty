@@ -1,11 +1,11 @@
 "use client";
 
-import { CreateTeamHeader } from "@/components/dashboard/create-team/components/CreateTeamHeader";
-import { GameweekEntryNotice } from "@/components/dashboard/create-team/components/GameweekEntryNotice";
-import { CurrentTeam } from "@/components/dashboard/create-team/components/CurrentTeam";
-import { PlayerMarket } from "@/components/dashboard/create-team/components/PlayerMarket";
-import { TeamNameForm } from "@/components/dashboard/create-team/components/TeamNameForm";
-import { SquadValidationChecklist } from "@/components/dashboard/create-team/components/SquadValidationChecklist";
+import { CreateTeamHeader } from "./CreateTeamHeader";
+import { GameweekEntryNotice } from "./GameweekEntryNotice";
+import { CurrentTeam } from "./CurrentTeam";
+import { PlayerMarket } from "./PlayerMarket";
+import { TeamNameForm } from "./TeamNameForm";
+import { SquadValidationChecklist } from "./SquadValidationChecklist";
 import { MULTISPORT_MIN_BY_SPORT } from "../hooks/useCreateTeamDashboard";
 
 type CreateTeamProps = Record<string, unknown> & { leagueId?: string };

@@ -1,4 +1,4 @@
-import type { Sport } from "@/components/dashboard/my-team/components/PlayerCard";
+import type { Sport } from "./components/PlayerCard";
 import type { TFantasyTeam, TLeague, TTeamPlayer } from "@/types/league";
 import { getLeagueDisplayName } from "@/hooks/my-team/useMyTeam";
 import type { LeagueOption, MyTeamLeagueView, MyTeamPlayerView } from "./types";

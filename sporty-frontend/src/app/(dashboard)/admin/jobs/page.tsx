@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminJobs } from "@/components/dashboard/admin/AdminJobs";
+import { AdminJobs } from "@/features/admin/components/AdminJobs";
 
 export default function AdminJobsPage() {
   return <AdminJobs />;

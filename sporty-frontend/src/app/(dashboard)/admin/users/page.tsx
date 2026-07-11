@@ -1,6 +1,6 @@
 "use client";
 
-import { AdminUserList } from "@/components/dashboard/admin/AdminUserList";
+import { AdminUserList } from "@/features/admin/components/AdminUserList";
 
 export default function AdminUsersPage() {
   return <AdminUserList />;

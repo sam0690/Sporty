@@ -1,7 +1,8 @@
 "use client";
 
-import { MyTeam } from "@/components/dashboard/my-team";
+import { MyTeamView, useMyTeamDashboard } from "@/features/my-team";
 
 export default function MyTeamPage() {
-  return <MyTeam />;
+  const viewModel = useMyTeamDashboard();
+  return <MyTeamView {...viewModel} />;
 }

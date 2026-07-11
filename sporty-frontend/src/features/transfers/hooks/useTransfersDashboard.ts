@@ -18,8 +18,8 @@ import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { toastifier } from "@/lib/toastifier";
 import { isApiError } from "@/utils/api-Error";
-import type { OwnedPlayer } from "@/components/dashboard/transfers/components/CurrentRoster";
-import type { Sport } from "@/components/dashboard/transfers/components/FilterBar";
+import type { OwnedPlayer } from "../components/CurrentRoster";
+import type { Sport } from "../components/FilterBar";
 import type { TBudgetOverageDetail } from "@/types";
 
 const TRANSFER_POOL_PAGE_SIZE = 20;

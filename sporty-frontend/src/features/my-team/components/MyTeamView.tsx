@@ -3,9 +3,9 @@
 import { Users } from "lucide-react";
 import { EmptyState, Select } from "@/components/ui";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
-import { EmptyTeamState } from "@/components/dashboard/my-team/components/EmptyTeamState";
-import { LeagueGroup } from "@/components/dashboard/my-team/components/LeagueGroup";
-import { TeamHeader } from "@/components/dashboard/my-team/components/TeamHeader";
+import { EmptyTeamState } from "./EmptyTeamState";
+import { LeagueGroup } from "./LeagueGroup";
+import { TeamHeader } from "./TeamHeader";
 import type { MyTeamLeagueView, MyTeamPlayerView, LeagueOption } from "../types";
 
 function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
