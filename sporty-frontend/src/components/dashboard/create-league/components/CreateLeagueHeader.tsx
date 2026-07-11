@@ -30,7 +30,7 @@ function PreviewChip({ children }: { children: React.ReactNode }) {
       initial={prefersReducedMotion ? false : { opacity: 0, y: -4, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/8 px-3 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-accent"
+      className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/8 px-3 py-1 font-sans text-[11px] font-700 uppercase tracking-[1px] text-accent"
     >
       {children}
     </motion.span>
@@ -52,7 +52,7 @@ export function CreateLeagueHeader({
   return (
     <div>
       <p className="section-label">Create League</p>
-      <h1 className="mt-2 truncate font-bebas text-4xl tracking-[3px] text-fg-1 sm:text-5xl">
+      <h1 className="mt-2 truncate font-display text-4xl tracking-[-0.02em] text-fg-1 sm:text-5xl">
         {leagueName ? leagueName : "New League"}
       </h1>
 
@@ -88,7 +88,7 @@ export function CreateLeagueHeader({
                 <motion.span
                   animate={{ scale: isActive ? 1.12 : 1 }}
                   transition={{ type: "spring", stiffness: 420, damping: 26 }}
-                  className={`grid size-7 shrink-0 place-items-center rounded-full border font-bebas text-sm leading-none ${
+                  className={`grid size-7 shrink-0 place-items-center rounded-full border font-display text-sm leading-none ${
                     isDone
                       ? "border-accent bg-accent text-surface-0"
                       : isActive
@@ -99,7 +99,7 @@ export function CreateLeagueHeader({
                   {isDone ? <Check size={14} strokeWidth={3} /> : n}
                 </motion.span>
                 <span
-                  className={`hidden font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] sm:inline ${
+                  className={`hidden font-sans text-xs font-700 uppercase tracking-[1.5px] sm:inline ${
                     isActive
                       ? "text-accent"
                       : isDone

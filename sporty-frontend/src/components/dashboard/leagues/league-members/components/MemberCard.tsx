@@ -40,14 +40,14 @@ export function MemberCard({
         <div className="flex min-w-0 items-center gap-3">
           <PlayerAvatar name={member.name} photoUrl={member.avatarUrl} size="md" className="shrink-0" />
           <div className="min-w-0">
-            <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+            <p className="truncate font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
               {member.name}
             </p>
             <p className="mt-0.5 truncate text-xs text-fg-3">
               {member.teamName}
             </p>
             {isCommissionerMember ? (
-              <span className="mt-1.5 inline-flex items-center gap-1 rounded-[3px] bg-accent/12 px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-accent">
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-[3px] bg-accent/12 px-1.5 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] text-accent">
                 <Crown className="h-3 w-3" />
                 Commissioner
               </span>
@@ -56,7 +56,7 @@ export function MemberCard({
         </div>
 
         <span
-          className={`shrink-0 rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${
+          className={`shrink-0 rounded-[3px] px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] ${
             isLeftMember
               ? "border border-white/8 bg-surface-3 text-fg-2"
               : "border border-accent/25 bg-accent/8 text-accent-dim"
@@ -72,7 +72,7 @@ export function MemberCard({
           <button
             type="button"
             onClick={() => onKick(member)}
-            className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-transparent px-3 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.1)]"
+            className="rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-transparent px-3 py-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.1)]"
           >
             Kick
           </button>

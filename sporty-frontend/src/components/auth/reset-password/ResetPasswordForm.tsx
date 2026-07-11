@@ -50,9 +50,9 @@ export function ResetPasswordForm() {
             <span className="text-lg" aria-hidden="true">
               ⚽🏀🏏
             </span>
-            <span className="font-barlow-condensed text-base font-700">Sporty</span>
+            <span className="font-sans text-base font-700">Sporty</span>
           </div>
-          <CardTitle className="font-bebas text-5xl text-fg-1 sm:text-4xl">
+          <CardTitle className="font-display text-5xl text-fg-1 sm:text-4xl">
             Create new password
           </CardTitle>
           <p className="text-sm text-fg-1/65">

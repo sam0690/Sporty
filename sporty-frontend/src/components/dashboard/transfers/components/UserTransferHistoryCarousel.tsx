@@ -56,7 +56,7 @@ export function UserTransferHistoryCarousel({
     <section className="overflow-hidden card-surface">
       <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
         <p className="section-label">Your Transfer History</p>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+        <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
           Grouped by league
         </span>
       </div>
@@ -94,7 +94,7 @@ export function UserTransferHistoryCarousel({
                 return (
                   <span
                     key={`${group.league.id}-${sportName}`}
-                    className="rounded-[3px] px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px]"
+                    className="rounded-[3px] px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[1px]"
                     style={{ color: accent, background: `${accent}1f` }}
                   >
                     {sportIconByName[sportName] ?? "🏅"}{" "}
@@ -108,10 +108,10 @@ export function UserTransferHistoryCarousel({
               <Carousel.Slide key={group.league.id}>
                 <div className="rounded-[3px] border border-white/8 bg-surface-2 p-4 sm:p-5">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+                    <p className="font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
                       {group.league.name}
                     </p>
-                    <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+                    <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
                       {group.transfers.length} transfer
                       {group.transfers.length === 1 ? "" : "s"}
                     </span>
@@ -138,7 +138,7 @@ export function UserTransferHistoryCarousel({
 
                           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-3">
-                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger flex items-center gap-1">
+                              <p className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger flex items-center gap-1">
                                 <ChevronDown className="h-3 w-3" /> Out
                               </p>
                               <div className="mt-1.5 flex items-center gap-2">
@@ -148,7 +148,7 @@ export function UserTransferHistoryCarousel({
                                   size="sm"
                                   className="shrink-0"
                                 />
-                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                                <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                                   {resolvePlayerName(transfer.player_out)}
                                 </p>
                               </div>
@@ -168,13 +168,13 @@ export function UserTransferHistoryCarousel({
                                   </>
                                 ) : null}
                               </p>
-                              <p className="mt-1 font-bebas tracking-[1px] text-accent">
+                              <p className="mt-1 font-display tracking-[-0.02em] text-accent">
                                 ${formatMoney(transfer.player_out.cost)}
                               </p>
                             </div>
 
                             <div className="rounded-[3px] border border-success/20 bg-success/06 p-3">
-                              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success flex items-center gap-1">
+                              <p className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-success flex items-center gap-1">
                                 <ChevronUp className="h-3 w-3" /> In
                               </p>
                               <div className="mt-1.5 flex items-center gap-2">
@@ -184,7 +184,7 @@ export function UserTransferHistoryCarousel({
                                   size="sm"
                                   className="shrink-0"
                                 />
-                                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                                <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                                   {resolvePlayerName(transfer.player_in)}
                                 </p>
                               </div>
@@ -204,7 +204,7 @@ export function UserTransferHistoryCarousel({
                                   </>
                                 ) : null}
                               </p>
-                              <p className="mt-1 font-bebas tracking-[1px] text-accent">
+                              <p className="mt-1 font-display tracking-[-0.02em] text-accent">
                                 ${formatMoney(transfer.player_in.cost)}
                               </p>
                             </div>

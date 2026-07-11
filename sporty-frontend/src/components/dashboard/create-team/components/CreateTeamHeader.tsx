@@ -49,11 +49,11 @@ export function CreateTeamHeader({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="font-bebas text-4xl leading-none tracking-[2px] text-fg-1">
+            <h1 className="font-display text-4xl leading-none tracking-[-0.02em] text-fg-1">
               {leagueName}
             </h1>
             <span
-              className={`rounded-[3px] px-2.5 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+              className={`rounded-[3px] px-2.5 py-1 font-sans text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
               aria-label={sport}
             >
               {sport === "multisport" ? "Multi-Sport" : sport}
@@ -68,7 +68,7 @@ export function CreateTeamHeader({
           <div className="text-right">
             <p className="section-label">Budget ${budget.toFixed(1)}M</p>
             <p
-              className={`mt-1 font-bebas text-2xl tracking-[1px] tabular-nums ${
+              className={`mt-1 font-display text-2xl tracking-[-0.02em] tabular-nums ${
                 overBudget ? "text-danger" : "text-accent"
               }`}
             >
@@ -85,7 +85,7 @@ export function CreateTeamHeader({
             style={{ width: `${progress}%` }}
           />
         </div>
-        <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+        <p className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
           {selectedCount}/{requiredCount} players selected
         </p>
       </div>

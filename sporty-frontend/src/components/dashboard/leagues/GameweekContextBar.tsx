@@ -68,7 +68,7 @@ export function GameweekContextBar({
       <div className="flex items-stretch gap-3">
         <div className="w-1 self-stretch bg-accent" />
         <div className="py-2.5">
-          <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-accent">
+          <p className="font-sans text-sm font-700 uppercase tracking-[1.5px] text-accent">
             Setting up ▸ Gameweek {editableWindow.number}
           </p>
           {deadlineMs ? (
@@ -88,11 +88,11 @@ export function GameweekContextBar({
           href={`/leagues/${leagueId}`}
           className="group flex items-center gap-2 px-4 py-2.5 transition-colors hover:bg-surface-2"
         >
-          <span className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-danger">
+          <span className="inline-flex items-center gap-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-danger">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             GW{activeWindow!.number} is live now
           </span>
-          <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3 group-hover:text-fg-2">
+          <span className="inline-flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3 group-hover:text-fg-2">
             View live
             <ArrowRight size={12} />
           </span>

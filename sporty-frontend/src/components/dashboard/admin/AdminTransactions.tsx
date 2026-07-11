@@ -69,7 +69,7 @@ export function AdminTransactions() {
   if (leaguesError) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Transactions</h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Transactions</h1>
         <AdminErrorState message="Couldn't load leagues." onRetry={() => refetchLeagues()} />
       </div>
     );
@@ -77,7 +77,7 @@ export function AdminTransactions() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Transactions</h1>
+      <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Transactions</h1>
 
       <section className="card-surface p-5 space-y-3">
         <p className="section-label">Trades</p>

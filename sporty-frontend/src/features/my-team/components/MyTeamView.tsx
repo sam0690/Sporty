@@ -21,7 +21,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
     <section className="card-surface px-5 py-4 sm:px-6 sm:py-5">
       <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
         <div>
-          <p className="num font-bebas text-5xl leading-none tracking-[1px] text-accent sm:text-6xl">
+          <p className="num font-display text-5xl leading-none tracking-[-0.02em] text-accent sm:text-6xl">
             {Math.round(totalPoints)}
           </p>
           <p className="section-label mt-1.5">Total Points</p>
@@ -30,14 +30,14 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
         <span className="hidden h-10 w-px bg-white/8 sm:block" />
 
         <div>
-          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
+          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
             {players.length}
           </p>
           <p className="section-label mt-1.5">Players</p>
         </div>
 
         <div>
-          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
+          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
             ${squadValue.toFixed(1)}M
           </p>
           <p className="section-label mt-1.5">Squad Value</p>
@@ -45,7 +45,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
 
         {topScorer && (
           <div>
-            <p className="num font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
+            <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
               {Math.round(topScorer.gameweekPoints)}
             </p>
             <p className="section-label mt-1.5">
@@ -107,7 +107,7 @@ export function MyTeamView({
               aria-pressed={isActive}
             >
               <span
-                className={`block font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
+                className={`block font-sans text-sm font-700 uppercase tracking-[0.5px] ${
                   isActive ? "text-accent" : "text-fg-1"
                 }`}
               >
@@ -122,7 +122,7 @@ export function MyTeamView({
       </div>
     ) : (
       <label className="block max-w-xl">
-        <span className="mb-2 block font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+        <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
           Select league
         </span>
         <select
@@ -174,7 +174,7 @@ export function MyTeamView({
           <section className="overflow-hidden card-surface">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
               <span className="section-label">Squad</span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+              <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
                 {teamLeague.teamName}
               </span>
             </header>

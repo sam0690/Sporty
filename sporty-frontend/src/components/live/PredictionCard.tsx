@@ -39,7 +39,7 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
       title="Outcome Prediction"
       icon={<ChartIcon className="size-3.5" />}
       action={
-        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
+        <span className="font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
           {favourite.label} favoured
         </span>
       }
@@ -67,11 +67,11 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
                 className="size-2 rounded-full"
                 style={{ background: s.color }}
               />
-              <span className="font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-fg-2">
+              <span className="font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-2">
                 {s.label}
               </span>
             </div>
-            <p className="mt-1 font-bebas text-2xl leading-none tracking-[1px] text-fg-1">
+            <p className="mt-1 font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
               {pct(s.value)}%
             </p>
           </div>

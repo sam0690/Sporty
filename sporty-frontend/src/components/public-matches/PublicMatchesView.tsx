@@ -71,7 +71,7 @@ export function PublicMatchesView() {
 
         {!isLoading && isError && (
           <div className="mt-8 flex flex-col items-center gap-2 rounded-[3px] border border-danger/25 bg-danger/7 px-4 py-8 text-center">
-            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-danger-soft">
+            <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-danger-soft">
               Couldn&apos;t load fixtures
             </p>
             <p className="text-sm text-[#c98686]">Please try again in a moment.</p>
@@ -83,7 +83,7 @@ export function PublicMatchesView() {
             <span className="grid size-11 place-items-center rounded-[3px] border border-white/8 text-fg-3">
               <ClockIcon className="size-5" />
             </span>
-            <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-2">
+            <p className="font-sans text-base font-700 uppercase tracking-[1px] text-fg-2">
               No fixtures right now
             </p>
             <p className="mt-1 max-w-[32ch] text-sm text-fg-3">
@@ -111,7 +111,7 @@ export function PublicMatchesView() {
             </div>
 
             <div className="mt-10 flex flex-col items-center gap-3 rounded-[3px] border border-accent/22 bg-accent/4 p-8 text-center sm:p-12">
-              <p className="font-bebas text-3xl tracking-[2px] text-fg-1 sm:text-4xl">
+              <p className="font-display text-3xl tracking-[-0.02em] text-fg-1 sm:text-4xl">
                 Turn these fixtures into points
               </p>
               <p className="max-w-md text-sm text-fg-2">
@@ -120,7 +120,7 @@ export function PublicMatchesView() {
               </p>
               <Link
                 href="/register"
-                className="mt-1 inline-flex items-center gap-1.5 rounded-[3px] bg-accent px-6 py-3 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright hover:no-underline"
+                className="mt-1 inline-flex items-center gap-1.5 rounded-[3px] bg-accent px-6 py-3 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright hover:no-underline"
               >
                 Get Started Free <ArrowRight className="size-3.5" />
               </Link>

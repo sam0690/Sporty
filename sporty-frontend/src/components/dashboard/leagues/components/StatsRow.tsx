@@ -19,7 +19,7 @@ export function StatsRow({
         { label: "Total Pts", value: totalPoints },
       ].map(({ label, value }) => (
         <div key={label} className="flex-1 px-5 py-4 text-center">
-          <p className="font-bebas text-3xl tracking-[2px] text-accent">
+          <p className="font-display text-3xl tracking-[-0.02em] text-accent">
             {value}
           </p>
           <p className="section-label mt-1">{label}</p>

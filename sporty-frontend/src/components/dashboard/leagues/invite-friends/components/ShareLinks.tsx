@@ -65,7 +65,7 @@ export function ShareLinks({ shareUrl }: ShareLinksProps) {
               href={href(shareUrl)}
               target="_blank"
               rel="noreferrer"
-              className={`flex items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors ${hover}`}
+              className={`flex items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors ${hover}`}
             >
               <Icon className="h-4 w-4" aria-hidden />
               {label}

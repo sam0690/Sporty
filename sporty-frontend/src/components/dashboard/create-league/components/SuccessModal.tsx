@@ -51,7 +51,7 @@ export function SuccessModal({
           </div>
 
           <p className="section-label mt-4">League Created</p>
-          <h2 className="mt-1 font-bebas text-4xl leading-none tracking-[2px] text-fg-1">
+          <h2 className="mt-1 font-display text-4xl leading-none tracking-[-0.02em] text-fg-1">
             {leagueName}
           </h2>
 
@@ -65,7 +65,7 @@ export function SuccessModal({
             </div>
           ) : (
             <div className="mt-5 rounded-[3px] border border-white/8 bg-surface-2 px-4 py-3 text-left">
-              <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-2">
+              <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-2">
                 Public League
               </p>
               <p className="mt-1 text-xs text-fg-3">
@@ -78,7 +78,7 @@ export function SuccessModal({
             <button
               type="button"
               onClick={() => router.push(`/leagues/${leagueId}`)}
-              className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
+              className="flex w-full items-center justify-center gap-2 rounded-[3px] bg-accent px-6 py-2.5 font-sans text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
             >
               Go to League
               <ArrowRight size={16} />
@@ -86,7 +86,7 @@ export function SuccessModal({
             <button
               type="button"
               onClick={handleCopyInviteLink}
-              className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-surface-3 px-6 py-2.5 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-fg-1 transition-colors hover:border-accent/30"
+              className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-surface-3 px-6 py-2.5 font-sans text-sm font-700 uppercase tracking-[1.5px] text-fg-1 transition-colors hover:border-accent/30"
             >
               <Share2 size={15} />
               Invite Friends
@@ -94,7 +94,7 @@ export function SuccessModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex w-full items-center justify-center gap-2 rounded-[3px] px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-3 transition-colors hover:text-fg-2"
+              className="flex w-full items-center justify-center gap-2 rounded-[3px] px-6 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-3 transition-colors hover:text-fg-2"
             >
               <Plus size={14} />
               Create Another League

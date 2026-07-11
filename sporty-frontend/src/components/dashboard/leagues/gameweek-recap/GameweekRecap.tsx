@@ -47,7 +47,7 @@ const STATUS_META: Record<
 function ArmbandBadge({ letter, color }: { letter: string; color: string }) {
   return (
     <span
-      className="grid size-4 shrink-0 place-items-center rounded-full font-barlow-condensed text-[9px] font-700"
+      className="grid size-4 shrink-0 place-items-center rounded-full font-sans text-[9px] font-700"
       style={{ color, background: `${color}1f`, border: `1px solid ${color}59` }}
     >
       {letter}
@@ -88,7 +88,7 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
     <li className="flex items-center gap-3 rounded-[3px] px-2.5 py-2.5 transition-colors hover:bg-white/3">
       <PlayerAvatar name={p.player.name} photoUrl={p.player.photo_url} size="sm" className="shrink-0" />
       <span
-        className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[3px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
+        className="grid h-7 min-w-9 shrink-0 place-items-center rounded-[3px] px-1 font-sans text-[10px] font-700 uppercase tracking-[0.5px]"
         style={{ color: accent, background: `${accent}17`, border: `1px solid ${accent}33` }}
       >
         {p.player.position}
@@ -96,7 +96,7 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+          <span className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
             {p.player.name}
           </span>
           {p.is_captain && <ArmbandBadge letter="C" color="#e2c368" />}
@@ -119,13 +119,13 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
       </div>
 
       {p.captain_bonus && Number(p.captain_bonus) > 0 ? (
-        <span className="hidden shrink-0 rounded-[3px] bg-accent/12 px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-accent sm:inline">
+        <span className="hidden shrink-0 rounded-[3px] bg-accent/12 px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] text-accent sm:inline">
           +{fmt(p.captain_bonus)} bonus
         </span>
       ) : null}
 
       <span
-        className={`shrink-0 font-bebas text-xl leading-none tracking-[1px] tabular-nums ${
+        className={`shrink-0 font-display text-xl leading-none tracking-[-0.02em] tabular-nums ${
           p.counted ? "text-accent" : "text-fg-3"
         }`}
       >
@@ -150,7 +150,7 @@ function Section({
     <section className="overflow-hidden card-surface">
       <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
         <span className="section-label">{title}</span>
-        <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">
+        <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
           {count}
         </span>
       </header>
@@ -203,7 +203,7 @@ export function GameweekRecap() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
         <div>
           <p className="section-label">Gameweek Recap</p>
-          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+          <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
             {data?.team_name ?? "My Team"}
           </h1>
           <p className="mt-1 text-sm text-fg-3">
@@ -222,7 +222,7 @@ export function GameweekRecap() {
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-28 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-2 text-center font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent">
+          <span className="min-w-28 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-2 text-center font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent">
             {currentGw != null ? `Gameweek ${currentGw}` : "—"}
           </span>
           <button
@@ -257,7 +257,7 @@ export function GameweekRecap() {
             <div className="flex flex-wrap items-center justify-between gap-6">
               <div>
                 <p className="section-label">Total Points</p>
-                <p className="mt-1 font-bebas text-7xl leading-none tracking-[2px] text-accent">
+                <p className="mt-1 font-display text-7xl leading-none tracking-[-0.02em] text-accent">
                   {fmt(data.total_points)}
                 </p>
               </div>
@@ -292,7 +292,7 @@ export function GameweekRecap() {
 
           {data.players.length === 0 && (
             <div className="card-surface p-10 text-center">
-              <p className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-2">
+              <p className="font-sans text-base font-700 uppercase tracking-[1px] text-fg-2">
                 No lineup for this gameweek
               </p>
               <p className="mt-1 text-sm text-fg-3">
@@ -319,7 +319,7 @@ function Stat({
     <div className="rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-center">
       <p className="section-label">{label}</p>
       <p
-        className={`mt-1 font-bebas text-2xl leading-none tracking-[1px] tabular-nums ${
+        className={`mt-1 font-display text-2xl leading-none tracking-[-0.02em] tabular-nums ${
           accent ? "text-accent" : "text-fg-1"
         }`}
       >

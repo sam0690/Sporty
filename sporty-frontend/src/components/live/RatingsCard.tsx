@@ -36,11 +36,11 @@ function RatingRow({
       <div className="flex items-center gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+            <span className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
               {row.name ?? row.sporty_player_id ?? "Unknown"}
             </span>
             {isMotm && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded-[3px] bg-accent/16 px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-accent">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-[3px] bg-accent/16 px-1.5 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] text-accent">
                 <StarIcon className="size-2.5" />
                 MOTM
               </span>
@@ -56,7 +56,7 @@ function RatingRow({
           )}
         </div>
         <span
-          className="grid size-11 shrink-0 place-items-center rounded-[3px] font-bebas text-2xl leading-none tracking-[1px]"
+          className="grid size-11 shrink-0 place-items-center rounded-[3px] font-display text-2xl leading-none tracking-[-0.02em]"
           style={{ color, background: `${color}14`, border: `1px solid ${color}3d` }}
         >
           {row.rating.toFixed(1)}
@@ -93,7 +93,7 @@ export function RatingsCard({ ratings }: { ratings: MatchRatings | null }) {
       icon={<TrophyIcon className="size-3.5" />}
       action={
         ratings.man_of_match_name ? (
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+          <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
             MOTM{" "}
             <span className="text-accent">{ratings.man_of_match_name}</span>
           </span>

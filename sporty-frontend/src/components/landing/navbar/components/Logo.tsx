@@ -16,7 +16,7 @@ export function Logo({ onClick }: LogoProps) {
       <span className="grid size-8 place-items-center rounded-[3px] bg-accent text-surface-0">
         <BoltGlyph className="size-4" />
       </span>
-      <span className="font-bebas text-2xl leading-none tracking-[3px] text-fg-1 transition-colors group-hover:text-accent">
+      <span className="font-display text-2xl leading-none tracking-[-0.02em] text-fg-1 transition-colors group-hover:text-accent">
         SPORTY
       </span>
     </Link>

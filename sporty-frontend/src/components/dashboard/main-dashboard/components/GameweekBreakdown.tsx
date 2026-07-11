@@ -29,19 +29,19 @@ export function GameweekBreakdown({
   return (
     <section className="overflow-hidden card-surface">
       <header className="flex items-center justify-between gap-4 border-b border-white/7 px-5 py-4">
-        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
+        <h2 className="font-sans text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Gameweek Points
         </h2>
         {rows.length > 0 && (
           <div className="flex items-center gap-5">
             <div className="text-right">
-              <p className="num font-bebas text-xl leading-none tracking-[1px] text-fg-2">
+              <p className="num font-display text-xl leading-none tracking-[-0.02em] text-fg-2">
                 {Math.round(average)}
               </p>
               <p className="section-label mt-1">Avg</p>
             </div>
             <div className="text-right">
-              <p className="num font-bebas text-2xl leading-none tracking-[1px] text-accent">
+              <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-accent">
                 {Math.round(total)}
               </p>
               <p className="section-label mt-1">Total</p>
@@ -73,7 +73,7 @@ export function GameweekBreakdown({
                   key={row.transfer_window_id}
                   className="flex items-center gap-3"
                 >
-                  <span className="w-12 shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2">
+                  <span className="w-12 shrink-0 font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2">
                     GW{row.gameweek}
                   </span>
 
@@ -93,7 +93,7 @@ export function GameweekBreakdown({
                   </div>
 
                   <span
-                    className={`num w-12 shrink-0 text-right font-bebas text-xl leading-none tracking-[1px] ${
+                    className={`num w-12 shrink-0 text-right font-display text-xl leading-none tracking-[-0.02em] ${
                       isBest ? "text-accent" : "text-fg-1"
                     }`}
                   >

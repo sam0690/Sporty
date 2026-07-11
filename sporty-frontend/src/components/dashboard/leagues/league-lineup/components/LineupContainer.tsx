@@ -33,10 +33,10 @@ function SportGroup({
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
-        <h3 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-2">
+        <h3 className="font-sans text-sm font-700 uppercase tracking-[2px] text-fg-2">
           {sportDisplayName}
         </h3>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+        <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
           {players.length} players
         </span>
       </div>

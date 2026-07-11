@@ -91,10 +91,10 @@ export function TransferConfirmation({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
       <div className="w-full max-w-md overflow-hidden card-surface animate-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-white/8 px-6 py-4">
-          <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-fg-1">
+          <h3 className="font-sans text-xl font-700 uppercase tracking-[2px] text-fg-1">
             Confirm Transfers
           </h3>
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+          <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
             {stagedOutPlayers.length} out · {stagedInPlayers.length} in
           </span>
         </div>
@@ -102,7 +102,7 @@ export function TransferConfirmation({
         <div className="p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-[3px] border border-[rgba(255,59,48,0.2)] bg-[rgba(255,59,48,0.06)] p-4">
-              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger flex items-center gap-1">
+              <p className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger flex items-center gap-1">
                 <ChevronDown className="h-3 w-3" /> Out
               </p>
               <div className="mt-2 space-y-1">
@@ -112,7 +112,7 @@ export function TransferConfirmation({
                   stagedOutPlayers.map((player) => (
                     <p
                       key={player.id}
-                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1"
+                      className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1"
                     >
                       {player.name}
                     </p>
@@ -122,7 +122,7 @@ export function TransferConfirmation({
             </div>
 
             <div className="rounded-[3px] border border-success/20 bg-success/06 p-4">
-              <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success flex items-center gap-1">
+              <p className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-success flex items-center gap-1">
                 <ChevronUp className="h-3 w-3" /> In
               </p>
               <div className="mt-2 space-y-1">
@@ -132,7 +132,7 @@ export function TransferConfirmation({
                   stagedInPlayers.map((player) => (
                     <p
                       key={player.id}
-                      className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1"
+                      className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1"
                     >
                       {player.name}
                     </p>
@@ -145,7 +145,7 @@ export function TransferConfirmation({
           {transfersOpen && formattedCountdown ? (
             <p className="mt-5 text-center text-xs text-fg-3">
               Window closes in{" "}
-              <span className="font-bebas text-base tracking-[1px] text-accent">
+              <span className="font-display text-base tracking-[-0.02em] text-accent">
                 {formattedCountdown}
               </span>
             </p>
@@ -159,7 +159,7 @@ export function TransferConfirmation({
             <div className="mt-5 rounded-[3px] border border-warning/25 bg-warning/8 px-3 py-2.5 text-sm text-warning">
               Transfers are closed for this window.
               {formattedCountdown ? (
-                <span className="ml-2 font-bebas tracking-[1px]">
+                <span className="ml-2 font-display tracking-[-0.02em]">
                   {formattedCountdown}
                 </span>
               ) : null}
@@ -171,7 +171,7 @@ export function TransferConfirmation({
               type="button"
               onClick={onConfirm}
               disabled={confirmDisabled}
-              className="w-full rounded-[3px] bg-accent py-3 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-[3px] bg-accent py-3 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? "Processing…" : "Confirm Transfers"}
             </button>
@@ -179,7 +179,7 @@ export function TransferConfirmation({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="w-full rounded-[3px] border border-white/8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-[3px] border border-white/8 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>

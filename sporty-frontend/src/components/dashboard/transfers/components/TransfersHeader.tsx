@@ -27,7 +27,7 @@ export function TransfersHeader({
       </div>
       <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-bebas text-5xl tracking-[3px] text-fg-1">
+          <h1 className="font-display text-5xl tracking-[-0.02em] text-fg-1">
             Transfers
           </h1>
           <p className="mt-1 text-sm text-fg-3">
@@ -38,7 +38,7 @@ export function TransfersHeader({
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent">
+        <div className="inline-flex items-center gap-2 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-accent">
           <Wallet className="h-4 w-4" aria-hidden="true" />
           <span>${budget.toFixed(1)}M remaining</span>
         </div>

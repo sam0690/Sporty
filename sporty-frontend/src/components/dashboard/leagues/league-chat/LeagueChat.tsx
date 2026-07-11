@@ -124,7 +124,7 @@ export function LeagueChat() {
 
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Chat
         </h1>
       </header>
@@ -148,7 +148,7 @@ export function LeagueChat() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+                    <span className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
                       {message.user.username}
                     </span>
                     <span className="text-xs text-fg-3">
@@ -201,7 +201,7 @@ export function LeagueChat() {
             type="button"
             onClick={handleSend}
             disabled={!draft.trim() || postMessage.isPending}
-            className="min-h-[44px] rounded-[3px] bg-accent px-5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"
+            className="min-h-[44px] rounded-[3px] bg-accent px-5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"
           >
             Send
           </button>

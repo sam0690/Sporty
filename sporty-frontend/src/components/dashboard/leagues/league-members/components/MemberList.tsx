@@ -25,7 +25,7 @@ export function MemberList({
     return (
       <div className="card-surface p-8 text-center">
         <Users className="mx-auto h-6 w-6 text-fg-3" aria-hidden />
-        <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+        <p className="mt-2 font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
           No members found
         </p>
         <p className="mt-1 text-sm text-fg-3">

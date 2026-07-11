@@ -19,7 +19,7 @@ type LeagueSettingsProps = {
 const teamSizes = [4, 6, 8, 10, 12, 14, 16];
 
 const fieldLabel =
-  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
+  "mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
 
 function RadioCard({
   selected,
@@ -61,7 +61,7 @@ function RadioCard({
       )}
       <span>
         <p
-          className={`font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
+          className={`font-sans text-sm font-700 uppercase tracking-[0.5px] ${
             selected ? "text-accent" : "text-fg-1"
           }`}
         >
@@ -90,7 +90,7 @@ function TeamSizeChip({
       whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
       animate={{ scale: selected ? 1.05 : 1 }}
       transition={{ type: "spring", stiffness: 420, damping: 24 }}
-      className={`rounded-full border px-4 py-2 font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] transition-colors ${
+      className={`rounded-full border px-4 py-2 font-sans text-sm font-700 uppercase tracking-[0.5px] transition-colors ${
         selected
           ? "border-accent bg-accent text-surface-0"
           : "border-white/12 bg-surface-2 text-fg-2 hover:border-white/25 hover:text-fg-1"

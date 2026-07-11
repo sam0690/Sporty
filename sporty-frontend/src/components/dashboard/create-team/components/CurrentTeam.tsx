@@ -29,7 +29,7 @@ export function CurrentTeam({
     <aside className="sticky top-4 card-surface p-4">
       <div className="flex items-baseline justify-between">
         <p className="section-label">Your Team</p>
-        <p className="font-bebas text-xl leading-none tracking-[1px] text-fg-1 tabular-nums">
+        <p className="font-display text-xl leading-none tracking-[-0.02em] text-fg-1 tabular-nums">
           {players.length}
           <span className="text-fg-3">/{requiredPlayers}</span>
         </p>
@@ -54,7 +54,7 @@ export function CurrentTeam({
               className="flex items-center justify-between gap-2 rounded-[3px] border border-white/8 bg-surface-3 p-2.5"
             >
               <div className="min-w-0">
-                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                   {player.name}
                 </p>
                 <p className="mt-0.5 text-xs text-fg-3">
@@ -78,14 +78,14 @@ export function CurrentTeam({
       <div className="mt-4 space-y-1.5 border-t border-white/8 pt-3">
         <div className="flex items-center justify-between text-sm">
           <span className="section-label">Total</span>
-          <span className="font-bebas text-lg leading-none tracking-[1px] text-fg-1 tabular-nums">
+          <span className="font-display text-lg leading-none tracking-[-0.02em] text-fg-1 tabular-nums">
             ${totalCost.toFixed(1)}M
           </span>
         </div>
         <div className="flex items-center justify-between text-sm">
           <span className="section-label">Remaining</span>
           <span
-            className={`font-bebas text-lg leading-none tracking-[1px] tabular-nums ${
+            className={`font-display text-lg leading-none tracking-[-0.02em] tabular-nums ${
               overBudget ? "text-danger" : "text-accent"
             }`}
           >

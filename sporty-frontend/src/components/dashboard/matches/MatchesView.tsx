@@ -54,8 +54,8 @@ function Chip({
       onClick={onClick}
       className={
         active
-          ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0"
-          : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/12 px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:border-white/28 hover:text-fg-1"
+          ? "inline-flex min-h-11 items-center gap-1.5 rounded-full bg-accent px-3.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-surface-0"
+          : "inline-flex min-h-11 items-center gap-1.5 rounded-full border border-white/12 px-3.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:border-white/28 hover:text-fg-1"
       }
     >
       {children}
@@ -130,7 +130,7 @@ export function MatchesView() {
     <main className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <header className="border-b border-white/8 pb-6">
         <p className="section-label">Matchday Centre</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Matches
         </h1>
         <p className="mt-1 text-sm text-fg-3">
@@ -176,7 +176,7 @@ export function MatchesView() {
                 }`}
               >
                 <span
-                  className={`block font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${
+                  className={`block font-sans text-xs font-700 uppercase tracking-[1px] ${
                     active ? "text-accent" : "text-fg-1"
                   }`}
                 >
@@ -214,7 +214,7 @@ export function MatchesView() {
             type="button"
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="inline-flex min-h-9 shrink-0 items-center rounded-[3px] border border-[rgba(255,138,138,0.35)] px-3.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-danger-soft transition-colors hover:border-[rgba(255,138,138,0.6)] disabled:opacity-50"
+            className="inline-flex min-h-9 shrink-0 items-center rounded-[3px] border border-[rgba(255,138,138,0.35)] px-3.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-danger-soft transition-colors hover:border-[rgba(255,138,138,0.6)] disabled:opacity-50"
           >
             {isRefetching ? "Retrying…" : "Try again"}
           </button>
@@ -229,7 +229,7 @@ export function MatchesView() {
           >
             <CalendarIcon className="size-5" />
           </span>
-          <p className="mt-3 font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+          <p className="mt-3 font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
             No fixtures
           </p>
           <p className="mt-1 text-sm text-fg-3">
@@ -242,7 +242,7 @@ export function MatchesView() {
 
       {activeDay && (
         <section className="space-y-3">
-          <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-2">
+          <h2 className="font-sans text-sm font-700 uppercase tracking-[2px] text-fg-2">
             {fullDayLabel(activeDay.date)}
           </h2>
           <div className="space-y-2">

@@ -28,14 +28,14 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
       />
 
       <div className="relative flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3 sm:px-8">
-        <span className="inline-flex items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2">
+        <span className="inline-flex items-center gap-2 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2">
           <span style={{ color: glyph.color }}>
             <glyph.Icon className="size-3.5" />
           </span>
           {match.competition}
         </span>
         {isLive ? (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/32 bg-danger/10 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-danger">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/32 bg-danger/10 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[2px] text-danger">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             Live
           </span>
@@ -52,7 +52,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
 
       <div className="relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7 sm:gap-8 sm:px-10 sm:py-10">
         <div className="flex min-w-0 items-center justify-end gap-3 sm:gap-4">
-          <p className="truncate text-right font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-2xl">
+          <p className="truncate text-right font-sans text-lg font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-2xl">
             {match.home_team}
           </p>
           <TeamBadge name={match.home_team} logoUrl={match.home_team_logo_url} size="lg" />
@@ -60,7 +60,7 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
 
         <div className="shrink-0 text-center">
           {hasScore ? (
-            <div className="flex items-center justify-center font-bebas text-4xl leading-none tracking-[2px] sm:text-6xl">
+            <div className="flex items-center justify-center font-display text-4xl leading-none tracking-[-0.02em] sm:text-6xl">
               <span style={{ color: home.color }} className="min-w-[1.1ch] text-right tabular-nums">
                 {match.home_score}
               </span>
@@ -70,19 +70,19 @@ export function FeaturedMatch({ match }: { match: TMatch }) {
               </span>
             </div>
           ) : (
-            <p className="font-bebas text-2xl tracking-[1px] text-fg-3 sm:text-3xl">VS</p>
+            <p className="font-display text-2xl tracking-[-0.02em] text-fg-3 sm:text-3xl">VS</p>
           )}
         </div>
 
         <div className="flex min-w-0 items-center justify-start gap-3 sm:gap-4">
           <TeamBadge name={match.away_team} logoUrl={match.away_team_logo_url} size="lg" />
-          <p className="truncate font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-2xl">
+          <p className="truncate font-sans text-lg font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-2xl">
             {match.away_team}
           </p>
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center gap-1.5 border-t border-white/8 px-5 py-3 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors group-hover:text-accent">
+      <div className="relative flex items-center justify-center gap-1.5 border-t border-white/8 px-5 py-3 font-sans text-[11px] font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors group-hover:text-accent">
         View live coverage
         <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
       </div>

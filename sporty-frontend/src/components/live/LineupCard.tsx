@@ -29,11 +29,11 @@ export function LineupCard() {
               style={{ animationDelay: `${idx * 50}ms` }}
             >
               <div className="flex items-center justify-between">
-                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2">
+                <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2">
                   {nameFor(change.team_id ?? teamId)}
                 </span>
                 {change.minute != null && (
-                  <span className="font-bebas text-sm leading-none tracking-[1px] text-accent">
+                  <span className="font-display text-sm leading-none tracking-[-0.02em] text-accent">
                     {change.minute}&apos;
                   </span>
                 )}

@@ -96,7 +96,7 @@ export function AdminPlayers() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Players</h1>
+      <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Players</h1>
 
       <section className="card-surface p-5 space-y-3">
         <p className="section-label">Repricing</p>

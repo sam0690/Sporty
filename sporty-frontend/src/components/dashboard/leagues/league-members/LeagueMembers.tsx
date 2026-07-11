@@ -93,7 +93,7 @@ export function LeagueMembers() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/8 pb-6">
         <div>
           <p className="section-label">{league?.name || "League"}</p>
-          <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+          <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
             Members
           </h1>
           <p className="mt-1 text-sm text-fg-3">
@@ -102,13 +102,13 @@ export function LeagueMembers() {
         </div>
         <div className="flex items-center gap-5">
           <div className="text-right">
-            <p className="font-bebas text-4xl leading-none tracking-[2px] text-accent">
+            <p className="font-display text-4xl leading-none tracking-[-0.02em] text-accent">
               {members.length}
             </p>
             <p className="section-label mt-1">Total</p>
           </div>
           <div className="text-right">
-            <p className="font-bebas text-4xl leading-none tracking-[2px] text-fg-1">
+            <p className="font-display text-4xl leading-none tracking-[-0.02em] text-fg-1">
               {activeCount}
             </p>
             <p className="section-label mt-1">Active</p>

@@ -27,7 +27,7 @@ export function AdminJobs() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Jobs</h1>
+      <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Jobs</h1>
       <p className="text-xs text-fg-3">Refreshes automatically every 10 seconds.</p>
 
       <section className="card-surface p-5 space-y-3">

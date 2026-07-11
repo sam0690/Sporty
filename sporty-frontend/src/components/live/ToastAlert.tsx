@@ -34,7 +34,7 @@ export function ToastAlert() {
     <div
       role="status"
       aria-live="polite"
-      className="animate-fade-in-scale fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 rounded-[3px] border border-accent/32 bg-surface-1 px-3.5 py-2 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-accent shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
+      className="animate-fade-in-scale fixed bottom-4 right-4 z-50 inline-flex items-center gap-2 rounded-[3px] border border-accent/32 bg-surface-1 px-3.5 py-2 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-accent shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
     >
       <span aria-hidden className="size-1.5 rounded-full bg-accent animate-live-pulse" />
       Live update

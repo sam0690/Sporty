@@ -28,7 +28,7 @@ export function AdminConfig() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Config</h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Config</h1>
         <AdminDetailSkeleton />
       </div>
     );
@@ -37,7 +37,7 @@ export function AdminConfig() {
   if (isError) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Config</h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Config</h1>
         <AdminErrorState onRetry={() => refetch()} />
       </div>
     );
@@ -45,7 +45,7 @@ export function AdminConfig() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Config</h1>
+      <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Config</h1>
 
       <section className="card-surface p-5 space-y-3">
         <p className="section-label">Live external-API polling (football / NBA)</p>

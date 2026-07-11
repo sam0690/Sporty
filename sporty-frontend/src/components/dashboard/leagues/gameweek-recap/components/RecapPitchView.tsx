@@ -106,7 +106,7 @@ function RecapMarker({ p }: { p: RecapPitchPlayer }) {
           {p.name}
         </p>
         <p
-          className={`mt-0.5 rounded-sm bg-black/60 px-1.5 font-bebas text-sm leading-tight tracking-[1px] tabular-nums sm:text-base ${
+          className={`mt-0.5 rounded-sm bg-black/60 px-1.5 font-display text-sm leading-tight tracking-[-0.02em] tabular-nums sm:text-base ${
             p.counted ? "text-accent" : "text-[#7a7a85]"
           }`}
         >
@@ -146,7 +146,7 @@ export function RecapPitchView({
         <section className="overflow-hidden card-surface">
           <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
             <span className="section-label">Bench</span>
-            <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">
+            <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
               {bench.length}
             </span>
           </header>

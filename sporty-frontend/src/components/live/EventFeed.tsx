@@ -37,7 +37,7 @@ function EventRow({
         />
       )}
 
-      <span className="w-8 shrink-0 pt-1.5 text-right font-bebas text-lg leading-none tracking-[1px] tabular-nums text-fg-2">
+      <span className="w-8 shrink-0 pt-1.5 text-right font-display text-lg leading-none tracking-[-0.02em] tabular-nums text-fg-2">
         {event.minute != null ? `${event.minute}'` : "—"}
       </span>
 
@@ -53,7 +53,7 @@ function EventRow({
       </span>
 
       <div className="min-w-0 flex-1 pt-0.5">
-        <div className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+        <div className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
           {label}
         </div>
         <div className="mt-0.5 truncate text-xs text-fg-3">
@@ -95,7 +95,7 @@ export function EventFeed() {
       icon={<ListIcon className="size-3.5" />}
       action={
         ordered.length > 0 ? (
-          <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-barlow-condensed text-[11px] font-700 tabular-nums text-fg-2">
+          <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
             {ordered.length}
           </span>
         ) : null

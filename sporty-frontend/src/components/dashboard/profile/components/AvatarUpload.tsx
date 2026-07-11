@@ -79,7 +79,7 @@ export function AvatarUpload({
               className="h-full w-full object-cover"
             />
           ) : (
-            <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px]">
+            <span className="font-sans text-[10px] font-700 uppercase tracking-[1px]">
               No Image
             </span>
           )}
@@ -96,7 +96,7 @@ export function AvatarUpload({
           <button
             type="button"
             onClick={() => document.getElementById("avatar-upload")?.click()}
-            className="rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
+            className="rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
           >
             Upload New
           </button>
@@ -106,7 +106,7 @@ export function AvatarUpload({
               type="button"
               onClick={saveAvatar}
               disabled={isUploading}
-              className="rounded-[3px] bg-accent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-[3px] bg-accent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isUploading ? "Saving…" : "Save"}
             </button>

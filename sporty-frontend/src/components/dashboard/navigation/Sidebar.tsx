@@ -48,10 +48,10 @@ export function Sidebar({ items }: SidebarProps) {
           href="/dashboard"
           className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-2 lg:w-auto lg:justify-start"
         >
-          <span className="font-bebas text-2xl tracking-[3px] text-accent lg:hidden">
+          <span className="font-display text-2xl tracking-[-0.02em] text-accent lg:hidden">
             S
           </span>
-          <span className="hidden font-bebas text-2xl tracking-[3px] text-accent lg:inline">
+          <span className="hidden font-display text-2xl tracking-[-0.02em] text-accent lg:inline">
             SPORTY
           </span>
         </Link>
@@ -86,7 +86,7 @@ export function Sidebar({ items }: SidebarProps) {
                   active ? "text-accent" : "text-fg-3 group-hover:text-fg-1",
                 )}
               />
-              <span className="hidden font-barlow-condensed text-xs font-700 uppercase tracking-[2px] lg:inline">
+              <span className="hidden font-sans text-xs font-700 uppercase tracking-[2px] lg:inline">
                 {item.label}
               </span>
             </Link>
@@ -100,7 +100,7 @@ export function Sidebar({ items }: SidebarProps) {
           type="button"
           onClick={handleOpenSettings}
           title="Settings"
-          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 lg:justify-start"
+          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-sans font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 lg:justify-start"
         >
           <Settings className="h-4 w-4 shrink-0" />
           <span className="hidden lg:inline">Settings</span>
@@ -110,7 +110,7 @@ export function Sidebar({ items }: SidebarProps) {
           onClick={() => setShowLogoutModal(true)}
           disabled={actionLoading.logout}
           title="Log out"
-          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-barlow-condensed font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-danger/40 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 disabled:opacity-50 lg:justify-start"
+          className="flex w-full items-center justify-center gap-2 rounded-[3px] border border-white/8 bg-transparent px-3 py-3 text-xs font-sans font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-danger/40 hover:text-danger focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/50 disabled:opacity-50 lg:justify-start"
           aria-label="Log out"
         >
           <LogOut className="h-4 w-4 shrink-0" />

@@ -52,7 +52,7 @@ export function LeagueHistory({ leagues }: LeagueHistoryProps) {
                   <div className="flex min-w-0 items-center gap-3" style={{ color: meta.color }}>
                     <Icon className="size-4 shrink-0" />
                     <div className="min-w-0">
-                      <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                      <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                         {league.name}
                       </p>
                       <p className="mt-0.5 text-xs">{meta.label}</p>
@@ -60,13 +60,13 @@ export function LeagueHistory({ leagues }: LeagueHistoryProps) {
                   </div>
                   <div className="flex shrink-0 items-center gap-4 text-right">
                     <div>
-                      <p className="num font-bebas text-lg leading-none tracking-[1px] text-fg-1">
+                      <p className="num font-display text-lg leading-none tracking-[-0.02em] text-fg-1">
                         {league.rank > 0 ? `#${league.rank}` : "—"}
                       </p>
                       <p className="section-label mt-1">Rank</p>
                     </div>
                     <div>
-                      <p className="num font-bebas text-lg leading-none tracking-[1px] text-accent">
+                      <p className="num font-display text-lg leading-none tracking-[-0.02em] text-accent">
                         {Math.round(league.points)}
                       </p>
                       <p className="section-label mt-1">Pts</p>

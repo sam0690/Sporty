@@ -26,7 +26,7 @@ export function Sidebar({
           S
         </span>
         <div>
-          <p className="font-barlow-condensed text-base font-700 text-fg-1">
+          <p className="font-sans text-base font-700 text-fg-1">
             Sporty
           </p>
           <p className="text-xs text-fg-3">Fantasy Dashboard</p>

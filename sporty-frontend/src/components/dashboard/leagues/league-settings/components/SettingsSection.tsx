@@ -33,7 +33,7 @@ export function SettingsSection({
       >
         <div>
           <p
-            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.2em]"
+            className="font-sans text-[10px] font-700 uppercase tracking-[0.2em]"
             style={{ color: tone === "danger" ? "#ff3b5c" : "rgba(255,255,255,0.5)" }}
           >
             {title}
@@ -51,7 +51,7 @@ export function SettingsSection({
 
 // Shared control class strings so toggles/inputs look identical everywhere.
 export const segmentBase =
-  "rounded-[3px] border px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] transition-colors";
+  "rounded-[3px] border px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] transition-colors";
 export const segmentActive =
   "border-accent/40 bg-accent/10 text-accent";
 export const segmentIdle =

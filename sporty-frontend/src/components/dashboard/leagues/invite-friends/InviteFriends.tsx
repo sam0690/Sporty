@@ -42,7 +42,7 @@ export function InviteFriends() {
 
       <header className="border-b border-white/8 pb-6">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Invite Friends
         </h1>
         <p className="mt-1 text-sm text-fg-3">

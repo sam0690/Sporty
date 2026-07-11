@@ -28,7 +28,7 @@ export function GameweekEntryNotice({
 
   return (
     <div className="rounded-[3px] border border-accent/30 bg-accent/8 px-4 py-3 text-sm text-fg-1">
-      <span className="font-barlow-condensed font-700 uppercase tracking-[1px] text-accent">
+      <span className="font-sans font-700 uppercase tracking-[1px] text-accent">
         Gameweek {activeWindow.number} is already locked and in progress.
       </span>{" "}
       Your team&apos;s scoring starts from Gameweek {editableWindow.number}{" "}

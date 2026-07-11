@@ -49,7 +49,7 @@ export function LineupHeader({
     <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/8 pb-5">
       <div className="flex items-center gap-3">
         <div>
-          <h1 className="font-bebas text-5xl tracking-[3px] text-fg-1">
+          <h1 className="font-display text-5xl tracking-[-0.02em] text-fg-1">
             {leagueName}
           </h1>
           {teamName ? (
@@ -57,7 +57,7 @@ export function LineupHeader({
           ) : null}
         </div>
         <span
-          className={`rounded-[3px] px-2 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+          className={`rounded-[3px] px-2 py-1 font-sans text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
           aria-label={sport}
         >
           {sport}
@@ -67,11 +67,11 @@ export function LineupHeader({
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-1.5 card-surface px-3 py-1.5">
           <span className="section-label !text-accent">Editing ▸</span>
-          <span className="font-bebas text-xl tracking-[2px] text-accent">{currentWeek}</span>
+          <span className="font-display text-xl tracking-[-0.02em] text-accent">{currentWeek}</span>
           <span className="section-label">/ {totalWeeks}</span>
         </div>
         <span
-          className={`rounded-[3px] border px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] ${
+          className={`rounded-[3px] border px-4 py-1.5 font-sans text-xs font-700 uppercase tracking-[2px] ${
             countdown.locked
               ? "border-[rgba(255,59,48,0.3)] bg-[#2a1010] text-danger"
               : "alert-deadline"

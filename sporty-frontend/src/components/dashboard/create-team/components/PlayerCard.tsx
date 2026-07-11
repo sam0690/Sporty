@@ -65,7 +65,7 @@ export function PlayerCard({
         <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+            <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
               {player.name}
             </p>
             {showSportIcon ? (
@@ -74,7 +74,7 @@ export function PlayerCard({
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <span
-              className={`rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
+              className={`rounded-[3px] px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
             >
               {player.position}
             </span>
@@ -84,7 +84,7 @@ export function PlayerCard({
                 {player.realTeam}
               </span>
             ) : null}
-            <span className="font-bebas text-base leading-none tracking-[1px] text-accent">
+            <span className="font-display text-base leading-none tracking-[-0.02em] text-accent">
               ${player.price.toFixed(1)}M
             </span>
           </div>
@@ -98,7 +98,7 @@ export function PlayerCard({
         <button
           type="button"
           onClick={() => onRemove(player.id)}
-          className="inline-flex items-center gap-1 rounded-[3px] border border-accent/30 px-2.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-accent transition-colors hover:bg-accent/10"
+          className="inline-flex items-center gap-1 rounded-[3px] border border-accent/30 px-2.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] text-accent transition-colors hover:bg-accent/10"
         >
           <Check size={13} />
           Added
@@ -109,7 +109,7 @@ export function PlayerCard({
           disabled={addDisabled}
           title={addButtonTitle}
           onClick={() => onAdd(player)}
-          className="inline-flex items-center gap-1 rounded-[3px] bg-accent px-2.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
+          className="inline-flex items-center gap-1 rounded-[3px] bg-accent px-2.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
         >
           <Plus size={13} />
           Add

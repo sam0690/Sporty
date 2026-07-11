@@ -41,14 +41,14 @@ export function ProfileHeader({
             className="h-16 w-16 shrink-0 rounded-full object-cover"
           />
         ) : (
-          <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent/10 font-bebas text-3xl tracking-[2px] text-accent">
+          <span className="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-accent/10 font-display text-3xl tracking-[-0.02em] text-accent">
             {initial}
           </span>
         )}
 
         <div className="min-w-0">
           <p className="section-label">Public Profile</p>
-          <h2 className="mt-1 truncate font-bebas text-3xl tracking-[2px] text-fg-1">
+          <h2 className="mt-1 truncate font-display text-3xl tracking-[-0.02em] text-fg-1">
             {name}
           </h2>
           <p className="text-xs text-fg-3">Joined {formatDate(joinDate)}</p>

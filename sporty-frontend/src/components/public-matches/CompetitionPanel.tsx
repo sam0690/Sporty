@@ -19,11 +19,11 @@ function TeamRow({
   return (
     <div className="flex items-center gap-2.5">
       <TeamBadge name={name} logoUrl={logoUrl} size="sm" />
-      <span className="min-w-0 flex-1 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+      <span className="min-w-0 flex-1 truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
         {name}
       </span>
       {score != null && (
-        <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] tabular-nums text-fg-1">
+        <span className="shrink-0 font-display text-lg leading-none tracking-[-0.02em] tabular-nums text-fg-1">
           {score}
         </span>
       )}
@@ -43,17 +43,17 @@ function MatchRow({ match }: { match: TMatch }) {
     >
       <div className="w-14 shrink-0 text-center">
         {isLive ? (
-          <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-danger">
+          <span className="inline-flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1px] text-danger">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             Live
           </span>
         ) : isFinished ? (
-          <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+          <span className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
             FT
           </span>
         ) : (
           <div className="leading-tight">
-            <span className="block font-bebas text-base leading-none tracking-[1px] text-fg-2">
+            <span className="block font-display text-base leading-none tracking-[-0.02em] text-fg-2">
               {kickoffTime(match.match_date)}
             </span>
             {!isToday(match.match_date) && (
@@ -106,17 +106,17 @@ export function CompetitionPanel({
           >
             <Glyph className="size-3.5" />
           </span>
-          <span className="truncate font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-1">
+          <span className="truncate font-sans text-xs font-700 uppercase tracking-[2px] text-fg-1">
             {group.competition}
           </span>
         </div>
         {group.live > 0 ? (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             {group.live} Live
           </span>
         ) : (
-          <span className="shrink-0 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
+          <span className="shrink-0 font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
             {group.matches.length} {group.matches.length === 1 ? "match" : "matches"}
           </span>
         )}

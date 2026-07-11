@@ -13,16 +13,16 @@ function TickerItem({ match }: { match: TMatch }) {
     >
       <span className="size-1.5 shrink-0 rounded-full bg-danger animate-live-pulse" />
       <span
-        className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
+        className="font-sans text-xs font-700 uppercase tracking-[0.5px]"
         style={{ color: home.color }}
       >
         {home.initials}
       </span>
-      <span className="font-bebas text-sm tabular-nums tracking-[1px] text-fg-1">
+      <span className="font-display text-sm tabular-nums tracking-[-0.02em] text-fg-1">
         {match.home_score ?? 0}&ndash;{match.away_score ?? 0}
       </span>
       <span
-        className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
+        className="font-sans text-xs font-700 uppercase tracking-[0.5px]"
         style={{ color: away.color }}
       >
         {away.initials}

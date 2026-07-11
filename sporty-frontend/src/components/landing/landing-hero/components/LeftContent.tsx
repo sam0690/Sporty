@@ -13,14 +13,14 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center gap-2 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[2px] text-accent">
+      <span className="inline-flex items-center gap-2 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-1.5 font-sans text-[11px] font-700 uppercase tracking-[2px] text-accent">
         <span className="size-1.5 rounded-full bg-accent animate-live-pulse" />
         {content.badge}
       </span>
 
       <h1
         id="landing-hero-title"
-        className="mt-6 font-bebas text-6xl leading-[0.92] tracking-[3px] text-fg-1 md:text-8xl"
+        className="mt-6 font-display text-6xl leading-[0.92] tracking-[-0.02em] text-fg-1 md:text-8xl"
       >
         {titleLines.map((line, idx) => (
           <span
@@ -86,7 +86,7 @@ export function LeftContent({ content }: LeftContentProps) {
             <span style={{ color }}>
               <Icon className="size-4" />
             </span>
-            <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-1">
+            <span className="font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-1">
               {label}
             </span>
           </span>
@@ -98,7 +98,7 @@ export function LeftContent({ content }: LeftContentProps) {
           {content.stat.avatars.map((avatar) => (
             <span
               key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-surface-0 bg-accent/16 font-barlow-condensed text-[10px] font-700 text-accent"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-surface-0 bg-accent/16 font-sans text-[10px] font-700 text-accent"
             >
               {avatar}
             </span>

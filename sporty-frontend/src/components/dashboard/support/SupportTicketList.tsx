@@ -38,7 +38,7 @@ export function SupportTicketList() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Support</h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Support</h1>
         <Button variant="primary" size="sm" onClick={() => setShowForm((v) => !v)}>
           {showForm ? "Cancel" : "New Ticket"}
         </Button>

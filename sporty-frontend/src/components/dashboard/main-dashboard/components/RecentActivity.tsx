@@ -40,7 +40,7 @@ export function RecentActivity({
   return (
     <section className="flex h-full flex-col overflow-hidden card-surface">
       <header className="border-b border-white/7 px-5 py-4">
-        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
+        <h2 className="font-sans text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Recent Activity
         </h2>
       </header>
@@ -74,7 +74,7 @@ export function RecentActivity({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+                      <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
                         {item.title}
                       </p>
                       <span className="shrink-0 section-label whitespace-nowrap text-fg-3 transition-colors group-hover:text-fg-2">

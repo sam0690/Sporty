@@ -99,7 +99,7 @@ export function JoinLeagueView() {
     <section className="mx-auto max-w-4xl space-y-8 px-4 py-10 text-fg-1 sm:px-6 sm:py-12">
       <header className="text-center">
         <span className="section-label">Leagues</span>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Join a League
         </h1>
         <p className="mt-2 text-sm text-fg-2">
@@ -127,7 +127,7 @@ export function JoinLeagueView() {
 
       <div className="mx-auto flex max-w-2xl items-center gap-4">
         <div className="h-px flex-1 bg-white/10" />
-        <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-fg-3">
+        <span className="font-sans text-[10px] font-700 uppercase tracking-[2px] text-fg-3">
           or browse public leagues
         </span>
         <div className="h-px flex-1 bg-white/10" />
@@ -141,7 +141,7 @@ export function JoinLeagueView() {
       <div className="text-center">
         <Link
           href="/create-league"
-          className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-accent hover:no-underline"
+          className="font-sans text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-accent hover:no-underline"
         >
           Don&apos;t have a league? Create one →
         </Link>

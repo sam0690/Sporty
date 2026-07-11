@@ -47,14 +47,14 @@ export function AuthHeroImage({
           >
             <BoltGlyph className="size-5" />
           </span>
-          <span className="font-bebas text-2xl leading-none tracking-[3px] text-fg-1">
+          <span className="font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
             SPORTY
           </span>
         </div>
 
         {/* headline */}
         <div className="max-w-sm">
-          <h3 className="font-bebas text-5xl leading-[0.95] tracking-[2px] text-fg-1">
+          <h3 className="font-display text-5xl leading-[0.95] tracking-[-0.02em] text-fg-1">
             {title}
           </h3>
           {subtitle && (
@@ -79,7 +79,7 @@ export function AuthHeroImage({
                       <path d="M20 6L9 17l-5-5" />
                     </svg>
                   </span>
-                  <span className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                  <span className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {item}
                   </span>
                 </li>
@@ -98,7 +98,7 @@ export function AuthHeroImage({
               <span style={{ color }}>
                 <Icon className="size-4" />
               </span>
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-1">
+              <span className="font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-1">
                 {label}
               </span>
             </span>

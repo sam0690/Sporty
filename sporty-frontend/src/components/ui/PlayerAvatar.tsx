@@ -42,7 +42,7 @@ export function PlayerAvatar({
     <div
       className={cn(
         box,
-        "shrink-0 overflow-hidden rounded-[3px] border border-accent/20 bg-accent/8 flex items-center justify-center font-barlow-condensed font-700 tracking-[1px] text-accent",
+        "shrink-0 overflow-hidden rounded-[3px] border border-accent/20 bg-accent/8 flex items-center justify-center font-sans font-700 tracking-[1px] text-accent",
         text,
         className,
       )}

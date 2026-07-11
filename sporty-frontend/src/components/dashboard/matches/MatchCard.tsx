@@ -76,17 +76,17 @@ export function MatchCard({
       <div className="w-16 shrink-0 text-center">
         {isLive ? (
           <span className="inline-flex flex-col items-center gap-0.5">
-            <span className="inline-flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-danger">
+            <span className="inline-flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1px] text-danger">
               <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
               Live
             </span>
           </span>
         ) : isFinished ? (
-          <span className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+          <span className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
             FT
           </span>
         ) : (
-          <span className="font-bebas text-lg leading-none tracking-[1px] text-fg-2">
+          <span className="font-display text-lg leading-none tracking-[-0.02em] text-fg-2">
             {kickoffTime(match.match_date)}
           </span>
         )}
@@ -97,12 +97,12 @@ export function MatchCard({
         <div className="flex items-center justify-between gap-3">
           <span className="flex min-w-0 items-center gap-2">
             <TeamLogo teamName={match.home_team} logoUrl={match.home_team_logo_url} size="sm" />
-            <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+            <span className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
               {match.home_team}
             </span>
           </span>
           {hasScore && (
-            <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-accent">
+            <span className="shrink-0 font-display text-lg leading-none tracking-[-0.02em] text-accent">
               {match.home_score}
             </span>
           )}
@@ -110,12 +110,12 @@ export function MatchCard({
         <div className="mt-1.5 flex items-center justify-between gap-3">
           <span className="flex min-w-0 items-center gap-2">
             <TeamLogo teamName={match.away_team} logoUrl={match.away_team_logo_url} size="sm" />
-            <span className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+            <span className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
               {match.away_team}
             </span>
           </span>
           {hasScore && (
-            <span className="shrink-0 font-bebas text-lg leading-none tracking-[1px] text-accent">
+            <span className="shrink-0 font-display text-lg leading-none tracking-[-0.02em] text-accent">
               {match.away_score}
             </span>
           )}

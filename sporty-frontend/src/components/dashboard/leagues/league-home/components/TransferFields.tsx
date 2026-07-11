@@ -74,23 +74,23 @@ export function TransferFields({
           <div className="flex items-center gap-2">
             <span className="section-label">Transfer Window</span>
             {isOpen ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/12 px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-accent">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/12 px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-accent">
                 <span className="size-1.5 rounded-full bg-accent animate-live-pulse" />
                 Open
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3">
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/5 px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3">
                 <Lock size={9} /> Locked
               </span>
             )}
           </div>
 
           {isOpen && editableWindow ? (
-            <p className="mt-2 font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-fg-1">
+            <p className="mt-2 font-sans text-lg font-700 uppercase tracking-[0.5px] text-fg-1">
               Gameweek {editableWindow.number} is open to edit
             </p>
           ) : (
-            <p className="mt-2 font-barlow-condensed text-lg font-700 uppercase tracking-[0.5px] text-fg-2">
+            <p className="mt-2 font-sans text-lg font-700 uppercase tracking-[0.5px] text-fg-2">
               {editableWindow
                 ? `Gameweek ${editableWindow.number} transfers have locked`
                 : "No upcoming gameweek to edit"}
@@ -115,14 +115,14 @@ export function TransferFields({
         {isOpen ? (
           <Link
             href={`/transfers?leagueId=${leagueId}`}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[3px] bg-accent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-[3px] bg-accent px-5 py-2.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
           >
             <Repeat size={14} />
             Make Transfers
             <ArrowRight size={14} />
           </Link>
         ) : (
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-[3px] border border-white/8 bg-surface-2 px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-3">
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-[3px] border border-white/8 bg-surface-2 px-5 py-2.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-3">
             <Lock size={13} />
             Closed
           </span>

@@ -83,7 +83,7 @@ function ActivityCard({ activity }: { activity: TUserActivityItem }) {
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
-            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+            <p className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
               {activity.title}
             </p>
             <span className="shrink-0 section-label whitespace-nowrap">
@@ -154,7 +154,7 @@ export function RecentActivity({
               key={filter.value}
               type="button"
               onClick={() => setActiveFilter(filter.value)}
-              className={`rounded-[3px] border px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] transition-colors ${
+              className={`rounded-[3px] border px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[1px] transition-colors ${
                 activeFilter === filter.value
                   ? "border-accent/35 bg-accent/8 text-accent"
                   : "border-white/8 bg-transparent text-fg-2 hover:border-white/16 hover:text-fg-1"

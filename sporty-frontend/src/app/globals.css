@@ -114,9 +114,6 @@
   /* §3 Typography — Inter = display, DM Sans = body (loaded in layout.tsx) */
   --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
-  /* Legacy font shims → display family until components are rewritten */
-  --font-bebas: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-barlow-condensed: var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif;
 
   /* §4 Radius scale — sharp (rounded-sm … rounded-2xl) */
   --radius-sm: 2px; /* name plates, chips */

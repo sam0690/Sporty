@@ -15,7 +15,7 @@ export function Pagination({ page, pageSize, total, hasNext, onPageChange }: Pag
 
   return (
     <div className="flex items-center justify-between border-t border-white/8 px-5 py-3">
-      <span className="font-barlow-condensed text-xs uppercase tracking-[2px] text-fg-3">
+      <span className="font-sans text-xs uppercase tracking-[2px] text-fg-3">
         Page {page} of {totalPages} &middot; {total} total
       </span>
       <div className="flex gap-2">

@@ -28,7 +28,7 @@ export function StandingsTable({
   return (
     <section className="overflow-hidden card-surface animate-fade-soft">
       <div className="border-b border-white/8 px-5 py-3">
-        <h2 className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-[#666]">
+        <h2 className="font-sans text-xs font-700 uppercase tracking-[3px] text-[#666]">
           Standings
         </h2>
       </div>
@@ -62,7 +62,7 @@ export function StandingsTable({
                 }`}
               >
                 <span
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border font-bebas text-lg tracking-[1px] ${
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[3px] border font-display text-lg tracking-[-0.02em] ${
                     medalClass ?? "border-white/8 bg-surface-3 text-fg-2"
                   }`}
                 >
@@ -70,7 +70,7 @@ export function StandingsTable({
                 </span>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                  <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {team.team_name}
                     {isUser && (
                       <span className="ml-2 section-label text-accent-dim">You</span>
@@ -81,7 +81,7 @@ export function StandingsTable({
                   </p>
                 </div>
 
-                <span className="num shrink-0 font-bebas text-2xl tracking-[1px] text-accent">
+                <span className="num shrink-0 font-display text-2xl tracking-[-0.02em] text-accent">
                   {Math.round(Number(team.points))}
                 </span>
               </div>

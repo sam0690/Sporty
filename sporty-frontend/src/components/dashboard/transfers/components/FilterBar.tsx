@@ -69,7 +69,7 @@ export function FilterBar({
     selectedSport === "All" ? dynamicAllPositions : dynamicSportPositions;
 
   const chip = (active: boolean) =>
-    `whitespace-nowrap rounded-[3px] border px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] transition-colors ${
+    `whitespace-nowrap rounded-[3px] border px-3.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] transition-colors ${
       active
         ? "border-accent/40 bg-accent/10 text-accent"
         : "border-white/8 bg-surface-3 text-fg-2 hover:text-fg-1"
@@ -112,7 +112,7 @@ export function FilterBar({
       ) : null}
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <label className="space-y-1.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+        <label className="space-y-1.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
           <span>Min cost</span>
           <input
             type="number"
@@ -125,7 +125,7 @@ export function FilterBar({
           />
         </label>
 
-        <label className="space-y-1.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+        <label className="space-y-1.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
           <span>Max cost</span>
           <input
             type="number"

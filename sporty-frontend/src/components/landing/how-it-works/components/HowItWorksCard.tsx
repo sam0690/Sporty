@@ -27,7 +27,7 @@ export function HowItWorksCard({ step, index }: HowItWorksCardProps) {
       {/* watermark step number */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -right-2 -top-4 font-bebas text-8xl leading-none tracking-[2px] text-white/4"
+        className="pointer-events-none absolute -right-2 -top-4 font-display text-8xl leading-none tracking-[-0.02em] text-white/4"
       >
         {String(index + 1).padStart(2, "0")}
       </span>
@@ -36,12 +36,12 @@ export function HowItWorksCard({ step, index }: HowItWorksCardProps) {
         <span className="grid size-11 place-items-center rounded-[3px] border border-accent/25 bg-accent/10 text-accent">
           <StepIcon icon={step.icon} />
         </span>
-        <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3">
+        <span className="font-sans text-xs font-700 uppercase tracking-[2px] text-fg-3">
           Step {index + 1}
         </span>
       </div>
 
-      <h3 className="relative mt-5 font-bebas text-3xl tracking-[1.5px] text-fg-1">
+      <h3 className="relative mt-5 font-display text-3xl tracking-[-0.02em] text-fg-1">
         {step.title}
       </h3>
       <p className="relative mt-2.5 text-sm leading-6 text-fg-2">

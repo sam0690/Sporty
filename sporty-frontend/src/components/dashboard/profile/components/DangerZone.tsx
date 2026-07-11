@@ -36,7 +36,7 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
   return (
     <section className="card-fade-in overflow-hidden rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-surface-1">
       <header className="border-b border-[rgba(255,59,48,0.25)] px-5 py-3">
-        <p className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.2em] text-danger">
+        <p className="font-sans text-[10px] font-700 uppercase tracking-[0.2em] text-danger">
           Danger Zone
         </p>
       </header>
@@ -48,14 +48,14 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="shrink-0 rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-5 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.1)]"
+          className="shrink-0 rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-5 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.1)]"
         >
           Delete Account
         </button>
       </div>
 
       <Modal isOpen={open} onClose={closeModal} closeDisabled={isDeleting}>
-        <h3 className="font-barlow-condensed text-xl font-700 uppercase tracking-[2px] text-danger">
+        <h3 className="font-sans text-xl font-700 uppercase tracking-[2px] text-danger">
           Delete Account?
         </h3>
         <p className="mt-2 text-sm text-fg-2">
@@ -74,7 +74,7 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
           <button
             type="button"
             onClick={closeModal}
-            className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1"
+            className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1"
           >
             Cancel
           </button>
@@ -82,7 +82,7 @@ export function DangerZone({ onDeleteAccount }: DangerZoneProps) {
             type="button"
             onClick={handleDelete}
             disabled={!canDelete || isDeleting}
-            className="flex-1 rounded-[3px] bg-danger px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-[3px] bg-danger px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isDeleting ? "Deleting…" : "Delete Account"}
           </button>

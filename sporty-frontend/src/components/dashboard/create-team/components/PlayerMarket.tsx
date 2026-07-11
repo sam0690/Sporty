@@ -146,7 +146,7 @@ export function PlayerMarket({
                 key={sportOption}
                 type="button"
                 onClick={() => onSportChange(sportOption)}
-                className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] capitalize transition-colors ${
+                className={`rounded-[3px] border px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] capitalize transition-colors ${
                   active
                     ? "border-accent/30 bg-accent/10 text-accent"
                     : "border-white/8 bg-surface-3 text-fg-2 hover:text-fg-1"
@@ -160,7 +160,7 @@ export function PlayerMarket({
       ) : null}
 
       <div className="flex flex-col gap-3 rounded-[3px] border border-white/8 bg-surface-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+        <div className="flex flex-wrap items-center gap-2 font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
           <span className="text-fg-1">Page {currentPage}</span>
           <span>/ {Math.max(totalPages, 1)}</span>
           <span className="hidden sm:inline">·</span>
@@ -178,7 +178,7 @@ export function PlayerMarket({
             type="button"
             onClick={onPreviousPage}
             disabled={currentPage <= 1 || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft className="h-4 w-4" />
             Prev
@@ -187,7 +187,7 @@ export function PlayerMarket({
             type="button"
             onClick={onNextPage}
             disabled={!hasNext || isLoadingPage}
-            className="inline-flex items-center gap-1 rounded-[3px] bg-accent px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
+            className="inline-flex items-center gap-1 rounded-[3px] bg-accent px-3.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
           >
             Next
             <ChevronRight className="h-4 w-4" />

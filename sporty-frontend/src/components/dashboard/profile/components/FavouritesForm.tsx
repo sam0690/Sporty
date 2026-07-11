@@ -18,7 +18,7 @@ type FavouritesFormProps = {
 };
 
 const fieldLabel =
-  "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
+  "mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
 
 const SPORTS: Array<{ sport: SportName; Icon: typeof FootballGlyph; color: string; label: string }> = [
   { sport: "football", Icon: FootballGlyph, color: "#00ff88", label: "Football" },
@@ -52,7 +52,7 @@ export function FavouritesForm({
             <div key={sport} className="space-y-4 border-t border-white/6 pt-5 first:border-t-0 first:pt-0">
               <div className="flex items-center gap-2" style={{ color }}>
                 <Icon className="size-4 shrink-0" />
-                <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px]">
+                <p className="font-sans text-xs font-700 uppercase tracking-[1.5px]">
                   {label}
                 </p>
               </div>

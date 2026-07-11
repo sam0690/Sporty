@@ -35,7 +35,7 @@ export function AdminTicketDetail({ ticketId }: { ticketId: string }) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">{ticket.subject}</h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">{ticket.subject}</h1>
         <p className="text-xs text-fg-3 mt-1">
           Reported by {ticket.reporter_username} · {ticket.category.replaceAll("_", " ")}
         </p>

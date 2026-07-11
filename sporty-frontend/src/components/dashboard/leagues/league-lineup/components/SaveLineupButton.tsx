@@ -25,7 +25,7 @@ export function SaveLineupButton({
           type="button"
           onClick={onSave}
           disabled={isDisabled}
-          className={`rounded-[3px] px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
+          className={`rounded-[3px] px-8 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] transition-colors ${
             isDisabled
               ? "cursor-not-allowed bg-surface-3 text-fg-3"
               : "bg-accent text-surface-0 hover:bg-accent-bright"

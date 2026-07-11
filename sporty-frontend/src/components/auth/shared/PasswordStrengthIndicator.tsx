@@ -34,7 +34,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
           style={{ width, background: color }}
         />
       </div>
-      <p className="font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
+      <p className="font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
         Password strength:{" "}
         <span style={{ color }}>{label}</span>
       </p>

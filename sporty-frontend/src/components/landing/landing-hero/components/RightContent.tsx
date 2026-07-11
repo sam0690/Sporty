@@ -31,7 +31,7 @@ export function RightContent({ visual }: RightContentProps) {
 
         {/* status row */}
         <div className="flex items-center justify-between border-b border-white/6 px-5 py-3">
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-danger">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[2px] text-danger">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             Live
           </span>
@@ -42,7 +42,7 @@ export function RightContent({ visual }: RightContentProps) {
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7">
           <div className="flex items-center justify-end gap-3 text-right">
             <div className="min-w-0">
-              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+              <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                 {HOME.name}
               </p>
               <p className="section-label mt-1">Home</p>
@@ -51,7 +51,7 @@ export function RightContent({ visual }: RightContentProps) {
           </div>
 
           <div className="text-center">
-            <div className="flex items-center justify-center font-bebas text-5xl leading-none tracking-[2px]">
+            <div className="flex items-center justify-center font-display text-5xl leading-none tracking-[-0.02em]">
               <span style={{ color: HOME.color }} className="tabular-nums">
                 {HOME.score}
               </span>
@@ -60,7 +60,7 @@ export function RightContent({ visual }: RightContentProps) {
                 {AWAY.score}
               </span>
             </div>
-            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-2.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
+            <p className="mt-2.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-2.5 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
               67:14
             </p>
           </div>
@@ -68,7 +68,7 @@ export function RightContent({ visual }: RightContentProps) {
           <div className="flex items-center justify-start gap-3">
             <Crest team={AWAY} />
             <div className="min-w-0">
-              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+              <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                 {AWAY.name}
               </p>
               <p className="section-label mt-1">Away</p>
@@ -82,7 +82,7 @@ export function RightContent({ visual }: RightContentProps) {
           <ul className="mt-3 space-y-2.5">
             {TIMELINE.map((e) => (
               <li key={e.minute} className="flex items-center gap-3">
-                <span className="w-8 text-right font-bebas text-base leading-none tabular-nums text-fg-2">
+                <span className="w-8 text-right font-display text-base leading-none tabular-nums text-fg-2">
                   {e.minute}
                 </span>
                 <span
@@ -95,7 +95,7 @@ export function RightContent({ visual }: RightContentProps) {
                 >
                   <FootballGlyph className="size-3.5" />
                 </span>
-                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+                <span className="font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
                   {e.label}
                 </span>
                 <span className="text-xs text-fg-3">· {e.who}</span>
@@ -107,11 +107,11 @@ export function RightContent({ visual }: RightContentProps) {
         {/* next matchday progress */}
         <div className="border-t border-white/6 px-5 py-4">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2">
+            <span className="inline-flex items-center gap-2 font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2">
               <CricketGlyph className="size-4 text-info" />
               {visual.nextMatchLabel}
             </span>
-            <span className="font-bebas text-sm tracking-[1px] text-accent">
+            <span className="font-display text-sm tracking-[-0.02em] text-accent">
               {visual.progressPercent}%
             </span>
           </div>
@@ -141,7 +141,7 @@ function Crest({
 }) {
   return (
     <span
-      className="grid size-12 shrink-0 place-items-center rounded-[3px] font-bebas text-lg leading-none tracking-[1px]"
+      className="grid size-12 shrink-0 place-items-center rounded-[3px] font-display text-lg leading-none tracking-[-0.02em]"
       style={{
         color: team.color,
         background: `${team.color}14`,

@@ -67,14 +67,14 @@ export function LeagueCard({
         />
         <div className="absolute inset-0 bg-black/40" />
         <span
-          className={`absolute right-3 top-3 rounded-[3px] px-2 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
+          className={`absolute right-3 top-3 rounded-[3px] px-2 py-1 font-sans text-xs font-700 uppercase tracking-[1px] ${sportBadgeClass[sport]}`}
         >
           {sport}
         </span>
       </div>
 
       <div className="space-y-3 p-4">
-        <h3 className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+        <h3 className="truncate font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
           {name}
         </h3>
 
@@ -86,13 +86,13 @@ export function LeagueCard({
         <div className="flex items-center justify-between border-t border-white/8 pt-3">
           <div className="flex items-baseline gap-4">
             <span className="flex items-baseline gap-1.5">
-              <span className="font-bebas text-2xl text-accent">
+              <span className="font-display text-2xl text-accent">
                 {yourRank > 0 ? `#${yourRank}` : "—"}
               </span>
               <span className="section-label">Rank</span>
             </span>
             <span className="flex items-baseline gap-1.5">
-              <span className="font-bebas text-2xl text-fg-1">
+              <span className="font-display text-2xl text-fg-1">
                 {points}
               </span>
               <span className="section-label">Pts</span>

@@ -72,7 +72,7 @@ export function TeamPreview({
         >
           <Glyph className="size-3.5" />
         </span>
-        <h2 className="font-barlow-condensed text-sm font-700 uppercase tracking-[2px] text-fg-1">
+        <h2 className="font-sans text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Team Preview
         </h2>
       </header>
@@ -97,11 +97,11 @@ export function TeamPreview({
             className="group w-full rounded-[3px] border border-white/8 p-3 text-left transition-colors hover:border-accent/30"
           >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+              <p className="truncate font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
                 {activeSlide.leagueName}
               </p>
               <div className="flex shrink-0 items-center gap-2">
-                <span className="rounded-[3px] border border-accent/25 bg-accent/8 px-2.5 py-0.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-accent-dim">
+                <span className="rounded-[3px] border border-accent/25 bg-accent/8 px-2.5 py-0.5 font-sans text-xs font-700 uppercase tracking-[1px] text-accent-dim">
                   {activeSlide.gameweek ? `GW ${activeSlide.gameweek}` : "Current GW"}
                 </span>
                 <ChevronRight className="size-4 text-fg-3 transition-colors group-hover:text-accent" />

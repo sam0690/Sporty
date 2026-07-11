@@ -37,7 +37,7 @@ export function ConfirmDialog({
         } bg-surface-1`}
       >
         <h3
-          className={`font-barlow-condensed text-xl font-700 uppercase tracking-[2px] ${
+          className={`font-sans text-xl font-700 uppercase tracking-[2px] ${
             isDanger ? "text-danger" : "text-accent"
           }`}
         >
@@ -50,7 +50,7 @@ export function ConfirmDialog({
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex-1 rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {cancelLabel}
           </button>
@@ -58,7 +58,7 @@ export function ConfirmDialog({
             type="button"
             disabled={isPending}
             onClick={onConfirm}
-            className={`flex-1 rounded-[3px] px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+            className={`flex-1 rounded-[3px] px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
               isDanger
                 ? "bg-danger text-white hover:bg-danger/85"
                 : "bg-accent text-surface-0 hover:bg-accent-bright"

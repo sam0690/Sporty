@@ -46,10 +46,10 @@ export function SquadValidationChecklist({
               key={warning.club}
               className="flex items-center justify-between gap-3 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-2.5 py-1.5"
             >
-              <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-danger">
+              <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-danger">
                 {warning.club} at club limit
               </span>
-              <span className="font-bebas text-sm tracking-[1px] tabular-nums text-danger">
+              <span className="font-display text-sm tracking-[-0.02em] tabular-nums text-danger">
                 {warning.count}/{warning.max}
               </span>
             </li>
@@ -71,7 +71,7 @@ export function SquadValidationChecklist({
                 {rule.satisfied ? <Check className="h-2.5 w-2.5" strokeWidth={3} /> : null}
               </span>
               <span
-                className={`font-barlow-condensed text-xs font-700 uppercase tracking-[1px] ${
+                className={`font-sans text-xs font-700 uppercase tracking-[1px] ${
                   rule.satisfied ? "text-fg-1" : "text-fg-2"
                 }`}
               >
@@ -79,7 +79,7 @@ export function SquadValidationChecklist({
               </span>
             </span>
             <span
-              className={`font-bebas text-sm tracking-[1px] tabular-nums ${
+              className={`font-display text-sm tracking-[-0.02em] tabular-nums ${
                 rule.satisfied ? "text-accent" : "text-fg-2"
               }`}
             >

@@ -105,13 +105,13 @@ export function LiveLeaderboard() {
                 }}
               >
                 <span
-                  className="w-5 shrink-0 text-center font-bebas text-lg leading-none tabular-nums"
+                  className="w-5 shrink-0 text-center font-display text-lg leading-none tabular-nums"
                   style={{ color: medal ?? "#71717d" }}
                 >
                   {idx + 1}
                 </span>
                 <span
-                  className="grid size-8 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-[11px] font-700 tracking-[0.5px]"
+                  className="grid size-8 shrink-0 place-items-center rounded-[3px] font-sans text-[11px] font-700 tracking-[0.5px]"
                   style={{
                     color: medal ?? "#a0a0aa",
                     background: medal ? `${medal}1f` : "rgba(255,255,255,0.05)",
@@ -121,7 +121,7 @@ export function LiveLeaderboard() {
                   {initialsOf(row.name)}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                  <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {row.name}
                   </p>
                   {(row.goals > 0 || row.assists > 0) && (
@@ -135,7 +135,7 @@ export function LiveLeaderboard() {
                     </p>
                   )}
                 </div>
-                <span className="shrink-0 font-bebas text-xl leading-none tracking-[1px] tabular-nums text-accent">
+                <span className="shrink-0 font-display text-xl leading-none tracking-[-0.02em] tabular-nums text-accent">
                   {row.points.toFixed(1)}
                 </span>
               </li>

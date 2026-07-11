@@ -36,7 +36,7 @@ function Crest({
 
   return (
     <span
-      className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[3px] font-bebas text-xl leading-none tracking-[1px] sm:size-[4.5rem] sm:text-3xl"
+      className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[3px] font-display text-xl leading-none tracking-[-0.02em] sm:size-[4.5rem] sm:text-3xl"
       style={{
         color,
         background: `${color}14`,
@@ -127,7 +127,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
       <div className="relative">
         <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3 sm:px-6">
           {phase === "live" ? (
-            <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[2px] text-danger">
+            <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-danger/30 bg-danger/10 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[2px] text-danger">
               <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
               Live
             </span>
@@ -166,7 +166,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
             }`}
           >
             <div className="min-w-0 text-right">
-              <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
+              <p className="truncate font-sans text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {homeTeam ?? "Home"}
               </p>
               <p className="section-label mt-1.5">
@@ -183,7 +183,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
 
           {/* Score */}
           <div className="shrink-0 text-center">
-            <div className="flex items-center justify-center font-bebas text-[3.25rem] leading-none tracking-[2px] sm:text-8xl">
+            <div className="flex items-center justify-center font-display text-[3.25rem] leading-none tracking-[-0.02em] sm:text-8xl">
               <span
                 style={{ color: home.color }}
                 className="min-w-[1.1ch] text-right tabular-nums"
@@ -199,7 +199,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               </span>
             </div>
             {phase === "live" && matchClock ? (
-              <p className="mt-3.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
+              <p className="mt-3.5 inline-flex items-center gap-1.5 rounded-[3px] border border-danger/28 bg-danger/12 px-3 py-1 font-sans text-xs font-700 uppercase tracking-[1.5px] tabular-nums text-danger">
                 <span className="size-1 rounded-full bg-danger animate-live-pulse" />
                 {matchClock}
               </p>
@@ -221,7 +221,7 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               logoUrl={awayTeamLogoUrl}
             />
             <div className="min-w-0 text-left">
-              <p className="truncate font-barlow-condensed text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
+              <p className="truncate font-sans text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {awayTeam ?? "Away"}
               </p>
               <p className="section-label mt-1.5">

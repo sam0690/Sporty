@@ -153,7 +153,7 @@ function StatChip({
   const colors = CHIP_TONES[tone];
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-[3px] border bg-surface-2 px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+      className="inline-flex items-center gap-1.5 rounded-[3px] border bg-surface-2 px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px]"
       style={{ borderColor: colors.border }}
     >
       <span className="text-fg-3">{label}</span>
@@ -936,7 +936,7 @@ export function LeagueLineup() {
             type="button"
             onClick={handleOptimizeLineup}
             disabled={isOptimizing || updateLineup.isPending}
-            className="rounded-[3px] border border-accent/35 bg-accent/10 px-4 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:bg-accent/18 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-[3px] border border-accent/35 bg-accent/10 px-4 py-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:bg-accent/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isOptimizing ? "Optimizing…" : "Auto-Optimize Lineup"}
           </button>

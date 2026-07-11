@@ -45,7 +45,7 @@ export function LandingFooterContainer() {
               </span>
               <span
                 id="landing-footer-title"
-                className="font-bebas text-2xl leading-none tracking-[3px] text-fg-1"
+                className="font-display text-2xl leading-none tracking-[-0.02em] text-fg-1"
               >
                 SPORTY
               </span>
@@ -77,7 +77,7 @@ export function LandingFooterContainer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/6 pt-6 text-sm text-fg-3 sm:flex-row">
           <p>© 2026 Sporty. All rights reserved.</p>
-          <p className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px]">
+          <p className="font-sans text-xs font-700 uppercase tracking-[2px]">
             Football · Basketball · Cricket
           </p>
         </div>

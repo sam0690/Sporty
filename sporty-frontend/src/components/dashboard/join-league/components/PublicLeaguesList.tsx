@@ -83,7 +83,7 @@ function LeagueCard({
           <Glyph className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[0.5px] text-fg-1">
+          <h3 className="truncate font-sans text-base font-700 uppercase tracking-[0.5px] text-fg-1">
             {league.name}
           </h3>
           <p className="mt-1 flex items-center gap-1.5 text-xs text-fg-2">
@@ -97,16 +97,16 @@ function LeagueCard({
       {/* status pill */}
       <div className="mt-4">
         {league.requiresInviteCode ? (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-white/12 bg-white/4 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-white/12 bg-white/4 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
             <LockIcon className="size-3" />
             Invite only
           </span>
         ) : league.joinableNow === false ? (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-warning/25 bg-warning/8 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-warning">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-warning/25 bg-warning/8 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-warning">
             Closed
           </span>
         ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-success/28 bg-success/8 px-2.5 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success">
+          <span className="inline-flex items-center gap-1.5 rounded-[3px] border border-success/28 bg-success/8 px-2.5 py-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-success">
             <span className="size-1.5 rounded-full bg-success" />
             Open to join
           </span>
@@ -129,7 +129,7 @@ function LeagueCard({
         type="button"
         disabled={disabled}
         onClick={() => onJoin(league)}
-        className="mt-4 inline-flex w-full items-center justify-center rounded-[3px] bg-accent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-white/6 disabled:text-fg-3"
+        className="mt-4 inline-flex w-full items-center justify-center rounded-[3px] bg-accent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-white/6 disabled:text-fg-3"
       >
         {disabled ? "Unavailable" : "Join League"}
       </button>
@@ -143,7 +143,7 @@ function EmptyState() {
       <span className="mx-auto grid size-11 place-items-center rounded-full border border-white/8 bg-white/2 text-fg-3">
         <UsersIcon className="size-5" />
       </span>
-      <p className="mt-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-2">
+      <p className="mt-3 font-sans text-sm font-700 uppercase tracking-[1px] text-fg-2">
         No public leagues
       </p>
       <p className="mt-1 text-xs text-fg-3">

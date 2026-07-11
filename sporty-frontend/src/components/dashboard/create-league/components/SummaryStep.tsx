@@ -51,7 +51,7 @@ export function SummaryStep({
           <button
             type="button"
             onClick={onBack}
-            className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:text-accent-bright"
+            className="font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-accent transition-colors hover:text-accent-bright"
           >
             Edit
           </button>
@@ -111,7 +111,7 @@ export function SummaryStep({
                 className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-2"
               >
                 <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
-                  <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                  <p className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {sportLabels[sport]}
                   </p>
                   <p className="text-xs text-fg-3">Default scoring</p>
@@ -139,7 +139,7 @@ export function SummaryStep({
         <button
           type="button"
           onClick={onBack}
-          className="w-full rounded-[3px] border border-white/8 bg-surface-3 px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 sm:w-auto"
+          className="w-full rounded-[3px] border border-white/8 bg-surface-3 px-8 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 sm:w-auto"
         >
           Back
         </button>
@@ -147,7 +147,7 @@ export function SummaryStep({
           type="button"
           onClick={onCreate}
           disabled={isLoading}
-          className="w-full rounded-[3px] bg-accent px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+          className="w-full rounded-[3px] bg-accent px-8 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isLoading ? "Creating…" : "Create League"}
         </button>

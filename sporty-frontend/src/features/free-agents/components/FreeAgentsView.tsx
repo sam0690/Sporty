@@ -94,7 +94,7 @@ export function FreeAgentsView() {
 
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Free Agents
         </h1>
         <p className="mt-1 text-sm text-fg-3">
@@ -150,7 +150,7 @@ export function FreeAgentsView() {
                   <div className="flex min-w-0 items-center gap-3">
                     <PlayerAvatar name={p.name} photoUrl={p.photo_url} size="sm" className="shrink-0" />
                     <div className="min-w-0">
-                      <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                      <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                         {p.name}
                       </p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-3">
@@ -170,7 +170,7 @@ export function FreeAgentsView() {
                   <button
                     type="button"
                     onClick={() => setAddTarget(p)}
-                    className="shrink-0 rounded-[3px] bg-accent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
+                    className="shrink-0 rounded-[3px] bg-accent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright"
                   >
                     Add
                   </button>
@@ -187,7 +187,7 @@ export function FreeAgentsView() {
         closeDisabled={claim.isPending}
       >
         <p className="section-label">Add {addTarget?.name}</p>
-        <h3 className="mt-1 font-barlow-condensed text-lg font-700 uppercase tracking-[1px] text-fg-1">
+        <h3 className="mt-1 font-sans text-lg font-700 uppercase tracking-[1px] text-fg-1">
           Drop a player to make room
         </h3>
         <div className="mt-4 max-h-72 space-y-2 overflow-y-auto">
@@ -226,7 +226,7 @@ export function FreeAgentsView() {
           type="button"
           onClick={() => setAddTarget(null)}
           disabled={claim.isPending}
-          className="mt-4 w-full rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 disabled:opacity-50"
+          className="mt-4 w-full rounded-[3px] border border-white/8 bg-transparent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 disabled:opacity-50"
         >
           Cancel
         </button>

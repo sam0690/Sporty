@@ -12,7 +12,7 @@ import { SocialLogin } from "./components/SocialLogin";
 const FIELD_CLASS =
   "h-11 w-full rounded-[3px] border border-white/12 bg-surface-2 px-4 text-sm text-fg-1 placeholder:text-fg-3 transition-colors focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/15";
 const LABEL_CLASS =
-  "mb-1.5 block font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2";
+  "mb-1.5 block font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2";
 
 export function LoginForm() {
   const {
@@ -41,7 +41,7 @@ export function LoginForm() {
       <div className="mx-auto w-full max-w-md">
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 hover:no-underline"
+          className="inline-flex items-center gap-1.5 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:text-fg-1 hover:no-underline"
         >
           ← Back to Home
         </Link>
@@ -49,7 +49,7 @@ export function LoginForm() {
         <div className="animate-fade-in mt-5 overflow-hidden card-surface">
           <div className="space-y-2.5 p-8 pb-4">
             <span className="section-label">Sign In</span>
-            <h1 className="font-bebas text-5xl leading-none tracking-[3px] text-fg-1">
+            <h1 className="font-display text-5xl leading-none tracking-[-0.02em] text-fg-1">
               Sign In
             </h1>
             <p className="text-sm text-fg-2">
@@ -114,7 +114,7 @@ export function LoginForm() {
               <div className="flex justify-end">
                 <Link
                   href="/forgot-password"
-                  className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent transition-colors hover:text-accent-bright hover:no-underline"
+                  className="font-sans text-xs font-700 uppercase tracking-[2px] text-accent transition-colors hover:text-accent-bright hover:no-underline"
                 >
                   Forgot password?
                 </Link>
@@ -143,7 +143,7 @@ export function LoginForm() {
               Don&apos;t have an account?{" "}
               <Link
                 href="/register"
-                className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent hover:text-accent-bright hover:no-underline"
+                className="font-sans text-xs font-700 uppercase tracking-[2px] text-accent hover:text-accent-bright hover:no-underline"
               >
                 Create account
               </Link>

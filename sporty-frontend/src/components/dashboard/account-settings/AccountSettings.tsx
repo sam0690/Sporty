@@ -51,7 +51,7 @@ export function AccountSettings() {
     <section className="mx-auto max-w-3xl px-6 py-8 text-fg-1">
       <header className="border-b border-white/8 pb-6">
         <p className="section-label">Account</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Settings
         </h1>
         <p className="mt-1 text-sm text-fg-3">
@@ -73,14 +73,14 @@ export function AccountSettings() {
           className="flex items-center justify-between gap-4 card-surface px-5 py-4 transition-colors hover:border-accent/20 hover:no-underline"
         >
           <div>
-            <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+            <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
               Profile &amp; Account
             </p>
             <p className="mt-0.5 text-sm text-fg-3">
               Edit your avatar, display name and bio, or delete your account
             </p>
           </div>
-          <span className="flex shrink-0 items-center gap-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent">
+          <span className="flex shrink-0 items-center gap-1 font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent">
             Open <ArrowRight className="h-3.5 w-3.5" />
           </span>
         </Link>

@@ -10,7 +10,7 @@ export function EmptyState({ message }: EmptyStateProps) {
       <div className="mx-auto mb-3 text-4xl" aria-hidden="true">
         🛡️
       </div>
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-3">
+      <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-3">
         {message}
       </p>
     </section>

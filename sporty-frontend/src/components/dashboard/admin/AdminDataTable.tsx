@@ -31,7 +31,7 @@ export function AdminDataTable<T>({
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-5 py-3 font-barlow-condensed text-[10px] font-700 uppercase tracking-[3px] text-[#666] ${
+                  className={`px-5 py-3 font-sans text-[10px] font-700 uppercase tracking-[3px] text-[#666] ${
                     col.align === "right" ? "text-right" : "text-left"
                   }`}
                 >

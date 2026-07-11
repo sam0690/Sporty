@@ -7,7 +7,7 @@ type FixturesHeroProps = {
 function Stat({ value, label }: { value: number; label: string }) {
   return (
     <div className="text-left">
-      <p className="num font-bebas text-3xl leading-none tracking-[1px] text-fg-1 sm:text-4xl">
+      <p className="num font-display text-3xl leading-none tracking-[-0.02em] text-fg-1 sm:text-4xl">
         {value}
       </p>
       <p className="section-label mt-1.5">{label}</p>
@@ -25,7 +25,7 @@ export function FixturesHero({
       <div className="relative flex flex-wrap items-start justify-between gap-6">
         <div className="max-w-xl">
           <p className="section-label">Matchday</p>
-          <h1 className="mt-3 font-bebas text-5xl leading-[0.95] tracking-[2px] text-fg-1 sm:text-7xl">
+          <h1 className="mt-3 font-display text-5xl leading-[0.95] tracking-[-0.02em] text-fg-1 sm:text-7xl">
             Fixtures &amp; Results
           </h1>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-fg-2">
@@ -35,7 +35,7 @@ export function FixturesHero({
         </div>
 
         {totalLive > 0 && (
-          <span className="inline-flex shrink-0 items-center gap-2 rounded-[3px] border border-danger/32 bg-danger/10 px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-danger">
+          <span className="inline-flex shrink-0 items-center gap-2 rounded-[3px] border border-danger/32 bg-danger/10 px-3.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-danger">
             <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
             {totalLive} playing now
           </span>

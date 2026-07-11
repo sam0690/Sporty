@@ -29,7 +29,7 @@ function FairnessBadge({ fairness }: { fairness: TTradeFairness | undefined }) {
           : "border-success/35 bg-success/08 text-success"
       }`}
     >
-      <span className="font-barlow-condensed font-700 uppercase tracking-[1px]">
+      <span className="font-sans font-700 uppercase tracking-[1px]">
         {isLopsided ? "Lopsided trade" : "Balanced trade"}
       </span>
       <span className="text-fg-2">
@@ -180,7 +180,7 @@ export function TradesView() {
 
       <header className="border-b border-white/8 pb-4">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Trades
         </h1>
         <p className="mt-1 text-sm text-fg-3">
@@ -218,7 +218,7 @@ export function TradesView() {
             {targetTeamId ? (
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-success">
+                  <p className="mb-2 font-sans text-xs font-700 uppercase tracking-[1px] text-success">
                     You give ({offered.size})
                   </p>
                   <div className="space-y-1.5">
@@ -233,7 +233,7 @@ export function TradesView() {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-info">
+                  <p className="mb-2 font-sans text-xs font-700 uppercase tracking-[1px] text-info">
                     You receive ({requested.size})
                   </p>
                   <div className="space-y-1.5">
@@ -265,7 +265,7 @@ export function TradesView() {
                   type="button"
                   onClick={handlePropose}
                   disabled={!canSubmit}
-                  className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-[3px] bg-accent px-6 py-2.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {propose.isPending ? "Proposing…" : "Propose Trade"}
                 </button>
@@ -314,7 +314,7 @@ function TradeRow({
 }) {
   const names = (list: { name: string }[]) => list.map((p) => p.name).join(", ");
   const btn =
-    "rounded-[3px] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:opacity-50";
+    "rounded-[3px] px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] transition-colors disabled:opacity-50";
 
   return (
     <li className="rounded-[3px] border border-white/6 bg-surface-2 p-3">
@@ -325,7 +325,7 @@ function TradeRow({
             : `To ${trade.to_team.name}`}
         </span>
         <span
-          className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px]"
+          className="font-sans text-xs font-700 uppercase tracking-[1px]"
           style={{ color: STATUS_COLORS[trade.status] ?? "#a0a0aa" }}
         >
           {trade.status}

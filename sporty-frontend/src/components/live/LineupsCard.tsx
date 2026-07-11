@@ -30,7 +30,7 @@ function TeamColumn({
         className={`flex items-center gap-2.5 ${isRight ? "flex-row-reverse text-right" : ""}`}
       >
         <span
-          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[3px] font-bebas text-sm leading-none tracking-[1px]"
+          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[3px] font-display text-sm leading-none tracking-[-0.02em]"
           style={{
             color,
             background: `${color}14`,
@@ -51,7 +51,7 @@ function TeamColumn({
           )}
         </span>
         <div className={`min-w-0 ${isRight ? "text-right" : ""}`}>
-          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+          <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
             {teamName}
           </p>
           <p className="section-label mt-0.5">{players.length} players</p>
@@ -67,7 +67,7 @@ function TeamColumn({
             }`}
           >
             <span
-              className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[3px] px-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px]"
+              className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[3px] px-1 font-sans text-[10px] font-700 uppercase tracking-[0.5px]"
               style={{
                 color,
                 background: `${color}17`,

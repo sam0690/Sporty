@@ -300,7 +300,7 @@ const PitchSlotMarker = memo(function PitchSlotMarker({
             </button>
 
             <div className="absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 text-center">
-              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[0.5px] text-white backdrop-blur-xs">
+              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[0.5px] text-white backdrop-blur-xs">
                 {player.name}
               </p>
               <p className="mt-0.5 text-[9px] uppercase tracking-[2px] text-white/80">
@@ -365,7 +365,7 @@ const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
       title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
     >
       <div className="flex items-center justify-between gap-2">
-        <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+        <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
           {player.name}
         </p>
         <span className="text-base" aria-label={player.sport}>
@@ -374,11 +374,11 @@ const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
       </div>
       <div className="mt-1.5 flex items-center gap-2">
         <span
-          className={`rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
+          className={`rounded-[3px] px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] ${sportBadgeClass[player.sport]}`}
         >
           {player.position}
         </span>
-        <span className="font-bebas text-base leading-none tracking-[1px] text-accent tabular-nums">
+        <span className="font-display text-base leading-none tracking-[-0.02em] text-accent tabular-nums">
           {player.cost}
         </span>
       </div>
@@ -994,11 +994,11 @@ export function LineupPitchView({
           <section className="mx-auto w-full max-w-2xl animate-[fade-soft_0.2s_ease]">
             {isMultiSport ? (
               <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-[3px] sport-badge-basketball px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] tabular-nums">
+                <span className="rounded-[3px] sport-badge-basketball px-3 py-1 font-sans text-xs font-700 uppercase tracking-[1px] tabular-nums">
                   Basketball {activeSportCounts.basketball ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.basketball}
                 </span>
-                <span className="rounded-[3px] sport-badge-football px-3 py-1 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] tabular-nums">
+                <span className="rounded-[3px] sport-badge-football px-3 py-1 font-sans text-xs font-700 uppercase tracking-[1px] tabular-nums">
                   Football {activeSportCounts.football ?? 0} /{" "}
                   {MULTISPORT_STARTER_REQUIREMENTS.football}
                 </span>
@@ -1076,20 +1076,20 @@ export function LineupPitchView({
             <button
               type="button"
               onClick={() => setSelectedPlayerId(null)}
-              className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 px-2.5 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-fg-3 transition-colors hover:text-fg-1"
+              className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 px-2.5 py-1 font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3 transition-colors hover:text-fg-1"
             >
               <X size={12} />
               Deselect
             </button>
           ) : (
-            <span className="rounded-[3px] border border-white/8 bg-surface-2 px-3 py-1 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
+            <span className="rounded-[3px] border border-white/8 bg-surface-2 px-3 py-1 font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
               Tap a player to move or assign C/VC
             </span>
           )}
         </div>
 
         {!selectedPitchPlayer || !selectedLineupPlayer ? (
-          <div className="rounded-[3px] border border-dashed border-white/8 bg-surface-2 p-6 text-center font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-3">
+          <div className="rounded-[3px] border border-dashed border-white/8 bg-surface-2 p-6 text-center font-sans text-sm font-700 uppercase tracking-[1px] text-fg-3">
             Tap a player on the pitch or bench, then tap a slot to move them — or
             assign captain below.
           </div>
@@ -1097,7 +1097,7 @@ export function LineupPitchView({
           <div className="space-y-4 rounded-[3px] border border-white/8 bg-surface-2 p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[0.5px] text-fg-1">
+                <p className="truncate font-sans text-base font-700 uppercase tracking-[0.5px] text-fg-1">
                   {selectedLineupPlayer.name}
                 </p>
                 <p className="mt-1 text-xs text-fg-3">
@@ -1105,7 +1105,7 @@ export function LineupPitchView({
                 </p>
               </div>
               <span
-                className={`shrink-0 rounded-[3px] px-2 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] ${
+                className={`shrink-0 rounded-[3px] px-2 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] ${
                   selectedPitchPlayer.isStarter
                     ? "sport-badge-football"
                     : "border border-white/8 text-fg-3"
@@ -1122,7 +1122,7 @@ export function LineupPitchView({
                     type="button"
                     onClick={() => onSetCaptain(selectedLineupPlayer.playerId)}
                     disabled={disabled || selectedLineupPlayer.isViceCaptain}
-                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[3px] border px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[3px] border px-3 py-2 font-sans text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                       selectedLineupPlayer.isCaptain
                         ? "border-yellow-400 bg-yellow-400 text-yellow-950"
                         : "border-white/8 text-fg-2 hover:text-fg-1"
@@ -1137,7 +1137,7 @@ export function LineupPitchView({
                       onSetViceCaptain(selectedLineupPlayer.playerId)
                     }
                     disabled={disabled || selectedLineupPlayer.isCaptain}
-                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[3px] border px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                    className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-[3px] border px-3 py-2 font-sans text-xs font-700 uppercase tracking-[1px] transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                       selectedLineupPlayer.isViceCaptain
                         ? "border-sky-400 bg-sky-400 text-sky-950"
                         : "border-white/8 text-fg-2 hover:text-fg-1"
@@ -1151,7 +1151,7 @@ export function LineupPitchView({
                   type="button"
                   onClick={() => benchPlayer(selectedPitchPlayer.id)}
                   disabled={disabled}
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-[rgba(255,59,48,0.3)] px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] border border-[rgba(255,59,48,0.3)] px-3 py-2 font-sans text-xs font-700 uppercase tracking-[1px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ArrowDownToLine size={14} />
                   Move to Bench
@@ -1167,7 +1167,7 @@ export function LineupPitchView({
                   type="button"
                   onClick={() => handleAutoPlace(selectedPitchPlayer.id)}
                   disabled={disabled}
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] bg-accent px-3 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-[3px] bg-accent px-3 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
                 >
                   <Plus size={14} />
                   Add to Lineup

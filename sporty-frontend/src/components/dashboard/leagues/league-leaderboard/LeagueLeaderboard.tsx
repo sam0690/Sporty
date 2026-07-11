@@ -159,7 +159,7 @@ export function LeagueLeaderboard() {
                 key={mode}
                 type="button"
                 onClick={() => setHistorical(mode === "Historical")}
-                className={`rounded-[3px] px-3 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors ${
+                className={`rounded-[3px] px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[2px] transition-colors ${
                   isActive
                     ? "bg-accent text-surface-0"
                     : "text-fg-3 hover:text-fg-1"

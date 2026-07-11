@@ -28,7 +28,7 @@ export function TeamBadge({ name, logoUrl, size = "sm" }: TeamBadgeProps) {
   return (
     <span
       title={name}
-      className={`grid shrink-0 place-items-center overflow-hidden rounded-[3px] font-bebas leading-none tracking-[1px] ${SIZE_CLASS[size]}`}
+      className={`grid shrink-0 place-items-center overflow-hidden rounded-[3px] font-display leading-none tracking-[-0.02em] ${SIZE_CLASS[size]}`}
       style={{
         color,
         background: `${color}14`,

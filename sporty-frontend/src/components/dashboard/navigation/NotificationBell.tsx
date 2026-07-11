@@ -108,7 +108,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
           size="xs"
           mb="xs"
           style={{
-            fontFamily: "var(--font-barlow-condensed)",
+            fontFamily: "var(--font-sans)",
             textTransform: "uppercase",
             letterSpacing: "2px",
             color: "#f2f2f0",

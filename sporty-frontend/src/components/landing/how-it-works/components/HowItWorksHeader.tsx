@@ -12,7 +12,7 @@ export function HowItWorksHeader({
       <span className="section-label">Get in the game</span>
       <h2
         id="how-it-works-title"
-        className="mt-3 font-bebas text-5xl tracking-[2px] text-fg-1 md:text-6xl"
+        className="mt-3 font-display text-5xl tracking-[-0.02em] text-fg-1 md:text-6xl"
       >
         {heading}
       </h2>

@@ -51,7 +51,7 @@ export function Topbar({
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0">
           <p className="section-label">Welcome back</p>
-          <h1 className="mt-1.5 truncate font-bebas text-3xl leading-none tracking-[1.5px] text-fg-1 sm:text-4xl">
+          <h1 className="mt-1.5 truncate font-display text-3xl leading-none tracking-[-0.02em] text-fg-1 sm:text-4xl">
             {userName}
           </h1>
         </div>
@@ -62,7 +62,7 @@ export function Topbar({
               className="rounded-[3px] border border-white/10 px-3.5 py-2 text-right"
               title="Available budget"
             >
-              <span className="num font-barlow-condensed text-sm font-700 text-fg-1">
+              <span className="num font-sans text-sm font-700 text-fg-1">
                 {statsLoading ? "—" : budget.value}
               </span>
               <span className="ml-1.5 text-[10px] uppercase tracking-[1px] text-fg-3">
@@ -75,7 +75,7 @@ export function Topbar({
             value={selectedLeagueId ?? ""}
             onChange={(event) => onLeagueChange(event.target.value)}
             disabled={leagues.length === 0}
-            className="rounded-[3px] border border-white/10 bg-transparent px-3.5 py-2 font-barlow-condensed text-sm font-600 uppercase tracking-[0.5px] text-fg-1 transition-colors focus:border-accent/50 focus:outline-none disabled:opacity-50"
+            className="rounded-[3px] border border-white/10 bg-transparent px-3.5 py-2 font-sans text-sm font-600 uppercase tracking-[0.5px] text-fg-1 transition-colors focus:border-accent/50 focus:outline-none disabled:opacity-50"
             aria-label="Choose active league"
           >
             {leagues.map((league) => (
@@ -101,11 +101,11 @@ export function Topbar({
                 className="h-[30px] w-[30px] rounded-full object-cover"
               />
             ) : (
-              <span className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent/10 font-bebas text-sm text-accent">
+              <span className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-full bg-accent/10 font-display text-sm text-accent">
                 {initial}
               </span>
             )}
-            <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 group-hover:text-fg-1">
+            <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2 group-hover:text-fg-1">
               Profile
             </span>
             <ChevronRight className="size-3.5 text-fg-3 transition-colors group-hover:text-accent" />
@@ -126,7 +126,7 @@ export function Topbar({
           <>
             {totalPoints && (
               <div>
-                <p className="num font-bebas text-6xl leading-none tracking-[1px] text-accent sm:text-7xl">
+                <p className="num font-display text-6xl leading-none tracking-[-0.02em] text-accent sm:text-7xl">
                   {totalPoints.value}
                 </p>
                 <div className="mt-1.5 flex items-baseline gap-2">
@@ -150,7 +150,7 @@ export function Topbar({
 
             {rank && (
               <div>
-                <p className="num font-bebas text-3xl leading-none tracking-[1px] text-fg-1">
+                <p className="num font-display text-3xl leading-none tracking-[-0.02em] text-fg-1">
                   {rank.value}
                 </p>
                 <p className="section-label mt-1.5">Rank</p>
@@ -159,7 +159,7 @@ export function Topbar({
 
             {gwPoints && (
               <div>
-                <p className="num font-bebas text-3xl leading-none tracking-[1px] text-fg-1">
+                <p className="num font-display text-3xl leading-none tracking-[-0.02em] text-fg-1">
                   {gwPoints.value}
                 </p>
                 <p className="section-label mt-1.5">This Gameweek</p>

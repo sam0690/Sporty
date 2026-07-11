@@ -43,7 +43,7 @@ export function TeamLogo({
       title={teamName}
       className={cn(
         box,
-        "shrink-0 overflow-hidden rounded-full border border-white/10 bg-surface-3 inline-flex items-center justify-center font-barlow-condensed font-700 text-fg-2",
+        "shrink-0 overflow-hidden rounded-full border border-white/10 bg-surface-3 inline-flex items-center justify-center font-sans font-700 text-fg-2",
         text,
         className,
       )}

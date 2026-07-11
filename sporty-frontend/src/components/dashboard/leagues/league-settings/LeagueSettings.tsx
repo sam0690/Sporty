@@ -216,7 +216,7 @@ export function LeagueSettings() {
         />
         <div className="card-surface p-8 text-center">
           <Lock className="mx-auto h-6 w-6 text-fg-3" aria-hidden />
-          <p className="mt-2 font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-1">
+          <p className="mt-2 font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
             Commissioner only
           </p>
           <p className="mt-1 text-sm text-fg-3">
@@ -237,7 +237,7 @@ export function LeagueSettings() {
 
       <header className="border-b border-white/8 pb-6">
         <p className="section-label">{league?.name || "League"}</p>
-        <h1 className="mt-2 font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-6xl">
+        <h1 className="mt-2 font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-6xl">
           Settings
         </h1>
         <p className="mt-1 text-sm text-fg-3">
@@ -307,7 +307,7 @@ export function LeagueSettings() {
                       : "border-white/8"
                   }`}
                 >
-                  <span className="font-barlow-condensed uppercase tracking-[1px] text-fg-1">
+                  <span className="font-sans uppercase tracking-[1px] text-fg-1">
                     Season {season.season_number}
                   </span>
                   <span className="text-fg-3">
@@ -379,7 +379,7 @@ export function LeagueSettings() {
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-accent px-6 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Save Changes"}
         </button>

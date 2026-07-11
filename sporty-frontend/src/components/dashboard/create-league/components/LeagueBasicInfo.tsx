@@ -40,7 +40,7 @@ export function LeagueBasicInfo({
       <div>
         <label
           htmlFor="league-name"
-          className="mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2"
+          className="mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2"
         >
           League Name
         </label>
@@ -59,7 +59,7 @@ export function LeagueBasicInfo({
       </div>
 
       <div>
-        <p className="mb-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
+        <p className="mb-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
           Select Sport
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -83,7 +83,7 @@ export function LeagueBasicInfo({
                   {option.icon}
                 </span>
                 <span
-                  className={`font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] ${
+                  className={`font-sans text-sm font-700 uppercase tracking-[0.5px] ${
                     isSelected ? "text-accent" : "text-fg-1"
                   }`}
                 >

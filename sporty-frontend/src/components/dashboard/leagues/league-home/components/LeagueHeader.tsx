@@ -44,13 +44,13 @@ export function LeagueHeader({
       <div className="relative flex flex-wrap items-end justify-between gap-6">
         <div className="min-w-0">
           <span
-            className={`inline-flex rounded-[3px] px-2 py-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] ${sportBadgeClass[sport]}`}
+            className={`inline-flex rounded-[3px] px-2 py-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] ${sportBadgeClass[sport]}`}
             aria-label={sport}
             title={sport}
           >
             {sport}
           </span>
-          <h1 className="mt-3 truncate font-bebas text-5xl tracking-[3px] text-fg-1 sm:text-7xl">
+          <h1 className="mt-3 truncate font-display text-5xl tracking-[-0.02em] text-fg-1 sm:text-7xl">
             {leagueName}
           </h1>
         </div>
@@ -58,7 +58,7 @@ export function LeagueHeader({
         <div className="min-w-[220px] shrink-0">
           <div className="flex items-center justify-between gap-3">
             <span className="section-label">Season Progress</span>
-            <span className="font-bebas text-xl tracking-[1px] text-accent">
+            <span className="font-display text-xl tracking-[-0.02em] text-accent">
               GW {currentWeek}
               <span className="text-fg-3">/{totalWeeks}</span>
             </span>

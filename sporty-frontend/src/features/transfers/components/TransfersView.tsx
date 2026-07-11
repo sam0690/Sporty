@@ -93,7 +93,7 @@ export function TransfersView(props: Props) {
           <div className="mx-auto mb-4 inline-flex h-12 w-12 items-center justify-center rounded-[3px] border border-white/8 text-fg-3">
             <ArrowLeftRight className="h-5 w-5" aria-hidden />
           </div>
-          <h2 className="font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+          <h2 className="font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
             Select a league to manage transfers
           </h2>
           <p className="mt-1 text-sm text-fg-3">
@@ -102,7 +102,7 @@ export function TransfersView(props: Props) {
           </p>
           <Link
             href="/leagues"
-            className="mt-5 inline-flex rounded-[3px] bg-accent px-6 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
+            className="mt-5 inline-flex rounded-[3px] bg-accent px-6 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
           >
             My Leagues
           </Link>
@@ -135,7 +135,7 @@ export function TransfersView(props: Props) {
             deadlineField="transfer_deadline_at"
           />
           {transfersRemaining !== null ? (
-            <div className="rounded-[3px] border border-accent/20 bg-accent/8 px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-accent">
+            <div className="rounded-[3px] border border-accent/20 bg-accent/8 px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent">
               {transfersRemaining} transfers remaining this session
             </div>
           ) : null}
@@ -148,13 +148,13 @@ export function TransfersView(props: Props) {
             <div className="overflow-hidden rounded-[3px] border border-accent/20 bg-surface-1">
               <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
                 <p className="section-label">Staged Transfers</p>
-                <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-3">
+                <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
                   {stagedOutPlayers.length} out · {stagedInPlayers.length} in
                 </span>
               </div>
               <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
                 <div>
-                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
+                  <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-danger">
                     <ArrowDown className="h-3 w-3" /> Out
                   </p>
                   <div className="space-y-1.5">
@@ -164,7 +164,7 @@ export function TransfersView(props: Props) {
                       stagedOutPlayers.map((player) => (
                         <div key={player.id} className="flex min-w-0 items-center gap-2">
                           <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
-                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                          <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                             {player.name}
                           </p>
                         </div>
@@ -173,7 +173,7 @@ export function TransfersView(props: Props) {
                   </div>
                 </div>
                 <div>
-                  <p className="mb-2 flex items-center gap-1 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px] text-success">
+                  <p className="mb-2 flex items-center gap-1 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-success">
                     <ArrowUp className="h-3 w-3" /> In
                   </p>
                   <div className="space-y-1.5">
@@ -183,7 +183,7 @@ export function TransfersView(props: Props) {
                       stagedInPlayers.map((player) => (
                         <div key={player.id} className="flex min-w-0 items-center gap-2">
                           <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
-                          <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                          <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                             {player.name}
                           </p>
                         </div>
@@ -204,7 +204,7 @@ export function TransfersView(props: Props) {
                       stagedOutPlayers.length !== stagedInPlayers.length) ||
                     !isTransfersOpen
                   }
-                  className="w-full rounded-[3px] bg-accent px-4 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full rounded-[3px] bg-accent px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {confirmTransfersMutation.isPending
                     ? "Confirming…"
@@ -236,7 +236,7 @@ export function TransfersView(props: Props) {
 
           <div className="flex flex-col gap-3 card-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
-              <span className="font-barlow-condensed font-700 uppercase tracking-[1px] text-fg-1">
+              <span className="font-sans font-700 uppercase tracking-[1px] text-fg-1">
                 Page {playersCurrentPage}
               </span>
               <span>/ {playersTotalPages}</span>
@@ -254,7 +254,7 @@ export function TransfersView(props: Props) {
                 type="button"
                 onClick={handlePreviousPlayersPage}
                 disabled={playersCurrentPage <= 1 || isPlayersPageLoading}
-                className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" /> Prev
               </button>
@@ -264,7 +264,7 @@ export function TransfersView(props: Props) {
                 disabled={
                   playersCurrentPage >= playersTotalPages || isPlayersPageLoading
                 }
-                className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1 rounded-[3px] border border-white/8 bg-surface-3 px-3.5 py-1.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </button>
@@ -315,7 +315,7 @@ export function TransfersView(props: Props) {
             <div className="mt-4 flex items-center justify-between gap-3 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-3">
               <div className="min-w-0">
                 <p className="section-label">Swapping Out</p>
-                <p className="mt-0.5 truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                <p className="mt-0.5 truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                   {selectedOutPlayer.name}
                 </p>
               </div>
@@ -342,7 +342,7 @@ export function TransfersView(props: Props) {
                   setShowConfirmModal(false);
                 } catch {}
               }}
-              className="mt-3 w-full rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
+              className="mt-3 w-full rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
             >
               Cancel Staged Session
             </button>

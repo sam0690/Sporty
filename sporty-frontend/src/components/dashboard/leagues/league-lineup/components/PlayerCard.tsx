@@ -37,7 +37,7 @@ export function PlayerCard({
       <div className="flex min-w-0 flex-1 items-center gap-3">
         <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="md" className="shrink-0" />
         <span
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-[3px] font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px]"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-[3px] font-sans text-xs font-700 uppercase tracking-[0.5px]"
           style={{ color: accentColor, background: `${accentColor}1f` }}
         >
           {player.position}
@@ -45,16 +45,16 @@ export function PlayerCard({
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+            <p className="truncate font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
               {player.name}
             </p>
             {player.isCaptain ? (
-              <span className="shrink-0 rounded-[3px] border border-accent/30 bg-accent/10 px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-accent">
+              <span className="shrink-0 rounded-[3px] border border-accent/30 bg-accent/10 px-1.5 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] text-accent">
                 C
               </span>
             ) : null}
             {player.isViceCaptain ? (
-              <span className="shrink-0 rounded-[3px] border border-white/15 bg-surface-3 px-1.5 py-0.5 font-barlow-condensed text-[10px] font-700 uppercase tracking-[1px] text-fg-1">
+              <span className="shrink-0 rounded-[3px] border border-white/15 bg-surface-3 px-1.5 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-1">
                 VC
               </span>
             ) : null}
@@ -81,7 +81,7 @@ export function PlayerCard({
               type="button"
               onClick={() => onSetCaptain?.(player.playerId)}
               disabled={disabled}
-              className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`rounded-[3px] border px-3 py-1.5 font-sans text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 player.isCaptain
                   ? "border-accent/40 bg-accent/12 text-accent"
                   : "border-white/8 bg-surface-3 text-fg-2 hover:text-accent"
@@ -93,7 +93,7 @@ export function PlayerCard({
               type="button"
               onClick={() => onSetViceCaptain?.(player.playerId)}
               disabled={disabled}
-              className={`rounded-[3px] border px-3 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+              className={`rounded-[3px] border px-3 py-1.5 font-sans text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
                 player.isViceCaptain
                   ? "border-white/25 bg-surface-3 text-fg-1"
                   : "border-white/8 bg-surface-3 text-fg-2 hover:text-fg-1"
@@ -108,7 +108,7 @@ export function PlayerCard({
           type="button"
           onClick={() => onToggleStarter?.(player.playerId)}
           disabled={disabled || starterToggleDisabled}
-          className={`rounded-[3px] border px-3.5 py-1.5 font-barlow-condensed text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+          className={`rounded-[3px] border px-3.5 py-1.5 font-sans text-[11px] font-700 uppercase tracking-[1.5px] transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
             player.isStarter
               ? "border-[rgba(255,59,48,0.3)] bg-[rgba(255,59,48,0.08)] text-danger hover:bg-[rgba(255,59,48,0.16)]"
               : starterToggleDisabled

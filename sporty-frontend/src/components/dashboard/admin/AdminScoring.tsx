@@ -38,7 +38,7 @@ export function AdminScoring() {
   if (leaguesError) {
     return (
       <div className="space-y-6">
-        <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Scoring</h1>
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Scoring</h1>
         <AdminErrorState message="Couldn't load leagues." onRetry={() => refetchLeagues()} />
       </div>
     );
@@ -46,7 +46,7 @@ export function AdminScoring() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-bebas text-4xl tracking-[2px] text-fg-1">Scoring</h1>
+      <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Scoring</h1>
 
       <section className="card-surface p-5 space-y-4">
         <p className="section-label">Recalculate a transfer window</p>

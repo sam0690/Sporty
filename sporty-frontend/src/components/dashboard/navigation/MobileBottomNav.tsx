@@ -39,7 +39,7 @@ export function MobileBottomNav({ items }: MobileBottomNavProps) {
               aria-current={active ? "page" : undefined}
             >
               <Icon className="h-4 w-4" />
-              <span className="text-[10px] font-barlow-condensed font-700 uppercase tracking-[1px]">
+              <span className="text-[10px] font-sans font-700 uppercase tracking-[1px]">
                 {item.label}
               </span>
             </Link>

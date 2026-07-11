@@ -21,7 +21,7 @@ type ToggleRowProps = {
 function ToggleRow({ label, enabled, onToggle }: ToggleRowProps) {
   return (
     <div className="flex items-center justify-between rounded-[3px] border border-white/8 bg-surface-2 px-4 py-3">
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+      <p className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
         {label}
       </p>
       <button
@@ -94,7 +94,7 @@ export function PreferencesForm({
         />
 
         <div className="flex items-center justify-between rounded-[3px] border border-white/8 bg-surface-2 px-4 py-3">
-          <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+          <p className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
             Language
           </p>
           <select

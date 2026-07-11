@@ -57,10 +57,10 @@ export function PlayerCard({
 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+            <p className="truncate font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
               {name}
             </p>
-            <span className="shrink-0 font-barlow-condensed text-xs font-700 uppercase tracking-[0.5px] text-fg-3">
+            <span className="shrink-0 font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-3">
               {position}
             </span>
           </div>
@@ -87,19 +87,19 @@ export function PlayerCard({
 
       <div className="flex shrink-0 items-center gap-4 text-right">
         <div>
-          <p className="num font-bebas text-2xl leading-none tracking-[1px] text-accent">
+          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-accent">
             {Math.round(totalPoints)}
           </p>
           <p className="section-label mt-1">Points</p>
         </div>
         <div>
-          <p className="num font-bebas text-lg leading-none tracking-[1px] text-fg-1">
+          <p className="num font-display text-lg leading-none tracking-[-0.02em] text-fg-1">
             {gameweekPoints > 0 ? `+${Math.round(gameweekPoints)}` : Math.round(gameweekPoints)}
           </p>
           <p className="section-label mt-1">GW</p>
         </div>
         <div>
-          <p className="num font-bebas text-lg leading-none tracking-[1px] text-fg-1">
+          <p className="num font-display text-lg leading-none tracking-[-0.02em] text-fg-1">
             {avgPoints.toFixed(1)}
           </p>
           <p className="section-label mt-1">Avg</p>

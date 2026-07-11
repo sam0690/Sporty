@@ -46,7 +46,7 @@ export function CurrentRoster({
     <aside className="overflow-hidden card-surface lg:sticky lg:top-24">
       <div className="flex items-center justify-between border-b border-white/8 px-5 py-3">
         <p className="section-label">Your Squad</p>
-        <span className="font-bebas text-lg leading-none tracking-[1px] text-accent">
+        <span className="font-display text-lg leading-none tracking-[-0.02em] text-accent">
           {players.length}
           <span className="text-fg-3">/{maxPlayers}</span>
         </span>
@@ -77,7 +77,7 @@ export function CurrentRoster({
                 <PlayerAvatar name={player.name} photoUrl={player.photoUrl} size="sm" className="shrink-0" />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                  <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {player.name}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-fg-3">
@@ -109,7 +109,7 @@ export function CurrentRoster({
       <div className="border-t border-white/8 p-4">
         <div className="flex items-center justify-between">
           <span className="section-label">In-Bank</span>
-          <span className="font-bebas text-xl leading-none tracking-[1px] text-accent">
+          <span className="font-display text-xl leading-none tracking-[-0.02em] text-accent">
             ${budget.toFixed(1)}M
           </span>
         </div>

@@ -64,7 +64,7 @@ export function PanelEmpty({
       <span className="grid size-11 place-items-center rounded-[3px] border border-white/8 text-fg-3">
         {icon}
       </span>
-      <p className="font-barlow-condensed text-sm font-700 uppercase tracking-[1px] text-fg-2">
+      <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-2">
         {title}
       </p>
       {hint && <p className="max-w-[24ch] text-xs text-fg-3">{hint}</p>}

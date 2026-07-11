@@ -37,12 +37,12 @@ export function LogoutConfirmationModal({
     >
       <div className="w-full max-w-md card-surface p-6 text-fg-1">
         <div className="inline-flex rounded-[3px] border border-accent/25 bg-accent/8 px-3 py-1">
-          <span className="font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-accent-dim">
+          <span className="font-sans text-xs font-700 uppercase tracking-[2px] text-accent-dim">
             Logout Confirmation
           </span>
         </div>
 
-        <h2 className="mt-4 font-bebas text-4xl uppercase tracking-[2px] text-fg-1">
+        <h2 className="mt-4 font-display text-4xl uppercase tracking-[-0.02em] text-fg-1">
           Do you want to log out?
         </h2>
 
@@ -56,7 +56,7 @@ export function LogoutConfirmationModal({
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full rounded-[3px] border border-white/8 bg-transparent px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 disabled:opacity-50 sm:w-auto"
+            className="w-full rounded-[3px] border border-white/8 bg-transparent px-5 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-3 transition-colors hover:border-white/15 hover:text-fg-1 disabled:opacity-50 sm:w-auto"
           >
             Cancel
           </button>
@@ -64,7 +64,7 @@ export function LogoutConfirmationModal({
             type="button"
             onClick={onConfirm}
             disabled={isLoading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-danger px-5 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:opacity-60 sm:w-auto"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-danger px-5 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-white transition-colors hover:bg-danger/85 disabled:opacity-60 sm:w-auto"
           >
             <LogOut className="h-3.5 w-3.5" />
             {isLoading ? "Logging out..." : "Logout"}

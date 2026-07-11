@@ -13,7 +13,7 @@ export function InviteCodeDisplay({ inviteCode }: InviteCodeDisplayProps) {
         <p className="section-label">Invite Code</p>
       </div>
       <div className="flex flex-wrap items-center justify-between gap-4 p-5">
-        <span className="font-bebas text-4xl tracking-[8px] text-accent sm:text-5xl">
+        <span className="font-display text-4xl tracking-[-0.02em] text-accent sm:text-5xl">
           {inviteCode}
         </span>
         <CopyButton value={inviteCode} label="Invite code" />

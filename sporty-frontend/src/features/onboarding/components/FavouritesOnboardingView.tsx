@@ -68,7 +68,7 @@ export function FavouritesOnboardingView() {
     <section className="mx-auto max-w-lg space-y-6 px-6 py-12 text-fg-1">
       <div>
         <p className="section-label">Welcome to Sporty</p>
-        <h1 className="mt-2 font-bebas text-4xl tracking-[2px] text-fg-1 sm:text-5xl">
+        <h1 className="mt-2 font-display text-4xl tracking-[-0.02em] text-fg-1 sm:text-5xl">
           Pick your favourites
         </h1>
         <p className="mt-2 text-sm text-fg-2">
@@ -90,14 +90,14 @@ export function FavouritesOnboardingView() {
         <button
           type="button"
           onClick={() => router.replace(continuePath)}
-          className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 sm:w-auto"
+          className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-8 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2 transition-colors hover:text-fg-1 sm:w-auto"
         >
           Skip for now
         </button>
         <button
           type="button"
           onClick={() => router.replace(continuePath)}
-          className="w-full rounded-[3px] bg-accent px-8 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright sm:w-auto"
+          className="w-full rounded-[3px] bg-accent px-8 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright sm:w-auto"
         >
           Continue
         </button>

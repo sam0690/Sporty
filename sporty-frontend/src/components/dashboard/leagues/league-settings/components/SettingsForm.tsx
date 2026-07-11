@@ -22,7 +22,7 @@ type SettingsFormProps = {
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <label className="mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
+    <label className="mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
       {children}
     </label>
   );

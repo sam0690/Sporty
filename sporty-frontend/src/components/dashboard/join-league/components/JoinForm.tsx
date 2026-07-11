@@ -61,7 +61,7 @@ export function JoinForm({
       <div className="mt-5">
         <label
           htmlFor="invite-code"
-          className="mb-2 block text-center font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-fg-2"
+          className="mb-2 block text-center font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2"
         >
           Invite Code
         </label>
@@ -86,7 +86,7 @@ export function JoinForm({
       <button
         type="submit"
         disabled={isLoading}
-        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-accent px-8 py-3 font-barlow-condensed text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-[3px] bg-accent px-8 py-3 font-sans text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isLoading ? (
           <>

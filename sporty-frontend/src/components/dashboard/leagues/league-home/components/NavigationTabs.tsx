@@ -81,7 +81,7 @@ export function NavigationTabs({
                 key={tab.key}
                 href={routes[tab.key]}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex min-h-11 items-center rounded-[3px] px-4 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
+                className={`flex min-h-11 items-center rounded-[3px] px-4 font-sans text-xs font-700 uppercase tracking-[2px] transition-colors hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 ${
                   isActive
                     ? "bg-accent text-surface-0"
                     : "bg-transparent text-fg-3 hover:bg-surface-3 hover:text-fg-1"

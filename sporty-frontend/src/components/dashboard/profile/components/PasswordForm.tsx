@@ -83,11 +83,11 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
     strength === "Strong" ? "100%" : strength === "Medium" ? "66%" : "33%";
 
   const fieldLabel =
-    "mb-2 block font-barlow-condensed text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
+    "mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
   const fieldInput =
     "w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-accent";
   const toggleBtn =
-    "shrink-0 rounded-[3px] border border-white/8 bg-surface-3 px-3 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors hover:text-fg-1";
+    "shrink-0 rounded-[3px] border border-white/8 bg-surface-3 px-3 py-2.5 font-sans text-xs font-700 uppercase tracking-[1px] text-fg-2 transition-colors hover:text-fg-1";
 
   return (
     <section className="card-fade-in overflow-hidden card-surface">
@@ -149,7 +149,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
                 />
               </div>
               <p
-                className="font-barlow-condensed text-[10px] font-700 uppercase tracking-[1.5px]"
+                className="font-sans text-[10px] font-700 uppercase tracking-[1.5px]"
                 style={{ color: strengthColor }}
               >
                 {strength}
@@ -185,7 +185,7 @@ export function PasswordForm({ onChangePassword }: PasswordFormProps) {
         <button
           type="submit"
           disabled={isSaving}
-          className="rounded-[3px] bg-accent px-6 py-2.5 font-barlow-condensed text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-[3px] bg-accent px-6 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "Saving…" : "Update Password"}
         </button>

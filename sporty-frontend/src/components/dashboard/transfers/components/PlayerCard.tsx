@@ -59,7 +59,7 @@ export function PlayerCard({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate font-barlow-condensed text-base font-700 uppercase tracking-[1px] text-fg-1">
+        <p className="truncate font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
           {name}
         </p>
         <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-fg-3">
@@ -84,7 +84,7 @@ export function PlayerCard({
 
       <div className="flex shrink-0 items-center gap-3">
         <div className="text-right">
-          <p className="num font-bebas text-xl leading-none tracking-[1px] text-accent">
+          <p className="num font-display text-xl leading-none tracking-[-0.02em] text-accent">
             ${price.toFixed(1)}M
           </p>
           <p className="section-label mt-1">Cost</p>

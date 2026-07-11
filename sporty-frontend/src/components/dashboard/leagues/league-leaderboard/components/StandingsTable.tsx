@@ -25,7 +25,7 @@ function RankDeltaBadge({ delta }: { delta: number | null | undefined }) {
   const Icon = isUp ? ChevronUp : ChevronDown;
   return (
     <span
-      className={`inline-flex items-center font-barlow-condensed text-[11px] font-700 ${
+      className={`inline-flex items-center font-sans text-[11px] font-700 ${
         isUp ? "text-success" : "text-danger"
       }`}
       title={`${isUp ? "Up" : "Down"} ${Math.abs(delta)} rank vs last gameweek`}
@@ -52,7 +52,7 @@ export function StandingsTable({
   return (
     <section className="overflow-hidden card-surface animate-fade-soft">
       <div className="border-b border-white/8 px-5 py-3">
-        <h2 className="font-barlow-condensed text-xs font-700 uppercase tracking-[3px] text-[#666]">
+        <h2 className="font-sans text-xs font-700 uppercase tracking-[3px] text-[#666]">
           {pointsLabel}
         </h2>
       </div>
@@ -73,7 +73,7 @@ export function StandingsTable({
             >
               <div className="flex shrink-0 flex-col items-center gap-0.5">
                 <span
-                  className={`flex h-9 w-9 items-center justify-center rounded-[3px] border font-bebas text-lg tracking-[1px] ${
+                  className={`flex h-9 w-9 items-center justify-center rounded-[3px] border font-display text-lg tracking-[-0.02em] ${
                     medalClass ?? "border-white/8 bg-surface-3 text-fg-2"
                   }`}
                 >
@@ -83,7 +83,7 @@ export function StandingsTable({
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-barlow-condensed text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+                <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                   {team.teamName}
                   {isUser && (
                     <span className="ml-2 section-label text-accent-dim">You</span>
@@ -108,7 +108,7 @@ export function StandingsTable({
                 <p className="mt-0.5 truncate text-xs text-fg-3">{team.manager}</p>
               </div>
 
-              <span className="num shrink-0 font-bebas text-2xl tracking-[1px] text-accent">
+              <span className="num shrink-0 font-display text-2xl tracking-[-0.02em] text-accent">
                 {Math.round(team.points)}
               </span>
             </div>
