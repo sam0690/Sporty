@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { LogOut } from "lucide-react";
 import { useMe } from "@/hooks/auth/useMe";
 import { ConfirmDialog, EmptyState } from "@/components/ui";
 import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "./components/CurrentMatchup";
+import { getLeagueCta, type LeagueDraftStatus } from "./leagueCta";
 import {
   StandingsTable,
   type StandingRow,
@@ -131,6 +133,19 @@ export function LeagueHome() {
   const isLoading =
     leagueLoading || teamLoading || windowLoading || transferWindowLoading;
 
+  const draftStatus: LeagueDraftStatus =
+    leagueStatus === "setup"
+      ? "setup"
+      : leagueStatus === "drafting"
+        ? "drafting"
+        : "complete";
+  const cta = getLeagueCta({
+    competitionType: isDraftMode ? "draft" : "budget",
+    draftStatus,
+    isCommissioner,
+    hasTeam: isBudgetMode ? hasMyTeam : !myTeamMissing,
+  });
+
   // Draft rooms are member-scoped: once a draft league is DRAFTING, everyone
   // belongs in the draft screen. `replace` (not push) keeps the back button
   // from bouncing users straight back into the redirect.
@@ -238,9 +253,10 @@ export function LeagueHome() {
               ? "Commissioner cannot leave — delete league or transfer ownership"
               : "Leave this league"
           }
-          className="rounded-[3px] border border-[rgba(255,59,48,0.3)] bg-transparent px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-danger transition-colors hover:bg-[rgba(255,59,48,0.1)] disabled:cursor-not-allowed disabled:opacity-50"
+          aria-label="Leave league"
+          className="rounded-[3px] border border-white/8 p-2 text-fg-3 transition-colors hover:border-[rgba(255,59,48,0.3)] hover:text-danger disabled:cursor-not-allowed disabled:opacity-50"
         >
-          Leave League
+          <LogOut className="h-4 w-4" aria-hidden />
         </button>
       </div>
 
@@ -277,28 +293,33 @@ export function LeagueHome() {
         </div>
       ) : (
         <div className="space-y-4">
-          {isDraftMode ? (
-            leagueStatus === "setup" ? (
-              <div className="alert-deadline flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <span>
-                  {isCommissioner
-                    ? "All set? Start the draft to randomise the order, create every member's team, and open the draft room. Members can't join once it starts."
-                    : "Draft has not started yet. Team creation happens through the draft only."}
-                </span>
-                {isCommissioner ? (
-                  <button
-                    type="button"
-                    onClick={handleStartDraft}
-                    disabled={startDraft.isPending}
-                    className="shrink-0 rounded-[3px] bg-accent px-5 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {startDraft.isPending ? "Starting…" : "Start Draft"}
-                  </button>
-                ) : null}
-              </div>
-            ) : leagueStatus === "drafting" ? (
-              <div className="flex flex-col gap-3 rounded-[3px] border border-info/30 bg-[#1a1a2a] p-5 text-sm text-info sm:flex-row sm:items-center sm:justify-between">
-                <span>Draft is in progress. Make your picks from the draft screen.</span>
+          {cta.banner.tone === "success" ? (
+            <div className="rounded-[3px] border border-success/30 bg-[#1a2a1a] p-5 text-sm text-success">
+              {cta.banner.message}
+            </div>
+          ) : cta.banner.tone === "neutral" ? (
+            <div className="rounded-[3px] border border-white/8 bg-surface-3 p-5 text-sm text-fg-3">
+              {cta.banner.message}
+            </div>
+          ) : (
+            <div
+              className={
+                cta.banner.tone === "warning"
+                  ? "alert-deadline flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                  : "flex flex-col gap-3 rounded-[3px] border border-info/30 bg-[#1a1a2a] p-5 text-sm text-info sm:flex-row sm:items-center sm:justify-between"
+              }
+            >
+              <span>{cta.banner.message}</span>
+              {cta.banner.action === "startDraft" ? (
+                <button
+                  type="button"
+                  onClick={handleStartDraft}
+                  disabled={startDraft.isPending}
+                  className="shrink-0 rounded-[3px] bg-accent px-5 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {startDraft.isPending ? "Starting…" : "Start Draft"}
+                </button>
+              ) : cta.banner.action === "enterDraftRoom" ? (
                 <button
                   type="button"
                   onClick={goToDraftRoom}
@@ -306,19 +327,11 @@ export function LeagueHome() {
                 >
                   Enter Draft Room
                 </button>
-              </div>
-            ) : (
-              <div className="rounded-[3px] border border-white/8 bg-surface-3 p-5 text-sm text-fg-3">
-                Draft is complete, but your team is not available yet.
-              </div>
-            )
-          ) : (
-            <div className="rounded-[3px] border border-success/30 bg-[#1a2a1a] p-5 text-sm text-success">
-              Build your team to start competing in this budget league.
+              ) : null}
             </div>
           )}
 
-          {league && isBudgetMode ? (
+          {league && cta.primary.kind === "buildOrViewTeam" ? (
             <div className="flex justify-end">
               <button
                 type="button"
@@ -331,10 +344,10 @@ export function LeagueHome() {
                 }
                 className="rounded-[3px] bg-accent px-5 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright"
               >
-                {hasMyTeam ? "View Team" : "Build Team"}
+                {cta.primary.label}
               </button>
             </div>
-          ) : myTeamMissing && league ? (
+          ) : league && cta.primary.kind === "openDraftScreen" ? (
             <div className="flex justify-end">
               <button
                 type="button"

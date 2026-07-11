@@ -30,7 +30,7 @@ export function Select({
       disabled={disabled}
       aria-label={label ? undefined : ariaLabel}
       style={{ colorScheme: "dark" }}
-      className={`rounded-[3px] border border-white/12 bg-surface-1 px-4 py-3 text-sm text-fg-1 outline-none transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+      className={`rounded-[3px] border border-white/12 bg-surface-1 px-4 py-3 text-sm text-fg-1 outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {placeholder && <option value="">{placeholder}</option>}
       {options.map((option) => (

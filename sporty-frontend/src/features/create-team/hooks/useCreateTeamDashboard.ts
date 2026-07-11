@@ -55,6 +55,8 @@ function normalizeLeagueSport(
   return "multisport";
 }
 
+export type CreateTeamViewModel = ReturnType<typeof useCreateTeamDashboard>;
+
 export function useCreateTeamDashboard() {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();

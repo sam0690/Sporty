@@ -46,6 +46,13 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
 
   return (
     <div className="min-h-screen bg-background font-sans text-fg-1">
+      <a
+        href="#main-content"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-4 focus-visible:left-4 focus-visible:z-50 focus-visible:rounded-[3px] focus-visible:bg-accent focus-visible:px-4 focus-visible:py-2 focus-visible:font-sans focus-visible:text-xs focus-visible:font-700 focus-visible:uppercase focus-visible:tracking-[1.5px] focus-visible:text-surface-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-0"
+      >
+        Skip to content
+      </a>
+
       <Sidebar
         items={navItems}
         userId={userId}
@@ -54,7 +61,9 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
       />
 
       <div className="pb-24 pt-8 md:ml-[72px] md:pb-10 md:pt-10 lg:ml-64">
-        <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">{children}</div>
+        <main id="main-content" className="mx-auto w-full px-4 sm:px-6 lg:px-8">
+          {children}
+        </main>
       </div>
 
       <MobileBottomNav items={navItems} />

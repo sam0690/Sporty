@@ -65,7 +65,7 @@ export function ConfirmDialog({
           value={typedValue}
           onChange={(event) => setTypedValue(event.target.value)}
           placeholder={confirmInput.placeholder}
-          className="mt-4 w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-danger"
+          className="mt-4 w-full rounded-[3px] border border-white/8 bg-surface-2 px-4 py-2.5 text-sm text-fg-1 outline-none transition-colors focus:border-danger focus-visible:ring-2 focus-visible:ring-danger/50"
         />
       )}
 

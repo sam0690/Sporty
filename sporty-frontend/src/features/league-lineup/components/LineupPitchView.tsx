@@ -1,11 +1,13 @@
 "use client";
-// dnd-kit's useDraggable exposes setNodeRef/listeners/attributes that must be
-// spread onto the node during render — the idiomatic usage the library is built
-// around. The react-hooks/refs rule flags this as a false positive, so it stays
-// disabled for this file (it does NOT mask any of our own ref-in-render code).
-/* eslint-disable react-hooks/refs */
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,7 +16,6 @@ import {
   TouchSensor,
   closestCenter,
   pointerWithin,
-  useDraggable,
   useSensor,
   useSensors,
   type Announcements,
@@ -24,17 +25,12 @@ import {
   type DragStartEvent,
   type UniqueIdentifier,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowDownToLine, Crown, Plus, Shield, X } from "lucide-react";
-import { Badge, PlayerAvatar } from "@/components/ui";
-import { DropZone } from "./DropZone";
+import { PitchSlot, PlayerChip } from "./PitchSlot";
+import { BenchList } from "./BenchList";
+import { MULTISPORT_STARTER_REQUIREMENTS, type PitchPlayer } from "./pitchPlayer";
 import type { LineupPlayerCardModel } from "../hooks/useLeagueLineupData";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import {
@@ -44,11 +40,6 @@ import {
   type FormationSlot,
   type TeamLayout,
 } from "@/components/dashboard/shared/formation/formationEngine";
-import {
-  getSportAccentClass,
-  getSportIcon,
-  type SportKind,
-} from "@/components/dashboard/shared/formation/sportRegistry";
 import { toastifier } from "@/lib/toastifier";
 
 type LineupPitchViewProps = {
@@ -58,30 +49,13 @@ type LineupPitchViewProps = {
   onReorderBench: (draggedId: string, targetId: string) => void;
   onToggleStarter: (playerId: string) => void;
   /** Atomic bench↔starter swap — must be used instead of two onToggleStarter
-   * calls (see swapStarter's comment in LeagueLineup.tsx for why). */
+   * calls (see swapStarter's comment in useLineupState.ts for why). */
   onSwapStarter: (benchPlayerId: string, starterPlayerId: string) => void;
   onSetCaptain: (playerId: string) => void;
   onSetViceCaptain: (playerId: string) => void;
   starterLimitReached: boolean;
   disabled?: boolean;
 };
-
-type PitchPlayer = {
-  id: string;
-  playerId: string;
-  name: string;
-  sport: SportKind;
-  position: string;
-  realTeam: string;
-  cost: string;
-  isStarter: boolean;
-  photoUrl?: string | null;
-};
-
-const MULTISPORT_STARTER_REQUIREMENTS = {
-  football: 5,
-  basketball: 4,
-} as const;
 
 // Would this proposed starting XI still be legal? Football is bounds-checked
 // against FPL's own rule (GK=1, DEF 3-5, MID 2-5, FWD 1-3 — see
@@ -110,273 +84,6 @@ function validateNextStarters(
   }
   return { ok: true };
 }
-
-// ── Presentational chip reused by the pitch marker and the drag overlay so the
-// preview faithfully matches the dragged item. ──────────────────────────────
-function PlayerChip({
-  player,
-  isCaptain,
-  isViceCaptain,
-  isSelected,
-  elevated = false,
-}: {
-  player: PitchPlayer;
-  isCaptain?: boolean;
-  isViceCaptain?: boolean;
-  isSelected?: boolean;
-  elevated?: boolean;
-}) {
-  return (
-    <div className="relative">
-      <div
-        className={`flex h-12 w-12 items-center justify-center overflow-hidden rounded-[3px] border border-white/25 bg-white shadow-lg sm:h-14 sm:w-14 ${
-          isSelected ? "ring-2 ring-accent" : ""
-        } ${elevated ? "shadow-2xl" : ""}`}
-      >
-        <PlayerAvatar
-          name={player.name}
-          photoUrl={player.photoUrl}
-          size="md"
-          className="!h-full !w-full !rounded-none !border-0 !bg-transparent"
-        />
-      </div>
-
-      {isCaptain ? (
-        <div className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-[3px] bg-yellow-400 text-[10px] font-700 text-yellow-950 shadow-sm ring-2 ring-white/10">
-          C
-        </div>
-      ) : isViceCaptain ? (
-        <div className="absolute -left-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-[3px] bg-sky-400 text-[10px] font-700 text-sky-950 shadow-sm ring-2 ring-white/10">
-          VC
-        </div>
-      ) : null}
-
-      <div
-        className={`absolute -right-1 -top-1 z-10 flex h-5 w-5 items-center justify-center rounded-[3px] border text-[9px] font-700 shadow-sm ring-2 ring-white/10 ${getSportAccentClass(
-          player.sport,
-        )}`}
-      >
-        {getSportIcon(player.sport)}
-      </div>
-    </div>
-  );
-}
-
-type PitchSlotMarkerProps = {
-  slot: FormationSlot<PitchPlayer>;
-  player: PitchPlayer | null;
-  isSelected: boolean;
-  isDropDisabled: boolean;
-  /** A drag/tap interaction can legally land here → emphasize as a target. */
-  isEligible: boolean;
-  /** The slot directly under an active drag pointer. */
-  isHoveredTarget: boolean;
-  /** Drag in progress and this slot is not a legal target → fade it back. */
-  isDimmed: boolean;
-  /** Hovered target is occupied and the occupant would be displaced. */
-  isDisplaced: boolean;
-  isShaking: boolean;
-  isCaptain: boolean;
-  isViceCaptain: boolean;
-  onRemove: (slotId: string) => void;
-  onSlotTap: (slotId: string) => void;
-};
-
-const PitchSlotMarker = memo(function PitchSlotMarker({
-  slot,
-  player,
-  isSelected,
-  isDropDisabled,
-  isEligible,
-  isHoveredTarget,
-  isDimmed,
-  isDisplaced,
-  isShaking,
-  isCaptain,
-  isViceCaptain,
-  onRemove,
-  onSlotTap,
-}: PitchSlotMarkerProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const draggable = useDraggable({
-    id: player ? `player-${player.id}` : `empty-${slot.id}`,
-    disabled: !player,
-    data: player
-      ? { type: "player", playerId: player.id, from: "slot", slotId: slot.id }
-      : undefined,
-  });
-
-  // With a DragOverlay we deliberately do NOT translate the source node — the
-  // overlay is the single drag visual and layout animations own the settle.
-  const style = player
-    ? { opacity: draggable.isDragging ? 0.4 : 1, touchAction: "none" as const }
-    : undefined;
-
-  // Target emphasis: the single hovered slot gets the strongest treatment, all
-  // other eligible slots a soft ring, and ineligible slots fade back during a
-  // drag rather than shouting red across the whole pitch.
-  const targetClass = isHoveredTarget
-    ? isEligible
-      ? "ring-2 ring-emerald-400 scale-110"
-      : "ring-2 ring-red-500/60 scale-105"
-    : isEligible
-      ? "ring-2 ring-emerald-400/45"
-      : "";
-
-  const shakeAnimation =
-    isShaking && !prefersReducedMotion ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 };
-
-  return (
-    <DropZone
-      id={`slot-${slot.id}`}
-      disabled={isDropDisabled}
-      className={`group relative h-20 w-20 rounded-[3px] transition-all sm:h-24 sm:w-24 ${targetClass} ${
-        isDimmed ? "opacity-40" : ""
-      }`}
-      activeClassName="!z-30"
-    >
-      <motion.div
-        ref={player ? draggable.setNodeRef : undefined}
-        style={style}
-        {...(player ? draggable.listeners : undefined)}
-        {...(player ? draggable.attributes : undefined)}
-        animate={shakeAnimation}
-        transition={{ duration: 0.4 }}
-        onClick={() => onSlotTap(slot.id)}
-        className={`relative flex flex-col items-center justify-center ${
-          player
-            ? `cursor-pointer p-1 ${
-                isSelected
-                  ? "rounded-[3px] ring-2 ring-white/40 ring-offset-2 ring-offset-green-900/40"
-                  : ""
-              }`
-            : "h-12 w-12 cursor-pointer rounded-[3px] border border-dashed border-white/20 bg-surface-3 backdrop-blur-[2px]"
-        }`}
-      >
-        {player ? (
-          <motion.div
-            // Keyed by player id (not just slot.id above) so a cross-position
-            // swap — which reshuffles row bucket sizes and can hand this same
-            // slot to a different occupant — unmounts the outgoing player's
-            // chip and mounts a fresh one instead of one instance silently
-            // reassigning its layoutId mid-flight (that's what caused the
-            // stuck/overlapping chip until a second interaction forced a
-            // clean re-render).
-            key={player.id}
-            layoutId={
-              prefersReducedMotion ? undefined : `pitch-player-${player.id}`
-            }
-            layout={!prefersReducedMotion}
-            initial={prefersReducedMotion ? false : { scale: 0.85, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 520, damping: 34 }}
-            className={`relative transition-opacity ${isDisplaced ? "opacity-50" : ""}`}
-          >
-            <PlayerChip
-              player={player}
-              isCaptain={isCaptain}
-              isViceCaptain={isViceCaptain}
-              isSelected={isSelected}
-              elevated={draggable.isDragging}
-            />
-
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onRemove(slot.id);
-              }}
-              className="absolute -right-3 bottom-8 flex h-5 w-5 translate-y-1/2 items-center justify-center rounded-[3px] bg-red-500/90 text-[10px] text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 hover:bg-red-600"
-              aria-label={`Remove ${player.name}`}
-            >
-              ×
-            </button>
-
-            <div className="absolute top-[calc(100%+6px)] left-1/2 -translate-x-1/2 text-center">
-              <p className="w-20 truncate rounded bg-black/50 px-1 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[0.5px] text-white backdrop-blur-xs">
-                {player.name}
-              </p>
-              <p className="mt-0.5 text-[9px] uppercase tracking-[2px] text-white/80">
-                {player.position}
-              </p>
-            </div>
-          </motion.div>
-        ) : (
-          <div className="pointer-events-none flex flex-col items-center">
-            <span className="text-[9px] font-700 uppercase text-white/40">
-              {slot.label}
-            </span>
-          </div>
-        )}
-      </motion.div>
-    </DropZone>
-  );
-});
-
-type DraggableBenchPlayerCardProps = {
-  player: PitchPlayer;
-  isSelected: boolean;
-  onTap: (playerId: string) => void;
-};
-
-const DraggableBenchPlayerCard = memo(function DraggableBenchPlayerCard({
-  player,
-  isSelected,
-  onTap,
-}: DraggableBenchPlayerCardProps) {
-  const prefersReducedMotion = useReducedMotion();
-  // useSortable (not plain useDraggable) so a bench card is both draggable
-  // (out to the pitch, or onto another bench card to reorder) AND droppable
-  // (so a starter/bench card can be dropped onto it) within the same
-  // DndContext — see handleDragEnd's "player-" branch for how the two
-  // gestures are told apart.
-  const sortable = useSortable({
-    id: `player-${player.id}`,
-    data: { type: "player", playerId: player.id, from: "bench" },
-  });
-
-  return (
-    <motion.article
-      ref={sortable.setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(sortable.transform),
-        transition: sortable.transition,
-        touchAction: "none",
-      }}
-      {...sortable.listeners}
-      {...sortable.attributes}
-      layout={!prefersReducedMotion}
-      initial={prefersReducedMotion ? false : { opacity: 0, y: -6 }}
-      animate={{ opacity: sortable.isDragging ? 0.45 : 1, y: 0 }}
-      transition={{ duration: 0.18 }}
-      onClick={() => onTap(player.id)}
-      className={`cursor-pointer rounded-[3px] border p-3 transition-colors ${
-        isSelected
-          ? "border-accent/50 bg-accent/6"
-          : "border-white/8 bg-surface-3 hover:border-accent/30"
-      }`}
-      title={`${player.name} | ${player.position} | ${player.realTeam} | Cost ${player.cost}`}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-          {player.name}
-        </p>
-        <span className="text-base" aria-label={player.sport}>
-          {getSportIcon(player.sport)}
-        </span>
-      </div>
-      <div className="mt-1.5 flex items-center gap-2">
-        <Badge sport={player.sport} size="sm">
-          {player.position}
-        </Badge>
-        <span className="font-display text-base leading-none tracking-[-0.02em] text-accent tabular-nums">
-          {player.cost}
-        </span>
-      </div>
-      <p className="mt-1 truncate text-xs text-fg-3">{player.realTeam}</p>
-    </motion.article>
-  );
-});
 
 export function LineupPitchView({
   allPlayers,
@@ -475,6 +182,12 @@ export function LineupPitchView({
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   // The slot currently under an active drag pointer (drag feedback only).
   const [overSlotId, setOverSlotId] = useState<string | null>(null);
+
+  // Screen-reader feedback for the select-then-place keyboard/tap path
+  // (mouse drag gets its own narration via the DndContext `announcements`
+  // prop below — this region only speaks for taps/keyboard so the two don't
+  // double-announce the same move).
+  const [liveMessage, setLiveMessage] = useState("");
 
   // Brief shake feedback on an invalid drop, keyed by the rejected slot.
   const [shakeSlotId, setShakeSlotId] = useState<string | null>(null);
@@ -722,6 +435,8 @@ export function LineupPitchView({
 
   // Tap a slot: with a player selected, place/swap/substitute; otherwise select
   // the slot's occupant. Tapping the selected player's own slot deselects.
+  // This is the keyboard path too — PitchSlot's Enter/Space handler calls the
+  // same function a mouse tap does.
   const handleSlotTap = useCallback(
     (slotId: string) => {
       if (disabled) {
@@ -736,12 +451,19 @@ export function LineupPitchView({
       if (!selectedPlayerId) {
         if (occupantId) {
           setSelectedPlayerId(occupantId);
+          const player = playerById[occupantId];
+          if (player) {
+            setLiveMessage(
+              `${player.name} selected. Choose a highlighted slot to place them, or press Escape to cancel.`,
+            );
+          }
         }
         return;
       }
 
       if (occupantId === selectedPlayerId) {
         setSelectedPlayerId(null);
+        setLiveMessage("Selection cleared.");
         return;
       }
 
@@ -750,8 +472,14 @@ export function LineupPitchView({
         setSelectedPlayerId(null);
         return;
       }
+      const occupant = slot.player;
       if (commitSubstitution(dragged, slot)) {
         setSelectedPlayerId(dragged.id);
+        setLiveMessage(
+          occupant
+            ? `${dragged.name} swapped with ${occupant.name}.`
+            : `${dragged.name} placed in the ${slot.label} slot.`,
+        );
       }
     },
     [commitSubstitution, disabled, playerById, selectedPlayerId, slotById],
@@ -762,9 +490,32 @@ export function LineupPitchView({
       if (disabled) {
         return;
       }
-      setSelectedPlayerId((prev) => (prev === playerId ? null : playerId));
+      setSelectedPlayerId((prev) => {
+        const next = prev === playerId ? null : playerId;
+        const player = playerById[playerId];
+        if (player) {
+          setLiveMessage(
+            next
+              ? `${player.name} selected. Choose a highlighted slot to place them, or press Escape to cancel.`
+              : `${player.name} deselected.`,
+          );
+        }
+        return next;
+      });
     },
-    [disabled],
+    [disabled, playerById],
+  );
+
+  // Escape cancels the current select-then-place selection from anywhere in
+  // the pitch view (bubbles up from whichever slot/bench card has focus).
+  const handleContainerKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Escape" && selectedPlayerId) {
+        setSelectedPlayerId(null);
+        setLiveMessage("Selection cleared.");
+      }
+    },
+    [selectedPlayerId],
   );
 
   // Drop a selected bench player into the first open eligible slot.
@@ -786,6 +537,7 @@ export function LineupPitchView({
       }
       if (commitSubstitution(player, target)) {
         setSelectedPlayerId(player.id);
+        setLiveMessage(`${player.name} placed in the ${target.label} slot.`);
       }
     },
     [canPlaceInSlot, commitSubstitution, playerById, slots],
@@ -939,7 +691,11 @@ export function LineupPitchView({
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" onKeyDown={handleContainerKeyDown}>
+      <div aria-live="polite" className="sr-only">
+        {liveMessage}
+      </div>
+
       <DndContext
         sensors={sensors}
         accessibility={{ announcements }}
@@ -950,37 +706,11 @@ export function LineupPitchView({
         onDragCancel={handleDragCancel}
       >
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
-          <section className="space-y-4 card-surface p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="section-label">Bench Players</p>
-            </div>
-
-            <DropZone
-              id="bench-drop"
-              className="max-h-155 space-y-2 overflow-y-auto rounded-[3px] pr-1"
-              activeClassName="ring-2 ring-emerald-400/50"
-            >
-              {benchPlayers.length === 0 ? (
-                <p className="rounded-[3px] border border-dashed border-white/8 bg-surface-2 p-4 text-center text-xs text-fg-3">
-                  No bench players. Drag a player here to bench them.
-                </p>
-              ) : (
-                <SortableContext
-                  items={benchPlayers.map((player) => `player-${player.id}`)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {benchPlayers.map((player) => (
-                    <DraggableBenchPlayerCard
-                      key={player.id}
-                      player={player}
-                      isSelected={selectedPlayerId === player.id}
-                      onTap={handlePlayerTap}
-                    />
-                  ))}
-                </SortableContext>
-              )}
-            </DropZone>
-          </section>
+          <BenchList
+            benchPlayers={benchPlayers}
+            selectedPlayerId={selectedPlayerId}
+            onTap={handlePlayerTap}
+          />
 
           <section className="mx-auto w-full max-w-2xl animate-[fade-soft_0.2s_ease]">
             {isMultiSport ? (
@@ -1009,7 +739,7 @@ export function LineupPitchView({
                 const isHoveredTarget = isDragging && overSlotId === slot.id;
 
                 return (
-                  <PitchSlotMarker
+                  <PitchSlot
                     slot={slot}
                     player={player}
                     isDropDisabled={
