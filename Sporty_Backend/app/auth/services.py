@@ -192,6 +192,28 @@ def _is_forgot_password_rate_limited(client_ip: str, email: str) -> bool:
         return False
 
 
+def _is_login_rate_limited(identifier: str) -> bool:
+    """Per-account login throttle, keyed on the identifier alone (no IP).
+
+    The RateLimitMiddleware's /auth/login rule is per-IP, so a credential
+    stuffing attack spread across many IPs against one account sails through
+    it untouched. This closes that gap independent of client IP.
+    """
+    try:
+        redis = get_redis()
+        key_hash = hashlib.sha256(identifier.strip().lower().encode()).hexdigest()
+        key = f"auth:login:rl:{key_hash}"
+
+        current = redis.incr(key)
+        if current == 1:
+            redis.expire(key, settings.RATE_LIMIT_LOGIN_ACCOUNT_WINDOW_SECONDS)
+
+        return current > settings.RATE_LIMIT_LOGIN_ACCOUNT_MAX_ATTEMPTS
+    except Exception:
+        # Fail open if Redis is unavailable; do not lock out legitimate users.
+        return False
+
+
 # ── Public service functions ──────────────────────────────────────────────────
 
 def register(db: Session, data: RegisterRequest):
@@ -244,6 +266,13 @@ def login(db: Session, data: LoginRequest) -> TokenResponse:
 
     identifier = data.identifier.strip()
     normalized_identifier = identifier.lower()
+
+    if _is_login_rate_limited(normalized_identifier):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many login attempts for this account. Please try again later.",
+        )
+
     user = (
         db.query(User)
         .filter(or_(User.email == normalized_identifier, User.username == identifier))

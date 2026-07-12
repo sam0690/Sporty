@@ -296,6 +296,23 @@ async def lifespan(app: FastAPI):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Error tracking — auto-captures unhandled exceptions plus any logger.exception()
+# / logger.error() call anywhere in the app (Sentry's logging integration is on
+# by default). No-op when SENTRY_DSN is unset (e.g. local dev).
+# ═══════════════════════════════════════════════════════════════════════════════
+
+if settings.SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        traces_sample_rate=0,  # error tracking only, no perf/APM sampling
+        send_default_pii=False,
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # App instance
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -475,6 +492,10 @@ async def global_exception_handler(request, exc: Exception):
         request.headers.get("user-agent", "unknown"),
         exc_info=exc,
     )
+    if settings.SENTRY_DSN:
+        import sentry_sdk
+
+        sentry_sdk.capture_exception(exc)
     return JSONResponse(
         status_code=500,
         content={

@@ -29,12 +29,21 @@ logger = logging.getLogger(__name__)
 # Rate limit configurations per path pattern
 # Format: (path_prefix, requests_per_window, window_seconds)
 RATE_LIMIT_RULES = [
-    # Auth endpoints - strictest limits
-    ("/auth/login", settings.RATE_LIMIT_LOGIN_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
-    ("/auth/register", settings.RATE_LIMIT_REGISTER_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
-    ("/auth/refresh", settings.RATE_LIMIT_REFRESH_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
-    ("/auth/forgot-password", settings.RATE_LIMIT_FORGOT_PASSWORD_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
-    ("/auth/reset-password", settings.RATE_LIMIT_RESET_PASSWORD_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
+    # Auth endpoints - strictest limits. Prefixes must match the actual
+    # mounted path (app.include_router(auth_router, prefix="/api/v1") in
+    # main.py) — these previously read "/auth/login" etc. without the
+    # "/api/v1" mount prefix, so they never matched a real request and this
+    # whole block was dead code.
+    ("/api/v1/auth/login", settings.RATE_LIMIT_LOGIN_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
+    ("/api/v1/auth/register", settings.RATE_LIMIT_REGISTER_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
+    ("/api/v1/auth/refresh", settings.RATE_LIMIT_REFRESH_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
+    ("/api/v1/auth/forgot-password", settings.RATE_LIMIT_FORGOT_PASSWORD_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
+    ("/api/v1/auth/reset-password", settings.RATE_LIMIT_RESET_PASSWORD_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
+    # Catch-all fallback — every other endpoint (transfers, waivers, etc.) had
+    # zero rate limiting before this; RATE_LIMIT_GLOBAL_RPM existed in config
+    # but was never actually wired into a rule. "" matches every path via
+    # startswith, so keep this last — more specific rules above must win.
+    ("", settings.RATE_LIMIT_GLOBAL_RPM, settings.RATE_LIMIT_WINDOW_SECONDS),
 ]
 
 

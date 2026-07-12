@@ -36,6 +36,21 @@ from app.scoring.models import DefaultScoringRule  # noqa: F401
 from app.core.config import settings
 from app.tasks.celery_schedule import CELERY_BEAT_SCHEDULE
 
+# Worker/beat run as separate processes from the API — main.py's Sentry init
+# never reaches them, so init here too. CeleryIntegration auto-reports any
+# task that raises, even ones with no explicit try/except.
+if settings.SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.celery import CeleryIntegration
+
+    sentry_sdk.init(
+        dsn=settings.SENTRY_DSN,
+        environment=settings.ENVIRONMENT,
+        integrations=[CeleryIntegration()],
+        traces_sample_rate=0,
+        send_default_pii=False,
+    )
+
 
 celery_app = Celery(
     "sporty",

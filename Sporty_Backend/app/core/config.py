@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     # ── Environment ───────────────────────────────────────────
     ENVIRONMENT: str = "development"  # "development", "staging", "production"
 
+    # ── Error tracking ────────────────────────────────────────
+    # Empty = disabled (sentry_sdk.init with a falsy dsn is a no-op).
+    SENTRY_DSN: str = ""
+
     # ── Database ──────────────────────────────────────────────
     DATABASE_URL: str
 
@@ -47,6 +51,10 @@ class Settings(BaseSettings):
     RATE_LIMIT_RESET_PASSWORD_RPM: int = 5
     # Window size in seconds for rate limit tracking
     RATE_LIMIT_WINDOW_SECONDS: int = 60
+    # Per-account (not per-IP) login throttle — catches credential stuffing
+    # spread across many IPs, which the per-IP /auth/login limit above misses.
+    RATE_LIMIT_LOGIN_ACCOUNT_MAX_ATTEMPTS: int = 10
+    RATE_LIMIT_LOGIN_ACCOUNT_WINDOW_SECONDS: int = 900
 
     # ── CSRF Protection ────────────────────────────────────────
     CSRF_ENABLED: bool = True
