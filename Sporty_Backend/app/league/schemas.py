@@ -13,6 +13,7 @@ Rules applied:
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import (
     AliasChoices,
@@ -657,6 +658,13 @@ class SeasonResponse(BaseModel):
     start_date: datetime | date
     end_date: datetime | date
     is_active: bool
+    # Date-derived (Season.is_current property, not a DB column) — lets
+    # clients auto-select "the season running right now" for a sport instead
+    # of guessing among a sport's active-but-not-necessarily-current seasons.
+    is_current: bool
+    # Same date-derived source as is_current, as a richer 3-way view for
+    # admin display (Season.status property).
+    status: Literal["upcoming", "running", "finished"]
 
     model_config = ConfigDict(from_attributes=True)
 

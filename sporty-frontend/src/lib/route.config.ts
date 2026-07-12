@@ -68,6 +68,11 @@ export const ROUTES: Record<string, RouteMeta> = {
     name: "Admin Leagues",
     protection: "admin",
   },
+  ADMIN_SEASONS: {
+    path: "/admin/seasons",
+    name: "Admin Seasons",
+    protection: "admin",
+  },
   ADMIN_AUDIT_LOG: {
     path: "/admin/audit-log",
     name: "Admin Audit Log",

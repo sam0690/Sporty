@@ -10,7 +10,7 @@ import { LeagueSettings } from "./LeagueSettings";
 import { SummaryStep } from "./SummaryStep";
 import { SuccessModal } from "./SuccessModal";
 import { useDefaultScoringRules } from "@/hooks/scoring/useScoring";
-import { useSeasons, useCreateLeague } from "@/hooks/leagues/useLeagues";
+import { useSeasons, useSports, useCreateLeague } from "@/hooks/leagues/useLeagues";
 import { CreateLeagueSchema, type CreateLeagueValues } from "@/lib/validations";
 import type { TCompetitionType } from "@/types";
 
@@ -43,6 +43,7 @@ function normalizeScoringRules(
 
 export function CreateLeagueView() {
   const { data: seasons } = useSeasons();
+  const { data: sports } = useSports();
   const { data: footballRules } = useDefaultScoringRules("football");
   const { data: basketballRules } = useDefaultScoringRules("basketball");
   const createMutation = useCreateLeague();
@@ -106,19 +107,45 @@ export function CreateLeagueView() {
   }, [sportIds]);
 
   const defaultSeasonId = useMemo(() => {
-    if (!seasons || seasons.length === 0) {
+    if (!seasons || seasons.length === 0 || !sports) {
       return "";
     }
 
-    const sportSeasons = seasons.filter((s) => {
-      const name = s.name.toLowerCase();
-      return selectedSports.some((sport) => name.includes(sport));
-    });
-    const firstSportSeasonId = sportSeasons.find((season) => season.id)?.id;
-    const firstAnySeasonId = seasons.find((season) => season.id)?.id;
+    // Multisport leagues use one "primary" season (matching the backend's
+    // find_equivalent_window_for_sport architecture, where a league's
+    // season_id is deliberately only one of its N sports) — selectedSports[0]
+    // is always "football" first for multisport (see
+    // mapSportSelectionToPayload). No fallback to "any season": a season
+    // whose sport doesn't match is worse than no season, since it silently
+    // sends every lineup/score to the wrong sport's transfer windows.
+    const primarySport = sports.find((sport) => sport.name === selectedSports[0]);
+    if (!primarySport) {
+      return "";
+    }
 
-    return firstSportSeasonId || firstAnySeasonId || "";
-  }, [seasons, selectedSports]);
+    const sportSeasons = seasons.filter(
+      (season) => season.sport_id === primarySport.id,
+    );
+
+    // Prefer the season actually running right now (at most one per sport —
+    // the backend enforces no date-range overlap within a sport).
+    const currentSeason = sportSeasons.find((season) => season.is_current);
+    if (currentSeason) {
+      return currentSeason.id ?? "";
+    }
+
+    // Off-season gap (no season currently running for this sport) — fall
+    // back to the soonest upcoming one rather than leaving the league
+    // unattached until the next season starts.
+    const upcoming = [...sportSeasons]
+      .filter((season) => new Date(season.start_date) > new Date())
+      .sort(
+        (a, b) =>
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime(),
+      );
+
+    return upcoming[0]?.id ?? "";
+  }, [seasons, sports, selectedSports]);
 
   const effectiveSeasonId = seasonId || defaultSeasonId;
 

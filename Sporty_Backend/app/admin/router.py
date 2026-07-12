@@ -32,6 +32,7 @@ from app.admin.schemas import (
     RoleChangeRequest,
     ScoringRecalculateResponse,
     SeasonCreateRequest,
+    SeasonUpdateRequest,
     SystemConfigResponse,
     TicketUpdateRequest,
     TradeActionResponse,
@@ -248,6 +249,29 @@ def create_season(
         name=data.name,
         start_date=data.start_date,
         end_date=data.end_date,
+        reason=data.reason,
+    )
+
+
+@router.patch(
+    "/seasons/{season_id}",
+    response_model=SeasonResponse,
+    summary="Update a season (admin)",
+)
+def update_season(
+    season_id: uuid.UUID,
+    data: SeasonUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return services.update_season_admin(
+        db,
+        current_user,
+        season_id,
+        name=data.name,
+        start_date=data.start_date,
+        end_date=data.end_date,
+        is_active=data.is_active,
         reason=data.reason,
     )
 

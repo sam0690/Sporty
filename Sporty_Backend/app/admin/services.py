@@ -326,6 +326,79 @@ def create_season_admin(
     return season
 
 
+def update_season_admin(
+    db: Session,
+    actor: User,
+    season_id: uuid.UUID,
+    *,
+    name: str | None = None,
+    start_date=None,
+    end_date=None,
+    is_active: bool | None = None,
+    reason: str | None = None,
+) -> Season:
+    season = db.query(Season).filter(Season.id == season_id).first()
+    if not season:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Season not found")
+
+    before = {
+        "name": season.name,
+        "start_date": str(season.start_date),
+        "end_date": str(season.end_date),
+        "is_active": season.is_active,
+    }
+
+    # Validate against the resulting date range, not just the two fields
+    # given in this call — a caller might only pass start_date and leave the
+    # existing end_date in place (or vice versa).
+    next_start = start_date if start_date is not None else season.start_date
+    next_end = end_date if end_date is not None else season.end_date
+    if next_end <= next_start:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="end_date must be after start_date",
+        )
+
+    if name is not None:
+        season.name = name
+    if start_date is not None:
+        season.start_date = start_date
+    if end_date is not None:
+        season.end_date = end_date
+    if is_active is not None:
+        season.is_active = is_active
+
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A season with this name, start date, or overlapping date range already exists for this sport",
+        )
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.SEASON_UPDATE,
+        target_type="season",
+        target_id=season.id,
+        reason=reason,
+        metadata={
+            "before": before,
+            "after": {
+                "name": season.name,
+                "start_date": str(season.start_date),
+                "end_date": str(season.end_date),
+                "is_active": season.is_active,
+            },
+        },
+    )
+    db.commit()
+    db.refresh(season)
+    return season
+
+
 # ── Scoring ─────────────────────────────────────────────────────────────────────
 
 def recalculate_window_score(

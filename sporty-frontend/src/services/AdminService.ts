@@ -1,6 +1,7 @@
 import { authApi } from "@/api/auth-api-client";
 import { API_PATHS } from "@/api/apiPath";
 import type { TTicketCategory, TTicketMessage, TTicketPriority, TTicketStatus } from "@/services/SupportService";
+import type { TSeason } from "@/types/league";
 
 export type { TTicketMessage };
 
@@ -43,6 +44,26 @@ export type TAdminLeagueListResponse = {
   page: number;
   page_size: number;
   has_next: boolean;
+};
+
+export type TAdminSeason = TSeason & {
+  status: "upcoming" | "running" | "finished";
+};
+
+export type TSeasonCreateRequest = {
+  sport_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  reason?: string;
+};
+
+export type TSeasonUpdateRequest = {
+  name?: string;
+  start_date?: string;
+  end_date?: string;
+  is_active?: boolean;
+  reason?: string;
 };
 
 export type TAdminAuditLogEntry = {
@@ -307,6 +328,21 @@ export const AdminService = {
     data: { name?: string; is_public?: boolean; reason?: string },
   ) {
     const res = await authApi.patch(API_PATHS.ADMIN.LEAGUE_SETTINGS(id), data);
+    return res.data;
+  },
+
+  async getSeasons(): Promise<TAdminSeason[]> {
+    const res = await authApi.get(API_PATHS.ADMIN.SEASONS);
+    return res.data;
+  },
+
+  async createSeason(data: TSeasonCreateRequest): Promise<TAdminSeason> {
+    const res = await authApi.post(API_PATHS.ADMIN.SEASONS, data);
+    return res.data;
+  },
+
+  async updateSeason(id: string, data: TSeasonUpdateRequest): Promise<TAdminSeason> {
+    const res = await authApi.patch(API_PATHS.ADMIN.SEASON_DETAIL(id), data);
     return res.data;
   },
 

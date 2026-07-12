@@ -362,6 +362,23 @@ def create_league(
             detail="At least one sport must be specified in the creation payload",
         )
 
+    # The season's own sport must be one of the league's requested sports —
+    # otherwise every lineup/transfer this league ever saves gets keyed to
+    # the wrong sport's transfer windows (season_id drives "current window"
+    # resolution), while the sport-aware scorer never touches those windows
+    # for this league. A multisport league's season is deliberately only one
+    # of its N sports (see find_equivalent_window_for_sport), so this only
+    # rejects a season whose sport isn't in the list at all.
+    if season_sport.name not in requested_sports:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=(
+                f"The selected season is for {season_sport.name}, but this "
+                f"league is for {', '.join(requested_sports)}. Choose a "
+                "season that matches one of the league's sports."
+            ),
+        )
+
     # Derive squad size from sport type
     sport_type = derive_sport_type(requested_sports)
     squad_size = SPORT_CONFIGS[sport_type]["squad_size"]

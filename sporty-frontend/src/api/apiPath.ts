@@ -185,6 +185,8 @@ export const API_PATHS = {
     LEAGUE_STATUS: (id: string) => `/admin/leagues/${id}/status`,
     LEAGUE_DELETE: (id: string) => `/admin/leagues/${id}`,
     LEAGUE_SETTINGS: (id: string) => `/admin/leagues/${id}/settings`,
+    SEASONS: "/admin/seasons",
+    SEASON_DETAIL: (id: string) => `/admin/seasons/${id}`,
     AUDIT_LOG: (opts?: { page?: number; pageSize?: number }) => {
       const params = new URLSearchParams();
       if (opts?.page != null) params.set("page", String(opts.page));

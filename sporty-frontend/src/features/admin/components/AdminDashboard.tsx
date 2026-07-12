@@ -56,6 +56,11 @@ export function AdminDashboard() {
           description="Platform-wide league oversight and overrides."
         />
         <NavCard
+          href={ROUTES.ADMIN_SEASONS.path}
+          title="Seasons"
+          description="Create and edit seasons; status is derived from dates."
+        />
+        <NavCard
           href={ROUTES.ADMIN_AUDIT_LOG.path}
           title="Audit Log"
           description="Every admin action, who did it, and why."

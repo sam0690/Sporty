@@ -157,6 +157,17 @@ class Season(Base):
         """Season is current if today falls within [start_date, end_date]."""
         return self.start_date <= date.today() <= self.end_date
 
+    @property
+    def status(self) -> str:
+        """upcoming | running | finished — derived from the same dates as
+        is_current. Not stored; can never drift from the calendar."""
+        today = date.today()
+        if today < self.start_date:
+            return "upcoming"
+        if today > self.end_date:
+            return "finished"
+        return "running"
+
     __table_args__ = (
         CheckConstraint("start_date < end_date", name="ck_season_dates"),
         UniqueConstraint("sport_id", "start_date", name="uq_season_sport_start"),

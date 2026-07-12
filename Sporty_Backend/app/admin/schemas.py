@@ -87,6 +87,16 @@ class SeasonCreateRequest(BaseModel):
     reason: str | None = Field(default=None, max_length=1000)
 
 
+class SeasonUpdateRequest(BaseModel):
+    # No sport_id — a season's sport is immutable after creation (windows
+    # and league scoring are keyed to it).
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    start_date: date | None = None
+    end_date: date | None = None
+    is_active: bool | None = None
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 # ── Scoring ─────────────────────────────────────────────────────────────────────
 
 class ScoringRecalculateResponse(BaseModel):

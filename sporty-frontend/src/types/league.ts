@@ -20,6 +20,9 @@ export type TSeasonBrief = {
 export type TSeason = TSeasonBrief & {
   sport_id: string;
   is_active: boolean;
+  /** Date-derived: today falls within [start_date, end_date]. At most one
+   * season per sport can be current at a time (DB-enforced, no overlaps). */
+  is_current: boolean;
 };
 
 export type TSport = TSportBrief & {
