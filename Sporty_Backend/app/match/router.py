@@ -13,9 +13,9 @@ users can browse fixtures before (or without) joining a league.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
@@ -97,6 +97,9 @@ def list_matches(
     sport_name: str | None = Query(
         default=None, description='Filter by sport slug: "football" | "basketball" | "cricket"'
     ),
+    date: str | None = Query(
+        default=None, description="Filter to a single calendar day, YYYY-MM-DD (UTC)"
+    ),
     limit: int = Query(default=100, ge=1, le=200),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
@@ -111,6 +114,14 @@ def list_matches(
         query = query.filter(Match.status == status.strip().lower())
     if sport_name:
         query = query.filter(Sport.name == sport_name.strip().lower())
+    if date:
+        try:
+            day_start = datetime.strptime(date, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        except ValueError:
+            raise HTTPException(status_code=422, detail="date must be in YYYY-MM-DD format")
+        query = query.filter(
+            Match.match_date >= day_start, Match.match_date < day_start + timedelta(days=1)
+        )
 
     # Most recent / live first; the UI groups by status.
     rows = query.order_by(Match.match_date.desc()).limit(limit).all()

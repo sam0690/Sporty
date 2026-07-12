@@ -28,5 +28,7 @@ export type TMatchListResponse = {
 export type TMatchFilter = {
   status?: string;
   sport_name?: string;
+  /** YYYY-MM-DD, filters to a single calendar day (UTC). */
+  date?: string;
   limit?: number;
 };

@@ -9,6 +9,7 @@ export const MatchService = {
     const params: TMatchFilter = {
       status: filters.status,
       sport_name: filters.sport_name,
+      date: filters.date,
       limit: filters.limit,
     };
     const res = await authApi.get(API_PATHS.MATCHES.LIST, { params });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { PlayerDetailContent } from "@/components/shared/player-detail/PlayerDetailContent";
@@ -9,9 +9,26 @@ type PlayerDetailModalRouteProps = {
   playerId: string;
 };
 
+// Matches the .pop-out keyframe duration in globals.css — exit animates
+// before the route actually unmounts so it's visible.
+const EXIT_DURATION_MS = 180;
+
 export function PlayerDetailModalRoute({ playerId }: PlayerDetailModalRouteProps) {
   const router = useRouter();
-  const close = () => router.back();
+  const [closing, setClosing] = useState(false);
+
+  const close = () => {
+    if (closing) return;
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      router.back();
+      return;
+    }
+    setClosing(true);
+    window.setTimeout(() => router.back(), EXIT_DURATION_MS);
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -30,7 +47,7 @@ export function PlayerDetailModalRoute({ playerId }: PlayerDetailModalRouteProps
       onClick={close}
     >
       <div
-        className="pop-in max-h-[85vh] w-full max-w-lg overflow-y-auto card-surface text-fg-1"
+        className={`${closing ? "pop-out" : "pop-in"} max-h-[85vh] w-full max-w-lg overflow-y-auto card-surface text-fg-1`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="relative">

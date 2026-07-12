@@ -10,6 +10,7 @@ import { CompetitionPanel } from "./CompetitionPanel";
 import { FeaturedMatch } from "./FeaturedMatch";
 import { FixturesHero } from "./FixturesHero";
 import { LiveTicker } from "./LiveTicker";
+import { MatchDateStrip } from "./MatchDateStrip";
 import { SportFilterChips } from "./SportFilterChips";
 import { groupByCompetition, statusMeta } from "./matchFormat";
 
@@ -36,6 +37,9 @@ type MatchesBrowserProps = {
   sport: string;
   onSportChange: (sport: string) => void;
   variant: MatchesBrowserVariant;
+  /** YYYY-MM-DD. Omit to hide the date strip (e.g. the public landing page). */
+  date?: string;
+  onDateChange?: (date: string) => void;
 };
 
 const VARIANT_COPY: Record<
@@ -64,6 +68,8 @@ export function MatchesBrowser({
   sport,
   onSportChange,
   variant,
+  date,
+  onDateChange,
 }: MatchesBrowserProps) {
   const copy = VARIANT_COPY[variant];
 
@@ -95,6 +101,9 @@ export function MatchesBrowser({
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <SportFilterChips active={sport} onChange={onSportChange} />
+          {date && onDateChange && (
+            <MatchDateStrip selectedDate={date} onDateChange={onDateChange} />
+          )}
         </div>
 
         {isLoading && (

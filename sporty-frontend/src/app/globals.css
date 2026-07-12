@@ -366,6 +366,7 @@
   .float-up,
   .animate-live-pulse,
   .pop-in,
+  .pop-out,
   .marquee-track {
     animation: none;
   }
@@ -384,6 +385,15 @@
 }
 .pop-in {
   animation: pop-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Exit is faster than the entrance so closing feels responsive, not lazy. */
+@keyframes pop-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(10px) scale(0.98); }
+}
+.pop-out {
+  animation: pop-out 0.18s cubic-bezier(0.4, 0, 1, 1) both;
 }
 
 /* Shimmer skeleton — replaces flat `animate-pulse` blocks for loading states. */
@@ -481,6 +491,14 @@
 .sport-badge-basketball { background: color-mix(in oklab, var(--basketball) 12%, transparent); color: var(--basketball); }
 .sport-badge-rugby      { background: color-mix(in oklab, var(--rugby) 12%, transparent); color: var(--rugby); }
 .sport-badge-multisport { background: color-mix(in oklab, var(--playoff) 12%, transparent); color: var(--playoff); }
+
+/* Sport-tinted hero wash — top-down gradient fading to transparent, used
+   behind player detail headers so each sport reads as visually distinct. */
+.sport-wash-football   { background: linear-gradient(180deg, color-mix(in oklab, var(--football) 18%, transparent), transparent); }
+.sport-wash-cricket    { background: linear-gradient(180deg, color-mix(in oklab, var(--cricket) 18%, transparent), transparent); }
+.sport-wash-basketball { background: linear-gradient(180deg, color-mix(in oklab, var(--basketball) 18%, transparent), transparent); }
+.sport-wash-rugby      { background: linear-gradient(180deg, color-mix(in oklab, var(--rugby) 18%, transparent), transparent); }
+.sport-wash-multisport { background: linear-gradient(180deg, color-mix(in oklab, var(--playoff) 18%, transparent), transparent); }
 
 .live-badge {
   display: inline-flex;

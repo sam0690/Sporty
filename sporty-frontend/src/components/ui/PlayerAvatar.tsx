@@ -7,7 +7,7 @@ import { cn } from "@/utils/classUtils";
 export interface PlayerAvatarProps {
   name: string;
   photoUrl?: string | null;
-  size?: "sm" | "md" | "lg";
+  size?: "sm" | "md" | "lg" | "xl";
   className?: string;
 }
 
@@ -15,6 +15,7 @@ const SIZE_MAP = {
   sm: { box: "h-8 w-8", text: "text-[10px]", px: 32 },
   md: { box: "h-11 w-11", text: "text-xs", px: 44 },
   lg: { box: "h-16 w-16", text: "text-xl", px: 64 },
+  xl: { box: "h-24 w-24 sm:h-28 sm:w-28", text: "text-3xl sm:text-4xl", px: 112 },
 } as const;
 
 function getInitials(name: string): string {
