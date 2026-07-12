@@ -170,6 +170,10 @@ class LeagueResponse(BaseModel):
     joinable_now: bool | None = None
     midseason_entry_window_number: int | None = None
     midseason_join_message: str | None = None
+    # Was this league itself created via a dynasty rollover? Lets the
+    # renew-next-season UI default the Dynasty checkbox to the commissioner's
+    # own last choice instead of always resetting to unchecked.
+    was_dynasty: bool = False
 
     # Nested objects instead of raw UUIDs
     owner: UserBrief

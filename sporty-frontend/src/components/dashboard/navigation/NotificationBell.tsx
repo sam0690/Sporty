@@ -110,7 +110,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
             tabIndex={-1}
             role="dialog"
             aria-label="Notifications"
-            className="absolute right-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] card-surface p-3 shadow-xl outline-none"
+            className="absolute left-0 top-full z-50 mt-2 w-[340px] max-w-[calc(100vw-2rem)] card-surface p-3 shadow-xl outline-none"
           >
             <p className="mb-2 font-sans text-xs font-700 uppercase tracking-[2px] text-fg-1">
               Notifications

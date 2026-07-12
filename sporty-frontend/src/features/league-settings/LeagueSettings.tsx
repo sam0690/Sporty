@@ -272,7 +272,13 @@ export function LeagueSettings() {
             league?.status === "completed" ? (
               <button
                 type="button"
-                onClick={() => setShowRenewModal(true)}
+                onClick={() => {
+                  // Default to the commissioner's own last choice (was this
+                  // league itself a dynasty rollover?) instead of always
+                  // resetting to unchecked — see league.was_dynasty.
+                  setRenewDynasty(league?.was_dynasty ?? false);
+                  setShowRenewModal(true);
+                }}
                 disabled={renewLeague.isPending}
                 className={`${segmentBase} ${segmentActive} disabled:cursor-not-allowed disabled:opacity-60`}
               >

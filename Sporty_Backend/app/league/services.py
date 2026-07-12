@@ -419,10 +419,28 @@ def create_league(
     return _require_league(db, league.id, eager=True)
 
 
+def _attach_dynasty_history_info(db: Session, league: League) -> None:
+    """Set the transient `was_dynasty` attribute: was this league itself
+    created via a dynasty rollover? Derived from the audit trail
+    (`_carry_over_dynasty_rosters` logs a RosterMove(move_type=
+    'dynasty_carryover') per carried player) rather than a stored column —
+    one indexed lookup, no schema change for a single-league read."""
+    league.was_dynasty = (
+        db.query(RosterMove)
+        .filter(
+            RosterMove.league_id == league.id,
+            RosterMove.move_type == "dynasty_carryover",
+        )
+        .first()
+        is not None
+    )
+
+
 def get_league(db: Session, league_id: uuid.UUID) -> League:
     """Fetch a single league or raise 404."""
     league = _require_league(db, league_id, eager=True)
     _attach_midseason_join_info(db, league)
+    _attach_dynasty_history_info(db, league)
     return league
 
 

@@ -42,6 +42,9 @@ export type TLeague = {
   draft_mode?: boolean;
   is_head_to_head?: boolean;
   allow_midseason_join?: boolean;
+  /** Was this league itself created via a dynasty rollover? Used to default
+   * the Dynasty checkbox on the next renewal to the commissioner's last choice. */
+  was_dynasty?: boolean;
   budget_per_team?: number;
   is_public?: boolean;
   sports: TLeagueSport[];

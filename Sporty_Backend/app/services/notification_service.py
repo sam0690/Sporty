@@ -67,6 +67,38 @@ def notify_league_completed(db: Session, league_ids: Sequence[uuid.UUID]) -> int
     )
 
 
+def notify_commissioners_rollover_pending(
+    db: Session, league_ids: Sequence[uuid.UUID]
+) -> int:
+    """Nudge just the commissioner (owner) of each newly-completed league to
+    start the next season — renewal (and the Dynasty choice) is a
+    commissioner-only action nothing else prompts them to come back for.
+    Separate from notify_league_completed, which goes to every member."""
+    if not league_ids:
+        return 0
+
+    rows = (
+        db.query(League.owner_id, League.id, League.name)
+        .filter(League.id.in_(league_ids))
+        .all()
+    )
+    if not rows:
+        return 0
+
+    notifications = [
+        Notification(
+            user_id=owner_id,
+            league_id=league_id,
+            message=f"{league_name}'s season has ended — head to Settings to start next season.",
+            is_read=False,
+        )
+        for owner_id, league_id, league_name in rows
+    ]
+    db.add_all(notifications)
+    db.flush()
+    return len(notifications)
+
+
 def notify_new_season_started(db: Session, league_ids: Sequence[uuid.UUID]) -> int:
     """Notify carried-over members that a renewed league's next season is ready."""
     return _create_league_status_notifications(

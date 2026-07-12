@@ -6,7 +6,11 @@ from sqlalchemy import func
 from app.league.models import League, LeagueMembershipStatus, LeagueStatus
 from app.league.models import LeagueMembership
 from app.services.matchup_service import generate_matchups_for_league
-from app.services.notification_service import notify_league_active, notify_league_completed
+from app.services.notification_service import (
+    notify_commissioners_rollover_pending,
+    notify_league_active,
+    notify_league_completed,
+)
 from app.core.config import settings
 
 
@@ -69,6 +73,7 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
 
     setup_notifications = notify_league_active(db, setup_ids)
     completed_notifications = notify_league_completed(db, completed_ids)
+    rollover_notifications = notify_commissioners_rollover_pending(db, completed_ids)
 
     db.commit()
 
@@ -78,4 +83,5 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
         "active_to_completed": len(completed_ids),
         "active_notifications": setup_notifications,
         "completed_notifications": completed_notifications,
+        "rollover_notifications": rollover_notifications,
     }

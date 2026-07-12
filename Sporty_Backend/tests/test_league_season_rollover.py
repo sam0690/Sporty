@@ -368,6 +368,11 @@ def test_renew_league_dynasty_carryover_draft_mode() -> None:
         ).all()
         assert len({tp.player_id for tp in new_all_players}) == len(new_all_players)
 
+        # was_dynasty (drives the renew-modal default next time round) is
+        # True for the just-created dynasty league, False for the one before it.
+        assert league_service.get_league(db, new_league.id).was_dynasty is True
+        assert league_service.get_league(db, league.id).was_dynasty is False
+
 
 def test_renew_league_dynasty_budget_mode_allows_negative_budget() -> None:
     with session_scope() as db:
