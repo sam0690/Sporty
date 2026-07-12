@@ -438,6 +438,7 @@ def test_matchups_and_standings_endpoints_return_expected_shapes():
         assert len(body) == 1
         assert body[0]["result"] == "home_win"
         assert body[0]["home_team"]["name"]
+        assert body[0]["home_team"]["user"]["username"]
 
         resp = client.get(f"/api/v1/leagues/{league.id}/matchups/standings")
         assert resp.status_code == 200
@@ -445,3 +446,28 @@ def test_matchups_and_standings_endpoints_return_expected_shapes():
         assert len(standings) == 2
         assert standings[0]["wins"] == 1
         assert standings[0]["team_name"]
+        assert standings[0]["owner_username"]
+
+
+def test_matchups_endpoint_include_all_returns_whole_schedule_sorted():
+    with session_scope() as db:
+        league, _season, windows, teams = _h2h_league(db, num_teams=2, num_windows=4)
+        db.commit()
+        matchup_service.generate_matchups_for_league(db, league)
+        db.commit()
+
+        owner = db.query(User).filter(User.username == "owner").first()
+        app = _build_app(db, owner)
+        client = TestClient(app)
+
+        # No include_all -> only the current window (none has started, so
+        # falls back to the most recent started window / empty).
+        resp = client.get(f"/api/v1/leagues/{league.id}/matchups")
+        assert resp.status_code == 200
+
+        resp = client.get(f"/api/v1/leagues/{league.id}/matchups", params={"include_all": "true"})
+        assert resp.status_code == 200
+        body = resp.json()
+        assert len(body) == len(windows)  # 2 teams -> 1 matchup/window, no byes
+        assert [m["window_number"] for m in body] == sorted(m["window_number"] for m in body)
+        assert body[0]["home_team"]["user"]["username"]

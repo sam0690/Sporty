@@ -52,7 +52,7 @@ export function Sidebar({ items, userId, userName, avatarUrl }: SidebarProps) {
             SPORTY
           </span>
         </Link>
-        <NotificationBell className="hidden text-fg-3 transition-colors hover:text-fg-1 lg:block" />
+        <NotificationBell className="hidden text-fg-3 transition-colors hover:text-fg-1 lg:inline-flex" />
       </div>
 
       {/* Nav items */}

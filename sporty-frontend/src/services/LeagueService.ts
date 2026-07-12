@@ -249,6 +249,14 @@ export const LeagueService = {
     return res.data;
   },
 
+  /** The whole season's head-to-head schedule, every gameweek. */
+  async getFullSchedule(id: string): Promise<TMatchup[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.MATCHUPS(id), {
+      params: { include_all: true },
+    });
+    return res.data;
+  },
+
   /** Head-to-head W-L-T standings, sorted wins desc then points-for desc. */
   async getH2HStandings(id: string): Promise<TH2HStandingRow[]> {
     const res = await authApi.get(API_PATHS.LEAGUES.MATCHUP_STANDINGS(id));

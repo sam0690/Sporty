@@ -311,6 +311,14 @@ export const useMatchups = (leagueId: string, windowId?: string, enabled = true)
   );
 };
 
+export const useFullSchedule = (leagueId: string, enabled = true) => {
+  return useApiQuery<TMatchup[]>(
+    ["leagues", leagueId, "matchups", "full-schedule"],
+    () => LeagueService.getFullSchedule(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
 export const useH2HStandings = (leagueId: string, enabled = true) => {
   return useApiQuery<TH2HStandingRow[]>(
     ["leagues", leagueId, "matchups", "standings"],

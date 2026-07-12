@@ -1,10 +1,21 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useState } from "react";
+import { PlayerAvatar, Tabs } from "@/components/ui";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
-import { useH2HStandings, useLeague, useMatchups, useMyTeam } from "@/hooks/leagues/useLeagues";
+import {
+  useFullSchedule,
+  useH2HStandings,
+  useLeague,
+  useMatchups,
+  useMyTeam,
+} from "@/hooks/leagues/useLeagues";
+import { FullScheduleView } from "./FullScheduleView";
 import { H2HStandingsTable } from "./H2HStandingsTable";
 import type { TMatchup } from "@/types";
+
+type ScheduleView = "week" | "schedule";
 
 function fmtPoints(points: string | null): string {
   if (points === null) return "–";
@@ -23,19 +34,29 @@ function MatchupCard({ matchup, myTeamId }: { matchup: TMatchup; myTeamId?: stri
         {isBye ? "Bye" : isPending ? "This Week" : "Final"}
       </p>
       <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0 flex-1 text-center">
-          <p className="truncate text-sm font-700 text-fg-1">{matchup.home_team.name}</p>
+        <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+          <PlayerAvatar
+            name={matchup.home_team.user.username}
+            photoUrl={matchup.home_team.user.avatar_url}
+            size="md"
+          />
+          <p className="mt-2 truncate text-sm font-700 text-fg-1">{matchup.home_team.name}</p>
           <p className="num mt-1 text-3xl font-700 text-fg-1">
             {fmtPoints(matchup.home_points)}
           </p>
         </div>
         {!isBye && (
           <>
-            <span className="shrink-0 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-3">
+            <span className="shrink-0 rounded-full border border-white/12 px-2.5 py-1 font-sans text-[11px] font-700 uppercase tracking-[2px] text-fg-2">
               vs
             </span>
-            <div className="min-w-0 flex-1 text-center">
-              <p className="truncate text-sm font-700 text-fg-1">{matchup.away_team?.name}</p>
+            <div className="flex min-w-0 flex-1 flex-col items-center text-center">
+              <PlayerAvatar
+                name={matchup.away_team?.user.username ?? matchup.away_team?.name ?? "?"}
+                photoUrl={matchup.away_team?.user.avatar_url}
+                size="md"
+              />
+              <p className="mt-2 truncate text-sm font-700 text-fg-1">{matchup.away_team?.name}</p>
               <p className="num mt-1 text-3xl font-700 text-fg-1">
                 {fmtPoints(matchup.away_points)}
               </p>
@@ -54,8 +75,17 @@ export function MatchupsView() {
   const { data: league } = useLeague(leagueId);
   const { data: myTeam } = useMyTeam(leagueId);
   const enabled = !!league?.is_head_to_head && league?.status === "active";
+  const [view, setView] = useState<ScheduleView>("week");
 
-  const { data: matchups, isLoading: matchupsLoading } = useMatchups(leagueId, undefined, enabled);
+  const { data: matchups, isLoading: matchupsLoading } = useMatchups(
+    leagueId,
+    undefined,
+    enabled && view === "week",
+  );
+  const { data: fullSchedule, isLoading: scheduleLoading } = useFullSchedule(
+    leagueId,
+    enabled && view === "schedule",
+  );
   const { data: standings, isLoading: standingsLoading } = useH2HStandings(leagueId, enabled);
 
   if (league && !enabled) {
@@ -75,26 +105,52 @@ export function MatchupsView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <p className="section-label mb-3">Your Matchup</p>
-        {matchupsLoading ? (
-          <TableSkeleton />
-        ) : myMatchup ? (
-          <MatchupCard matchup={myMatchup} myTeamId={myTeam?.id} />
-        ) : (
-          <p className="text-sm text-fg-3">No matchup this window.</p>
-        )}
+      <div className="flex justify-end">
+        <Tabs
+          ariaLabel="Matchups view"
+          size="sm"
+          value={view}
+          onChange={(key) => setView(key as ScheduleView)}
+          items={[
+            { key: "week", label: "This Week" },
+            { key: "schedule", label: "Full Schedule" },
+          ]}
+        />
       </div>
 
-      {others.length > 0 && (
+      {view === "schedule" ? (
         <div>
-          <p className="section-label mb-3">Around the League</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {others.map((m) => (
-              <MatchupCard key={m.id} matchup={m} myTeamId={myTeam?.id} />
-            ))}
-          </div>
+          <p className="section-label mb-3">Full Schedule</p>
+          {scheduleLoading ? (
+            <TableSkeleton />
+          ) : (
+            <FullScheduleView matchups={fullSchedule ?? []} myTeamId={myTeam?.id} />
+          )}
         </div>
+      ) : (
+        <>
+          <div>
+            <p className="section-label mb-3">Your Matchup</p>
+            {matchupsLoading ? (
+              <TableSkeleton />
+            ) : myMatchup ? (
+              <MatchupCard matchup={myMatchup} myTeamId={myTeam?.id} />
+            ) : (
+              <p className="text-sm text-fg-3">No matchup this window.</p>
+            )}
+          </div>
+
+          {others.length > 0 && (
+            <div>
+              <p className="section-label mb-3">Around the League</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {others.map((m) => (
+                  <MatchupCard key={m.id} matchup={m} myTeamId={myTeam?.id} />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div>

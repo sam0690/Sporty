@@ -420,11 +420,13 @@ export type TWaiverOrderEntry = {
 export type TMatchupTeamBrief = {
   id: string;
   name: string;
+  user: TUser;
 };
 
 export type TMatchup = {
   id: string;
   transfer_window_id: string;
+  window_number: number;
   home_team: TMatchupTeamBrief;
   away_team: TMatchupTeamBrief | null;
   // Decimal fields serialize as JSON strings in this backend (same as
@@ -437,6 +439,8 @@ export type TMatchup = {
 export type TH2HStandingRow = {
   fantasy_team_id: string;
   team_name: string;
+  owner_username: string;
+  owner_avatar_url: string | null;
   wins: number;
   losses: number;
   ties: number;

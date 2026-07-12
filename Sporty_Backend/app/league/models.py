@@ -1398,6 +1398,12 @@ class LeagueMatchup(Base):
     home_team: Mapped["FantasyTeam"] = relationship(foreign_keys=[home_team_id])
     away_team: Mapped["FantasyTeam | None"] = relationship(foreign_keys=[away_team_id])
 
+    @property
+    def window_number(self) -> int:
+        """Gameweek number — for display (Full Schedule view) without a
+        separate window lookup on the frontend."""
+        return self.transfer_window.number
+
     __table_args__ = (
         Index("ix_matchup_league_window", "league_id", "transfer_window_id"),
     )

@@ -18,7 +18,7 @@ import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.auth.models import User
 from app.league.models import (
@@ -163,11 +163,16 @@ def get_h2h_standings(db: Session, league_id: uuid.UUID) -> list[dict]:
     window has scored."""
     teams = (
         db.query(FantasyTeam)
+        .options(joinedload(FantasyTeam.user))
         .filter(FantasyTeam.league_id == league_id, FantasyTeam.status == FantasyTeamStatus.ACTIVE)
         .all()
     )
     resolved = (
         db.query(LeagueMatchup)
+        .options(
+            joinedload(LeagueMatchup.home_team).joinedload(FantasyTeam.user),
+            joinedload(LeagueMatchup.away_team).joinedload(FantasyTeam.user),
+        )
         .filter(
             LeagueMatchup.league_id == league_id,
             LeagueMatchup.result.in_(["home_win", "away_win", "tie"]),
@@ -179,6 +184,8 @@ def get_h2h_standings(db: Session, league_id: uuid.UUID) -> list[dict]:
         team.id: {
             "fantasy_team_id": team.id,
             "team_name": team.name,
+            "owner_username": team.user.username,
+            "owner_avatar_url": team.user.avatar_url,
             "wins": 0,
             "losses": 0,
             "ties": 0,
@@ -188,12 +195,14 @@ def get_h2h_standings(db: Session, league_id: uuid.UUID) -> list[dict]:
         for team in teams
     }
 
-    def _row(team_id: uuid.UUID) -> dict:
+    def _row(team: FantasyTeam) -> dict:
         return records.setdefault(
-            team_id,
+            team.id,
             {
-                "fantasy_team_id": team_id,
-                "team_name": "",
+                "fantasy_team_id": team.id,
+                "team_name": team.name,
+                "owner_username": team.user.username,
+                "owner_avatar_url": team.user.avatar_url,
                 "wins": 0,
                 "losses": 0,
                 "ties": 0,
@@ -203,8 +212,8 @@ def get_h2h_standings(db: Session, league_id: uuid.UUID) -> list[dict]:
         )
 
     for m in resolved:
-        home = _row(m.home_team_id)
-        away = _row(m.away_team_id)
+        home = _row(m.home_team)
+        away = _row(m.away_team)
         home["points_for"] += m.home_points
         home["points_against"] += m.away_points
         away["points_for"] += m.away_points
@@ -253,12 +262,31 @@ def get_matchups_for_window(
     league_id: uuid.UUID,
     transfer_window_id: uuid.UUID | None,
     current_user: User,
+    *,
+    include_all: bool = False,
 ) -> list[LeagueMatchup]:
     """All matchups for a window (full scoreboard, not just the caller's).
     Defaults to the league's current window when transfer_window_id is
-    omitted."""
+    omitted. include_all=True ignores window scoping entirely and returns
+    the whole season's schedule, ordered by gameweek — for the Full
+    Schedule view (the round-robin is generated upfront, so this is just a
+    read, nothing to compute)."""
     league = _require_league(db, league_id)
     _require_membership(db, league_id, current_user.id)
+
+    base_query = (
+        db.query(LeagueMatchup)
+        .join(TransferWindow, LeagueMatchup.transfer_window_id == TransferWindow.id)
+        .options(
+            joinedload(LeagueMatchup.transfer_window),
+            joinedload(LeagueMatchup.home_team).joinedload(FantasyTeam.user),
+            joinedload(LeagueMatchup.away_team).joinedload(FantasyTeam.user),
+        )
+        .filter(LeagueMatchup.league_id == league_id)
+    )
+
+    if include_all:
+        return base_query.order_by(TransferWindow.number).all()
 
     window_id = transfer_window_id
     if window_id is None:
@@ -267,14 +295,7 @@ def get_matchups_for_window(
     if window_id is None:
         return []
 
-    return (
-        db.query(LeagueMatchup)
-        .filter(
-            LeagueMatchup.league_id == league_id,
-            LeagueMatchup.transfer_window_id == window_id,
-        )
-        .all()
-    )
+    return base_query.filter(LeagueMatchup.transfer_window_id == window_id).all()
 
 
 def get_standings(db: Session, league_id: uuid.UUID, current_user: User) -> list[dict]:

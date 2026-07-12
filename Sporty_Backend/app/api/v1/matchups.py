@@ -17,10 +17,13 @@ router = APIRouter(prefix="/leagues/{league_id}/matchups", tags=["Head-to-Head"]
 def list_matchups(
     league_id: uuid.UUID,
     window_id: uuid.UUID | None = Query(default=None),
+    include_all: bool = Query(default=False, description="Return the whole season's schedule instead of one window"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    return matchup_service.get_matchups_for_window(db, league_id, window_id, current_user)
+    return matchup_service.get_matchups_for_window(
+        db, league_id, window_id, current_user, include_all=include_all
+    )
 
 
 @router.get("/standings", response_model=list[H2HStandingRow])
