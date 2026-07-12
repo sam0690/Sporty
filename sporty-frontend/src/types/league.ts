@@ -40,6 +40,7 @@ export type TLeague = {
   owner: TUser;
   competition_type?: TCompetitionType;
   draft_mode?: boolean;
+  is_head_to_head?: boolean;
   allow_midseason_join?: boolean;
   budget_per_team?: number;
   is_public?: boolean;
@@ -407,6 +408,31 @@ export type TWaiverOrderEntry = {
   position: number;
   fantasy_team_id: string;
   team_name: string;
+};
+
+export type TMatchupTeamBrief = {
+  id: string;
+  name: string;
+};
+
+export type TMatchup = {
+  id: string;
+  transfer_window_id: string;
+  home_team: TMatchupTeamBrief;
+  away_team: TMatchupTeamBrief | null;
+  home_points: number | null;
+  away_points: number | null;
+  result: "home_win" | "away_win" | "tie" | "bye" | null;
+};
+
+export type TH2HStandingRow = {
+  fantasy_team_id: string;
+  team_name: string;
+  wins: number;
+  losses: number;
+  ties: number;
+  points_for: number;
+  points_against: number;
 };
 
 export type TRosterPlayer = {

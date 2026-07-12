@@ -97,6 +97,8 @@ export const API_PATHS = {
     TRADE_ROSTERS: (id: string) => `/leagues/${id}/trades/rosters`,
     TRADE_ACTION: (id: string, tradeId: string, action: string) =>
       `/leagues/${id}/trades/${tradeId}/${action}`,
+    MATCHUPS: (id: string) => `/leagues/${id}/matchups`,
+    MATCHUP_STANDINGS: (id: string) => `/leagues/${id}/matchups/standings`,
     TRADE_FAIRNESS_PREVIEW: (id: string) => `/leagues/${id}/trades/fairness-preview`,
     LEADERBOARD: (
       id: string,

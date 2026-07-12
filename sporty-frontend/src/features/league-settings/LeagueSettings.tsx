@@ -7,6 +7,7 @@ import { ArrowRight, Lock, X } from "lucide-react";
 import { toastifier } from "@/lib/toastifier";
 import { DangerZone } from "./components/DangerZone";
 import { DeleteLeagueModal } from "./components/DeleteLeagueModal";
+import { RenewLeagueModal } from "./components/RenewLeagueModal";
 import {
   SettingsForm,
   type LeagueSettingsData,
@@ -64,6 +65,8 @@ export function LeagueSettings() {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [renewDynasty, setRenewDynasty] = useState(false);
   const [data, setData] = useState<LeagueSettingsData>(() => ({
     leagueName: league?.name ?? "",
     isPrivate: !league?.is_public,
@@ -183,7 +186,8 @@ export function LeagueSettings() {
 
   const handleRenewLeague = async () => {
     try {
-      const nextLeague = await renewLeague.mutateAsync(undefined);
+      const nextLeague = await renewLeague.mutateAsync({ dynasty: renewDynasty });
+      setShowRenewModal(false);
       router.push(`/leagues/${nextLeague.id}/settings`);
     } catch {
       // errors are surfaced by shared mutation toast
@@ -268,7 +272,7 @@ export function LeagueSettings() {
             league?.status === "completed" ? (
               <button
                 type="button"
-                onClick={handleRenewLeague}
+                onClick={() => setShowRenewModal(true)}
                 disabled={renewLeague.isPending}
                 className={`${segmentBase} ${segmentActive} disabled:cursor-not-allowed disabled:opacity-60`}
               >
@@ -377,6 +381,15 @@ export function LeagueSettings() {
         isDeleting={isDeleting}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
+      />
+
+      <RenewLeagueModal
+        isOpen={showRenewModal}
+        dynasty={renewDynasty}
+        onDynastyChange={setRenewDynasty}
+        isPending={renewLeague.isPending}
+        onClose={() => setShowRenewModal(false)}
+        onConfirm={handleRenewLeague}
       />
     </section>
   );

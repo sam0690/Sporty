@@ -7,11 +7,13 @@ type LeagueSettingsProps = {
   isPrivate: boolean;
   teamSize: number;
   competitionType: "draft" | "budget";
+  isHeadToHead: boolean;
   draftDate: string;
   onSettingsChange: (next: {
     isPrivate?: boolean;
     teamSize?: number;
     competitionType?: "draft" | "budget";
+    isHeadToHead?: boolean;
     draftDate?: string;
   }) => void;
 };
@@ -106,6 +108,7 @@ export function LeagueSettings({
   isPrivate,
   teamSize,
   competitionType,
+  isHeadToHead,
   onSettingsChange,
 }: LeagueSettingsProps) {
   return (
@@ -159,6 +162,24 @@ export function LeagueSettings({
             title="Draft Mode"
             desc="Take turns drafting players live."
             icon="🎯"
+          />
+        </div>
+      </div>
+
+      <div>
+        <p className={fieldLabel}>Standings Format</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <RadioCard
+            selected={!isHeadToHead}
+            onSelect={() => onSettingsChange({ isHeadToHead: false })}
+            title="Points Total"
+            desc="Rank by cumulative fantasy points across the season."
+          />
+          <RadioCard
+            selected={isHeadToHead}
+            onSelect={() => onSettingsChange({ isHeadToHead: true })}
+            title="Head-to-Head"
+            desc="Face one opponent per gameweek — win, lose, or tie. Schedule locks once the season starts."
           />
         </div>
       </div>

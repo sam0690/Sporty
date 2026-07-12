@@ -35,6 +35,8 @@ import type {
   TTradeOffer,
   TTradeFairness,
   TPowerRankingEntry,
+  TMatchup,
+  TH2HStandingRow,
 } from "@/types/league";
 
 /**
@@ -87,6 +89,7 @@ export const LeagueService = {
     squad_size?: number;
     budget_per_team?: number;
     draft_mode?: boolean;
+    is_head_to_head?: boolean;
     allow_midseason_join?: boolean;
     transfers_per_window?: number;
     transfer_day?: number;
@@ -238,6 +241,20 @@ export const LeagueService = {
     return res.data;
   },
 
+  /** Head-to-head matchups for a window (defaults to the current window). */
+  async getMatchups(id: string, windowId?: string): Promise<TMatchup[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.MATCHUPS(id), {
+      params: windowId ? { window_id: windowId } : undefined,
+    });
+    return res.data;
+  },
+
+  /** Head-to-head W-L-T standings, sorted wins desc then points-for desc. */
+  async getH2HStandings(id: string): Promise<TH2HStandingRow[]> {
+    const res = await authApi.get(API_PATHS.LEAGUES.MATCHUP_STANDINGS(id));
+    return res.data;
+  },
+
   /** Live fairness preview while building a trade (no side-effects) */
   async getTradeFairnessPreview(
     id: string,
@@ -356,10 +373,15 @@ export const LeagueService = {
     return res.data;
   },
 
-  /** Start the next season of a completed league. */
-  async renewLeague(id: string, targetSeasonId?: string): Promise<TLeague> {
+  /** Start the next season of a completed league. `dynasty: true` carries
+   * the entire roster over with no re-draft (see RenewLeagueModal). */
+  async renewLeague(
+    id: string,
+    options: { targetSeasonId?: string; dynasty?: boolean } = {},
+  ): Promise<TLeague> {
     const res = await authApi.post(API_PATHS.LEAGUES.RENEW(id), {
-      target_season_id: targetSeasonId ?? null,
+      target_season_id: options.targetSeasonId ?? null,
+      dynasty: options.dynasty ?? false,
     });
     return res.data;
   },

@@ -14,6 +14,7 @@ import {
 } from "./components/WeekSelector";
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
 import {
+  useH2HStandings,
   useLeaderboard,
   useLeague,
   useMyTeam,
@@ -59,6 +60,17 @@ export function LeagueLeaderboard() {
     return map;
   }, [powerRankings]);
 
+  // Small W-L-T badge alongside points for head-to-head leagues — the
+  // Matchups tab is where the real H2H standings live, this is just a hint.
+  const { data: h2hStandings } = useH2HStandings(leagueId, !!league?.is_head_to_head);
+  const recordByTeam = useMemo(() => {
+    const map = new Map<string, string>();
+    (h2hStandings ?? []).forEach((row) =>
+      map.set(row.fantasy_team_id, `${row.wins}-${row.losses}-${row.ties}`),
+    );
+    return map;
+  }, [h2hStandings]);
+
   const standings = useMemo<StandingRow[]>(() => {
     if (!leaderboard) return [];
     // Backend rank can be null until the ranking job runs (e.g. an in-progress
@@ -76,9 +88,10 @@ export function LeagueLeaderboard() {
           rankDelta: power?.rank_delta,
           streak: power?.streak,
           isManagerOfTheWeek: power?.manager_of_the_week,
+          record: recordByTeam.get(entry.team_id),
         };
       });
-  }, [leaderboard, powerRankingsByTeam]);
+  }, [leaderboard, powerRankingsByTeam, recordByTeam]);
 
   const userTeam = useMemo(() => {
     if (!myTeam || !standings.length) return null;

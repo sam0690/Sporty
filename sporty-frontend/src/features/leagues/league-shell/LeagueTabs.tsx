@@ -7,6 +7,7 @@ type LeagueTabsProps = {
   leagueId: string;
   isDraftMode: boolean;
   isCommissioner: boolean;
+  isHeadToHead: boolean;
 };
 
 type SubTab = { key: string; label: string; segment: string };
@@ -21,7 +22,11 @@ type TabGroup = {
   subTabs?: SubTab[];
 };
 
-function buildGroups(isDraftMode: boolean, isCommissioner: boolean): TabGroup[] {
+function buildGroups(
+  isDraftMode: boolean,
+  isCommissioner: boolean,
+  isHeadToHead: boolean,
+): TabGroup[] {
   const groups: TabGroup[] = [
     { key: "overview", label: "Overview", segment: "", segments: [""] },
     { key: "team", label: "Team", segment: "lineup", segments: ["lineup"] },
@@ -44,6 +49,9 @@ function buildGroups(isDraftMode: boolean, isCommissioner: boolean): TabGroup[] 
           segments: ["transfers"],
         },
     { key: "table", label: "Table", segment: "leaderboard", segments: ["leaderboard"] },
+    ...(isHeadToHead
+      ? [{ key: "matchups", label: "Matchups", segment: "matchups", segments: ["matchups"] }]
+      : []),
     { key: "matchday", label: "Matchday", segment: "gameweek", segments: ["gameweek"] },
     {
       key: "league",
@@ -74,6 +82,7 @@ export function LeagueTabs({
   leagueId,
   isDraftMode,
   isCommissioner,
+  isHeadToHead,
 }: LeagueTabsProps) {
   const pathname = usePathname();
   const base = `/leagues/${leagueId}`;
@@ -83,7 +92,7 @@ export function LeagueTabs({
     ? (pathname.slice(base.length).split("/").filter(Boolean)[0] ?? "")
     : "";
 
-  const groups = buildGroups(isDraftMode, isCommissioner);
+  const groups = buildGroups(isDraftMode, isCommissioner, isHeadToHead);
   const activeGroup = groups.find((g) => g.segments.includes(currentSegment));
 
   const hrefFor = (segment: string) => (segment ? `${base}/${segment}` : base);

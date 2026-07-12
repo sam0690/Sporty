@@ -50,6 +50,7 @@ class LeagueCreate(BaseModel):
     squad_size: int = Field(default=15, ge=1, le=30)
     budget_per_team: Decimal = Field(default=DEFAULT_TEAM_BUDGET, gt=0, max_digits=12, decimal_places=2)
     draft_mode: bool = Field(default=False)
+    is_head_to_head: bool = Field(default=False)
     allow_midseason_join: bool = Field(default=False)
     transfers_per_window: int = Field(default=4, ge=0, le=10)
     transfer_day: int = Field(default=1, ge=1, le=7)
@@ -158,6 +159,7 @@ class LeagueResponse(BaseModel):
     position_minimums: dict[str, int] = {}
     max_per_club: int
     draft_mode: bool
+    is_head_to_head: bool
     allow_midseason_join: bool
     transfers_per_window: int
     transfer_day: int

@@ -11,6 +11,8 @@ type StandingRow = {
   rankDelta?: number | null;
   streak?: number;
   isManagerOfTheWeek?: boolean;
+  /** Head-to-head W-L-T record, e.g. "4-2-1" — only set for H2H leagues. */
+  record?: string;
 };
 
 type StandingsTableProps = {
@@ -107,6 +109,11 @@ export function StandingsTable({
                         title="Manager of the Week — highest points last gameweek"
                       >
                         🔥
+                      </span>
+                    )}
+                    {team.record && (
+                      <span className="ml-1.5 text-xs text-fg-2" title="Head-to-head record (W-L-T)">
+                        {team.record}
                       </span>
                     )}
                     {team.streak && team.streak >= 2 ? (

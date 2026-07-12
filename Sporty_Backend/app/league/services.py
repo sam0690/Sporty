@@ -328,6 +328,15 @@ def create_league(
             detail="end_date must be on or after start_date",
         )
 
+    if data.is_head_to_head and data.allow_midseason_join:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                "Head-to-head leagues can't allow mid-season joining — the "
+                "matchup schedule is locked once the season starts."
+            ),
+        )
+
     new_id = uuid.uuid4()
     league = League(
         id=new_id,
@@ -341,6 +350,7 @@ def create_league(
         squad_size=data.squad_size,
         budget_per_team=data.budget_per_team,
         draft_mode=data.draft_mode,
+        is_head_to_head=data.is_head_to_head,
         allow_midseason_join=data.allow_midseason_join,
         transfers_per_window=data.transfers_per_window,
         transfer_day=data.transfer_day,
@@ -1596,9 +1606,12 @@ def make_draft_pick(
         logger.info("Draft complete for league=%s — auto-transitioned to ACTIVE", league_id)
         # Seed the waiver order (reverse draft order) now the draft is done.
         from app.services import waiver_service
+        from app.services.matchup_service import generate_matchups_for_league
 
         db.flush()
         waiver_service.init_waiver_order(db, league)
+        if league.is_head_to_head:
+            generate_matchups_for_league(db, league)
 
     db.flush()
 
@@ -2316,6 +2329,15 @@ def update_midseason_join_setting(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Mid-season joining is only available for budget leagues",
+        )
+
+    if allow_midseason_join and league.is_head_to_head:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Mid-season joining is not available for head-to-head leagues — "
+                "the matchup schedule is locked once the season starts."
+            ),
         )
 
     if league.status == LeagueStatus.COMPLETED:

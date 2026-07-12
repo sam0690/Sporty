@@ -405,6 +405,12 @@ class League(Base):
     # When draft_mode=True, users participate in a snake draft to build teams
     draft_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Head-to-head format — orthogonal to draft_mode. When True, teams are
+    # paired against one opponent per transfer window (see LeagueMatchup /
+    # app/services/matchup_service.py) and standings rank by W-L-T record
+    # instead of pure cumulative points. See docs/HEAD_TO_HEAD_MATCHUPS.md.
+    is_head_to_head: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
     # Transfer economy settings (applies to budget-mode leagues)
     # Number of transfers allowed per transfer window (hard cap, no penalty system)
     transfers_per_window: Mapped[int] = mapped_column(
@@ -1342,6 +1348,58 @@ class TeamWeeklyScore(Base):
             "rank_in_league IS NULL OR rank_in_league >= 1",
             name="ck_weekly_score_rank_positive",
         ),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 11b. LeagueMatchup
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# One row per head-to-head pairing per transfer window, for leagues with
+# is_head_to_head=True. away_team_id NULL = a bye (odd team count that
+# window). result is NULL until the window's scoring finalizes and
+# resolve_matchups_for_window() (app/services/matchup_service.py) fills it
+# in from TeamWeeklyScore — bye rows get result="bye" immediately at
+# generation time instead. See docs/HEAD_TO_HEAD_MATCHUPS.md.
+#
+# No DB-level uniqueness on "a team appears once per window" — enforced in
+# generate_matchups_for_league() at generation time, matching this
+# codebase's existing app-layer-enforcement style elsewhere (e.g. the
+# dynasty negative-budget freeze).
+class LeagueMatchup(Base):
+    __tablename__ = "league_matchups"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    league_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("leagues.id", ondelete="CASCADE"), nullable=False,
+    )
+    transfer_window_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("transfer_windows.id"), nullable=False,
+    )
+    home_team_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("fantasy_teams.id", ondelete="CASCADE"), nullable=False,
+    )
+    # NULL = bye week for home_team_id.
+    away_team_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("fantasy_teams.id", ondelete="CASCADE"), nullable=True,
+    )
+
+    home_points: Mapped[Decimal | None] = mapped_column(Numeric(precision=8, scale=2), nullable=True)
+    away_points: Mapped[Decimal | None] = mapped_column(Numeric(precision=8, scale=2), nullable=True)
+
+    # home_win | away_win | tie | bye | NULL (pending — scoring not finalized yet)
+    result: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    league: Mapped["League"] = relationship(foreign_keys=[league_id])
+    transfer_window: Mapped["TransferWindow"] = relationship(foreign_keys=[transfer_window_id])
+    home_team: Mapped["FantasyTeam"] = relationship(foreign_keys=[home_team_id])
+    away_team: Mapped["FantasyTeam | None"] = relationship(foreign_keys=[away_team_id])
+
+    __table_args__ = (
+        Index("ix_matchup_league_window", "league_id", "transfer_window_id"),
     )
 
 

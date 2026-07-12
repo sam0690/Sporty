@@ -14,6 +14,7 @@ from app.services.scoring.player_scoring import (
     score_football_players_for_window,
     score_nba_players_for_window,
 )
+from app.services.matchup_service import resolve_matchups_for_window
 from app.services.scoring.ranking import apply_rankings_for_league_window
 from app.services.scoring.team_scoring import upsert_team_weekly_scores
 from app.services.scoring.window_locator import find_equivalent_window_for_sport
@@ -119,6 +120,8 @@ def score_transfer_window_for_league(
             league_id=league_id,
             transfer_window_id=transfer_window_id,
         )
+        if league.is_head_to_head:
+            resolve_matchups_for_window(db, league_id, transfer_window_id)
         apply_rankings_for_league_window(
             db,
             league_id=league_id,

@@ -74,6 +74,7 @@ export function CreateLeagueView() {
       max_teams: 10,
       squad_size: 15,
       draft_mode: false,
+      is_head_to_head: false,
       is_public: true,
     },
     mode: "onSubmit",
@@ -83,6 +84,7 @@ export function CreateLeagueView() {
   const sportIds = useWatch({ control, name: "sport_ids" });
   const maxTeams = useWatch({ control, name: "max_teams" }) ?? 10;
   const draftMode = useWatch({ control, name: "draft_mode" }) ?? false;
+  const isHeadToHead = useWatch({ control, name: "is_head_to_head" }) ?? false;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -162,11 +164,13 @@ export function CreateLeagueView() {
       competitionType: draftMode
         ? ("draft" as TCompetitionType)
         : ("budget" as TCompetitionType),
+      isHeadToHead,
       draftDate,
     }),
     [
       draftDate,
       draftMode,
+      isHeadToHead,
       isPublic,
       leagueName,
       effectiveSeasonId,
@@ -190,6 +194,7 @@ export function CreateLeagueView() {
         ? errors.budget?.message ||
           errors.squad_size?.message ||
           errors.draft_mode?.message ||
+          errors.is_head_to_head?.message ||
           errors.is_public?.message
         : null;
 
@@ -201,7 +206,7 @@ export function CreateLeagueView() {
     const fields =
       step === 1
         ? (["name", "sport_ids"] as const)
-        : (["budget", "squad_size", "draft_mode", "is_public"] as const);
+        : (["budget", "squad_size", "draft_mode", "is_head_to_head", "is_public"] as const);
 
     const isValid = await trigger(fields);
     if (!isValid) {
@@ -241,7 +246,10 @@ export function CreateLeagueView() {
         squad_size: values.squad_size,
         budget_per_team: values.budget,
         draft_mode: values.draft_mode,
-        allow_midseason_join: competitionType === "budget",
+        is_head_to_head: values.is_head_to_head,
+        // Head-to-head leagues lock their matchup schedule at season start —
+        // mutually exclusive with mid-season joining (backend 422s otherwise).
+        allow_midseason_join: competitionType === "budget" && !values.is_head_to_head,
         transfers_per_window: 4,
         transfer_day: 1,
       });
@@ -306,6 +314,7 @@ export function CreateLeagueView() {
     isPrivate?: boolean;
     teamSize?: number;
     competitionType?: TCompetitionType;
+    isHeadToHead?: boolean;
     draftDate?: string;
   }) => {
     if (typeof next.isPrivate === "boolean") {
@@ -322,6 +331,12 @@ export function CreateLeagueView() {
     }
     if (typeof next.competitionType === "string") {
       setValue("draft_mode", next.competitionType === "draft", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    if (typeof next.isHeadToHead === "boolean") {
+      setValue("is_head_to_head", next.isHeadToHead, {
         shouldDirty: true,
         shouldValidate: true,
       });
@@ -387,6 +402,7 @@ export function CreateLeagueView() {
                 isPrivate={leagueData.isPrivate}
                 teamSize={leagueData.teamSize}
                 competitionType={leagueData.competitionType}
+                isHeadToHead={isHeadToHead}
                 draftDate={leagueData.draftDate}
                 onSettingsChange={handleSettingsChange}
               />

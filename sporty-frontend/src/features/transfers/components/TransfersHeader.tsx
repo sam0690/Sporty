@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Wallet } from "lucide-react";
+import { TriangleAlert, Wallet } from "lucide-react";
 
 type TransfersHeaderProps = {
   budget: number;
@@ -14,6 +14,8 @@ export function TransfersHeader({
   leagueName,
   currentWeek,
 }: TransfersHeaderProps) {
+  const isOverBudget = budget < 0;
+
   return (
     <header className="relative overflow-hidden card-surface p-5">
       <div className="pointer-events-none absolute inset-0 opacity-18">
@@ -38,11 +40,32 @@ export function TransfersHeader({
           </p>
         </div>
 
-        <div className="inline-flex items-center gap-2 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-accent">
-          <Wallet className="h-4 w-4" aria-hidden="true" />
-          <span>${budget.toFixed(1)}M remaining</span>
+        <div
+          className={
+            isOverBudget
+              ? "inline-flex items-center gap-2 rounded-[3px] border border-danger/30 bg-danger/10 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-danger"
+              : "inline-flex items-center gap-2 rounded-[3px] border border-accent/25 bg-accent/8 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[2px] text-accent"
+          }
+        >
+          {isOverBudget ? (
+            <TriangleAlert className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Wallet className="h-4 w-4" aria-hidden="true" />
+          )}
+          <span>
+            {isOverBudget
+              ? `$${Math.abs(budget).toFixed(1)}M over budget`
+              : `$${budget.toFixed(1)}M remaining`}
+          </span>
         </div>
       </div>
+
+      {isOverBudget && (
+        <p className="relative z-10 mt-3 text-xs text-danger-soft">
+          Sell players to get back within budget — transfers that add spend
+          are blocked until you do (drops are always allowed).
+        </p>
+      )}
     </header>
   );
 }

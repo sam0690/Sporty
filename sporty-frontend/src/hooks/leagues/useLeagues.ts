@@ -37,6 +37,8 @@ import {
   TTradeOffer,
   TTradeFairness,
   TPowerRankingEntry,
+  TMatchup,
+  TH2HStandingRow,
   TSeasonHistoryItem,
 } from "@/types";
 import { toastifier } from "@/lib/toastifier";
@@ -114,6 +116,7 @@ export function useCreateLeague() {
       squad_size?: number;
       budget_per_team?: number;
       draft_mode?: boolean;
+      is_head_to_head?: boolean;
       allow_midseason_join?: boolean;
       transfers_per_window?: number;
       transfer_day?: number;
@@ -296,6 +299,22 @@ export const useWaiverOrder = (leagueId: string, enabled = true) => {
   return useApiQuery<TWaiverOrderEntry[]>(
     ["leagues", leagueId, "waiver-order"],
     () => LeagueService.getWaiverOrder(leagueId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useMatchups = (leagueId: string, windowId?: string, enabled = true) => {
+  return useApiQuery<TMatchup[]>(
+    ["leagues", leagueId, "matchups", windowId ?? "current"],
+    () => LeagueService.getMatchups(leagueId, windowId),
+    { enabled: !!leagueId && enabled },
+  );
+};
+
+export const useH2HStandings = (leagueId: string, enabled = true) => {
+  return useApiQuery<TH2HStandingRow[]>(
+    ["leagues", leagueId, "matchups", "standings"],
+    () => LeagueService.getH2HStandings(leagueId),
     { enabled: !!leagueId && enabled },
   );
 };
@@ -652,8 +671,8 @@ export function useUpdateLeagueStatus(leagueId: string) {
 export function useRenewLeague(leagueId: string) {
   const queryClient = useQueryClient();
   return useApiMutation(
-    (targetSeasonId?: string) =>
-      LeagueService.renewLeague(leagueId, targetSeasonId),
+    (options: { targetSeasonId?: string; dynasty?: boolean } = {}) =>
+      LeagueService.renewLeague(leagueId, options),
     {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "seasons"] });

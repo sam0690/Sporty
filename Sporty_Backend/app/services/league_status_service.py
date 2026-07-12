@@ -5,6 +5,7 @@ from sqlalchemy import func
 
 from app.league.models import League, LeagueMembershipStatus, LeagueStatus
 from app.league.models import LeagueMembership
+from app.services.matchup_service import generate_matchups_for_league
 from app.services.notification_service import notify_league_active, notify_league_completed
 from app.core.config import settings
 
@@ -59,6 +60,8 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
 
         league.status = LeagueStatus.ACTIVE
         setup_ids.append(league.id)
+        if league.is_head_to_head:
+            generate_matchups_for_league(db, league)
 
     for league in active_to_completed:
         league.status = LeagueStatus.COMPLETED

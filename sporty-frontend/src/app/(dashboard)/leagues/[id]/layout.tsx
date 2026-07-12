@@ -84,6 +84,7 @@ export default function LeagueLayout({
             leagueId={leagueId}
             isDraftMode={isDraftMode}
             isCommissioner={isCommissioner}
+            isHeadToHead={!!league.is_head_to_head}
           />
         </>
       ) : isLoading ? (

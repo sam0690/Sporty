@@ -15,6 +15,7 @@ type SummaryStepProps = {
     isPrivate: boolean;
     teamSize: number;
     competitionType: "draft" | "budget";
+    isHeadToHead: boolean;
     draftDate: string;
   };
   selectedSports: LeagueSportName[];
@@ -86,6 +87,12 @@ export function SummaryStep({
               {leagueData.competitionType === "draft"
                 ? "Draft Mode"
                 : "Budget Mode"}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 border-b border-white/8 px-4 py-3">
+            <p className="text-sm text-fg-3">Standings</p>
+            <p className="text-sm text-fg-1">
+              {leagueData.isHeadToHead ? "Head-to-Head" : "Points Total"}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 px-4 py-3">
