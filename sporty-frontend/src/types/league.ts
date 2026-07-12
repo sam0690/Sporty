@@ -424,8 +424,10 @@ export type TMatchup = {
   transfer_window_id: string;
   home_team: TMatchupTeamBrief;
   away_team: TMatchupTeamBrief | null;
-  home_points: number | null;
-  away_points: number | null;
+  // Decimal fields serialize as JSON strings in this backend (same as
+  // total_points/base_points elsewhere) — coerce with Number() before math.
+  home_points: string | null;
+  away_points: string | null;
   result: "home_win" | "away_win" | "tie" | "bye" | null;
 };
 
@@ -435,8 +437,9 @@ export type TH2HStandingRow = {
   wins: number;
   losses: number;
   ties: number;
-  points_for: number;
-  points_against: number;
+  // Decimal fields — see TMatchup note above.
+  points_for: string;
+  points_against: string;
 };
 
 export type TRosterPlayer = {

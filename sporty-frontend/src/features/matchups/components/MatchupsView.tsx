@@ -6,6 +6,12 @@ import { useH2HStandings, useLeague, useMatchups, useMyTeam } from "@/hooks/leag
 import { H2HStandingsTable } from "./H2HStandingsTable";
 import type { TMatchup } from "@/types";
 
+function fmtPoints(points: string | null): string {
+  if (points === null) return "–";
+  const n = Number(points);
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
 function MatchupCard({ matchup, myTeamId }: { matchup: TMatchup; myTeamId?: string }) {
   const isMine = matchup.home_team.id === myTeamId || matchup.away_team?.id === myTeamId;
   const isBye = matchup.result === "bye";
@@ -20,7 +26,7 @@ function MatchupCard({ matchup, myTeamId }: { matchup: TMatchup; myTeamId?: stri
         <div className="min-w-0 flex-1 text-center">
           <p className="truncate text-sm font-700 text-fg-1">{matchup.home_team.name}</p>
           <p className="num mt-1 text-3xl font-700 text-fg-1">
-            {matchup.home_points ?? "–"}
+            {fmtPoints(matchup.home_points)}
           </p>
         </div>
         {!isBye && (
@@ -31,7 +37,7 @@ function MatchupCard({ matchup, myTeamId }: { matchup: TMatchup; myTeamId?: stri
             <div className="min-w-0 flex-1 text-center">
               <p className="truncate text-sm font-700 text-fg-1">{matchup.away_team?.name}</p>
               <p className="num mt-1 text-3xl font-700 text-fg-1">
-                {matchup.away_points ?? "–"}
+                {fmtPoints(matchup.away_points)}
               </p>
             </div>
           </>

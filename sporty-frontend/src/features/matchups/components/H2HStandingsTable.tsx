@@ -20,8 +20,8 @@ export function H2HStandingsTable({ rows, myTeamId }: H2HStandingsTableProps) {
       ),
     },
     { key: "record", header: "W-L-T", render: (r) => `${r.wins}-${r.losses}-${r.ties}` },
-    { key: "points_for", header: "Points For", align: "right", render: (r) => r.points_for.toFixed(1) },
-    { key: "points_against", header: "Points Against", align: "right", render: (r) => r.points_against.toFixed(1) },
+    { key: "points_for", header: "Points For", align: "right", render: (r) => Number(r.points_for).toFixed(1) },
+    { key: "points_against", header: "Points Against", align: "right", render: (r) => Number(r.points_against).toFixed(1) },
   ];
 
   return (
