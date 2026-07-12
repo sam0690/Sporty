@@ -3,6 +3,7 @@
 import { CreateTeamHeader } from "./CreateTeamHeader";
 import { CurrentTeam } from "./CurrentTeam";
 import { DraftBoard } from "./DraftBoard";
+import { DraftPickToast } from "./DraftPickToast";
 import { GameweekEntryNotice } from "./GameweekEntryNotice";
 import { PlayerMarket } from "./PlayerMarket";
 import { SquadValidationChecklist } from "./SquadValidationChecklist";
@@ -53,6 +54,7 @@ export function DraftRoom({
   activeWindow,
   editableWindow,
   draftTurn,
+  lastDraftPick,
 }: DraftRoomProps) {
   const status = league.status;
   const { data: members } = useLeagueMembers(league.id);
@@ -150,6 +152,7 @@ export function DraftRoom({
                 currentTurnUserId={draftTurn.current_turn_user_id}
                 roundNumber={draftTurn.round_number}
                 pickNumber={draftTurn.next_pick_number}
+                pickDeadlineAt={draftTurn.pick_deadline_at}
               />
             ) : null}
 
@@ -250,6 +253,8 @@ export function DraftRoom({
       {playersLoading || makeDraftPickMutation.isPending ? (
         <p className="section-label">Updating draft board…</p>
       ) : null}
+
+      {status === "drafting" ? <DraftPickToast event={lastDraftPick ?? null} /> : null}
     </section>
   );
 }

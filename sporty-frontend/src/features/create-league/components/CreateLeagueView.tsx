@@ -74,6 +74,7 @@ export function CreateLeagueView() {
       max_teams: 10,
       squad_size: 15,
       draft_mode: false,
+      draft_pick_seconds: 90,
       is_head_to_head: false,
       is_public: true,
     },
@@ -84,6 +85,7 @@ export function CreateLeagueView() {
   const sportIds = useWatch({ control, name: "sport_ids" });
   const maxTeams = useWatch({ control, name: "max_teams" }) ?? 10;
   const draftMode = useWatch({ control, name: "draft_mode" }) ?? false;
+  const draftPickSeconds = useWatch({ control, name: "draft_pick_seconds" }) ?? 90;
   const isHeadToHead = useWatch({ control, name: "is_head_to_head" }) ?? false;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
 
@@ -166,10 +168,12 @@ export function CreateLeagueView() {
         : ("budget" as TCompetitionType),
       isHeadToHead,
       draftDate,
+      draftPickSeconds,
     }),
     [
       draftDate,
       draftMode,
+      draftPickSeconds,
       isHeadToHead,
       isPublic,
       leagueName,
@@ -246,6 +250,7 @@ export function CreateLeagueView() {
         squad_size: values.squad_size,
         budget_per_team: values.budget,
         draft_mode: values.draft_mode,
+        draft_pick_seconds: values.draft_mode ? values.draft_pick_seconds : undefined,
         is_head_to_head: values.is_head_to_head,
         // Head-to-head leagues lock their matchup schedule at season start —
         // mutually exclusive with mid-season joining (backend 422s otherwise).
@@ -316,6 +321,7 @@ export function CreateLeagueView() {
     competitionType?: TCompetitionType;
     isHeadToHead?: boolean;
     draftDate?: string;
+    draftPickSeconds?: number;
   }) => {
     if (typeof next.isPrivate === "boolean") {
       setValue("is_public", !next.isPrivate, {
@@ -343,6 +349,12 @@ export function CreateLeagueView() {
     }
     if (typeof next.draftDate === "string") {
       setDraftDate(next.draftDate);
+    }
+    if (typeof next.draftPickSeconds === "number") {
+      setValue("draft_pick_seconds", next.draftPickSeconds, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
     }
   };
 
@@ -404,6 +416,7 @@ export function CreateLeagueView() {
                 competitionType={leagueData.competitionType}
                 isHeadToHead={isHeadToHead}
                 draftDate={leagueData.draftDate}
+                draftPickSeconds={draftPickSeconds}
                 onSettingsChange={handleSettingsChange}
               />
             ) : null}

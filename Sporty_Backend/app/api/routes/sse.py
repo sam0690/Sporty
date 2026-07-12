@@ -108,16 +108,23 @@ async def league_draft_stream(
             status_code=status.HTTP_404_NOT_FOUND, detail="League not found"
         )
     current_status = league.status.value if league.status else None
+    current_deadline = (
+        league.draft_pick_deadline_at.isoformat() if league.draft_pick_deadline_at else None
+    )
 
     channel = _draft_channel(league_uuid)
 
     async def event_stream():
-        # Snapshot first — self-heals late joiners and reconnects.
+        # Snapshot first — self-heals late joiners and reconnects. Includes
+        # the current pick deadline so a client joining mid-draft (not just
+        # mid-lobby) has a clock immediately, without waiting for the next
+        # draft_turn_update.
         snapshot = json.dumps(
             {
                 "type": "draft_status",
                 "league_id": str(league_uuid),
                 "status": current_status,
+                "pick_deadline_at": current_deadline,
             }
         )
         yield f"data: {snapshot}\n\n"

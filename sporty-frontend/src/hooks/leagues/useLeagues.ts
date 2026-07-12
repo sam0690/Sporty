@@ -116,6 +116,7 @@ export function useCreateLeague() {
       squad_size?: number;
       budget_per_team?: number;
       draft_mode?: boolean;
+      draft_pick_seconds?: number;
       is_head_to_head?: boolean;
       allow_midseason_join?: boolean;
       transfers_per_window?: number;

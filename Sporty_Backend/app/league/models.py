@@ -405,6 +405,21 @@ class League(Base):
     # When draft_mode=True, users participate in a snake draft to build teams
     draft_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
+    # Live draft room clock. Commissioner-configurable at creation (draft-mode
+    # only); mandatory once DRAFTING — no opt-out of having a clock.
+    draft_pick_seconds: Mapped[int] = mapped_column(
+        SmallInteger, nullable=False, default=90
+    )
+
+    # Absolute deadline for the CURRENT pick (next_pick_number from
+    # get_current_draft_turn). NULL when not DRAFTING. Read as an absolute
+    # instant, never a duration, so client clock drift / backgrounded tabs
+    # don't matter — the frontend just diffs against Date.now(). Recomputed
+    # by _advance_draft_clock() on every pick, not derived on read.
+    draft_pick_deadline_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
     # Head-to-head format — orthogonal to draft_mode. When True, teams are
     # paired against one opponent per transfer window (see LeagueMatchup /
     # app/services/matchup_service.py) and standings rank by W-L-T record

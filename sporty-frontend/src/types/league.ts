@@ -40,6 +40,7 @@ export type TLeague = {
   owner: TUser;
   competition_type?: TCompetitionType;
   draft_mode?: boolean;
+  draft_pick_seconds?: number;
   is_head_to_head?: boolean;
   allow_midseason_join?: boolean;
   /** Was this league itself created via a dynasty rollover? Used to default
@@ -224,7 +225,34 @@ export type TDraftTurn = {
   next_pick_number: number;
   round_number: number;
   is_draft_complete: boolean;
+  total_picks_possible: number;
+  pick_deadline_at: string | null;
 };
+
+/** Draft-room SSE stream events (GET /api/leagues/{id}/draft/stream),
+ * published to the same channel _publish_draft_started already used —
+ * see app/league/services.py _advance_draft_clock / _publish_draft_event. */
+export type TDraftEvent =
+  | { type: "draft_started"; league_id: string; status: string }
+  | { type: "draft_status"; league_id: string; status: string | null; pick_deadline_at?: string | null }
+  | {
+      type: "draft_turn_update";
+      league_id: string;
+      current_turn_user_id: string | null;
+      next_pick_number: number;
+      round_number: number;
+      pick_deadline_at: string | null;
+    }
+  | {
+      type: "draft_pick_made";
+      league_id: string;
+      pick_number: number;
+      round_number: number;
+      player: { id: string; name: string; position: string };
+      team: { id: string; name: string };
+      was_auto_pick: boolean;
+    }
+  | { type: "draft_complete"; league_id: string };
 
 export type TDiscardPlayerResponse = {
   message: string;

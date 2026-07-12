@@ -50,6 +50,7 @@ class LeagueCreate(BaseModel):
     squad_size: int = Field(default=15, ge=1, le=30)
     budget_per_team: Decimal = Field(default=DEFAULT_TEAM_BUDGET, gt=0, max_digits=12, decimal_places=2)
     draft_mode: bool = Field(default=False)
+    draft_pick_seconds: int = Field(default=90, ge=15, le=600)
     is_head_to_head: bool = Field(default=False)
     allow_midseason_join: bool = Field(default=False)
     transfers_per_window: int = Field(default=4, ge=0, le=10)
@@ -159,6 +160,7 @@ class LeagueResponse(BaseModel):
     position_minimums: dict[str, int] = {}
     max_per_club: int
     draft_mode: bool
+    draft_pick_seconds: int
     is_head_to_head: bool
     allow_midseason_join: bool
     transfers_per_window: int
@@ -520,6 +522,8 @@ class DraftTurnResponse(BaseModel):
     next_pick_number: int
     round_number: int
     is_draft_complete: bool
+    total_picks_possible: int
+    pick_deadline_at: datetime | None = None
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

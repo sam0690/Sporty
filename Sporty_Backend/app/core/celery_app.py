@@ -60,7 +60,9 @@ celery_app = Celery(
     "app.tasks.sync_tasks",
     "app.tasks.live_polling_tasks",
     "app.tasks.scoring_tasks",
-    "app.tasks.pricing_tasks",    "app.tasks.transfer_tasks",  ],
+    "app.tasks.pricing_tasks",    "app.tasks.transfer_tasks",
+    "app.tasks.draft_tasks",
+  ],
 )
 
 celery_app.conf.update(

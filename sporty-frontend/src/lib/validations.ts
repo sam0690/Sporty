@@ -54,6 +54,7 @@ export const CreateLeagueSchema = z.object({
     .min(2, "Squad size must be at least 2.")
     .max(64, "Squad size must be 64 or fewer."),
   draft_mode: z.boolean(),
+  draft_pick_seconds: z.coerce.number().int().min(15).max(600).optional(),
   is_head_to_head: z.boolean(),
   is_public: z.boolean(),
 });

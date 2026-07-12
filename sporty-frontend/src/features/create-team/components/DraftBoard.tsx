@@ -3,12 +3,14 @@
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { PlayerAvatar } from "@/components/ui";
 import type { TMembership } from "@/types/league";
+import { DraftClock } from "./DraftClock";
 
 type DraftBoardProps = {
   members: TMembership[];
   currentTurnUserId: string | null;
   roundNumber: number;
   pickNumber: number;
+  pickDeadlineAt: string | null;
 };
 
 export function DraftBoard({
@@ -16,6 +18,7 @@ export function DraftBoard({
   currentTurnUserId,
   roundNumber,
   pickNumber,
+  pickDeadlineAt,
 }: DraftBoardProps) {
   const ordered = [...members]
     .filter((m) => m.status === "active" && m.draft_position != null)
@@ -37,14 +40,17 @@ export function DraftBoard({
         <p className="section-label">
           Round {roundNumber} · Pick {pickNumber}
         </p>
-        <span className="flex items-center gap-1.5 text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3">
-          Draft order
-          {ascending ? (
-            <ArrowRight className="size-3" aria-hidden />
-          ) : (
-            <ArrowLeft className="size-3" aria-hidden />
-          )}
-        </span>
+        <div className="flex items-center gap-3">
+          <DraftClock deadline={pickDeadlineAt} />
+          <span className="flex items-center gap-1.5 text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3">
+            Draft order
+            {ascending ? (
+              <ArrowRight className="size-3" aria-hidden />
+            ) : (
+              <ArrowLeft className="size-3" aria-hidden />
+            )}
+          </span>
+        </div>
       </div>
 
       <div className="flex gap-3 overflow-x-auto pb-1">

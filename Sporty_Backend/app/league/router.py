@@ -692,6 +692,8 @@ def start_draft(
     league = league_service.start_draft(db, league.id, current_user)
     db.commit()
     _publish_draft_started(league.id)
+    league_service._advance_draft_clock(db, league.id)
+    db.commit()
     return league
 
 
@@ -732,6 +734,8 @@ def make_pick(
         db, league.id, data.player_id, current_user,
     )
     db.commit()
+    league_service._advance_draft_clock(db, league.id)
+    db.commit()
     return pick
 
 
@@ -751,6 +755,8 @@ def get_draft_turn(
         "next_pick_number": turn["next_pick_number"],
         "round_number": turn["round_number"],
         "is_draft_complete": turn["is_draft_complete"],
+        "total_picks_possible": turn["total_picks_possible"],
+        "pick_deadline_at": turn["pick_deadline_at"],
     }
 
 

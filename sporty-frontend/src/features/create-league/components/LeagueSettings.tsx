@@ -9,19 +9,24 @@ type LeagueSettingsProps = {
   competitionType: "draft" | "budget";
   isHeadToHead: boolean;
   draftDate: string;
+  draftPickSeconds: number;
   onSettingsChange: (next: {
     isPrivate?: boolean;
     teamSize?: number;
     competitionType?: "draft" | "budget";
     isHeadToHead?: boolean;
     draftDate?: string;
+    draftPickSeconds?: number;
   }) => void;
 };
 
 const teamSizes = [4, 6, 8, 10, 12, 14, 16];
+const pickTimerOptions = [30, 60, 90, 120];
 
 const fieldLabel =
   "mb-2 block font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2";
+const fieldControl =
+  "w-full rounded-[3px] border border-white/12 bg-surface-2 px-3.5 py-2.5 font-sans text-sm text-fg-1 transition-colors focus:border-accent/50 focus:outline-none";
 
 function RadioCard({
   selected,
@@ -109,6 +114,7 @@ export function LeagueSettings({
   teamSize,
   competitionType,
   isHeadToHead,
+  draftPickSeconds,
   onSettingsChange,
 }: LeagueSettingsProps) {
   return (
@@ -165,6 +171,32 @@ export function LeagueSettings({
           />
         </div>
       </div>
+
+      {competitionType === "draft" ? (
+        <div>
+          <label htmlFor="draft-pick-seconds" className={fieldLabel}>
+            Pick Timer
+          </label>
+          <select
+            id="draft-pick-seconds"
+            value={draftPickSeconds}
+            onChange={(event) =>
+              onSettingsChange({ draftPickSeconds: Number(event.target.value) })
+            }
+            className={fieldControl}
+          >
+            {pickTimerOptions.map((seconds) => (
+              <option key={seconds} value={seconds}>
+                {seconds < 60 ? `${seconds}s` : `${seconds / 60} min`} per pick
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-xs text-fg-3">
+            Managers get this long to make each pick before the system
+            auto-picks for them.
+          </p>
+        </div>
+      ) : null}
 
       <div>
         <p className={fieldLabel}>Standings Format</p>

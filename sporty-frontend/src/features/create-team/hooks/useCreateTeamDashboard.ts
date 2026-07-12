@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +17,7 @@ import {
   useMyTeam,
 } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
+import { useDraftRoomStream } from "@/hooks/leagues/useLeagueDraftStream";
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { CreateTeamSchema, type CreateTeamValues } from "@/lib/validations";
@@ -61,7 +61,6 @@ export function useCreateTeamDashboard() {
   const searchParams = useSearchParams();
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { username, data: me } = useMe();
   const leagueId = params?.id || searchParams.get("leagueId") || "";
 
@@ -114,40 +113,13 @@ export function useCreateTeamDashboard() {
   const buildTeamMutation = useBuildTeam();
   const makeDraftPickMutation = useMakeDraftPick(leagueId || "");
   const discardTeamPlayerMutation = useDiscardTeamPlayer(leagueId || "");
-  const { data: draftTurn } = useDraftTurn(
-    leagueId || "",
-    !!leagueId && isDraftLeague && league?.status === "drafting",
-  );
-
-  // Keep the draft pool in sync with the live draft. `useDraftTurn` polls every
-  // few seconds; `next_pick_number` increments on every pick (by anyone), so a
-  // change means a player was just taken. Refetch the players pool then — the
-  // backend already excludes rostered players by league_id — so selected
-  // players drop out automatically, no manual refresh needed.
-  const lastPickNumberRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (!isDraftLeague || league?.status !== "drafting") {
-      lastPickNumberRef.current = null;
-      return;
-    }
-    const pickNumber = draftTurn?.next_pick_number;
-    if (pickNumber == null) return;
-
-    // First reading just establishes a baseline — don't refetch on mount.
-    if (lastPickNumberRef.current === null) {
-      lastPickNumberRef.current = pickNumber;
-      return;
-    }
-    if (pickNumber !== lastPickNumberRef.current) {
-      lastPickNumberRef.current = pickNumber;
-      queryClient.invalidateQueries({ queryKey: ["players"] });
-    }
-  }, [
-    draftTurn?.next_pick_number,
-    isDraftLeague,
-    league?.status,
-    queryClient,
-  ]);
+  const draftRoomEnabled = !!leagueId && isDraftLeague && league?.status === "drafting";
+  const { data: draftTurn } = useDraftTurn(leagueId || "", draftRoomEnabled);
+  // Live pick/turn push over SSE — supersedes the old "diff next_pick_number
+  // on each poll, then invalidate players" effect. useDraftTurn's poll stays
+  // on as a fallback for a missed SSE frame; this hook keeps its cache fresh
+  // in near-real-time instead of waiting up to 3s.
+  const { lastPick: lastDraftPick } = useDraftRoomStream(leagueId || "", draftRoomEnabled);
 
   const [step, setStep] = useState(1);
   const [selectedPlayers, setSelectedPlayers] = useState<MarketPlayer[]>([]);
@@ -733,5 +705,6 @@ export function useCreateTeamDashboard() {
     makeDraftPickMutation,
     discardTeamPlayerMutation,
     draftTurn,
+    lastDraftPick,
   } as const;
 }
