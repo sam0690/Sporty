@@ -649,6 +649,14 @@ def update_league_status(
     league.status = new_status
     db.flush()
 
+    if new_status == LeagueStatus.ACTIVE and league.is_head_to_head:
+        # Commissioner manually activated (bypassing the automatic daily
+        # sweep / draft-completion transition, which already do this) —
+        # the H2H schedule still needs generating exactly once here too.
+        from app.services.matchup_service import generate_matchups_for_league
+
+        generate_matchups_for_league(db, league)
+
     # Re-load with eager options so the caller can serialise to LeagueResponse
     return _require_league(db, league_id, eager=True)
 

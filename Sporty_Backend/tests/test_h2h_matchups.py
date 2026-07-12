@@ -36,7 +36,7 @@ import app.player.models  # noqa: F401,E402
 import app.player.models_nba  # noqa: F401,E402
 from app.api.v1.matchups import router as matchups_router  # noqa: E402
 from app.league import services as league_service  # noqa: E402
-from app.league.models import FantasyTeam, LeagueMatchup, Season, Sport, TeamWeeklyScore, TransferWindow  # noqa: E402
+from app.league.models import FantasyTeam, LeagueMatchup, LeagueStatus, Season, Sport, TeamWeeklyScore, TransferWindow  # noqa: E402
 from app.league.schemas import LeagueCreate  # noqa: E402
 from app.services import matchup_service  # noqa: E402
 
@@ -173,6 +173,26 @@ def test_generate_matchups_for_league_is_idempotent():
         db.commit()
         second_count = db.query(LeagueMatchup).filter(LeagueMatchup.league_id == league.id).count()
         assert second_count == first_count
+
+
+def test_manual_status_change_to_active_generates_matchups():
+    """Regression: generate_matchups_for_league must fire on the manual
+    commissioner-driven update_league_status(ACTIVE) path too, not just the
+    automatic daily sweep / draft-completion transitions — a 5-team H2H
+    league activated this way previously ended up with zero matchups."""
+    with session_scope() as db:
+        league, _season, windows, teams = _h2h_league(db, num_teams=5, num_windows=4)
+        db.commit()
+        assert league.status == LeagueStatus.SETUP
+
+        owner = db.query(User).filter(User.username == "owner").first()
+        league_service.update_league_status(db, league.id, LeagueStatus.ACTIVE, owner)
+        db.commit()
+
+        count = db.query(LeagueMatchup).filter(LeagueMatchup.league_id == league.id).count()
+        assert count > 0
+        # 5 teams -> 2 real pairs + 1 bye per window.
+        assert count == 3 * len(windows)
 
 
 def test_generate_matchups_bye_gets_immediate_result():
