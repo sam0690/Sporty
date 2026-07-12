@@ -812,6 +812,10 @@ class GameweekRecapResponse(BaseModel):
     captain_vice_bonus: Decimal
     rank_in_league: int | None = None
     players: list[GameweekPlayerRecap] = Field(default_factory=list)
+    # "Beat the Optimizer" — best possible lineup score in hindsight, and what
+    # % of it the actual lineup captured. None until the window has played.
+    best_possible_points: Decimal | None = None
+    capture_rate: float | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

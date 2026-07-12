@@ -26,6 +26,7 @@ os.environ.setdefault("FEEDER_SECRET", "test-feeder-secret-not-for-production")
 # on PostgreSQL (models + alembic migrations) is untouched.
 from sqlalchemy.dialects.postgresql import JSONB, ExcludeConstraint
 from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.schema import CreateIndex
 
 
 @compiles(ExcludeConstraint, "sqlite")
@@ -36,3 +37,24 @@ def _skip_exclude_constraint_on_sqlite(element, compiler, **kw):
 @compiles(JSONB, "sqlite")
 def _render_jsonb_as_json_on_sqlite(element, compiler, **kw):
     return "JSON"
+
+
+# TeamGameweekLineup's uq_one_captain_per_team_window / uq_one_vice_captain_
+# per_team_window are PARTIAL unique indexes (postgresql_where=is_captain/
+# is_vice_captain = TRUE) — correct on Postgres, but SQLAlchemy silently
+# drops postgresql_where for non-postgres dialects, so SQLite would create a
+# FULL unique index on (fantasy_team_id, transfer_window_id) instead —
+# blocking every multi-player lineup insert, captain or not. Skip both by
+# name on SQLite, same "Postgres-only DDL, no-op elsewhere" treatment as
+# ExcludeConstraint above.
+_SQLITE_SKIP_PARTIAL_INDEXES = {
+    "uq_one_captain_per_team_window",
+    "uq_one_vice_captain_per_team_window",
+}
+
+
+@compiles(CreateIndex, "sqlite")
+def _skip_postgres_only_partial_indexes_on_sqlite(element, compiler, **kw):
+    if element.element.name in _SQLITE_SKIP_PARTIAL_INDEXES:
+        return ""
+    return compiler.visit_create_index(element, **kw)

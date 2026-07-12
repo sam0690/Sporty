@@ -3109,6 +3109,7 @@ def get_gameweek_recap(
     The window is resolved by ``window_id`` if given, else by ``gameweek`` number
     within the league's season, else the most recently scored window for this
     team (falling back to the latest window in the league's season)."""
+    from app.services.optimization.hindsight_service import compute_hindsight_lineup
     from app.services.scoring.team_scoring import (
         load_slot_bounds,
         load_team_lineup_rows,
@@ -3254,6 +3255,18 @@ def get_gameweek_recap(
     base = result.base_points if result else Decimal("0")
     bonus = result.captain_vice_bonus if result else Decimal("0")
 
+    # "Beat the Optimizer" — how close was the actual lineup to the best
+    # possible one, in hindsight? Only meaningful once the window has
+    # actually played; never lets a computation failure break the recap.
+    hindsight = None
+    if window_has_played and rows:
+        hindsight = compute_hindsight_lineup(
+            rows=rows,
+            players_by_id=players_by_id,
+            slot_bounds=slot_bounds,
+            actual_total_points=total,
+        )
+
     return {
         "fantasy_team_id": team.id,
         "team_name": team.name,
@@ -3264,6 +3277,8 @@ def get_gameweek_recap(
         "captain_vice_bonus": bonus,
         "rank_in_league": stored.rank_in_league if stored else None,
         "players": player_lines,
+        "best_possible_points": hindsight.best_possible_points if hindsight else None,
+        "capture_rate": hindsight.capture_rate if hindsight else None,
     }
 
 

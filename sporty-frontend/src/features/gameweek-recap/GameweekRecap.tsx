@@ -263,6 +263,27 @@ export function GameweekRecap() {
             </div>
           </section>
 
+          {data.best_possible_points != null && data.capture_rate != null && (
+            <section className="overflow-hidden card-surface p-6">
+              <p className="section-label">Beat the Optimizer</p>
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-6">
+                <p className="text-sm text-fg-2">
+                  Your best possible XI (in hindsight) would have scored{" "}
+                  <span className="font-display text-2xl tracking-[-0.02em] text-accent">
+                    {fmt(data.best_possible_points)}
+                  </span>{" "}
+                  pts
+                </p>
+                <div>
+                  <p className="section-label">Captured</p>
+                  <p className="mt-1 font-display text-4xl leading-none tracking-[-0.02em] text-fg-1">
+                    {Math.round(data.capture_rate)}%
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+
           {data.players.length > 0 && (
             <div className="flex justify-end">
               <LineupViewToggle value={view} onChange={setView} />

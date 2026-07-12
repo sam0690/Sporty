@@ -164,6 +164,10 @@ export type TGameweekRecapResponse = {
   captain_vice_bonus: string;
   rank_in_league: number | null;
   players: TGameweekPlayerRecap[];
+  // "Beat the Optimizer" — best possible lineup score in hindsight, and
+  // what % of it the actual lineup captured. null until the window plays.
+  best_possible_points: string | null;
+  capture_rate: number | null;
 };
 
 export type TLeaderboardEntry = {
