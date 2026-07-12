@@ -1,4 +1,5 @@
 import { authApi } from "@/api/auth-api-client";
+import { publicApi } from "@/api/public-api-client";
 import { API_PATHS } from "@/api/apiPath";
 import type {
   TPlayer,
@@ -133,6 +134,12 @@ export const PlayerService = {
     return mapBackendPlayer(res.data as BackendPlayer);
   },
 
+  /** Same as getPlayer, no login required — for the shareable /p/[id] profile. */
+  async getPublicPlayer(id: string): Promise<TPlayer> {
+    const res = await publicApi.get(API_PATHS.PLAYERS.PUBLIC_DETAIL(id));
+    return mapBackendPlayer(res.data as BackendPlayer);
+  },
+
   /** Get player stats for a specific gameweek/transfer window */
   async getPlayerStats(
     id: string,
@@ -162,6 +169,21 @@ export const PlayerService = {
     limit = 5,
   ): Promise<TPlayerGameweekStat[]> {
     const res = await authApi.get(API_PATHS.PLAYERS.RECENT_STATS(id), {
+      params: { limit },
+    });
+    const data = res.data as TPlayerRecentStatsResponse;
+    return data.items.map((item) => ({
+      ...item,
+      fantasy_points: Number(item.fantasy_points),
+    }));
+  },
+
+  /** Same as getPlayerRecentStats, no login required. */
+  async getPublicPlayerRecentStats(
+    id: string,
+    limit = 5,
+  ): Promise<TPlayerGameweekStat[]> {
+    const res = await publicApi.get(API_PATHS.PLAYERS.PUBLIC_RECENT_STATS(id), {
       params: { limit },
     });
     const data = res.data as TPlayerRecentStatsResponse;

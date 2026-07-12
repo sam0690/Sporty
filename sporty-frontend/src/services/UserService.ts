@@ -261,6 +261,13 @@ export const UserService = {
     return unwrapResponseData(res.data);
   },
 
+  /** Same data as getUserPublicStats, no login required — for shareable
+   * manager-profile links (/u/[id]). */
+  async getPublicManagerStats(id: string): Promise<TUserPublicStats> {
+    const res = await publicApi.get(API_PATHS.USERS.PUBLIC_MANAGER_STATS(id));
+    return unwrapResponseData(res.data);
+  },
+
   async getUserActivity(id: string): Promise<TUserActivityItem[]> {
     const res = await authApi.get(API_PATHS.USERS.ACTIVITY(id));
     return unwrapResponseData(res.data);

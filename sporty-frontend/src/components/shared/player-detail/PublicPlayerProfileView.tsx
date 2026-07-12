@@ -1,14 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { ShareProfileButton } from "@/components/shared/ShareProfileButton";
-import { usePlayer, usePlayerRecentStats } from "@/hooks/players/usePlayers";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { usePublicPlayer, usePublicPlayerRecentStats } from "@/hooks/players/usePlayers";
 import { PlayerHero } from "./PlayerHero";
 import { PlayerRecentStats } from "./PlayerRecentStats";
 import { PlayerStatSparkline } from "./PlayerStatSparkline";
 
-type PlayerDetailPageViewProps = {
+type PublicPlayerProfileViewProps = {
   playerId: string;
 };
 
@@ -39,30 +38,18 @@ function BioField({ label, value }: { label: string; value: string | number | nu
   );
 }
 
-/** Rich standalone profile — the real players/[id]/page.tsx, reached by
- * direct navigation or refresh (not through the intercepted modal). */
-export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
-  const router = useRouter();
-  const { data: player, isLoading, isError } = usePlayer(playerId);
-  const { data: recentStats, isLoading: statsLoading } = usePlayerRecentStats(
+/** Shareable, no-login player profile — reached via /p/[id]. Same building
+ * blocks as the in-app full page (PlayerDetailPageView), sourced from the
+ * public endpoints instead. */
+export function PublicPlayerProfileView({ playerId }: PublicPlayerProfileViewProps) {
+  const { data: player, isLoading, isError } = usePublicPlayer(playerId);
+  const { data: recentStats, isLoading: statsLoading } = usePublicPlayerRecentStats(
     playerId,
     RECENT_STATS_LIMIT,
   );
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <div className="mb-4 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="flex items-center gap-2 rounded-[3px] px-2 py-1.5 text-sm text-fg-2 transition-colors hover:text-fg-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
-        <ShareProfileButton path={`/p/${playerId}`} />
-      </div>
-
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
       <div className="overflow-hidden card-surface text-fg-1">
         {isLoading && (
           <div className="p-6">
@@ -74,7 +61,7 @@ export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
 
         {!isLoading && (isError || !player) && (
           <div className="p-6 text-center">
-            <p className="text-sm text-fg-1/65">Couldn&apos;t load this player. Try again.</p>
+            <p className="text-sm text-fg-1/65">Couldn&apos;t load this player.</p>
           </div>
         )}
 
@@ -91,10 +78,6 @@ export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
               <BioField label="Height" value={player.height} />
               <BioField label="Weight" value={player.weight} />
               <BioField label="Squad Number" value={player.jersey_number} />
-              <BioField label="Agent" value={player.agent} />
-              <BioField label="Wage" value={player.wage} />
-              <BioField label="Signing Fee" value={player.signing_fee} />
-              <BioField label="Date Signed" value={player.date_signed} />
             </div>
 
             {player.bio && (
@@ -116,6 +99,22 @@ export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
             </div>
           </>
         )}
+      </div>
+
+      <div className="mt-8 flex flex-col items-center gap-3 rounded-[3px] border border-accent/22 bg-accent/4 p-8 text-center sm:p-12">
+        <p className="font-display text-3xl tracking-[-0.02em] text-fg-1 sm:text-4xl">
+          Draft {player?.display_name ?? "this player"} on your team
+        </p>
+        <p className="max-w-md text-sm text-fg-2">
+          Build a fantasy squad, set your lineup, and score from every match — across
+          football, basketball and cricket.
+        </p>
+        <Link
+          href="/register"
+          className="mt-1 inline-flex items-center gap-1.5 rounded-[3px] bg-accent px-6 py-3 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright hover:no-underline"
+        >
+          Get Started Free <ArrowRight className="size-3.5" />
+        </Link>
       </div>
     </div>
   );

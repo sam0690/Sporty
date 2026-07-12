@@ -105,6 +105,15 @@ export function useUserPublicStats(userId: string) {
   );
 }
 
+/** No-auth variant for the shareable /u/[id] manager-profile page. */
+export function usePublicManagerStats(userId: string) {
+  return useApiQuery<TUserPublicStats>(
+    ["users", "public", userId, "stats"],
+    () => UserService.getPublicManagerStats(userId),
+    { enabled: !!userId },
+  );
+}
+
 export function useUserActivity(userId: string) {
   return useApiQuery<TUserActivityItem[]>(
     ["users", userId, "activity"],

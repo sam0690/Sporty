@@ -231,3 +231,34 @@ def get_player_recent_stats(
     """Return newest-first gameweek stats for a player's detail view."""
     rows = player_service.get_player_recent_stats(db, player_id, limit=limit)
     return PlayerRecentStatsResponse(items=rows)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /players/public/{player_id} — unauthenticated, shareable profile
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# Same data as get_player()/get_player_recent_stats() above — player data is
+# already documented as "public reference data" (see module docstring), this
+# just drops the login requirement so a shared profile link works for a
+# logged-out visitor, mirroring GET /matches/public (app/match/router.py).
+
+
+@router.get(
+    "/public/{player_id}",
+    response_model=PlayerResponse,
+    summary="Get player details (no auth — shareable profile link)",
+)
+def get_public_player(player_id: uuid.UUID, db: Session = Depends(get_db)):
+    return player_service.get_player(db, player_id)
+
+
+@router.get(
+    "/public/{player_id}/recent-stats",
+    response_model=PlayerRecentStatsResponse,
+    summary="Get a player's recent gameweek performance (no auth)",
+)
+def get_public_player_recent_stats(
+    player_id: uuid.UUID, limit: int = 5, db: Session = Depends(get_db)
+):
+    rows = player_service.get_player_recent_stats(db, player_id, limit=limit)
+    return PlayerRecentStatsResponse(items=rows)

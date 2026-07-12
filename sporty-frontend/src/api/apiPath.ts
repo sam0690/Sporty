@@ -26,6 +26,7 @@ export const API_PATHS = {
     DETAIL: (id: string) => `/users/${id}`,
     ACTIVITY: (id: string) => `/users/${id}/activity`,
     PUBLIC_STATS: (id: string) => `/users/${id}/public-stats`,
+    PUBLIC_MANAGER_STATS: (id: string) => `/users/public/${id}/stats`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
     UPLOAD_AVATAR: (id: string) => `/users/${id}/avatar`,
@@ -131,6 +132,8 @@ export const API_PATHS = {
     STAT_DETAIL: (id: string, mwId: string) => `/players/${id}/stats/${mwId}`,
     RECENT_STATS: (id: string) => `/players/${id}/recent-stats`,
     TEAMS: "/players/teams",
+    PUBLIC_DETAIL: (id: string) => `/players/public/${id}`,
+    PUBLIC_RECENT_STATS: (id: string) => `/players/public/${id}/recent-stats`,
   },
 
   SCORING: {

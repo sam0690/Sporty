@@ -77,3 +77,24 @@ export const usePlayerRecentStats = (id: string, limit = 5) => {
     },
   );
 };
+
+/** No-auth variant for the shareable /p/[id] profile page. */
+export const usePublicPlayer = (id: string) => {
+  return useApiQuery(
+    ["players", "public", "detail", id],
+    () => PlayerService.getPublicPlayer(id),
+    {
+      enabled: !!id,
+    },
+  );
+};
+
+export const usePublicPlayerRecentStats = (id: string, limit = 5) => {
+  return useApiQuery(
+    ["players", "public", id, "recent-stats", limit],
+    () => PlayerService.getPublicPlayerRecentStats(id, limit),
+    {
+      enabled: !!id,
+    },
+  );
+};

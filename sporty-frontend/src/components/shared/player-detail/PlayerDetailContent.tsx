@@ -1,5 +1,6 @@
 "use client";
 
+import { ShareProfileButton } from "@/components/shared/ShareProfileButton";
 import { usePlayer, usePlayerRecentStats } from "@/hooks/players/usePlayers";
 import { PlayerHero } from "./PlayerHero";
 import { PlayerRecentStats } from "./PlayerRecentStats";
@@ -82,17 +83,22 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
         <PlayerRecentStats stats={recentStats} isLoading={statsLoading} />
       </div>
 
-      <div className="border-t border-white/6 px-6 py-4">
+      <div className="flex gap-2 border-t border-white/6 px-6 py-4">
         {/* Plain anchor, not next/link — intentional. This route is already
             intercepted (@modal/(.)players/[id]); a client-side navigation to
             the same URL would just re-render the modal. A full page load is
             the only way to reach the real players/[id]/page.tsx. */}
         <a
           href={`/players/${playerId}`}
-          className="block rounded-[3px] border border-white/12 px-4 py-2.5 text-center font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:border-white/28 hover:text-fg-1"
+          className="flex-1 rounded-[3px] border border-white/12 px-4 py-2.5 text-center font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:border-white/28 hover:text-fg-1"
         >
           View Full Profile
         </a>
+        <ShareProfileButton
+          path={`/p/${playerId}`}
+          label=""
+          className="flex items-center justify-center rounded-[3px] border border-white/12 px-4 text-fg-2 transition-colors hover:border-white/28 hover:text-fg-1"
+        />
       </div>
     </>
   );

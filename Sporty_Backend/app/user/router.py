@@ -130,6 +130,19 @@ def get_user_public_stats(
     return services.get_user_public_stats(db, user_id)
 
 
+@router.get(
+    "/public/{user_id}/stats",
+    response_model=UserPublicStatsResponse,
+    summary="Get a user's manager stats (no auth — shareable profile link)",
+)
+def get_public_user_stats(user_id: uuid.UUID, db: Session = Depends(get_db)):
+    """Same data as public-stats above, without the login requirement, so a
+    shared manager-profile link works for a logged-out visitor. Deliberately
+    NOT reusing get_user()/UserProfileResponse here — that response includes
+    email, which must never be exposed on a no-auth route."""
+    return services.get_user_public_stats(db, user_id)
+
+
 @router.patch("/{user_id}", response_model=UserProfileResponse, summary="Update user profile")
 def update_user(
     user_id: uuid.UUID,
