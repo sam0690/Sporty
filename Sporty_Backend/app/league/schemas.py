@@ -569,6 +569,30 @@ class TransferResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LeagueActivityEvent(BaseModel):
+    """GET /leagues/{id}/activity — one entry in the league's chronological
+    activity feed. A read-time merge of RosterMove (trade/waiver/free_agent/
+    dynasty_carryover, draft-mode leagues), Transfer (budget-mode swaps), and
+    DraftPick (draft picks) — see app/services/league_activity_service.py.
+    Flat model with a `type` discriminator and nullable type-specific
+    fields, rather than one response class per event type, matching how
+    TransferResponse etc. are already modelled in this file.
+    """
+    id: str
+    type: Literal["trade", "waiver", "free_agent", "dynasty_carryover", "draft_pick", "transfer"]
+    created_at: datetime
+    fantasy_team: FantasyTeamResponse
+    actor: UserBrief | None = None
+    add_player: PlayerBrief | None = None
+    drop_player: PlayerBrief | None = None
+    window_number: int | None = None
+    cost_at_transfer: Decimal | None = None
+    round_number: int | None = None
+    pick_number: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class UserTransferHistoryLeagueBrief(BaseModel):
     """Minimal league metadata for grouped user transfer history."""
     id: uuid.UUID

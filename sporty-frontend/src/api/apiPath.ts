@@ -123,6 +123,7 @@ export const API_PATHS = {
       `/leagues/${id}/chat/messages/${messageId}`,
     CHAT_MESSAGE_REACTIONS: (id: string, messageId: string) =>
       `/leagues/${id}/chat/messages/${messageId}/reactions`,
+    ACTIVITY: (id: string) => `/leagues/${id}/activity`,
   },
 
   PLAYERS: {

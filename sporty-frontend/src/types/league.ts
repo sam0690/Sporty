@@ -521,6 +521,30 @@ export type TChatMessage = {
   reactions: TChatReaction[];
 };
 
+/** Nested player shape returned by the activity feed — matches the
+ * backend's PlayerBrief schema, not src/types/player.ts's TPlayerBrief
+ * (that one has different field names for a different endpoint). */
+type TActivityPlayer = {
+  id: string;
+  name: string;
+  position: string;
+  photo_url: string | null;
+};
+
+export type TLeagueActivityEvent = {
+  id: string;
+  type: "trade" | "waiver" | "free_agent" | "dynasty_carryover" | "draft_pick" | "transfer";
+  created_at: string;
+  fantasy_team: { id: string; name: string; owner: TUser; created_at: string };
+  actor: TUser | null;
+  add_player: TActivityPlayer | null;
+  drop_player: TActivityPlayer | null;
+  window_number: number | null;
+  cost_at_transfer: string | null;
+  round_number: number | null;
+  pick_number: number | null;
+};
+
 export type TPowerRankingEntry = {
   fantasy_team_id: string;
   team_name: string;

@@ -57,11 +57,12 @@ function buildGroups(
       key: "league",
       label: "League",
       segment: "members",
-      segments: ["members", "chat", "invite"],
+      segments: ["members", "chat", "invite", "activity"],
       subTabs: [
         { key: "members", label: "Members", segment: "members" },
         { key: "chat", label: "Chat", segment: "chat" },
         { key: "invite", label: "Invite", segment: "invite" },
+        { key: "activity", label: "Activity", segment: "activity" },
       ],
     },
   ];

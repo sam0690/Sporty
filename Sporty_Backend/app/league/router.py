@@ -17,9 +17,10 @@ import json
 import logging
 import time
 import uuid
+from datetime import datetime
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status, HTTPException
+from fastapi import APIRouter, Depends, Query, Response, status, HTTPException
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
@@ -31,6 +32,7 @@ from app.league import services as league_service
 from app.league.auto_pick_service import auto_pick_team
 from app.league.models import FantasyTeam, League, TeamWeeklyScore
 from app.services import (
+    league_activity_service,
     power_rankings_service,
     transfer_service,
     transfer_session_service,
@@ -48,6 +50,7 @@ from app.league.schemas import (
     JoinLeagueRequest,
     LeaderboardEntry,
     LeaderboardResponse,
+    LeagueActivityEvent,
     LeagueDashboardStatsResponse,
     LeagueCreate,
     LeagueResponse,
@@ -960,6 +963,32 @@ def get_transfers(
     public within a league (you can see who your rivals traded).
     """
     return league_service.get_transfers(db, league.id)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# GET /leagues/{league_id}/activity — league activity feed
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+@router.get(
+    "/{league_id}/activity",
+    response_model=list[LeagueActivityEvent],
+    summary="League activity feed",
+)
+def get_league_activity(
+    limit: int = Query(default=50, ge=1, le=200),
+    before: datetime | None = Query(default=None),
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    """Chronological feed of trades, waiver claims, free-agent pickups,
+    dynasty carryovers, draft picks, and budget-mode transfers — newest
+    first. `before` (an event's created_at) pages further back in time.
+
+    Any league member can view this — same "public within a league"
+    rationale as get_transfers above.
+    """
+    return league_activity_service.get_league_activity(db, league, limit=limit, before=before)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
