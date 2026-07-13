@@ -1,8 +1,9 @@
 name: Backend CI
 
+# Runs on every branch push (work lands directly on feature branches, not
+# only via PRs to main) — paths filter keeps frontend-only pushes cheap.
 on:
   push:
-    branches: [main]
     paths: ["Sporty_Backend/**"]
   pull_request:
     paths: ["Sporty_Backend/**"]
@@ -20,9 +21,9 @@ jobs:
         with:
           python-version: "3.11"
           cache: "pip"
-          cache-dependency-path: Sporty_Backend/requirements.txt
+          cache-dependency-path: Sporty_Backend/requirements*.txt
 
-      - run: pip install -r requirements.txt pytest
+      - run: pip install -r requirements-dev.txt
 
       # conftest.py os.environ.setdefault()s every required Settings field —
       # no secrets/services needed, the suite is pure-function + SQLite/fakes.

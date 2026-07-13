@@ -48,7 +48,7 @@ websockets==16.0
 nba_api==1.5.2
 redis==5.0.1
 tenacity==9.1.4
-celery[redis]
+celery[redis]==5.6.3
 pulp==2.9.0
 resend==2.13.0
 apscheduler==3.11.0

@@ -1,0 +1,3 @@
+# Dev/CI-only dependencies. Runtime deps stay in requirements.txt.
+-r requirements.txt
+pytest==9.0.3

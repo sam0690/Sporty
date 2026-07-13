@@ -1,8 +1,9 @@
 name: Frontend CI
 
+# Runs on every branch push (work lands directly on feature branches, not
+# only via PRs to main) — paths filter keeps backend-only pushes cheap.
 on:
   push:
-    branches: [main]
     paths: ["sporty-frontend/**"]
   pull_request:
     paths: ["sporty-frontend/**"]
@@ -16,14 +17,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # corepack before setup-node so the cache step resolves Yarn 4
+      - run: corepack enable
+
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - run: corepack enable
+          cache: "yarn"
+          cache-dependency-path: sporty-frontend/yarn.lock
 
       - run: yarn install --immutable
 
       - run: yarn lint
 
       - run: yarn tsc --noEmit
+
+      # tsc alone misses next-build-only failures (route exports, RSC
+      # violations, image config). API URL is the same relative path the
+      # deployed app uses; the value only matters at runtime.
+      - run: yarn build
+        env:
+          NEXT_PUBLIC_API_URL: /api/v1
