@@ -1,0 +1,12 @@
+# Dependencies & virtualenvs (never tracked — see PHASE1_AUDIT.md C3)
+node_modules/
+.venv/
+venv/
+
+# Tool output
+graphify-out/
+
+# Python cruft
+__pycache__/
+*.pyc
+.pytest_cache/

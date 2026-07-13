@@ -1,7 +1,0 @@
-/home/sam069/projects/Sporty/merge_chunks.py
-/home/sam069/projects/Sporty/CLAUDE.md
-/home/sam069/projects/Sporty/Sporty_Backend/seed.py
-/home/sam069/projects/Sporty/Sporty_Backend/seed_data.py
-/home/sam069/projects/Sporty/Sporty_Backend/CLAUDE.md
-/home/sam069/projects/Sporty/Sporty_Backend/requirements.txt
-/home/sam069/projects/Sporty/Sporty_Backend/alembic/env.py
