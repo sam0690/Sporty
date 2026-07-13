@@ -1,178 +1,82 @@
+# sporty-frontend — conventions
 
-Project Overview
+Next.js 16 (App Router) + React 19 + TypeScript (strict, no `any`) frontend
+for the Sporty fantasy platform. It consumes the FastAPI backend over
+`/api/v1` and implements no business logic of its own — the backend is the
+source of truth for all rules and scoring.
 
-This is a Next.js (App Router) project using TypeScript, Tailwind CSS, and Mantine UI.
+## Stack (what is actually installed — check package.json before assuming)
 
-The project follows a modular, scalable architecture with reusable components and strict separation of concerns.
+- **Package manager: Yarn 4** (`corepack enable`; never npm)
+- **UI**: Mantine 9 components + Tailwind CSS v4 for layout/spacing
+- **Data**: Axios → TanStack React Query 5
+- **State**: Zustand (used sparingly — one store, `src/store/matchStore.ts`)
+- **Validation**: Zod 4 (`src/lib/validations.ts`)
+- **Forms**: react-hook-form + @hookform/resolvers
+- **Motion**: framer-motion · **DnD**: @dnd-kit · **Icons**: lucide-react
 
-Tech Stack
-Next.js (App Router)
-TypeScript
-Tailwind CSS
-Mantine UI
-Axios (API requests)
-Zustand or Redux (state management)
-Zod (validation)
-API & Data Fetching
-Use Axios for all API calls
-Create a centralized Axios instance (/services/api.ts)
-Do not call APIs directly inside components
-Use services layer (/services)
-Handle errors and responses consistently
-State Management
-Use Zustand for lightweight/global state
-Use Redux Toolkit for complex/global state
-Avoid unnecessary global state
-Keep state logic outside UI components
-Validation
-Use Zod for all form and schema validation
-Define schemas in /schemas or alongside features
-Avoid manual validation logic when Zod can be used
+There is **no Redux** and no `tailwind.config.ts` — design tokens are
+Tailwind v4 CSS-first, defined in `src/app/globals.css` with
+`Design_System.md` as the source of truth. Never hardcode colors/spacing;
+use the token classes (`bg-surface-1`, `text-fg-2`, `text-accent`, …).
 
-Folder Structure Rules
-/app → Routing (Next.js App Router)
-/components → Reusable UI components
-/features → Feature-based modules 
-/hooks → Custom hooks
-/services → API calls and business logic
-/types → TypeScript types
-/utils → Helper functions
-/services → API calls using Axios
-/store → Zustand or Redux store
-/schemas → Zod validation schemas
+## Commands
 
-Coding Guidelines
-General
-Always use TypeScript (no any)
-Use functional components with hooks
-Prefer composition over prop drilling
-Components
-Use PascalCase for component names
-Keep components small and reusable
-Separate UI and logic (container vs presentational)
-Styling
-Use Tailwind for layout and spacing
-Use Mantine for UI components (Stepper, Modal, etc.)
-Avoid inline styles unless necessary
-State Management
-Use React hooks or Zustand (if needed)
-Avoid unnecessary global state
-API & Data Fetching
-Use services layer (/services)
-Do not call APIs directly inside components
-Use async/await with proper error handling
-Naming Conventions
-Components: AutoLoanBenefit.tsx
-Hooks: useAutoLoan.ts
-Services: loanService.ts
-UI Consistency Rules
-Follow existing design patterns
-Maintain spacing, typography, and alignment consistency
-Reuse shared components whenever possible
-Performance
-Use dynamic imports where needed
-Avoid unnecessary re-renders
-Use memoization when required
-What to Avoid
-Do not create duplicate components
-Do not mix business logic inside UI components
-Do not hardcode values that should be dynamic
+```bash
+yarn dev      # dev server on :3000, proxies /api/* -> BACKEND_SERVER_URL (default :8000)
+yarn build    # production build (CI runs this — keep it green)
+yarn lint     # eslint
+yarn tsc --noEmit   # typecheck
+```
 
-Output Expectations for AI
-Clean, readable, production-ready code
-Proper TypeScript types
-Reusable and scalable structure
+Full local stack (DB, Redis, API, workers): `docker compose up` at the repo root.
 
-## Global Styling with Tailwind
+## Data flow — Backend → services → hooks → UI
 
-- All colors, fonts, spacing, and design tokens must be defined in a single global `tailwind.config.ts`.  
-- Do NOT hardcode styles inside components. Every style should use Tailwind classes referencing this config.  
+1. **`src/api/apiPath.ts`** — every backend endpoint is registered in
+   `API_PATHS`. Never hard-code a URL anywhere else. Adding/renaming a
+   backend route means updating this registry and the matching service.
+2. **`src/api/`** — the only two Axios instances: `auth-api-client.ts`
+   (cookie auth, auto-refresh on 401, CSRF header) and
+   `public-api-client.ts` (unauthenticated + in-memory CSRF token store).
+   UI components never call Axios directly.
+3. **`src/services/`** — typed functions per domain (`LeagueService`,
+   `PlayerService`, …) consuming `API_PATHS`.
+4. **`src/hooks/`** — React Query wrappers `hooks/api/useApiQuery.ts` /
+   `useApiMutation.ts` (auto-toasts), plus domain hooks
+   (`hooks/leagues/`, `hooks/players/`, …) that call services.
+5. **`src/features/<feature>/`** — feature modules composing components +
+   hooks. `src/components/ui/` holds the shared design-system primitives
+   (Button, Card, Modal, EmptyState, ErrorState, skeletons, …) — reuse
+   these before writing new ones.
 
-### Example Expectations:
+Auth is **httpOnly-cookie JWT + CSRF double-submit**: tokens are never
+readable from JS; state-changing requests carry `X-CSRF-Token` (handled by
+the Axios interceptors — don't reimplement).
 
-- **Colors** → `primary`, `secondary`, `accent`, `background`, `text`  
-- **Fonts** → `heading`, `body`, `mono`  
-- **Spacing / Sizes** → `padding`, `margin`, `borderRadius`, `boxShadow`  
+## Folder map
 
-### Usage in Components:
+```
+src/app/        App Router: (auth) (dashboard) (public) route groups, @modal
+src/api/        Axios clients + API_PATHS registry
+src/services/   API call functions per domain
+src/hooks/      useApiQuery/useApiMutation + domain hooks
+src/features/   feature modules (create-league, my-team, transfers, …)
+src/components/ ui/ (design-system primitives), shared/, live/, dashboard/
+src/store/      Zustand (matchStore)
+src/context/    auth-context, react-query provider
+src/lib/        realtime (socket.ts), routes, storage helpers, validations
+src/types/      API response types
+src/utils/      formatting/date/string helpers
+```
 
-```tsx
-<div className="bg-primary text-text font-heading p-4 rounded-lg">
-  Example Component
-</div>
+Path alias: `@/*` → `src/*`.
 
+## Rules
 
-
-## Domain Context: Fantasy Sports Platform (Frontend + FastAPI Backend)
-
-This project is a Next.js frontend for a multi-sport fantasy league system.
-
-The backend is built using FastAPI and provides all data via APIs.
-
-The frontend must strictly consume backend APIs and should not implement business logic locally.
-
----
-
-## API Integration
-
-* Use Axios for all API calls
-* Use a centralized Axios instance (`/services/api.ts`)
-* Base URL should point to FastAPI backend
-* All API calls must go through `/services` layer
-* Do NOT call APIs directly inside components
-
----
-
-## Data Handling
-
-* Always fetch data from backend APIs
-* Do NOT use mock data unless explicitly required for fallback/testing
-* Follow backend response structure strictly
-* Use TypeScript interfaces for API responses
-
----
-
-## State Management
-
-* Use Zustand or Redux for:
-
-  * User session data
-  * Selected team
-  * Player selections
-  * Leaderboards and scores
-* Do not duplicate backend state unnecessarily
-
----
-
-## Validation
-
-* Use Zod for:
-
-  * Form validation
-  * Client-side constraints (before API calls)
-* Backend remains source of truth
-
----
-
-## Architecture Expectations
-
-* `/services` → API calls (Axios)
-* `/types` → API response types
-* `/store` → Zustand/Redux state
-* `/features` → UI + feature logic
-
----
-
-## Error Handling
-
-* Handle API errors gracefully
-* Show loading and error states in UI
-* Do not crash UI on failed requests
-
----
-
-## What to Avoid
-
-* Do NOT hardcode data
-* Do NOT duplicate backend logic (e.g., scoring rules)
-* Do NOT tightly couple UI with API responses (use adapters if needed)
+- Handle loading / error / empty states on every data-driven view
+  (`EmptyState`, `ErrorState`, skeletons exist for this).
+- Prefer editing an existing component over creating a near-duplicate.
+- No new dependencies for what Mantine/Tailwind/stdlib already covers.
+- Deployment is **Vercel** (frontend) + Render (API). There is no Docker
+  image for the frontend and no Cloudflare/wrangler path.
