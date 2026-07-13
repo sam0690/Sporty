@@ -14,6 +14,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, selectinload
 
 from app.auth.models import User
+from app.core.errors import DomainError
 from app.core.redis import cache_get, cache_set
 from app.league.models import (
     BudgetTransaction,
@@ -279,16 +280,16 @@ def auto_pick_ilp(
 ) -> list[PoolPlayer]:
     locked_ids = [uuid.UUID(str(player_id)) for player_id in (locked_player_ids or [])]
     if len(set(locked_ids)) != len(locked_ids):
-        raise ValueError("Duplicate locked players are not allowed")
+        raise DomainError("Duplicate locked players are not allowed")
 
     pool_by_id = {player.id: player for player in player_pool}
     selected_locked: list[PoolPlayer] = []
     for locked_id in locked_ids:
         player = pool_by_id.get(locked_id)
         if not player:
-            raise ValueError(f"Locked player {locked_id} is not available in the current pool")
+            raise DomainError(f"Locked player {locked_id} is not available in the current pool")
         if not player.is_available:
-            raise ValueError(f"Locked player {player.name} is not available")
+            raise DomainError(f"Locked player {player.name} is not available")
         selected_locked.append(player)
 
     budget = Decimal(str(total_budget if total_budget is not None else sport_config["totalBudget"]))
@@ -346,7 +347,7 @@ def auto_pick_ilp(
         sport_type = sport["type"]
         sport_players = [player for player in player_pool if player.sport_type == sport_type]
         if len(sport_players) < int(sport["quota"]):
-            raise ValueError(
+            raise DomainError(
                 f"{sport_type.title()} quota not met: expected {sport['quota']}, got {len(sport_players)}"
             )
 
@@ -358,7 +359,7 @@ def auto_pick_ilp(
         for position, minimum in position_minimums.items():
             pos_players = [player for player in sport_players if player.position == position]
             if len(pos_players) < int(minimum):
-                raise ValueError(
+                raise DomainError(
                     f"{sport_type.title()} squad cannot satisfy required position {position}"
                 )
             model += pulp.lpSum(variables[player.id] for player in pos_players) >= int(minimum)
@@ -375,14 +376,14 @@ def auto_pick_ilp(
         logger.error(f"[auto_pick] ILP solve FAILED status={status_name}")
         logger.error(f"[auto_pick] constraints at failure — budget={budget} sports={sport_config['sports']} maxPerClub={max_per_club}")
         logger.error(f"[auto_pick] pool at failure — total={len(player_pool)} by_sport={dict(sport_counts)} by_position={dict(position_counts)}")
-        raise ValueError(
+        raise DomainError(
             "No valid squad exists within the given constraints. "
             "Check budget, available players, and position coverage."
         )
 
     selected = [player for player in player_pool if pulp.value(variables[player.id]) >= 0.5]
     if len(selected) != sum(int(sport["quota"]) for sport in sport_config["sports"]):
-        raise ValueError("ILP did not return a complete squad")
+        raise DomainError("ILP did not return a complete squad")
 
     total_cost = sum(p.cost for p in selected)
     budget_remaining = budget - total_cost

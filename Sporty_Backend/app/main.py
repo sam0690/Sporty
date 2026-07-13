@@ -498,11 +498,20 @@ async def global_exception_handler(request, exc: Exception):
     )
 
 
-@app.exception_handler(ValueError)
-async def value_error_handler(request, exc: ValueError):
-    """Handle value errors (bad input, validation failures) as 400."""
+from app.core.errors import DomainError
+
+
+@app.exception_handler(DomainError)
+async def domain_error_handler(request, exc: DomainError):
+    """Business-rule violations with client-safe messages → 400.
+
+    Only DomainError is echoed to the client. A bare ValueError is an
+    internal bug and falls through to the generic 500 handler above —
+    the old ValueError→400 handler leaked str(exc) for ANY ValueError
+    raised anywhere in the stack.
+    """
     logger.warning(
-        "ValueError on %s %s: %s",
+        "DomainError on %s %s: %s",
         request.method,
         request.url.path,
         exc,

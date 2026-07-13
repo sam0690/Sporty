@@ -19,6 +19,7 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
+from app.core.errors import DomainError
 from app.league.sportConfigs import (
     MIXED_SPORT_QUOTAS,
     SPORT_CONFIG_REGISTRY,
@@ -122,13 +123,13 @@ def validate_squad_size(
     """
     count = len(team_players)
     if count != league.squad_size:
-        raise ValueError(
+        raise DomainError(
             f"Squad must contain exactly {league.squad_size} player(s), got {count}."
         )
 
     ids = [_player_id(tp) for tp in team_players]
     if len(ids) != len(set(ids)):
-        raise ValueError("Duplicate players are not allowed in the squad.")
+        raise DomainError("Duplicate players are not allowed in the squad.")
 
     if not sports:
         return
@@ -152,12 +153,12 @@ def validate_squad_size(
     for sport_name, required in MIXED_SPORT_QUOTAS.items():
         sport_id = sport_id_by_name.get(sport_name)
         if not sport_id:
-            raise ValueError(
+            raise DomainError(
                 f"Mixed league is missing required sport '{sport_name}'."
             )
         actual = counts_by_sport.get(sport_id, 0)
         if actual < required:
-            raise ValueError(
+            raise DomainError(
                 f"Mixed team must include at least {required} {sport_name} "
                 f"player(s) in the squad, got {actual}."
             )
@@ -192,7 +193,7 @@ def validate_position_slots(
         sport_id = _player_sport_id(tp)
         position = _player_position(tp)
         if not sport_id or not position:
-            raise ValueError(
+            raise DomainError(
                 f"Player '{_player_name(tp)}' is missing required "
                 "sport or position data."
             )
@@ -204,12 +205,12 @@ def validate_position_slots(
         count = counts.get(key, 0)
 
         if count < slot.min_count:
-            raise ValueError(
+            raise DomainError(
                 f"Position '{slot.position}' requires at least "
                 f"{slot.min_count} player(s), but {count} selected."
             )
         if count > slot.max_count:
-            raise ValueError(
+            raise DomainError(
                 f"Position '{slot.position}' allows at most "
                 f"{slot.max_count} player(s), but {count} selected."
             )
@@ -256,19 +257,19 @@ def validate_lineup_for_league_type(
     bench_count = total_squad - starting_count
 
     if total_squad != rules["total"]:
-        raise ValueError(
+        raise DomainError(
             f"{sport_label} team must have exactly {rules['total']} squad "
             f"player(s), got {total_squad}."
         )
 
     if starting_count != rules["starting"]:
-        raise ValueError(
+        raise DomainError(
             f"{sport_label} lineup must have exactly {rules['starting']} "
             f"starting player(s), got {starting_count}."
         )
 
     if bench_count != rules["bench"]:
-        raise ValueError(
+        raise DomainError(
             f"{sport_label} lineup must have exactly {rules['bench']} "
             f"bench player(s), got {bench_count}."
         )
@@ -287,7 +288,7 @@ def validate_lineup_for_league_type(
     for player in lineup:
         sport_id = _player_sport_id(player)
         if not sport_id:
-            raise ValueError(
+            raise DomainError(
                 f"Player '{_player_name(player)}' is missing sport assignment."
             )
         starter_counts_by_sport[sport_id] = starter_counts_by_sport.get(sport_id, 0) + 1
@@ -295,14 +296,14 @@ def validate_lineup_for_league_type(
     for sport_name, required in _MIXED_STARTER_REQUIREMENTS.items():
         sport_id = sport_id_by_name.get(sport_name)
         if not sport_id:
-            raise ValueError(
+            raise DomainError(
                 f"Mixed league is missing required sport '{sport_name}'."
             )
         actual = starter_counts_by_sport.get(sport_id, 0)
         if actual != required:
             football_req = _MIXED_STARTER_REQUIREMENTS["football"]
             basketball_req = _MIXED_STARTER_REQUIREMENTS["basketball"]
-            raise ValueError(
+            raise DomainError(
                 f"Mixed starting lineup must include exactly "
                 f"{football_req} football and {basketball_req} basketball "
                 f"player(s)."
@@ -351,7 +352,7 @@ def _assert_max_per_club(team_players: list[Any], sport_type: str) -> None:
 
     for key, count in counts.items():
         if count > max_per_club:
-            raise ValueError(
+            raise DomainError(
                 f"Squad would have {count} players from {labels[key]}, "
                 f"max is {max_per_club}."
             )
@@ -381,7 +382,7 @@ def _assert_position_minimums_if_complete(
     for pos, required in minimums.items():
         actual = counts.get(pos, 0)
         if actual < required:
-            raise ValueError(
+            raise DomainError(
                 f"Squad needs at least {required} {pos} player(s), has {actual}."
             )
 
