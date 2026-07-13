@@ -260,6 +260,21 @@ def get_me(current_user: User = Depends(get_current_active_user)):
     return current_user
 
 
+@router.post("/ws-ticket", status_code=200)
+def create_websocket_ticket(current_user: User = Depends(get_current_active_user)):
+    """Mint a short-lived ticket for authenticated WebSocket handshakes.
+
+    Sockets connect to the API host directly (WebSocket upgrades don't go
+    through the frontend's HTTP proxy), so the httpOnly session cookie may
+    not accompany the handshake. The client calls this over the normal
+    authenticated channel and appends the ticket as ?token= on the socket
+    URL. 5-minute TTL — it only needs to survive the connect.
+    """
+    from app.core.security import create_ws_ticket
+
+    return {"token": create_ws_ticket(current_user.id)}
+
+
 @router.post("/change-password", status_code=200)
 def change_password(
     data: ChangePasswordRequest,

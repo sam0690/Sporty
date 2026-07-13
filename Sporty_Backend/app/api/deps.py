@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.models import User
-from app.core.security import decode_access_token
+from app.core.security import decode_access_token, decode_ws_ticket
 from app.core.config import settings
 from app.core.database import get_async_db
 from app.core.redis import create_redis_pool, get_async_redis
@@ -73,7 +73,11 @@ async def get_current_active_user_ws(ws: WebSocket, db=Depends(get_async_db)) ->
     if token is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
 
-    payload = decode_access_token(token)
+    # Accept a full access token OR a short-lived WS ticket (POST
+    # /auth/ws-ticket). The ticket exists because the httpOnly cookie lives
+    # on the app's origin when the frontend proxies HTTP same-origin, so a
+    # direct cross-origin socket handshake carries no credentials.
+    payload = decode_access_token(token) or decode_ws_ticket(token)
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
 

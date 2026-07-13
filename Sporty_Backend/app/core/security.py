@@ -78,6 +78,43 @@ def create_refresh_token() -> str:
     return secrets.token_urlsafe(64)
 
 
+WS_TICKET_EXPIRE_MINUTES = 5
+
+
+def create_ws_ticket(user_id: uuid.UUID) -> str:
+    """Short-lived token for WebSocket handshakes.
+
+    WebSocket upgrades can't always carry the httpOnly auth cookie (e.g. the
+    frontend is served same-origin through a proxy while sockets connect to
+    the API host directly — the cookie lives on the app domain, not the API
+    domain). The client fetches this ticket over the authenticated HTTP
+    channel and appends it as ?token= on the socket URL. 5-minute TTL: it
+    only needs to survive the handshake.
+    """
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=WS_TICKET_EXPIRE_MINUTES)
+    payload = {"sub": str(user_id), "exp": expire, "iat": now, "type": "ws"}
+    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+
+def decode_ws_ticket(token: str) -> AccessTokenPayload | None:
+    """Decode and validate a WS ticket. Same shape as an access payload."""
+    try:
+        payload = jwt.decode(
+            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+        )
+    except JWTError:
+        return None
+
+    if payload.get("type") != "ws":
+        return None
+
+    try:
+        return AccessTokenPayload(sub=uuid.UUID(payload["sub"]))
+    except (KeyError, ValueError):
+        return None
+
+
 def create_password_reset_token(user_id: uuid.UUID) -> str:
     """Create a short-lived password reset JWT."""
     now = datetime.now(timezone.utc)
