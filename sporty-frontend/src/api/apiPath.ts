@@ -15,6 +15,7 @@ export const API_PATHS = {
     ME: "/auth/me",
     CHANGE_PASSWORD: "/auth/change-password",
     GOOGLE: "/auth/google",
+    WS_TICKET: "/auth/ws-ticket",
     GOOGLE_LINK: "/auth/google/link",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",

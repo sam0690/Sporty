@@ -3,6 +3,8 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
+import { API_PATHS } from "@/api/apiPath";
+import { authApi } from "@/api/auth-api-client";
 import { buildLeagueChatSocketUrl } from "@/lib/socket";
 import { chatQueryKey } from "@/hooks/leagues/useLeagueChat";
 
@@ -37,8 +39,20 @@ export function useLeagueChatSocket(leagueId: string, enabled = true) {
 
     let closedByUser = false;
 
-    const connect = () => {
-      const socket = new WebSocket(buildLeagueChatSocketUrl(leagueId));
+    const connect = async () => {
+      // Fresh ticket per connect attempt (5-min TTL) — the cookie-auth'd
+      // HTTP channel vouches for the socket handshake.
+      let ticket: string | undefined;
+      try {
+        const res = await authApi.post<{ token: string }>(API_PATHS.AUTH.WS_TICKET);
+        ticket = res.data.token;
+      } catch {
+        // Fall through: same-origin dev sockets still carry the cookie.
+      }
+      if (closedByUser) {
+        return;
+      }
+      const socket = new WebSocket(buildLeagueChatSocketUrl(leagueId, ticket));
       wsRef.current = socket;
 
       socket.onopen = () => {
@@ -72,7 +86,7 @@ export function useLeagueChatSocket(leagueId: string, enabled = true) {
       };
     };
 
-    connect();
+    void connect();
 
     return () => {
       closedByUser = true;
