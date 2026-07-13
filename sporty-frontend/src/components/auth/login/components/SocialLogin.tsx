@@ -18,7 +18,11 @@ export function SocialLogin() {
 
     const params = new URLSearchParams({
       client_id: clientId,
-      redirect_uri: "https://sporty-woad.vercel.app/auth/google/callback",
+      // Must EXACTLY match an authorized redirect URI in Google console AND
+      // the backend's GOOGLE_REDIRECT_URI (used again in the code exchange).
+      // Deriving from the page origin keeps it correct per environment
+      // (sportyyy.tech in prod, localhost:3000 in dev).
+      redirect_uri: `${window.location.origin}/auth/google/callback`,
       response_type: "code",
       scope: "openid email profile",
       access_type: "offline",
