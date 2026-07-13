@@ -49,28 +49,23 @@ RATE_LIMIT_RULES = [
 
 def get_client_ip(request: Request) -> str:
     """
-    Extract real client IP, respecting proxy headers.
+    Extract the real client IP without trusting client-supplied headers.
 
-    Order of precedence:
-    1. X-Forwarded-For (first IP = original client)
-    2. X-Real-IP (nginx convention)
-    3. Direct connection IP
-
-    Security note: In production, ensure your reverse proxy
-    strips any client-supplied X-Forwarded-For headers to
-    prevent spoofing.
+    Proxies APPEND to X-Forwarded-For, so with TRUSTED_PROXY_HOPS=N the
+    real client is the Nth entry from the right; everything left of it
+    arrived from the client and is spoofable. The previous version took
+    the LEFTMOST entry (and fell back to X-Real-IP, equally spoofable),
+    so any client could rotate a fake header past every rate limit.
+    X-Real-IP support is dropped for the same reason — nothing sets it here.
     """
-    # Check for proxy headers (set by nginx, cloudflare, etc.)
-    forwarded_for = request.headers.get("x-forwarded-for")
-    if forwarded_for:
-        # First IP in the chain is the original client
-        return forwarded_for.split(",")[0].strip()
+    hops = settings.TRUSTED_PROXY_HOPS
+    if hops > 0:
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        entries = [e.strip() for e in forwarded_for.split(",") if e.strip()]
+        if entries:
+            return entries[-hops] if len(entries) >= hops else entries[0]
 
-    real_ip = request.headers.get("x-real-ip")
-    if real_ip:
-        return real_ip.strip()
-
-    # Fallback to direct connection
+    # Direct connection (or hops=0: forwarded headers ignored entirely)
     if request.client:
         return request.client.host
 

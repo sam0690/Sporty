@@ -42,6 +42,7 @@ from app.auth.schemas import (
 )
 from app.core.config import settings
 from app.database import get_db
+from app.middleware.rate_limiter import get_client_ip
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -62,9 +63,15 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     Cookie expiration:
     - Access token: Short-lived (default 30 minutes)
     - Refresh token: Long-lived (default 7 days)
+
+    Attributes come from Settings (previously hardcoded secure/None, which
+    made COOKIE_SECURE / COOKIE_SAME_SITE dead config): production env must
+    set secure=True + samesite=none (validate_production enforces this);
+    development defaults to lax + insecure, which works because the Next.js
+    dev server proxies /api/* so cookies are same-origin.
     """
-    secure = True
-    same_site = "none"
+    secure = settings.COOKIE_SECURE
+    same_site = settings.COOKIE_SAME_SITE
     domain = settings.COOKIE_DOMAIN or None
 
     response.set_cookie(
@@ -96,8 +103,8 @@ def _clear_auth_cookies(response: Response) -> None:
     Important: Cookie deletion requires matching the exact attributes
     used when setting the cookie (path, domain, secure, samesite).
     """
-    secure = True
-    same_site = "none"
+    secure = settings.COOKIE_SECURE
+    same_site = settings.COOKIE_SAME_SITE
     domain = settings.COOKIE_DOMAIN or None
 
     response.delete_cookie(
@@ -183,9 +190,7 @@ def refresh_token(
 @router.post("/forgot-password", response_model=ForgotPasswordResponse, status_code=200)
 def forgot_password(data: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     """Request password reset email. Rate-limited by IP + email."""
-    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
-    if not client_ip:
-        client_ip = request.client.host if request.client else "unknown"
+    client_ip = get_client_ip(request)
     return services.forgot_password(db, data.email, client_ip)
 
 

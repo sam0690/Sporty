@@ -39,6 +39,16 @@ class Settings(BaseSettings):
     COOKIE_SAME_SITE: str = "lax"  # "lax", "strict", or "none"
     COOKIE_DOMAIN: str = ""  # Empty = current domain; set to ".sporty.com" for subdomains
 
+    # ── Client IP resolution (rate limiting, abuse throttles) ──
+    # Number of trusted reverse-proxy hops in front of the app. Proxies
+    # APPEND the caller's IP to X-Forwarded-For, so with N trusted hops the
+    # real client is the Nth entry from the RIGHT — anything left of that is
+    # client-supplied and spoofable (the old code took the leftmost entry,
+    # letting any client rotate a fake header past every rate limit).
+    # 1 = one proxy (Render, nginx). 0 = direct connections only (ignore
+    # forwarded headers entirely).
+    TRUSTED_PROXY_HOPS: int = 1
+
     # ── Rate Limiting ──────────────────────────────────────────
     RATE_LIMIT_ENABLED: bool = True
     # Global rate limit (requests per minute per IP)
