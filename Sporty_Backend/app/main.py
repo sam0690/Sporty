@@ -88,36 +88,50 @@ from app.league_chat.router import router as league_chat_router
 logger = logging.getLogger(__name__)
 
 
+# Every scheduler runs in-process, so with 2+ API instances each cron fires
+# once PER INSTANCE. The waiver/trade jobs below always had Redis locks; these
+# four were unguarded (double-sent notifications, double-run rankings). Same
+# pattern everywhere now: skip the tick if another instance holds the lock.
 def _run_transfer_window_notification_job() -> None:
-  db = SessionLocal()
-  try:
-    stats = check_and_notify_open_windows(db)
-    db.commit()
-    logger.info(
-      "Daily transfer-window notification job completed: %s",
-      stats,
-    )
-  except Exception:
-    db.rollback()
-    logger.exception("Daily transfer-window notification job failed")
-  finally:
-    db.close()
+  from app.core.redis_lock import redis_lock
+
+  with redis_lock("lock:jobs:transfer_window_notifications", ttl_seconds=300) as acquired:
+    if not acquired:
+      return
+    db = SessionLocal()
+    try:
+      stats = check_and_notify_open_windows(db)
+      db.commit()
+      logger.info(
+        "Daily transfer-window notification job completed: %s",
+        stats,
+      )
+    except Exception:
+      db.rollback()
+      logger.exception("Daily transfer-window notification job failed")
+    finally:
+      db.close()
 
 
 
 def _run_league_lifecycle_job() -> None:
-  db = SessionLocal()
-  try:
-    stats = auto_update_league_statuses(db)
-    logger.info(
-      "Daily league lifecycle job completed: %s",
-      stats,
-    )
-  except Exception:
-    db.rollback()
-    logger.exception("Daily league lifecycle job failed")
-  finally:
-    db.close()
+  from app.core.redis_lock import redis_lock
+
+  with redis_lock("lock:jobs:league_lifecycle", ttl_seconds=300) as acquired:
+    if not acquired:
+      return
+    db = SessionLocal()
+    try:
+      stats = auto_update_league_statuses(db)
+      logger.info(
+        "Daily league lifecycle job completed: %s",
+        stats,
+      )
+    except Exception:
+      db.rollback()
+      logger.exception("Daily league lifecycle job failed")
+    finally:
+      db.close()
 
 
 def _run_waiver_processing_job() -> None:
@@ -163,38 +177,48 @@ def _run_trade_finalization_job() -> None:
 
 
 def _run_cache_warming_job() -> None:
-  db = SessionLocal()
-  try:
-    redis = get_redis()
-    stats = asyncio.run(warm_cache(db, redis))
-    logger.info("Cache warming job completed: %s", stats)
-  except Exception:
-    logger.exception("Cache warming job failed")
-  finally:
-    db.close()
+  from app.core.redis_lock import redis_lock
+
+  with redis_lock("lock:jobs:cache_warming", ttl_seconds=300) as acquired:
+    if not acquired:
+      return
+    db = SessionLocal()
+    try:
+      redis = get_redis()
+      stats = asyncio.run(warm_cache(db, redis))
+      logger.info("Cache warming job completed: %s", stats)
+    except Exception:
+      logger.exception("Cache warming job failed")
+    finally:
+      db.close()
 
 
 def _run_gameweek_ranking_job() -> None:
   from datetime import datetime, timezone
-  db = SessionLocal()
-  try:
-    now = datetime.now(timezone.utc)
-    window = (
-      db.query(TransferWindow)
-      .filter(TransferWindow.start_at <= now, TransferWindow.end_at >= now)
-      .first()
-    )
-    if window is None:
-      logger.info("Gameweek ranking job: no active transfer window, skipping")
+  from app.core.redis_lock import redis_lock
+
+  with redis_lock("lock:jobs:gameweek_ranking", ttl_seconds=300) as acquired:
+    if not acquired:
       return
-    compute_and_store_rankings(window.id, db)
-    db.commit()
-    logger.info("Gameweek ranking job completed for window %s", window.id)
-  except Exception:
-    db.rollback()
-    logger.exception("Gameweek ranking job failed")
-  finally:
-    db.close()
+    db = SessionLocal()
+    try:
+      now = datetime.now(timezone.utc)
+      window = (
+        db.query(TransferWindow)
+        .filter(TransferWindow.start_at <= now, TransferWindow.end_at >= now)
+        .first()
+      )
+      if window is None:
+        logger.info("Gameweek ranking job: no active transfer window, skipping")
+        return
+      compute_and_store_rankings(window.id, db)
+      db.commit()
+      logger.info("Gameweek ranking job completed for window %s", window.id)
+    except Exception:
+      db.rollback()
+      logger.exception("Gameweek ranking job failed")
+    finally:
+      db.close()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -265,30 +289,8 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     logger.info("APScheduler started with transfer, lifecycle, cache warming, price-update, and ranking jobs")
 
-    realtime_started = False
-    if settings.REALTIME_PIPELINE_ENABLED:
-      from app.core.kafka import create_producer
-      from app.services.match_scheduler import MatchScheduler
-
-      producer = await create_producer()
-      match_scheduler = MatchScheduler(
-        producer=producer,
-        refresh_interval_seconds=settings.MATCH_SCHEDULER_REFRESH_SECONDS,
-      )
-      await match_scheduler.start()
-
-      app.state.realtime_producer = producer
-      app.state.match_scheduler = match_scheduler
-      realtime_started = True
-      logger.info("Realtime match scheduler started")
-
     yield
     # ── Shutdown ────────────────────────────────────────────────────
-    if realtime_started:
-      await app.state.match_scheduler.stop()
-      await app.state.realtime_producer.stop()
-      logger.info("Realtime match scheduler stopped")
-
     await close_async_redis()
 
     scheduler.shutdown(wait=False)

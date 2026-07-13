@@ -8,7 +8,7 @@ Sporty is a multi-sport fantasy league platform (Football/Soccer, NBA Basketball
 
 This is a **monorepo** with two independently-deployed apps plus supporting data:
 
-- `Sporty_Backend/` — FastAPI API + Celery/APScheduler workers + Kafka realtime pipeline + data ingestion. **Has its own detailed `Sporty_Backend/CLAUDE.md` — read it before working in the backend.**
+- `Sporty_Backend/` — FastAPI API + Celery/APScheduler workers + data ingestion. **Has its own detailed `Sporty_Backend/CLAUDE.md` — read it before working in the backend.**
 - `sporty-frontend/` — Next.js 16 (App Router) + React 19 + TypeScript UI. Has `sporty-frontend/CLAUDE.md` and `AGENTS.md` covering frontend coding conventions (Mantine + Tailwind, services/store/Zod separation).
 - `EPL/`, `basketball/` — raw CSV stat datasets used by backend seeders/ingestion.
 - `graphify-out/`, `merge_chunks.py` — local knowledge-graph tooling artifacts (untracked, not app code).
@@ -64,8 +64,8 @@ Path alias `@/*` → `src/*` (`tsconfig.json`). Layered data flow is **Backend �
 - `src/lib/` — cross-cutting client utilities: `realtimeApi.ts` / `socket.ts` (WebSocket/SSE for live scoring), `league-lifecycle.ts`, `storage.*` (typed localStorage/session helpers), `route.config.ts`, `sanitize.ts`, `validations.ts`.
 - `src/features/` — feature modules (`create-league`, `create-team`, `my-team`, `transfers`, `leagues`, …) composing components + hooks.
 
-The realtime/live-scoring frontend (`src/lib/realtimeApi.ts`, `socket.ts`, `components/live/`) pairs with the backend Kafka pipeline, which is gated behind `REALTIME_PIPELINE_ENABLED` (default off, not prod-tested) — see `Sporty_Backend/CLAUDE.md`.
+The realtime/live-scoring frontend (`src/lib/realtimeApi.ts`, `socket.ts`, `components/live/`) consumes the backend's feeder → Redis pub/sub → WebSocket/SSE chain — see `Sporty_Backend/CLAUDE.md`.
 
 ## Backend architecture (summary — full detail in `Sporty_Backend/CLAUDE.md`)
 
-Vertical-slice modules under `app/` (each with `models/router/services/schemas`). Two DB sessions: **sync** (`app/database.py`, psycopg2) for most routes/jobs, **async** (`app/core/database.py`, asyncpg) for realtime only. Key conventions: services never `db.commit()` (the router/job owns the transaction); all model modules are imported in `app/main.py` before routers so SQLAlchemy resolves relationships. Sports are normalized behind `ISportAdapter` (`app/adapters/`); squad rules in `app/league/sportConfigs.py`. Scoring has a batch/gameweek layer (`app/services/scoring/`) and a realtime event layer (`app/scoring/rules.py`). Three background systems: APScheduler (in-process cron), Celery + Beat (sync/polling/pricing), Kafka (realtime). Squad auto-pick uses PuLP ILP (`app/services/optimization/`).
+Vertical-slice modules under `app/` (each with `models/router/services/schemas`). Two DB sessions: **sync** (`app/database.py`, psycopg2) for most routes/jobs, **async** (`app/core/database.py`, asyncpg) for realtime only. Key conventions: top-level service entry points own and commit their transaction, helpers called by other services never commit (see the backend CLAUDE.md for the full rule); all model modules are imported in `app/main.py` before routers so SQLAlchemy resolves relationships. Sports are normalized behind `ISportAdapter` (`app/adapters/`); squad rules in `app/league/sportConfigs.py`. Scoring has a batch/gameweek layer (`app/services/scoring/`) and a live layer applying the same rules to feeder events (`app/services/feed_scoring.py`). Two background systems: APScheduler (in-process cron, Redis-locked per job) and Celery + Beat (sync/polling/pricing). Squad auto-pick uses PuLP ILP (`app/services/optimization/`).

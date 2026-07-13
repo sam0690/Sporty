@@ -5,61 +5,56 @@ from typing import Any
 
 DEFAULT_MAX_PER_CLUB = 3
 
-SPORT_CONFIGS = {
-    'football': {
-        'squad_size': 15,
-        'quota': 15,
-        'maxPerClub': 3,
-    },
-    'basketball': {
-        'squad_size': 13,
-        'quota': 13,
-        'maxPerClub': None,
-    },
-    'mixed': {
-        'squad_size': 15,
-        'football_quota': 8,
-        'basketball_quota': 7
-    }
-}
+# ═══════════════════════════════════════════════════════════════════════════
+# THE single source of truth for per-sport squad rules.
+#
+# This replaces three overlapping registries (SPORT_CONFIGS,
+# SPORT_CONFIG_REGISTRY, MIXED_SPORT_QUOTAS) that each held part of the
+# picture — the mixed 8/7 split was literally defined twice. Every entry
+# point reads through the accessor functions below; adding a sport (e.g.
+# cricket) means adding ONE entry here.
+#
+# Position codes must match Player.position ("GKP", not "GK") or the
+# auto-pick ILP rejects every pool with "cannot satisfy required position".
+# Football's "single" minimums (2/5/5/3) sum to exactly the 15-player squad
+# size, so a valid single-sport football squad is fully constrained (no flex
+# slots). Basketball has no position constraints (all players are position
+# "UNK"; the quota already fixes the count, and any UNK minimum above the
+# mixed-league basketball quota of 7 would make the ILP infeasible).
+# ═══════════════════════════════════════════════════════════════════════════
 
-# Single source of truth for position-minimum quotas, by sport and by
-# single-vs-mixed league shape. Position codes must match Player.position
-# ("GKP", not "GK") or the auto-pick ILP rejects every pool with "cannot
-# satisfy required position". Football's "single" minimums (2/5/5/3) sum to
-# exactly the 15-player squad size, so a valid single-sport football squad is
-# fully constrained (no flex slots). Basketball has no position constraints
-# (all players are position "UNK"; the quota already fixes the count, and any
-# UNK minimum above the mixed-league basketball quota of 7 would make the ILP
-# infeasible).
-SPORT_CONFIG_REGISTRY: dict[str, dict[str, dict[str, Any]]] = {
+SPORT_REGISTRY: dict[str, dict[str, Any]] = {
     "football": {
-        "single": {
-            "position_minimums": {
-                "GKP": 2,
-                "DEF": 5,
-                "MID": 5,
-                "FWD": 3,
-            },
-        },
-        "mixed": {
-            "position_minimums": {
-                "GKP": 1,
-                "DEF": 2,
-                "MID": 3,
-                "FWD": 2,
-            },
+        "squad_size": 15,
+        "quota": 15,
+        "max_per_club": 3,
+        "position_minimums": {
+            "single": {"GKP": 2, "DEF": 5, "MID": 5, "FWD": 3},
+            "mixed": {"GKP": 1, "DEF": 2, "MID": 3, "FWD": 2},
         },
     },
     "basketball": {
-        "single": {
-            "position_minimums": {},
-        },
-        "mixed": {
-            "position_minimums": {},
-        },
+        "squad_size": 13,
+        "quota": 13,
+        "max_per_club": None,  # accessor falls back to DEFAULT_MAX_PER_CLUB
+        "position_minimums": {"single": {}, "mixed": {}},
+    },
+    "mixed": {
+        "squad_size": 15,
+        "quotas": {"football": 8, "basketball": 7},
     },
 }
+
+# Per-sport quotas for mixed leagues — a VIEW of the registry, not a second
+# definition (squad/services iterates this when validating mixed squads).
+MIXED_SPORT_QUOTAS: dict[str, int] = SPORT_REGISTRY["mixed"]["quotas"]
+
+SUPPORTED_SPORT_TYPES = {name for name in SPORT_REGISTRY if name != "mixed"}
+
+
+def get_squad_size(sport_type: str, default: int = 15) -> int:
+    """Squad size for a sport type ("football" | "basketball" | "mixed")."""
+    return int(SPORT_REGISTRY.get(sport_type, {}).get("squad_size", default))
 
 
 def get_position_minimums(sport_type: str, mode: str) -> dict[str, int]:
@@ -69,29 +64,18 @@ def get_position_minimums(sport_type: str, mode: str) -> dict[str, int]:
     (no constraint) rather than raising, matching existing "unknown → no
     constraint" behavior elsewhere in the squad-validation code.
     """
-    return SPORT_CONFIG_REGISTRY.get(sport_type, {}).get(mode, {}).get(
-        "position_minimums", {}
-    )
+    return SPORT_REGISTRY.get(sport_type, {}).get("position_minimums", {}).get(mode, {})
 
 
 def get_max_per_club(sport_type: str) -> int:
     """Max players allowed from the same real-world club, for `sport_type`.
 
-    Mirrors the `maxPerClub or DEFAULT_MAX_PER_CLUB` fallback the ILP
-    optimizer already applies (auto_pick_service.py) so every entry point
-    agrees on the same cap, including sports (e.g. basketball) whose
-    SPORT_CONFIGS entry sets maxPerClub=None.
+    Mirrors the `max_per_club or DEFAULT_MAX_PER_CLUB` fallback the ILP
+    optimizer applies so every entry point agrees on the same cap, including
+    sports (e.g. basketball) whose entry sets max_per_club=None.
     """
-    config = SPORT_CONFIGS.get(sport_type, {})
-    return int(config.get("maxPerClub") or DEFAULT_MAX_PER_CLUB)
-
-
-MIXED_SPORT_QUOTAS = {
-    "football": 8,
-    "basketball": 7,
-}
-
-SUPPORTED_SPORT_TYPES = set(SPORT_CONFIG_REGISTRY)
+    config = SPORT_REGISTRY.get(sport_type, {})
+    return int(config.get("max_per_club") or DEFAULT_MAX_PER_CLUB)
 
 
 def derive_sport_type(sports: Any) -> str:
@@ -122,7 +106,7 @@ def build_auto_pick_sport_config(
     total_budget: Decimal,
     squad_size: int,
 ) -> dict[str, Any]:
-    config = SPORT_CONFIGS.get(sport_type)
+    config = SPORT_REGISTRY.get(sport_type)
     if not config:
         # Fallback if unknown sport
         return {
@@ -139,15 +123,11 @@ def build_auto_pick_sport_config(
         # 15/13-player squads and are infeasible here.
         sports = [
             {
-                "type": "football",
-                "quota": config.get("football_quota", 8),
-                "position_minimums": get_position_minimums("football", "mixed"),
-            },
-            {
-                "type": "basketball",
-                "quota": config.get("basketball_quota", 7),
-                "position_minimums": get_position_minimums("basketball", "mixed"),
-            },
+                "type": name,
+                "quota": quota,
+                "position_minimums": get_position_minimums(name, "mixed"),
+            }
+            for name, quota in MIXED_SPORT_QUOTAS.items()
         ]
     else:
         sports = [
@@ -161,7 +141,7 @@ def build_auto_pick_sport_config(
     return {
         "sportType": sport_type,
         "totalBudget": total_budget,
-        "maxPerClub": config.get("maxPerClub", DEFAULT_MAX_PER_CLUB),
+        "maxPerClub": config.get("max_per_club") or DEFAULT_MAX_PER_CLUB,
         "sports": sports,
         "squad_size": config["squad_size"],
     }

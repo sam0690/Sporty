@@ -22,7 +22,6 @@ from typing import Any
 from app.core.errors import DomainError
 from app.league.sportConfigs import (
     MIXED_SPORT_QUOTAS,
-    SPORT_CONFIG_REGISTRY,
     derive_sport_type,
     get_max_per_club,
     get_position_minimums,
@@ -223,7 +222,7 @@ def validate_lineup_for_league_type(
 ) -> None:
     """Validate that a starting lineup is structurally correct for the league type.
 
-    Uses SPORT_CONFIG_REGISTRY (via derive_sport_type) to detect whether the
+    Uses SPORT_REGISTRY (via derive_sport_type) to detect whether the
     league is single-sport or mixed and select the appropriate rules from
     _LINEUP_SIZE_RULES.
 
@@ -429,7 +428,7 @@ def check_squad_constraints(
         Player or TeamPlayer objects; caller loads this (no DB I/O here, per
         the module docstring).
     sport_type / mode: from derive_sport_type(...) and "single"/"mixed" —
-        selects which SPORT_CONFIG_REGISTRY entry applies.
+        selects which SPORT_REGISTRY entry applies.
 
     Returns a violation message, or None if the change is legal — this
     string-or-None shape (rather than raising) matches the calling

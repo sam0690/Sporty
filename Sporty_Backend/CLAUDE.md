@@ -30,9 +30,6 @@ venv/bin/alembic upgrade head
 # Celery (sync/polling/scoring/pricing tasks)
 venv/bin/celery -A app.core.celery_app.celery_app worker --loglevel=INFO
 venv/bin/celery -A app.core.celery_app.celery_app beat --loglevel=INFO
-
-# Realtime Kafka consumers (only when REALTIME_PIPELINE_ENABLED=true)
-venv/bin/python -m app.workers.entry_points [points-engine|normalizer|notifications]
 ```
 
 Config comes from `.env` (see `.env.example`). Required at startup: `DATABASE_URL` (PostgreSQL), `REDIS_URL`, `JWT_SECRET_KEY` (≥32 chars), `GOOGLE_CLIENT_ID`. `settings.validate_production()` runs in the lifespan startup and will refuse to boot on bad config.
@@ -46,7 +43,7 @@ Feature modules under `app/` each own `models.py` (SQLAlchemy), `router.py` (Fas
 
 **Feeder ingestion (`app/api/v1/feed.py`):** inbound push from the Sporty Data Feeder (sibling repo `SportyDataFeeder`). Three endpoints under `/api/v1/feed/*` authenticated by the `X-Feeder-Secret` header (`FEEDER_SECRET` in Settings/.env; 503 when unset, 401 on mismatch, value never logged; CSRF-exempt as server-to-server). `match-result` upserts `live_events` idempotently (`ON CONFLICT (match_id, event_id) DO NOTHING`), updates match score/status, publishes a `SCORE_UPDATE` `WSMessage` to `{REDIS_PUBSUB_PREFIX}:{external_api_id or match.id}` (the channel the WebSocket routes subscribe to), and on the live→finished transition calls `enqueue_scoring_for_finished_match` immediately. `prediction` / `player-ratings` SETEX `prediction:match:{id}` / `ratings:match:{id}` with a 24h TTL. Note: the scoring trigger is imported lazily inside the handler — `scoring.trigger` ↔ `celery_app` ↔ task modules form an import cycle that breaks if `trigger` is imported first.
 
-**Transaction ownership convention (important):** service functions never call `db.commit()` — the router (or scheduler job) that invoked them owns the transaction and commits/rolls back. Follow this when adding service code.
+**Transaction ownership (the real rule, not the aspirational one):** the TOP-LEVEL entry point of a request/job owns the transaction — and in much of the codebase that top-level function lives in a services module and calls `db.commit()` itself (auth, league, admin, sync services all do). Helper/composable functions must NOT commit; they flush and let their caller decide (see `_build_tokens` in `auth/services.py` for the documented pattern). When adding code: committing in a function routers call directly is normal here; committing in anything called BY another service function is a bug.
 
 ### Two database sessions
 - `app/database.py` — **sync** engine, `SessionLocal`, `get_db` dependency. Used by most routers, services, and scheduler jobs (psycopg2).
@@ -58,22 +55,23 @@ Feature modules under `app/` each own `models.py` (SQLAlchemy), `router.py` (Fas
 Leagues move `SETUP → DRAFTING → ACTIVE → COMPLETED`. Transitions are driven by a daily APScheduler job (`auto_update_league_statuses` in `app/services/league_status_service.py`), keyed off `Season`/`TransferWindow` dates.
 
 ### Sport abstraction
-Three sports are normalized behind `ISportAdapter` (`app/adapters/base.py`), instantiated in `app/adapters/registry.py` (`ADAPTER_REGISTRY` keyed by `"football"|"cricket"|"basketball"`). Adapters convert raw external-API payloads into normalized internal shapes. Squad/roster rules live in `app/league/sportConfigs.py`. **Note:** that file currently has two overlapping config dicts — `SPORT_CONFIGS` (squad sizes, position minimums, maxPerClub) and `SPORT_CONFIG_REGISTRY` (single vs. mixed-league position minimums) — be careful which one applies to your path.
+Three sports are normalized behind `ISportAdapter` (`app/adapters/base.py`), instantiated in `app/adapters/registry.py` (`ADAPTER_REGISTRY` keyed by `"football"|"cricket"|"basketball"`). Adapters convert raw external-API payloads into normalized internal shapes. Squad/roster rules live in `app/league/sportConfigs.py` as a single `SPORT_REGISTRY` (squad sizes, quotas, max-per-club, position minimums for single vs. mixed leagues) read through accessor functions (`get_squad_size`, `get_position_minimums`, `get_max_per_club`). Adding a sport (e.g. cricket) means adding one registry entry.
 
 ### Scoring (two distinct layers)
 - **Batch/gameweek scoring** — `app/services/scoring/` (`engine.py`, `player_scoring.py`, `team_scoring.py`, `ranking.py`, captain/vice logic, window locating). Persistent rule config (`DefaultScoringRule` only — see note below) lives in `app/scoring/`.
   - `player_gameweek_stats` has no `league_id` — it's one row per `player_id`+`transfer_window_id`, shared by every league playing that sport. So `score_football_players_for_window`/cricket/nba run **once per (sport, transfer_window_id)**, not once per league (`engine.py`'s `_score_player_stats_once_per_sport`, called before the per-league loop). Do not add a `league_id` param back to these — a prior version did, and having N leagues each re-run the identical bulk `UPDATE` against the same shared rows is exactly what caused a production Postgres deadlock.
   - Per-league scoring overrides (`LeagueScoringOverride`) were retired (2026-07) — scoring is `DefaultScoringRule`-only now. It wasn't just a team-scoring concern: `fantasy_points` is also read directly by squad auto-pick valuation, pricing/repricing, and "my team" display, none of which were league-aware, so supporting real per-league overrides would have meant threading `league_id` through all of them.
   - The bulk `UPDATE` in `player_scoring.py` is wrapped in a `(sport_id, transfer_window_id)`-scoped Redis lock + SAVEPOINT retry (`_execute_window_stat_update`) so the Beat-scheduled `score.active_transfer_windows` sweep and the ad-hoc match-finish-triggered `score.transfer_window` task can't deadlock each other when they race on the same window. `engine.py`'s per-league loop also wraps each league in `db.begin_nested()` so one league's failure can't roll back other leagues' already-computed scores in the same run.
-- **Realtime event scoring** — `app/scoring/rules.py` holds `POINTS_RULES`, pure lambdas mapping a `NormalizedEvent` (`app/models/schemas/events.py`) to points, consumed by the Kafka `points_engine`.
+- **Live scoring during matches** — `app/services/feed_scoring.py` (`apply_live_points`, `persist_match_stats`): applies the same `DefaultScoringRule` config to feeder events as they arrive so live numbers agree with the final gameweek totals. (A separate Kafka-consumer scoring layer, `app/scoring/rules.py`, was deleted with the pipeline — see below.)
 
 ### Squad selection / optimization
 `app/services/optimization/ilp_optimizer.py` uses PuLP (integer linear programming) to auto-pick a valid squad under budget, position, and club-quota constraints. Exposed via `app/optimization/router.py` and used by `app/league/auto_pick_service.py`. The default max-players-per-club is `DEFAULT_MAX_PER_CLUB = 3` in `sportConfigs.py`.
 
-### Background processing (three systems)
-1. **APScheduler** — in-process, started in the `app/main.py` lifespan. Cron jobs: transfer-window notifications (08:00), league lifecycle (00:00), cache warming (00:05), price updates (every 4h), gameweek ranking (02:00). Each job opens its own `SessionLocal` and commits itself.
+### Background processing (two systems)
+1. **APScheduler** — in-process, started in the `app/main.py` lifespan. Cron jobs: transfer-window notifications (08:00), league lifecycle (00:00), cache warming (00:05), gameweek ranking (02:00), waiver processing (hourly :15), trade finalization (hourly :20). Each job opens its own `SessionLocal`, commits itself, and holds a Redis lock (`lock:jobs:*` / `lock:draft:*`) so multiple API instances can't double-run it.
 2. **Celery + Beat** — `app/core/celery_app.py` with schedule in `app/tasks/celery_schedule.py`. Handles external-data sync, live polling (distributed-lock protected via `app/core/redis_lock.py`), scoring refresh, pricing, transfers. Redis is broker (db 1) + result backend (db 2). Task modules in `app/tasks/`.
-3. **Kafka realtime pipeline** — gated by `REALTIME_PIPELINE_ENABLED` (default `False`, not prod-tested). Producer + `MatchScheduler` start in lifespan; consumers run as separate processes via `app/workers/entry_points.py` (normalizer → points-engine → notifications). Uses InfluxDB for time-series and Redis pub/sub for fan-out.
+
+(A third system — the Kafka/InfluxDB realtime pipeline — was deleted in 2026-07: it was permanently disabled by decision, and live data flows feeder → Postgres/Redis pub/sub → WebSocket/SSE instead. `git log` has it if ever needed.)
 
 ### Security middleware (order matters)
 Applied outermost→innermost in `app/main.py` / `app/middleware/`: security headers → CORS (env-driven origins) → CSRF (double-submit cookie) → rate limiting (IP + endpoint-specific). Auth is httpOnly-cookie JWT plus Google OAuth; tokens via `app/core/security.py`. CORS origins are environment-specific (`CORS_PRODUCTION_ORIGINS` / `CORS_LOCAL_ORIGINS`).

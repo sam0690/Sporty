@@ -71,7 +71,7 @@ def _user(db, username: str) -> User:
 
 
 def _league(db, owner: User, *, draft_mode: bool, sport: Sport | None = None) -> tuple:
-    # "basketball" is a lookup key into SPORT_CONFIGS elsewhere in the
+    # "basketball" is a lookup key into SPORT_REGISTRY elsewhere in the
     # system (squad_size derivation) — unlike League/Season names, it can't
     # be randomised per call. Share one Sport row when a test creates two
     # leagues (Sport.name is unique).

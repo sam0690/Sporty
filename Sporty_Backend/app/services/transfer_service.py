@@ -22,7 +22,7 @@ from app.league.models import (
     Transfer,
     TransferWindow,
 )
-from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
+from app.league.sportConfigs import derive_sport_type, get_squad_size
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
 from app.services.transfer_session_service import clear_session, get_session, save_session
@@ -209,8 +209,7 @@ def _transfer_rules(db: Session, redis: Redis, sport_name: str, league: League) 
     )
     sport_names_list = [row[0] for row in sport_names]
     sport_type = derive_sport_type(sport_names_list)
-    sport_config = SPORT_CONFIGS.get(sport_type, {"squad_size": 15})
-    squad_size = int(sport_config["squad_size"])
+    squad_size = get_squad_size(sport_type)
 
     # DB fallback: use league-level setting and defaults.
     return {

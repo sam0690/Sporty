@@ -46,7 +46,7 @@ from app.league.models import (
     TeamWeeklyScore,
 )
 from app.league.schemas import LeagueCreate, LineupSlotCreate
-from app.league.sportConfigs import SPORT_CONFIGS, derive_sport_type
+from app.league.sportConfigs import derive_sport_type, get_squad_size
 from app.player.models import Player, PlayerGameweekStat
 from app.core.redis import get_redis
 from app.services.budget_utils import calculate_refund
@@ -394,7 +394,7 @@ def create_league(
 
     # Derive squad size from sport type
     sport_type = derive_sport_type(requested_sports)
-    squad_size = SPORT_CONFIGS[sport_type]["squad_size"]
+    squad_size = get_squad_size(sport_type)
     league.squad_size = squad_size
 
     # Resolve sport names to IDs

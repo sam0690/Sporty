@@ -28,7 +28,7 @@ from app.league.models import (
 )
 from app.league.sportConfigs import (
     DEFAULT_MAX_PER_CLUB,
-    SPORT_CONFIGS,
+    get_squad_size,
     SUPPORTED_SPORT_TYPES,
     build_auto_pick_sport_config,
     derive_sport_type,
@@ -70,7 +70,7 @@ def _league_sport_type(league: League) -> str:
 
 def _sport_config_for_league(league: League) -> dict[str, Any]:
     sport_type = derive_sport_type(league.sports)
-    squad_size = SPORT_CONFIGS[sport_type]["squad_size"]
+    squad_size = get_squad_size(sport_type)
     config = build_auto_pick_sport_config(
         sport_type,
         total_budget=Decimal(str(league.budget_per_team)),

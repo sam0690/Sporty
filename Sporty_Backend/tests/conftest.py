@@ -13,6 +13,11 @@ from __future__ import annotations
 
 import os
 
+# Force Sentry OFF for tests regardless of the developer's .env — env vars
+# outrank the .env file in pydantic-settings, and test runs were shipping
+# captured exceptions to the real Sentry project.
+os.environ["SENTRY_DSN"] = ""
+
 os.environ.setdefault("DATABASE_URL", "postgresql://sporty:sporty@localhost:5432/sporty_test")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
 os.environ.setdefault("JWT_SECRET_KEY", "x" * 32)

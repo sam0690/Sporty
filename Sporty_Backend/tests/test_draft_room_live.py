@@ -3,7 +3,7 @@ previously had zero direct test coverage. SQLite throwaway DB, same pattern
 as test_hindsight_lineup.py / test_batch_scoring.py.
 
 Uses basketball (not football) as the test sport: basketball has no
-position-minimum quotas (SPORT_CONFIG_REGISTRY["basketball"]) so a small
+position-minimum quotas (SPORT_REGISTRY["basketball"]) so a small
 squad_size doesn't trip position-minimum validation on every pick — only
 max-per-club matters, and that's easy to control with distinct RealTeams.
 """
@@ -138,7 +138,7 @@ def _league(db, owner: User, *, squad_size: int = 2) -> League:
         owner,
     )
     # create_league normalises squad_size to the sport's canonical value
-    # (SPORT_CONFIGS["basketball"]["squad_size"] == 13) regardless of what
+    # (SPORT_REGISTRY["basketball"]["squad_size"] == 13) regardless of what
     # was requested — that's an intentional, unrelated business rule. Force
     # it back to the small size these tests want, to keep draft-turn-math
     # tests fast without drafting 13+ players per team.
