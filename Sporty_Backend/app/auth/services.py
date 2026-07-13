@@ -43,6 +43,17 @@ GOOGLE_LINK_TOKEN_TYPE = "google_link"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _normalize_email(email: str) -> str:
+    """Every email write and lookup goes through this (strip + lowercase).
+
+    login/forgot-password always lowercased their input, but register/google
+    stored the email as submitted — so an account created as
+    "John.Doe@gmail.com" could never log in by email or reset its password.
+    Existing rows were lowercased by migration c9d2e8f4a107.
+    """
+    return email.strip().lower()
+
+
 def _build_tokens(db: Session, user: User) -> TokenResponse:
     """
     Create token pair and stage the refresh token — does NOT commit.
@@ -225,14 +236,15 @@ def register(db: Session, data: RegisterRequest):
         - If auto_login=False: UserResponse (user object only)
     """
 
+    email = _normalize_email(data.email)
     if db.query(User).filter(User.username == data.username).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Username already taken")
-    if db.query(User).filter(User.email == data.email).first():
+    if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
     user = User(
         username=data.username,
-        email=data.email,
+        email=email,
         auth_provider=AuthProvider.LOCAL,
         password_hash=hash_password(data.password),
         is_active=True,
@@ -299,7 +311,7 @@ def google_auth(db: Session, data: GoogleAuthRequest) -> TokenResponse | JSONRes
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google token")
 
     google_id = payload.sub
-    email = payload.email
+    email = _normalize_email(payload.email)
     avatar_url = payload.picture
     is_new_user = False
 
@@ -432,7 +444,7 @@ def link_google_account(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    if user.email != email:
+    if _normalize_email(user.email) != _normalize_email(email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Google email must match the existing account email",
