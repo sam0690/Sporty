@@ -11,10 +11,11 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, Iterable
 
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.auth.models import RefreshToken, User  # noqa: F401
+from app.core.team_names import canonical_team_name
 from app.league.models import Season, Sport, TransferWindow
 from app.match.models import Match  # noqa: F401
 from app.player.models import FootballStat, Player, PlayerGameweekStat, RealTeam
@@ -397,6 +398,25 @@ class DatasetImporter:
             .filter(Player.sport_id == sport.id, Player.external_api_id == external_id)
             .first()
         )
+        if player is None:
+            # Fallback: match by identity (name + real team) so a source that
+            # slugs the same player differently (another team spelling, another
+            # namespace) updates the existing row instead of forking a
+            # duplicate. This is the follow-up the e6f7a8b9c0d1 dedupe
+            # migration required before the unique players index could exist.
+            # The existing external_api_id is deliberately kept — identities
+            # must not ping-pong between sources.
+            # ponytail: lower(name) equality, not whitespace-collapsed like the
+            # index expression — CSV names are clean; tighten if a source isn't.
+            player = (
+                self.db.query(Player)
+                .filter(
+                    Player.sport_id == sport.id,
+                    Player.real_team_id == real_team_ref.id,
+                    func.lower(Player.name) == name.strip().lower(),
+                )
+                .first()
+            )
         if player:
             player.name = name
             player.position = position
@@ -624,6 +644,11 @@ class DatasetImporter:
                 position = self._football_position(self._first_value(row, "position"))
                 if not player_name or not team_name:
                     raise ValueError("Missing player_name or team_name")
+                # Canonicalise BEFORE building external ids: the two EPL CSVs
+                # spell the club differently ("Liverpool" vs "Liverpool FC"),
+                # which forked the slug namespace and double-seeded the whole
+                # roster (merged back by the liverpool-dedupe migration).
+                team_name = canonical_team_name(team_name)
 
                 external_id = self._football_player_external_id(
                     player_name=player_name,

@@ -40,6 +40,7 @@ from app.services import notification_service
 from app.services.feed_scoring import apply_live_points, persist_match_stats
 from app.auth.models import AuthProvider, User
 from app.core.security import hash_password
+from app.core.team_names import canonical_team_name
 from app.league.models import (
     FantasyTeam,
     FantasyTeamStatus,
@@ -382,20 +383,37 @@ async def register_players(payload: RegisterPlayersPayload, db=Depends(get_db)):
             db.query(Player).filter(Player.external_api_id == entry.external_ref).first()
         )
         if player is None:
-            team = _get_or_create_real_team(db, sport.id, entry.real_team.strip())
-            player = Player(
-                sport_id=sport.id,
-                external_api_id=entry.external_ref,
-                name=entry.name.strip(),
-                position=(entry.position.strip() or "MID"),
-                real_team=entry.real_team.strip(),
-                real_team_id=team.id,
-                cost=entry.cost,
-                is_available=True,
+            # Identity fallback, same as DatasetImporter._upsert_player: match
+            # by name + real team before creating, so a feeder-namespaced id
+            # ("feeder:player:*") maps onto a player already seeded from
+            # CSVs/APIs instead of forking a duplicate row (the failure the
+            # e6f7a8b9c0d1 dedupe migration cleaned up). On a fallback hit the
+            # player keeps its existing external_api_id.
+            team_name = canonical_team_name(entry.real_team)
+            team = _get_or_create_real_team(db, sport.id, team_name)
+            player = (
+                db.query(Player)
+                .filter(
+                    Player.sport_id == sport.id,
+                    Player.real_team_id == team.id,
+                    func.lower(Player.name) == entry.name.strip().lower(),
+                )
+                .first()
             )
-            db.add(player)
-            db.flush()
-            created += 1
+            if player is None:
+                player = Player(
+                    sport_id=sport.id,
+                    external_api_id=entry.external_ref,
+                    name=entry.name.strip(),
+                    position=(entry.position.strip() or "MID"),
+                    real_team=team_name,
+                    real_team_id=team.id,
+                    cost=entry.cost,
+                    is_available=True,
+                )
+                db.add(player)
+                db.flush()
+                created += 1
         mapping[entry.external_ref] = str(player.id)
     db.commit()
     logger.info("Feeder registered %s players (%s new) for %s", len(mapping), created, payload.sport)

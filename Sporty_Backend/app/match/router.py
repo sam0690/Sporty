@@ -32,16 +32,10 @@ router = APIRouter(tags=["Matches"])
 # which don't always agree with RealTeam.name (used elsewhere for crest
 # lookups, e.g. the squad/lineup views) — some fixtures use the short form
 # ("Newcastle") where RealTeam uses the long form ("Newcastle United"), or
-# vice versa. Explicit alias map, not fuzzy matching, mirroring the same
-# fix already applied to the feeder's team-name matching.
-MATCH_TEAM_NAME_ALIASES: dict[str, str] = {
-    "Brighton": "Brighton &amp; Hove Albion",
-    "Newcastle": "Newcastle United",
-    "Tottenham": "Tottenham Hotspur",
-    "West Ham": "West Ham United",
-    "Wolves": "Wolverhampton",
-    "Liverpool FC": "Liverpool",
-}
+# vice versa. The alias map lives in app.core.team_names so the dataset
+# importer and feeder registration share the exact same canonicalisation
+# (re-exported here for existing importers).
+from app.core.team_names import TEAM_NAME_ALIASES as MATCH_TEAM_NAME_ALIASES
 
 
 def _real_team_logo_lookup(db: Session) -> dict[tuple[uuid.UUID, str], str]:

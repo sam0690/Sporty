@@ -8,6 +8,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     SmallInteger,
@@ -15,6 +16,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -202,6 +204,19 @@ class Player(Base):
 
     __table_args__ = (
         CheckConstraint("cost >= 0", name="ck_player_cost_non_negative"),
+        # One row per real-world player identity: importers dedupe by
+        # external_api_id first, then fall back to name+team — this index is
+        # the backstop that turns any remaining cross-namespace re-import into
+        # an insert error instead of a silent duplicate (Liverpool was seeded
+        # twice from two CSV team spellings; see alembic b7e4d2a91c58).
+        # Postgres-only expression index — skipped on SQLite in tests/conftest.py.
+        Index(
+            "uq_players_identity",
+            "sport_id",
+            text(r"lower(regexp_replace(btrim(name), '\s+', ' ', 'g'))"),
+            "real_team_id",
+            unique=True,
+        ),
     )
 
 

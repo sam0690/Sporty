@@ -46,10 +46,12 @@ def _render_jsonb_as_json_on_sqlite(element, compiler, **kw):
 # FULL unique index on (fantasy_team_id, transfer_window_id) instead —
 # blocking every multi-player lineup insert, captain or not. Skip both by
 # name on SQLite, same "Postgres-only DDL, no-op elsewhere" treatment as
-# ExcludeConstraint above.
+# ExcludeConstraint above. uq_players_identity is an EXPRESSION index
+# (regexp_replace doesn't exist on SQLite) — same treatment.
 _SQLITE_SKIP_PARTIAL_INDEXES = {
     "uq_one_captain_per_team_window",
     "uq_one_vice_captain_per_team_window",
+    "uq_players_identity",
 }
 
 
