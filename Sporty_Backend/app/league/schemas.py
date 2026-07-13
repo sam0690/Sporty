@@ -688,6 +688,8 @@ class SeasonResponse(BaseModel):
     """What gets returned for public season listings."""
     id: uuid.UUID
     sport_id: uuid.UUID
+    # Resolved display name (model property) — clients show this, not the id.
+    sport_name: str | None = None
     name: str
     start_date: datetime | date
     end_date: datetime | date

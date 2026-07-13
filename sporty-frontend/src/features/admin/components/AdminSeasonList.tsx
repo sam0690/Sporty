@@ -25,18 +25,22 @@ export function AdminSeasonList() {
 
   const sportName = useMemo(() => {
     const byId = new Map((sports ?? []).map((s) => [s.id, s.display_name]));
-    return (sportId: string) => byId.get(sportId) ?? sportId;
+    // Prefer the backend-resolved name: /leagues/sports only lists
+    // league-playable sports, so ids outside it (e.g. Cricket) used to
+    // render as raw UUIDs here.
+    return (season: { sport_id: string; sport_name?: string | null }) =>
+      season.sport_name ?? byId.get(season.sport_id) ?? season.sport_id;
   }, [sports]);
 
   const rows = useMemo(() => {
     return [...(data ?? [])].sort((a, b) => {
-      const sportCompare = sportName(a.sport_id).localeCompare(sportName(b.sport_id));
+      const sportCompare = sportName(a).localeCompare(sportName(b));
       return sportCompare !== 0 ? sportCompare : b.start_date.localeCompare(a.start_date);
     });
   }, [data, sportName]);
 
   const columns: TableColumn<TAdminSeason>[] = [
-    { key: "sport", header: "Sport", render: (s) => sportName(s.sport_id) },
+    { key: "sport", header: "Sport", render: (s) => sportName(s) },
     { key: "name", header: "Name", render: (s) => s.name },
     { key: "start_date", header: "Start", render: (s) => new Date(s.start_date).toLocaleDateString() },
     { key: "end_date", header: "End", render: (s) => new Date(s.end_date).toLocaleDateString() },

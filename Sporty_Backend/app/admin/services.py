@@ -5,7 +5,7 @@ from decimal import Decimal
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.admin.models import AdminActionType, AdminAuditLog, SystemConfig
 from app.admin.audit import record_admin_action
@@ -280,7 +280,12 @@ def override_league_settings(
 # the real-world calendar without shell access.
 
 def list_seasons_admin(db: Session) -> list[Season]:
-    return db.query(Season).order_by(Season.sport_id, Season.start_date.desc()).all()
+    return (
+        db.query(Season)
+        .options(joinedload(Season.sport))  # sport_name property reads it
+        .order_by(Season.sport_id, Season.start_date.desc())
+        .all()
+    )
 
 
 def create_season_admin(

@@ -141,6 +141,14 @@ class Season(Base):
 
     # Relationships
     sport: Mapped["Sport"] = relationship(back_populates="seasons")
+
+    @property
+    def sport_name(self) -> str | None:
+        """Display name of the owning sport — SeasonResponse exposes it so
+        clients never have to resolve sport_id themselves (the admin seasons
+        page showed raw UUIDs for sports absent from /leagues/sports, which
+        filters to league-playable sports only)."""
+        return self.sport.display_name if self.sport else None
     transfer_windows: Mapped[list["TransferWindow"]] = relationship(
         back_populates="season",
         cascade="all, delete-orphan",
