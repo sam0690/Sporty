@@ -69,8 +69,8 @@ def _render_branded_email(
     if cta_label and cta_url:
         cta_block = f"""
                         <tr>
-                            <td style="padding:6px 32px 22px;">
-                                <a href="{cta_url}" style="display:inline-block;background:{_GOLD};color:{_INK};text-decoration:none;font-weight:700;font-size:15px;letter-spacing:.01em;padding:13px 26px;border-radius:3px;">{cta_label}</a>
+                            <td style="padding:10px 40px 30px;">
+                                <a href="{cta_url}" style="display:inline-block;background:{_GOLD};color:{_INK};text-decoration:none;font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:15px 32px;border-radius:3px;">{cta_label}</a>
                             </td>
                         </tr>"""
 
@@ -84,32 +84,41 @@ def _render_branded_email(
     </head>
     <body style="margin:0;padding:0;background:{_FLOOR};font-family:{_FONT};color:{_TEXT};">
         <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">{html.escape(preheader)}</div>
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:28px 12px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:36px 12px;">
             <tr>
                 <td align="center">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid {_CARD_BORDER};border-radius:3px;overflow:hidden;">
                         <tr>
-                            <td style="padding:26px 32px 22px;background:{_INK};border-bottom:2px solid {_GOLD};">
-                                <div style="font-size:15px;font-weight:800;letter-spacing:.24em;color:{_GOLD};">SPORTY</div>
-                                <h1 style="margin:12px 0 0;font-size:23px;line-height:1.25;font-weight:700;color:#f2f2f0;">{heading}</h1>
+                            <td style="padding:38px 40px 32px;background-color:{_INK};background:linear-gradient(160deg,#14141c 0%,{_INK} 55%);border-bottom:2px solid {_GOLD};">
+                                <div style="font-size:13px;font-weight:800;letter-spacing:.34em;color:{_GOLD};">SPORTY</div>
+                                <div style="margin-top:7px;font-size:10px;font-weight:600;letter-spacing:.26em;color:#71717d;">MULTI-SPORT FANTASY LEAGUES</div>
+                                <h1 style="margin:22px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1.22;font-weight:400;color:#f2f2f0;">{heading}</h1>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:26px 32px 10px;font-size:16px;line-height:1.65;color:{_TEXT};">
+                            <td style="padding:34px 40px 12px;font-size:16px;line-height:1.75;color:{_TEXT};">
                                 {body_html}
                             </td>
                         </tr>{cta_block}
                         <tr>
-                            <td style="padding:4px 32px 26px;font-size:13px;line-height:1.6;color:{_TEXT_SOFT};">
+                            <td style="padding:0 40px;">
+                                <div style="border-top:1px solid {_CARD_BORDER};font-size:0;line-height:0;">&nbsp;</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding:18px 40px 30px;font-size:13px;line-height:1.7;color:{_TEXT_SOFT};">
                                 {footnote_html}
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding:16px 32px;background:#fafafa;border-top:1px solid {_CARD_BORDER};font-size:12px;color:{_TEXT_FAINT};">
-                                Sporty — multi-sport fantasy leagues · <a href="{settings.FRONTEND_BASE_URL}" style="color:{_GOLD_DIM};text-decoration:none;">sportyyy.tech</a>
+                            <td align="center" style="padding:22px 40px;background:{_INK};font-size:10px;font-weight:600;letter-spacing:.22em;color:#71717d;">
+                                SPORTY&nbsp;&nbsp;·&nbsp;&nbsp;<a href="{settings.FRONTEND_BASE_URL}" style="color:{_GOLD_DIM};text-decoration:none;">SPORTYYY.TECH</a>
                             </td>
                         </tr>
                     </table>
+                    <div style="max-width:600px;padding:16px 8px 0;font-size:11px;line-height:1.6;color:{_TEXT_FAINT};text-align:center;">
+                        You are receiving this email about your Sporty account.
+                    </div>
                 </td>
             </tr>
         </table>
@@ -168,8 +177,8 @@ def send_transfer_window_open_email(
         f'<p style="margin:0 0 12px;">Hi {safe_username},</p>'
         f'<p style="margin:0 0 16px;">The transfer window for <strong>{safe_league}</strong> is now open.</p>'
         f'<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.7;color:{_TEXT_SOFT};margin:0 0 6px;">'
-        f'<tr><td style="padding-right:14px;color:{_GOLD_DIM};font-weight:700;">OPENS</td><td>{start_at.strftime(fmt)}</td></tr>'
-        f'<tr><td style="padding-right:14px;color:{_GOLD_DIM};font-weight:700;">CLOSES</td><td>{end_at.strftime(fmt)}</td></tr>'
+        f'<tr><td style="padding-right:18px;color:{_GOLD_DIM};font-weight:700;font-size:11px;letter-spacing:.18em;">OPENS</td><td style="color:{_TEXT};">{start_at.strftime(fmt)}</td></tr>'
+        f'<tr><td style="padding-right:18px;color:{_GOLD_DIM};font-weight:700;font-size:11px;letter-spacing:.18em;">CLOSES</td><td style="color:{_TEXT};">{end_at.strftime(fmt)}</td></tr>'
         "</table>"
     )
     return _send_email_via_resend(
