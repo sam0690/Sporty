@@ -94,7 +94,11 @@ def _stub_redis_and_celery(monkeypatch):
     reaches it; draft_tasks.py imports celery_app once at module top, so its
     own module-global binding must be patched directly.
     """
-    monkeypatch.setattr(league_service, "get_redis", lambda: (_ for _ in ()).throw(ConnectionError("no redis in tests")))
+    # get_redis is bound in draft_service (the split module where
+    # _publish_draft_event lives) — patching the services facade no longer
+    # reaches it.
+    import app.league.draft_service as draft_service
+    monkeypatch.setattr(draft_service, "get_redis", lambda: (_ for _ in ()).throw(ConnectionError("no redis in tests")))
     monkeypatch.setattr(draft_tasks, "redis_lock", _no_redis_lock)
     fake_celery = _NoopCelery()
     import app.core.celery_app as celery_app_module
