@@ -18,6 +18,7 @@ import { isProtectedRoute } from "@/lib/route.utils";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { isApiError } from "@/utils/api-Error";
+import { z } from "zod";
 
 export interface User {
   id: string;
@@ -96,33 +97,36 @@ const initialActionLoading: Record<AuthAction, boolean> = {
   google: false,
 };
 
-type AnyObject = Record<string, unknown>;
-
-const toRecord = (value: unknown): AnyObject => {
-  if (!value || typeof value !== "object") {
-    return {};
-  }
-  return value as AnyObject;
-};
-
-const readString = (record: AnyObject, key: string): string => {
-  const value = record[key];
-  return typeof value === "string" ? value : "";
-};
+// Zod is the project's validation standard — this replaces a hand-rolled
+// toRecord/readString parser. Lenient by design (catch/default per field):
+// the /auth/me shape is backend-owned, and a missing optional field should
+// degrade a display value, not log the user out.
+const UserResponseSchema = z
+  .object({
+    id: z.string().catch(() => crypto.randomUUID()),
+    username: z.string().catch(""),
+    email: z.string().catch(""),
+    avatar_url: z.string().nullish(),
+    avatar: z.string().nullish(),
+    role: z.string().catch("user"),
+  })
+  .catch(() => ({
+    id: crypto.randomUUID(),
+    username: "",
+    email: "",
+    avatar_url: null,
+    avatar: null,
+    role: "user",
+  }));
 
 const toUser = (value: unknown): User => {
-  const source = toRecord(value);
-  const username = readString(source, "username");
-  const email = readString(source, "email");
-  const avatar =
-    readString(source, "avatar_url") || readString(source, "avatar");
-
+  const parsed = UserResponseSchema.parse(value);
   return {
-    id: readString(source, "id") || crypto.randomUUID(),
-    name: username || email || "Sporty User",
-    email,
-    avatar,
-    role: readString(source, "role") || "user",
+    id: parsed.id,
+    name: parsed.username || parsed.email || "Sporty User",
+    email: parsed.email,
+    avatar: parsed.avatar_url || parsed.avatar || "",
+    role: parsed.role || "user",
   };
 };
 
