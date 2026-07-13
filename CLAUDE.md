@@ -16,11 +16,18 @@ This is a **monorepo** with two independently-deployed apps plus supporting data
 
 ## Commands
 
+### Full local stack (recommended)
+```bash
+docker compose up    # postgres + redis + API (:8000) + celery worker/beat + frontend (:3000)
+```
+Root `docker-compose.yml` uses its own local DB with dev credentials (never
+the production `.env`) and leaves a fresh stack migrated + seeded.
+
 ### Backend (`Sporty_Backend/`)
 See `Sporty_Backend/CLAUDE.md` for the full set. Quick reference (venv at `Sporty_Backend/venv/`, no `pyproject.toml`):
 ```bash
-venv/bin/uvicorn app.main:app --reload --port 8000   # API (see port note below)
-venv/bin/python -m pytest                             # tests (pip install pytest first; runs against real PostgreSQL)
+venv/bin/uvicorn app.main:app --reload --port 8000   # API (:8000 = what the frontend proxy expects)
+venv/bin/python -m pytest                             # tests (pip install -r requirements-dev.txt first)
 venv/bin/alembic upgrade head                         # migrations
 venv/bin/celery -A app.core.celery_app.celery_app worker --loglevel=INFO
 ```
@@ -29,11 +36,12 @@ venv/bin/celery -A app.core.celery_app.celery_app worker --loglevel=INFO
 Package manager is **Yarn 4** (`packageManager: yarn@4.15.0`); use `yarn`, not npm.
 ```bash
 yarn dev          # dev server on :3000 (proxies /api/* → backend)
-yarn build        # next build
+yarn build        # next build (CI runs this on every push)
 yarn start        # serve production build
 yarn lint         # eslint
-yarn deploy       # wrangler deploy (Cloudflare); yarn preview for local wrangler
 ```
+Deployment: frontend on **Vercel**, backend on **Render** (Docker). There is
+no frontend Docker image and no Cloudflare/wrangler path.
 Note: `__tests__/example.spec.ts` uses Playwright, but there is no `playwright.config` or `test` script wired up yet — there is no working frontend test runner.
 
 ## Cross-app integration (the part that requires reading both sides)
@@ -41,8 +49,6 @@ Note: `__tests__/example.spec.ts` uses Playwright, but there is no `playwright.c
 **Auth & API contract.** The frontend talks to the backend entirely over `/api/v1` using **httpOnly-cookie JWT + CSRF double-submit**. There is no token in JS — `src/api/auth-api-client.ts` holds the authenticated Axios instance (auto-refreshes on 401), `src/api/public-api-client.ts` manages the in-memory CSRF token. State-changing requests must carry `X-CSRF-Token`. The backend's CSRF/CORS/cookie middleware must match this; CORS origins and `COOKIE_DOMAIN` are environment-specific on the backend.
 
 **Dev cross-origin handling.** `next.config.ts` rewrites `/api/:path*` to `BACKEND_SERVER_URL` (default `http://localhost:8000`) so cookies are same-origin in dev (avoids `SameSite=Lax` blocking POST/PUT/etc.). `NEXT_PUBLIC_API_URL` (e.g. `/api/v1`) is the base path the Axios clients prepend.
-
-⚠️ **Port mismatch to watch:** the backend `CLAUDE.md` example runs uvicorn on `:10000`, but the frontend dev proxy and `docker-compose.yml` assume the backend on `:8000`. Run the backend on `8000` for the frontend proxy to work, or set `BACKEND_SERVER_URL`/the uvicorn port to match.
 
 **Endpoint registry.** Every backend endpoint the frontend calls is registered centrally in `src/api/apiPath.ts` (`API_PATHS`). Services consume those constants — URLs are never hard-coded elsewhere. When you add/rename a backend route, update `API_PATHS` and the corresponding service.
 

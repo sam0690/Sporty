@@ -14,10 +14,10 @@ The project uses a virtualenv at `venv/` with no `pyproject.toml`/`setup.py`. Pr
 
 ```bash
 # Run the API (reload for dev)
-venv/bin/uvicorn app.main:app --reload --port 10000
+venv/bin/uvicorn app.main:app --reload --port 8000   # :8000 = frontend proxy default (image CMD defaults to $PORT/10000 for Render)
 
-# Tests — pytest is NOT in requirements.txt; install it first
-venv/bin/pip install pytest
+# Tests — dev deps live in requirements-dev.txt (includes requirements.txt)
+venv/bin/pip install -r requirements-dev.txt
 venv/bin/python -m pytest                         # all tests
 venv/bin/python -m pytest tests/test_ilp_optimizer.py            # one file
 venv/bin/python -m pytest tests/test_scoring_algorithms.py -k captain   # one test

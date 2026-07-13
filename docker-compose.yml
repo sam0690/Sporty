@@ -1,0 +1,113 @@
+# Full local stack: postgres + redis + API + celery worker/beat + frontend.
+#
+#   docker compose up            # everything; frontend on :3000, API on :8000
+#   docker compose up backend    # API + its deps only
+#
+# Uses its OWN local database/redis with dev-only credentials — it never
+# reads Sporty_Backend/.env, so it cannot touch the production DB. The
+# backend image's boot chain (alembic upgrade head + idempotent seeders)
+# leaves a fresh stack migrated and seeded with sports + scoring rules.
+# Player data is optional: docker compose exec backend python scripts/import_datasets.py
+
+x-backend-env: &backend-env
+  ENVIRONMENT: development
+  DATABASE_URL: postgresql://sporty:sporty@postgres:5432/sporty
+  REDIS_URL: redis://redis:6379/0
+  CELERY_BROKER_URL: redis://redis:6379/1
+  CELERY_RESULT_BACKEND: redis://redis:6379/2
+  JWT_SECRET_KEY: local-dev-only-secret-key-not-for-prod-0000
+  GOOGLE_CLIENT_ID: local-dev # Google login non-functional locally; everything else works
+  COOKIE_SECURE: "false"
+  COOKIE_SAME_SITE: lax
+  TRUSTED_PROXY_HOPS: "0" # direct connections locally
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sporty
+      POSTGRES_PASSWORD: sporty
+      POSTGRES_DB: sporty
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sporty -d sporty"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  backend:
+    build: ./Sporty_Backend
+    environment:
+      <<: *backend-env
+      PORT: "8000" # frontend proxy default (BACKEND_SERVER_URL) expects :8000
+    ports:
+      - "8000:8000"
+    volumes:
+      # :z = SELinux shared label (Fedora/podman); required or the mount
+      # shadows the image's app/ package with an unreadable dir
+      - ./Sporty_Backend/app:/app/app:z # hot reload on source edits
+    # Same chain as the image CMD, plus --reload for dev. Keep the folded
+    # lines at EQUAL indentation — deeper-indented continuations keep their
+    # newlines and break sh -c.
+    command: >-
+      sh -c "alembic upgrade head
+      && { python scripts/create_sports.py && python scripts/seed_default_scoring_rules.py || echo '[boot] seed step failed, continuing'; }
+      && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  celery-worker:
+    build: ./Sporty_Backend
+    environment: *backend-env
+    command: celery -A app.core.celery_app.celery_app worker --loglevel=INFO
+    volumes:
+      - ./Sporty_Backend/app:/app/app:z
+    depends_on:
+      backend:
+        condition: service_started # backend runs the migrations first
+
+  celery-beat:
+    build: ./Sporty_Backend
+    environment: *backend-env
+    command: celery -A app.core.celery_app.celery_app beat --loglevel=INFO
+    volumes:
+      - ./Sporty_Backend/app:/app/app:z
+    depends_on:
+      backend:
+        condition: service_started
+
+  frontend:
+    image: node:22-alpine
+    working_dir: /app
+    environment:
+      BACKEND_SERVER_URL: http://backend:8000
+      NEXT_PUBLIC_API_URL: /api/v1
+    command: sh -c "corepack enable && yarn install --immutable && yarn dev --hostname 0.0.0.0"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./sporty-frontend:/app:z
+      - frontend_node_modules:/app/node_modules # container-local; keeps host node_modules intact
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  pgdata:
+  frontend_node_modules:
