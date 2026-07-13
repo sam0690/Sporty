@@ -30,6 +30,11 @@ venv/bin/alembic upgrade head
 # Celery (sync/polling/scoring/pricing tasks)
 venv/bin/celery -A app.core.celery_app.celery_app worker --loglevel=INFO
 venv/bin/celery -A app.core.celery_app.celery_app beat --loglevel=INFO
+
+# Realtime Kafka consumers — DORMANT (see Background processing below);
+# requires REALTIME_PIPELINE_ENABLED=true AND installing the commented-out
+# deps at the bottom of requirements.txt first
+venv/bin/python -m app.workers.entry_points [points-engine|normalizer|notifications]
 ```
 
 Config comes from `.env` (see `.env.example`). Required at startup: `DATABASE_URL` (PostgreSQL), `REDIS_URL`, `JWT_SECRET_KEY` (≥32 chars), `GOOGLE_CLIENT_ID`. `settings.validate_production()` runs in the lifespan startup and will refuse to boot on bad config.
@@ -62,16 +67,15 @@ Three sports are normalized behind `ISportAdapter` (`app/adapters/base.py`), ins
   - `player_gameweek_stats` has no `league_id` — it's one row per `player_id`+`transfer_window_id`, shared by every league playing that sport. So `score_football_players_for_window`/cricket/nba run **once per (sport, transfer_window_id)**, not once per league (`engine.py`'s `_score_player_stats_once_per_sport`, called before the per-league loop). Do not add a `league_id` param back to these — a prior version did, and having N leagues each re-run the identical bulk `UPDATE` against the same shared rows is exactly what caused a production Postgres deadlock.
   - Per-league scoring overrides (`LeagueScoringOverride`) were retired (2026-07) — scoring is `DefaultScoringRule`-only now. It wasn't just a team-scoring concern: `fantasy_points` is also read directly by squad auto-pick valuation, pricing/repricing, and "my team" display, none of which were league-aware, so supporting real per-league overrides would have meant threading `league_id` through all of them.
   - The bulk `UPDATE` in `player_scoring.py` is wrapped in a `(sport_id, transfer_window_id)`-scoped Redis lock + SAVEPOINT retry (`_execute_window_stat_update`) so the Beat-scheduled `score.active_transfer_windows` sweep and the ad-hoc match-finish-triggered `score.transfer_window` task can't deadlock each other when they race on the same window. `engine.py`'s per-league loop also wraps each league in `db.begin_nested()` so one league's failure can't roll back other leagues' already-computed scores in the same run.
-- **Live scoring during matches** — `app/services/feed_scoring.py` (`apply_live_points`, `persist_match_stats`): applies the same `DefaultScoringRule` config to feeder events as they arrive so live numbers agree with the final gameweek totals. (A separate Kafka-consumer scoring layer, `app/scoring/rules.py`, was deleted with the pipeline — see below.)
+- **Live scoring during matches** — `app/services/feed_scoring.py` (`apply_live_points`, `persist_match_stats`): applies the same `DefaultScoringRule` config to feeder events as they arrive so live numbers agree with the final gameweek totals. (`app/scoring/rules.py`'s `POINTS_RULES` lambdas belong to the dormant Kafka pipeline's points engine, not this path.)
 
 ### Squad selection / optimization
 `app/services/optimization/ilp_optimizer.py` uses PuLP (integer linear programming) to auto-pick a valid squad under budget, position, and club-quota constraints. Exposed via `app/optimization/router.py` and used by `app/league/auto_pick_service.py`. The default max-players-per-club is `DEFAULT_MAX_PER_CLUB = 3` in `sportConfigs.py`.
 
-### Background processing (two systems)
+### Background processing (two active systems + one dormant)
 1. **APScheduler** — in-process, started in the `app/main.py` lifespan. Cron jobs: transfer-window notifications (08:00), league lifecycle (00:00), cache warming (00:05), gameweek ranking (02:00), waiver processing (hourly :15), trade finalization (hourly :20). Each job opens its own `SessionLocal`, commits itself, and holds a Redis lock (`lock:jobs:*` / `lock:draft:*`) so multiple API instances can't double-run it.
 2. **Celery + Beat** — `app/core/celery_app.py` with schedule in `app/tasks/celery_schedule.py`. Handles external-data sync, live polling (distributed-lock protected via `app/core/redis_lock.py`), scoring refresh, pricing, transfers. Redis is broker (db 1) + result backend (db 2). Task modules in `app/tasks/`.
-
-(A third system — the Kafka/InfluxDB realtime pipeline — was deleted in 2026-07: it was permanently disabled by decision, and live data flows feeder → Postgres/Redis pub/sub → WebSocket/SSE instead. `git log` has it if ever needed.)
+3. **Kafka realtime pipeline — DORMANT.** Kept for a future real-matches API; gated by `REALTIME_PIPELINE_ENABLED` (default `False`, not prod-tested) and its deps (`aiokafka`, `influxdb-client`, `firebase-admin`) are commented out in `requirements.txt` — all imports are lazy, so the app runs without them. Today's live data flows feeder → Postgres/Redis pub/sub → WebSocket/SSE instead. To enable: install the commented deps, set the flag, run consumers via `app/workers/entry_points.py` (normalizer → points-engine → notifications).
 
 ### Security middleware (order matters)
 Applied outermost→innermost in `app/main.py` / `app/middleware/`: security headers → CORS (env-driven origins) → CSRF (double-submit cookie) → rate limiting (IP + endpoint-specific). Auth is httpOnly-cookie JWT plus Google OAuth; tokens via `app/core/security.py`. CORS origins are environment-specific (`CORS_PRODUCTION_ORIGINS` / `CORS_LOCAL_ORIGINS`).

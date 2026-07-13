@@ -56,3 +56,10 @@ pybreaker==1.4.1
 prometheus-fastapi-instrumentator==7.1.0
 boto3==1.35.99
 sentry-sdk==2.64.0
+# ── Realtime Kafka pipeline (DORMANT) ────────────────────────────────
+# Code kept for a future real-matches API but default-off
+# (REALTIME_PIPELINE_ENABLED=False) — these deps are deliberately NOT
+# installed. Uncomment when enabling the pipeline:
+# aiokafka==0.12.0
+# influxdb-client==1.49.0
+# firebase-admin==7.1.0

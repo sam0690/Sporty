@@ -289,8 +289,34 @@ async def lifespan(app: FastAPI):
     scheduler.start()
     logger.info("APScheduler started with transfer, lifecycle, cache warming, price-update, and ranking jobs")
 
+    # Kafka realtime pipeline — DORMANT: kept for a future real-matches API,
+    # default-off, and its deps (aiokafka/influxdb-client/firebase-admin) are
+    # not in requirements.txt. Install them when flipping the flag; imports
+    # are lazy so the app runs fine without them.
+    realtime_started = False
+    if settings.REALTIME_PIPELINE_ENABLED:
+      from app.core.kafka import create_producer
+      from app.services.match_scheduler import MatchScheduler
+
+      producer = await create_producer()
+      match_scheduler = MatchScheduler(
+        producer=producer,
+        refresh_interval_seconds=settings.MATCH_SCHEDULER_REFRESH_SECONDS,
+      )
+      await match_scheduler.start()
+
+      app.state.realtime_producer = producer
+      app.state.match_scheduler = match_scheduler
+      realtime_started = True
+      logger.info("Realtime match scheduler started")
+
     yield
     # ── Shutdown ────────────────────────────────────────────────────
+    if realtime_started:
+      await app.state.match_scheduler.stop()
+      await app.state.realtime_producer.stop()
+      logger.info("Realtime match scheduler stopped")
+
     await close_async_redis()
 
     scheduler.shutdown(wait=False)
