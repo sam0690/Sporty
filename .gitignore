@@ -10,3 +10,7 @@ graphify-out/
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# Local-only: graphify tooling script + internal security audit (kept out of the public repo)
+merge_chunks.py
+PHASE1_AUDIT.md

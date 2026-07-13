@@ -11,8 +11,8 @@ This is a **monorepo** with two independently-deployed apps plus supporting data
 - `Sporty_Backend/` — FastAPI API + Celery/APScheduler workers + Kafka realtime pipeline + data ingestion. **Has its own detailed `Sporty_Backend/CLAUDE.md` — read it before working in the backend.**
 - `sporty-frontend/` — Next.js 16 (App Router) + React 19 + TypeScript UI. Has `sporty-frontend/CLAUDE.md` and `AGENTS.md` covering frontend coding conventions (Mantine + Tailwind, services/store/Zod separation).
 - `EPL/`, `basketball/` — raw CSV stat datasets used by backend seeders/ingestion.
-- `graphify-out/`, `merge_chunks.py` — knowledge-graph extraction artifacts (tooling output, not app code).
-- `PROJECT_CONTEXT.md`, `SYSTEM_DOCUMENTATION.md` — living architecture writeups spanning both apps; check these for cross-cutting context.
+- `graphify-out/`, `merge_chunks.py` — local knowledge-graph tooling artifacts (untracked, not app code).
+- `docs/`, `diagrams/` — architecture writeups and diagrams spanning both apps.
 
 ## Commands
 
