@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     # ── CORS Configuration ─────────────────────────────────────
     # Comma-separated list of allowed origins per environment
     # Add your deployed frontend domain here (comma-separated if multiple)
-    CORS_PRODUCTION_ORIGINS: str = "https://sporty-woad.vercel.app"
+    CORS_PRODUCTION_ORIGINS: str = "https://sportyyy.tech,https://www.sportyyy.tech"
     CORS_STAGING_ORIGINS: str = ""
     CORS_LOCAL_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173"
 
@@ -34,10 +34,16 @@ class Settings(BaseSettings):
     # secure=True in production (HTTPS), False in development (HTTP)
     COOKIE_SECURE: bool = False  # Override to True in production
     # SameSite policy:
-    #   - "none" + Secure=True: Required for cross-origin SPA cookie auth (production)
-    #   - "lax" + Secure=False: Development only; requires Next.js rewrites for POST cookie auth
+    #   - Production, same-site subdomains (app at sportyyy.tech, API at
+    #     api.sportyyy.tech): "lax" + Secure=True + COOKIE_DOMAIN=".sportyyy.tech".
+    #     Same-SITE requests send Lax cookies, so nothing cross-site is needed
+    #     and the frontend's proxy.ts can see the session cookie.
+    #   - Production, unrelated domains (e.g. *.vercel.app frontend with an
+    #     onrender.com API): "none" + Secure=True (cross-site cookies).
+    #   - Development: "lax" + Secure=False; the Next.js rewrite proxy makes
+    #     cookies same-origin.
     COOKIE_SAME_SITE: str = "lax"  # "lax", "strict", or "none"
-    COOKIE_DOMAIN: str = ""  # Empty = current domain; set to ".sporty.com" for subdomains
+    COOKIE_DOMAIN: str = ""  # Empty = current domain; ".sportyyy.tech" shares across subdomains
 
     # ── Client IP resolution (rate limiting, abuse throttles) ──
     # Number of trusted reverse-proxy hops in front of the app. Proxies
@@ -134,7 +140,7 @@ class Settings(BaseSettings):
     # ── Google OAuth ──────────────────────────────────────────
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str = ""
-    GOOGLE_REDIRECT_URI: str = "https://sporty-woad.vercel.app/auth/google/callback"
+    GOOGLE_REDIRECT_URI: str = "https://sportyyy.tech/auth/google/callback"
 
     # ── External APIs ─────────────────────────────────────────
     RAPIDAPI_FOOTBALL_KEY: str = ""
@@ -153,7 +159,7 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     FROM_EMAIL: str = ""
     # Default frontend base; override via env in non-local environments
-    FRONTEND_BASE_URL: str = "https://sporty-woad.vercel.app"
+    FRONTEND_BASE_URL: str = "https://sportyyy.tech"
 
     # ── Cloudflare R2 (avatar/object storage, S3-compatible) ─────
     R2_ACCOUNT_ID: str = ""
@@ -245,9 +251,20 @@ class Settings(BaseSettings):
                 errors.append("CORS_PRODUCTION_ORIGINS is required in production")
             if not self.COOKIE_SECURE:
                 errors.append("COOKIE_SECURE must be True in production (HTTPS required)")
-            if self.COOKIE_SAME_SITE.lower() != "none":
+            same_site = self.COOKIE_SAME_SITE.lower()
+            if same_site == "lax":
+                # Same-site setup: app + API on sibling subdomains of one
+                # registrable domain. Lax cookies flow between them, but only
+                # if the cookie is scoped to the parent domain.
+                if not self.COOKIE_DOMAIN:
+                    errors.append(
+                        "COOKIE_SAME_SITE='lax' in production requires COOKIE_DOMAIN "
+                        "(e.g. '.sportyyy.tech') so app and api subdomains share the session cookie"
+                    )
+            elif same_site != "none":
                 errors.append(
-                    "COOKIE_SAME_SITE must be 'none' in production for cross-origin SPA cookie auth"
+                    "COOKIE_SAME_SITE must be 'lax' (same-site subdomains + COOKIE_DOMAIN) "
+                    "or 'none' (unrelated domains) in production"
                 )
             if self.JWT_SECRET_KEY == "your-secret-key-here-min-32-chars":
                 errors.append("JWT_SECRET_KEY must be changed from default value")

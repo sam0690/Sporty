@@ -65,9 +65,11 @@ def _set_auth_cookies(response: Response, access_token: str, refresh_token: str)
     - Refresh token: Long-lived (default 7 days)
 
     Attributes come from Settings (previously hardcoded secure/None, which
-    made COOKIE_SECURE / COOKIE_SAME_SITE dead config): production env must
-    set secure=True + samesite=none (validate_production enforces this);
-    development defaults to lax + insecure, which works because the Next.js
+    made COOKIE_SECURE / COOKIE_SAME_SITE dead config). Production runs
+    secure=True with either samesite=lax + COOKIE_DOMAIN=.sportyyy.tech
+    (app + api are sibling subdomains — same-site) or samesite=none for
+    unrelated domains; validate_production enforces a coherent combination.
+    Development defaults to lax + insecure, which works because the Next.js
     dev server proxies /api/* so cookies are same-origin.
     """
     secure = settings.COOKIE_SECURE

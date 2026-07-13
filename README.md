@@ -43,8 +43,10 @@ CI runs both on every push (`.github/workflows/`).
 - **Backend** — Render builds `Sporty_Backend/Dockerfile`; the container runs
   `alembic upgrade head` + idempotent seeders on boot. Required env is listed
   in `Sporty_Backend/.env.example`; production must set
-  `ENVIRONMENT=production`, `COOKIE_SECURE=true`, `COOKIE_SAME_SITE=none`
-  (boot fails fast otherwise).
+  `ENVIRONMENT=production`, `COOKIE_SECURE=true`, and either
+  `COOKIE_SAME_SITE=lax` + `COOKIE_DOMAIN=.sportyyy.tech` (app and API on
+  sibling subdomains — the current setup) or `COOKIE_SAME_SITE=none` for
+  unrelated domains (boot fails fast otherwise).
 - **Frontend** — Vercel builds `sporty-frontend/` from source
   (`NEXT_PUBLIC_API_URL` + `BACKEND_SERVER_URL` env).
 
