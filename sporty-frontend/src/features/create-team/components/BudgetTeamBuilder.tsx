@@ -6,7 +6,7 @@ import { CurrentTeam } from "./CurrentTeam";
 import { PlayerMarket } from "./PlayerMarket";
 import { TeamNameForm } from "./TeamNameForm";
 import { SquadValidationChecklist } from "./SquadValidationChecklist";
-import { MULTISPORT_MIN_BY_SPORT } from "../hooks/useCreateTeamDashboard";
+import { MULTISPORT_MIN_BY_SPORT } from "@/lib/squad/squadRules";
 import type { CreateTeamViewModel } from "../hooks/useCreateTeamDashboard";
 
 type BudgetTeamBuilderProps = Omit<CreateTeamViewModel, "league"> & {

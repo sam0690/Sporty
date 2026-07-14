@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { CardSkeleton } from "@/components/ui/skeletons";
-import { Modal, PlayerAvatar, PlayerListCard, TeamLogo } from "@/components/ui";
+import { ErrorState, Modal, PlayerAvatar, PlayerListCard, TeamLogo } from "@/components/ui";
 import {
   useCancelWaiverClaim,
   useFreeAgents,
@@ -37,7 +37,11 @@ export function WaiversView() {
   const enabled = isDraftMode && isActive;
 
   const { data: order } = useWaiverOrder(leagueId, enabled);
-  const { data: claims, isLoading: claimsLoading } = useWaiverClaims(leagueId, enabled);
+  const {
+    data: claims,
+    isLoading: claimsLoading,
+    isError: claimsError,
+  } = useWaiverClaims(leagueId, enabled);
   const { data: pool } = useFreeAgents(leagueId, { limit: 100 }, enabled);
   const submit = useSubmitWaiverClaim(leagueId);
   const cancel = useCancelWaiverClaim(leagueId);
@@ -179,6 +183,8 @@ export function WaiversView() {
               <span className="section-label">My Claims</span>
               {claimsLoading ? (
                 <CardSkeleton />
+              ) : claimsError ? (
+                <ErrorState className="mt-3" title="Failed to load claims" />
               ) : (claims?.length ?? 0) === 0 ? (
                 <p className="mt-3 text-sm text-fg-3">No claims yet.</p>
               ) : (

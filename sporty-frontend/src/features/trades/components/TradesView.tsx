@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 
-import { PlayerAvatar, Select, TeamLogo } from "@/components/ui";
+import { ErrorState, PlayerAvatar, Select, TeamLogo } from "@/components/ui";
 import { useMe } from "@/hooks/auth/useMe";
 import {
   useLeague,
@@ -93,7 +93,7 @@ export function TradesView() {
   const enabled = isDraftMode && isActive;
 
   const { data: rosters } = useTradeRosters(leagueId, enabled);
-  const { data: trades } = useTrades(leagueId, enabled);
+  const { data: trades, isError: tradesError } = useTrades(leagueId, enabled);
   const propose = useProposeTrade(leagueId);
   const action = useTradeAction(leagueId);
 
@@ -272,7 +272,9 @@ export function TradesView() {
           {/* My trades */}
           <div className="card-surface p-5">
             <span className="section-label">My Trades</span>
-            {(trades?.length ?? 0) === 0 ? (
+            {tradesError ? (
+              <ErrorState className="mt-3" title="Failed to load trades" />
+            ) : (trades?.length ?? 0) === 0 ? (
               <p className="mt-3 text-sm text-fg-3">No trades yet.</p>
             ) : (
               <ul className="mt-3 space-y-3">

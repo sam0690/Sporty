@@ -8,54 +8,50 @@ import { GameweekEntryNotice } from "./GameweekEntryNotice";
 import { PlayerMarket } from "./PlayerMarket";
 import { SquadValidationChecklist } from "./SquadValidationChecklist";
 import { useLeagueMembers } from "@/hooks/leagues/useLeagues";
-import type { CreateTeamViewModel } from "../hooks/useCreateTeamDashboard";
+import { useDraftRoom } from "../hooks/useDraftRoom";
 
-type DraftRoomProps = Omit<CreateTeamViewModel, "league"> & {
-  league: NonNullable<CreateTeamViewModel["league"]>;
-};
-
-export function DraftRoom({
-  username,
-  router,
-  league,
-  myTeam,
-  leagueSport,
-  budget,
-  requiredPlayers,
-  error,
-  draftedPlayers,
-  squadValidation,
-  clubCounts,
-  isRosterComplete,
-  isDraftComplete,
-  isMyDraftTurn,
-  handleGoToLineup,
-  marketPlayers,
-  handleDraftPick,
-  searchQuery,
-  selectedPosition,
-  selectedSport,
-  minCostInput,
-  maxCostInput,
-  handleSearchQueryChange,
-  handlePositionChange,
-  handleSportChange,
-  handleMinCostChange,
-  handleMaxCostChange,
-  playersCurrentPage,
-  playersTotalPages,
-  playersTotal,
-  playersData,
-  isPlayersPageLoading,
-  handlePreviousPlayersPage,
-  handleNextPlayersPage,
-  playersLoading,
-  makeDraftPickMutation,
-  activeWindow,
-  editableWindow,
-  draftTurn,
-  lastDraftPick,
-}: DraftRoomProps) {
+export function DraftRoom({ league }: { league: { id: string; name: string; status: string } }) {
+  const {
+    username,
+    router,
+    myTeam,
+    leagueSport,
+    budget,
+    requiredPlayers,
+    error,
+    draftedPlayers,
+    squadValidation,
+    clubCounts,
+    isRosterComplete,
+    isDraftComplete,
+    isMyDraftTurn,
+    handleGoToLineup,
+    marketPlayers,
+    handleDraftPick,
+    searchQuery,
+    selectedPosition,
+    selectedSport,
+    minCostInput,
+    maxCostInput,
+    handleSearchQueryChange,
+    handlePositionChange,
+    handleSportChange,
+    handleMinCostChange,
+    handleMaxCostChange,
+    playersCurrentPage,
+    playersTotalPages,
+    playersTotal,
+    playersData,
+    isPlayersPageLoading,
+    handlePreviousPlayersPage,
+    handleNextPlayersPage,
+    playersLoading,
+    makeDraftPickMutation,
+    activeWindow,
+    editableWindow,
+    draftTurn,
+    lastDraftPick,
+  } = useDraftRoom();
   const status = league.status;
   const { data: members } = useLeagueMembers(league.id);
 

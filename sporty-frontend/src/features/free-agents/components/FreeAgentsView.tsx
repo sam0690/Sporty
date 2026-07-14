@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 
 import { CardSkeleton } from "@/components/ui/skeletons";
 import {
+  ErrorState,
   Modal,
   PlayerAvatar,
   PlayerListCard,
@@ -34,7 +35,7 @@ export function FreeAgentsView() {
 
   const isActive = league?.status === "active";
 
-  const { data, isLoading } = useFreeAgents(
+  const { data, isLoading, isError } = useFreeAgents(
     leagueId,
     { search: search.trim() || undefined, position: position || undefined, limit: 50 },
     isDraftMode && isActive,
@@ -123,6 +124,8 @@ export function FreeAgentsView() {
               <CardSkeleton />
               <CardSkeleton />
             </div>
+          ) : isError ? (
+            <ErrorState title="Failed to load free agents" />
           ) : (data?.items.length ?? 0) === 0 ? (
             <div className="card-surface p-8 text-center text-sm text-fg-3">
               No available free agents match your filters.
