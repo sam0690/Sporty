@@ -100,6 +100,9 @@ export function EventFeed() {
           </span>
         ) : null
       }
+      // Header stays put; only the event list scrolls once it outgrows the
+      // panel, instead of stretching the whole page.
+      bodyClassName="max-h-[560px] overflow-y-auto p-5"
     >
       {ordered.length === 0 ? (
         <PanelEmpty
