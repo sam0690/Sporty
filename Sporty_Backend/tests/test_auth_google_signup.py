@@ -26,6 +26,18 @@ from app.auth.models import AuthProvider, RefreshToken, User
 from app.auth.schemas import GoogleAuthRequest, RegisterRequest
 from app.database import Base
 
+# Model modules needed so SQLAlchemy can resolve the full relationship graph
+# reachable from User (same convention as the import block in app/main.py).
+from app.ingestion.models import IngestionPlayer  # noqa: F401
+from app.league.models import Sport  # noqa: F401
+from app.league_chat.models import LeagueChatMessage  # noqa: F401
+from app.match.models import Match  # noqa: F401
+from app.notification.models import Notification  # noqa: F401
+from app.player.models import UserFavouriteTeam  # noqa: F401
+from app.player.models_nba import NBAStat  # noqa: F401
+from app.scoring.models import DefaultScoringRule  # noqa: F401
+from app.support.models import SupportTicket  # noqa: F401
+
 ENGINE = create_engine(os.environ["DATABASE_URL"])
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
 
