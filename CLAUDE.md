@@ -39,10 +39,11 @@ yarn dev          # dev server on :3000 (proxies /api/* → backend)
 yarn build        # next build (CI runs this on every push)
 yarn start        # serve production build
 yarn lint         # eslint
+yarn test         # vitest unit tests (src/**/*.test.ts), runs in CI
+yarn test:e2e     # Playwright smoke flows (e2e/) — needs `docker compose up` first
 ```
 Deployment: frontend on **Vercel**, backend on **Render** (Docker). There is
 no frontend Docker image and no Cloudflare/wrangler path.
-Note: `__tests__/example.spec.ts` uses Playwright, but there is no `playwright.config` or `test` script wired up yet — there is no working frontend test runner.
 
 ## Cross-app integration (the part that requires reading both sides)
 
