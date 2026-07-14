@@ -47,7 +47,7 @@ export function RecentActivity({
         </h2>
       </header>
 
-      <div className="flex-1 px-5">
+      <div className="flex-1 px-5" aria-busy={isLoading}>
         {isLoading ? (
           <div className="space-y-3 py-5">
             {Array.from({ length: 4 }, (_, index) => (

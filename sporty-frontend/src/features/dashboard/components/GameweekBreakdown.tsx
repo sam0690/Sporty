@@ -2,16 +2,19 @@
 
 import { useMemo } from "react";
 
+import { ErrorState } from "@/components/ui";
 import type { TGameweekPoints } from "@/types/league";
 
 type GameweekBreakdownProps = {
   breakdown: TGameweekPoints[];
   isLoading?: boolean;
+  isError?: boolean;
 };
 
 export function GameweekBreakdown({
   breakdown,
   isLoading,
+  isError,
 }: GameweekBreakdownProps) {
   const { rows, maxPoints, total, best, average } = useMemo(() => {
     const sorted = [...breakdown].sort((a, b) => a.gameweek - b.gameweek);
@@ -27,7 +30,7 @@ export function GameweekBreakdown({
   }, [breakdown]);
 
   return (
-    <section className="overflow-hidden card-surface">
+    <section className="overflow-hidden card-surface" aria-busy={isLoading}>
       <header className="flex items-center justify-between gap-4 border-b border-white/7 px-5 py-4">
         <h2 className="font-sans text-sm font-700 uppercase tracking-[2px] text-fg-1">
           Gameweek Points
@@ -57,6 +60,8 @@ export function GameweekBreakdown({
               <div key={index} className="skeleton h-10 rounded-[3px]" />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState title="Failed to load gameweek points" />
         ) : rows.length === 0 ? (
           <div className="rounded-[3px] border border-white/8 bg-surface-2 p-4 text-sm text-fg-2">
             No gameweeks scored yet. Points appear here once a gameweek finishes.
@@ -79,6 +84,7 @@ export function GameweekBreakdown({
 
                   <div className="relative h-7 flex-1 overflow-hidden rounded-[3px] bg-surface-2">
                     <div
+                      aria-hidden
                       className="h-full rounded-[3px] transition-[width] duration-300"
                       style={{
                         width: `${Math.max(widthPct, 3)}%`,

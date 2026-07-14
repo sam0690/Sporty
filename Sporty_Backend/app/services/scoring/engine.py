@@ -86,18 +86,47 @@ def score_transfer_window_for_league(
     league_id: uuid.UUID,
     transfer_window_id: uuid.UUID,
 ) -> dict[str, bool | str]:
-    # Algorithm: lock (league,window), upsert team weekly scores from the
-    # already-scored player stats, apply SQL RANK rankings, invalidate the
-    # leaderboard cache key. Player-stat scoring itself happens once per
-    # sport before this is called — see _score_player_stats_once_per_sport.
+    # Algorithm: translate the window to the league's native schedule, lock
+    # (league,window), upsert team weekly scores from the already-scored
+    # player stats, apply SQL RANK rankings, invalidate the leaderboard cache
+    # key. Player-stat scoring itself happens once per sport before this is
+    # called — see _score_player_stats_once_per_sport.
+    league = db.query(League).filter(League.id == league_id).first()
+    if not league:
+        raise ValueError(f"League {league_id} not found")
+
+    # Callers may hand us any sport's window: the sweep maps windows to
+    # leagues via LeagueSport, so a multisport league is reached once per
+    # sport it plays. But lineups and TeamWeeklyScore rows only ever live
+    # under the league's OWN season's windows — scoring under a foreign
+    # sport's window id writes phantom 0-point rows (duplicate gameweek bars
+    # on the dashboard, everyone-ranks-#1 rows polluting power rankings).
+    # Translate to the league-native window before doing anything, including
+    # taking the lock, so foreign and native callers converge on one lock
+    # key. Same-sport windows pass through unchanged.
+    window = (
+        db.query(TransferWindow)
+        .filter(TransferWindow.id == transfer_window_id)
+        .first()
+    )
+    if not window:
+        raise ValueError(f"TransferWindow {transfer_window_id} not found")
+    league_sport_id = (
+        db.query(Season.sport_id).filter(Season.id == league.season_id).scalar()
+    )
+    native_window = find_equivalent_window_for_sport(
+        db, window=window, sport_id=league_sport_id
+    )
+    if native_window is None:
+        # The league's own schedule has no window covering this date range
+        # (season not started / ended / off week) — nothing to score.
+        return {"skipped": True, "reason": "no_native_window"}
+    transfer_window_id = native_window.id
+
     lock_key = f"lock:score:{league_id}:{transfer_window_id}"
     with redis_lock(lock_key, ttl_seconds=300) as acquired:
         if not acquired:
             return {"skipped": True, "reason": "lock_held"}
-
-        league = db.query(League).filter(League.id == league_id).first()
-        if not league:
-            raise ValueError(f"League {league_id} not found")
 
         # Only a live league scores. Before ACTIVE (SETUP/DRAFTING) squads aren't
         # finalized, so there is nothing legitimate to score — skip so a shared

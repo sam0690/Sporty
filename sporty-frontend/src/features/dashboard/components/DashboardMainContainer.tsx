@@ -20,6 +20,7 @@ export function DashboardMainContainer() {
     dashboardStats,
     stats,
     statsLoading,
+    statsError,
     mappedActivity,
     recentActivityLoading,
     recentActivityError,
@@ -45,6 +46,7 @@ export function DashboardMainContainer() {
             <GameweekBreakdown
               breakdown={dashboardStats?.gameweek_breakdown ?? []}
               isLoading={statsLoading}
+              isError={Boolean(statsError)}
             />
           </div>
         )}
@@ -55,6 +57,7 @@ export function DashboardMainContainer() {
             isLoading={leaguesLoading || previewLoading}
             isError={Boolean(previewError)}
             hasLeagues={hasLeagues}
+            activeLeagueId={activeLeagueId}
           />
           <RecentActivity
             items={mappedActivity}

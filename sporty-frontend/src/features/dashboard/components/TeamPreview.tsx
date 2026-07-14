@@ -1,6 +1,7 @@
 import { useRouter } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ClipboardList, Trophy } from "lucide-react";
 
+import { EmptyState, ErrorState } from "@/components/ui";
 import { sportGlyph } from "@/components/landing/sport-icons";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import { buildTeamLayout } from "@/lib/formation/formationEngine";
@@ -12,6 +13,7 @@ type TeamPreviewProps = {
   isLoading: boolean;
   isError: boolean;
   hasLeagues: boolean;
+  activeLeagueId: string | null;
 };
 
 function LoadingPitch() {
@@ -39,19 +41,15 @@ function LoadingPitch() {
   );
 }
 
-function EmptyPanel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="rounded-[3px] border border-white/8 bg-surface-2 p-4 text-sm text-fg-2">
-      {children}
-    </div>
-  );
-}
+const EMPTY_STATE_INSET =
+  "!border-transparent !bg-transparent !py-8 !shadow-none";
 
 export function TeamPreview({
   slides,
   isLoading,
   isError,
   hasLeagues,
+  activeLeagueId,
 }: TeamPreviewProps) {
   const router = useRouter();
   const activeSlide = slides[0] ?? null;
@@ -77,17 +75,40 @@ export function TeamPreview({
         </h2>
       </header>
 
-      <div className="flex-1 p-5">
+      <div className="flex-1 p-5" aria-busy={isLoading}>
         {isLoading ? (
           <LoadingPitch />
         ) : isError ? (
-          <EmptyPanel>
-            <span className="text-danger">Failed to load team previews.</span>
-          </EmptyPanel>
+          <ErrorState title="Failed to load team preview" />
         ) : !hasLeagues ? (
-          <EmptyPanel>You have not joined a league yet.</EmptyPanel>
+          <EmptyState
+            className={EMPTY_STATE_INSET}
+            icon={Trophy}
+            title="No leagues yet"
+            description="Create or join a league to start building your squad."
+            actions={[
+              { label: "Create league", href: "/create-league", variant: "primary" },
+              { label: "Join league", href: "/join-league" },
+            ]}
+          />
         ) : !activeSlide ? (
-          <EmptyPanel>No lineup has been set yet.</EmptyPanel>
+          <EmptyState
+            className={EMPTY_STATE_INSET}
+            icon={ClipboardList}
+            title="No lineup set yet"
+            description="Your starting eleven will show up here once you set a lineup."
+            actions={
+              activeLeagueId
+                ? [
+                    {
+                      label: "Set lineup",
+                      href: `/leagues/${activeLeagueId}/lineup`,
+                      variant: "primary",
+                    },
+                  ]
+                : []
+            }
+          />
         ) : (
           <button
             type="button"

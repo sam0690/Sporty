@@ -51,8 +51,11 @@ export function useDashboardMainState() {
     isLoading: previewLoading,
     error: previewError,
   } = useDashboardTeamPreview(activeLeagueId);
-  const { data: dashboardStats, isLoading: statsLoading } =
-    useDashboardLeagueStats(activeLeagueId);
+  const {
+    data: dashboardStats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useDashboardLeagueStats(activeLeagueId);
   const {
     data: recentActivityData,
     isLoading: recentActivityLoading,
@@ -65,25 +68,29 @@ export function useDashboardMainState() {
     leagueOptions.find((league) => league.id === activeLeagueId)?.name ??
     "League";
 
+  // On a failed stats fetch show "—", never fake zeros.
+  const statValue = (value: string) => (statsError ? "—" : value);
   const stats: OverviewStat[] = [
     {
       label: "Total Points",
-      value: Math.round(dashboardStats?.total_points ?? 0).toString(),
+      value: statValue(Math.round(dashboardStats?.total_points ?? 0).toString()),
       change: selectedLeagueName,
     },
     {
       label: "Rank",
-      value: dashboardStats?.rank ? `#${dashboardStats.rank}` : "-",
+      value: statValue(dashboardStats?.rank ? `#${dashboardStats.rank}` : "-"),
       change: selectedLeagueName,
     },
     {
       label: "Budget",
-      value: `$${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`,
+      value: statValue(`$${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`),
       change: "Current budget",
     },
     {
       label: "Gameweek Points",
-      value: Math.round(dashboardStats?.gameweek_points ?? 0).toString(),
+      value: statValue(
+        Math.round(dashboardStats?.gameweek_points ?? 0).toString(),
+      ),
       change: selectedLeagueName,
     },
   ];
@@ -112,6 +119,7 @@ export function useDashboardMainState() {
     dashboardStats,
     stats,
     statsLoading,
+    statsError,
     mappedActivity,
     recentActivityLoading,
     recentActivityError,

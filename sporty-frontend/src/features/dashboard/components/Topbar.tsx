@@ -122,7 +122,10 @@ export function Topbar({
 
       <div className="my-5 h-px bg-white/6" />
 
-      <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
+      <div
+        className="flex flex-wrap items-end gap-x-8 gap-y-4"
+        aria-busy={statsLoading}
+      >
         {statsLoading ? (
           <>
             <StatSkeleton wide />
