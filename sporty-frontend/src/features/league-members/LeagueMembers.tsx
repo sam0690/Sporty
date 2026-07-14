@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Search } from "lucide-react";
+import { ErrorState } from "@/components/ui";
 import { KickMemberModal } from "./components/KickMemberModal";
 import { MemberList } from "./components/MemberList";
 import type { Member } from "./components/MemberCard";
@@ -18,7 +19,7 @@ export function LeagueMembers() {
   const leagueId = params?.id ?? "";
   const { username } = useMe();
   const { data: league } = useLeague(leagueId);
-  const { data: memberships, isLoading } = useLeagueMembers(leagueId);
+  const { data: memberships, isLoading, isError } = useLeagueMembers(leagueId);
 
   const isCommissioner = league?.owner?.username === username;
   const selfId =
@@ -129,6 +130,8 @@ export function LeagueMembers() {
             />
           ))}
         </div>
+      ) : isError ? (
+        <ErrorState title="Failed to load members" />
       ) : (
         <MemberList
           members={filteredMembers}

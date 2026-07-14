@@ -8,13 +8,13 @@ import {
   type Sport,
 } from "@/features/leagues/components/LeagueCard";
 import { StatsRow } from "@/features/leagues/components/StatsRow";
-import { EmptyState, PageHeader } from "@/components/ui";
+import { EmptyState, ErrorState, PageHeader } from "@/components/ui";
 import { Trophy } from "lucide-react";
 import { LeagueCardSkeleton } from "@/components/ui/skeletons";
 
 export function LeaguesView() {
   const { username } = useMe();
-  const { data: leaguesData, isLoading } = useMyLeagues();
+  const { data: leaguesData, isLoading, isError } = useMyLeagues();
 
   const userName = username || "Sporty User";
 
@@ -83,6 +83,8 @@ export function LeaguesView() {
               <LeagueCardSkeleton key={index} />
             ))}
           </div>
+        ) : isError ? (
+          <ErrorState title="Failed to load your leagues" />
         ) : leagues.length === 0 ? (
           <EmptyState
             icon={Trophy}

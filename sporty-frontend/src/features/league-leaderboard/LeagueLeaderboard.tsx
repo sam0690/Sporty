@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { EmptyState, Tabs } from "@/components/ui";
+import { EmptyState, ErrorState, Tabs } from "@/components/ui";
 import {
   StandingsTable,
   type StandingRow,
@@ -27,7 +27,11 @@ export function LeagueLeaderboard() {
   const params = useParams<{ id: string }>();
   const leagueId = params?.id ?? "";
 
-  const { data: league, isLoading: isLeagueLoading } = useLeague(leagueId);
+  const {
+    data: league,
+    isLoading: isLeagueLoading,
+    isError: isLeagueError,
+  } = useLeague(leagueId);
   const { data: myTeam, isLoading: isTeamLoading } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: isWindowLoading } =
     useActiveWindow(leagueId);
@@ -39,12 +43,11 @@ export function LeagueLeaderboard() {
   // standings (resolved to the season window server-side via the gameweek arg).
   const selectedGameweek =
     selectedWeek === "overall" ? undefined : selectedWeek;
-  const { data: leaderboard, isLoading: isLeaderboardLoading } = useLeaderboard(
-    leagueId,
-    undefined,
-    historical,
-    selectedGameweek,
-  );
+  const {
+    data: leaderboard,
+    isLoading: isLeaderboardLoading,
+    isError: isLeaderboardError,
+  } = useLeaderboard(leagueId, undefined, historical, selectedGameweek);
 
 
   // Power rankings (rank movement/streak/MOTW) are only meaningful for the
@@ -122,6 +125,10 @@ export function LeagueLeaderboard() {
     );
   }
 
+  if (isLeagueError) {
+    return <ErrorState title="Failed to load league" />;
+  }
+
   if (!league) {
     return <EmptyState title="League not found." />;
   }
@@ -162,7 +169,9 @@ export function LeagueLeaderboard() {
         />
       )}
 
-      {standings.length === 0 ? (
+      {isLeaderboardError ? (
+        <ErrorState title="Failed to load standings" />
+      ) : standings.length === 0 ? (
         <EmptyState
           title={
             selectedWeek === "overall"

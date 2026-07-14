@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { useMe } from "@/hooks/auth/useMe";
-import { ConfirmDialog, EmptyState } from "@/components/ui";
+import { ConfirmDialog, EmptyState, ErrorState } from "@/components/ui";
 import { toastifier } from "@/lib/toastifier";
 import { CurrentMatchup } from "./components/CurrentMatchup";
 import { getLeagueCta, type LeagueDraftStatus } from "./leagueCta";
@@ -37,7 +37,11 @@ export function LeagueHome() {
 
   const leagueId = params?.id ?? "";
 
-  const { data: league, isLoading: leagueLoading } = useLeague(leagueId);
+  const {
+    data: league,
+    isLoading: leagueLoading,
+    isError: leagueError,
+  } = useLeague(leagueId);
   const {
     data: myTeam,
     isLoading: teamLoading,
@@ -84,8 +88,11 @@ export function LeagueHome() {
     false,
     currentWeek,
   );
-  const { data: leagueStats, isLoading: leagueStatsLoading } =
-    useDashboardLeagueStats(leagueId);
+  const {
+    data: leagueStats,
+    isLoading: leagueStatsLoading,
+    error: leagueStatsError,
+  } = useDashboardLeagueStats(leagueId);
 
   const weekStanding = useMemo(() => {
     const entries = [...(weekBoard?.entries ?? [])].sort(
@@ -213,6 +220,12 @@ export function LeagueHome() {
     );
   }
 
+  // A failed league fetch must not fall through to the CTA branch below —
+  // it would misread as "you have no team in this league".
+  if (leagueError || !league) {
+    return <ErrorState title="Failed to load league" />;
+  }
+
   return (
     <section className="space-y-5">
       {isBudgetMode ? (
@@ -265,6 +278,7 @@ export function LeagueHome() {
           <GameweekBreakdown
             breakdown={leagueStats?.gameweek_breakdown ?? []}
             isLoading={leagueStatsLoading}
+            isError={Boolean(leagueStatsError)}
           />
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
             <div className="space-y-5 order-1 lg:order-2 lg:col-span-1">

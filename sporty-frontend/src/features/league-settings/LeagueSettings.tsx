@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowRight, Lock, X } from "lucide-react";
+import { ErrorState } from "@/components/ui";
+import { CardSkeleton } from "@/components/ui/skeletons";
 import { toastifier } from "@/lib/toastifier";
 import { DangerZone } from "./components/DangerZone";
 import { DeleteLeagueModal } from "./components/DeleteLeagueModal";
@@ -45,7 +47,11 @@ export function LeagueSettings() {
   const leagueId = params?.id ?? "";
 
   const { username } = useMe();
-  const { data: league } = useLeague(leagueId);
+  const {
+    data: league,
+    isLoading: leagueLoading,
+    isError: leagueError,
+  } = useLeague(leagueId);
   const { data: sports } = useSports();
 
   const isCommissioner = league?.owner?.username === username;
@@ -202,6 +208,22 @@ export function LeagueSettings() {
     }
   };
 
+  // Gate order matters: the commissioner check reads league data, so it can
+  // only run once the league has actually loaded — otherwise the real
+  // commissioner sees the lock screen while the fetch is in flight.
+  if (leagueLoading) {
+    return (
+      <section className="space-y-6">
+        <CardSkeleton />
+        <CardSkeleton />
+      </section>
+    );
+  }
+
+  if (leagueError || !league) {
+    return <ErrorState title="Failed to load league settings" />;
+  }
+
   if (!isCommissioner) {
     return (
       <section className="space-y-6">
@@ -337,7 +359,7 @@ export function LeagueSettings() {
             <button
               key={leagueSport.sport.name}
               type="button"
-              onClick={() => removeSport.mutateAsync(leagueSport.sport.name)}
+              onClick={() => removeSport.mutate(leagueSport.sport.name)}
               aria-label={`Remove ${leagueSport.sport.display_name}`}
               className={`inline-flex items-center gap-1.5 ${segmentBase} ${segmentActive}`}
             >
@@ -356,7 +378,7 @@ export function LeagueSettings() {
               <button
                 key={sport.name}
                 type="button"
-                onClick={() => addSport.mutateAsync(sport.name)}
+                onClick={() => addSport.mutate(sport.name)}
                 className={`${segmentBase} ${segmentIdle}`}
               >
                 + {sport.display_name}
