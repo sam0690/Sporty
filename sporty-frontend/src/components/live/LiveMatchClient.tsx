@@ -43,6 +43,13 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
     const load = async () => {
       setLoading(true);
       setError(null);
+      // Clear the previous match's decorative state so a slow prediction/
+      // model-metrics fetch for the new match doesn't leave the old match's
+      // values on screen in the meantime (ratings additionally gates its own
+      // fetch on this being null — see the ratings effect below).
+      setPrediction(null);
+      setRatings(null);
+      setModelMetrics(null);
       try {
         const snapshot = await fetchMatchSnapshot(matchId);
         if (!mounted) {
@@ -91,18 +98,20 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   useEffect(() => {
     // The WebSocket drives live updates; this periodic re-hydrate is a fallback
     // so the page self-heals if the socket drops or misses a beat. The snapshot
-    // is authoritative (reads live_events + points server-side). Stop once the
-    // match is finished — no more changes to pull.
-    if (status === "finished") {
-      return;
-    }
+    // is authoritative (reads live_events + points server-side). Once finished,
+    // slow down instead of stopping outright: the same match id can legitimately
+    // go live again (a feeder match relaunched — see feeder_match_external_ref),
+    // and with no poll at all a tab left open on the finished state would have
+    // no way to ever notice. 120s keeps that self-heal cheap for the far more
+    // common case of a match that really is done for good.
+    const intervalMs = status === "finished" ? 120000 : 15000;
     const intervalId = window.setInterval(() => {
       fetchMatchSnapshot(matchId)
         .then((snapshot) => hydrate(snapshot))
         .catch(() => {
           // Transient failure — the next tick (or the WS) recovers.
         });
-    }, 15000);
+    }, intervalMs);
     return () => window.clearInterval(intervalId);
   }, [status, matchId, hydrate]);
 

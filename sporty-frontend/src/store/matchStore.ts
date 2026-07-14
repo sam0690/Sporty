@@ -67,6 +67,15 @@ function mergeEvents(existing: MatchEvent[], update: ScoreUpdate): MatchEvent[] 
   );
 }
 
+// Every live message carries the match_id it belongs to (feed.py/websocket.py
+// scope the Redis channel per match, but that only protects the common case —
+// a stray message during a matchId transition, or two feeder matches that
+// briefly alias the same backend match id, should still never get merged into
+// state for a different match than the one currently hydrated).
+function isForCurrentMatch(state: MatchStoreState, matchId: string): boolean {
+  return state.matchId === matchId;
+}
+
 export const useMatchStore = create<MatchStoreState>((set) => ({
   matchId: null,
   homeTeam: null,
@@ -105,6 +114,9 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
 
   applyScoreUpdate: (update) =>
     set((state) => {
+      if (!isForCurrentMatch(state, update.match_id)) {
+        return state;
+      }
       const minuteChanged =
         update.minute != null && update.minute !== state.minute;
       return {
@@ -121,17 +133,27 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   setSocketStatus: (socketStatus) => set({ socketStatus }),
 
   applyPointsDelta: (delta) =>
-    set((state) => ({
-      playerPoints: {
-        ...state.playerPoints,
-        [delta.player_id]: delta.total_points,
-      },
-      lastUpdatedTs: delta.ts,
-    })),
+    set((state) => {
+      if (!isForCurrentMatch(state, delta.match_id)) {
+        return state;
+      }
+      return {
+        playerPoints: {
+          ...state.playerPoints,
+          [delta.player_id]: delta.total_points,
+        },
+        lastUpdatedTs: delta.ts,
+      };
+    }),
 
   applyLineupChange: (change) =>
-    set((state) => ({
-      lineup: { ...state.lineup, [change.team_id]: change },
-      lastUpdatedTs: Date.now(),
-    })),
+    set((state) => {
+      if (!isForCurrentMatch(state, change.match_id)) {
+        return state;
+      }
+      return {
+        lineup: { ...state.lineup, [change.team_id]: change },
+        lastUpdatedTs: Date.now(),
+      };
+    }),
 }));
