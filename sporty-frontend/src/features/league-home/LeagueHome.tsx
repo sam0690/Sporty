@@ -61,17 +61,21 @@ export function LeagueHome() {
   // gameweeks lives on the leaderboard page, so there's no week selector here.
   const currentWeek = activeWindow?.number ?? 1;
 
-  // Season standings (total points) and the running gameweek's board (per-week
-  // points + rank) power the standings table, your-score card and the
-  // you-vs-leader matchup. The per-gameweek breakdown comes from the league
-  // dashboard stats. The week board is scoped to the active gameweek via
-  // `gameweek`, resolved to the season's transfer window server-side.
-  const { data: seasonBoard, isLoading: seasonBoardLoading } =
-    useLeaderboard(leagueId);
+  // The overview's standings table shows the running gameweek's board (per-week
+  // points + rank), not the season total — that lives on the leaderboard/table
+  // page. Same board also powers the your-score card and the you-vs-leader
+  // matchup. It's scoped to the active gameweek via `gameweek`, resolved to
+  // the season's transfer window server-side.
+  const { data: weekBoard, isLoading: weekBoardLoading } = useLeaderboard(
+    leagueId,
+    undefined,
+    false,
+    currentWeek,
+  );
   // Backend rank can be null until the ranking job runs; fall back to
   // position in points-sorted order so the list always shows a standing.
   const standings = useMemo<StandingRow[]>(() => {
-    const entries = seasonBoard?.entries ?? [];
+    const entries = weekBoard?.entries ?? [];
     return [...entries]
       .sort((a, b) => Number(b.points) - Number(a.points))
       .map((entry, index) => ({
@@ -81,13 +85,7 @@ export function LeagueHome() {
         manager: entry.owner_name,
         points: Number(entry.points),
       }));
-  }, [seasonBoard]);
-  const { data: weekBoard } = useLeaderboard(
-    leagueId,
-    undefined,
-    false,
-    currentWeek,
-  );
+  }, [weekBoard]);
   const {
     data: leagueStats,
     isLoading: leagueStatsLoading,
@@ -296,11 +294,20 @@ export function LeagueHome() {
                 pointsBehind={weekStanding.pointsBehind}
               />
             </div>
-            <div className="order-2 lg:order-1 lg:col-span-2">
+            <div className="order-2 lg:order-1 lg:col-span-2 space-y-2">
+              <div className="flex justify-end">
+                <Link
+                  href={`/leagues/${leagueId}/leaderboard`}
+                  className="font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-3 transition-colors hover:text-accent"
+                >
+                  View Full Table
+                </Link>
+              </div>
               <StandingsTable
                 standings={standings}
                 userTeamId={myTeam.id}
-                isLoading={seasonBoardLoading}
+                isLoading={weekBoardLoading}
+                pointsLabel={`Gameweek ${currentWeek} Standings`}
               />
             </div>
           </div>
