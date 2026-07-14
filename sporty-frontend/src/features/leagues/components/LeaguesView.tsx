@@ -39,7 +39,9 @@ export function LeaguesView() {
   const stats = {
     totalLeagues: leagues.length,
     highestRank: rankedPositions.length ? Math.min(...rankedPositions) : 0,
-    totalPoints: leagues.reduce((sum, l) => sum + l.points, 0),
+    // Round the client-side sum: adding backend-rounded floats reintroduces
+    // FP noise (0 + 55.2 + 9 + 29.6 + 5 === 98.80000000000001).
+    totalPoints: Math.round(leagues.reduce((sum, l) => sum + l.points, 0) * 10) / 10,
   };
 
   return (

@@ -193,6 +193,25 @@ def _run_cache_warming_job() -> None:
       db.close()
 
 
+def _run_stale_match_watchdog_job() -> None:
+  from app.core.redis_lock import redis_lock
+  from app.services.feed_scoring import finalize_stale_live_matches
+
+  with redis_lock("lock:jobs:stale_match_watchdog", ttl_seconds=300) as acquired:
+    if not acquired:
+      return
+    db = SessionLocal()
+    try:
+      stats = finalize_stale_live_matches(db, get_redis())
+      if stats["finalized"]:
+        logger.info("Stale match watchdog completed: %s", stats)
+    except Exception:
+      db.rollback()
+      logger.exception("Stale match watchdog job failed")
+    finally:
+      db.close()
+
+
 def _run_gameweek_ranking_job() -> None:
   from datetime import datetime, timezone
   from app.core.redis_lock import redis_lock
@@ -284,6 +303,15 @@ async def lifespan(app: FastAPI):
       trigger="cron",
       minute=20,
       id="trade_finalization_hourly",
+      replace_existing=True,
+    )
+    # Watchdog: finish feeder matches orphaned on status='live' (the feeder's
+    # simulation state is in-memory, so a feeder crash can't finish them).
+    scheduler.add_job(
+      _run_stale_match_watchdog_job,
+      trigger="cron",
+      minute=25,
+      id="stale_match_watchdog_hourly",
       replace_existing=True,
     )
     scheduler.start()

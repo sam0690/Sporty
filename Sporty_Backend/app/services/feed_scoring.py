@@ -24,6 +24,7 @@ import logging
 import time
 import uuid
 from collections import Counter, defaultdict
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -241,3 +242,81 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
         len(window_ids),
     )
     return {"players": len(known_player_ids), "windows": len(window_ids), "stat_rows": booked}
+
+
+# A live feeder match goes quiet when the feeder dies mid-simulation (its
+# simulation state is in-memory only, so a restart can't resume or finish it).
+# Simulations run ~90 in-game minutes; anything silent this long is orphaned.
+STALE_LIVE_AFTER = timedelta(hours=3)
+
+
+def finalize_stale_live_matches(db: Session, redis) -> dict:
+    """Finish matches stuck on status='live' whose feed went silent.
+
+    Runs the same live→finished path as the feed endpoint: mark finished at the
+    last known score, fold live_events into the gameweek stat tables, enqueue
+    scoring, and publish the final SCORE_UPDATE so open browsers stop showing
+    the match as live. Owns its transaction (top-level job entry point);
+    commits per match so one bad match can't roll back the others.
+    """
+    from app.core.config import settings
+    from app.league.models import Sport
+    # Lazy: scoring_trigger ↔ celery_app ↔ tasks form an import cycle that
+    # only resolves when celery_app loads first (same note as feed.py).
+    from app.services.scoring.scoring_trigger import enqueue_scoring_for_finished_match
+
+    cutoff = datetime.now(timezone.utc) - STALE_LIVE_AFTER
+    stale = (
+        db.query(Match)
+        .filter(Match.status == "live", Match.updated_at < cutoff)
+        .all()
+    )
+    finalized = 0
+    for match in stale:
+        live_key = match.external_api_id or str(match.id)
+        sport_row = db.query(Sport).filter(Sport.id == match.sport_id).first()
+        sport = (sport_row.name if sport_row else "football").lower()
+        logger.warning(
+            "Stale live match %s (%s vs %s): no feed update since %s, finalizing at %s-%s",
+            live_key,
+            match.home_team,
+            match.away_team,
+            match.updated_at,
+            match.home_score,
+            match.away_score,
+        )
+        try:
+            match.status = "finished"
+            persist_match_stats(db, match=match, live_key=live_key, sport=sport)
+            db.commit()
+        except Exception:
+            db.rollback()
+            logger.exception("Stale match %s: finalization failed, skipping", live_key)
+            continue
+        # Best-effort from here: stats are committed, the daily ranking cron
+        # re-scores as fallback, and a lost WS message only affects open tabs.
+        try:
+            enqueue_scoring_for_finished_match(
+                db, match_date=match.match_date, sport_id=match.sport_id
+            )
+        except Exception:
+            logger.exception("Stale match %s: scoring enqueue failed (cron will re-score)", live_key)
+        try:
+            message = WSMessage(
+                event="SCORE_UPDATE",
+                data={
+                    "kind": "FEED_MATCH_RESULT",
+                    "match_id": live_key,
+                    "sport": sport,
+                    "status": "finished",
+                    "home": match.home_score,
+                    "away": match.away_score,
+                    "minute": MATCH_MINUTES.get(sport, 90),
+                    "events": [],
+                },
+            )
+            redis.publish(f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}", message.model_dump_json())
+        except Exception:
+            logger.exception("Stale match %s: final SCORE_UPDATE publish failed", live_key)
+        finalized += 1
+    return {"stale": len(stale), "finalized": finalized}
