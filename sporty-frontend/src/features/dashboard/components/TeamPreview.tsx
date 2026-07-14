@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 
 import { sportGlyph } from "@/components/landing/sport-icons";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
-import { buildTeamLayout } from "@/components/dashboard/shared/formation/formationEngine";
+import { buildTeamLayout } from "@/lib/formation/formationEngine";
 import { PlayerMarker } from "@/components/dashboard/shared/formation/PlayerMarker";
 import type { TeamPreviewSlide } from "../types";
 

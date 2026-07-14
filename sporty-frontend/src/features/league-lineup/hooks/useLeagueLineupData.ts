@@ -5,7 +5,7 @@ import { useLineup } from "@/hooks/leagues/useLeagues";
 import {
   normalizeSport,
   type SportKind,
-} from "@/components/dashboard/shared/formation/sportRegistry";
+} from "@/lib/formation/sportRegistry";
 
 export type LineupPlayerCardModel = {
   id: string;

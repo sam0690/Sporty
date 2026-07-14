@@ -4,7 +4,7 @@ import {
   normalizeSport,
   type SportKind,
   type SurfaceKind,
-} from "@/components/dashboard/shared/formation/sportRegistry";
+} from "@/lib/formation/sportRegistry";
 
 export type FormationPlayerLike = {
   id: string;
@@ -184,11 +184,16 @@ export const FOOTBALL_FORMATION_BOUNDS: Record<
  * dropped onto an open spot instead of being forced to swap onto an occupant. */
 const FOOTBALL_STARTING_XI_SIZE = 11;
 
-/** Football/basketball starters required from a multisport squad — mirrors
- * MULTISPORT_STARTER_REQUIREMENTS in LeagueLineup.tsx/LineupPitchView.tsx
- * (kept local here since formationEngine has no dependency on those files). */
-const MULTISPORT_FOOTBALL_STARTERS = 5;
-const MULTISPORT_BASKETBALL_STARTERS = 4;
+/** Football/basketball starters required from a multisport squad — the single
+ * source of truth (useLineupState, LineupPitchView, pitchPlayer all import
+ * this; it used to be copy-pasted in each). */
+export const MULTISPORT_STARTER_REQUIREMENTS: Record<
+  "football" | "basketball",
+  number
+> = {
+  football: 5,
+  basketball: 4,
+};
 
 /** Basketball's starting five. */
 const BASKETBALL_STARTING_FIVE_SIZE = 5;
@@ -730,7 +735,7 @@ function buildMixedLayout<TPlayer extends FormationPlayerLike>(
 
   // Football at the TOP (scaled to top 50% of surface) — matches the pitch
   // half of multisport-court.png.
-  const fbRows = buildFootballRows(footballPlayers, MULTISPORT_FOOTBALL_STARTERS)
+  const fbRows = buildFootballRows(footballPlayers, MULTISPORT_STARTER_REQUIREMENTS.football)
     .rows;
   const footballSlots = generateCoordinates(
     fbRows.map((row) => ({
@@ -741,7 +746,7 @@ function buildMixedLayout<TPlayer extends FormationPlayerLike>(
 
   // Basketball (and others) at the BOTTOM (scaled to bottom 45% of surface) —
   // matches the court half of multisport-court.png.
-  const bbRows = buildBasketballRows(bbPool, MULTISPORT_BASKETBALL_STARTERS).rows;
+  const bbRows = buildBasketballRows(bbPool, MULTISPORT_STARTER_REQUIREMENTS.basketball).rows;
   const basketballSlots = generateCoordinates(
     bbRows.map((row) => ({
       ...row,

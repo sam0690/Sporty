@@ -1,4 +1,4 @@
-import type { SportKind } from "@/components/dashboard/shared/formation/sportRegistry";
+import type { SportKind } from "@/lib/formation/sportRegistry";
 
 export type PitchPlayer = {
   id: string;
@@ -12,7 +12,4 @@ export type PitchPlayer = {
   photoUrl?: string | null;
 };
 
-export const MULTISPORT_STARTER_REQUIREMENTS = {
-  football: 5,
-  basketball: 4,
-} as const;
+export { MULTISPORT_STARTER_REQUIREMENTS } from "@/lib/formation/formationEngine";

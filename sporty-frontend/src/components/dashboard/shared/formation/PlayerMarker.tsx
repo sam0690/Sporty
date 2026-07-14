@@ -1,5 +1,5 @@
 import { PlayerAvatar } from "@/components/ui";
-import { getSportAccentClass } from "@/components/dashboard/shared/formation/sportRegistry";
+import { getSportAccentClass } from "@/lib/formation/sportRegistry";
 
 type PlayerMarkerProps = {
   name: string;

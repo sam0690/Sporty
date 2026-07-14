@@ -7,7 +7,7 @@ import type { TLeagueDashboardStats } from "@/types/league";
 import {
   normalizeSport,
   type SportKind,
-} from "@/components/dashboard/shared/formation/sportRegistry";
+} from "@/lib/formation/sportRegistry";
 
 export type DashboardPitchPlayer = {
   id: string;

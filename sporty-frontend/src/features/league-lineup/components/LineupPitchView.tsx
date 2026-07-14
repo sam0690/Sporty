@@ -39,7 +39,7 @@ import {
   validateFootballFormation,
   type FormationSlot,
   type TeamLayout,
-} from "@/components/dashboard/shared/formation/formationEngine";
+} from "@/lib/formation/formationEngine";
 import { toastifier } from "@/lib/toastifier";
 
 type LineupPitchViewProps = {

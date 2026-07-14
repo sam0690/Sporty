@@ -15,7 +15,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { motion, useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui";
 import { DropZone } from "./DropZone";
-import { getSportIcon } from "@/components/dashboard/shared/formation/sportRegistry";
+import { getSportIcon } from "@/lib/formation/sportRegistry";
 import type { PitchPlayer } from "./pitchPlayer";
 
 type DraggableBenchPlayerCardProps = {

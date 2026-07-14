@@ -18,19 +18,31 @@ import {
   getFootballFormationBucket,
   isFootballGoalkeeper,
   validateFootballFormation,
-} from "@/components/dashboard/shared/formation/formationEngine";
+} from "@/lib/formation/formationEngine";
 
-export type HeaderSport = "football" | "basketball" | "cricket" | "multisport";
+import {
+  detectLineupSport,
+  groupPlayersBySport,
+  lineupFingerprint,
+  MULTISPORT_SQUAD_MAX,
+  MULTISPORT_SQUAD_MIN,
+  MULTISPORT_STARTER_REQUIREMENTS,
+  parseNumericCost,
+  positionBaselineProjection,
+  SPORT_LINEUP_RULES,
+  type HeaderSport,
+} from "../lineupRules";
+
+// Pure rules/helpers live in ../lineupRules (unit-tested); re-exported here
+// for the existing consumers of this hook module.
+export {
+  MULTISPORT_STARTER_REQUIREMENTS,
+  SPORT_LINEUP_RULES,
+  type HeaderSport,
+};
+
 const FALLBACK_DEADLINE = "2099-01-01T00:00:00.000Z";
 
-export const SPORT_LINEUP_RULES = {
-  football: { starters: 11, bench: 4, total: 15, label: "Football" },
-  basketball: { starters: 5, bench: 8, total: 13, label: "Basketball" },
-  multisport: { starters: 9, bench: 6, total: 15, label: "Multisport" },
-} as const;
-
-const MULTISPORT_SQUAD_MIN = 13;
-const MULTISPORT_SQUAD_MAX = 15;
 // Canonical label Auto-Optimize's position constraints key goalkeepers under,
 // regardless of the raw position string in player data (GK/GKP/etc — see
 // isFootballGoalkeeper). No basketball position ever uses this label, so it's
@@ -43,79 +55,6 @@ type PlayerProjectionCacheEntry = {
   isKnownMissing: boolean;
   expiresAtMs: number;
 };
-
-export const MULTISPORT_STARTER_REQUIREMENTS: Record<
-  "football" | "basketball",
-  number
-> = {
-  football: 5,
-  basketball: 4,
-};
-
-type LineupSportType = keyof typeof SPORT_LINEUP_RULES;
-
-function detectLineupSport(players: LineupPlayerCardModel[]): LineupSportType {
-  const sportSet = new Set(players.map((player) => player.sportName));
-  if (sportSet.size > 1) {
-    return "multisport";
-  }
-
-  const sport = Array.from(sportSet)[0];
-  if (sport === "football" || sport === "basketball") {
-    return sport;
-  }
-
-  return "multisport";
-}
-
-function groupPlayersBySport(players: LineupPlayerCardModel[]) {
-  return players.reduce<Record<string, LineupPlayerCardModel[]>>(
-    (acc, player) => {
-      if (!acc[player.sportDisplayName]) {
-        acc[player.sportDisplayName] = [];
-      }
-
-      acc[player.sportDisplayName].push(player);
-      return acc;
-    },
-    {},
-  );
-}
-
-function lineupFingerprint(players: LineupPlayerCardModel[]): string {
-  return [...players]
-    .sort((a, b) => a.playerId.localeCompare(b.playerId))
-    .map(
-      (player) =>
-        `${player.playerId}:${player.isStarter ? 1 : 0}:${player.isCaptain ? 1 : 0}:${player.isViceCaptain ? 1 : 0}`,
-    )
-    .join("|");
-}
-
-function positionBaselineProjection(position: string): number {
-  const normalized = position.trim().toUpperCase();
-  if (normalized.includes("GK") || normalized === "GKP") return 4.2;
-  if (normalized.includes("DEF") || normalized === "D") return 4.6;
-  if (normalized.includes("MID") || normalized === "M") return 5.4;
-  if (
-    normalized.includes("FWD") ||
-    normalized.includes("ATT") ||
-    normalized === "F"
-  ) {
-    return 5.9;
-  }
-  if (normalized === "PG") return 5.3;
-  if (normalized === "SG") return 5.2;
-  if (normalized === "SF") return 5.1;
-  if (normalized === "PF") return 5.4;
-  if (normalized === "C") return 5.6;
-  return 4.8;
-}
-
-function parseNumericCost(value: string): number {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
-}
 
 export function useLineupState() {
   const params = useParams<{ id: string }>();

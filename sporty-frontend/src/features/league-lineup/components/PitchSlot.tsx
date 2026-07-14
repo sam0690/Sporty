@@ -5,11 +5,11 @@ import { useDraggable } from "@dnd-kit/core";
 import { motion, useReducedMotion } from "framer-motion";
 import { PlayerAvatar } from "@/components/ui";
 import { DropZone } from "./DropZone";
-import type { FormationSlot } from "@/components/dashboard/shared/formation/formationEngine";
+import type { FormationSlot } from "@/lib/formation/formationEngine";
 import {
   getSportAccentClass,
   getSportIcon,
-} from "@/components/dashboard/shared/formation/sportRegistry";
+} from "@/lib/formation/sportRegistry";
 import type { PitchPlayer } from "./pitchPlayer";
 
 // ── Presentational chip reused by the pitch marker and the drag overlay so the

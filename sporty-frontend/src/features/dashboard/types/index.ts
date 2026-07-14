@@ -1,4 +1,4 @@
-import { SportKind } from "@/components/dashboard/shared/formation/sportRegistry";
+import { SportKind } from "@/lib/formation/sportRegistry";
 
 export type OverviewStat = {
   label: string;

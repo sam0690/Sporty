@@ -7,7 +7,7 @@ import type {
   FormationSection,
   FormationSlot,
   TeamLayout,
-} from "@/components/dashboard/shared/formation/formationEngine";
+} from "@/lib/formation/formationEngine";
 
 type FormationRendererProps<TPlayer extends FormationPlayerLike> = {
   layout: TeamLayout<TPlayer>;
