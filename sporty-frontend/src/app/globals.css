@@ -127,6 +127,9 @@
   --shadow-neon-orange: var(--shadow-neon-orange);
   --shadow-neon-purple: var(--shadow-neon-purple);
   --shadow-neon-cyan: var(--shadow-neon-cyan);
+
+  /* Stacking order */
+  --z-header: 50;
 }
 
 /* ── Base ───────────────────────────────────────────────────────────── */
