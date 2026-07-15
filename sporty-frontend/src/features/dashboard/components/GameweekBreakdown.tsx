@@ -72,6 +72,7 @@ export function GameweekBreakdown({
           <ul className="space-y-1.5">
             {rows.map((row) => {
               const value = Number(row.points);
+              const deducted = Number(row.points_deducted);
               const widthPct = maxPoints > 0 ? (value / maxPoints) * 100 : 0;
               const isBest =
                 best != null && rows.length > 1 && row.gameweek === best.gameweek;
@@ -100,14 +101,14 @@ export function GameweekBreakdown({
                     )}
                   </div>
 
-                  {row.points_deducted > 0 && (
+                  {deducted > 0 && (
                     <Tooltip
-                      label={`${row.points_deducted.toFixed(1)} pts deducted this window`}
+                      label={`${deducted.toFixed(1)} pts deducted this window`}
                       withArrow
                     >
                       <MinusCircle
                         className="h-3.5 w-3.5 shrink-0 text-danger"
-                        aria-label={`${row.points_deducted.toFixed(1)} points deducted this window`}
+                        aria-label={`${deducted.toFixed(1)} points deducted this window`}
                       />
                     </Tooltip>
                   )}

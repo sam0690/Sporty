@@ -95,7 +95,8 @@ export function useDashboardMainState() {
     },
   ];
 
-  const pointsDeducted = dashboardStats?.points_deducted ?? 0;
+  // API serializes Decimals as strings; coerce before arithmetic/toFixed.
+  const pointsDeducted = Number(dashboardStats?.points_deducted ?? 0);
 
   const mappedActivity: ActivityItem[] = (recentActivityData ?? []).map(
     (item) => ({
