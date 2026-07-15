@@ -32,6 +32,7 @@ from app.admin.schemas import (
     RoleChangeRequest,
     ScoringRecalculateResponse,
     SeasonCreateRequest,
+    SeasonGenerateWindowsRequest,
     SeasonUpdateRequest,
     SystemConfigResponse,
     TicketUpdateRequest,
@@ -272,6 +273,29 @@ def update_season(
         start_date=data.start_date,
         end_date=data.end_date,
         is_active=data.is_active,
+        reason=data.reason,
+    )
+
+
+@router.post(
+    "/seasons/{season_id}/generate-windows",
+    response_model=SeasonResponse,
+    summary="Generate transfer windows for a season (admin)",
+)
+def generate_season_windows(
+    season_id: uuid.UUID,
+    data: SeasonGenerateWindowsRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    """Generate one transfer window per week for this season, shared by every
+    league on it. A no-op (returns the existing windows) if the season
+    already has windows."""
+    return services.generate_season_windows_admin(
+        db,
+        current_user,
+        season_id,
+        transfer_day=data.transfer_day,
         reason=data.reason,
     )
 

@@ -66,6 +66,11 @@ export type TSeasonUpdateRequest = {
   reason?: string;
 };
 
+export type TSeasonGenerateWindowsRequest = {
+  transfer_day: number;
+  reason?: string;
+};
+
 export type TAdminAuditLogEntry = {
   id: string;
   actor_user_id: string;
@@ -343,6 +348,11 @@ export const AdminService = {
 
   async updateSeason(id: string, data: TSeasonUpdateRequest): Promise<TAdminSeason> {
     const res = await authApi.patch(API_PATHS.ADMIN.SEASON_DETAIL(id), data);
+    return res.data;
+  },
+
+  async generateSeasonWindows(id: string, data: TSeasonGenerateWindowsRequest): Promise<TAdminSeason> {
+    const res = await authApi.post(API_PATHS.ADMIN.SEASON_GENERATE_WINDOWS(id), data);
     return res.data;
   },
 

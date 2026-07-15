@@ -27,6 +27,12 @@ export type TSeason = TSeasonBrief & {
   /** Date-derived: today falls within [start_date, end_date]. At most one
    * season per sport can be current at a time (DB-enforced, no overlaps). */
   is_current: boolean;
+  /** Weekday transfer windows are generated on (1=Monday..7=Sunday), null
+   * until an admin generates windows for this season. */
+  transfer_day: number | null;
+  /** Season.total_windows — 0 means no league on this season can go ACTIVE
+   * yet (see admin Seasons "Generate Windows" action). */
+  total_windows: number;
 };
 
 export type TSport = TSportBrief & {

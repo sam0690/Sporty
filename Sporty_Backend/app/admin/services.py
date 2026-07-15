@@ -30,6 +30,7 @@ from app.player.models import Player
 from app.services import trade_service
 from app.services.pricing.repricing import recalculate_player_prices
 from app.services.scoring.engine import score_active_transfer_windows, score_transfer_window_for_league
+from app.services.transfer_window_service import generate_transfer_windows_for_season
 from app.support import services as support_services
 from app.support.models import SupportTicket, TicketMessage, TicketStatus
 from app.user import services as user_services
@@ -399,6 +400,40 @@ def update_season_admin(
                 "is_active": season.is_active,
             },
         },
+    )
+    db.commit()
+    db.refresh(season)
+    return season
+
+
+def generate_season_windows_admin(
+    db: Session,
+    actor: User,
+    season_id: uuid.UUID,
+    *,
+    transfer_day: int,
+    reason: str | None = None,
+) -> Season:
+    """Generate (or reuse existing) transfer windows for a season.
+
+    Season-scoped, not league-scoped — every league on this season shares
+    the result. See app/services/transfer_window_service.py for the
+    idempotency/race-safety details.
+    """
+    season = db.query(Season).filter(Season.id == season_id).first()
+    if not season:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Season not found")
+
+    windows = generate_transfer_windows_for_season(db, season, transfer_day)
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.SEASON_GENERATE_WINDOWS,
+        target_type="season",
+        target_id=season.id,
+        reason=reason,
+        metadata={"transfer_day": transfer_day, "windows_generated": len(windows)},
     )
     db.commit()
     db.refresh(season)

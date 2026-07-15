@@ -12,6 +12,9 @@ type GameweekContextBarProps = {
   activeWindow?: TTransferWindow;
   // Which deadline drives the "locks in" countdown for this page.
   deadlineField: "lineup_deadline_at" | "transfer_deadline_at";
+  // While the window query is still resolving, render nothing (the page's
+  // own skeleton covers this) rather than flashing the "not set up" message.
+  isLoading?: boolean;
 };
 
 function formatCountdown(targetMs: number, nowMs: number): string {
@@ -31,6 +34,7 @@ export function GameweekContextBar({
   editableWindow,
   activeWindow,
   deadlineField,
+  isLoading = false,
 }: GameweekContextBarProps) {
   // Refresh the countdown every minute — no per-second timer needed.
   const [now, setNow] = useState(() => Date.now());
@@ -39,8 +43,24 @@ export function GameweekContextBar({
     return () => globalThis.clearInterval(id);
   }, []);
 
-  if (!editableWindow) {
+  if (isLoading) {
     return null;
+  }
+
+  if (!editableWindow) {
+    return (
+      <div className="flex items-stretch gap-3 overflow-hidden rounded-[3px] border border-white/8 bg-surface-1">
+        <div className="w-1 self-stretch bg-fg-3/40" />
+        <div className="py-2.5">
+          <p className="font-sans text-sm font-700 uppercase tracking-[1.5px] text-fg-3">
+            Transfer windows not set up yet
+          </p>
+          <p className="mt-0.5 text-xs text-fg-3">
+            This season&apos;s transfer schedule hasn&apos;t been generated. Check back once it has.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   const deadline = editableWindow[deadlineField];

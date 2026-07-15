@@ -701,6 +701,12 @@ class SeasonResponse(BaseModel):
     # Same date-derived source as is_current, as a richer 3-way view for
     # admin display (Season.status property).
     status: Literal["upcoming", "running", "finished"]
+    # Weekday transfer windows are generated on (1=Monday..7=Sunday), null
+    # until an admin generates windows for this season.
+    transfer_day: int | None = None
+    # Season.total_windows model property — lets the admin seasons list flag
+    # a season with zero windows without a second round trip.
+    total_windows: int = 0
 
     model_config = ConfigDict(from_attributes=True)
 

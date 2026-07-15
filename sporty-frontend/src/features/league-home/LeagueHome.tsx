@@ -84,6 +84,12 @@ export function LeagueHome() {
         teamName: entry.team_name,
         manager: entry.owner_name,
         points: Number(entry.points),
+        pointsDeducted: Number(entry.points_deducted),
+        penalties: entry.penalties?.map((p) => ({
+          points_charged: Number(p.points_charged),
+          reason: p.reason,
+          created_at: p.created_at,
+        })),
       }));
   }, [weekBoard]);
   const {

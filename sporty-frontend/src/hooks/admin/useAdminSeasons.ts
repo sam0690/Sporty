@@ -5,6 +5,7 @@ import {
   AdminService,
   type TAdminSeason,
   type TSeasonCreateRequest,
+  type TSeasonGenerateWindowsRequest,
   type TSeasonUpdateRequest,
 } from "@/services/AdminService";
 
@@ -38,6 +39,20 @@ export function useUpdateSeason() {
         queryClient.invalidateQueries({ queryKey: ["admin", "audit-log"] });
       },
       successMessage: "Season updated",
+    },
+  );
+}
+
+export function useGenerateSeasonWindows() {
+  const queryClient = useQueryClient();
+  return useApiMutation<TAdminSeason, { id: string; data: TSeasonGenerateWindowsRequest }>(
+    ({ id, data }) => AdminService.generateSeasonWindows(id, data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: SEASONS_KEY });
+        queryClient.invalidateQueries({ queryKey: ["admin", "audit-log"] });
+      },
+      successMessage: "Transfer windows generated",
     },
   );
 }

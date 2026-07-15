@@ -1,9 +1,10 @@
+import logging
 from datetime import date
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.league.models import League, LeagueMembershipStatus, LeagueStatus
+from app.league.models import League, LeagueMembershipStatus, LeagueStatus, TransferWindow
 from app.league.models import LeagueMembership
 from app.services.matchup_service import generate_matchups_for_league
 from app.services.notification_service import (
@@ -12,6 +13,8 @@ from app.services.notification_service import (
     notify_league_completed,
 )
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def auto_update_league_statuses(db: Session) -> dict[str, int]:
@@ -49,6 +52,7 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
 
     setup_ids = []
     skipped_min_members = 0
+    skipped_no_windows = 0
     completed_ids = []
 
     for league in setup_to_active:
@@ -60,6 +64,19 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
         )
         if member_count < settings.LEAGUE_MIN_MEMBERS_TO_ACTIVATE:
             skipped_min_members += 1
+            continue
+
+        has_windows = db.query(
+            db.query(TransferWindow)
+            .filter(TransferWindow.season_id == league.season_id)
+            .exists()
+        ).scalar()
+        if not has_windows:
+            skipped_no_windows += 1
+            logger.warning(
+                "Skipping SETUP->ACTIVE for league=%s: season=%s has no transfer windows",
+                league.id, league.season_id,
+            )
             continue
 
         league.status = LeagueStatus.ACTIVE
@@ -80,6 +97,7 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
     return {
         "setup_to_active": len(setup_ids),
         "setup_skipped_min_members": skipped_min_members,
+        "setup_skipped_no_windows": skipped_no_windows,
         "active_to_completed": len(completed_ids),
         "active_notifications": setup_notifications,
         "completed_notifications": completed_notifications,

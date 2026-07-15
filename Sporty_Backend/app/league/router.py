@@ -878,36 +878,6 @@ def get_my_team(
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# POST /leagues/{league_id}/transfer-windows/generate — generate transfer windows
-# ═══════════════════════════════════════════════════════════════════════════════
-
-
-@router.post(
-    "/{league_id}/transfer-windows/generate",
-    response_model=dict,
-    summary="Generate transfer windows for budget-mode league",
-)
-def generate_windows(
-    league: League = Depends(require_league_owner),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
-):
-    """Generate transfer windows for a budget-mode league.
-    
-    Creates one transfer window per week on the league's designated transfer_day.
-    Used when transitioning from SETUP to ACTIVE for budget-mode leagues.
-    
-    Guards enforced by the service:
-      - Only the league owner can generate windows.
-      - League must be in SETUP status.
-      - League must be budget-mode (draft_mode=False).
-    """
-    windows = league_service.generate_transfer_windows(db, league.id, current_user)
-    db.commit()
-    return {"message": f"Generated {len(windows)} transfer windows", "count": len(windows)}
-
-
-# ═══════════════════════════════════════════════════════════════════════════════
 # POST /leagues/{league_id}/transfers — make a transfer
 # ═══════════════════════════════════════════════════════════════════════════════
 

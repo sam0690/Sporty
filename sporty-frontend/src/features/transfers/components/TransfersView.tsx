@@ -135,6 +135,7 @@ export function TransfersView(props: Props) {
             editableWindow={activeWindow}
             activeWindow={liveWindow}
             deadlineField="transfer_deadline_at"
+            isLoading={isLoading}
           />
           {transfersRemaining !== null ? (
             <div className="rounded-[3px] border border-accent/20 bg-accent/8 px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[1.5px] text-accent">

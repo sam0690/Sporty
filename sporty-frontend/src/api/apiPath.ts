@@ -75,8 +75,6 @@ export const API_PATHS = {
     AUTO_PICK_TEAM: (id: string) => `/leagues/${id}/auto-pick`,
     DISCARD_TEAM_PLAYER: (id: string, playerId: string) =>
       `/leagues/${id}/teams/players/${playerId}`,
-    GENERATE_WINDOWS: (id: string) =>
-      `/leagues/${id}/transfer-windows/generate`,
     TRANSFERS: (id: string) => `/leagues/${id}/transfers`,
     FREE_AGENTS: (
       id: string,
@@ -194,6 +192,7 @@ export const API_PATHS = {
     LEAGUE_SETTINGS: (id: string) => `/admin/leagues/${id}/settings`,
     SEASONS: "/admin/seasons",
     SEASON_DETAIL: (id: string) => `/admin/seasons/${id}`,
+    SEASON_GENERATE_WINDOWS: (id: string) => `/admin/seasons/${id}/generate-windows`,
     AUDIT_LOG: (opts?: { page?: number; pageSize?: number }) => {
       const params = new URLSearchParams();
       if (opts?.page != null) params.set("page", String(opts.page));

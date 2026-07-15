@@ -135,6 +135,14 @@ class Season(Base):
     # A season can be is_current=True but is_active=False (cancelled mid-season).
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
+    # Weekday transfer windows are generated on (1=Monday..7=Sunday). Null
+    # until an admin generates windows for this season — every league on the
+    # season shares this one schedule (see generate_transfer_windows_for_season
+    # in app/services/transfer_window_service.py). Not the League-level
+    # transfer_day field, which only ever affected the first league to
+    # generate and is no longer read.
+    transfer_day: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -178,6 +186,10 @@ class Season(Base):
 
     __table_args__ = (
         CheckConstraint("start_date < end_date", name="ck_season_dates"),
+        CheckConstraint(
+            "transfer_day IS NULL OR (transfer_day >= 1 AND transfer_day <= 7)",
+            name="ck_season_transfer_day",
+        ),
         UniqueConstraint("sport_id", "start_date", name="uq_season_sport_start"),
         UniqueConstraint("sport_id", "name", name="uq_season_sport_name"),
         ExcludeConstraint(

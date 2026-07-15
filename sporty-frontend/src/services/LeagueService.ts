@@ -93,7 +93,6 @@ export const LeagueService = {
     is_head_to_head?: boolean;
     allow_midseason_join?: boolean;
     transfers_per_window?: number;
-    transfer_day?: number;
   }): Promise<TLeague> {
     const res = await authApi.post(API_PATHS.LEAGUES.CREATE, payload);
     return res.data;
@@ -412,14 +411,6 @@ export const LeagueService = {
         allow_midseason_join: allowMidseasonJoin,
       },
     );
-    return res.data;
-  },
-
-  /** Generate transfer windows */
-  async generateTransferWindows(
-    id: string,
-  ): Promise<{ message: string; count: number }> {
-    const res = await authApi.post(API_PATHS.LEAGUES.GENERATE_WINDOWS(id));
     return res.data;
   },
 

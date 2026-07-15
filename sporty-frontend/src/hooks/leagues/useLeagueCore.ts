@@ -127,7 +127,6 @@ export function useCreateLeague() {
       is_head_to_head?: boolean;
       allow_midseason_join?: boolean;
       transfers_per_window?: number;
-      transfer_day?: number;
     }) => LeagueService.createLeague(payload),
     {
       onSuccess: () => {
@@ -284,16 +283,6 @@ export function useSeasonHistory(leagueId: string) {
       enabled: !!leagueId,
     },
   );
-}
-
-export function useGenerateTransferWindows(leagueId: string) {
-  const queryClient = useQueryClient();
-  return useApiMutation(() => LeagueService.generateTransferWindows(leagueId), {
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
-    },
-    successMessage: "Transfer windows generated",
-  });
 }
 
 export function useUpdateMidseasonJoin(leagueId: string) {

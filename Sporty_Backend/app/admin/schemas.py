@@ -97,6 +97,11 @@ class SeasonUpdateRequest(BaseModel):
     reason: str | None = Field(default=None, max_length=1000)
 
 
+class SeasonGenerateWindowsRequest(BaseModel):
+    transfer_day: int = Field(ge=1, le=7)
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 # ── Scoring ─────────────────────────────────────────────────────────────────────
 
 class ScoringRecalculateResponse(BaseModel):

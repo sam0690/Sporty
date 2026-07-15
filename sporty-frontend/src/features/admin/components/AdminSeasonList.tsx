@@ -7,6 +7,7 @@ import { Table, type TableColumn } from "@/components/ui";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { AdminErrorState } from "./AdminErrorState";
 import { SeasonFormModal } from "./SeasonFormModal";
+import { GenerateWindowsModal } from "./GenerateWindowsModal";
 import { useAdminSeasons } from "@/hooks/admin/useAdminSeasons";
 import { useSports } from "@/hooks/leagues/useLeagues";
 import type { TAdminSeason } from "@/services/AdminService";
@@ -22,6 +23,7 @@ export function AdminSeasonList() {
   const { data: sports } = useSports();
   const [editTarget, setEditTarget] = useState<TAdminSeason | null>(null);
   const [creating, setCreating] = useState(false);
+  const [generateTarget, setGenerateTarget] = useState<TAdminSeason | null>(null);
 
   const sportName = useMemo(() => {
     const byId = new Map((sports ?? []).map((s) => [s.id, s.display_name]));
@@ -51,13 +53,30 @@ export function AdminSeasonList() {
     },
     { key: "is_active", header: "Active", render: (s) => (s.is_active ? "Yes" : "No") },
     {
+      key: "windows",
+      header: "Windows",
+      render: (s) =>
+        s.total_windows > 0 || s.status === "finished" ? (
+          s.total_windows
+        ) : (
+          <Badge tone="danger">None generated</Badge>
+        ),
+    },
+    {
       key: "actions",
       header: "Actions",
       align: "right",
       render: (s) => (
-        <Button variant="outline" size="sm" onClick={() => setEditTarget(s)}>
-          Edit
-        </Button>
+        <div className="flex justify-end gap-2">
+          {s.total_windows === 0 && s.status !== "finished" ? (
+            <Button variant="outline" size="sm" onClick={() => setGenerateTarget(s)}>
+              Generate Windows
+            </Button>
+          ) : null}
+          <Button variant="outline" size="sm" onClick={() => setEditTarget(s)}>
+            Edit
+          </Button>
+        </div>
       ),
     },
   ];
@@ -85,6 +104,11 @@ export function AdminSeasonList() {
         mode="edit"
         season={editTarget ?? undefined}
         onClose={() => setEditTarget(null)}
+      />
+      <GenerateWindowsModal
+        isOpen={!!generateTarget}
+        season={generateTarget ?? undefined}
+        onClose={() => setGenerateTarget(null)}
       />
     </div>
   );

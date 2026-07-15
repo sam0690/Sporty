@@ -144,7 +144,9 @@ def create_league(
         is_head_to_head=data.is_head_to_head,
         allow_midseason_join=data.allow_midseason_join,
         transfers_per_window=data.transfers_per_window,
-        transfer_day=data.transfer_day,
+        # transfer_day intentionally not threaded through: windows are
+        # season-scoped now (Season.transfer_day, admin-generated) — this
+        # column is dead, left at its default. See app/league/models.py.
         start_date=league_start,
         end_date=league_end,
         # A freshly created league is the head of its own season lineage —
@@ -432,6 +434,17 @@ def update_league_status(
                 ),
             )
 
+        has_windows = db.query(
+            db.query(TransferWindow)
+            .filter(TransferWindow.season_id == league.season_id)
+            .exists()
+        ).scalar()
+        if not has_windows:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Transfer windows haven't been generated for this season yet",
+            )
+
     allowed_next = VALID_TRANSITIONS.get(league.status.value, [])
     if new_status.value not in allowed_next:
         raise HTTPException(
@@ -586,7 +599,7 @@ def renew_league(
         draft_mode=source.draft_mode,
         allow_midseason_join=source.allow_midseason_join,
         transfers_per_window=source.transfers_per_window,
-        transfer_day=source.transfer_day,
+        # transfer_day intentionally not threaded through — see create_league.
         start_date=target_season.start_date,
         end_date=target_season.end_date,
         season_group_id=source.season_group_id,
@@ -1458,133 +1471,6 @@ def update_league_settings(
 # ═══════════════════════════════════════════════════════════════════════════════
 # Section 6 — Budget-mode specific functions
 # ═══════════════════════════════════════════════════════════════════════════════
-
-
-def generate_transfer_windows(
-    db: Session,
-    league_id: uuid.UUID,
-    current_user: User,
-) -> list[TransferWindow]:
-    """Generate transfer windows for a budget-mode league.
-    
-    Called when transitioning from SETUP to ACTIVE for budget-mode leagues.
-    Creates one transfer window per week on the league's designated transfer_day.
-    
-    Guards:
-      1. Only the league owner can generate windows.
-      2. League must be in SETUP status.
-      3. League must be budget-mode (draft_mode=False).
-      4. Season must have a valid date range.
-    
-    Returns all generated transfer windows.
-    Does NOT commit — caller owns the transaction.
-    """
-    from datetime import datetime, timedelta, timezone
-    
-    league = _require_league(db, league_id)
-    
-    if league.owner_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the league owner can generate transfer windows",
-        )
-    
-    if league.status != LeagueStatus.SETUP:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Transfer windows can only be generated during SETUP",
-        )
-    
-    if league.draft_mode:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Transfer windows are only for budget-mode leagues",
-        )
-    
-    # Load season to get date range
-    season = league.season
-    if not season:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="League has no associated season",
-        )
-
-    # Idempotency: transfer windows are unique by (season_id, number).
-    # If they already exist for this season, reuse them instead of re-inserting.
-    existing_windows = (
-        db.query(TransferWindow)
-        .filter(TransferWindow.season_id == season.id)
-        .order_by(TransferWindow.number.asc())
-        .all()
-    )
-    if existing_windows:
-        logger.info(
-            "Transfer windows already exist for season=%s, reusing %d windows",
-            season.id,
-            len(existing_windows),
-        )
-        return existing_windows
-    
-    # Calculate transfer windows
-    # Each window is a single day on the designated weekday
-    # transfer_day: 1=Monday, 7=Sunday
-    current_date = season.start_date
-    window_number = 1
-    windows = []
-    
-    # Find the first occurrence of transfer_day
-    # Python weekday(): Monday=0, Sunday=6
-    # Our transfer_day: Monday=1, Sunday=7
-    target_weekday = (league.transfer_day - 1) % 7
-    
-    # Move to the first transfer day
-    while current_date.weekday() != target_weekday:
-        current_date += timedelta(days=1)
-        if current_date > season.end_date:
-            break
-    
-    # Generate weekly windows
-    while current_date <= season.end_date:
-        # Window runs for 24 hours on that day
-        start_at = datetime.combine(current_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-        end_at = start_at + timedelta(hours=23, minutes=59, seconds=59)
-        
-        # Deadlines anchored to the START of the gameweek: transfers + lineup
-        # lock as the window opens, BEFORE its matches play, so no one can react
-        # to live results. (lineup is +1 min so transfer < lineup stays strict.)
-        transfer_deadline = start_at
-        lineup_deadline = start_at + timedelta(minutes=1)
-        
-        window = TransferWindow(
-            season_id=season.id,
-            number=window_number,
-            start_at=start_at,
-            end_at=end_at,
-            transfer_deadline_at=transfer_deadline,
-            lineup_deadline_at=lineup_deadline,
-            transfers_locked=False,
-            lineup_locked=False,
-        )
-        db.add(window)
-        windows.append(window)
-        
-        window_number += 1
-        current_date += timedelta(weeks=1)
-    
-    if not windows:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="No transfer windows could be generated for this season",
-        )
-    
-    db.flush()
-    logger.info(
-        "Generated %d transfer windows for league=%s",
-        len(windows), league_id
-    )
-    
-    return windows
-
 
 
 def build_initial_team(

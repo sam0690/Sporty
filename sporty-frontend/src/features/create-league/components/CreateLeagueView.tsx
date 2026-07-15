@@ -256,7 +256,6 @@ export function CreateLeagueView() {
         // mutually exclusive with mid-season joining (backend 422s otherwise).
         allow_midseason_join: competitionType === "budget" && !values.is_head_to_head,
         transfers_per_window: 4,
-        transfer_day: 1,
       });
 
       setCreatedLeagueInfo({

@@ -23,7 +23,6 @@ import {
 import {
   useAddLeagueSport,
   useDeleteLeague,
-  useGenerateTransferWindows,
   useLeague,
   useRemoveLeagueSport,
   useRenewLeague,
@@ -63,7 +62,6 @@ export function LeagueSettings() {
   const startDraft = useStartDraft();
   const updateLeague = useUpdateLeague(leagueId);
   const updateMidseasonJoin = useUpdateMidseasonJoin(leagueId);
-  const generateWindows = useGenerateTransferWindows(leagueId);
   const addSport = useAddLeagueSport(leagueId);
   const removeSport = useRemoveLeagueSport(leagueId);
   const deleteLeague = useDeleteLeague();
@@ -200,14 +198,6 @@ export function LeagueSettings() {
     }
   };
 
-  const handleGenerateWindows = async () => {
-    try {
-      await generateWindows.mutateAsync(undefined);
-    } catch {
-      // errors are surfaced by shared mutation toast
-    }
-  };
-
   // Gate order matters: the commissioner check reads league data, so it can
   // only run once the league has actually loaded — otherwise the real
   // commissioner sees the lock screen while the fetch is in flight.
@@ -260,17 +250,6 @@ export function LeagueSettings() {
       <SettingsSection
         title="League Lifecycle"
         description="Move the league between setup, drafting, active and completed"
-        action={
-          isBudgetMode ? (
-            <button
-              type="button"
-              onClick={handleGenerateWindows}
-              className={`${segmentBase} ${segmentIdle}`}
-            >
-              Generate Windows
-            </button>
-          ) : null
-        }
       >
         <div className="flex flex-wrap gap-2">
           {lifecycleStatuses.map((status) => (

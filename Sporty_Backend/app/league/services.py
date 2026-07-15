@@ -44,7 +44,6 @@ from app.league.league_service import (  # noqa: F401
     create_league,
     delete_league,
     discover_public_leagues,
-    generate_transfer_windows,
     get_active_seasons,
     get_active_sports,
     get_active_transfer_window,
