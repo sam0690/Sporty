@@ -25,7 +25,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
-DEFAULT_TEAM_BUDGET = Decimal("103.00")
+DEFAULT_TEAM_BUDGET = Decimal("100.00")
 
 # NOTE: No import of player.models or auth.models here — would cause
 # circular imports. All cross-module relationships use string-based

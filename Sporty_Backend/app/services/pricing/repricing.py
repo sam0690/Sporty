@@ -40,7 +40,7 @@ class PricingPolicy:
 
 DEFAULT_POLICY = PricingPolicy(
     min_cost=Decimal("4.0"),
-    max_cost=Decimal("20.0"),
+    max_cost=Decimal("17.0"),
     baseline_points=Decimal("6.0"),
     points_to_cost_factor=Decimal("0.15"),
     max_step_per_run=Decimal("1.50"),
@@ -50,7 +50,7 @@ SPORT_POLICIES: dict[str, PricingPolicy] = {
     "football": DEFAULT_POLICY,
     "basketball": PricingPolicy(
         min_cost=Decimal("5.0"),
-        max_cost=Decimal("22.0"),
+        max_cost=Decimal("20.0"),
         baseline_points=Decimal("8.0"),
         points_to_cost_factor=Decimal("0.12"),
         max_step_per_run=Decimal("1.50"),
@@ -183,6 +183,28 @@ def recalculate_player_prices(
         .all()
     )
 
+    # This task runs on a daily cron, but a transfer window's underlying
+    # stats/demand often don't change day to day. Without this guard, a
+    # positive delta gets recomputed and reapplied every single run against
+    # the same unchanged signal, marching price to max_cost within days even
+    # with zero new results — this is exactly what happened to ~27% of the
+    # football pool. Skip a player once their weighted_points for this window
+    # matches the last run's, so only genuinely new stats move price again.
+    # ponytail: only guards the performance signal (weighted_points, already
+    # persisted); a demand-only re-run (new transfers, unchanged stats) still
+    # gets skipped. Store/compare demand_score too if that turns out to matter.
+    last_priced_points: dict[uuid.UUID, Decimal] = {}
+    for player_id, points in (
+        db.query(PlayerPriceHistory.player_id, PlayerPriceHistory.weighted_points)
+        .filter(
+            PlayerPriceHistory.transfer_window_id == latest_window_id,
+            PlayerPriceHistory.player_id.in_(list(weighted_points_sum.keys())),
+        )
+        .order_by(PlayerPriceHistory.created_at.desc())
+        .all()
+    ):
+        last_priced_points.setdefault(player_id, points)
+
     history_rows: list[PlayerPriceHistory] = []
     updated = 0
     unchanged = 0
@@ -194,6 +216,11 @@ def recalculate_player_prices(
             continue
 
         weighted_points = weighted_points_sum[player.id] / denominator
+        quantized_points = weighted_points.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        if last_priced_points.get(player.id) == quantized_points:
+            unchanged += 1
+            continue
+
         policy = SPORT_POLICIES.get(player.sport.name, DEFAULT_POLICY)
 
         performance_delta = (
@@ -235,9 +262,7 @@ def recalculate_player_prices(
                 old_cost=player.cost,
                 new_cost=next_cost,
                 delta=delta,
-                weighted_points=weighted_points.quantize(
-                    Decimal("0.01"), rounding=ROUND_HALF_UP
-                ),
+                weighted_points=quantized_points,
                 algorithm_version=algorithm_version,
             )
         )

@@ -189,6 +189,53 @@ def test_blended_delta_still_respects_max_cost_ceiling() -> None:
         assert player.cost == policy.max_cost
 
 
+def test_rerunning_against_unchanged_stats_does_not_reapply_delta() -> None:
+    """Regression guard: a daily cron re-running against a window whose stats
+    haven't moved must not keep marching price toward max_cost (the bug that
+    pinned ~27% of the football pool at the 20M ceiling after ~12 daily runs
+    with no new match data)."""
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("10.00"))
+        _stat(db, player, window, Decimal("10"))  # baseline=6, factor=0.15 -> perf_delta=0.6
+
+        recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert player.cost == Decimal("10.42")
+
+        # Same window, same stats, no new transfers — rerun the job as the
+        # daily cron would the next day with nothing having changed.
+        result = recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert player.cost == Decimal("10.42")
+        assert result["updated"] == 0
+        assert result["unchanged"] == 1
+
+        history_rows = (
+            db.query(PlayerPriceHistory)
+            .filter(PlayerPriceHistory.player_id == player.id)
+            .all()
+        )
+        assert len(history_rows) == 1  # no duplicate row from the no-op rerun
+
+        # New stats arrive for the same window (more matches finished) —
+        # price should move again.
+        _stat_row = (
+            db.query(PlayerGameweekStat)
+            .filter(PlayerGameweekStat.player_id == player.id)
+            .one()
+        )
+        _stat_row.fantasy_points = Decimal("14")
+        db.commit()
+
+        recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert player.cost > Decimal("10.42")
+
+
 def test_basketball_post_fix_scale_gives_sane_delta() -> None:
     """Regression guard for the season-totals-vs-per-game ingestion bug:
     a realistic post-fix per-game fantasy_points value should move price by
