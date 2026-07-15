@@ -357,6 +357,7 @@ def create_season_admin(
     name: str,
     start_date,
     end_date,
+    label: str | None = None,
     reason: str | None = None,
 ) -> Season:
     sport = db.query(Sport).filter(Sport.id == sport_id).first()
@@ -369,7 +370,7 @@ def create_season_admin(
             detail="end_date must be after start_date",
         )
 
-    season = Season(sport_id=sport_id, name=name, start_date=start_date, end_date=end_date)
+    season = Season(sport_id=sport_id, name=name, start_date=start_date, end_date=end_date, label=label)
     db.add(season)
     try:
         db.flush()
@@ -402,6 +403,7 @@ def update_season_admin(
     start_date=None,
     end_date=None,
     is_active: bool | None = None,
+    label: str | None = None,
     reason: str | None = None,
 ) -> Season:
     season = db.query(Season).filter(Season.id == season_id).first()
@@ -413,6 +415,7 @@ def update_season_admin(
         "start_date": str(season.start_date),
         "end_date": str(season.end_date),
         "is_active": season.is_active,
+        "label": season.label,
     }
 
     # Validate against the resulting date range, not just the two fields
@@ -434,6 +437,8 @@ def update_season_admin(
         season.end_date = end_date
     if is_active is not None:
         season.is_active = is_active
+    if label is not None:
+        season.label = label
 
     try:
         db.flush()
@@ -458,6 +463,7 @@ def update_season_admin(
                 "start_date": str(season.start_date),
                 "end_date": str(season.end_date),
                 "is_active": season.is_active,
+                "label": season.label,
             },
         },
     )

@@ -55,6 +55,7 @@ export type TSeasonCreateRequest = {
   name: string;
   start_date: string;
   end_date: string;
+  label?: string;
   reason?: string;
 };
 
@@ -63,6 +64,7 @@ export type TSeasonUpdateRequest = {
   start_date?: string;
   end_date?: string;
   is_active?: boolean;
+  label?: string;
   reason?: string;
 };
 

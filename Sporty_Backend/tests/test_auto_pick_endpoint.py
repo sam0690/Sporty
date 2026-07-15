@@ -121,6 +121,16 @@ def _create_mixed_league_with_players(db, owner: User) -> tuple[League, list[uui
         end_date=date(2026, 12, 31),
     )
     db.add(season)
+    # create_league now hard-requires every secondary sport to resolve a
+    # CURRENT season (LeagueSport.season_id) — see _current_season_for_sport
+    # in league_service.py. Basketball needs its own current-dated season,
+    # not just football's.
+    db.add(Season(
+        sport_id=basketball.id,
+        name=f"Season-{uuid.uuid4().hex[:8]}",
+        start_date=date(2026, 1, 1),
+        end_date=date(2026, 12, 31),
+    ))
     db.flush()
 
     league = league_service.create_league(

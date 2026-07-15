@@ -100,9 +100,20 @@ class LeagueSportAdd(BaseModel):
 class LeagueSportResponse(BaseModel):
     """What gets returned — nested sport, not raw sport_id."""
     sport: SportBrief
+    # Which season of `sport` this league is mapped to (see LeagueSport.
+    # season_id / get_league_sport_season) — null only for a stale pre-
+    # migration row. None for the league's own primary sport, whose season
+    # is League.season_id, not this field (see remap_sport_season).
+    season: SeasonBrief | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class LeagueSportRemap(BaseModel):
+    """PATCH /leagues/{id}/sports/{sport_name}/season — re-point a
+    secondary sport's season mapping."""
+    season_id: uuid.UUID
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -704,6 +715,10 @@ class SeasonResponse(BaseModel):
     # Weekday transfer windows are generated on (1=Monday..7=Sunday), null
     # until an admin generates windows for this season.
     transfer_day: int | None = None
+    # Human-facing cross-sport cycle label ("2026/27") — display only, never
+    # read by cross-sport matching logic (LeagueSport.season_id is the
+    # actual source of truth, see app/services/scoring/window_locator.py).
+    label: str | None = None
     # Season.total_windows model property — lets the admin seasons list flag
     # a season with zero windows without a second round trip.
     total_windows: int = 0

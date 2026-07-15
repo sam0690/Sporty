@@ -55,6 +55,7 @@ from app.league.league_service import (  # noqa: F401
     get_season_history,
     join_league,
     leave_league,
+    remap_sport_season,
     remove_member,
     remove_sport,
     renew_league,

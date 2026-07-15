@@ -311,6 +311,14 @@ export const LeagueService = {
     await authApi.delete(API_PATHS.LEAGUES.SPORT_DETAIL(id, sportName));
   },
 
+  /** Re-point a secondary sport's season mapping (cross-sport scoring) */
+  async remapSportSeason(id: string, sportName: string, seasonId: string): Promise<TLeagueSport> {
+    const res = await authApi.patch(API_PATHS.LEAGUES.SPORT_SEASON(id, sportName), {
+      season_id: seasonId,
+    });
+    return res.data;
+  },
+
   /** Add a lineup slot config to a league */
   async addLineupSlot(
     id: string,

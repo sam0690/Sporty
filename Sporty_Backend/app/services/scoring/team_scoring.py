@@ -261,6 +261,7 @@ def _eligible_team_ids(
 def load_team_lineup_rows(
     db: Session,
     *,
+    league_id: uuid.UUID,
     team_ids: list[uuid.UUID],
     transfer_window_id: uuid.UUID,
 ) -> dict[uuid.UUID, list[LineupRow]]:
@@ -272,16 +273,19 @@ def load_team_lineup_rows(
     # A multisport league's lineup rows all carry ONE window id (whichever
     # sport the league's season_id points to), including for players of the
     # league's OTHER sports — but those sports book PlayerGameweekStat under
-    # their OWN season's window ids. Translate per player's sport to that
-    # sport's equivalent window (same start_at/end_at) instead of assuming
-    # the lineup's stored window id applies to every player directly.
+    # THAT league's own resolved season for each sport (LeagueSport.season_id
+    # — see get_league_sport_season). Translate per player's sport to that
+    # league-specific equivalent window instead of assuming the lineup's
+    # stored window id applies to every player directly.
     window = db.query(TransferWindow).filter(TransferWindow.id == transfer_window_id).first()
     if window is None:
         return {}
 
     sport_window_ids: dict[uuid.UUID, uuid.UUID] = {}
     for (sport_id,) in db.query(Sport.id).all():
-        equivalent = find_equivalent_window_for_sport(db, window=window, sport_id=sport_id)
+        equivalent = find_equivalent_window_for_sport(
+            db, league_id=league_id, window=window, sport_id=sport_id
+        )
         if equivalent is not None:
             sport_window_ids[sport_id] = equivalent.id
 
@@ -371,7 +375,7 @@ def upsert_team_weekly_scores(
 
     slot_bounds = load_slot_bounds(db, league_id)
     lineups_by_team = load_team_lineup_rows(
-        db, team_ids=team_ids, transfer_window_id=transfer_window_id
+        db, league_id=league_id, team_ids=team_ids, transfer_window_id=transfer_window_id
     )
 
     values = []

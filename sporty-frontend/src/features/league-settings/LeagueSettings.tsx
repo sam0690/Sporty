@@ -24,9 +24,11 @@ import {
   useAddLeagueSport,
   useDeleteLeague,
   useLeague,
+  useRemapSportSeason,
   useRemoveLeagueSport,
   useRenewLeague,
   useSeasonHistory,
+  useSeasons,
   useSports,
   useUpdateLeague,
   useUpdateMidseasonJoin,
@@ -52,6 +54,7 @@ export function LeagueSettings() {
     isError: leagueError,
   } = useLeague(leagueId);
   const { data: sports } = useSports();
+  const { data: allSeasons } = useSeasons();
 
   const isCommissioner = league?.owner?.username === username;
   const { isBudgetMode, isDraftMode } = useLeagueCompetitionMode(league);
@@ -64,6 +67,7 @@ export function LeagueSettings() {
   const updateMidseasonJoin = useUpdateMidseasonJoin(leagueId);
   const addSport = useAddLeagueSport(leagueId);
   const removeSport = useRemoveLeagueSport(leagueId);
+  const remapSportSeason = useRemapSportSeason(leagueId);
   const deleteLeague = useDeleteLeague();
 
   const [isSaving, setIsSaving] = useState(false);
@@ -333,36 +337,73 @@ export function LeagueSettings() {
         title="League Sports"
         description="Add or remove the sports played in this league"
       >
-        <div className="flex flex-wrap gap-2">
-          {(league?.sports ?? []).map((leagueSport) => (
-            <button
-              key={leagueSport.sport.name}
-              type="button"
-              onClick={() => removeSport.mutate(leagueSport.sport.name)}
-              aria-label={`Remove ${leagueSport.sport.display_name}`}
-              className={`inline-flex items-center gap-1.5 ${segmentBase} ${segmentActive}`}
-            >
-              {leagueSport.sport.display_name}
-              <X className="h-3 w-3" aria-hidden />
-            </button>
-          ))}
-          {(sports ?? [])
-            .filter(
-              (sport) =>
-                !(league?.sports ?? []).some(
-                  (leagueSport) => leagueSport.sport.name === sport.name,
-                ),
-            )
-            .map((sport) => (
-              <button
-                key={sport.name}
-                type="button"
-                onClick={() => addSport.mutate(sport.name)}
-                className={`${segmentBase} ${segmentIdle}`}
-              >
-                + {sport.display_name}
-              </button>
-            ))}
+        <div className="space-y-3">
+          {(league?.sports ?? []).map((leagueSport) => {
+            const sportSeasons = (allSeasons ?? []).filter(
+              (season) => season.sport_name === leagueSport.sport.display_name,
+            );
+            return (
+              <div key={leagueSport.sport.name} className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => removeSport.mutate(leagueSport.sport.name)}
+                  aria-label={`Remove ${leagueSport.sport.display_name}`}
+                  className={`inline-flex items-center gap-1.5 ${segmentBase} ${segmentActive}`}
+                >
+                  {leagueSport.sport.display_name}
+                  <X className="h-3 w-3" aria-hidden />
+                </button>
+                {leagueSport.season ? (
+                  <span className="text-xs text-fg-3">
+                    season: {leagueSport.season.name} ({new Date(leagueSport.season.start_date).toLocaleDateString()}
+                    {" – "}
+                    {new Date(leagueSport.season.end_date).toLocaleDateString()})
+                  </span>
+                ) : null}
+                {sportSeasons.length > 1 ? (
+                  <select
+                    value={
+                      sportSeasons.find((s) => s.name === leagueSport.season?.name)?.id ?? ""
+                    }
+                    disabled={remapSportSeason.isPending}
+                    onChange={(e) =>
+                      remapSportSeason.mutate({
+                        sportName: leagueSport.sport.name,
+                        seasonId: e.target.value,
+                      })
+                    }
+                    className="rounded-[3px] border border-white/15 bg-surface-2 px-2 py-1 text-xs text-fg-1"
+                    aria-label={`Remap ${leagueSport.sport.display_name} season`}
+                  >
+                    {sportSeasons.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        Remap to: {s.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : null}
+              </div>
+            );
+          })}
+          <div className="flex flex-wrap gap-2">
+            {(sports ?? [])
+              .filter(
+                (sport) =>
+                  !(league?.sports ?? []).some(
+                    (leagueSport) => leagueSport.sport.name === sport.name,
+                  ),
+              )
+              .map((sport) => (
+                <button
+                  key={sport.name}
+                  type="button"
+                  onClick={() => addSport.mutate(sport.name)}
+                  className={`${segmentBase} ${segmentIdle}`}
+                >
+                  + {sport.display_name}
+                </button>
+              ))}
+          </div>
         </div>
       </SettingsSection>
 

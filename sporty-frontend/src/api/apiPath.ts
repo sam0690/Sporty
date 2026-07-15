@@ -58,6 +58,8 @@ export const API_PATHS = {
     LEAGUE_SPORTS: (id: string) => `/leagues/${id}/sports`,
     SPORT_DETAIL: (id: string, sport: string) =>
       `/leagues/${id}/sports/${sport}`,
+    SPORT_SEASON: (id: string, sport: string) =>
+      `/leagues/${id}/sports/${sport}/season`,
     LINEUP_SLOTS: (id: string) => `/leagues/${id}/lineup-slots`,
     LINEUP: (id: string) => `/leagues/${id}/my-team/lineup`,
     LIVE_LINEUP: (id: string) => `/leagues/${id}/my-team/live-lineup`,

@@ -84,6 +84,10 @@ class SeasonCreateRequest(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     start_date: date
     end_date: date
+    # Human-facing cross-sport cycle label ("2026/27"), display/admin-UX
+    # only — never read by cross-sport matching logic (LeagueSport.season_id
+    # is the actual source of truth, see window_locator.py).
+    label: str | None = Field(default=None, max_length=20)
     reason: str | None = Field(default=None, max_length=1000)
 
 
@@ -93,6 +97,7 @@ class SeasonUpdateRequest(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     start_date: date | None = None
     end_date: date | None = None
+    label: str | None = Field(default=None, max_length=20)
     is_active: bool | None = None
     reason: str | None = Field(default=None, max_length=1000)
 

@@ -31,28 +31,48 @@ def _score_player_stats_once_per_sport(
 ) -> dict[str, int]:
     # Player-stat scoring has no per-league dimension (player_gameweek_stats
     # has no league_id — it's one row per player+window, shared by every
-    # league playing that sport), so it must run exactly once per sport for
-    # this window, not once per league. Resolve the distinct sports played
-    # across all the leagues sharing this window, translate each to its own
-    # equivalent window (a multisport league's window id is only native for
-    # one sport — see find_equivalent_window_for_sport), and score it once.
-    totals = {"football_players_updated": 0, "cricket_players_updated": 0, "basketball_players_updated": 0}
+    # league playing that sport), so it must run exactly once per (sport,
+    # resolved window) for this window, not once per league. Under per-
+    # league season mapping (LeagueSport.season_id), two leagues sharing
+    # this window CAN legitimately resolve the same sport to different
+    # equivalent windows (different seasons) — so resolve per (league, sport)
+    # pair, then dedupe by (sport_id, resolved window id) before scoring.
+    # In the common case (every league mapping a sport to the same season)
+    # this collapses back to exactly one pass per sport, same as before —
+    # the dedup is what preserves the deadlock-avoidance property this
+    # function exists for (see the module CLAUDE.md note on player_gameweek_stats).
+    totals = {
+        "football_players_updated": 0,
+        "cricket_players_updated": 0,
+        "basketball_players_updated": 0,
+        "leagues_skipped_no_equivalent_season": 0,
+    }
     if not league_ids:
         return totals
 
-    sports = (
-        db.query(Sport.id, Sport.name)
-        .join(LeagueSport, LeagueSport.sport_id == Sport.id)
+    league_sports = (
+        db.query(LeagueSport.league_id, Sport.id, Sport.name)
+        .join(Sport, Sport.id == LeagueSport.sport_id)
         .filter(LeagueSport.league_id.in_(league_ids))
-        .distinct()
         .all()
     )
 
-    for sport_id, sport_name in sports:
-        sport_window = find_equivalent_window_for_sport(db, window=window, sport_id=sport_id)
+    resolved: dict[tuple[uuid.UUID, uuid.UUID], str] = {}
+    for league_id, sport_id, sport_name in league_sports:
+        sport_window = find_equivalent_window_for_sport(
+            db, league_id=league_id, window=window, sport_id=sport_id
+        )
         if sport_window is None:
+            totals["leagues_skipped_no_equivalent_season"] += 1
+            logger.warning(
+                "No equivalent %s window for league=%s (window=%s) — skipping "
+                "player-stat scoring for this league/sport this cycle",
+                sport_name, league_id, window.id,
+            )
             continue
-        sport_window_id = sport_window.id
+        resolved[(sport_id, sport_window.id)] = sport_name
+
+    for (sport_id, sport_window_id), sport_name in resolved.items():
         slug = (sport_name or "").strip().lower()
         try:
             if slug == "football":
@@ -73,7 +93,7 @@ def _score_player_stats_once_per_sport(
             # exception reaches here the session is not poisoned — one sport
             # failing must not block scoring the others sharing this window.
             logger.exception(
-                "Skipping player-stat scoring for sport %s window %s", sport_id, window.id
+                "Skipping player-stat scoring for sport %s window %s", sport_id, sport_window_id
             )
             continue
 
@@ -115,11 +135,20 @@ def score_transfer_window_for_league(
         db.query(Season.sport_id).filter(Season.id == league.season_id).scalar()
     )
     native_window = find_equivalent_window_for_sport(
-        db, window=window, sport_id=league_sport_id
+        db, league_id=league_id, window=window, sport_id=league_sport_id
     )
     if native_window is None:
         # The league's own schedule has no window covering this date range
-        # (season not started / ended / off week) — nothing to score.
+        # (season not started / ended / off week) — nothing to score. Loud,
+        # not silent: this is the league's OWN native sport, so unlike the
+        # off-week case for a secondary sport, this should basically never
+        # fire post-creation (create_league/add_sport hard-block leagues
+        # from existing without a resolvable season) — worth a log line if
+        # it ever does.
+        logger.warning(
+            "No native window for league=%s (window=%s, sport=%s) — skipping scoring",
+            league_id, window.id, league_sport_id,
+        )
         return {"skipped": True, "reason": "no_native_window"}
     transfer_window_id = native_window.id
 
@@ -249,6 +278,7 @@ def score_active_transfer_windows(db: Session, *, commit: bool = True) -> dict[s
         football_updated = 0
         cricket_updated = 0
         basketball_updated = 0
+        leagues_skipped_no_equivalent_season = 0
 
         for window_id in windows:
             result = score_transfer_window_for_season_leagues(
@@ -260,6 +290,7 @@ def score_active_transfer_windows(db: Session, *, commit: bool = True) -> dict[s
             football_updated += result.get("football_players_updated", 0)
             cricket_updated += result.get("cricket_players_updated", 0)
             basketball_updated += result.get("basketball_players_updated", 0)
+            leagues_skipped_no_equivalent_season += result.get("leagues_skipped_no_equivalent_season", 0)
 
         output = {
             "windows_scored": len(windows),
@@ -267,6 +298,7 @@ def score_active_transfer_windows(db: Session, *, commit: bool = True) -> dict[s
             "football_players_updated": football_updated,
             "cricket_players_updated": cricket_updated,
             "basketball_players_updated": basketball_updated,
+            "leagues_skipped_no_equivalent_season": leagues_skipped_no_equivalent_season,
         }
         if commit:
             db.commit()

@@ -33,6 +33,10 @@ export type TSeason = TSeasonBrief & {
   /** Season.total_windows — 0 means no league on this season can go ACTIVE
    * yet (see admin Seasons "Generate Windows" action). */
   total_windows: number;
+  /** Human-facing cross-sport cycle label ("2026/27") — display only, never
+   * used for cross-sport matching (LeagueSport.season_id is the real
+   * mapping, set per league). */
+  label: string | null;
 };
 
 export type TSport = TSportBrief & {
@@ -41,6 +45,11 @@ export type TSport = TSportBrief & {
 
 export type TLeagueSport = {
   sport: TSportBrief;
+  /** Which season of `sport` this league is mapped to for cross-sport
+   * scoring — null for the league's own primary sport (that one's season
+   * is the league's own season_id, not this field) or a stale pre-
+   * migration row. See LeagueSport.season_id on the backend. */
+  season: TSeasonBrief | null;
   created_at: string;
 };
 

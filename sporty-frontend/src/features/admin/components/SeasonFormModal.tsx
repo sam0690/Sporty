@@ -40,6 +40,7 @@ function SeasonFormBody({
 
   const [sportId, setSportId] = useState(season?.sport_id ?? "");
   const [name, setName] = useState(season?.name ?? "");
+  const [label, setLabel] = useState(season?.label ?? "");
   const [startDate, setStartDate] = useState(season?.start_date ?? "");
   const [endDate, setEndDate] = useState(season?.end_date ?? "");
   const [isActive, setIsActive] = useState(season?.is_active ?? true);
@@ -48,14 +49,20 @@ function SeasonFormBody({
   const handleSubmit = () => {
     if (mode === "create") {
       createSeason.mutate(
-        { sport_id: sportId, name, start_date: startDate, end_date: endDate, reason: reason || undefined },
+        {
+          sport_id: sportId, name, start_date: startDate, end_date: endDate,
+          label: label || undefined, reason: reason || undefined,
+        },
         { onSuccess: onClose },
       );
     } else if (season?.id) {
       updateSeason.mutate(
         {
           id: season.id,
-          data: { name, start_date: startDate, end_date: endDate, is_active: isActive, reason: reason || undefined },
+          data: {
+            name, start_date: startDate, end_date: endDate, is_active: isActive,
+            label: label || undefined, reason: reason || undefined,
+          },
         },
         { onSuccess: onClose },
       );
@@ -86,6 +93,22 @@ function SeasonFormBody({
       <label className="block">
         <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">Name</span>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. 2026/27 Season" />
+      </label>
+
+      <label className="block">
+        <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+          Cross-Sport Label (optional)
+        </span>
+        <Input
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="e.g. 2026/27"
+          maxLength={20}
+        />
+        <p className="mt-1 text-xs text-fg-3">
+          Display only — helps admins spot which seasons across sports belong to the same cycle. Does not
+          affect scoring; that mapping is set per league.
+        </p>
       </label>
 
       <div className="grid grid-cols-2 gap-3">

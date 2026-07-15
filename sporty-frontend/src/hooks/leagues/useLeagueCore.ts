@@ -326,6 +326,20 @@ export function useRemoveLeagueSport(leagueId: string) {
   );
 }
 
+export function useRemapSportSeason(leagueId: string) {
+  const queryClient = useQueryClient();
+  return useApiMutation(
+    ({ sportName, seasonId }: { sportName: string; seasonId: string }) =>
+      LeagueService.remapSportSeason(leagueId, sportName, seasonId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
+      },
+      successMessage: "Season mapping updated",
+    },
+  );
+}
+
 export function useActiveWindow(
   leagueId: string,
   options?: Omit<

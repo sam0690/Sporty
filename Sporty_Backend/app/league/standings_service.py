@@ -146,7 +146,7 @@ def get_gameweek_recap(
 
     slot_bounds = load_slot_bounds(db, league_id)
     rows = load_team_lineup_rows(
-        db, team_ids=[team.id], transfer_window_id=window.id
+        db, league_id=league_id, team_ids=[team.id], transfer_window_id=window.id
     ).get(team.id, [])
     result = (
         resolve_team_gameweek(

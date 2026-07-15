@@ -143,6 +143,12 @@ class Season(Base):
     # generate and is no longer read.
     transfer_day: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
 
+    # Human-facing cross-sport cycle label (e.g. "2026/27"), set deliberately
+    # by an admin. Display/admin-UX only — NEVER read by cross-sport matching
+    # logic (see LeagueSport.season_id / app/services/scoring/window_locator.py),
+    # which is the actual source of truth for "which season pairs with which."
+    label: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -606,6 +612,18 @@ class LeagueSport(Base):
         primary_key=True,
     )
 
+    # Which season of `sport_id` THIS league uses — the explicit, deliberate
+    # mapping cross-sport scoring reads (see get_league_sport_season in
+    # app/services/scoring/window_locator.py). Null only transiently; a
+    # persisted row should always have this set by create_league/add_sport,
+    # which resolve it (or hard-block) rather than leaving it unmapped.
+    # No ondelete: retiring a season out from under a league that still
+    # references it should fail loudly (FK violation), not silently orphan
+    # the mapping.
+    season_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("seasons.id"), nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -613,6 +631,7 @@ class LeagueSport(Base):
     # Relationships
     league: Mapped["League"] = relationship(back_populates="sports")
     sport: Mapped["Sport"] = relationship()
+    season: Mapped["Season | None"] = relationship()
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -43,6 +43,7 @@ import app.player.models_nba  # noqa: F401
 from app.league import services as league_service
 from app.league.models import (
     League,
+    LeagueSport,
     LeagueStatus,
     Season,
     Sport,
@@ -219,3 +220,76 @@ def test_foreign_window_without_native_equivalent_is_skipped(monkeypatch) -> Non
 
         assert result == {"skipped": True, "reason": "no_native_window"}
         assert seen == []
+
+
+def test_two_leagues_mapping_same_sport_to_different_seasons_each_scored_once(monkeypatch) -> None:
+    """Two multisport leagues share this football window but map basketball
+    to DIFFERENT basketball seasons (LeagueSport.season_id) — confirms
+    _score_player_stats_once_per_sport dedupes by (sport, RESOLVED window),
+    not by sport alone, so both leagues' basketball players get scored under
+    their own league's correct window rather than one clobbering the other."""
+    with session_scope() as db:
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+
+        football_season = _create_season(db, football)
+        # Two independent basketball seasons — different start_date so they
+        # don't collide on uq_season_sport_start, both still covering "today"
+        # so create_league's current-season auto-resolution can pick either.
+        basketball_season_a = Season(
+            sport_id=basketball.id, name=f"BBall-A-{uuid.uuid4().hex[:8]}",
+            start_date=date(2026, 1, 1), end_date=date(2026, 12, 31), is_active=True,
+        )
+        basketball_season_b = Season(
+            sport_id=basketball.id, name=f"BBall-B-{uuid.uuid4().hex[:8]}",
+            start_date=date(2026, 1, 2), end_date=date(2026, 12, 30), is_active=True,
+        )
+        db.add_all([basketball_season_a, basketball_season_b])
+        db.flush()
+
+        gw6_start = datetime(2026, 2, 7, tzinfo=timezone.utc)
+        football_window = _create_window(db, football_season, number=6, start=gw6_start)
+        basketball_window_a = _create_window(db, basketball_season_a, number=6, start=gw6_start)
+        basketball_window_b = _create_window(db, basketball_season_b, number=6, start=gw6_start)
+
+        owner_a = _create_user(db)
+        owner_b = _create_user(db)
+        league_a = league_service.create_league(
+            db, LeagueCreate(name=f"A-{uuid.uuid4().hex[:8]}", season_id=football_season.id,
+                              draft_mode=False, sports=["football", "basketball"]), owner_a,
+        )
+        league_b = league_service.create_league(
+            db, LeagueCreate(name=f"B-{uuid.uuid4().hex[:8]}", season_id=football_season.id,
+                              draft_mode=False, sports=["football", "basketball"]), owner_b,
+        )
+        db.flush()
+
+        # Force each league onto a distinct basketball season explicitly —
+        # auto-resolution at creation could have picked either for both,
+        # this is what makes the divergence deterministic for the test.
+        for league, target_season in ((league_a, basketball_season_a), (league_b, basketball_season_b)):
+            league_sport = (
+                db.query(LeagueSport)
+                .filter(LeagueSport.league_id == league.id, LeagueSport.sport_id == basketball.id)
+                .first()
+            )
+            league_sport.season_id = target_season.id
+        db.flush()
+
+        calls: list[uuid.UUID] = []
+
+        def fake_score_nba(db, *, sport_id, transfer_window_id):
+            calls.append(transfer_window_id)
+            return 0
+
+        monkeypatch.setattr(scoring_engine, "score_nba_players_for_window", fake_score_nba)
+        monkeypatch.setattr(scoring_engine, "score_football_players_for_window", lambda db, **kw: 0)
+
+        totals = scoring_engine._score_player_stats_once_per_sport(
+            db, league_ids=[league_a.id, league_b.id], window=football_window,
+        )
+
+        assert sorted(calls) == sorted([basketball_window_a.id, basketball_window_b.id])
+        assert totals["leagues_skipped_no_equivalent_season"] == 0

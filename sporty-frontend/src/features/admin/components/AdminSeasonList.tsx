@@ -61,6 +61,7 @@ export function AdminSeasonList() {
           s.name
         ),
     },
+    { key: "label", header: "Label", render: (s) => s.label ?? <span className="text-fg-3">—</span> },
     { key: "start_date", header: "Start", render: (s) => new Date(s.start_date).toLocaleDateString() },
     { key: "end_date", header: "End", render: (s) => new Date(s.end_date).toLocaleDateString() },
     {

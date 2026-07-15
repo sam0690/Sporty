@@ -55,6 +55,7 @@ from app.league.schemas import (
     LeagueCreate,
     LeagueResponse,
     LeagueSportAdd,
+    LeagueSportRemap,
     LeagueSportResponse,
     GameweekRecapResponse,
     LineupResponse,
@@ -584,6 +585,25 @@ def add_sport(
     return league_sport
 
 
+@router.patch(
+    "/{league_id}/sports/{sport_name}/season",
+    response_model=LeagueSportResponse,
+    summary="Re-point a secondary sport's season mapping",
+)
+def remap_sport_season(
+    sport_name: str,
+    data: LeagueSportRemap,
+    league: League = Depends(require_league_owner),
+    db: Session = Depends(get_db),
+):
+    """Re-point this league's cross-sport scoring mapping for `sport_name` to
+    a different season of that sport (e.g. a placeholder season being
+    replaced by its real-dated successor). Not restricted to SETUP — this
+    exists specifically to fix an already-ACTIVE league's mapping. Cannot
+    target the league's own primary sport (set via creation/renewal)."""
+    league_sport = league_service.remap_sport_season(db, league.id, sport_name, data.season_id)
+    db.commit()
+    return league_sport
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

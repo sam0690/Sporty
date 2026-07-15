@@ -24,13 +24,11 @@ from app.league.models import (
     RosterMove,
     TeamGameweekLineup,
     TransferWindow,
-    League,
     LeagueMembership,
     LeagueMembershipStatus,
     LeagueStatus,
     LeagueSport,
     LineupSlot,
-    Season,
     Sport,
     TeamPlayer,
     Transfer,
@@ -131,15 +129,6 @@ def _attach_player_points(
     if not rows:
         return
 
-    league_season = (
-        db.query(Season)
-        .join(League, League.season_id == Season.id)
-        .filter(League.id == league_id)
-        .first()
-    )
-    if league_season is None:
-        return
-
     player_ids = [team_player.player_id for team_player in rows]
 
     player_sport_map = dict(
@@ -149,7 +138,7 @@ def _attach_player_points(
     sport_season_ids: dict[uuid.UUID, uuid.UUID] = {}
     for sport_id in roster_sport_ids:
         equivalent_season = find_equivalent_season_for_sport(
-            db, season=league_season, sport_id=sport_id
+            db, league_id=league_id, sport_id=sport_id
         )
         if equivalent_season is not None:
             sport_season_ids[sport_id] = equivalent_season.id

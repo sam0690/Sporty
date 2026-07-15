@@ -198,7 +198,22 @@ def create_league(
             )
     
     for s in sport_records:
-        league.sports.append(LeagueSport(sport_id=s.id))
+        if s.id == season.sport_id:
+            # The season the creator explicitly picked — no lookup needed,
+            # no ambiguity.
+            mapped_season_id = season.id
+        else:
+            # A secondary sport: resolve its own current season. Hard-block
+            # rather than create a dangling LeagueSport.season_id=None — see
+            # _current_season_for_sport's docstring.
+            mapped_season = _current_season_for_sport(db, s.id)
+            if mapped_season is None:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=f"Cannot create this league: '{s.name}' has no current season yet",
+                )
+            mapped_season_id = mapped_season.id
+        league.sports.append(LeagueSport(sport_id=s.id, season_id=mapped_season_id))
 
     # 3. Auto-enrol owner
     membership = LeagueMembership(
@@ -1089,6 +1104,27 @@ def remove_member(
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+def _current_season_for_sport(db: Session, sport_id: uuid.UUID) -> Season | None:
+    """The season of `sport_id` running right now — the SQL equivalent of
+    Season.is_current (a Python property, not a queryable column). Used to
+    auto-resolve which season a sport maps to for a league (LeagueSport.
+    season_id) at creation/add-sport time: see create_league and add_sport.
+    Cross-sport scoring depends on every LeagueSport row having a resolved
+    season (get_league_sport_season in app/services/scoring/window_locator.py)
+    — callers here must hard-block rather than leave one unmapped."""
+    today = date.today()
+    return (
+        db.query(Season)
+        .filter(
+            Season.sport_id == sport_id,
+            Season.is_active.is_(True),
+            Season.start_date <= today,
+            Season.end_date >= today,
+        )
+        .first()
+    )
+
+
 def add_sport(
     db: Session,
     league_id: uuid.UUID,
@@ -1149,9 +1185,17 @@ def add_sport(
             detail=f"Sport '{sport_name}' is already attached to this league",
         )
 
+    mapped_season = _current_season_for_sport(db, sport.id)
+    if mapped_season is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot add '{sport_name}': no current season exists for it yet",
+        )
+
     league_sport = LeagueSport(
         league_id=league_id,
         sport_id=sport.id,
+        season_id=mapped_season.id,
     )
     db.add(league_sport)
     db.flush()
@@ -1164,6 +1208,90 @@ def add_sport(
             LeagueSport.league_id == league_id,
             LeagueSport.sport_id == sport.id,
         )
+        .first()
+    )
+
+
+
+def remap_sport_season(
+    db: Session,
+    league_id: uuid.UUID,
+    sport_name: str,
+    season_id: uuid.UUID,
+) -> LeagueSport:
+    """Re-point this league's LeagueSport.season_id for `sport_name` to a
+    different season of that same sport.
+
+    The real-world case this exists for: a sport's season gets created with
+    placeholder dates (or a coincidentally-shared range with another sport),
+    a league is built against it, and later an admin creates the sport's
+    correctly-dated real season — existing leagues need to be moved onto it
+    deliberately, not left silently pointing at the retired placeholder.
+
+    Unlike add_sport/remove_sport this is NOT restricted to SETUP — the
+    whole point is fixing a live league's cross-sport scoring mapping,
+    which is exactly the case for an already-ACTIVE league.
+
+    Guards:
+      1. Sport must be attached to this league already.
+      2. Sport must not be the league's OWN primary sport (League.season_id)
+         — that one is set at creation/renewal, this endpoint only touches
+         secondary sports' mappings, and remapping it here would silently
+         do nothing (get_league_sport_season short-circuits on the primary
+         sport via League.season_id, never reading LeagueSport.season_id
+         for it).
+      3. The new season must actually belong to `sport_name` — remapping to
+         a different sport's season would corrupt scoring, not fix it.
+
+    Does NOT commit — caller owns the transaction.
+    """
+    league = _require_league(db, league_id)
+
+    sport = (
+        db.query(Sport)
+        .filter(Sport.name == sport_name.strip().lower())
+        .first()
+    )
+    if not sport:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sport '{sport_name}' not found",
+        )
+
+    if league.season and league.season.sport_id == sport.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                f"'{sport_name}' is this league's primary sport — its season is set via "
+                "league creation or renewal, not this action"
+            ),
+        )
+
+    league_sport = (
+        db.query(LeagueSport)
+        .filter(LeagueSport.league_id == league_id, LeagueSport.sport_id == sport.id)
+        .first()
+    )
+    if not league_sport:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"'{sport_name}' is not attached to this league",
+        )
+
+    season = db.query(Season).filter(Season.id == season_id).first()
+    if not season or season.sport_id != sport.id:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"season_id must be a season of '{sport_name}'",
+        )
+
+    league_sport.season_id = season.id
+    db.flush()
+
+    return (
+        db.query(LeagueSport)
+        .options(joinedload(LeagueSport.sport), joinedload(LeagueSport.season))
+        .filter(LeagueSport.league_id == league_id, LeagueSport.sport_id == sport.id)
         .first()
     )
 

@@ -259,6 +259,7 @@ def create_season(
         name=data.name,
         start_date=data.start_date,
         end_date=data.end_date,
+        label=data.label,
         reason=data.reason,
     )
 
@@ -282,6 +283,7 @@ def update_season(
         start_date=data.start_date,
         end_date=data.end_date,
         is_active=data.is_active,
+        label=data.label,
         reason=data.reason,
     )
 
