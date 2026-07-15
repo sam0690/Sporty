@@ -383,6 +383,7 @@ export type TGameweekPoints = {
   gameweek: number;
   transfer_window_id: string;
   points: number;
+  points_deducted: number;
   rank: number | null;
 };
 
@@ -391,7 +392,9 @@ export type TLeagueDashboardStats = {
   team_id: string;
   rank: number | null;
   gameweek_points: number | null;
+  gameweek_points_deducted: number;
   total_points: number;
+  points_deducted: number;
   budget: number;
   gameweek_breakdown: TGameweekPoints[];
 };

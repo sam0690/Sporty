@@ -1940,35 +1940,73 @@ def get_dashboard_stats(
         .all()
     )
 
-    gameweek_breakdown = [
-        {
-            "gameweek": row.gameweek,
-            "transfer_window_id": row.transfer_window_id,
-            "points": row.points,
-            "rank": row.rank,
-        }
-        for row in weekly_rows
-    ]
+    # Budget-overage points penalties, netted out at read time — same
+    # approach as standings_service.py's leaderboard query. TeamWeeklyScore.points
+    # stays untouched; the deduction is applied here and surfaced separately
+    # as points_deducted so the UI can show a "X points deducted" note.
+    penalty_by_window: dict[uuid.UUID, Decimal] = {
+        row.transfer_window_id: row.charged
+        for row in (
+            db.query(
+                PointsPenalty.transfer_window_id.label("transfer_window_id"),
+                func.sum(PointsPenalty.points_charged).label("charged"),
+            )
+            .filter(PointsPenalty.fantasy_team_id == team.id)
+            .group_by(PointsPenalty.transfer_window_id)
+            .all()
+        )
+    }
+
+    gameweek_breakdown = []
+    for row in weekly_rows:
+        deducted = penalty_by_window.get(row.transfer_window_id, Decimal("0"))
+        gameweek_breakdown.append(
+            {
+                "gameweek": row.gameweek,
+                "transfer_window_id": row.transfer_window_id,
+                "points": row.points - deducted,
+                "points_deducted": deducted,
+                "rank": row.rank,
+            }
+        )
 
     gameweek_points: Decimal | None = None
+    gameweek_points_deducted = Decimal("0")
     rank: int | None = None
     if active_window:
         active = next(
-            (r for r in weekly_rows if r.transfer_window_id == active_window.id),
+            (
+                r
+                for r in gameweek_breakdown
+                if r["transfer_window_id"] == active_window.id
+            ),
             None,
         )
         if active:
-            gameweek_points = active.points
-            rank = active.rank
+            gameweek_points = active["points"]
+            gameweek_points_deducted = active["points_deducted"]
+            rank = next(
+                (
+                    r.rank
+                    for r in weekly_rows
+                    if r.transfer_window_id == active_window.id
+                ),
+                None,
+            )
 
-    total_points = sum((row.points for row in weekly_rows), Decimal("0"))
+    total_points_deducted = sum(penalty_by_window.values(), Decimal("0"))
+    total_points = (
+        sum((row.points for row in weekly_rows), Decimal("0")) - total_points_deducted
+    )
 
     return {
         "league_id": league_id,
         "team_id": team.id,
         "rank": rank,
         "gameweek_points": gameweek_points,
+        "gameweek_points_deducted": gameweek_points_deducted,
         "total_points": total_points,
+        "points_deducted": total_points_deducted,
         "budget": team.current_budget,
         "gameweek_breakdown": gameweek_breakdown,
     }

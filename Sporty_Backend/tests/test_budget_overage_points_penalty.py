@@ -280,3 +280,37 @@ def test_leaderboard_and_ranking_reflect_points_penalty() -> None:
         rival_score = db.query(TeamWeeklyScore).filter(TeamWeeklyScore.fantasy_team_id == rival_team.id).first()
         assert rival_score.rank_in_league == 1
         assert owner_score.rank_in_league == 2
+
+
+def test_dashboard_stats_reflect_points_penalty() -> None:
+    with session_scope() as db:
+        sport, real_team, owner, league, team, player_out, past_window, future_window = _setup_league_with_team(db)
+
+        db.add(TeamWeeklyScore(fantasy_team_id=team.id, transfer_window_id=past_window.id, points=20))
+        db.add(TeamWeeklyScore(fantasy_team_id=team.id, transfer_window_id=future_window.id, points=100))
+        db.flush()
+
+        expensive = _create_player(db, sport, real_team, name="Star Keeper", cost=50)
+        league_service.make_transfer(
+            db, league.id, player_out.id, expensive.id, owner, pay_shortfall_with_points=True,
+        )
+        db.flush()
+
+        penalty = db.query(PointsPenalty).filter(PointsPenalty.fantasy_team_id == team.id).first()
+        assert penalty is not None
+        assert penalty.transfer_window_id == future_window.id
+
+        stats = league_service.get_dashboard_stats(db, league.id, owner.id)
+
+        # total_points nets the penalty out; raw TeamWeeklyScore.points (20 + 100)
+        # is untouched, only the derived stat is reduced.
+        assert stats["total_points"] == Decimal("120") - penalty.points_charged
+        assert stats["points_deducted"] == penalty.points_charged
+
+        # Per-window breakdown attributes the deduction to the window the
+        # penalty actually landed in, not the other scored window.
+        by_window = {row["transfer_window_id"]: row for row in stats["gameweek_breakdown"]}
+        assert by_window[future_window.id]["points_deducted"] == penalty.points_charged
+        assert by_window[future_window.id]["points"] == Decimal("100") - penalty.points_charged
+        assert by_window[past_window.id]["points_deducted"] == Decimal("0")
+        assert by_window[past_window.id]["points"] == Decimal("20")

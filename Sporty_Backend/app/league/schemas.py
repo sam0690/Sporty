@@ -799,6 +799,7 @@ class GameweekPointsResponse(BaseModel):
     gameweek: int  # TransferWindow.number
     transfer_window_id: uuid.UUID
     points: Decimal
+    points_deducted: Decimal = Decimal("0")
     rank: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
@@ -811,7 +812,9 @@ class LeagueDashboardStatsResponse(BaseModel):
     team_id: uuid.UUID
     rank: int | None = None
     gameweek_points: Decimal | None = None
+    gameweek_points_deducted: Decimal = Decimal("0")
     total_points: Decimal = Decimal("0")
+    points_deducted: Decimal = Decimal("0")
     budget: Decimal
     # Per-gameweek breakdown (ordered by gameweek number). total_points is the
     # sum of these rows' points; gameweek_points is the active window's row.

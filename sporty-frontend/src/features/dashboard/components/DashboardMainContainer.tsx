@@ -19,6 +19,7 @@ export function DashboardMainContainer() {
     previewError,
     dashboardStats,
     stats,
+    gameweekPointsDeducted,
     statsLoading,
     statsError,
     mappedActivity,
@@ -38,6 +39,7 @@ export function DashboardMainContainer() {
           selectedLeagueId={activeLeagueId}
           onLeagueChange={setSelectedLeagueId}
           stats={stats}
+          gameweekPointsDeducted={gameweekPointsDeducted}
           statsLoading={statsLoading && hasLeagues}
         />
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { MinusCircle } from "lucide-react";
+import { Tooltip } from "@mantine/core";
 
 import { ErrorState } from "@/components/ui";
 import type { TGameweekPoints } from "@/types/league";
@@ -97,6 +99,18 @@ export function GameweekBreakdown({
                       </span>
                     )}
                   </div>
+
+                  {row.points_deducted > 0 && (
+                    <Tooltip
+                      label={`${row.points_deducted.toFixed(1)} pts deducted this window`}
+                      withArrow
+                    >
+                      <MinusCircle
+                        className="h-3.5 w-3.5 shrink-0 text-danger"
+                        aria-label={`${row.points_deducted.toFixed(1)} points deducted this window`}
+                      />
+                    </Tooltip>
+                  )}
 
                   <span
                     className={`num w-12 shrink-0 text-right font-display text-xl leading-none tracking-[-0.02em] ${

@@ -5,6 +5,9 @@ type UserRankCardProps = {
   teamName: string;
   totalPoints: number;
   pointsBehind: number;
+  /** Points deducted (budget-overage penalty) in the current transfer window. */
+  windowPointsDeducted?: number;
+  windowNumber?: number | null;
 };
 
 export function UserRankCard({
@@ -12,6 +15,8 @@ export function UserRankCard({
   teamName,
   totalPoints,
   pointsBehind,
+  windowPointsDeducted = 0,
+  windowNumber,
 }: UserRankCardProps) {
   return (
     <section className="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-[3px] border border-accent/20 bg-accent/4 p-5 animate-fade-soft">
@@ -35,6 +40,12 @@ export function UserRankCard({
             {pointsBehind} pts behind leader
           </p>
         ) : null}
+        {windowPointsDeducted > 0 && (
+          <p className="mt-1 font-sans text-xs font-600 text-danger">
+            −{windowPointsDeducted.toFixed(1)} pts deducted
+            {windowNumber != null ? ` in GW${windowNumber}` : " this window"}
+          </p>
+        )}
       </div>
     </section>
   );
