@@ -29,7 +29,7 @@ export function PlayerBrowserCard({ player }: { player: TPlayer }) {
           {player.sport?.name}
         </Badge>
         <span className="stat-box-number text-base">
-          {player.current_cost?.toFixed?.(1) ?? player.current_cost}
+          £{player.current_cost?.toFixed?.(1) ?? player.current_cost}M
         </span>
       </div>
     </Link>

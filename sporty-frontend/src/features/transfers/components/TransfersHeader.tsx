@@ -54,8 +54,8 @@ export function TransfersHeader({
           )}
           <span>
             {isOverBudget
-              ? `$${Math.abs(budget).toFixed(1)}M over budget`
-              : `$${budget.toFixed(1)}M remaining`}
+              ? `£${Math.abs(budget).toFixed(1)}M over budget`
+              : `£${budget.toFixed(1)}M remaining`}
           </span>
         </div>
       </div>

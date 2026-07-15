@@ -307,6 +307,20 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     }
   }, [availablePlayers, stagedInPlayers, stagedOutPlayers, leagueId, activeWindow, isTransfersOpen, isMultiSportLeague, stageInMutation]);
 
+  const cancelStagedSession = useCallback(async () => {
+    try {
+      await cancelTransfersMutation.mutateAsync();
+    } catch {
+      // handled by toast state below
+    }
+    setSelectedOutPlayer(null);
+    setStagedOutPlayers([]);
+    setStagedInPlayers([]);
+    setSessionBudget(null);
+    setTransfersRemaining(null);
+    setShowConfirmModal(false);
+  }, [cancelTransfersMutation]);
+
   const handleStageOut = useCallback(async (id: string) => {
     if (!isTransfersOpen) {
       toastifier.error("Transfers are closed for this window");
@@ -322,17 +336,7 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     }
 
     if (selectedOutPlayer?.id === id) {
-      try {
-        await cancelTransfersMutation.mutateAsync();
-      } catch {
-        // handled by toast state below
-      }
-      setSelectedOutPlayer(null);
-      setStagedOutPlayers([]);
-      setStagedInPlayers([]);
-      setSessionBudget(null);
-      setTransfersRemaining(null);
-      setShowConfirmModal(false);
+      await cancelStagedSession();
       return;
     }
 
@@ -351,7 +355,7 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
       const message = err instanceof Error ? err.message : "Unable to stage out";
       setToastState({ status: "error", message, token: Date.now() });
     }
-  }, [isTransfersOpen, ownedPlayers, stagedOutPlayers, selectedOutPlayer, cancelTransfersMutation, stageOutMutation, leagueId, activeWindow]);
+  }, [isTransfersOpen, ownedPlayers, stagedOutPlayers, selectedOutPlayer, cancelStagedSession, stageOutMutation, leagueId, activeWindow]);
 
   const confirmAllTransfers = useCallback(async (payWithPoints = false) => {
     if (!leagueId || !activeWindow?.id) return;
@@ -474,6 +478,7 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     handleMaxCostChange,
     handleAddPlayer,
     handleStageOut,
+    cancelStagedSession,
     confirmAllTransfers,
     clearAllFilters,
     cancelTransfersMutation,

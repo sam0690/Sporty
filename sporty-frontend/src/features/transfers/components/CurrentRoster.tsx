@@ -82,7 +82,7 @@ export function CurrentRoster({
                   </p>
                   <p className="mt-0.5 truncate text-xs text-fg-3">
                     {player.position}
-                    <span className="mx-1 text-white/20">·</span>${player.price.toFixed(1)}M
+                    <span className="mx-1 text-white/20">·</span>£{player.price.toFixed(1)}M
                   </p>
                 </div>
 
@@ -110,7 +110,7 @@ export function CurrentRoster({
         <div className="flex items-center justify-between">
           <span className="section-label">In-Bank</span>
           <span className="font-display text-xl leading-none tracking-[-0.02em] text-accent">
-            ${budget.toFixed(1)}M
+            £{budget.toFixed(1)}M
           </span>
         </div>
 

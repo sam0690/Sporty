@@ -83,7 +83,7 @@ export function useDashboardMainState() {
     },
     {
       label: "Budget",
-      value: statValue(`$${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`),
+      value: statValue(`£${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`),
       change: "Current budget",
     },
     {

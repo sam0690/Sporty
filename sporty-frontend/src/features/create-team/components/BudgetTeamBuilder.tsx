@@ -154,14 +154,14 @@ export function BudgetTeamBuilder({
       <section className="card-surface p-4">
         <div className="flex items-center justify-between">
           <span className="section-label">
-            Budget used ${budgetUsed.toFixed(1)}M / ${budget.toFixed(1)}M
+            Budget used £{budgetUsed.toFixed(1)}M / £{budget.toFixed(1)}M
           </span>
           <span
             className={`font-display text-lg leading-none tracking-[-0.02em] tabular-nums ${
               remainingBudget >= 0 ? "text-accent" : "text-danger"
             }`}
           >
-            ${remainingBudget.toFixed(1)}M left
+            £{remainingBudget.toFixed(1)}M left
           </span>
         </div>
         <div className="mt-2.5 h-2 w-full overflow-hidden rounded-[3px] bg-surface-2">

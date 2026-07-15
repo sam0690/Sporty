@@ -76,7 +76,7 @@ export function PlayerCard({
               </span>
             ) : null}
             <span className="font-display text-base leading-none tracking-[-0.02em] text-accent">
-              ${player.price.toFixed(1)}M
+              £{player.price.toFixed(1)}M
             </span>
           </div>
           <p className="mt-1 text-xs text-fg-3">

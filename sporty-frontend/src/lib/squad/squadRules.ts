@@ -107,7 +107,7 @@ export function buildSquadValidation({
           {
             key: "budget",
             label: "Within budget",
-            detail: `$${remainingBudget.toFixed(1)}M left`,
+            detail: `£${remainingBudget.toFixed(1)}M left`,
             satisfied: remainingBudget >= 0,
           },
         ]

@@ -85,7 +85,7 @@ export function PlayerCard({
       <div className="flex shrink-0 items-center gap-3">
         <div className="text-right">
           <p className="num font-display text-xl leading-none tracking-[-0.02em] text-accent">
-            ${price.toFixed(1)}M
+            £{price.toFixed(1)}M
           </p>
           <p className="section-label mt-1">Cost</p>
         </div>

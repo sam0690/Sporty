@@ -39,7 +39,7 @@ function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
 
         <div>
           <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
-            ${squadValue.toFixed(1)}M
+            £{squadValue.toFixed(1)}M
           </p>
           <p className="section-label mt-1.5">Squad Value</p>
         </div>

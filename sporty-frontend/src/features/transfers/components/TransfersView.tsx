@@ -79,9 +79,9 @@ export function TransfersView(props: Props) {
     handleMaxCostChange,
     handleAddPlayer,
     handleStageOut,
+    cancelStagedSession,
     confirmAllTransfers,
     clearAllFilters,
-    cancelTransfersMutation,
     confirmTransfersMutation,
     toastState,
   } = props;
@@ -256,11 +256,7 @@ export function TransfersView(props: Props) {
               </div>
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    await cancelTransfersMutation.mutateAsync();
-                  } catch {}
-                }}
+                onClick={cancelStagedSession}
                 className="shrink-0 text-fg-3 transition-colors hover:text-fg-1"
                 aria-label="Cancel swap"
               >
@@ -365,12 +361,7 @@ export function TransfersView(props: Props) {
               {selectedOutPlayer ? (
                 <button
                   type="button"
-                  onClick={async () => {
-                    try {
-                      await cancelTransfersMutation.mutateAsync();
-                      setShowConfirmModal(false);
-                    } catch {}
-                  }}
+                  onClick={cancelStagedSession}
                   className="mt-2 w-full rounded-[3px] border border-white/8 bg-surface-3 px-4 py-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2 transition-colors hover:text-fg-1"
                 >
                   Cancel Staged Session
