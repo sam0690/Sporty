@@ -314,3 +314,25 @@ def test_dashboard_stats_reflect_points_penalty() -> None:
         assert by_window[future_window.id]["points"] == Decimal("100") - penalty.points_charged
         assert by_window[past_window.id]["points_deducted"] == Decimal("0")
         assert by_window[past_window.id]["points"] == Decimal("20")
+
+
+def test_my_leagues_points_reflect_penalty() -> None:
+    with session_scope() as db:
+        sport, real_team, owner, league, team, player_out, past_window, future_window = _setup_league_with_team(db)
+
+        db.add(TeamWeeklyScore(fantasy_team_id=team.id, transfer_window_id=future_window.id, points=100))
+        db.flush()
+
+        expensive = _create_player(db, sport, real_team, name="Star Keeper", cost=50)
+        league_service.make_transfer(
+            db, league.id, player_out.id, expensive.id, owner, pay_shortfall_with_points=True,
+        )
+        db.flush()
+
+        penalty = db.query(PointsPenalty).filter(PointsPenalty.fantasy_team_id == team.id).first()
+        assert penalty is not None
+
+        leagues = league_service.get_leagues_for_user(db, owner.id)
+        my_league = next(l for l in leagues if l.id == league.id)
+        assert my_league.my_team["points"] == Decimal("100") - penalty.points_charged
+        assert my_league.my_team["points_deducted"] == penalty.points_charged

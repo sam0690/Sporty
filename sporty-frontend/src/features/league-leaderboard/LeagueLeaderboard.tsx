@@ -21,7 +21,6 @@ import {
   useActiveWindow,
   usePowerRankings,
 } from "@/hooks/leagues/useLeagues";
-import { useDashboardLeagueStats } from "@/hooks/dashboard/useDashboardData";
 import type { TPowerRankingEntry } from "@/types";
 
 export function LeagueLeaderboard() {
@@ -36,10 +35,6 @@ export function LeagueLeaderboard() {
   const { data: myTeam, isLoading: isTeamLoading } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: isWindowLoading } =
     useActiveWindow(leagueId);
-  // Overall standings aggregate deductions across the whole season (see the
-  // pointsDeducted badge below); this fetch adds the current window's own
-  // deduction so "Your Position" can call that one out specifically.
-  const { data: dashboardStats } = useDashboardLeagueStats(leagueId);
 
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek>("overall");
   const [historical, setHistorical] = useState(true);
@@ -116,6 +111,7 @@ export function LeagueLeaderboard() {
       rank: teamInStandings.rank,
       teamName: teamInStandings.teamName,
       totalPoints: teamInStandings.points,
+      pointsDeducted: teamInStandings.pointsDeducted ?? 0,
       pointsBehind: Math.round(topPoints - teamInStandings.points),
     };
   }, [myTeam, standings]);
@@ -177,12 +173,7 @@ export function LeagueLeaderboard() {
           teamName={userTeam.teamName}
           totalPoints={userTeam.totalPoints}
           pointsBehind={userTeam.pointsBehind}
-          windowPointsDeducted={
-            selectedWeek === "overall"
-              ? (dashboardStats?.gameweek_points_deducted ?? 0)
-              : 0
-          }
-          windowNumber={activeWindow?.number}
+          pointsDeducted={userTeam.pointsDeducted}
         />
       )}
 

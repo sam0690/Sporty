@@ -361,25 +361,40 @@ def _attach_my_team_summaries(
     for row in total_rows:
         totals_by_league.setdefault(row.league_id, []).append(row)
 
+    # Budget-overage points penalties, netted out at read time — same
+    # approach as standings_service.py and get_dashboard_stats.
+    team_ids = [row.team_id for rows in totals_by_league.values() for row in rows]
+    penalty_by_team: dict[uuid.UUID, Decimal] = {}
+    if team_ids:
+        for row in (
+            db.query(
+                PointsPenalty.fantasy_team_id.label("team_id"),
+                func.sum(PointsPenalty.points_charged).label("charged"),
+            )
+            .filter(PointsPenalty.fantasy_team_id.in_(team_ids))
+            .group_by(PointsPenalty.fantasy_team_id)
+            .all()
+        ):
+            penalty_by_team[row.team_id] = row.charged
+
     for league in leagues:
         team = my_team_by_league.get(league.id)
         if team is None:
             continue
 
-        rows = sorted(
-            totals_by_league.get(league.id, []),
-            key=lambda r: Decimal(r.total),
-            reverse=True,
-        )
-        my_total = next(
-            (Decimal(r.total) for r in rows if r.team_id == team.id),
-            Decimal("0"),
-        )
+        rows = totals_by_league.get(league.id, [])
+        net_by_team = {
+            r.team_id: Decimal(r.total) - penalty_by_team.get(r.team_id, Decimal("0"))
+            for r in rows
+        }
+        ranked = sorted(net_by_team.items(), key=lambda item: item[1], reverse=True)
+        my_total = net_by_team.get(team.id, Decimal("0"))
+        my_deducted = penalty_by_team.get(team.id, Decimal("0"))
         # Only rank once scoring has started; before that every team ties at 0
         # and a position number would be meaningless.
-        scoring_started = any(Decimal(r.total) > 0 for r in rows)
+        scoring_started = any(total > 0 for _, total in ranked)
         rank = (
-            next((i + 1 for i, r in enumerate(rows) if r.team_id == team.id), None)
+            next((i + 1 for i, (tid, _) in enumerate(ranked) if tid == team.id), None)
             if scoring_started
             else None
         )
@@ -389,6 +404,7 @@ def _attach_my_team_summaries(
             "name": team.name,
             "rank": rank,
             "points": my_total,
+            "points_deducted": my_deducted,
         }
 
 

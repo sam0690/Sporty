@@ -13,7 +13,7 @@ type TopbarProps = {
   selectedLeagueId: string | null;
   onLeagueChange: (leagueId: string) => void;
   stats: OverviewStat[];
-  gameweekPointsDeducted?: number;
+  pointsDeducted?: number;
   statsLoading?: boolean;
 };
 
@@ -34,7 +34,7 @@ export function Topbar({
   selectedLeagueId,
   onLeagueChange,
   stats,
-  gameweekPointsDeducted = 0,
+  pointsDeducted = 0,
   statsLoading = false,
 }: TopbarProps) {
   const router = useRouter();
@@ -147,6 +147,11 @@ export function Topbar({
                     {totalPoints.change}
                   </p>
                 </div>
+                {pointsDeducted > 0 && (
+                  <p className="mt-1 font-sans text-[11px] font-600 text-danger">
+                    −{pointsDeducted.toFixed(1)} pts deducted this season
+                  </p>
+                )}
               </div>
             )}
 
@@ -169,11 +174,6 @@ export function Topbar({
                   {gwPoints.value}
                 </p>
                 <p className="section-label mt-1.5">This Gameweek</p>
-                {gameweekPointsDeducted > 0 && (
-                  <p className="mt-1 text-[11px] font-600 text-danger">
-                    −{gameweekPointsDeducted.toFixed(1)} pts deducted this window
-                  </p>
-                )}
               </div>
             )}
           </>

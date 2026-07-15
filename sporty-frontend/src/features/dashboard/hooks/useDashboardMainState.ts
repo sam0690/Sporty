@@ -95,7 +95,7 @@ export function useDashboardMainState() {
     },
   ];
 
-  const gameweekPointsDeducted = dashboardStats?.gameweek_points_deducted ?? 0;
+  const pointsDeducted = dashboardStats?.points_deducted ?? 0;
 
   const mappedActivity: ActivityItem[] = (recentActivityData ?? []).map(
     (item) => ({
@@ -120,7 +120,7 @@ export function useDashboardMainState() {
     previewError,
     dashboardStats,
     stats,
-    gameweekPointsDeducted,
+    pointsDeducted,
     statsLoading,
     statsError,
     mappedActivity,

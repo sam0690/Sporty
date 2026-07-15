@@ -141,6 +141,7 @@ class MyTeamBrief(BaseModel):
     name: str
     rank: int | None = None
     points: Decimal = Decimal("0")
+    points_deducted: Decimal = Decimal("0")
 
     model_config = ConfigDict(from_attributes=True)
 

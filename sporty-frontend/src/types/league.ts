@@ -95,6 +95,7 @@ export type TLeague = {
     name: string;
     rank: number | null;
     points: number | null;
+    points_deducted: number | null;
   };
 };
 
