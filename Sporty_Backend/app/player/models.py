@@ -252,6 +252,9 @@ class PlayerPriceHistory(Base):
     weighted_points: Mapped[Decimal | None] = mapped_column(
         Numeric(precision=8, scale=2), nullable=True
     )
+    demand_score: Mapped[Decimal | None] = mapped_column(
+        Numeric(precision=5, scale=4), nullable=True
+    )
     algorithm_version: Mapped[str] = mapped_column(
         String(30), nullable=False, default="v1"
     )

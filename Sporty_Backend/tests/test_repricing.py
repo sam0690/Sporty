@@ -43,6 +43,11 @@ from app.league.schemas import LeagueCreate  # noqa: E402
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory, RealTeam  # noqa: E402
 from app.services.pricing.repricing import SPORT_POLICIES, recalculate_player_prices  # noqa: E402
 
+import pytest  # noqa: E402
+from fastapi import HTTPException  # noqa: E402
+import app.admin.models  # noqa: F401,E402
+from app.admin import services as admin_services  # noqa: E402
+
 ENGINE = create_engine(os.environ["DATABASE_URL"])
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
 
@@ -234,6 +239,101 @@ def test_rerunning_against_unchanged_stats_does_not_reapply_delta() -> None:
         recalculate_player_prices(db, lookback_windows=1)
         db.refresh(player)
         assert player.cost > Decimal("10.42")
+
+
+def test_rerunning_with_new_demand_signal_still_moves_price() -> None:
+    """Regression guard for the gap in the first no-op fix: that guard only
+    compared weighted_points, so a demand-only change (new transfers, stats
+    unchanged) after a performance-only price move was silently swallowed
+    too. The guard must compare both signals -- a change in either one
+    should still reprice; only a fully-unchanged run is a no-op."""
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("10.00"))
+        other = _player(db, sport, rt, cost=Decimal("5.00"), name="Out")
+        _stat(db, player, window, Decimal("10"))  # baseline=6, factor=0.15 -> perf_delta=0.6
+
+        # First run: performance-only move, no transfers yet (demand_score=0).
+        recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert player.cost == Decimal("10.42")
+
+        # Rerun with nothing changed at all -- still a true no-op.
+        result = recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert player.cost == Decimal("10.42")
+        assert result["updated"] == 0
+
+        # Now demand changes (new transfers land) while stats stay flat --
+        # before the demand_score fix, this would have been skipped too
+        # because only weighted_points was compared.
+        league, team = _league_and_team(db, season, "football")
+        for _ in range(3):
+            _transfer_in(db, team, window, player_in=player, player_out=other)
+
+        result = recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert result["updated"] == 1
+        assert player.cost > Decimal("10.42")
+
+
+def test_rerunning_at_the_cap_produces_no_duplicate_history_rows() -> None:
+    """A player already pinned at max_cost with a continuing strong signal
+    must not accumulate duplicate PlayerPriceHistory rows on repeated
+    reruns -- confirms the no-op guard and the pre-existing
+    next_cost == player.cost check compose correctly at the ceiling."""
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("19.00"))
+        other = _player(db, sport, rt, cost=Decimal("5.00"), name="Out")
+        _stat(db, player, window, Decimal("50"))  # huge overperformance
+
+        league, team = _league_and_team(db, season, "football")
+        _transfer_in(db, team, window, player_in=player, player_out=other)
+
+        policy = SPORT_POLICIES["football"]
+
+        recalculate_player_prices(db, lookback_windows=1)
+        db.refresh(player)
+        assert player.cost == policy.max_cost
+
+        for _ in range(3):
+            recalculate_player_prices(db, lookback_windows=1)
+            db.refresh(player)
+            assert player.cost == policy.max_cost
+
+        history_rows = (
+            db.query(PlayerPriceHistory)
+            .filter(PlayerPriceHistory.player_id == player.id)
+            .all()
+        )
+        assert len(history_rows) == 1
+
+
+def test_trigger_repricing_rejects_when_lock_held(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Admin manual repricing (app/admin/services.py:trigger_repricing) used
+    to call recalculate_player_prices directly with no lock at all, unlike
+    the Celery-scheduled path -- an admin trigger overlapping the daily cron
+    (or two admins clicking at once) had nothing preventing a concurrent
+    run. It must now share the same lock key and back off with a 409 rather
+    than run unlocked."""
+
+    @contextmanager
+    def _lock_held(*args, **kwargs):
+        yield False
+
+    monkeypatch.setattr(admin_services, "redis_lock", _lock_held)
+
+    with pytest.raises(HTTPException) as exc_info:
+        admin_services.trigger_repricing(db=None, actor=None, lookback_windows=3)
+
+    assert exc_info.value.status_code == 409
 
 
 def test_basketball_post_fix_scale_gives_sane_delta() -> None:

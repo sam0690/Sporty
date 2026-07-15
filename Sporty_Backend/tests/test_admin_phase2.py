@@ -318,7 +318,9 @@ def test_edit_player_updates_fields_and_audits():
 
 
 def test_trigger_repricing_with_no_data_audits():
-    with session_scope() as db:
+    with session_scope() as db, patch(
+        "app.core.redis_lock.get_redis", return_value=_FakeRedisClient()
+    ):
         admin = _make_user(db, role=UserRole.ADMIN)
         db.commit()
 
@@ -551,7 +553,9 @@ def test_edit_player_endpoint_requires_super_admin_tier():
 
 
 def test_reprice_endpoint_allows_admin_tier():
-    with session_scope() as db:
+    with session_scope() as db, patch(
+        "app.core.redis_lock.get_redis", return_value=_FakeRedisClient()
+    ):
         admin = _make_user(db, role=UserRole.ADMIN)
         db.commit()
 

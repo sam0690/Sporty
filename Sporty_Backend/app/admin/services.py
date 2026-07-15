@@ -11,6 +11,7 @@ from app.admin.models import AdminActionType, AdminAuditLog, SystemConfig
 from app.admin.audit import record_admin_action
 from app.auth import services as auth_services
 from app.auth.models import User, UserRole
+from app.core.redis_lock import redis_lock
 from app.league import services as league_service
 from app.league.models import (
     BudgetTransaction,
@@ -544,18 +545,28 @@ def trigger_repricing(
     lookback_windows: int = 3,
     reason: str | None = None,
 ) -> dict:
-    result = recalculate_player_prices(db, lookback_windows=lookback_windows)
-    record_admin_action(
-        db,
-        actor=actor,
-        action=AdminActionType.PLAYER_PRICE_OVERRIDE,
-        target_type="platform",
-        target_id="repricing",
-        reason=reason,
-        metadata=result,
-    )
-    db.commit()
-    return result
+    # Same lock key as the scheduled Celery task (pricing_tasks.py) so an
+    # admin-triggered run and the daily cron can't execute concurrently.
+    lock_key = f"lock:pricing:recalculate:lookback:{lookback_windows}"
+    with redis_lock(lock_key, ttl_seconds=60 * 20) as acquired:
+        if not acquired:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="A repricing run is already in progress; try again shortly.",
+            )
+
+        result = recalculate_player_prices(db, lookback_windows=lookback_windows)
+        record_admin_action(
+            db,
+            actor=actor,
+            action=AdminActionType.PLAYER_PRICE_OVERRIDE,
+            target_type="platform",
+            target_id="repricing",
+            reason=reason,
+            metadata=result,
+        )
+        db.commit()
+        return result
 
 
 # ── Transactions (trades / waivers / transfers) ─────────────────────────────────

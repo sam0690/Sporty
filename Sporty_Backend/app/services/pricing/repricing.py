@@ -188,14 +188,16 @@ def recalculate_player_prices(
     # positive delta gets recomputed and reapplied every single run against
     # the same unchanged signal, marching price to max_cost within days even
     # with zero new results — this is exactly what happened to ~27% of the
-    # football pool. Skip a player once their weighted_points for this window
-    # matches the last run's, so only genuinely new stats move price again.
-    # ponytail: only guards the performance signal (weighted_points, already
-    # persisted); a demand-only re-run (new transfers, unchanged stats) still
-    # gets skipped. Store/compare demand_score too if that turns out to matter.
-    last_priced_points: dict[uuid.UUID, Decimal] = {}
-    for player_id, points in (
-        db.query(PlayerPriceHistory.player_id, PlayerPriceHistory.weighted_points)
+    # football pool. Skip a player only once BOTH signals (weighted_points
+    # and demand_score) match the last run's for this window, so a change in
+    # either one still moves price — only a fully-unchanged run is a no-op.
+    last_priced_signals: dict[uuid.UUID, tuple[Decimal, Decimal | None]] = {}
+    for player_id, points, demand in (
+        db.query(
+            PlayerPriceHistory.player_id,
+            PlayerPriceHistory.weighted_points,
+            PlayerPriceHistory.demand_score,
+        )
         .filter(
             PlayerPriceHistory.transfer_window_id == latest_window_id,
             PlayerPriceHistory.player_id.in_(list(weighted_points_sum.keys())),
@@ -203,7 +205,7 @@ def recalculate_player_prices(
         .order_by(PlayerPriceHistory.created_at.desc())
         .all()
     ):
-        last_priced_points.setdefault(player_id, points)
+        last_priced_signals.setdefault(player_id, (points, demand))
 
     history_rows: list[PlayerPriceHistory] = []
     updated = 0
@@ -217,7 +219,13 @@ def recalculate_player_prices(
 
         weighted_points = weighted_points_sum[player.id] / denominator
         quantized_points = weighted_points.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-        if last_priced_points.get(player.id) == quantized_points:
+
+        in_count, out_count = demand_counts.get(player.id, (0, 0))
+        transfer_volume = max(1, in_count + out_count)
+        demand_score = Decimal(in_count - out_count) / Decimal(transfer_volume)
+        quantized_demand = demand_score.quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+
+        if last_priced_signals.get(player.id) == (quantized_points, quantized_demand):
             unchanged += 1
             continue
 
@@ -227,9 +235,6 @@ def recalculate_player_prices(
             (weighted_points - policy.baseline_points) * policy.points_to_cost_factor
         )
 
-        in_count, out_count = demand_counts.get(player.id, (0, 0))
-        transfer_volume = max(1, in_count + out_count)
-        demand_score = Decimal(in_count - out_count) / Decimal(transfer_volume)
         # Scaled the same way performance_delta ultimately gets bounded, so a
         # maximal demand skew alone can move price by up to max_step_per_run
         # before weighting — the two signals are comparably scaled inputs to
@@ -263,6 +268,7 @@ def recalculate_player_prices(
                 new_cost=next_cost,
                 delta=delta,
                 weighted_points=quantized_points,
+                demand_score=quantized_demand,
                 algorithm_version=algorithm_version,
             )
         )
