@@ -311,6 +311,10 @@ export const AdminService = {
     return res.data;
   },
 
+  async deleteUser(id: string): Promise<void> {
+    await authApi.delete(API_PATHS.ADMIN.USER_DELETE(id));
+  },
+
   async getLeagues(params?: TAdminLeagueListParams): Promise<TAdminLeagueListResponse> {
     const res = await authApi.get(API_PATHS.ADMIN.LEAGUES(params));
     return res.data;

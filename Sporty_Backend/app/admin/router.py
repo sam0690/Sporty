@@ -147,6 +147,15 @@ def change_user_role(
     return services.change_user_role(db, current_user, user_id, data.role, reason=data.reason)
 
 
+@router.delete("/users/{user_id}", status_code=204, summary="Delete a user (super admin)")
+def delete_user(
+    user_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPER_ADMIN)),
+):
+    services.delete_user_admin(db, current_user, user_id)
+
+
 # ── Leagues ─────────────────────────────────────────────────────────────────────
 
 @router.get("/leagues", response_model=AdminLeagueListResponse, summary="List all leagues platform-wide (admin)")

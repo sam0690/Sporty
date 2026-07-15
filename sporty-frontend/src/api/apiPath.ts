@@ -178,6 +178,7 @@ export const API_PATHS = {
     USER_REACTIVATE: (id: string) => `/admin/users/${id}/reactivate`,
     USER_FORCE_LOGOUT: (id: string) => `/admin/users/${id}/force-logout`,
     USER_ROLE: (id: string) => `/admin/users/${id}/role`,
+    USER_DELETE: (id: string) => `/admin/users/${id}`,
     LEAGUES: (opts?: { page?: number; pageSize?: number; search?: string; status?: string }) => {
       const params = new URLSearchParams();
       if (opts?.page != null) params.set("page", String(opts.page));

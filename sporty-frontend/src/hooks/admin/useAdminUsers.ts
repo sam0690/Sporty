@@ -67,6 +67,20 @@ export function useForceLogoutUser() {
   );
 }
 
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useApiMutation<void, string>(
+    (id: string) => AdminService.deleteUser(id),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+        queryClient.invalidateQueries({ queryKey: ["admin", "audit-log"] });
+      },
+      successMessage: "User deleted",
+    },
+  );
+}
+
 export function useChangeUserRole() {
   const queryClient = useQueryClient();
   return useApiMutation<

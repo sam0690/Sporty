@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "./AdminErrorState";
+import { ConfirmDialog } from "./ConfirmDialog";
 import { Pagination } from "./Pagination";
 import {
   useAdminUsers,
@@ -14,6 +15,7 @@ import {
   useReactivateUser,
   useForceLogoutUser,
   useChangeUserRole,
+  useDeleteUser,
 } from "@/hooks/admin/useAdminUsers";
 import type { TAdminUserListItem } from "@/services/AdminService";
 
@@ -24,14 +26,17 @@ export function AdminUserList() {
   const { user: currentAdmin } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<TAdminUserListItem | null>(null);
 
   const { data, isLoading, isError, refetch } = useAdminUsers({ page, pageSize: PAGE_SIZE, search: search || undefined });
   const suspendUser = useSuspendUser();
   const reactivateUser = useReactivateUser();
   const forceLogoutUser = useForceLogoutUser();
   const changeUserRole = useChangeUserRole();
+  const deleteUser = useDeleteUser();
 
   const canChangeRoles = hasMinRole(currentAdmin?.role, "super_admin");
+  const canDelete = hasMinRole(currentAdmin?.role, "super_admin");
 
   const columns: TableColumn<TAdminUserListItem>[] = [
     { key: "username", header: "Username", render: (u) => u.username },
@@ -102,6 +107,16 @@ export function AdminUserList() {
           >
             Force Logout
           </Button>
+          {canDelete ? (
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={deleteUser.isPending || u.id === currentAdmin?.id}
+              onClick={() => setDeleteTarget(u)}
+            >
+              Delete
+            </Button>
+          ) : null}
         </div>
       ),
     },
@@ -138,6 +153,21 @@ export function AdminUserList() {
           />
         </>
       ) : null}
+
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        title="Delete User"
+        message={`Delete user "${deleteTarget?.username}"? This cannot be undone.`}
+        confirmLabel="Delete"
+        variant="danger"
+        isPending={deleteUser.isPending}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) {
+            deleteUser.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
+          }
+        }}
+      />
     </div>
   );
 }

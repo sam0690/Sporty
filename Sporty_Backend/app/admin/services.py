@@ -17,6 +17,7 @@ from app.league.models import (
     BudgetTransaction,
     FantasyTeam,
     League,
+    LeagueMembership,
     LeagueStatus,
     Season,
     Sport,
@@ -186,6 +187,65 @@ def change_user_role(
     db.commit()
     db.refresh(user)
     return user
+
+
+def delete_user_admin(
+    db: Session,
+    actor: User,
+    target_user_id: uuid.UUID,
+    reason: str | None = None,
+) -> None:
+    """Hard-delete a user row.
+
+    Only allowed when the user is FK-safe to remove: no owned leagues, no
+    league memberships, no fantasy teams, and no admin-audit-log rows as
+    actor (that FK is explicit RESTRICT — see AdminAuditLog.actor_user_id).
+    Everything else (refresh tokens, favourites, notifications, support
+    tickets, chat messages) is cleaned up or detached by existing CASCADE/
+    SET NULL FKs. Blocked users get one 409 listing every blocker, not just
+    the first — no reason to make an admin retry three times to find them all.
+    """
+    if target_user_id == actor.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot delete your own account",
+        )
+
+    user = get_user_admin(db, target_user_id)
+
+    owned_leagues = db.query(League).filter(League.owner_id == target_user_id).count()
+    memberships = db.query(LeagueMembership).filter(LeagueMembership.user_id == target_user_id).count()
+    fantasy_teams = db.query(FantasyTeam).filter(FantasyTeam.user_id == target_user_id).count()
+    audit_actions = db.query(AdminAuditLog).filter(AdminAuditLog.actor_user_id == target_user_id).count()
+
+    blockers = []
+    if owned_leagues:
+        blockers.append(f"owns {owned_leagues} league(s)")
+    if memberships:
+        blockers.append(f"member of {memberships} league(s)")
+    if fantasy_teams:
+        blockers.append(f"has {fantasy_teams} fantasy team(s)")
+    if audit_actions:
+        blockers.append(f"has {audit_actions} admin action(s) on record")
+
+    if blockers:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete user: " + "; ".join(blockers),
+        )
+
+    db.delete(user)
+    db.flush()
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.USER_DELETE,
+        target_type="user",
+        target_id=target_user_id,
+        reason=reason,
+    )
+    db.commit()
 
 
 # ── Leagues ─────────────────────────────────────────────────────────────────────

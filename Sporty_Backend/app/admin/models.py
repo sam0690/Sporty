@@ -42,6 +42,7 @@ class AdminActionType(str, enum.Enum):
     USER_REACTIVATE = "user_reactivate"
     USER_FORCE_LOGOUT = "user_force_logout"
     USER_ROLE_CHANGE = "user_role_change"
+    USER_DELETE = "user_delete"
     LEAGUE_STATUS_OVERRIDE = "league_status_override"
     LEAGUE_DELETE_OVERRIDE = "league_delete_override"
     LEAGUE_SETTINGS_OVERRIDE = "league_settings_override"

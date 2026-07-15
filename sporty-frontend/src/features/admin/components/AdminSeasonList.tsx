@@ -43,7 +43,24 @@ export function AdminSeasonList() {
 
   const columns: TableColumn<TAdminSeason>[] = [
     { key: "sport", header: "Sport", render: (s) => sportName(s) },
-    { key: "name", header: "Name", render: (s) => s.name },
+    {
+      key: "name",
+      header: "Name",
+      render: (s) =>
+        s.name.startsWith("dataset-import") ? (
+          <span className="inline-flex items-center gap-2">
+            {s.name}
+            <span
+              title="Created automatically by the CSV dataset importer to anchor historical stat rows it couldn't match to a real season. Not a playable season — no league can use it, safe to ignore."
+              className="cursor-help"
+            >
+              <Badge tone="neutral">Import artifact</Badge>
+            </span>
+          </span>
+        ) : (
+          s.name
+        ),
+    },
     { key: "start_date", header: "Start", render: (s) => new Date(s.start_date).toLocaleDateString() },
     { key: "end_date", header: "End", render: (s) => new Date(s.end_date).toLocaleDateString() },
     {
