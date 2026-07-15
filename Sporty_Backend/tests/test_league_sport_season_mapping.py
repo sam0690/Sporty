@@ -241,3 +241,127 @@ def test_remap_sport_season_rejects_mismatched_sport():
             # football_season.id is NOT a basketball season.
             league_service.remap_sport_season(db, league.id, "basketball", football_season.id)
         assert exc_info.value.status_code == 422
+
+
+# ── Multisport creation-window gate ──────────────────────────────────────────
+#
+# Requiring EVERY sport in a multisport league — including the primary one —
+# to have a season covering "today" mathematically guarantees all of them
+# overlap each other (two ranges containing the same point necessarily
+# overlap). These tests close the one gap: without also checking the PRIMARY
+# season, a caller could pick a not-yet-current primary season and still
+# pass the (already-tested) secondary-sport check above.
+
+
+def test_create_league_blocks_multisport_with_non_current_primary_season():
+    with session_scope() as db:
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        future_football_season = Season(
+            sport_id=football.id, name="Future Football Season",
+            start_date=date.today() + timedelta(days=60),
+            end_date=date.today() + timedelta(days=300),
+            is_active=True,
+        )
+        db.add(future_football_season)
+        basketball_season = _current_season(db, basketball)  # itself current
+        owner = _user(db)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            league_service.create_league(
+                db, LeagueCreate(name="Mixed", season_id=future_football_season.id,
+                                  draft_mode=False, sports=["football", "basketball"]), owner,
+            )
+        assert exc_info.value.status_code == 409
+        assert "multisport" in exc_info.value.detail.lower()
+
+
+def test_create_league_allows_multisport_when_primary_and_secondary_both_current():
+    with session_scope() as db:
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        football_season = _current_season(db, football)
+        basketball_season = _current_season(db, basketball)
+        owner = _user(db)
+        db.commit()
+
+        league = league_service.create_league(
+            db, LeagueCreate(name="Mixed", season_id=football_season.id,
+                              draft_mode=False, sports=["football", "basketball"]), owner,
+        )
+        assert league.id is not None
+
+
+def test_create_league_single_sport_allows_non_current_season():
+    """The multisport-only gate must not regress ordinary single-sport
+    league creation against a future/past season, which has always been
+    allowed and stays allowed."""
+    with session_scope() as db:
+        football = Sport(name="football", display_name="Football")
+        db.add(football)
+        db.flush()
+        future_football_season = Season(
+            sport_id=football.id, name="Future Football Season",
+            start_date=date.today() + timedelta(days=60),
+            end_date=date.today() + timedelta(days=300),
+            is_active=True,
+        )
+        db.add(future_football_season)
+        owner = _user(db)
+        db.commit()
+
+        league = league_service.create_league(
+            db, LeagueCreate(name="Future League", season_id=future_football_season.id,
+                              draft_mode=False, sports=["football"]), owner,
+        )
+        assert league.id is not None
+
+
+def test_add_sport_blocks_when_league_own_season_not_current():
+    with session_scope() as db:
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        future_football_season = Season(
+            sport_id=football.id, name="Future Football Season",
+            start_date=date.today() + timedelta(days=60),
+            end_date=date.today() + timedelta(days=300),
+            is_active=True,
+        )
+        db.add(future_football_season)
+        basketball_season = _current_season(db, basketball)  # itself current
+        owner = _user(db)
+        league = league_service.create_league(
+            db, LeagueCreate(name="Future Football League", season_id=future_football_season.id,
+                              draft_mode=False, sports=["football"]), owner,
+        )
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            league_service.add_sport(db, league.id, "basketball")
+        assert exc_info.value.status_code == 409
+
+
+def test_add_sport_allows_when_league_own_season_and_new_sport_both_current():
+    with session_scope() as db:
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        football_season = _current_season(db, football)
+        basketball_season = _current_season(db, basketball)
+        owner = _user(db)
+        league = league_service.create_league(
+            db, LeagueCreate(name="Football League", season_id=football_season.id,
+                              draft_mode=False, sports=["football"]), owner,
+        )
+        db.commit()
+
+        league_sport = league_service.add_sport(db, league.id, "basketball")
+        assert league_sport is not None

@@ -182,6 +182,24 @@ def create_league(
             ),
         )
 
+    # Multisport leagues are only creatable while every sport involved has a
+    # season live right now. _current_season_for_sport below already enforces
+    # this for the secondary sports; requiring the PRIMARY season to also be
+    # current closes the only gap — without it, every sport independently
+    # covering "today" is what guarantees they all overlap each other (two
+    # ranges containing the same point necessarily overlap), so this one
+    # check is what makes that guarantee airtight rather than a separate
+    # date-range overlap computation being needed.
+    if len(requested_sports) > 1 and not (season.start_date <= date.today() <= season.end_date):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Cannot create a multisport league: the selected season isn't in "
+                "progress right now — every sport in a multisport league must "
+                "have a season live at the same time."
+            ),
+        )
+
     # Derive squad size from sport type
     sport_type = derive_sport_type(requested_sports)
     squad_size = get_squad_size(sport_type)
@@ -1111,7 +1129,14 @@ def _current_season_for_sport(db: Session, sport_id: uuid.UUID) -> Season | None
     season_id) at creation/add-sport time: see create_league and add_sport.
     Cross-sport scoring depends on every LeagueSport row having a resolved
     season (get_league_sport_season in app/services/scoring/window_locator.py)
-    — callers here must hard-block rather than leave one unmapped."""
+    — callers here must hard-block rather than leave one unmapped.
+
+    This also doubles as the multisport overlap gate: create_league/add_sport
+    require EVERY sport in a multisport league — including the primary one —
+    to independently pass this "current" check. Two ranges that both contain
+    "today" necessarily overlap each other, so requiring every sport to be
+    current is sufficient to guarantee all of them overlap; no separate
+    date-range overlap computation is needed on top of it."""
     today = date.today()
     return (
         db.query(Season)
@@ -1146,6 +1171,20 @@ def add_sport(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Sports can only be added during SETUP",
+        )
+
+    # Adding a sport makes this a multisport league — same overlap gate as
+    # create_league: the league's OWN season must be live right now too, not
+    # just the sport being added (see _current_season_for_sport's docstring
+    # for why "every sport current" is what guarantees they all overlap).
+    if not league.season or not (league.season.start_date <= date.today() <= league.season.end_date):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "Cannot add a sport: this league's own season isn't in progress "
+                "right now — every sport in a multisport league must have a "
+                "season live at the same time."
+            ),
         )
 
     sport = (
