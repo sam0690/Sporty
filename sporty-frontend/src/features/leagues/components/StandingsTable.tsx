@@ -1,6 +1,17 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, MinusCircle } from "lucide-react";
+import { Tooltip } from "@mantine/core";
+
+type PointsPenalty = {
+  points_charged: number;
+  reason: string;
+  created_at: string;
+};
+
+const PENALTY_REASON_LABELS: Record<string, string> = {
+  budget_overage: "Over-budget transfer",
+};
 
 type StandingRow = {
   rank: number;
@@ -13,7 +24,29 @@ type StandingRow = {
   isManagerOfTheWeek?: boolean;
   /** Head-to-head W-L-T record, e.g. "4-2-1" — only set for H2H leagues. */
   record?: string;
+  /** Points paid via the budget-overage penalty this scope (window or season). */
+  pointsDeducted?: number;
+  penalties?: PointsPenalty[];
 };
+
+function PenaltyBreakdown({ penalties, total }: { penalties: PointsPenalty[]; total: number }) {
+  return (
+    <div className="flex flex-col gap-1 py-0.5 text-xs">
+      {penalties.map((p, i) => (
+        <div key={i} className="flex items-center justify-between gap-3">
+          <span>{PENALTY_REASON_LABELS[p.reason] ?? p.reason}</span>
+          <span className="num">-{p.points_charged.toFixed(2)}</span>
+        </div>
+      ))}
+      {penalties.length > 1 && (
+        <div className="flex items-center justify-between gap-3 border-t border-white/15 pt-1 font-700">
+          <span>Total</span>
+          <span className="num">-{total.toFixed(2)}</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 type StandingsTableProps = {
   standings: StandingRow[];
@@ -128,8 +161,27 @@ export function StandingsTable({
                   <p className="mt-0.5 truncate text-xs text-fg-3">{team.manager}</p>
                 </div>
 
-                <span className="num shrink-0 font-display text-2xl tracking-[-0.02em] text-accent">
-                  {Math.round(team.points)}
+                <span className="flex shrink-0 items-center gap-1.5">
+                  {team.pointsDeducted ? (
+                    <Tooltip
+                      label={
+                        <PenaltyBreakdown
+                          penalties={team.penalties ?? []}
+                          total={team.pointsDeducted}
+                        />
+                      }
+                      multiline
+                      withArrow
+                    >
+                      <MinusCircle
+                        className="h-3.5 w-3.5 text-danger"
+                        aria-label={`${team.pointsDeducted.toFixed(2)} points deducted this week`}
+                      />
+                    </Tooltip>
+                  ) : null}
+                  <span className="num font-display text-2xl tracking-[-0.02em] text-accent">
+                    {Math.round(team.points)}
+                  </span>
                 </span>
               </div>
             );
@@ -140,4 +192,4 @@ export function StandingsTable({
   );
 }
 
-export type { StandingRow };
+export type { StandingRow, PointsPenalty };

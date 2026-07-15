@@ -740,14 +740,25 @@ class SportResponse(BaseModel):
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+class PointsPenaltyEntry(BaseModel):
+    """One points-for-transfer deduction, for the leaderboard breakdown."""
+    points_charged: Decimal
+    reason: str
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LeaderboardEntryResponse(BaseModel):
     """A single team's standing in a league's leaderboard."""
     team_id: uuid.UUID
     team_name: str
     owner_name: str
     points: Decimal
+    points_deducted: Decimal = Decimal("0")
+    penalties: list[PointsPenaltyEntry] = []
     rank: int | None
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 

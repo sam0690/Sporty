@@ -92,6 +92,12 @@ export function LeagueLeaderboard() {
           streak: power?.streak,
           isManagerOfTheWeek: power?.manager_of_the_week,
           record: recordByTeam.get(entry.team_id),
+          pointsDeducted: Number(entry.points_deducted),
+          penalties: entry.penalties?.map((p) => ({
+            points_charged: Number(p.points_charged),
+            reason: p.reason,
+            created_at: p.created_at,
+          })),
         };
       });
   }, [leaderboard, powerRankingsByTeam, recordByTeam]);

@@ -178,11 +178,19 @@ export type TGameweekRecapResponse = {
   capture_rate: number | null;
 };
 
+export type TPointsPenalty = {
+  points_charged: number;
+  reason: string;
+  created_at: string;
+};
+
 export type TLeaderboardEntry = {
   team_id: string;
   team_name: string;
   owner_name: string;
   points: number;
+  points_deducted: number;
+  penalties: TPointsPenalty[];
   rank: number | null;
 };
 

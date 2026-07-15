@@ -78,7 +78,7 @@ export function PlayerCard({
             {cost ? (
               <>
                 <span className="text-white/20">·</span>
-                <span className="num">${cost}M</span>
+                <span className="num">£{cost}M</span>
               </>
             ) : null}
           </p>

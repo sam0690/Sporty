@@ -314,12 +314,22 @@ def get_league_leaderboard(
             .correlate(FantasyTeam)
             .scalar_subquery()
         )
+        window_penalty_display = (
+            select(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
+            .where(
+                PointsPenalty.fantasy_team_id == FantasyTeam.id,
+                PointsPenalty.transfer_window_id == window_id,
+            )
+            .correlate(FantasyTeam)
+            .scalar_subquery()
+        )
         query = (
             db.query(
                 FantasyTeam.id.label("team_id"),
                 FantasyTeam.name.label("team_name"),
                 User.username.label("owner_name"),
                 (TeamWeeklyScore.points - window_penalty).label("points"),
+                window_penalty_display.label("points_deducted"),
                 TeamWeeklyScore.rank_in_league.label("rank"),
             )
             .select_from(TeamWeeklyScore)
@@ -367,6 +377,12 @@ def get_league_leaderboard(
             .correlate(FantasyTeam)
             .scalar_subquery()
         )
+        season_penalty_display = (
+            select(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
+            .where(PointsPenalty.fantasy_team_id == FantasyTeam.id)
+            .correlate(FantasyTeam)
+            .scalar_subquery()
+        )
         net_total_points = raw_total_points - season_penalty
         query = (
             db.query(
@@ -374,6 +390,7 @@ def get_league_leaderboard(
                 FantasyTeam.name.label("team_name"),
                 User.username.label("owner_name"),
                 net_total_points.label("points"),
+                season_penalty_display.label("points_deducted"),
             )
             .join(User, FantasyTeam.user_id == User.id)
             .join(
@@ -415,7 +432,25 @@ def get_league_leaderboard(
         )
     
     results = query.all()
-    
+
+    team_ids = [row.team_id for row in results]
+    penalties_by_team: dict[uuid.UUID, list[dict]] = {}
+    if team_ids:
+        penalty_query = db.query(
+            PointsPenalty.fantasy_team_id,
+            PointsPenalty.points_charged,
+            PointsPenalty.reason,
+            PointsPenalty.created_at,
+        ).filter(PointsPenalty.fantasy_team_id.in_(team_ids))
+        if window_id:
+            penalty_query = penalty_query.filter(PointsPenalty.transfer_window_id == window_id)
+        for p in penalty_query.order_by(PointsPenalty.created_at.asc()).all():
+            penalties_by_team.setdefault(p.fantasy_team_id, []).append({
+                "points_charged": p.points_charged,
+                "reason": p.reason,
+                "created_at": p.created_at,
+            })
+
     entries = []
     for i, row in enumerate(results):
         rank = getattr(row, "rank", None) if window_id else (i + 1)
@@ -424,9 +459,11 @@ def get_league_leaderboard(
             "team_name": row.team_name,
             "owner_name": row.owner_name,
             "points": row.points,
+            "points_deducted": row.points_deducted,
+            "penalties": penalties_by_team.get(row.team_id, []),
             "rank": rank,
         })
-        
+
     return {
         "league_id": league_id,
         "transfer_window_id": window_id,
