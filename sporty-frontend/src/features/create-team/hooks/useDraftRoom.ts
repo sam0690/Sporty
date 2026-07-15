@@ -47,8 +47,8 @@ export function useDraftRoom() {
 
   const leagueSport = normalizeLeagueSport(league?.sports);
   const requiredPlayers = SQUAD_SIZES[leagueSport];
-  const rawBudget = Number(league?.budget_per_team ?? 103);
-  const budget = Number.isFinite(rawBudget) ? rawBudget : 103;
+  const rawBudget = Number(league?.budget_per_team ?? 100);
+  const budget = Number.isFinite(rawBudget) ? rawBudget : 100;
 
   const market = usePlayerMarket(leagueId);
 

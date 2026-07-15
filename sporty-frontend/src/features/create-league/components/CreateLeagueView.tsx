@@ -70,7 +70,7 @@ export function CreateLeagueView() {
     defaultValues: {
       name: "",
       sport_ids: ["football"],
-      budget: 103,
+      budget: 100,
       max_teams: 10,
       squad_size: 15,
       draft_mode: false,

@@ -129,8 +129,8 @@ export function useCreateTeamDashboard() {
     [selectedPlayers],
   );
 
-  const rawBudget = Number(league?.budget_per_team ?? 103);
-  const budget = Number.isFinite(rawBudget) ? rawBudget : 103;
+  const rawBudget = Number(league?.budget_per_team ?? 100);
+  const budget = Number.isFinite(rawBudget) ? rawBudget : 100;
 
   const requiredPlayers = SQUAD_SIZES[leagueSport];
   const minPlayersRequired = requiredPlayers;
