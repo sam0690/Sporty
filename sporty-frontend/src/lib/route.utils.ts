@@ -47,6 +47,15 @@ export function isActiveRoute(href: string, pathname: string): boolean {
  * never "//" or a path containing "://") to prevent open-redirect attacks
  * via a crafted login/signup link.
  */
+/**
+ * URL for the one-time post-signup "pick your favourites" step, carrying the
+ * user's original destination through as a `redirect` query param.
+ */
+export function buildFavouritesOnboardingUrl(redirect: string | null): string {
+  const base = ROUTES.ONBOARDING_FAVOURITES.path;
+  return redirect ? `${base}?redirect=${encodeURIComponent(redirect)}` : base;
+}
+
 export function getSafeRedirectPath(
   redirect: string | null | undefined,
 ): string | null {

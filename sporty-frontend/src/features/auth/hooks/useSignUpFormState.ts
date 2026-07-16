@@ -7,7 +7,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/context/auth-context";
 import { RegisterSchema, type RegisterValues } from "@/lib/validations";
 import { toastifier } from "@/lib/toastifier";
-import { getSafeRedirectPath } from "@/lib/route.utils";
+import {
+  buildFavouritesOnboardingUrl,
+  getSafeRedirectPath,
+} from "@/lib/route.utils";
 
 export function useSignUpFormState() {
   const router = useRouter();
@@ -42,10 +45,7 @@ export function useSignUpFormState() {
     // Route through a one-time "pick your favourites" step before landing
     // wherever the user was actually headed — it's skippable there, not a
     // hard gate on completing registration.
-    const onboardingUrl = redirect
-      ? `/onboarding/favourites?redirect=${encodeURIComponent(redirect)}`
-      : "/onboarding/favourites";
-    router.replace(onboardingUrl);
+    router.replace(buildFavouritesOnboardingUrl(redirect));
   });
 
   return {

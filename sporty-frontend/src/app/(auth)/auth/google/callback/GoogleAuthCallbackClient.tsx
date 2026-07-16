@@ -6,7 +6,10 @@ import { Button } from "@/components/ui";
 import { GoogleAccountLinkModal } from "@/components/auth/google-link/components/GoogleAccountLinkModal";
 import { useAuth } from "@/context/auth-context";
 import { toastifier } from "@/lib/toastifier";
-import { getSafeRedirectPath } from "@/lib/route.utils";
+import {
+  buildFavouritesOnboardingUrl,
+  getSafeRedirectPath,
+} from "@/lib/route.utils";
 
 export function GoogleAuthCallbackClient() {
   const router = useRouter();
@@ -21,7 +24,10 @@ export function GoogleAuthCallbackClient() {
   const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (isLoading || isLinkModalOpen || isReauthenticating) {
+    // Only handles arriving at the callback already authenticated. Once the
+    // code exchange starts, its success/link/error paths own navigation
+    // (new users route through /onboarding/favourites) — don't race them.
+    if (isLoading || isLinkModalOpen || isReauthenticating || hasStarted.current) {
       return;
     }
 
@@ -58,9 +64,7 @@ export function GoogleAuthCallbackClient() {
         const redirect = getSafeRedirectPath(searchParams.get("state"));
         window.location.replace(
           result.isNewUser
-            ? redirect
-              ? `/onboarding/favourites?redirect=${encodeURIComponent(redirect)}`
-              : "/onboarding/favourites"
+            ? buildFavouritesOnboardingUrl(redirect)
             : redirect ?? "/dashboard",
         );
         return;

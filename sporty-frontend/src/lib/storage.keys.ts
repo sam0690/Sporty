@@ -8,6 +8,7 @@
 export const LocalStorageKeys = {
   // Auth tokens removed - using httpOnly cookies only (security best practice)
   DASHBOARD_SELECTED_LEAGUE_ID: "dashboard_selected_league_id",
+  FAVOURITES_NUDGE_DISMISSED: "favourites_nudge_dismissed",
 } as const;
 
 export const SessionStorageKeys = {

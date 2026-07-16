@@ -43,6 +43,11 @@ export const ROUTES: Record<string, RouteMeta> = {
     name: "Dashboard",
     protection: "protected",
   },
+  ONBOARDING_FAVOURITES: {
+    path: "/onboarding/favourites",
+    name: "Pick Your Favourites",
+    protection: "protected",
+  },
   PROFILE: {
     path: "/profile",
     name: "Profile",

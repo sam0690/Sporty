@@ -1,6 +1,7 @@
 "use client";
 
 import { useDashboardMainState } from "@/features/dashboard";
+import { FavouritesNudge } from "./FavouritesNudge";
 import { Topbar } from "./Topbar";
 import { GameweekBreakdown } from "./GameweekBreakdown";
 import { TeamPreview } from "./TeamPreview";
@@ -44,6 +45,8 @@ export function DashboardMainContainer() {
           statsLoading={statsLoading && hasLeagues}
           isSwitching={isSwitching}
         />
+
+        <FavouritesNudge />
 
         {hasLeagues && (
           <div

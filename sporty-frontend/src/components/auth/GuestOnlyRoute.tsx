@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { ROUTES } from "@/lib/route.config";
@@ -18,9 +18,17 @@ export function GuestOnlyRoute({
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const isAuthenticated = Boolean(user);
+  const hasSettled = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    // Only bounce visitors who ARRIVE already authenticated (first settle).
+    // Auth completed while on the page (login/signup submit) is navigated by
+    // the form itself, which may route through onboarding — don't race it.
+    if (isLoading || hasSettled.current) {
+      return;
+    }
+    hasSettled.current = true;
+    if (isAuthenticated) {
       const redirect = getSafeRedirectPath(
         new URLSearchParams(window.location.search).get("redirect"),
       );
