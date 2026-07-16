@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { ArrowRight } from "lucide-react";
 
 import { ClockIcon } from "@/components/live/icons";
+import { useAuth } from "@/context/auth-context";
 import type { TMatch } from "@/types/match";
 import { CompetitionPanel } from "./CompetitionPanel";
 import { FeaturedMatch } from "./FeaturedMatch";
@@ -28,7 +29,7 @@ function SkeletonGrid() {
   );
 }
 
-type MatchesBrowserVariant = "public" | "dashboard";
+const BASE_PATH = "/fixtures";
 
 type MatchesBrowserProps = {
   items: TMatch[];
@@ -36,29 +37,9 @@ type MatchesBrowserProps = {
   isError: boolean;
   sport: string;
   onSportChange: (sport: string) => void;
-  variant: MatchesBrowserVariant;
-  /** YYYY-MM-DD. Omit to hide the date strip (e.g. the public landing page). */
-  date?: string;
-  onDateChange?: (date: string) => void;
-};
-
-const VARIANT_COPY: Record<
-  MatchesBrowserVariant,
-  { basePath: string; eyebrow: string; title: string; description: string }
-> = {
-  public: {
-    basePath: "/fixtures",
-    eyebrow: "Matchday",
-    title: "Fixtures & Results",
-    description:
-      "Live scores, upcoming kickoffs and recent results across football, basketball and cricket — free to browse, no account needed.",
-  },
-  dashboard: {
-    basePath: "/matches",
-    eyebrow: "Matchday Centre",
-    title: "Matches",
-    description: "Live scores and upcoming kickoffs across every sport.",
-  },
+  /** YYYY-MM-DD, drives the date strip. */
+  date: string;
+  onDateChange: (date: string) => void;
 };
 
 export function MatchesBrowser({
@@ -67,11 +48,11 @@ export function MatchesBrowser({
   isError,
   sport,
   onSportChange,
-  variant,
   date,
   onDateChange,
 }: MatchesBrowserProps) {
-  const copy = VARIANT_COPY[variant];
+  // Signed-in managers don't need the "create an account" pitch.
+  const { user } = useAuth();
 
   const liveMatches = useMemo(
     () => items.filter((m) => statusMeta(m.status).isLive),
@@ -85,9 +66,6 @@ export function MatchesBrowser({
     <div className="relative overflow-hidden">
       <main className="relative mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <FixturesHero
-          eyebrow={copy.eyebrow}
-          title={copy.title}
-          description={copy.description}
           totalFixtures={items.length}
           totalLive={totalLive}
           totalCompetitions={groups.length}
@@ -95,15 +73,13 @@ export function MatchesBrowser({
 
         {liveMatches.length > 1 && (
           <div className="mt-5">
-            <LiveTicker matches={liveMatches} basePath={copy.basePath} />
+            <LiveTicker matches={liveMatches} basePath={BASE_PATH} />
           </div>
         )}
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4">
           <SportFilterChips active={sport} onChange={onSportChange} />
-          {date && onDateChange && (
-            <MatchDateStrip selectedDate={date} onDateChange={onDateChange} />
-          )}
+          <MatchDateStrip selectedDate={date} onDateChange={onDateChange} />
         </div>
 
         {isLoading && (
@@ -118,7 +94,7 @@ export function MatchesBrowser({
             <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-danger-soft">
               Couldn&apos;t load fixtures
             </p>
-            <p className="text-sm text-[#c98686]">Please try again in a moment.</p>
+            <p className="text-sm text-danger-soft/80">Please try again in a moment.</p>
           </div>
         )}
 
@@ -140,7 +116,7 @@ export function MatchesBrowser({
           <>
             {featured && (
               <div className="mt-8">
-                <FeaturedMatch match={featured} basePath={copy.basePath} />
+                <FeaturedMatch match={featured} basePath={BASE_PATH} />
               </div>
             )}
 
@@ -149,13 +125,13 @@ export function MatchesBrowser({
                 <CompetitionPanel
                   key={`${g.competition}::${g.sport}`}
                   group={g}
-                  basePath={copy.basePath}
+                  basePath={BASE_PATH}
                   style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}
                 />
               ))}
             </div>
 
-            {variant === "public" && (
+            {!user && (
               <div className="mt-10 flex flex-col items-center gap-3 rounded-[3px] border border-accent/22 bg-accent/4 p-8 text-center sm:p-12">
                 <p className="font-display text-3xl tracking-[-0.02em] text-fg-1 sm:text-4xl">
                   Turn these fixtures into points

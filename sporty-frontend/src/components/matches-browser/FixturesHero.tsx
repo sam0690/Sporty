@@ -26,7 +26,7 @@ export function FixturesHero({
   totalCompetitions,
   eyebrow = "Matchday",
   title = "Fixtures & Results",
-  description = "Live scores, upcoming kickoffs and recent results across football, basketball and cricket — free to browse, no account needed.",
+  description = "Live scores, upcoming kickoffs and recent results across football, basketball and cricket.",
 }: FixturesHeroProps) {
   return (
     <header className="relative overflow-hidden card-surface px-5 py-9 sm:px-10 sm:py-12">

@@ -39,8 +39,9 @@ function MatchRow({ match, basePath }: { match: TMatch; basePath: string }) {
   return (
     <Link
       href={`${basePath}/${match.id}`}
-      className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/3 hover:no-underline"
-      style={isLive ? { borderLeft: "2px solid #ff3b5c", background: "rgba(255,59,92,0.03)" } : undefined}
+      className={`group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/3 hover:no-underline ${
+        isLive ? "bg-danger/4" : ""
+      }`}
     >
       <div className="w-14 shrink-0 text-center">
         {isLive ? (

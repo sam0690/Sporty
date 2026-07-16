@@ -34,7 +34,19 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/match/:matchId",
-        destination: "/matches/:matchId",
+        destination: "/fixtures/:matchId",
+        permanent: false,
+      },
+      // /matches was the authenticated twin of /fixtures; consolidated onto
+      // the public route (fixture data was never user-specific).
+      {
+        source: "/matches",
+        destination: "/fixtures",
+        permanent: false,
+      },
+      {
+        source: "/matches/:matchId",
+        destination: "/fixtures/:matchId",
         permanent: false,
       },
       {

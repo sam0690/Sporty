@@ -5,9 +5,10 @@ are keyed by a match id the caller must already know. This list endpoint is
 the discovery surface that feeds the frontend Matches/Fixtures page so users
 can actually reach the live match view.
 
-Access model: any authenticated user may view all fixtures, regardless of
-league membership — matches are a public discovery surface within the app, so
-users can browse fixtures before (or without) joining a league.
+Access model: fixtures are a public discovery surface — no auth required.
+Match data is never user-specific, so the browse list and the landing-page
+blend are both open; users can browse fixtures before (or without) having
+an account at all.
 """
 
 from __future__ import annotations
@@ -18,8 +19,6 @@ from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
-from app.auth.dependencies import get_current_active_user
-from app.auth.models import User
 from app.database import get_db
 from app.league.models import Sport
 from app.match.models import Match
@@ -81,7 +80,7 @@ def _to_match_response(
 @router.get(
     "/matches",
     response_model=MatchListResponse,
-    summary="List fixtures the user can view",
+    summary="List fixtures (public)",
 )
 def list_matches(
     status: str | None = Query(
@@ -96,9 +95,8 @@ def list_matches(
     ),
     limit: int = Query(default=100, ge=1, le=200),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
 ):
-    # Any authenticated user can browse all fixtures — no league gating.
+    # Public discovery surface — no auth, no league gating (see module docstring).
     query = (
         db.query(Match, Sport.name.label("sport_name"))
         .join(Sport, Match.sport_id == Sport.id)

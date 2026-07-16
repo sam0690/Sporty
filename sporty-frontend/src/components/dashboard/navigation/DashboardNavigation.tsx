@@ -37,7 +37,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
             { label: "Home", href: "/dashboard", icon: Home },
             { label: "Leagues", href: "/leagues", icon: Trophy },
             { label: "My Team", href: "/my-team", icon: Shield },
-            { label: "Matches", href: "/matches", icon: CalendarDays },
+            { label: "Fixtures", href: "/fixtures", icon: CalendarDays },
             { label: "Players", href: "/players", icon: Users },
           ]),
       ...(isAdmin ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),

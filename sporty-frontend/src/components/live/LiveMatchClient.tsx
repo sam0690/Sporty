@@ -154,7 +154,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         <ScoreTicker loading={loading} />
 
         {error && (
-          <p className="mt-4 rounded-[3px] border border-[rgba(255,59,48,0.25)] bg-[rgba(255,59,48,0.08)] px-3 py-2 text-sm text-danger-soft">
+          <p className="mt-4 rounded-[3px] border border-danger/25 bg-danger/8 px-3 py-2 text-sm text-danger-soft">
             {error}
           </p>
         )}

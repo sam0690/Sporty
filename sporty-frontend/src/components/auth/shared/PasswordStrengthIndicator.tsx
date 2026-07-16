@@ -13,16 +13,16 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
   const hasNumbers = /\d/.test(password);
 
   let label = "Weak";
-  let color = "#ff3b5c";
+  let color = "var(--danger)";
   let width = "33%";
 
   if (password.length >= 8 && hasLetters && hasNumbers) {
     label = "Strong";
-    color = "#00e07f";
+    color = "var(--success)";
     width = "100%";
   } else if (password.length >= 6 && (hasLetters || hasNumbers)) {
     label = "Medium";
-    color = "#ffd86b";
+    color = "var(--warning)";
     width = "66%";
   }
 

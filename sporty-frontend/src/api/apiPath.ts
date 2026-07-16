@@ -155,7 +155,6 @@ export const API_PATHS = {
 
   MATCHES: {
     LIST: "/matches",
-    PUBLIC: "/matches/public",
   },
 
   ADMIN: {
