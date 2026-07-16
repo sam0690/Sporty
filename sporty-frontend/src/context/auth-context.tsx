@@ -9,10 +9,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { API_PATHS } from "@/api/apiPath";
 import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
 import { subscribeAuthInvalidated } from "@/lib/auth-events";
+import { LocalStorageKeys } from "@/lib/storage.keys";
+import { removeLocalStorage } from "@/lib/storage.local";
 import { ROUTES } from "@/lib/route.config";
 import { isProtectedRoute } from "@/lib/route.utils";
 import { useRouter } from "next/navigation";
@@ -44,6 +47,8 @@ type AuthResult = {
   email?: string;
   linkToken?: string;
   isNewUser?: boolean;
+  /** Role of the just-authenticated user, for role-aware landing pages. */
+  role?: string;
 };
 
 type PendingGoogleLink = {
@@ -142,6 +147,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [actionLoading, setActionLoading] = useState(initialActionLoading);
   const router = useRouter();
   const pathname = usePathname();
+  const queryClient = useQueryClient();
+
+  // Everything cached for the signed-out user must go with them, or the next
+  // account to log in on this tab is served the previous user's data until
+  // staleTime expires (queries) / forever (localStorage).
+  const clearUserScopedState = useCallback(() => {
+    queryClient.clear();
+    removeLocalStorage(LocalStorageKeys.DASHBOARD_SELECTED_LEAGUE_ID);
+  }, [queryClient]);
 
   const setLoading = useCallback(
     (action: AuthAction, loading: boolean): void => {
@@ -181,14 +195,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     return subscribeAuthInvalidated(() => {
       // Auth tokens are httpOnly cookies - handled by backend
-      // Only clear user state client-side
       setUser(null);
+      clearUserScopedState();
 
       if (pathname && isProtectedRoute(pathname)) {
         router.replace(ROUTES.LOGIN.path);
       }
     });
-  }, [pathname, router]);
+  }, [clearUserScopedState, pathname, router]);
 
   const login = useCallback(
     async (identifier: string, password: string): Promise<AuthResult> => {
@@ -199,9 +213,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password,
         });
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
-        setUser(toUser(meResponse.data));
+        const me = toUser(meResponse.data);
+        setUser(me);
 
-        return { success: true };
+        return { success: true, role: me.role };
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Login failed.";
@@ -298,8 +313,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           code,
         });
         const meResponse = await authApi.get(API_PATHS.AUTH.ME);
-        setUser(toUser(meResponse.data));
-        return { success: true, isNewUser: Boolean(tokenResponse.data?.is_new_user) };
+        const me = toUser(meResponse.data);
+        setUser(me);
+        return {
+          success: true,
+          isNewUser: Boolean(tokenResponse.data?.is_new_user),
+          role: me.role,
+        };
       } catch (error) {
         if (isApiError(error) && error.statusCode === 409) {
           const details =
@@ -356,16 +376,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Backend clears httpOnly cookies via set_cookie with maxAge=0
       await authApi.post(API_PATHS.AUTH.LOGOUT);
       setUser(null);
+      clearUserScopedState();
       return { success: true };
     } catch (error) {
       // Even if API fails, clear local state - cookies may be cleared by browser
       setUser(null);
+      clearUserScopedState();
       const message = error instanceof Error ? error.message : "Logout failed.";
       return { success: true, error: message };
     } finally {
       setLoading("logout", false);
     }
-  }, [setLoading]);
+  }, [clearUserScopedState, setLoading]);
 
   const forgotPassword = useCallback(
     async (email: string): Promise<AuthResult> => {

@@ -3,18 +3,14 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
-import { ROUTES } from "@/lib/route.config";
-import { getSafeRedirectPath } from "@/lib/route.utils";
+import { getSafeRedirectPath, postAuthHomePath } from "@/lib/route.utils";
 
 type GuestOnlyRouteProps = {
   children: ReactNode;
   redirectTo?: string;
 };
 
-export function GuestOnlyRoute({
-  children,
-  redirectTo = ROUTES.DASHBOARD.path,
-}: GuestOnlyRouteProps) {
+export function GuestOnlyRoute({ children, redirectTo }: GuestOnlyRouteProps) {
   const router = useRouter();
   const { user, isLoading } = useAuth();
   const isAuthenticated = Boolean(user);
@@ -32,9 +28,9 @@ export function GuestOnlyRoute({
       const redirect = getSafeRedirectPath(
         new URLSearchParams(window.location.search).get("redirect"),
       );
-      router.replace(redirect ?? redirectTo);
+      router.replace(redirect ?? redirectTo ?? postAuthHomePath(user?.role));
     }
-  }, [isAuthenticated, isLoading, redirectTo, router]);
+  }, [isAuthenticated, isLoading, redirectTo, router, user?.role]);
 
   if (isLoading) {
     return (

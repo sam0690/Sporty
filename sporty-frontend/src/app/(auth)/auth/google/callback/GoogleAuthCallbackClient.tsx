@@ -9,6 +9,7 @@ import { toastifier } from "@/lib/toastifier";
 import {
   buildFavouritesOnboardingUrl,
   getSafeRedirectPath,
+  postAuthHomePath,
 } from "@/lib/route.utils";
 
 export function GoogleAuthCallbackClient() {
@@ -33,7 +34,8 @@ export function GoogleAuthCallbackClient() {
 
     if (user) {
       window.location.replace(
-        getSafeRedirectPath(searchParams.get("state")) ?? "/dashboard",
+        getSafeRedirectPath(searchParams.get("state")) ??
+          postAuthHomePath(user.role),
       );
     }
   }, [isLoading, isLinkModalOpen, isReauthenticating, searchParams, user]);
@@ -65,7 +67,7 @@ export function GoogleAuthCallbackClient() {
         window.location.replace(
           result.isNewUser
             ? buildFavouritesOnboardingUrl(redirect)
-            : redirect ?? "/dashboard",
+            : redirect ?? postAuthHomePath(result.role),
         );
         return;
       }
@@ -144,7 +146,10 @@ export function GoogleAuthCallbackClient() {
       setPendingLinkToken("");
       setPendingEmail(undefined);
       setLinkError(undefined);
-      router.replace(getSafeRedirectPath(searchParams.get("state")) ?? "/dashboard");
+      router.replace(
+        getSafeRedirectPath(searchParams.get("state")) ??
+          postAuthHomePath(reauthResult.role),
+      );
       return;
     }
 

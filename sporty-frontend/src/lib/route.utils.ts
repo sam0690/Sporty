@@ -1,3 +1,4 @@
+import { isAdminRole } from "./roles";
 import { ROUTES, type RouteMeta } from "./route.config";
 
 /**
@@ -47,6 +48,11 @@ export function isActiveRoute(href: string, pathname: string): boolean {
  * never "//" or a path containing "://") to prevent open-redirect attacks
  * via a crafted login/signup link.
  */
+/** Where a freshly authenticated user lands when they had no explicit destination. */
+export function postAuthHomePath(role: string | null | undefined): string {
+  return isAdminRole(role) ? ROUTES.ADMIN_DASHBOARD.path : ROUTES.DASHBOARD.path;
+}
+
 /**
  * URL for the one-time post-signup "pick your favourites" step, carrying the
  * user's original destination through as a `redirect` query param.
