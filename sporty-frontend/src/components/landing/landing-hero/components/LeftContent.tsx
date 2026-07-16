@@ -13,33 +13,44 @@ export function LeftContent({ content }: LeftContentProps) {
 
   return (
     <div className="max-w-2xl">
-      <span className="inline-flex items-center gap-2 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-1.5 font-sans text-[11px] font-700 uppercase tracking-[2px] text-accent">
+      <span
+        className="float-up inline-flex items-center gap-2 rounded-[3px] border border-accent/30 bg-accent/8 px-3 py-1.5 font-sans text-[11px] font-700 uppercase tracking-[2px] text-accent"
+        style={{ animationDelay: "0.05s" }}
+      >
         <span className="size-1.5 rounded-full bg-accent animate-live-pulse" />
         {content.badge}
       </span>
 
       <h1
         id="landing-hero-title"
-        className="mt-6 font-display text-6xl leading-[0.92] tracking-[-0.02em] text-fg-1 md:text-8xl"
+        className="mt-6 font-display text-5xl leading-[0.92] tracking-[-0.02em] text-fg-1 sm:text-6xl md:text-7xl"
+        style={{ textWrap: "balance" }}
       >
         {titleLines.map((line, idx) => (
           <span
             key={line}
             className={cn(
-              "block",
+              "float-up block",
               idx === titleLines.length - 1 && "text-accent",
             )}
+            style={{ animationDelay: `${0.12 + idx * 0.08}s` }}
           >
             {line}
           </span>
         ))}
       </h1>
 
-      <p className="mt-5 max-w-xl text-base leading-7 text-fg-2 md:text-lg">
+      <p
+        className="float-up mt-5 max-w-xl text-base leading-7 text-fg-2 md:text-lg"
+        style={{ animationDelay: "0.3s" }}
+      >
         {content.description}
       </p>
 
-      <div className="mt-8 flex flex-wrap items-center gap-3">
+      <div
+        className="float-up mt-8 flex flex-wrap items-center gap-3"
+        style={{ animationDelay: "0.4s" }}
+      >
         {content.ctas.map((cta) => {
           const isPrimary = cta.variant === "primary";
 
@@ -54,21 +65,6 @@ export function LeftContent({ content }: LeftContentProps) {
                     "border-white/20! text-fg-1! hover:bg-surface-3! hover:text-fg-1!",
                 )}
               >
-                {!isPrimary ? (
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="mr-2 h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M10 9l5 3-5 3z" />
-                  </svg>
-                ) : null}
                 {cta.label}
               </Button>
             </Link>
@@ -76,8 +72,11 @@ export function LeftContent({ content }: LeftContentProps) {
         })}
       </div>
 
-      {/* Sport chips */}
-      <div className="mt-7 flex flex-wrap items-center gap-2.5">
+      {/* Sport chips — the roster of playable sports, in their identity colors */}
+      <div
+        className="float-up mt-7 flex flex-wrap items-center gap-2.5"
+        style={{ animationDelay: "0.5s" }}
+      >
         {SPORT_GLYPHS.map(({ Icon, label, color }) => (
           <span
             key={label}
@@ -91,20 +90,6 @@ export function LeftContent({ content }: LeftContentProps) {
             </span>
           </span>
         ))}
-      </div>
-
-      <div className="mt-8 flex items-center gap-4 text-sm text-fg-2">
-        <div className="flex -space-x-2" aria-hidden="true">
-          {content.stat.avatars.map((avatar) => (
-            <span
-              key={avatar}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-[3px] border-2 border-surface-0 bg-accent/16 font-sans text-[10px] font-700 text-accent"
-            >
-              {avatar}
-            </span>
-          ))}
-        </div>
-        <span>{content.stat.text}</span>
       </div>
     </div>
   );

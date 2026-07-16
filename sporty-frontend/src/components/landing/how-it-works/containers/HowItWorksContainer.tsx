@@ -5,7 +5,7 @@ import { HOW_IT_WORKS_CONTENT } from "@/components/landing/how-it-works/constant
 export function HowItWorksContainer() {
   return (
     <section
-      className="relative overflow-hidden bg-background"
+      className="relative bg-background"
       aria-labelledby="how-it-works-title"
       id="how-it-works"
     >
@@ -15,7 +15,7 @@ export function HowItWorksContainer() {
           subheading={HOW_IT_WORKS_CONTENT.subheading}
         />
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
+        <div className="mt-12 grid gap-x-10 gap-y-10 md:grid-cols-3 lg:mt-16">
           {HOW_IT_WORKS_CONTENT.steps.map((step, index) => (
             <HowItWorksCard key={step.title} step={step} index={index} />
           ))}

@@ -34,7 +34,6 @@ export function LandingFooterContainer() {
     <footer
       className="relative border-t border-white/8 bg-surface-0"
       aria-labelledby="landing-footer-title"
-      id="pricing"
     >
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-14 sm:px-6 lg:px-8 lg:pb-14 lg:pt-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">

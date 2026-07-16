@@ -40,7 +40,7 @@ export function RightContent({ visual }: RightContentProps) {
 
         {/* scoreboard */}
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-5 py-7">
-          <div className="flex items-center justify-end gap-3 text-right">
+          <div className="flex min-w-0 items-center justify-end gap-3 text-right">
             <div className="min-w-0">
               <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                 {HOME.name}
@@ -65,7 +65,7 @@ export function RightContent({ visual }: RightContentProps) {
             </p>
           </div>
 
-          <div className="flex items-center justify-start gap-3">
+          <div className="flex min-w-0 items-center justify-start gap-3">
             <Crest team={AWAY} />
             <div className="min-w-0">
               <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">

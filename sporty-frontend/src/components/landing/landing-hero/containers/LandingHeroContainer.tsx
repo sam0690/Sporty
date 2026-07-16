@@ -10,14 +10,13 @@ export function LandingHeroContainer() {
     <section
       className="relative overflow-hidden bg-background"
       aria-labelledby="landing-hero-title"
-      id="features"
     >
       <div className="relative mx-auto w-full max-w-7xl px-4 pb-14 pt-12 sm:px-6 md:pb-16 md:pt-16 lg:px-8 lg:pb-20 lg:pt-20">
         <div className="grid items-center gap-10 lg:grid-cols-[1fr_1.05fr] lg:gap-14">
           <div>
             <LeftContent content={LANDING_HERO_CONTENT} />
           </div>
-          <div>
+          <div className="pop-in" style={{ animationDelay: "0.35s" }}>
             <RightContent visual={LANDING_HERO_VISUAL} />
           </div>
         </div>

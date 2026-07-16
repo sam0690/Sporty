@@ -5,30 +5,24 @@ import type {
 
 export const LANDING_HERO_CONTENT: LandingHeroContent = {
   badge: "NEW SEASON IS LIVE",
-  title: "Build Your Ultimate\nFantasy Team",
+  title: "One Squad.\nEvery Sport.",
   description:
-    "Draft, manage, and compete across sports with a clean experience designed for weekly wins.",
+    "Draft footballers, ballers, and batters into a single fantasy team. Set your lineup, watch the points land live, and settle it every matchday.",
   ctas: [
     {
-      label: "Get Started",
+      label: "Start a League",
       href: "/register",
       variant: "primary",
     },
     {
-      label: "Learn More",
+      label: "How it Works",
       href: "/#how-it-works",
       variant: "outline",
     },
   ],
-  stat: {
-    avatars: ["AL", "JO", "MK"],
-    text: "Joined by 50k+ active players",
-  },
 };
 
 export const LANDING_HERO_VISUAL: LandingHeroVisual = {
-  imageAlt: "Atmospheric wide-angle sports stadium",
-  imageSrc: "/images/landing/hero-stadium.jpg",
   nextMatchLabel: "Matchday arrives in 02:16:22",
   progressPercent: 68,
 };
