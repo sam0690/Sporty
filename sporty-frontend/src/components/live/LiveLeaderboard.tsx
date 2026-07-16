@@ -53,6 +53,9 @@ export function LiveLeaderboard() {
     for (const e of events) {
       if (!e.player_id) continue;
       const key = e.player_id.toLowerCase();
+      // Events carry resolved names too — use them for ids the players map
+      // doesn't know, instead of rendering "Unknown player" rows.
+      if (e.player_name) nameByLowerId[key] ??= e.player_name;
       const c = (contrib[key] ??= { goals: 0, assists: 0 });
       if (e.type === "goal") c.goals += 1;
       else if (e.type === "assist") c.assists += 1;
@@ -68,9 +71,12 @@ export function LiveLeaderboard() {
       ...Object.keys(contrib),
     ]);
     return [...ids]
+      // Nameless ids are unmapped feeder artefacts — a row reading "Unknown
+      // player" tells the fan nothing, so leave them off the board.
+      .filter((id) => nameByLowerId[id])
       .map<Row>((id) => ({
         playerId: id,
-        name: nameByLowerId[id] ?? "Unknown player",
+        name: nameByLowerId[id],
         points: pointsByLowerId[id] ?? 0,
         goals: contrib[id]?.goals ?? 0,
         assists: contrib[id]?.assists ?? 0,

@@ -97,6 +97,7 @@ sequenceDiagram
     Q-->>W: deliver task
     W->>R: acquire redis_lock(lock:score:{league}:{window})
     W->>DB: player_scoring UPDATE, upsert_team_weekly_scores, RANK()
+    W->>DB: resolve_matchups_for_window (H2H leagues: compare points → win/loss/tie)
     W->>R: invalidate leaderboard cache
     W->>R: release lock (Lua: delete if token matches)
 ```

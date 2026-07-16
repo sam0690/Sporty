@@ -29,7 +29,7 @@ export function NavbarContainer() {
 
   return (
     <header
-      className={`sticky top-0 z-header transition-all duration-300 ${
+      className={`sticky top-0 z-50 transition-all duration-300 ${
         isScrolled
           ? "border-b border-white/8 bg-surface-0"
           : "border-b border-transparent bg-transparent"

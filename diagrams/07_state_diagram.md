@@ -10,6 +10,17 @@ stateDiagram-v2
     SETUP --> ACTIVE : budget league, start_date reached (daily cron, >= min members)
     ACTIVE --> COMPLETED : end_date passed (daily cron)
     COMPLETED --> [*]
+
+    note right of ACTIVE
+        Entering ACTIVE generates the full-season
+        H2H matchup schedule (once, idempotent)
+        when is_head_to_head=true
+    end note
+    note right of COMPLETED
+        POST /renew spawns a NEW League row in SETUP
+        (same season_group_id lineage, season_number+1;
+        dynasty=true carries rosters over)
+    end note
 ```
 
 ## Match status (Sporty `Match.status` + feeder `SimulationState.status`)
@@ -52,6 +63,35 @@ stateDiagram-v2
     cancelled --> [*]
     vetoed --> [*]
     executed --> [*]
+```
+
+## H2H Matchup result (`league_matchups.result`)
+
+```mermaid
+stateDiagram-v2
+    [*] --> unresolved : schedule generated at ACTIVE (result NULL)
+    [*] --> bye : odd team count, no opponent this round
+    unresolved --> home_win : window scored, home_points > away_points
+    unresolved --> away_win : window scored, away_points > home_points
+    unresolved --> tie : window scored, equal points
+    home_win --> [*]
+    away_win --> [*]
+    tie --> [*]
+    bye --> [*]
+```
+
+## Support Ticket (`support_tickets.status`)
+
+```mermaid
+stateDiagram-v2
+    [*] --> open : user opens ticket
+    open --> in_progress : admin triages/assigns
+    in_progress --> waiting_on_user : admin needs info
+    waiting_on_user --> in_progress : user replies
+    in_progress --> resolved : admin resolves
+    open --> resolved
+    resolved --> closed
+    closed --> [*]
 ```
 
 ## Waiver Claim (`waiver_claims.status`)

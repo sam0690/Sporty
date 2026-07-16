@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
 import { Badge } from "@/components/ui";
+import { formatDateTime } from "@/utils/dateUtils";
 import { SignalIcon } from "./icons";
 
 type Phase = "pre" | "live" | "post";
@@ -61,13 +62,21 @@ function Crest({
   );
 }
 
-export function ScoreTicker({ loading = false }: { loading?: boolean }) {
+export function ScoreTicker({
+  loading = false,
+  footer,
+}: {
+  loading?: boolean;
+  /** Optional band fused to the bottom of the hero card (win probability). */
+  footer?: React.ReactNode;
+}) {
   const score = useMatchStore((s) => s.score);
   const status = useMatchStore((s) => s.status);
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
   const homeTeamLogoUrl = useMatchStore((s) => s.homeTeamLogoUrl);
   const awayTeamLogoUrl = useMatchStore((s) => s.awayTeamLogoUrl);
+  const matchDate = useMatchStore((s) => s.matchDate);
   const minute = useMatchStore((s) => s.minute);
   const minuteStartedTs = useMatchStore((s) => s.minuteStartedTs);
   const socketStatus = useMatchStore((s) => s.socketStatus);
@@ -159,15 +168,16 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-9 sm:gap-10 sm:px-8 sm:py-14">
-          {/* Home */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-7 sm:gap-10 sm:px-8 sm:py-10">
+          {/* Home — stacked (crest over name) on mobile so long names don't
+              truncate to a couple of letters; row layout from sm up. */}
           <div
-            className={`flex min-w-0 items-center justify-end gap-3 transition-opacity sm:gap-5 ${
+            className={`flex min-w-0 flex-col-reverse items-center gap-2 text-center transition-opacity sm:flex-row sm:justify-end sm:gap-5 sm:text-right ${
               phase === "post" && awayLead ? "opacity-55" : ""
             }`}
           >
-            <div className="min-w-0 text-right">
-              <p className="truncate font-sans text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
+            <div className="min-w-0 max-w-full">
+              <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {homeTeam ?? "Home"}
               </p>
               <p className="section-label mt-1.5">
@@ -182,39 +192,56 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
             />
           </div>
 
-          {/* Score */}
+          {/* Centre — score once the match exists; kickoff before it does. */}
           <div className="shrink-0 text-center">
-            <div className="flex items-center justify-center font-display text-[3.25rem] leading-none tracking-[-0.02em] sm:text-8xl">
-              <span
-                style={{ color: home.color }}
-                className="min-w-[1.1ch] text-right tabular-nums"
-              >
-                {score.home}
-              </span>
-              <span className="px-2 text-white/20 sm:px-4">:</span>
-              <span
-                style={{ color: away.color }}
-                className="min-w-[1.1ch] text-left tabular-nums"
-              >
-                {score.away}
-              </span>
-            </div>
-            {phase === "live" && matchClock ? (
-              <Badge
-                tone="danger"
-                className="mt-3.5 gap-1.5 tracking-[1.5px] tabular-nums"
-              >
-                <span className="size-1 rounded-full bg-danger animate-live-pulse" />
-                {matchClock}
-              </Badge>
+            {phase === "pre" ? (
+              <>
+                <p className="font-display text-4xl leading-none tracking-[-0.02em] text-white/25 sm:text-6xl">
+                  vs
+                </p>
+                {matchDate && formatDateTime(matchDate) ? (
+                  <p className="section-label mt-3.5">
+                    Kick-off · {formatDateTime(matchDate)}
+                  </p>
+                ) : (
+                  <p className="section-label mt-3.5">{label}</p>
+                )}
+              </>
             ) : (
-              <p className="section-label mt-3.5">{label}</p>
+              <>
+                <div className="flex items-center justify-center font-display text-[3.25rem] leading-none tracking-[-0.02em] sm:text-8xl">
+                  <span
+                    style={{ color: home.color }}
+                    className="min-w-[1.1ch] text-right tabular-nums"
+                  >
+                    {score.home}
+                  </span>
+                  <span className="px-2 text-white/20 sm:px-4">:</span>
+                  <span
+                    style={{ color: away.color }}
+                    className="min-w-[1.1ch] text-left tabular-nums"
+                  >
+                    {score.away}
+                  </span>
+                </div>
+                {phase === "live" && matchClock ? (
+                  <Badge
+                    tone="danger"
+                    className="mt-3.5 gap-1.5 tracking-[1.5px] tabular-nums"
+                  >
+                    <span className="size-1 rounded-full bg-danger animate-live-pulse" />
+                    {matchClock}
+                  </Badge>
+                ) : (
+                  <p className="section-label mt-3.5">{label}</p>
+                )}
+              </>
             )}
           </div>
 
           {/* Away */}
           <div
-            className={`flex min-w-0 items-center justify-start gap-3 transition-opacity sm:gap-5 ${
+            className={`flex min-w-0 flex-col items-center gap-2 text-center transition-opacity sm:flex-row sm:justify-start sm:gap-5 sm:text-left ${
               phase === "post" && homeLead ? "opacity-55" : ""
             }`}
           >
@@ -224,8 +251,8 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
               initials={away.initials}
               logoUrl={awayTeamLogoUrl}
             />
-            <div className="min-w-0 text-left">
-              <p className="truncate font-sans text-xl font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
+            <div className="min-w-0 max-w-full">
+              <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {awayTeam ?? "Away"}
               </p>
               <p className="section-label mt-1.5">
@@ -234,7 +261,69 @@ export function ScoreTicker({ loading = false }: { loading?: boolean }) {
             </div>
           </div>
         </div>
+
+        {footer && (
+          <div className="border-t border-white/8 px-5 py-4 sm:px-6">
+            {footer}
+          </div>
+        )}
       </div>
     </section>
+  );
+}
+
+/** Slim score bar fixed under the site navbar; the match page shows it once
+ *  the hero has scrolled out of view, so the score/minute never leaves the
+ *  screen on long live pages. */
+export function MiniScoreBar({ visible }: { visible: boolean }) {
+  const score = useMatchStore((s) => s.score);
+  const status = useMatchStore((s) => s.status);
+  const homeTeam = useMatchStore((s) => s.homeTeam);
+  const awayTeam = useMatchStore((s) => s.awayTeam);
+  const minute = useMatchStore((s) => s.minute);
+
+  const { label, phase } = describeStatus(status);
+  const home = teamIdentity(homeTeam ?? "Home");
+  const away = teamIdentity(awayTeam ?? "Away");
+
+  return (
+    <div
+      aria-hidden={!visible}
+      className={`fixed inset-x-0 top-16 z-40 border-b border-white/8 bg-surface-0 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none ${
+        visible
+          ? "translate-y-0 opacity-100"
+          : "pointer-events-none -translate-y-2 opacity-0"
+      }`}
+    >
+      <div className="mx-auto flex h-11 max-w-[1400px] items-center justify-between gap-3 px-4 sm:px-6">
+        <span className="min-w-0 flex-1 truncate text-right font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+          {homeTeam ?? "Home"}
+        </span>
+        <span className="flex shrink-0 items-center font-display text-xl leading-none tracking-[-0.02em] tabular-nums">
+          {phase === "pre" ? (
+            <span className="text-white/25">vs</span>
+          ) : (
+            <>
+              <span style={{ color: home.color }}>{score.home}</span>
+              <span className="px-1.5 text-white/20">:</span>
+              <span style={{ color: away.color }}>{score.away}</span>
+            </>
+          )}
+        </span>
+        <span className="min-w-0 flex-1 truncate font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+          {awayTeam ?? "Away"}
+        </span>
+        <span className="shrink-0">
+          {phase === "live" ? (
+            <Badge tone="danger" className="gap-1.5 tracking-[1.5px] tabular-nums">
+              <span className="size-1 rounded-full bg-danger animate-live-pulse" />
+              {minute != null ? `${minute}'` : "Live"}
+            </Badge>
+          ) : (
+            <span className="section-label">{label}</span>
+          )}
+        </span>
+      </div>
+    </div>
   );
 }

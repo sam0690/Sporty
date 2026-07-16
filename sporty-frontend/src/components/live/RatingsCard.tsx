@@ -37,7 +37,7 @@ function RatingRow({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-              {row.name ?? row.sporty_player_id ?? "Unknown"}
+              {row.name ?? "Unknown"}
             </span>
             {isMotm && (
               <span className="inline-flex shrink-0 items-center gap-1 rounded-[3px] bg-accent/16 px-1.5 py-0.5 font-sans text-[10px] font-700 uppercase tracking-[1px] text-accent">

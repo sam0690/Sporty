@@ -104,29 +104,6 @@ export type MatchPrediction = {
   model_version: string;
 };
 
-/** Per-model-version scorecard of stored predictions vs actual results,
- *  pushed by the data feeder after each finished match. */
-export type ModelVersionMetrics = {
-  n: number;
-  accuracy: number;
-  log_loss: number;
-  brier: number;
-  ece: number;
-  calibration: {
-    bin: string;
-    n: number;
-    avg_confidence: number;
-    accuracy: number;
-  }[];
-};
-
-export type ModelMetrics = {
-  generated_at: string;
-  finished_matches_scored: number;
-  predictions_scored: number;
-  by_model_version: Record<string, ModelVersionMetrics>;
-};
-
 export type PlayerRating = {
   sporty_player_id: string | null;
   /** Display name resolved server-side; null when the feeder id is unmapped. */

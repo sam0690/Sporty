@@ -9,6 +9,7 @@ actor "Commissioner" as Commissioner
 actor "SportyDataFeeder\n(external system)" as Feeder
 actor "Real Sports API\n(API-Football / API-NBA,\ncurrently disabled)" as RealAPI
 actor "Google OAuth" as Google
+actor "Platform Admin\n(support/admin/super_admin)" as Admin
 
 Owner --|> Manager
 Commissioner --|> Owner
@@ -32,14 +33,21 @@ rectangle Sporty {
   usecase "View Leaderboard" as UC15
   usecase "Browse Public Fixtures" as UC16
   usecase "Watch Live Match" as UC17
-  usecase "Override Scoring Rules" as UC18
+  usecase "Renew League\n(next season / dynasty carryover)" as UC18
   usecase "Push Match Events" as UC19
   usecase "Push Prediction / Ratings" as UC20
   usecase "Sync Real Fixtures & Stats\n(disabled path)" as UC21
+  usecase "Pick Favourite Team & Player\n(onboarding)" as UC22
+  usecase "View H2H Matchups\n& W-L-T Standings" as UC23
+  usecase "Pay Budget Overage\nwith League Points" as UC24
+  usecase "Open / Reply Support Ticket" as UC25
+  usecase "Administer Platform\n(users, leagues, seasons, scoring,\nrepricing, flags, tickets, audit log)" as UC26
 
   UC1 .> UC1a : <<extend>>
+  UC1 .> UC22 : <<extend>>
   UC5 .> UC4 : <<include>>
   UC8 .> UC9 : <<extend>>
+  UC8 .> UC24 : <<extend>>
   UC10 .> UC11 : <<extend>>
   UC12 .> UC13 : <<include>>
   UC13 .> UC14 : <<extend>>
@@ -60,12 +68,18 @@ Manager --> UC13
 Manager --> UC15
 Manager --> UC16
 Manager --> UC17
+Manager --> UC22
+Manager --> UC23
+Manager --> UC24
+Manager --> UC25
 
 Owner --> UC2
 Owner --> UC4
 Owner --> UC18
 
 Commissioner --> UC14
+
+Admin --> UC26
 
 UC1a ..> Google : <<include>>
 

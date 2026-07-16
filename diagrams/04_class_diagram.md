@@ -7,6 +7,7 @@ classDiagram
         +string username
         +string email
         +AuthProvider auth_provider
+        +UserRole role
         +string password_hash
         +string google_id
         +bool is_active
@@ -25,6 +26,10 @@ classDiagram
         +Decimal budget_per_team
         +int squad_size
         +bool draft_mode
+        +bool is_head_to_head
+        +bool allow_midseason_join
+        +UUID season_group_id
+        +int season_number
         +int transfers_per_window
         +update_status()
     }
@@ -210,10 +215,61 @@ classDiagram
         +Decimal points
     }
 
-    class LeagueScoringOverride {
+    class LeagueMatchup {
         +UUID league_id
-        +string action
+        +UUID transfer_window_id
+        +UUID home_team_id
+        +UUID away_team_id
+        +Decimal home_points
+        +Decimal away_points
+        +string result
+    }
+
+    class PointsPenalty {
+        +UUID fantasy_team_id
+        +UUID transfer_window_id
         +Decimal points
+        +string reason
+    }
+
+    class UserFavouriteTeam {
+        +UUID user_id
+        +UUID sport_id
+        +UUID real_team_id
+    }
+
+    class UserFavouritePlayer {
+        +UUID user_id
+        +UUID sport_id
+        +UUID player_id
+    }
+
+    class SupportTicket {
+        +UUID id
+        +UUID reporter_user_id
+        +UUID assigned_admin_user_id
+        +string subject
+        +TicketStatus status
+        +TicketPriority priority
+    }
+
+    class TicketMessage {
+        +UUID ticket_id
+        +UUID author_user_id
+        +string body
+        +bool is_internal_note
+    }
+
+    class SystemConfig {
+        +string key
+        +string value
+    }
+
+    class AdminAuditLog {
+        +UUID actor_user_id
+        +string action
+        +string target
+        +datetime created_at
     }
 
     User "1" --> "*" LeagueMembership
@@ -240,5 +296,15 @@ classDiagram
     League "1" --> "*" TradeOffer
     Match "1" --> "*" LiveEvent
     Sport "1" --> "*" DefaultScoringRule
-    League "1" --> "*" LeagueScoringOverride
+    League "1" --> "*" LeagueMatchup
+    TransferWindow "1" --> "*" LeagueMatchup
+    FantasyTeam "1" --> "*" PointsPenalty
+    User "1" --> "*" UserFavouriteTeam : one per sport
+    User "1" --> "*" UserFavouritePlayer : one per sport
+    User "1" --> "*" SupportTicket : reporter
+    SupportTicket "1" --> "*" TicketMessage
+    User "1" --> "*" AdminAuditLog : actor
 ```
+
+*(`LeagueScoringOverride` removed — per-league scoring overrides were retired
+2026-07; scoring is `DefaultScoringRule`-only.)*

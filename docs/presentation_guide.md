@@ -68,16 +68,22 @@ paid data subscription during development.
 
 ### Who the users are
 
-- **Fantasy managers** — the primary end user: register, join/create leagues,
-  draft or buy players, set lineups, make transfers, claim free agents, propose
-  trades, watch live matches, check the leaderboard.
+- **Fantasy managers** — the primary end user: register (picking a favourite
+  team and player per sport during onboarding, which drives goal
+  notifications), join/create leagues, draft or buy players, set lineups, make
+  transfers, claim free agents, propose trades, watch live matches, check the
+  leaderboard or head-to-head standings, open support tickets.
 - **League owners** — a manager with extra privileges scoped to a league they
-  created: start the draft, generate transfer windows (gameweeks), override
-  scoring rules, toggle mid-season joining, veto trades, delete the league.
-- **Platform administrators** — an implicit role; there is no modeled
-  `Role`/`Permission` table and **no admin panel was found in the frontend**.
-  Administrative actions are done via scripts, or via the Feeder's own
-  `admin.html` control panel.
+  created: start the draft, generate transfer windows (gameweeks), toggle
+  mid-season joining, veto trades, renew the league into the next season
+  (optionally as a dynasty, carrying rosters over), delete the league.
+- **Platform administrators** — a modeled role tier on `users.role`
+  (`user`/`support`/`admin`/`super_admin`, enforced by `require_admin_role`).
+  A dedicated `/api/v1/admin` router plus a frontend `/admin` console cover
+  user suspension/roles, league/season overrides, scoring recalculation,
+  repricing, feature flags, and support-ticket triage — and **every admin
+  action is written to an immutable `admin_audit_logs` table**. Admins land on
+  `/admin` after login instead of the manager dashboard.
 - **The Sporty Data Feeder** — a non-human, server-to-server actor, trusted (via a
   shared secret) to create matches/players and push events, with no user-level
   access at all.
@@ -95,15 +101,25 @@ paid data subscription during development.
 ### Key features
 
 - Draft **and** budget-based league modes, including mixed-sport squads.
+- Two competition formats: classic cumulative points, or opt-in
+  **head-to-head** — weekly one-vs-one matchups on a round-robin schedule with
+  W-L-T standings (the format Yahoo/ESPN/Sleeper default to).
 - Weekly lineups with captain (points double) / vice-captain (fallback) rules.
 - Formation-aware **automatic substitution** when a starter doesn't play.
 - Free agents, rolling-priority **waivers**, and manager-to-manager **trades**
   with a commissioner veto window — all for draft leagues.
+- **Season renewal / dynasty leagues** — a completed league rolls into the next
+  season as a new linked league, optionally carrying every roster over.
 - An **ILP-based** ("Integer Linear Programming") squad auto-pick and lineup
   optimizer — a real combinatorial-optimization solver, not a guess.
 - Live match pages with WebSocket score/point ticking, pre-match predictions, and
-  post-match player ratings.
-- Two independent, rule-driven player **pricing** algorithms.
+  post-match player ratings; per-sport **favourite team/player** picks drive
+  personalized "your player scored" notifications.
+- Two independent, rule-driven player **pricing** algorithms, and a
+  "pay a budget overage with league points" transfer option backed by an
+  immutable penalty ledger.
+- A full **admin console** (users, leagues, seasons, scoring recalcs, feature
+  flags, support tickets) with an append-only audit log.
 
 > 🎤 **Say this:** *"Sporty is a fantasy sports platform — think Fantasy Premier
 > League, but built from scratch, covering football, basketball, and cricket, and
@@ -432,10 +448,12 @@ Each business domain owns its own `models.py` / `router.py` / `services.py` /
 |---|---|
 | `auth/` | Users, refresh tokens, login/register/OAuth |
 | `league/` (the largest, ~2700-line `services.py`) | Leagues, draft, transfers, lineups, leaderboard, `sportConfigs.py` |
-| `player/` | Players, price history, per-sport stat tables |
+| `player/` | Players, price history, per-sport stat tables, user favourites |
 | `match/` | Match discovery |
-| `scoring/` | Default scoring rules + league overrides |
-| `notification/`, `user/`, `optimization/` | Notifications, profiles, the ILP lineup endpoint |
+| `scoring/` | Default scoring rules (per-league overrides were retired 2026-07) |
+| `notification/`, `user/`, `optimization/` | Notifications, profiles + favourites endpoints, the ILP lineup endpoint |
+| `admin/` | The platform-admin API — user/league/season management, scoring recalcs, feature flags, ticket triage; every action audit-logged |
+| `support/` | User-facing support tickets with threaded messages |
 
 Cross-cutting layers sit alongside the slices:
 
@@ -522,8 +540,13 @@ not trusted to application code alone. Money and points columns are always
 | `player_gameweek_stats` + `football_stats`/`cricket_stats`/`nba_stats` | A **table-per-subtype** pattern: one sport-agnostic base row, three 1:1 child tables — chosen over one wide table with hundreds of nullable columns, or single-table inheritance (same width problem) |
 | `matches`, `live_events` | Fixture + the append-only in-match event stream; idempotent on `(match_id, event_id)` |
 | `match_feed_cache` | A durable Postgres backstop for Feeder-pushed prediction/ratings data that's otherwise Redis-only with a 24-hour TTL |
-| `default_scoring_rules`, `league_scoring_overrides` | Two-tier scoring config: platform defaults, overridable per league |
-| `users`, `refresh_tokens` | Identity; refresh tokens store only a **SHA-256 hash** of the token, never the raw value |
+| `default_scoring_rules` | Platform scoring config. (A `league_scoring_overrides` tier existed but was **retired** — `fantasy_points` feeds league-unaware consumers like auto-pick valuation and pricing, so per-league values would have poisoned those; a good "we removed a feature deliberately" story) |
+| `league_matchups` | The full-season H2H schedule — one row per pairing per gameweek; `away_team_id` NULL = bye; `result` NULL until that window's scoring lands |
+| `points_penalties` | Immutable ledger of league-point deductions (currently: paying a transfer's budget overage with points) |
+| `user_favourite_teams`, `user_favourite_players` | One favourite per user **per sport** (unique constraint), `ON DELETE CASCADE` so a deleted club/player silently clears the favourite — no trigger needed |
+| `support_tickets`, `ticket_messages` | In-app support with threaded replies; admin messages can be internal-only notes |
+| `system_config`, `admin_audit_logs` | Runtime feature-flag overrides (no redeploy needed) and the append-only admin action trail |
+| `users`, `refresh_tokens` | Identity (incl. the `role` admin tier); refresh tokens store only a **SHA-256 hash** of the token, never the raw value |
 
 ### Relationships (the key structural insight)
 
@@ -560,15 +583,18 @@ All REST endpoints live under `/api/v1`; realtime (WebSocket + SSE) under `/api`
 Full request/response schemas are auto-generated at `/docs`/`/openapi.json` from
 the Pydantic models — this section covers the business rules a schema alone can't
 show. **Auth key:** 🔓 none · 🔒 cookie-JWT · 🔒+M league member · 🔒+O league owner ·
-🔑 Feeder shared-secret (a distinct trust boundary from user auth).
+🔒+A admin-tier role (`support`/`admin`/`super_admin`) · 🔑 Feeder shared-secret
+(a distinct trust boundary from user auth).
 
 ### Endpoint counts (grep of `@router.` decorators)
 
-`league/router.py` **35** (largest — leagues, draft, squads) · `auth/router.py`
-**11** · `api/v1/feed.py` **10** · `user/router.py` **8** · `api/v1/trades.py`
-**7** · `player/router.py` **5** · `api/v1/waivers.py` **5** · `scoring/router.py`
-**4** · `api/v1/transfers.py` **4** · `match/router.py` **2** ·
-`notification/router.py` **2** · `optimization/router.py` **1**.
+`league/router.py` **41** (largest — leagues, draft, squads, renewal) ·
+`admin/router.py` **39** · `user/router.py` **13** (profiles + favourites) ·
+`auth/router.py` **12** · `api/v1/feed.py` **10** · `player/router.py` **9** ·
+`api/v1/trades.py` **8** · `api/v1/waivers.py` **5** · `api/v1/transfers.py`
+**4** · `support/router.py` **4** · `api/v1/matchups.py` **2** ·
+`match/router.py` **2** · `notification/router.py` **2** ·
+`scoring/router.py` **1** · `optimization/router.py` **1** — ~150 routes total.
 
 ### The endpoints that tell the story
 
@@ -586,6 +612,10 @@ show. **Auth key:** 🔓 none · 🔒 cookie-JWT · 🔒+M league member · 🔒
 | POST | `/leagues/{id}/free-agents/claim` | 🔒+M | Immediate add+drop |
 | POST | `/leagues/{id}/waivers` | 🔒+M | Submit a rolling-priority waiver claim |
 | POST | `/leagues/{id}/trades` → `/accept` → (24h) → executed | 🔒+M/🔒+O | Manager-to-manager trade state machine, with commissioner veto |
+| GET | `/leagues/{id}/matchups` + `/standings` | 🔒+M | H2H weekly scoreboard + W-L-T standings |
+| POST | `/leagues/{id}/renew` | 🔒+O | Roll a completed league into the next season (`dynasty=true` carries rosters) |
+| POST | `/users/me/favourites/teams/{sport}` | 🔒 | Set a favourite team (one per sport; drives notifications) |
+| POST | `/admin/...` (39 routes) | 🔒+A | The admin console API — every mutation audit-logged |
 | WS | `/ws/match/{match_id}` | 🔒 | Live score/points event stream |
 | GET | `/match/{match_id}/prediction` / `/ratings` | 🔒 | Feeder-pushed pre-/post-match data |
 | POST | `/feed/match-result` | 🔑 | Core per-minute event push from the Feeder (idempotent, triggers scoring) |
@@ -1027,8 +1057,12 @@ arithmetic).
 
 ### 10c. Scoring, auto-substitution, captain/vice, ranking
 
-- **Effective-rule resolution**: `league override → platform default →
-  hardcoded fallback → 0`, `O(1)` per action.
+- **Effective-rule resolution**: `platform default → hardcoded fallback → 0`,
+  `O(1)` per action. *(A per-league override tier used to sit at the top of
+  this chain and was deliberately retired — `fantasy_points` also feeds
+  auto-pick valuation, pricing, and "my team" display, none of which are
+  league-aware, so per-league values would have silently corrupted those.
+  Great cross-question answer: "we removed a feature to protect correctness.")*
 - **Per-sport point formulas** run as **one SQL `UPDATE ... FROM`** per sport,
   not a Python row loop — orders of magnitude faster for thousands of rows.
   Football: `goals·5 + assists·3 + yellow·(−1) + red·(−2)`. Basketball uses
@@ -1091,6 +1125,31 @@ arithmetic).
 - **401 auto-refresh with a de-duped promise** (frontend): ten simultaneous
   401s trigger exactly one refresh call, not ten.
 
+### 10h. Head-to-head matchups — circle-method round robin
+
+- **The algorithm**: fix one team, arrange the rest in a circle, rotate the
+  circle one position per round — `n−1` rounds of `n/2` pairings in which every
+  team meets every other team exactly once. Odd team counts are padded with a
+  `None` slot, and whoever draws it that round gets a **bye**. If the season
+  has more gameweeks than rounds, the schedule simply cycles. `O(n²)` pairs
+  total — trivial at league scale.
+- **Why circle-method over random weekly pairing**: random pairing can give one
+  team the same opponent twice before meeting everyone once — round robin is
+  provably fair and is what every real H2H platform (Yahoo/ESPN/Sleeper) uses.
+- **Why the schedule is generated once and never regenerated**: it's created at
+  the league's ACTIVE transition and frozen; `is_head_to_head` is **mutually
+  exclusive** with `allow_midseason_join`, because a mid-season joiner would
+  silently rewrite everyone else's future opponents — the same reason real
+  platforms lock schedules at season start.
+- **Resolution is piggybacked on scoring, not scheduled separately**: after the
+  scoring engine writes a window's `TeamWeeklyScore` rows it compares each
+  pairing's points → win/loss/tie. A matchup whose scores haven't landed stays
+  `NULL` and the *next* scoring pass naturally retries it — idempotent, zero
+  extra infrastructure.
+- **Standings tiebreaker**: wins desc, then **points-for** — chosen because
+  it's the most common real-league tiebreaker and can't be gamed defensively
+  (points-against is displayed but never sorted on).
+
 > 🎤 **Say this:** *"If there's one algorithm to remember from this whole
 > project, it's Integer Linear Programming for squad selection — it's the same
 > class of problem as 'pack a suitcase to maximize value without exceeding the
@@ -1115,7 +1174,7 @@ arithmetic).
 | **Adapter** | `app/adapters/` — `ISportAdapter` interface + `ADAPTER_REGISTRY` for football/cricket/basketball | Normalizes three different sports' raw data shapes behind one interface, so the (dormant) realtime pipeline stays sport-agnostic |
 | **Vertical-slice / service layer** | Every backend module (`models.py`/`router.py`/`services.py`/`schemas.py`) | Keeps each business domain's data, routes, and logic together instead of scattered across horizontal layers |
 | **Dependency Injection** | FastAPI `Depends` — `get_db`, `get_async_db`, `require_league_member`/`require_league_owner` | Testable, composable request-scoped dependencies without global state |
-| **Strategy-like dispatch** | `POINTS_RULES`/effective-rule resolution — per-sport scoring formulas selected at runtime | New sports or league-specific overrides plug in without branching logic scattered everywhere |
+| **Strategy-like dispatch** | `POINTS_RULES`/effective-rule resolution — per-sport scoring formulas selected at runtime | New sports plug in without branching logic scattered everywhere |
 | **Circuit Breaker** (`pybreaker`) | External-API adapters (currently dormant/disabled paths) | After N consecutive failures, stop hammering a dead API and fail fast for a cooldown, then test recovery |
 | **Retry with exponential backoff** | Feeder's `backend_client.py` (3 attempts, 1.5ⁿ), the (dormant) points-engine consumer | A transient network blip doesn't lose data — non-fatal, logs and moves on |
 | **Distributed lock** | `app/core/redis_lock.py` | Prevents two overlapping runs of the same scheduled job across processes |
@@ -1157,8 +1216,22 @@ script-injection attack can't steal a token that was never accessible to JS.
 
 ### Authorization
 
-`require_league_member` / `require_league_owner` FastAPI dependencies gate
-league-scoped mutations; self-only checks on user-profile updates.
+Three scopes, each a FastAPI dependency:
+
+- **League-scoped** — `require_league_member` / `require_league_owner` gate
+  league mutations; self-only checks on user-profile updates.
+- **Platform-admin** — `require_admin_role` enforces the `users.role` tier
+  (`user < support < admin < super_admin`); destructive actions (role changes,
+  user deletion, platform-wide recalcs) need `super_admin`. **Why a role column
+  instead of a permissions table:** four fixed tiers with a strict ordering
+  don't justify a many-to-many RBAC model — a ranked enum is simpler, faster to
+  check, and impossible to misconfigure. Every admin mutation is written to an
+  append-only `admin_audit_logs` table (who, what, target, when).
+- **Server-to-server** — the Feeder's shared-secret header, a completely
+  separate trust boundary.
+
+Post-login routing is also role-aware: admin-tier users land on `/admin`, not
+the manager dashboard.
 
 ### Input validation (three layers, deliberately redundant)
 
@@ -1645,6 +1718,43 @@ confusing mid-request failure instead of transparently reconnecting.
 
 ### Architecture questions
 
+**Q22a. Why REST instead of GraphQL?**
+The API has one consumer — our own frontend — with well-known, stable query
+shapes, so GraphQL's main selling point (letting many unknown clients shape
+their own queries) buys nothing here. REST + Pydantic gives auto-generated
+OpenAPI docs, dead-simple caching semantics, and per-endpoint auth boundaries
+(member/owner/admin/feeder) that are much harder to reason about through one
+GraphQL resolver graph. Under-/over-fetching is handled the boring way: purpose-
+built endpoints like `/dashboard/stats`.
+
+**Q22b. Why offer BOTH WebSocket and SSE for live matches?**
+WebSocket is the primary channel (bidirectional, lowest latency). SSE
+(Server-Sent Events) is a one-directional fallback that's plain HTTP — it
+survives corporate proxies and restrictive networks that silently kill
+WebSocket upgrades, and auto-reconnects natively in the browser. Both consume
+the **same Redis pub/sub channel**, so the fallback costs almost no extra code
+— it's a different pipe on the same firehose.
+
+**Q22c. Why UUID primary keys instead of auto-increment integers?**
+Three reasons: (1) sequential IDs exposed in URLs invite enumeration attacks
+("try /users/1, /users/2, …") and leak business volume; (2) UUIDs can be
+generated app-side before the INSERT, which simplifies building object graphs;
+(3) rows from different environments/sources can merge without collision — which
+matters here because the Feeder maps its own integer IDs onto backend UUIDs via
+`entity_links`. Cost acknowledged: 16 bytes vs 4/8 and slightly worse index
+locality — irrelevant at this scale.
+
+**Q22d. Why TWO background-job systems (APScheduler AND Celery)?**
+Different job shapes. APScheduler runs **in-process** cron — cheap, zero extra
+infrastructure — for light, time-based housekeeping (lifecycle transitions,
+cache warming, notifications), with Redis locks so multiple API instances don't
+double-fire. Celery runs **out-of-process** for the heavy, latency-sensitive
+work (scoring, pricing, sync) so a long scoring run can never block an API
+request. Collapsing everything into Celery would force us to run a worker for
+trivial cron jobs; collapsing into APScheduler would put bulk scoring inside
+the API process. (The third system, Kafka, is dormant by choice — coded as the
+scale-up path but not needed at current load.)
+
 **Q23. Why is the backend organized by feature ("vertical slices") instead of
 by layer?**
 So everything related to one business domain — models, routes, services,
@@ -1853,6 +1963,96 @@ pushes no matter what.
 > those are if they come up."*
 
 ---
+
+### Newer-feature questions (H2H, admin, favourites, dynasty, penalties)
+
+**Q. How does the head-to-head format work, and why round robin?**
+Each gameweek every team is paired against one opponent; more fantasy points
+that week = a win, and standings are W-L-T. The schedule is a circle-method
+round robin — provably fair, everyone meets everyone before any rematch —
+generated **once** when the league activates and never regenerated. That's why
+H2H is mutually exclusive with mid-season joining: a new team would silently
+rewrite everyone's future opponents. Results resolve automatically after
+scoring runs — no separate scheduler.
+
+**Q. Why did you REMOVE per-league scoring overrides?**
+Because `fantasy_points` is consumed by league-unaware systems — auto-pick
+valuation, pricing, "my team" display. A per-league value would have silently
+corrupted all of them, so we retired the feature to protect correctness. (Strong
+answer to give proactively: deleting a feature for integrity reads as maturity.)
+
+**Q. How does admin access control work? Why not a full permissions table?**
+A ranked role enum on `users.role` — `user < support < admin < super_admin` —
+checked by one dependency, `require_admin_role`. Four fixed tiers with strict
+ordering don't justify many-to-many RBAC; the enum is simpler and impossible to
+misconfigure. Every admin mutation lands in an append-only audit log, and the
+admin frontend is a separate role-gated `/admin` console.
+
+**Q. What happens when a league's season ends?**
+The owner can renew it: a **new** League row is created for the next season,
+linked by a `season_group_id` lineage (so history stays intact and queryable),
+with `dynasty=true` optionally carrying every roster over as auditable
+`dynasty_carryover` moves. We chose a new-row-plus-lineage design over mutating
+the same league so past seasons remain immutable records.
+
+**Q. What's the points-penalty system?**
+In budget leagues a manager can confirm a transfer they can't quite afford by
+paying the shortfall in **league points** at a global conversion rate. Each
+deduction is a row in an immutable `points_penalties` ledger — same auditability
+philosophy as transfers and trades. We chose a single global rate over
+per-league configuration deliberately (YAGNI — no league had asked for it).
+
+**Q. What are favourites for?**
+One favourite team + player per sport, chosen in a skippable onboarding step
+right after signup (editable later in settings). They drive personalized "your
+player scored" notifications. Modeled as their own tables with `ON DELETE
+CASCADE` — deleting a club/player silently clears the favourite, no trigger.
+
+## 17b. Live demo script — a click-path that shows everything
+
+A ~10-minute end-to-end route through the running product (`docker compose up`
+locally, or the deployed stack). Each step names what to *say* while clicking.
+
+1. **Landing page → Register** — point out Google sign-in exists too. Register
+   fresh; you land on **Pick your favourites** (onboarding). Pick a team +
+   player: *"these drive personalized goal notifications — and note it's
+   skippable, onboarding is never a hard gate."*
+2. **Dashboard** — *"httpOnly-cookie JWT + CSRF; no token ever touches
+   JavaScript."* If you skipped favourites, show the dismissible nudge card.
+3. **Create a league** — walk the stepper: draft vs budget mode, single vs
+   mixed sport, and toggle **head-to-head**: *"a second competition format on
+   top of the same scoring engine."*
+4. **Build a squad** — use **Auto-Pick** and say the ILP line: *"this is an
+   integer-linear-programming solver finding the provably optimal squad under
+   budget, position, and club constraints — not a greedy heuristic."* Then edit
+   it manually to show the live budget/position validation.
+5. **Set the lineup** — drag-and-drop pitch, captain/vice: *"captain doubles;
+   if he doesn't play, the vice inherits it; if a starter doesn't play at all,
+   a formation-aware auto-sub replaces him at scoring time."*
+6. **Start a simulated match** (feeder) — open the live match page side by
+   side: *"the feeder rolls calibrated per-minute probabilities and pushes
+   events over a shared-secret API; Redis pub/sub fans them out to every open
+   browser over WebSocket — watch the points tick."* Show the pre-match
+   prediction card (*"Elo + logistic regression, benchmarked against bookmaker
+   odds"*).
+7. **After it finishes** — leaderboard updated (*"bulk-SQL scoring, RANK() in
+   the database, three independent retry paths"*); in an H2H league, show the
+   weekly matchup result and W-L-T standings.
+8. **Transfers** — stage out/in (Redis-staged session), and if over budget,
+   show the **pay-with-points** option: *"every deduction is an immutable
+   ledger row."*
+9. **Admin console** (log in as an admin — note you land on `/admin`, not the
+   dashboard) — show users, a scoring recalculation, feature flags, tickets,
+   and the **audit log**: *"every admin action you just watched me do is in
+   this append-only table."*
+10. **Close on the docs/diagrams** — *"everything I showed is documented in 14
+    chapters and 12 UML diagrams, reverse-engineered from the code."*
+
+**Prep checklist (do before the talk, not during):** `docker compose up` and a
+feeder health check; one pre-made league already ACTIVE with scores (so the
+leaderboard isn't empty if a live sim misbehaves); one admin account and one
+fresh throwaway email for the signup step; the live-match page and admin
+console open in background tabs as fallbacks.
 
 ## 18. Presentation Tips — quick-reference cheat sheet
 

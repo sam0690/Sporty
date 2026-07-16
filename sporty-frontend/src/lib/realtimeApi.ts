@@ -2,7 +2,6 @@ import type {
   MatchPrediction,
   MatchRatings,
   MatchSnapshot,
-  ModelMetrics,
 } from "@/types/events";
 
 // Realtime endpoints live under /api (not /api/v1). They must hit the backend
@@ -70,22 +69,4 @@ export function fetchMatchRatings(
   matchId: string,
 ): Promise<MatchRatings | null> {
   return fetchOptionalMatchResource<MatchRatings>(matchId, "ratings");
-}
-
-/** Global (not match-scoped) model-performance scorecard; 404 until the
- *  feeder has scored at least one finished match. */
-export async function fetchModelMetrics(): Promise<ModelMetrics | null> {
-  const response = await fetch(`${API_BASE}/api/model-metrics`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-
-  if (response.status === 404) {
-    return null;
-  }
-  if (!response.ok) {
-    throw new Error(`Failed to load model metrics (${response.status})`);
-  }
-  return (await response.json()) as ModelMetrics;
 }

@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 import { EventFeed } from "@/components/live/EventFeed";
 import { LineupsCard } from "@/components/live/LineupsCard";
-import { ModelMetricsCard } from "@/components/live/ModelMetricsCard";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
-import { ScoreTicker } from "@/components/live/ScoreTicker";
+import { MiniScoreBar, ScoreTicker } from "@/components/live/ScoreTicker";
 import { LiveLeaderboard } from "@/components/live/LiveLeaderboard";
 import { LineupCard } from "@/components/live/LineupCard";
 import { ToastAlert } from "@/components/live/ToastAlert";
@@ -16,10 +17,9 @@ import {
   fetchMatchPrediction,
   fetchMatchRatings,
   fetchMatchSnapshot,
-  fetchModelMetrics,
 } from "@/lib/realtimeApi";
 import { useMatchStore } from "@/store/matchStore";
-import type { MatchPrediction, MatchRatings, ModelMetrics } from "@/types/events";
+import type { MatchPrediction, MatchRatings } from "@/types/events";
 
 type LiveMatchClientProps = {
   matchId: string;
@@ -30,12 +30,28 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   const [error, setError] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<MatchPrediction | null>(null);
   const [ratings, setRatings] = useState<MatchRatings | null>(null);
-  const [modelMetrics, setModelMetrics] = useState<ModelMetrics | null>(null);
 
   const hydrate = useMatchStore((s) => s.hydrate);
   const status = useMatchStore((s) => s.status);
   const lineup = useMatchStore((s) => s.lineup);
   const hasLineupChanges = Object.keys(lineup).length > 0;
+
+  // The condensed score bar fades in once the hero card leaves the viewport
+  // (offset by the 64px sticky navbar it slides under).
+  const heroRef = useRef<HTMLDivElement>(null);
+  const [heroOffscreen, setHeroOffscreen] = useState(false);
+  useEffect(() => {
+    const hero = heroRef.current;
+    if (!hero) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroOffscreen(!entry.isIntersecting),
+      { rootMargin: "-64px 0px 0px 0px" },
+    );
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -43,13 +59,12 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
     const load = async () => {
       setLoading(true);
       setError(null);
-      // Clear the previous match's decorative state so a slow prediction/
-      // model-metrics fetch for the new match doesn't leave the old match's
-      // values on screen in the meantime (ratings additionally gates its own
-      // fetch on this being null — see the ratings effect below).
+      // Clear the previous match's decorative state so a slow prediction fetch
+      // for the new match doesn't leave the old match's values on screen in the
+      // meantime (ratings additionally gates its own fetch on this being null —
+      // see the ratings effect below).
       setPrediction(null);
       setRatings(null);
-      setModelMetrics(null);
       try {
         const snapshot = await fetchMatchSnapshot(matchId);
         if (!mounted) {
@@ -69,7 +84,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         }
       }
 
-      // Optional extras pushed by the data feeder; absence is normal.
+      // Optional extra pushed by the data feeder; absence is normal.
       try {
         const matchPrediction = await fetchMatchPrediction(matchId);
         if (mounted) {
@@ -77,14 +92,6 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         }
       } catch {
         // Prediction is decorative — never block the live view on it.
-      }
-      try {
-        const metrics = await fetchModelMetrics();
-        if (mounted) {
-          setModelMetrics(metrics);
-        }
-      } catch {
-        // The model scorecard is decorative too.
       }
     };
 
@@ -151,7 +158,25 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   return (
     <div className="relative">
       <main className="relative mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
-        <ScoreTicker loading={loading} />
+        <Link
+          href="/fixtures"
+          className="mb-4 inline-flex items-center gap-1 font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3 transition-colors hover:text-fg-1"
+        >
+          <ChevronLeft className="size-3.5" />
+          All Fixtures
+        </Link>
+
+        {/* Hero: scoreline + win-probability band fused into one card. The
+            wrapper ref drives the condensed sticky bar once it scrolls away. */}
+        <div ref={heroRef}>
+          <ScoreTicker
+            loading={loading}
+            footer={
+              prediction ? <PredictionCard prediction={prediction} /> : undefined
+            }
+          />
+        </div>
+        <MiniScoreBar visible={heroOffscreen && !loading} />
 
         {error && (
           <p className="mt-4 rounded-[3px] border border-danger/25 bg-danger/8 px-3 py-2 text-sm text-danger-soft">
@@ -159,52 +184,21 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
           </p>
         )}
 
-        {/* Each phase emphasises different content and fills the full width:
-            pre  → prediction (who'll win) leads; events wait.
-            live → events are the heartbeat (wide), board + odds in the rail.
-            post → ratings/MOTM are the centrepiece, flanked by recap + board. */}
-        {phase === "pre" && (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-            <LineupsCard />
-            <div className="space-y-6">
-              <PredictionCard prediction={prediction} />
-              <ModelMetricsCard metrics={modelMetrics} />
-              <EventFeed />
-            </div>
+        {/* One shell for every phase — a wide main column and a rail. Only the
+            slotting changes as the match moves pre → live → post, so the page
+            never re-architects mid-watch, and DOM order matches the mobile
+            reading order (main first, rail second). */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr] lg:items-start">
+          <div className="min-w-0 space-y-6">
+            {phase === "post" && <RatingsCard ratings={ratings} />}
+            {phase === "pre" ? <LineupsCard /> : <EventFeed />}
+            {phase !== "pre" && hasLineupChanges && <LineupCard />}
           </div>
-        )}
-
-        {phase === "live" && (
-          <div className="mt-6 grid gap-6 xl:grid-cols-[1.7fr_1fr]">
-            <div className="space-y-6">
-              <EventFeed />
-              {hasLineupChanges && <LineupCard />}
-            </div>
-            <div className="space-y-6">
-              <LiveLeaderboard />
-              <LineupsCard />
-              <PredictionCard prediction={prediction} />
-            </div>
+          <div className="min-w-0 space-y-6">
+            {phase !== "pre" && <LiveLeaderboard />}
+            {phase === "pre" ? <EventFeed /> : <LineupsCard />}
           </div>
-        )}
-
-        {phase === "post" && (
-          <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_1.7fr_1fr]">
-            <div className="order-2 space-y-6 xl:order-1">
-              <EventFeed />
-            </div>
-            <div className="order-1 space-y-6 xl:order-2">
-              <RatingsCard ratings={ratings} />
-            </div>
-            <div className="order-3 space-y-6">
-              <LiveLeaderboard />
-              <LineupsCard />
-              <PredictionCard prediction={prediction} />
-              <ModelMetricsCard metrics={modelMetrics} />
-              {hasLineupChanges && <LineupCard />}
-            </div>
-          </div>
-        )}
+        </div>
 
         <ToastAlert />
       </main>

@@ -90,6 +90,13 @@ classDiagram
         +VETO_HOURS int
     }
 
+    class MatchupService {
+        +generate_round_robin_rounds(team_ids) list
+        +generate_matchups_for_league(db, league)
+        +resolve_matchups_for_window(db, league_id, window_id)
+        +get_h2h_standings(db, league_id) list
+    }
+
     class RedisLock {
         <<context manager>>
         +acquire(key, ttl) bool
@@ -135,6 +142,8 @@ classDiagram
     ScoringEngine --> TeamScoring : orchestrates
     ScoringEngine --> RankingService : orchestrates
     ScoringEngine --> RedisLock : wraps run in
+    ScoringEngine --> MatchupService : resolves H2H results after team scores
+    LeagueServices --> MatchupService : generates schedule at ACTIVE transition
     TeamScoring --> AutoSubsResolver : uses
     WaiverService --> DraftRosterService : reuses check_add_drop/apply_add_drop
     TradeService --> DraftRosterService : reuses squad validation
