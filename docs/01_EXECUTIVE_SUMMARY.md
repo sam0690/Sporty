@@ -38,7 +38,9 @@ exists in the repository.
 ## Main goals
 
 - Let a group of users compete in a season-long fantasy competition with real
-  scoring stakes (captain bonuses, transfer strategy, waiver claims, trades).
+  scoring stakes (captain bonuses, transfer strategy, waiver claims, trades), in
+  either classic cumulative-points leagues or opt-in **head-to-head** leagues
+  (weekly one-vs-one matchups on a round-robin schedule, W-L-T standings).
 - Support **three sports** with different rules (squad sizes, scoring formulas,
   stat shapes) behind one platform and one mixed-league concept.
 - Make the live-match experience feel real-time: scores and fantasy points tick up
@@ -50,17 +52,24 @@ exists in the repository.
 
 ## Who the users are
 
-- **Fantasy managers** — the primary end user. Registers, joins/creates leagues,
-  drafts or buys players, sets lineups, makes transfers, claims free agents,
-  proposes trades, watches live matches, checks the leaderboard.
+- **Fantasy managers** — the primary end user. Registers (picking a favourite team
+  and player per sport during onboarding, which drives goal/score notifications),
+  joins/creates leagues, drafts or buys players, sets lineups, makes transfers,
+  claims free agents, proposes trades, watches live matches, checks the
+  leaderboard, and can open support tickets.
 - **League owners** — a fantasy manager with extra privileges scoped to a league they
   created: start the draft, generate transfer windows, override scoring rules, toggle
   mid-season joining, veto trades (commissioner power), delete the league.
-- **Platform administrators** — implicit role, not a modeled `Role`/`Permission`
-  system in the database (**could not determine** any admin panel in the frontend);
-  administrative actions (seeding sports/scoring rules, running the feeder's demo
-  launcher and admin HTML panel) are done via scripts and the feeder's
-  `SportyDataFeeder/app/static/admin.html` control panel, not a Sporty-backend admin UI.
+- **Platform administrators** — a modeled role tier on `users.role`
+  (`user`/`support`/`admin`/`super_admin`, enforced by `require_admin_role` in
+  `app/admin/dependencies.py`). A dedicated `/api/v1/admin` router and a frontend
+  admin console (`/admin` route group: users, leagues, seasons, scoring, players,
+  transactions, jobs, config, tickets, audit log) cover user suspension/role
+  changes, league/season overrides, scoring recalculation, repricing, feature
+  flags, and support-ticket handling — every admin action is written to
+  `admin_audit_logs`. Admins land on `/admin` (not the manager dashboard) after
+  login. The feeder additionally has its own separate demo control panel
+  (`SportyDataFeeder/app/static/admin.html`).
 - **The Sporty Data Feeder** — a non-human, server-to-server actor. Authenticated by a
   shared secret (`X-Feeder-Secret`), it is trusted to create matches/players and push
   match events, but has no user-level access.
@@ -108,7 +117,7 @@ request, and `docs/11-end-to-end-flows.md`-equivalent material folded into
 | Frontend data layer | Axios (two instances), TanStack Query (React Query), Zustand, Zod, react-hook-form |
 | Package manager | Yarn 4 (frontend); pip + a plain `venv/` (backend, no `pyproject.toml`) |
 | Feeder framework | FastAPI, SQLAlchemy, scikit-learn (`LogisticRegression` pipelines), NumPy/SciPy (Dixon-Coles bivariate Poisson, Elo), `httpx` |
-| Containerization | Dockerfiles for both backend and frontend; a `docker-compose.yml` for the frontend only |
+| Containerization | Dockerfiles for both backend and frontend; the root `docker-compose.yml` runs the full local stack (postgres + redis + API + celery worker/beat + frontend) against a throwaway dev DB |
 | Hosting (evidenced by code/config, not by an infra-as-code file) | Backend on Render, frontend on Vercel/Cloudflare, PostgreSQL on Render/Neon, Redis on Upstash — see [09 — Deployment](09_DEPLOYMENT.md) for exactly what is/isn't verifiable from the repo |
 
 ## Development methodology

@@ -20,6 +20,7 @@ format).
 8. [The feeder — match simulation](#8-the-feeder--match-simulation)
 9. [The feeder — statistical/ML models](#9-the-feeder--statisticalml-models)
 10. [Resilience patterns](#10-resilience-patterns)
+11. [Head-to-head matchups — schedule generation & resolution](#11-head-to-head-matchups--schedule-generation--resolution)
 
 ---
 
@@ -122,10 +123,13 @@ squad_size) total, an audit log by design.
 
 ### 3a. Effective-rule resolution — `app/services/scoring/rules.py:resolve_effective_rules`
 
-**What/why:** resolve the point value for a `(league, sport, action)` by precedence
-so a league owner can rebalance scoring without touching platform defaults:
-`league override → platform default → hardcoded fallback → 0`. **How:** one SELECT
-per table, merged in Python. **Complexity:** O(1) per action (two indexed lookups).
+**What/why:** resolve the point value for a `(sport, action)` by precedence:
+`platform default → hardcoded fallback → 0`. **How:** one SELECT over
+`default_scoring_rules`, merged in Python. **Complexity:** O(1) per action (one
+indexed lookup). *(Per-league overrides used to sit at the top of this chain but
+were retired in 2026-07 — `fantasy_points` feeds league-unaware consumers like
+auto-pick valuation and pricing, so scoring is platform-global now; see
+[08 — API](08_API.md)/Scoring config.)*
 
 ### 3b. Per-sport fantasy-point formulas — `app/services/scoring/player_scoring.py`
 
@@ -493,6 +497,48 @@ rule-based post-match ratings.
   produced on-finish, by a 10-minute periodic sweep, and by a daily ranking cron —
   all idempotent, so a failure in one path is caught by another (see
   [03 — Request Flow](03_REQUEST_FLOW.md)).
+
+## 11. Head-to-head matchups — schedule generation & resolution
+
+**Location:** `app/services/matchup_service.py` (full design writeup:
+`Sporty_Backend/docs/HEAD_TO_HEAD_MATCHUPS.md`).
+
+**What:** an opt-in league format (`League.is_head_to_head`, orthogonal to
+draft/budget mode — it changes nothing about squads, transfers, waivers, or
+trades). Each transfer window every team is paired against one opponent; whoever
+scores more fantasy points that window (per the already-computed
+`TeamWeeklyScore`) records a win. Standings are a W-L-T record instead of (well,
+alongside) cumulative points.
+
+**Schedule generation — circle-method round robin
+(`generate_round_robin_rounds`):** fix the first team, arrange the rest in a
+circle, and rotate the circle one step per round. For `n` teams this yields
+`n-1` rounds of `n/2` pairs where every team meets every other team exactly
+once. An **odd** team count is padded with a `None` slot — whoever is paired
+with `None` that round has a **bye** (its matchup row is written with
+`result="bye"` immediately). If the season has more gameweeks than rounds, the
+schedule cycles (`rounds[i % len(rounds)]`), so teams meet again in the same
+order. Complexity: O(n²) pairs total — trivially small at league scale.
+
+**When it runs:** exactly **once**, at the league's transition to `ACTIVE`
+(three call sites converge on the same idempotent function: draft completion in
+`draft_service.py`, a manual status change in `league_service.py`, and the daily
+lifecycle job in `league_status_service.py`). The schedule is never regenerated
+— `is_head_to_head` is **mutually exclusive** with `allow_midseason_join`
+(enforced at creation and on toggle), because a mid-season joiner would silently
+rewrite other teams' future opponents.
+
+**Resolution (`resolve_matchups_for_window`):** after the batch scoring engine
+writes a window's `TeamWeeklyScore` rows, `engine.py` calls this per league:
+compare `home_points` vs `away_points` → `home_win`/`away_win`/`tie`. A matchup
+where either side's score hasn't landed yet is skipped (its `result` stays
+`NULL`), so the next scoring pass naturally retries it — resolution is
+idempotent and requires no separate scheduler.
+
+**Standings (`get_h2h_standings`):** sort by **wins desc, then points-for desc**
+(the locked tiebreaker; points-against is tracked and displayed but never used
+to sort). Byes count as neither a win nor a loss, and every active team appears
+even at 0-0-0.
 
 ## Explain Like I'm New
 

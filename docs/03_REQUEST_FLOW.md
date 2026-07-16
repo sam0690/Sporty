@@ -32,7 +32,10 @@ Client (sporty-frontend)
    401s don't fire multiple refreshes), then retries the original request once
    (`_retry` flag prevents infinite loops). If refresh also fails, an
    `auth-invalidated` event fires (`src/lib/auth-events.ts`), which
-   `context/auth-context.tsx` listens for to clear the user and redirect to login.
+   `context/auth-context.tsx` listens for to clear the user, drop all user-scoped
+   client state (the whole React Query cache plus the persisted dashboard league
+   selection — same cleanup as an explicit logout, so the next account on this
+   browser never sees the previous user's cached data), and redirect to login.
 
 ```
         ▼  HTTPS

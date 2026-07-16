@@ -28,14 +28,16 @@ before any query runs (worker processes never execute `main.py`).
 | Module | Tables |
 |---|---|
 | `app/auth/models.py` | `users`, `refresh_tokens` |
-| `app/league/models.py` | `sports`, `seasons`, `transfer_windows`, `leagues`, `league_sports`, `lineup_slots`, `league_memberships`, `fantasy_teams`, `team_players`, `transfers`, `budget_transactions`, `team_gameweek_lineups`, `team_weekly_scores`, `draft_picks`, `roster_moves`, `waiver_order`, `waiver_claims`, `trade_offers` |
-| `app/player/models.py` | `real_teams`, `players`, `player_price_history`, `player_gameweek_stats`, `football_stats`, `cricket_stats` |
+| `app/league/models.py` | `sports`, `seasons`, `transfer_windows`, `leagues`, `league_sports`, `lineup_slots`, `league_memberships`, `fantasy_teams`, `team_players`, `transfers`, `budget_transactions`, `team_gameweek_lineups`, `team_weekly_scores`, `draft_picks`, `roster_moves`, `waiver_order`, `waiver_claims`, `trade_offers`, `points_penalties`, `league_matchups` |
+| `app/player/models.py` | `real_teams`, `players`, `player_price_history`, `player_gameweek_stats`, `football_stats`, `cricket_stats`, `user_favourite_teams`, `user_favourite_players` |
 | `app/player/models_nba.py` | `nba_stats` |
 | `app/match/models.py` | `matches` |
-| `app/scoring/models.py` | `default_scoring_rules`, `league_scoring_overrides` |
+| `app/scoring/models.py` | `default_scoring_rules` (`league_scoring_overrides` still exists in old databases but the model/endpoints were retired 2026-07) |
 | `app/notification/models.py` | `notifications` |
 | `app/models/db/live_event.py` | `live_events` |
 | `app/models/db/match_feed_cache.py` | `match_feed_cache` |
+| `app/support/models.py` | `support_tickets`, `ticket_messages` |
+| `app/admin/models.py` | `system_config` (runtime feature-flag overrides), `admin_audit_logs` |
 | `app/ingestion/models.py` | `ingestion_players`, `ingestion_teams` (staging for CSV/API ingestion) |
 
 ## Identity & auth (`app/auth/models.py`)
@@ -113,9 +115,16 @@ before any query runs (worker processes never execute `main.py`).
   `penalty_applied`.
 - **`draft_picks`** — immutable, append-only: `round_number`, `pick_number`. Unique
   on `(league_id, pick_number)` and `(league_id, player_id)`.
+- **`points_penalties`** — immutable ledger of league-points deductions per team.
+  Currently written with `reason='budget_overage'` when a manager pays a
+  transfer's budget shortfall with points (at the global
+  `BUDGET_OVERAGE_POINTS_RATE`); `reason` is a free string so future penalty
+  types reuse the table. Deductions surface on the dashboard and leaderboard.
 - **`roster_moves`** *(new, migration `f7a8b9c0d1e2`)* — audit trail for every
   free-agent/waiver/trade/draft roster change: `league_id`, `fantasy_team_id`,
-  `move_type` (`CHECK IN ('draft','free_agent','waiver','trade')`),
+  `move_type` (`CHECK IN ('draft','free_agent','waiver','trade','dynasty_carryover')`
+  — the last written by a dynasty-mode league renewal carrying rosters into the new
+  season),
   `add_player_id`/`drop_player_id` (nullable — a pure add or pure drop has one
   null), `window_id`, `actor_user_id` (`ON DELETE SET NULL` — the audit row survives
   user deletion). Indexed on `league_id`, `fantasy_team_id`, `created_at`.
@@ -204,6 +213,14 @@ queryable JSON.
   - **`nba_stats`** (`app/player/models_nba.py`) — points, assists, rebounds,
     steals, blocks.
 
+- **`user_favourite_teams`** / **`user_favourite_players`** — a user's favourite
+  club and player, **one per sport** (`UniqueConstraint(user_id, sport_id)`),
+  replacing the old single `User.favourite_team_id`/`favourite_player_id` columns.
+  FKs to `users`/`sports`/`real_teams`-or-`players` with `ON DELETE CASCADE`, so
+  deleting the favourited entity removes the favourite without a trigger. Drives
+  the personalized "your player scored" notifications and is set during the
+  post-signup onboarding step (editable later in Profile Settings).
+
 ### Data-quality migration: `e6f7a8b9c0d1_dedupe_players`
 
 This is a **data migration**, not a schema migration — worth documenting because it
@@ -248,12 +265,35 @@ docstring flags as still outstanding. See [14 — Improvements](14_IMPROVEMENTS.
 
 - **`default_scoring_rules`** — per-sport `action` + `points` (`Numeric`, negatives
   allowed) + `description`. Unique on `(sport_id, action)`.
-- **`league_scoring_overrides`** — a league owner's override of a specific action's
-  points. Unique on `(league_id, sport_id, action)`.
+- **`league_scoring_overrides`** — **retired** (2026-07). The table may still
+  exist in previously-migrated databases, but the ORM model and the
+  set/remove-override endpoints are gone: `fantasy_points` is read by
+  league-unaware consumers (auto-pick valuation, pricing, "my team" display), so
+  scoring is `DefaultScoringRule`-only platform-wide.
 
-The **effective** points for a `(league, sport, action)` triple resolve
-`override → default → hardcoded fallback → 0`
-(`app/services/scoring/rules.py:resolve_effective_rules`).
+## Head-to-head matchups (`app/league/models.py`)
+
+- **`league_matchups`** — the full-season H2H schedule for leagues with
+  `League.is_head_to_head=true`, one row per pairing per transfer window:
+  `league_id`, `transfer_window_id`, `home_team_id`, nullable `away_team_id`
+  (NULL = bye), `home_points`/`away_points` (`Numeric(8,2)`, filled when the
+  window's scoring finalizes), `result`
+  (`home_win`/`away_win`/`tie`/`bye`, NULL while unresolved). Generated once by
+  the circle-method round robin at the ACTIVE transition and never regenerated —
+  see [06 — Algorithms](06_ALGORITHMS.md) §11.
+
+## Support & admin (`app/support/models.py`, `app/admin/models.py`)
+
+- **`support_tickets`** — a user's ticket: subject, category, status
+  (open/in-progress/resolved/closed), priority, optional assignee (an admin-tier
+  user).
+- **`ticket_messages`** — the conversation thread on a ticket; admin replies can be
+  flagged internal-only (invisible to the ticket's owner).
+- **`system_config`** — runtime feature-flag overrides (e.g. the dormant Kafka
+  realtime pipeline, live external-API polling) editable from the admin console
+  without a redeploy.
+- **`admin_audit_logs`** — append-only record of every admin action (who, what,
+  target, when), surfaced in the admin console's audit-log page.
 
 ## Entity-relationship overview
 

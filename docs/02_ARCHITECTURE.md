@@ -34,7 +34,10 @@ business domain owns its own `models.py` / `router.py` / `services.py` / `schema
 inside its own directory, rather than a horizontal "all models here, all routers
 there" layout. Slices: `auth/`, `league/` (the largest — leagues, draft, transfers,
 lineup, leaderboard, `sportConfigs.py`), `player/`, `match/`, `scoring/`,
-`notification/`, `user/`, `optimization/`.
+`notification/`, `user/` (profile + per-sport favourite team/player), `optimization/`,
+`admin/` (platform-admin API: user/league/season management, scoring recalcs, job
+health, feature flags, ticket handling — every action audit-logged to
+`admin_audit_logs`), `support/` (user-facing support tickets).
 
 Cross-cutting layers sit alongside the slices:
 
@@ -93,7 +96,7 @@ in a component.
 
 | Layer | Folder | Responsibility |
 |---|---|---|
-| Routing | `src/app/` | Next.js App Router route groups (`(auth)`, `(dashboard)`, `(public)`) + a top-level `match/[matchId]` route |
+| Routing | `src/app/` | Next.js App Router route groups (`(auth)`, `(dashboard)`, `(public)`) + a top-level `match/[matchId]` route. `(dashboard)` includes the role-gated `/admin` console and the one-time post-signup `/onboarding/favourites` step (admins land on `/admin` after login; every navigable route is registered in `src/lib/route.config.ts`) |
 | API transport | `src/api/` | Two Axios instances (`public-api-client.ts`, `auth-api-client.ts`) + the endpoint registry (`apiPath.ts`) |
 | Services | `src/services/` | One typed module per domain (`LeagueService`, `TeamService`, `PlayerService`, `ScoringService`, `OptimizationService`, `UserService`, `MatchService`, `FeatureService`) — the **only** place Axios is called |
 | Hooks | `src/hooks/` | Generic React Query wrappers (`useApiQuery`, `useApiMutation`) + domain hooks that wire services to query keys/cache invalidation |

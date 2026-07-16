@@ -9,9 +9,12 @@ catalogue and the business rules a schema alone can't show.
 
 **Auth key:** 🔓 = no auth. 🔒 = cookie-JWT (`get_current_active_user`). 🔒+M = 🔒 +
 league membership (`require_league_member`). 🔒+O = 🔒 + league ownership
-(`require_league_owner`). 🔑 = feeder shared-secret (`X-Feeder-Secret`), a distinct
-trust boundary from user auth. All 🔒/🔒+M/🔒+O routes additionally require a valid
-`X-CSRF-Token` header on non-GET verbs (see [10 — Security](10_SECURITY.md)).
+(`require_league_owner`). 🔒+A = 🔒 + admin-tier role (`require_admin_role`,
+`app/admin/dependencies.py` — `support`/`admin`/`super_admin`; rows marked
+*(super)* require `super_admin`). 🔑 = feeder shared-secret (`X-Feeder-Secret`), a
+distinct trust boundary from user auth. All authenticated routes additionally
+require a valid `X-CSRF-Token` header on non-GET verbs (see
+[10 — Security](10_SECURITY.md)).
 
 ## Auth (`/api/v1/auth`, `app/auth/router.py`)
 
@@ -45,11 +48,15 @@ trust boundary from user auth. All 🔒/🔒+M/🔒+O routes additionally requir
 | DELETE | `/{league_id}` | 🔒+O | Delete league (cascades) | — |
 | PATCH | `/{league_id}/midseason-join` | 🔒+O | Toggle mid-season joining | — |
 | PATCH | `/{league_id}/status` | 🔒+O | Manual lifecycle transition | `409` invalid transition (see [02 — Architecture](02_ARCHITECTURE.md)/league state machine) |
+| POST | `/{league_id}/renew` | 🔒+O | Start the next season of this league; `dynasty=true` carries rosters over as `dynasty_carryover` moves (keeper/dynasty leagues) | `409` league/season not eligible |
+| GET | `/{league_id}/seasons` | 🔒+M | Every season in this league's rollover lineage | — |
+| PATCH | `/{league_id}/sports/{sport_name}/season` | 🔒+O | Re-point a secondary sport's season mapping (multi-sport leagues) | `409` overlap/eligibility violation |
 | POST | `/{league_id}/leave` | 🔒+M | Leave a league (non-owner) | `403` owner cannot leave |
 | POST | `/{league_id}/sports` | 🔒+O | Attach a sport | `409` league not in SETUP |
 | DELETE | `/{league_id}/sports/{sport_name}` | 🔒+O | Detach a sport | — |
 | POST | `/{league_id}/lineup-slots` | 🔒+O | Define position min/max per sport | — |
 | GET | `/{league_id}/members` | 🔒+M | Membership list | — |
+| DELETE | `/{league_id}/members/{membership_id}` | 🔒+O | Remove a member from the league | — |
 | POST | `/{league_id}/draft/start` | 🔒+O | Randomize draft order, create teams, → DRAFTING | `409` not SETUP / <2 members / no sport attached |
 | POST | `/{league_id}/draft/pick` | 🔒+M | Make a snake-draft pick | `409` not caller's turn / player unavailable / squad full / budget exceeded |
 | GET | `/{league_id}/draft/turn` | 🔒+M | Whose turn it is | — |
@@ -58,14 +65,17 @@ trust boundary from user auth. All 🔒/🔒+M/🔒+O routes additionally requir
 | DELETE | `/{league_id}/teams/players/{player_id}` | 🔒+M | Discard a player for a refund (with penalty) | `404` not owned |
 | GET | `/{league_id}/my-team` | 🔒+M | Caller's squad + budget | — |
 | POST | `/{league_id}/transfer-windows/generate` | 🔒+O | Create the season's weekly gameweeks | `409` not budget mode / not SETUP |
-| POST | `/{league_id}/transfers` | 🔒+M | Single-shot transfer (see [06 — Algorithms](06_ALGORITHMS.md)/`make_transfer`) | `409` window locked / transfer cap reached / insufficient budget |
+| POST | `/{league_id}/transfers` | 🔒+M | Single-shot transfer (see [06 — Algorithms](06_ALGORITHMS.md)/`make_transfer`). A budget shortfall can optionally be paid with league points at the global `BUDGET_OVERAGE_POINTS_RATE` — the deduction is recorded in `points_penalties` and shown against the team's total | `409` window locked / transfer cap reached / insufficient budget (and not covering with points) |
 | GET | `/{league_id}/transfers` | 🔒+M | Transfer history | — |
 | GET / PATCH / POST | `/{league_id}/my-team/lineup` | 🔒+M | Read/set the starting XI + captain/vice for the editable window (`PATCH` is canonical, `POST` a legacy alias) | `409` lineup window locked, `400` structural/position-slot violation, captain==vice |
 | GET | `/{league_id}/my-team/gameweek-recap` | 🔒+M | Per-window scoring breakdown including auto-subs applied | — |
+| GET | `/{league_id}/my-team/live-lineup` | 🔒+M | Caller's lineup for the in-progress gameweek (live-match view) | — |
 | GET | `/{league_id}/active-window` | 🔒+M | The window containing "now" | — |
 | GET | `/{league_id}/editable-window` | 🔒+M | The next not-yet-locked window | — |
 | GET | `/{league_id}/dashboard/stats` | 🔒+M | Summary stats for the league home page | — |
 | GET | `/{league_id}/leaderboard` | 🔒+M | Standings (per-window or season-total; `historical` flag) | — |
+| GET | `/{league_id}/power-rankings` | 🔒+M | Rank movement, streaks, manager of the week | — |
+| GET | `/{league_id}/activity` | 🔒+M | League activity feed (drafts, transfers, waivers, trades, dynasty carryovers — newest first) | — |
 
 ## Squads, Transfers & Optimization (`/api/v1/transfers`, `/api/v1/optimization`)
 
@@ -99,6 +109,18 @@ Draft leagues only; budget leagues use the transfer endpoints above instead. See
 | POST | `/trades/{trade_id}/cancel` | 🔒+M | Cancel (proposer only) | — |
 | POST | `/trades/{trade_id}/veto` | 🔒+O | Commissioner veto of an accepted, not-yet-executed trade | `409` already executed |
 
+## Head-to-head matchups (`/api/v1/leagues/{league_id}/matchups`, `app/api/v1/matchups.py`)
+
+Opt-in per league (`is_head_to_head=true` at creation; mutually exclusive with
+mid-season joining). The full-season schedule is a **circle-method round robin**
+generated once at the ACTIVE transition; results resolve automatically after each
+window's scoring lands. See [06 — Algorithms](06_ALGORITHMS.md) §11.
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `` | 🔒+M | Matchup scoreboard for one window (defaults to the current window via `window_id`; `include_all=true` returns the whole season's schedule) |
+| GET | `/standings` | 🔒+M | W-L-T standings — wins desc, points-for as the tiebreaker |
+
 ## Players (`/api/v1/players`, `app/player/router.py`)
 
 | Method | Path | Auth | Purpose |
@@ -109,14 +131,16 @@ Draft leagues only; budget leagues use the transfer endpoints above instead. See
 | GET | `/{player_id}/stats/{gameweek_id}` | 🔒 | One player's stat line for one window |
 | GET | `/{player_id}/price-history` | 🔒 | `PlayerPriceHistory` audit trail |
 
-## Scoring config (`/api/v1/scoring/rules/*`, `/api/v1/leagues/{id}/scoring-overrides`)
+## Scoring config (`/api/v1/scoring/rules/*`)
 
 | Method | Path | Auth | Purpose | Key errors |
 |---|---|---|---|---|
 | GET | `/scoring/rules/{sport_name}` | 🔒 | Platform default scoring rules | — |
-| GET | `/leagues/{league_id}/scoring-overrides` | 🔒+M | This league's overrides | — |
-| POST | `/leagues/{league_id}/scoring-overrides` | 🔒+O | Set/replace an override | `400` unknown action for the sport |
-| DELETE | `/leagues/{league_id}/scoring-overrides/{override_id}` | 🔒+O | Remove an override (reverts to default) | — |
+
+Per-league scoring overrides (`/leagues/{id}/scoring-overrides`) were **retired**
+(2026-07): `fantasy_points` is read directly by auto-pick valuation, pricing, and
+"my team" display, none of which are league-aware, so scoring is
+`DefaultScoringRule`-only platform-wide.
 
 ## Matches — public discovery (`/api/v1/matches`, `app/match/router.py`)
 
@@ -168,9 +192,60 @@ header mismatch (`secrets.compare_digest`, constant-time). See
 | GET | `/users/{user_id}/public-stats` | 🔒 | Public profile stats |
 | PATCH | `/users/{user_id}` | 🔒 | Update own profile (self-only, enforced in the service) |
 | POST | `/users/{user_id}/avatar` | 🔒 | Upload avatar → Cloudflare R2 (`storage_service.upload_avatar`) | `503` R2 not configured, `502` upload failure |
-| DELETE | `/users/{user_id}` | 🔒 | Deactivate account (`204`) |
+| DELETE | `/users/{user_id}` | 🔒 | Deactivate account (soft delete, `204`) |
+| POST | `/users/me/favourites/teams/{sport_name}` | 🔒 | Set (or replace) the caller's favourite team for a sport |
+| DELETE | `/users/me/favourites/teams/{sport_name}` | 🔒 | Remove the caller's favourite team for a sport |
+| POST | `/users/me/favourites/players/{sport_name}` | 🔒 | Set (or replace) the caller's favourite player for a sport |
+| DELETE | `/users/me/favourites/players/{sport_name}` | 🔒 | Remove the caller's favourite player for a sport |
 | GET | `/notifications` | 🔒 | Caller's notifications |
 | PATCH | `/notifications/{id}/read` | 🔒 | Mark one notification read |
+
+Favourites are one team + one player **per sport** (see
+[07 — Database](07_DATABASE.md)), set during the post-signup onboarding step
+(`/onboarding/favourites` in the frontend, skippable) or later from Profile
+Settings; they drive the personalized "your player scored" notifications.
+
+## Support tickets (`/api/v1/support`, `app/support/router.py`)
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/tickets` | 🔒 | Open a support ticket (subject, category, priority, optional league) |
+| GET | `/tickets` | 🔒 | List the caller's tickets |
+| GET | `/tickets/{ticket_id}` | 🔒 | One ticket + its message thread (internal admin notes excluded) |
+| POST | `/tickets/{ticket_id}/messages` | 🔒 | Reply on one of the caller's tickets |
+
+## Admin (`/api/v1/admin`, `app/admin/router.py` — all routes 🔒+A)
+
+Every mutating action here is written to `admin_audit_logs`. Rows marked *(super)*
+require the `super_admin` role; everything else needs `support` or above.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/audit-log` | List admin audit-log entries |
+| GET | `/users`, `/users/{id}` | List / inspect users |
+| POST | `/users/{id}/suspend`, `/users/{id}/reactivate` | Suspend / reactivate an account |
+| POST | `/users/{id}/force-logout` | Revoke every session for a user |
+| PATCH | `/users/{id}/role` | Change a user's role *(super)* |
+| DELETE | `/users/{id}` | Delete a user *(super)* |
+| GET | `/leagues` | List all leagues platform-wide |
+| PATCH | `/leagues/{id}/status`, `/leagues/{id}/settings` | Override a league's lifecycle status / settings |
+| DELETE | `/leagues/{id}` | Force-delete a league |
+| GET / POST | `/seasons` | List all seasons / create a season |
+| PATCH | `/seasons/{id}` | Update a season |
+| POST | `/seasons/{id}/generate-windows` | Generate a season's transfer windows |
+| POST | `/leagues/{id}/transfer-windows/{wid}/recalculate-score` | Recalculate one league window's scoring |
+| POST | `/scoring/recalculate-active` | Recalculate every active window platform-wide *(super)* |
+| POST | `/transfer-windows/{wid}/lock` | Force-set a window's lock flags |
+| GET / PATCH | `/players/{id}` | Inspect / directly edit a player *(PATCH is super)* |
+| POST | `/players/reprice` | Trigger a repricing pass |
+| POST | `/leagues/{id}/trades/{tid}/veto`, `.../cancel` | Veto / force-cancel a trade regardless of league ownership |
+| POST | `/leagues/{id}/waivers/{cid}/cancel` | Force-cancel a pending waiver claim |
+| POST | `/transfers/{tid}/reverse` | Reverse a budget transfer as a compensating entry *(super)* |
+| GET | `/leagues/{id}/transfer-windows`, `.../trades`, `.../waivers`, `.../transfers` | Per-league transaction listings |
+| GET | `/jobs/celery`, `/jobs/kafka` | Worker/beat status, Kafka consumer liveness |
+| GET / POST | `/config`, `/config/realtime-pipeline` *(super)*, `/config/live-polling` | List / toggle runtime feature flags (`system_config`) |
+| GET / PATCH | `/tickets`, `/tickets/{id}` | List / triage support tickets (status, priority, assignment) |
+| POST | `/tickets/{id}/messages` | Reply to a ticket, optionally as an internal note |
 
 ## Cross-cutting response conventions
 
