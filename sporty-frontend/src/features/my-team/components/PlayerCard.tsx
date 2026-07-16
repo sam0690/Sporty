@@ -70,7 +70,7 @@ export function PlayerCard({
               {meta.label}
             </span>
             {realTeam ? (
-              <span className="flex items-center gap-1.5 border-l border-[#26262e] pl-1.5">
+              <span className="flex items-center gap-1.5 border-l border-white/10 pl-1.5">
                 <TeamLogo teamName={realTeam} logoUrl={realTeamLogoUrl} size="sm" />
                 {realTeam}
               </span>

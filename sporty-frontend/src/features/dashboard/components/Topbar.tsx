@@ -15,6 +15,8 @@ type TopbarProps = {
   stats: OverviewStat[];
   pointsDeducted?: number;
   statsLoading?: boolean;
+  /** Previous league's numbers shown dimmed while the next league loads. */
+  isSwitching?: boolean;
 };
 
 function StatSkeleton({ wide = false }: { wide?: boolean }) {
@@ -36,6 +38,7 @@ export function Topbar({
   stats,
   pointsDeducted = 0,
   statsLoading = false,
+  isSwitching = false,
 }: TopbarProps) {
   const router = useRouter();
   const initial = userName.slice(0, 1).toUpperCase();
@@ -125,8 +128,10 @@ export function Topbar({
       <div className="my-5 h-px bg-white/6" />
 
       <div
-        className="flex flex-wrap items-end gap-x-8 gap-y-4"
-        aria-busy={statsLoading}
+        className={`flex flex-wrap items-end gap-x-8 gap-y-4 transition-opacity duration-200 ${
+          isSwitching ? "opacity-50" : ""
+        }`}
+        aria-busy={statsLoading || isSwitching}
       >
         {statsLoading ? (
           <>

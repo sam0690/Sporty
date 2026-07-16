@@ -49,18 +49,25 @@ export function useDashboardMainState() {
     previews,
     hasLeagues,
     isLoading: previewLoading,
+    isSwitching: previewSwitching,
     error: previewError,
   } = useDashboardTeamPreview(activeLeagueId);
   const {
     data: dashboardStats,
     isLoading: statsLoading,
+    isPlaceholderData: statsSwitching,
     error: statsError,
   } = useDashboardLeagueStats(activeLeagueId);
   const {
     data: recentActivityData,
     isLoading: recentActivityLoading,
+    isPlaceholderData: activitySwitching,
     error: recentActivityError,
   } = useRecentActivity(activeLeagueId);
+
+  // Optimistic league switch: previous league's data stays rendered (via
+  // keepPreviousData in the queries) and the UI dims until fresh data lands.
+  const isSwitching = previewSwitching || statsSwitching || activitySwitching;
 
   const userName = username || "Sporty Manager";
 
@@ -128,5 +135,6 @@ export function useDashboardMainState() {
     recentActivityLoading,
     recentActivityError,
     leaguesLoading,
+    isSwitching,
   };
 }

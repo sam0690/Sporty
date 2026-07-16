@@ -91,7 +91,9 @@ export function GameweekBreakdown({
                       className="h-full rounded-[3px] transition-[width] duration-300"
                       style={{
                         width: `${Math.max(widthPct, 3)}%`,
-                        background: isBest ? "#e2c368" : "rgba(226,195,104,0.25)",
+                        background: isBest
+                          ? "var(--accent)"
+                          : "color-mix(in oklab, var(--accent) 25%, transparent)",
                       }}
                     />
                     {row.rank != null && (

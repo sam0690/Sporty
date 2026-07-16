@@ -26,6 +26,7 @@ export function DashboardMainContainer() {
     recentActivityLoading,
     recentActivityError,
     leaguesLoading,
+    isSwitching,
   } = useDashboardMainState();
 
   return (
@@ -41,10 +42,13 @@ export function DashboardMainContainer() {
           stats={stats}
           pointsDeducted={pointsDeducted}
           statsLoading={statsLoading && hasLeagues}
+          isSwitching={isSwitching}
         />
 
         {hasLeagues && (
-          <div className="mb-6">
+          <div
+            className={`mb-6 transition-opacity duration-200 ${isSwitching ? "opacity-50" : ""}`}
+          >
             <GameweekBreakdown
               breakdown={dashboardStats?.gameweek_breakdown ?? []}
               isLoading={statsLoading}
@@ -53,7 +57,9 @@ export function DashboardMainContainer() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1.35fr_1fr]">
+        <div
+          className={`grid grid-cols-1 gap-6 transition-opacity duration-200 lg:grid-cols-[1.35fr_1fr] ${isSwitching ? "opacity-50" : ""}`}
+        >
           <TeamPreview
             slides={previews}
             isLoading={leaguesLoading || previewLoading}

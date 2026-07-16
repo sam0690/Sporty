@@ -1,18 +1,16 @@
 export default function FixturesLoading() {
-  // Mirrors the real page shape: hero card, filter chip row, panel grid.
+  // Mirrors the real page shape: sticky toolbar, then stacked competition sections.
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-      <div className="skeleton h-64 rounded-[3px] border border-white/6" />
-      <div className="mt-8 flex gap-2.5">
-        {Array.from({ length: 3 }, (_, i) => (
-          <div key={i} className="skeleton h-9 w-28 rounded-[3px]" />
-        ))}
+    <div className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
+      <div className="pb-3 pt-4">
+        <div className="skeleton h-8 w-40 rounded-[3px]" />
+        <div className="skeleton mt-3 h-12 rounded-[3px]" />
       </div>
-      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, i) => (
+      <div className="mt-6 space-y-4">
+        {Array.from({ length: 4 }, (_, i) => (
           <div
             key={i}
-            className="skeleton h-56 rounded-[3px] border border-white/6"
+            className="skeleton h-36 rounded-[3px] border border-white/6"
           />
         ))}
       </div>

@@ -369,8 +369,7 @@
   .float-up,
   .animate-live-pulse,
   .pop-in,
-  .pop-out,
-  .marquee-track {
+  .pop-out {
     animation: none;
   }
 }
@@ -442,18 +441,6 @@
   opacity: 0.035;
   background-image: radial-gradient(rgba(255, 255, 255, 0.9) 0.5px, transparent 0.5px);
   background-size: 3px 3px;
-}
-
-/* Marquee — continuous horizontal scroll for the live score ticker strip. */
-@keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-.marquee-track {
-  animation: marquee-scroll 28s linear infinite;
-}
-.marquee-track:hover {
-  animation-play-state: paused;
 }
 
 /* ════════════════════════════════════════════════════════════════════

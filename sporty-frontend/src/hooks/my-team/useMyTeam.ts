@@ -1,5 +1,6 @@
 "use client";
 
+import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import { TeamService } from "@/services/TeamService";
@@ -16,6 +17,9 @@ export function useMyTeam(leagueId: string | null | undefined) {
     {
       enabled: Boolean(leagueId),
       staleTime: 60_000,
+      // League switches keep the previous squad on screen (dimmed) instead
+      // of flashing skeletons; consumers with a fixed leagueId are unaffected.
+      placeholderData: keepPreviousData,
     },
   );
 }

@@ -52,6 +52,7 @@ export function useMyTeamDashboard() {
   const {
     data: selectedTeam,
     isLoading: selectedTeamLoading,
+    isPlaceholderData: isSwitching,
     error: selectedTeamError,
   } = useLeagueMyTeam(activeLeague?.id ?? null);
 
@@ -59,12 +60,6 @@ export function useMyTeamDashboard() {
     () => mapTeamLeagueView(activeLeague, selectedTeam ?? null),
     [activeLeague, selectedTeam],
   );
-
-  const totals = useMemo(() => {
-    const totalPlayers = teamLeague?.players.length ?? 0;
-
-    return { totalPlayers };
-  }, [teamLeague]);
 
   const handleLeagueChange = (leagueId: string) => {
     router.replace(`${pathname}?league=${leagueId}`, { scroll: false });
@@ -78,10 +73,13 @@ export function useMyTeamDashboard() {
     selectedTeamName:
       teamLeague?.teamName ?? activeLeague?.teamName ?? undefined,
     teamLeague,
-    totals,
     isLoading: leaguesLoading || (selectedTeamLoading && !teamLeague),
+    // League switch keeps the previous squad rendered (dimmed) — see
+    // placeholderData in useMyTeam.
+    isSwitching,
     hasLeagues: leagueOptions.length > 0,
-    isEmptyTeam: Boolean(activeLeague?.id) && selectedTeam === null,
+    isEmptyTeam:
+      Boolean(activeLeague?.id) && selectedTeam === null && !isSwitching,
     leaguesError,
     selectedTeamError,
     onLeagueChange: handleLeagueChange,

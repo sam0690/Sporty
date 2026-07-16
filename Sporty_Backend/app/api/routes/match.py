@@ -9,7 +9,6 @@ from sqlalchemy import select, text
 from app.api.deps import (
     get_async_db,
     get_async_redis_dep,
-    get_current_active_user_async,
     require_match_access,
 )
 from app.match.router import MATCH_TEAM_NAME_ALIASES
@@ -263,13 +262,12 @@ async def get_match_state(
 
 @router.get("/model-metrics")
 async def get_model_metrics(
-    _user=Depends(get_current_active_user_async),
     redis=Depends(get_async_redis_dep),
 ):
     """Global model-performance scorecard pushed by the Sporty Data Feeder
     (accuracy/log-loss of its stored predictions vs actual results, per model
-    version; cached under model:metrics). Not match-scoped: any signed-in user
-    may read it."""
+    version; cached under model:metrics). Public, like the rest of the match
+    detail surface — aggregate, non-sensitive data."""
     cached = await redis.get("model:metrics")
     if cached is None:
         raise HTTPException(status_code=404, detail="No model metrics available")

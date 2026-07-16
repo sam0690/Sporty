@@ -29,6 +29,11 @@ function addDays(d: Date, delta: number): Date {
   return next;
 }
 
+/** Shift a YYYY-MM-DD key by whole days (local calendar). */
+export function shiftDateKey(key: string, delta: number): string {
+  return toDateKey(addDays(parseDateKey(key), delta));
+}
+
 export function MatchDateStrip({ selectedDate, onDateChange }: MatchDateStripProps) {
   const selected = parseDateKey(selectedDate);
   const todayKey = toDateKey(new Date());

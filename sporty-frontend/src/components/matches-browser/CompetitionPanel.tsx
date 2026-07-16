@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui";
 import { sportGlyph } from "@/components/landing/sport-icons";
@@ -32,7 +32,16 @@ function TeamRow({
   );
 }
 
-function MatchRow({ match, basePath }: { match: TMatch; basePath: string }) {
+export function MatchRow({
+  match,
+  basePath,
+  showCompetition = false,
+}: {
+  match: TMatch;
+  basePath: string;
+  /** Live section mixes competitions, so each row names its own. */
+  showCompetition?: boolean;
+}) {
   const { isLive, isFinished } = statusMeta(match.status);
   const hasScore = match.home_score != null && match.away_score != null;
 
@@ -80,11 +89,18 @@ function MatchRow({ match, basePath }: { match: TMatch; basePath: string }) {
         />
       </div>
 
+      {showCompetition && (
+        <span className="hidden max-w-28 shrink-0 truncate text-right text-[9px] uppercase tracking-[1px] text-fg-3 sm:block">
+          {match.competition}
+        </span>
+      )}
       <ChevronRight className="size-4 shrink-0 text-fg-3 transition-colors group-hover:text-accent" />
     </Link>
   );
 }
 
+// Full-width, collapsible competition section (native <details> — open by
+// default). Replaces the old fixed-height card with an inner scrollbar.
 export function CompetitionPanel({
   group,
   basePath,
@@ -97,12 +113,8 @@ export function CompetitionPanel({
   const glyph = sportGlyph(group.sport);
   const Glyph = glyph.Icon;
   return (
-    <section
-      className="pop-in overflow-hidden card-surface"
-      style={style}
-    >
-      <div aria-hidden className="h-[2px] w-full" style={{ background: `linear-gradient(90deg, ${glyph.color}, transparent 80%)` }} />
-      <header className="flex items-center justify-between gap-3 border-b border-white/7 px-4 py-3">
+    <details open className="group/panel pop-in overflow-hidden card-surface" style={style}>
+      <summary className="flex cursor-pointer select-none list-none items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-white/3 [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 items-center gap-2.5">
           <span
             className="grid size-6 shrink-0 place-items-center rounded-[3px]"
@@ -114,22 +126,25 @@ export function CompetitionPanel({
             {group.competition}
           </span>
         </div>
-        {group.live > 0 ? (
-          <Badge tone="danger" size="sm" className="shrink-0 gap-1.5">
-            <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
-            {group.live} Live
-          </Badge>
-        ) : (
-          <span className="shrink-0 font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
-            {group.matches.length} {group.matches.length === 1 ? "match" : "matches"}
-          </span>
-        )}
-      </header>
-      <div className="max-h-[420px] divide-y divide-white/5 overflow-y-auto">
+        <div className="flex shrink-0 items-center gap-2.5">
+          {group.live > 0 ? (
+            <Badge tone="danger" size="sm" className="gap-1.5">
+              <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
+              {group.live} Live
+            </Badge>
+          ) : (
+            <span className="font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
+              {group.matches.length}
+            </span>
+          )}
+          <ChevronDown className="size-4 text-fg-3 transition-transform group-open/panel:rotate-180" />
+        </div>
+      </summary>
+      <div className="divide-y divide-white/5 border-t border-white/7">
         {group.matches.map((m) => (
           <MatchRow key={m.id} match={m} basePath={basePath} />
         ))}
       </div>
-    </section>
+    </details>
   );
 }

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { keepPreviousData } from "@tanstack/react-query";
 import { useMyLeagues } from "@/hooks/leagues/useLeagues";
 import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { LeagueService } from "@/services/LeagueService";
@@ -46,16 +47,20 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
   // must come from the same (live) window, or they can point to different
   // gameweeks. starting_lineup comes back empty when no window is live
   // (e.g. between gameweeks).
+  // keepPreviousData across all the league-keyed queries: switching leagues
+  // keeps the previous league's content on screen (dimmed by the caller via
+  // isSwitching) instead of collapsing to skeletons — skeletons are for the
+  // true first load only.
   const lineupQuery = useApiQuery(
     ["leagues", activeLeague?.id, "live-lineup"],
     () => LeagueService.getLiveLineup(activeLeague!.id),
-    { enabled: Boolean(activeLeague?.id) },
+    { enabled: Boolean(activeLeague?.id), placeholderData: keepPreviousData },
   );
 
   const windowQuery = useApiQuery(
     ["leagues", activeLeague?.id, "active-window"],
     () => LeagueService.getActiveWindow(activeLeague!.id),
-    { enabled: Boolean(activeLeague?.id) },
+    { enabled: Boolean(activeLeague?.id), placeholderData: keepPreviousData },
   );
 
   const previews = useMemo<DashboardLeagueTeamPreview[]>(() => {
@@ -95,6 +100,8 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
       leaguesQuery.isLoading ||
       (Boolean(activeLeague?.id) &&
         (lineupQuery.isLoading || windowQuery.isLoading)),
+    // True while showing the previous league's data during a switch.
+    isSwitching: lineupQuery.isPlaceholderData || windowQuery.isPlaceholderData,
     error: leaguesQuery.error || lineupQuery.error || windowQuery.error || null,
   };
 }
@@ -103,7 +110,7 @@ export function useDashboardLeagueStats(selectedLeagueId?: string | null) {
   return useApiQuery<TLeagueDashboardStats>(
     ["leagues", selectedLeagueId, "dashboard-stats"],
     () => LeagueService.getDashboardStats(selectedLeagueId!),
-    { enabled: Boolean(selectedLeagueId) },
+    { enabled: Boolean(selectedLeagueId), placeholderData: keepPreviousData },
   );
 }
 
@@ -113,6 +120,7 @@ export function useRecentActivity(selectedLeagueId?: string | null) {
     () => UserService.getMyActivity(selectedLeagueId ?? undefined),
     {
       enabled: Boolean(selectedLeagueId),
+      placeholderData: keepPreviousData,
     },
   );
 }

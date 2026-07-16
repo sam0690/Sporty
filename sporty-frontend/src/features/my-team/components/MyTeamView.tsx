@@ -1,7 +1,7 @@
 "use client";
 
-import { Users } from "lucide-react";
-import { EmptyState, Select } from "@/components/ui";
+import { Trophy, Users } from "lucide-react";
+import { EmptyState, ErrorState, Select } from "@/components/ui";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import { EmptyTeamState } from "./EmptyTeamState";
 import { LeagueGroup } from "./LeagueGroup";
@@ -66,8 +66,8 @@ type MyTeamViewProps = {
   selectedLeagueName: string;
   selectedTeamName?: string;
   teamLeague: MyTeamLeagueView | null;
-  totals: { totalPlayers: number };
   isLoading: boolean;
+  isSwitching: boolean;
   hasLeagues: boolean;
   isEmptyTeam: boolean;
   leaguesError: unknown;
@@ -81,8 +81,8 @@ export function MyTeamView({
   selectedLeagueName,
   selectedTeamName,
   teamLeague,
-  totals,
   isLoading,
+  isSwitching,
   hasLeagues,
   isEmptyTeam,
   leaguesError,
@@ -140,7 +140,6 @@ export function MyTeamView({
   return (
     <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
       <TeamHeader
-        totalPlayers={totals.totalPlayers}
         leagueName={selectedLeagueName}
         teamName={selectedTeamName}
       />
@@ -154,17 +153,26 @@ export function MyTeamView({
           ))}
         </div>
       ) : leaguesError || selectedTeamError ? (
-        <div className="rounded-[3px] border border-danger/25 bg-danger/6 p-4 text-sm text-danger">
-          Failed to load team data. Please try again.
-        </div>
+        <ErrorState title="Failed to load team data" />
       ) : !hasLeagues ? (
-        <div className="card-surface p-8 text-center text-sm text-fg-3">
-          You are not part of any leagues yet.
-        </div>
+        <EmptyState
+          icon={Trophy}
+          title="No leagues yet"
+          description="Create or join a league to start building your squad."
+          actions={[
+            { label: "Create league", href: "/create-league", variant: "primary" },
+            { label: "Join league", href: "/join-league" },
+          ]}
+        />
       ) : isEmptyTeam ? (
-        <EmptyTeamState />
+        <EmptyTeamState leagueId={activeLeague?.id} />
       ) : teamLeague && teamLeague.players.length > 0 ? (
-        <div className="space-y-6">
+        <div
+          className={`space-y-6 transition-opacity duration-200 ${
+            isSwitching ? "opacity-50" : ""
+          }`}
+          aria-busy={isSwitching}
+        >
           <SquadStats players={teamLeague.players} />
           <section className="overflow-hidden card-surface">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
