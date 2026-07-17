@@ -155,6 +155,7 @@ export const API_PATHS = {
 
   MATCHES: {
     LIST: "/matches",
+    LIVE_FAVOURITES: "/matches/live-for-favourites",
   },
 
   ADMIN: {

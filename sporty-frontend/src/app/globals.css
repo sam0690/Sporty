@@ -355,6 +355,33 @@
   animation: live-pulse 1.2s ease-in-out infinite;
 }
 
+/* Dashboard live-match ticker — continuous right-to-left marquee. The track
+   holds two identical halves, so sliding exactly -50% and looping is
+   seamless. Duration is set inline per content width (constant px/s speed).
+   Transform-only: compositor-driven, no layout work per frame. */
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.ticker-viewport {
+  overflow: hidden;
+  /* soft edge fades so items enter/exit gracefully instead of clipping */
+  mask-image: linear-gradient(90deg, transparent, black 20px, black calc(100% - 20px), transparent);
+}
+.ticker-track {
+  animation: ticker-scroll var(--ticker-duration, 40s) linear infinite;
+  will-change: transform;
+}
+/* Pause while pointing or keyboard-focused — items are links. */
+.ticker-viewport:hover .ticker-track,
+.ticker-viewport:focus-within .ticker-track {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+  .ticker-viewport { overflow-x: auto; mask-image: none; }
+}
+
 /* §11 — reduced motion: same story, calmer */
 @media (prefers-reduced-motion: reduce) {
   .glitch,

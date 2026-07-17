@@ -17,13 +17,17 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import Integer, func
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import get_current_active_user
+from app.auth.models import User
 from app.database import get_db
 from app.league.models import Sport
 from app.match.models import Match
 from app.match.schemas import MatchListResponse, MatchResponse
-from app.player.models import RealTeam
+from app.models.db.live_event import LiveEvent
+from app.player.models import RealTeam, UserFavouriteTeam
 
 router = APIRouter(tags=["Matches"])
 
@@ -183,4 +187,69 @@ def list_public_matches(
         if len(items) >= limit:
             break
 
+    return MatchListResponse(items=items, total=len(items))
+
+
+@router.get(
+    "/matches/live-for-favourites",
+    response_model=MatchListResponse,
+    summary="Live matches involving the caller's favourite teams",
+)
+def list_live_matches_for_favourites(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Feeds the dashboard live ticker. Matches store team names as free-text
+    strings (no FK), so favourites are matched by canonicalised name within
+    the same sport — the exact normalisation the logo lookup above uses.
+    Each item carries the current match minute (max minute seen in that
+    match's live_events)."""
+    favourites = (
+        db.query(UserFavouriteTeam.sport_id, RealTeam.name)
+        .join(RealTeam, UserFavouriteTeam.real_team_id == RealTeam.id)
+        .filter(UserFavouriteTeam.user_id == current_user.id)
+        .all()
+    )
+    if not favourites:
+        return MatchListResponse(items=[], total=0)
+    favourite_keys = {
+        (sport_id, MATCH_TEAM_NAME_ALIASES.get(name, name)) for sport_id, name in favourites
+    }
+
+    live_rows = (
+        db.query(Match, Sport.name.label("sport_name"))
+        .join(Sport, Match.sport_id == Sport.id)
+        .filter(Match.status == "live")
+        .order_by(Match.match_date.asc())
+        .all()
+    )
+    matched = [
+        (match, sport_name)
+        for match, sport_name in live_rows
+        if (match.sport_id, MATCH_TEAM_NAME_ALIASES.get(match.home_team, match.home_team)) in favourite_keys
+        or (match.sport_id, MATCH_TEAM_NAME_ALIASES.get(match.away_team, match.away_team)) in favourite_keys
+    ]
+    if not matched:
+        return MatchListResponse(items=[], total=0)
+
+    # Current minute per match: live_events are keyed by external_api_id (or
+    # the UUID as a string), one grouped query for all matched matches.
+    live_keys = {match.id: (match.external_api_id or str(match.id)) for match, _ in matched}
+    minute_rows = (
+        db.query(
+            LiveEvent.match_id,
+            func.max(LiveEvent.meta["minute"].astext.cast(Integer)),
+        )
+        .filter(LiveEvent.match_id.in_(live_keys.values()))
+        .group_by(LiveEvent.match_id)
+        .all()
+    )
+    minute_by_key = dict(minute_rows)
+
+    logo_lookup = _real_team_logo_lookup(db)
+    items = []
+    for match, sport_name in matched:
+        response = _to_match_response(match, sport_name, logo_lookup)
+        response.minute = minute_by_key.get(live_keys[match.id])
+        items.append(response)
     return MatchListResponse(items=items, total=len(items))

@@ -18,6 +18,9 @@ export type TMatch = {
   competition: string;
   home_score: number | null;
   away_score: number | null;
+  /** Current match minute — only populated by the live-for-favourites
+   *  endpoint (null elsewhere). */
+  minute?: number | null;
 };
 
 export type TMatchListResponse = {

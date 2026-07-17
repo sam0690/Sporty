@@ -1,3 +1,4 @@
+import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
 import { API_PATHS } from "@/api/apiPath";
 import type { TMatchFilter, TMatchListResponse } from "@/types/match";
@@ -13,6 +14,14 @@ export const MatchService = {
       limit: filters.limit,
     };
     const res = await publicApi.get(API_PATHS.MATCHES.LIST, { params });
+    return res.data as TMatchListResponse;
+  },
+
+  /** Live matches involving the current user's favourite teams (authed) —
+   *  each item includes the current match minute. Feeds the dashboard
+   *  live ticker. */
+  async getLiveForFavourites(): Promise<TMatchListResponse> {
+    const res = await authApi.get(API_PATHS.MATCHES.LIVE_FAVOURITES);
     return res.data as TMatchListResponse;
   },
 };

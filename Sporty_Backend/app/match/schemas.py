@@ -29,6 +29,9 @@ class MatchResponse(BaseModel):
     competition: str
     home_score: int | None = None
     away_score: int | None = None
+    # Current match minute, populated only by the live-for-favourites endpoint
+    # (derived from live_events; None elsewhere and for matches not yet live).
+    minute: int | None = None
 
 
 class MatchListResponse(BaseModel):
