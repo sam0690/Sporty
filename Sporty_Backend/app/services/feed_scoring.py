@@ -250,8 +250,9 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
 
 # A live feeder match goes quiet when the feeder dies mid-simulation (its
 # simulation state is in-memory only, so a restart can't resume or finish it).
-# Simulations run ~90 in-game minutes; anything silent this long is orphaned.
-STALE_LIVE_AFTER = timedelta(hours=3)
+# Simulations run ~90 in-game minutes even at slow speeds (plus ET/shootout),
+# so anything silent for 1.5 real hours is orphaned.
+STALE_LIVE_AFTER = timedelta(minutes=90)
 
 
 def finalize_stale_live_matches(db: Session, redis) -> dict:
