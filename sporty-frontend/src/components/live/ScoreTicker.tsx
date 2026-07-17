@@ -62,6 +62,67 @@ function Crest({
   );
 }
 
+/** Ball-share meter, mirroring PredictionCard's label-row + slim-meter +
+ *  values vocabulary so the two hero footer modules read as siblings. */
+function PossessionMeter({
+  possession,
+  home,
+  away,
+}: {
+  possession: { home_pct: number; away_pct: number } | null;
+  home: { color: string };
+  away: { color: string };
+}) {
+  if (!possession) {
+    return null;
+  }
+  const homePct = Math.round(possession.home_pct);
+  const awayPct = 100 - homePct;
+
+  return (
+    <div className="min-w-0">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="section-label">Possession</span>
+        <span className="font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
+          Ball share
+        </span>
+      </div>
+
+      <div
+        role="img"
+        aria-label={`Possession: home ${homePct}%, away ${awayPct}%`}
+        className="mt-2.5 flex h-1.5 w-full overflow-hidden rounded-full bg-white/6"
+      >
+        <div
+          className="h-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+          style={{ width: `${possession.home_pct}%`, background: home.color }}
+        />
+        <div
+          className="h-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
+          style={{ width: `${possession.away_pct}%`, background: away.color }}
+        />
+      </div>
+
+      <div className="mt-2 flex items-baseline justify-between">
+        <p className="font-display text-base leading-none tracking-[-0.02em] tabular-nums text-fg-1">
+          <span
+            className="mr-1 inline-block size-1.5 rounded-full align-middle"
+            style={{ background: home.color }}
+          />
+          {homePct}%
+        </p>
+        <p className="font-display text-base leading-none tracking-[-0.02em] tabular-nums text-fg-1">
+          {awayPct}%
+          <span
+            className="ml-1 inline-block size-1.5 rounded-full align-middle"
+            style={{ background: away.color }}
+          />
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function ScoreTicker({
   loading = false,
   footer,
@@ -87,6 +148,7 @@ export function ScoreTicker({
   const { label, phase } = describeStatus(status);
   const home = teamIdentity(homeTeam ?? "Home");
   const away = teamIdentity(awayTeam ?? "Away");
+  const showPossession = possession != null && phase !== "pre";
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -244,7 +306,10 @@ export function ScoreTicker({
                 )}
                 {shootout && (
                   <p className="section-label mt-2 tabular-nums">
-                    Penalties {shootout.home}–{shootout.away}
+                    Penalties{" "}
+                    <span style={{ color: home.color }}>{shootout.home}</span>
+                    <span className="px-0.5 text-white/25">–</span>
+                    <span style={{ color: away.color }}>{shootout.away}</span>
                   </p>
                 )}
               </>
@@ -274,34 +339,34 @@ export function ScoreTicker({
           </div>
         </div>
 
-        {/* Possession band — only when the feeder is reporting it (football). */}
-        {possession && phase !== "pre" && (
-          <div className="border-t border-white/8 px-5 py-3 sm:px-6">
-            <div className="flex items-center justify-between text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3">
-              <span className="tabular-nums" style={{ color: home.color }}>
-                {Math.round(possession.home_pct)}%
-              </span>
-              <span>Possession</span>
-              <span className="tabular-nums" style={{ color: away.color }}>
-                {Math.round(possession.away_pct)}%
-              </span>
-            </div>
-            <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-white/6">
-              <span
-                className="transition-[width] duration-700 ease-out"
-                style={{ width: `${possession.home_pct}%`, background: home.color }}
-              />
-              <span
-                className="transition-[width] duration-700 ease-out"
-                style={{ width: `${possession.away_pct}%`, background: away.color }}
-              />
-            </div>
-          </div>
-        )}
-
-        {footer && (
+        {/* Footer band: model call + possession as two compact side-by-side
+            modules sharing one visual vocabulary (label row, slim meter,
+            values). A lone module stays narrow and centered instead of
+            stretching into a full-width banner. */}
+        {(footer || showPossession) && (
           <div className="border-t border-white/8 px-5 py-4 sm:px-6">
-            {footer}
+            {footer && showPossession ? (
+              <div className="grid gap-5 sm:grid-cols-2 sm:gap-0">
+                <div className="sm:pr-8">{footer}</div>
+                <div className="border-t border-white/8 pt-5 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0">
+                  <PossessionMeter
+                    possession={possession}
+                    home={home}
+                    away={away}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto w-full max-w-sm">
+                {footer ?? (
+                  <PossessionMeter
+                    possession={possession}
+                    home={home}
+                    away={away}
+                  />
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>

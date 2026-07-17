@@ -3,7 +3,6 @@
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
 import type { MatchPrediction } from "@/types/events";
-import { ChartIcon } from "./icons";
 
 type PredictionCardProps = {
   prediction: MatchPrediction | null;
@@ -54,21 +53,9 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
   const favourite = segments.reduce((a, b) => (b.value > a.value ? b : a));
 
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <span
-            className="grid size-7 shrink-0 place-items-center rounded-[3px] border"
-            style={{
-              color: "#e2c368",
-              background: "#e2c36814",
-              borderColor: "#e2c36833",
-            }}
-          >
-            <ChartIcon className="size-3.5" />
-          </span>
-          <span className="section-label">Win Probability</span>
-        </div>
+    <div className="min-w-0">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="section-label">Win Probability</span>
         <span className="min-w-0 truncate font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
           {favourite.label} favoured
         </span>
@@ -79,28 +66,28 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
         aria-label={segments
           .map((s) => `${s.label} ${pct(s.value)}%`)
           .join(", ")}
-        className="mt-3.5 flex h-2.5 w-full overflow-hidden rounded-[3px] bg-white/5"
+        className="mt-2.5 flex h-1.5 w-full overflow-hidden rounded-full bg-white/6"
       >
         {segments.map((s) => (
           <div
             key={s.key}
-            className="h-full transition-[width] duration-700 ease-out"
+            className="h-full transition-[width] duration-700 ease-out motion-reduce:transition-none"
             style={{ width: `${pct(s.value)}%`, background: s.color }}
           />
         ))}
       </div>
 
-      <div className="mt-2.5 grid grid-cols-3 gap-3">
+      <div className="mt-2 grid grid-cols-3 gap-3">
         {segments.map((s) => (
           <div key={s.key} className={`min-w-0 ${s.align}`}>
-            <p className="truncate font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
+            <p className="truncate font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
               <span
-                className="mr-1.5 inline-block size-2 rounded-full align-middle"
+                className="mr-1 inline-block size-1.5 rounded-full align-middle"
                 style={{ background: s.color }}
               />
               {s.label}
             </p>
-            <p className="mt-1 font-display text-xl leading-none tracking-[-0.02em] tabular-nums text-fg-1">
+            <p className="mt-0.5 font-display text-base leading-none tracking-[-0.02em] tabular-nums text-fg-1">
               {pct(s.value)}%
             </p>
           </div>
