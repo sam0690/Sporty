@@ -11,8 +11,9 @@ type FixturesToolbarProps = {
   totalLive: number;
 };
 
-// FotMob-style control surface: the date strip IS the primary navigation.
-// Sticky under the site navbar so day/sport switching follows the scroll.
+// FotMob-style control surface: date strip beside the heading, sport chips
+// centered beneath. Sticky under the site navbar so day/sport switching
+// follows the scroll.
 export function FixturesToolbar({
   date,
   onDateChange,
@@ -34,10 +35,12 @@ export function FixturesToolbar({
             </span>
           )}
         </div>
-        <SportFilterChips active={sport} onChange={onSportChange} />
+        <div className="min-w-0">
+          <MatchDateStrip selectedDate={date} onDateChange={onDateChange} />
+        </div>
       </div>
       <div className="mt-3 flex justify-center">
-        <MatchDateStrip selectedDate={date} onDateChange={onDateChange} />
+        <SportFilterChips active={sport} onChange={onSportChange} />
       </div>
     </div>
   );
