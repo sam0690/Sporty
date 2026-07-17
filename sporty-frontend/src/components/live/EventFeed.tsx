@@ -20,6 +20,18 @@ function EventRow({
   const { Icon, color, label } = eventVisual(event.type);
   const teamColor = event.team ? teamIdentity(event.team).color : color;
 
+  // Feeder detail refinements: penalty goals, injury severity, injury subs.
+  const extra = event.extra ?? {};
+  let displayLabel = label;
+  if (event.type === "goal" && extra.penalty === true) {
+    displayLabel = "Goal (Penalty)";
+  } else if (event.type === "injury") {
+    displayLabel =
+      extra.severity === "forced_off" ? "Injury · Forced Off" : "Injury · Knock";
+  } else if (event.type === "substitution" && extra.reason === "injury") {
+    displayLabel = "Substitution · Injury";
+  }
+
   return (
     <li
       className="pop-in relative flex gap-4 pb-5 last:pb-0"
@@ -54,7 +66,7 @@ function EventRow({
 
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-          {label}
+          {displayLabel}
         </div>
         <div className="mt-0.5 truncate text-xs text-fg-3">
           {event.type === "substitution" ? (

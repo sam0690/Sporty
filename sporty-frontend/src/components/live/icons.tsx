@@ -84,6 +84,15 @@ export function PenaltyIcon({ className }: IconProps) {
   );
 }
 
+export function InjuryIcon({ className }: IconProps) {
+  return (
+    <Svg className={className}>
+      <rect x="4" y="8" width="16" height="8" rx="2" />
+      <path d="M12 10v4M10 12h4" />
+    </Svg>
+  );
+}
+
 export function ShieldIcon({ className }: IconProps) {
   return (
     <Svg className={className}>
@@ -206,6 +215,11 @@ const EVENT_VISUALS: Record<string, EventVisual> = {
   penalty: { Icon: PenaltyIcon, color: "#e2c368", label: "Penalty" },
   own_goal: { Icon: GoalIcon, color: "#ff3b5c", label: "Own Goal" },
   clean_sheet: { Icon: ShieldIcon, color: "#00d4ff", label: "Clean Sheet" },
+  injury: { Icon: InjuryIcon, color: "#ff9f43", label: "Injury" },
+  penalty_saved: { Icon: ShieldIcon, color: "#00d4ff", label: "Penalty Saved" },
+  penalty_missed: { Icon: PenaltyIcon, color: "#ff3b5c", label: "Penalty Missed" },
+  shootout_goal: { Icon: PenaltyIcon, color: "#00ff88", label: "Shootout Goal" },
+  shootout_miss: { Icon: PenaltyIcon, color: "#ff3b5c", label: "Shootout Miss" },
 };
 
 function titleCase(value: string): string {

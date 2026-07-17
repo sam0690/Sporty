@@ -231,12 +231,21 @@ async def get_match_state(
                 "related_player_id": related_pid,
                 "related_player_name": related_info["name"] if related_info else None,
                 "related_team": related_info["team"] if related_info else None,
+                # Feeder detail: penalty flag on goals, injury severity,
+                # substitution reason.
+                "extra": meta.get("extra"),
             }
         )
 
     home_team_logo_url, away_team_logo_url = await _resolve_team_logo_urls(
         db, row["sport_id"], row["home_team"], row["away_team"]
     )
+
+    # Possession/shootout snapshot pushed by the feeder: Redis while the match
+    # is live, durable feed cache once finished.
+    extras = await _get_cached_match_json(redis, "extras", _match)
+    if extras is None:
+        extras = await _get_persisted_match_json(db, "extras", row["id"]) or {}
 
     return {
         "match_id": row["id"],
@@ -257,6 +266,8 @@ async def get_match_state(
             "home": [_lineup_entry(pid) for pid in lineup_home],
             "away": [_lineup_entry(pid) for pid in lineup_away],
         },
+        "possession": extras.get("possession"),
+        "shootout": extras.get("shootout"),
     }
 
 

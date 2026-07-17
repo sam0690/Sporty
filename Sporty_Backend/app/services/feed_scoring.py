@@ -166,6 +166,10 @@ def _apply_football_counts(db: Session, base_stat: PlayerGameweekStat, counts: C
     child.assists = counts.get("assist", 0)
     child.yellow_cards = counts.get("yellow_card", 0)
     child.red_cards = counts.get("red_card", 0)
+    # Feeder penalty events (a scored penalty is a plain "goal" and lands
+    # above; saves/misses only exist as these dedicated event types).
+    child.penalties_saved = counts.get("penalty_saved", 0)
+    child.penalties_missed = counts.get("penalty_missed", 0)
 
 
 def _apply_basketball_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:

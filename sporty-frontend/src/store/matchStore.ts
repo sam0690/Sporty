@@ -7,8 +7,10 @@ import type {
   MatchLineups,
   MatchSnapshot,
   PlayerInfo,
+  Possession,
   Score,
   ScoreUpdate,
+  Shootout,
 } from "@/types/events";
 
 const EMPTY_LINEUPS: MatchLineups = { home: [], away: [] };
@@ -30,6 +32,8 @@ type MatchStoreState = {
   playerPoints: Record<string, number>;
   startingLineups: MatchLineups;
   lineup: Record<string, unknown>;
+  possession: Possession | null;
+  shootout: Shootout | null;
   status: string;
   socketStatus: SocketStatus;
   lastUpdatedTs: number | null;
@@ -59,6 +63,7 @@ function mergeEvents(existing: MatchEvent[], update: ScoreUpdate): MatchEvent[] 
       related_player_id: e.related_sporty_player_id ?? null,
       related_player_name: e.related_player_name ?? null,
       related_team: e.related_team ?? null,
+      extra: e.extra ?? null,
     }));
   if (!incoming.length) {
     return existing;
@@ -92,6 +97,8 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   playerPoints: {},
   startingLineups: EMPTY_LINEUPS,
   lineup: {},
+  possession: null,
+  shootout: null,
   status: "scheduled",
   socketStatus: "connecting",
   lastUpdatedTs: null,
@@ -110,6 +117,8 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
       playerPoints: snapshot.player_points,
       startingLineups: snapshot.lineups ?? EMPTY_LINEUPS,
       lineup: {},
+      possession: snapshot.possession ?? null,
+      shootout: snapshot.shootout ?? null,
       status: snapshot.status,
       minuteStartedTs: null,
       lastUpdatedTs: Date.now(),
@@ -129,6 +138,9 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
         // Stamp when the minute advanced so the hero can tick MM:SS within it.
         minuteStartedTs: minuteChanged ? Date.now() : state.minuteStartedTs,
         events: mergeEvents(state.events, update),
+        // Kickoff/final pushes may omit these — keep the last known values.
+        possession: update.possession ?? state.possession,
+        shootout: update.shootout ?? state.shootout,
         lastUpdatedTs: Date.now(),
       };
     }),

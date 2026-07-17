@@ -81,6 +81,8 @@ export function ScoreTicker({
   const minuteStartedTs = useMatchStore((s) => s.minuteStartedTs);
   const socketStatus = useMatchStore((s) => s.socketStatus);
   const lastUpdatedTs = useMatchStore((s) => s.lastUpdatedTs);
+  const possession = useMatchStore((s) => s.possession);
+  const shootout = useMatchStore((s) => s.shootout);
 
   const { label, phase } = describeStatus(status);
   const home = teamIdentity(homeTeam ?? "Home");
@@ -106,9 +108,14 @@ export function ScoreTicker({
     matchClock = `${minute}:${String(secs).padStart(2, "0")}`;
   }
 
-  // Winner emphasis (post-match) — dims the losing side subtly.
-  const homeLead = score.home > score.away;
-  const awayLead = score.away > score.home;
+  // Winner emphasis (post-match) — dims the losing side subtly. A knockout
+  // decided on penalties is tied on score, so the shootout breaks the tie.
+  const homeLead =
+    score.home > score.away ||
+    (score.home === score.away && (shootout?.home ?? 0) > (shootout?.away ?? 0));
+  const awayLead =
+    score.away > score.home ||
+    (score.home === score.away && (shootout?.away ?? 0) > (shootout?.home ?? 0));
 
   if (loading) {
     return (
@@ -235,6 +242,11 @@ export function ScoreTicker({
                 ) : (
                   <p className="section-label mt-3.5">{label}</p>
                 )}
+                {shootout && (
+                  <p className="section-label mt-2 tabular-nums">
+                    Penalties {shootout.home}–{shootout.away}
+                  </p>
+                )}
               </>
             )}
           </div>
@@ -261,6 +273,31 @@ export function ScoreTicker({
             </div>
           </div>
         </div>
+
+        {/* Possession band — only when the feeder is reporting it (football). */}
+        {possession && phase !== "pre" && (
+          <div className="border-t border-white/8 px-5 py-3 sm:px-6">
+            <div className="flex items-center justify-between text-[10px] font-700 uppercase tracking-[1.5px] text-fg-3">
+              <span className="tabular-nums" style={{ color: home.color }}>
+                {Math.round(possession.home_pct)}%
+              </span>
+              <span>Possession</span>
+              <span className="tabular-nums" style={{ color: away.color }}>
+                {Math.round(possession.away_pct)}%
+              </span>
+            </div>
+            <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-white/6">
+              <span
+                className="transition-[width] duration-700 ease-out"
+                style={{ width: `${possession.home_pct}%`, background: home.color }}
+              />
+              <span
+                className="transition-[width] duration-700 ease-out"
+                style={{ width: `${possession.away_pct}%`, background: away.color }}
+              />
+            </div>
+          </div>
+        )}
 
         {footer && (
           <div className="border-t border-white/8 px-5 py-4 sm:px-6">

@@ -32,6 +32,22 @@ export type MatchEvent = {
   related_player_id?: string | null;
   related_player_name?: string | null;
   related_team?: string | null;
+  // Feeder detail: {penalty: true} on penalty goals, {severity} on injuries,
+  // {reason: "injury"} on injury-forced substitutions.
+  extra?: Record<string, unknown> | null;
+};
+
+/** Running possession split pushed by the feeder (football only). */
+export type Possession = {
+  home_pct: number;
+  away_pct: number;
+};
+
+/** Penalty-shootout result for knockout matches tied after extra time. */
+export type Shootout = {
+  home: number;
+  away: number;
+  winner_sporty_team_id: string | null;
 };
 
 export type LineupPlayer = {
@@ -59,6 +75,8 @@ export type MatchSnapshot = {
   events: MatchEvent[];
   lineups: MatchLineups;
   player_points: Record<string, number>;
+  possession?: Possession | null;
+  shootout?: Shootout | null;
 };
 
 export type FantasyPointsDelta = {
@@ -83,6 +101,7 @@ export type FeedEventPayload = {
   related_sporty_player_id?: string | null;
   related_player_name?: string | null;
   related_team?: string | null;
+  extra?: Record<string, unknown> | null;
 };
 
 export type ScoreUpdate = {
@@ -94,6 +113,9 @@ export type ScoreUpdate = {
   status?: string;
   // Match events bundled with the score push (goals/cards/assists/etc.).
   events?: FeedEventPayload[];
+  // Football extras (absent on basketball / older pushes).
+  possession?: Possession | null;
+  shootout?: Shootout | null;
 };
 
 export type MatchPrediction = {

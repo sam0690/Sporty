@@ -16,6 +16,7 @@ Routes (mounted under /api/v1):
 
 from __future__ import annotations
 
+import json
 import logging
 import secrets
 import unicodedata
@@ -109,6 +110,15 @@ class FeedEvent(BaseModel):
     # Substitutions: the player coming OFF (sporty_player_id is the player
     # coming on). Ignored for every other event type.
     related_sporty_player_id: str | None = None
+    # Event detail from the feeder (penalty flag on goals, injury severity,
+    # substitution reason) — stored in live_events.meta and passed to the UI.
+    extra: dict | None = None
+
+
+class ShootoutResult(BaseModel):
+    home: int
+    away: int
+    winner_sporty_team_id: str | None = None
 
 
 class MatchResultPayload(BaseModel):
@@ -119,6 +129,11 @@ class MatchResultPayload(BaseModel):
     away_score: int
     current_minute: int
     events: list[FeedEvent] = []
+    # Football extras (older feeders / basketball omit them): running
+    # possession split, and the shootout tally for knockout ties.
+    possession_home_pct: float | None = None
+    possession_away_pct: float | None = None
+    shootout: ShootoutResult | None = None
 
 
 class PredictionPayload(BaseModel):
@@ -522,6 +537,7 @@ async def ingest_match_result(
                     "minute": event.minute,
                     "source": "feeder",
                     "related_player_id": event.related_sporty_player_id or None,
+                    "extra": event.extra,
                 },
                 "ts": now,
             }
@@ -608,6 +624,14 @@ async def ingest_match_result(
     # Data keys follow the canonical ScoreUpdate shape (home/away/minute) that
     # the frontend matchStore applies; kind/status/events are additive extras.
     channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
+    extras = {}
+    if payload.possession_home_pct is not None:
+        extras["possession"] = {
+            "home_pct": payload.possession_home_pct,
+            "away_pct": payload.possession_away_pct,
+        }
+    if payload.shootout is not None:
+        extras["shootout"] = payload.shootout.model_dump()
     message = WSMessage(
         event="SCORE_UPDATE",
         data={
@@ -619,9 +643,20 @@ async def ingest_match_result(
             "away": payload.away_score,
             "minute": payload.current_minute,
             "events": [_event_dict(event) for event in payload.events],
+            **extras,
         },
     )
     await redis.publish(channel, message.model_dump_json())
+
+    # Possession/shootout snapshot: Redis for mid-match /state loads, and the
+    # durable feed cache once finished (same pattern as prediction/ratings).
+    if extras:
+        try:
+            await redis.setex(f"extras:match:{live_key}", RATINGS_TTL_SECONDS, json.dumps(extras))
+        except Exception:  # noqa: BLE001 — cache only; never fail ingestion
+            logger.warning("Feeder match %s: extras cache write failed", live_key, exc_info=True)
+        if payload.status == "finished":
+            _persist_feed_cache(db, match.id, "extras", extras)
 
     # Substitutions additionally publish the dedicated LINEUP_CHANGE message the
     # frontend's LineupCard listens for (player_in = the event's player,
