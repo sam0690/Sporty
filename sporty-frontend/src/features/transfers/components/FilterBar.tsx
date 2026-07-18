@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  POSITION_LABELS,
   POSITION_MAP,
   SPORT_LABELS,
   type PlayerFilterSport as Sport,
@@ -96,7 +97,7 @@ export function FilterBar({
               onClick={() => onPositionChange(position)}
               className={chip(selectedPosition === position)}
             >
-              {position}
+              {POSITION_LABELS[position] ?? position}
             </button>
           ))}
         </div>

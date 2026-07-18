@@ -10,7 +10,11 @@ import { useSports } from "@/hooks/leagues/useLeagues";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
 import { usePlayers } from "@/hooks/players/usePlayers";
 import { PlayerBrowserCard } from "@/features/players/components/PlayerBrowserCard";
-import { POSITION_MAP, type PlayerFilterSport } from "@/lib/playerPositions";
+import {
+  POSITION_LABELS,
+  POSITION_MAP,
+  type PlayerFilterSport,
+} from "@/lib/playerPositions";
 
 const PAGE_SIZE = 24;
 
@@ -97,7 +101,7 @@ export function PlayersBrowserView() {
             aria-label="Filter by position"
             options={positionOptions.map((position) => ({
               value: position,
-              label: position === "All" ? "All Positions" : position,
+              label: POSITION_LABELS[position] ?? position,
             }))}
           />
         </div>

@@ -1,11 +1,30 @@
 export type PlayerFilterSport = "All" | "football" | "basketball" | "cricket";
 
 /** Filter values sent straight to the backend — must match the real stored
- * `position` strings, not display abbreviations. */
+ * `Player.position` codes (see Sporty_Backend/seed_data.py POSITIONS). */
 export const POSITION_MAP: Record<Exclude<PlayerFilterSport, "All">, string[]> = {
-  football: ["All", "Forward", "Midfielder", "Defender", "Goalkeeper"],
-  basketball: ["All", "Guard", "Forward", "Center"],
-  cricket: ["All", "Batter", "Bowler", "All-Rounder", "Wicketkeeper"],
+  football: ["All", "GKP", "DEF", "MID", "FWD"],
+  basketball: ["All", "PG", "SG", "SF", "PF", "C"],
+  cricket: ["All", "BAT", "BOWL", "AR", "WK"],
+};
+
+/** Display labels for the position codes above — UI shows the full name,
+ * queries still use the short code. */
+export const POSITION_LABELS: Record<string, string> = {
+  All: "All Positions",
+  GKP: "Goalkeeper",
+  DEF: "Defender",
+  MID: "Midfielder",
+  FWD: "Forward",
+  PG: "Point Guard",
+  SG: "Shooting Guard",
+  SF: "Small Forward",
+  PF: "Power Forward",
+  C: "Center",
+  BAT: "Batter",
+  BOWL: "Bowler",
+  AR: "All-Rounder",
+  WK: "Wicketkeeper",
 };
 
 export const SPORT_LABELS: Record<PlayerFilterSport, string> = {
