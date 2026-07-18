@@ -9,6 +9,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.league.models import FantasyTeam, League, LeagueSport, LeagueStatus, TeamPlayer, Sport
+from app.league.sportConfigs import get_squad_size
 from app.player.models import Player
 
 logger = logging.getLogger(__name__)
@@ -86,9 +87,7 @@ async def warm_cache(db: Session, redis: Redis) -> dict[str, int]:
             continue
         payload = {
             "transfers_per_window": int(transfers_per_window or 0),
-            "max_total": 15,
-            "max_starters": 9,
-            "max_bench": 6,
+            "max_total": get_squad_size(sport_name),
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }
         rules_key = f"transfer_rules:{sport_name}"
