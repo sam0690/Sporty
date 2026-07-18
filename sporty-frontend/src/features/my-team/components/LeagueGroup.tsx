@@ -9,6 +9,7 @@ import {
   CricketGlyph,
   FootballGlyph,
 } from "@/components/landing/sport-icons";
+import { POSITION_LABELS } from "@/lib/playerPositions";
 
 type LeaguePlayer = {
   id: string;
@@ -100,7 +101,7 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
           <div key={position} className="space-y-2">
             <div className="flex items-center gap-2">
               <h3 className="font-sans text-xs font-700 uppercase tracking-[2px] text-fg-2">
-                {position}
+                {POSITION_LABELS[position.toUpperCase()] ?? position}
               </h3>
               <span className="font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
                 {groupPlayers.length}

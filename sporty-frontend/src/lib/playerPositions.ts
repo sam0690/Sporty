@@ -12,6 +12,7 @@ export const POSITION_MAP: Record<Exclude<PlayerFilterSport, "All">, string[]> =
  * queries still use the short code. */
 export const POSITION_LABELS: Record<string, string> = {
   All: "All Positions",
+  UNK: "Unassigned",
   GKP: "Goalkeeper",
   DEF: "Defender",
   MID: "Midfielder",
