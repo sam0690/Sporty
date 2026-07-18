@@ -176,10 +176,12 @@ async def get_match_state(
         )
     ).mappings().all()
 
-    # Starting lineups (who's playing, per team) — pushed by the feeder and
-    # cached in Redis under the match UUID.
+    # Squads (starters + bench, per team) — pushed by the feeder and cached
+    # in Redis under the match UUID. Bench keys are absent on older pushes.
     lineup_home: list[str] = []
     lineup_away: list[str] = []
+    bench_home: list[str] = []
+    bench_away: list[str] = []
     lineups_raw = await redis.get(f"lineups:match:{row['id']}")
     lineup_data = None
     if lineups_raw:
@@ -192,6 +194,8 @@ async def get_match_state(
     if lineup_data:
         lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
         lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
+        bench_home = [str(x) for x in (lineup_data.get("home_bench") or [])]
+        bench_away = [str(x) for x in (lineup_data.get("away_bench") or [])]
 
     # Pre-parse each row's meta once — substitutions carry the outgoing
     # player's id here (see feed.py's ingest_match_result), which needs to
@@ -203,6 +207,7 @@ async def get_match_state(
     player_ids |= {meta.get("related_player_id") for meta in event_metas if meta.get("related_player_id")}
     player_ids |= set(points.keys())
     player_ids |= set(lineup_home) | set(lineup_away)
+    player_ids |= set(bench_home) | set(bench_away)
     players = await _resolve_players(db, player_ids)
 
     def _lineup_entry(pid: str) -> dict:
@@ -265,6 +270,8 @@ async def get_match_state(
         "lineups": {
             "home": [_lineup_entry(pid) for pid in lineup_home],
             "away": [_lineup_entry(pid) for pid in lineup_away],
+            "home_bench": [_lineup_entry(pid) for pid in bench_home],
+            "away_bench": [_lineup_entry(pid) for pid in bench_away],
         },
         "possession": extras.get("possession"),
         "shootout": extras.get("shootout"),

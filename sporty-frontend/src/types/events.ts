@@ -60,6 +60,9 @@ export type LineupPlayer = {
 export type MatchLineups = {
   home: LineupPlayer[];
   away: LineupPlayer[];
+  // Bench groups — absent on snapshots from before the feeder pushed them.
+  home_bench?: LineupPlayer[];
+  away_bench?: LineupPlayer[];
 };
 
 export type MatchSnapshot = {

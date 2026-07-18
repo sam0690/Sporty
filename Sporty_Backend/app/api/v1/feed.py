@@ -146,8 +146,12 @@ class PredictionPayload(BaseModel):
 
 class MatchLineupsPayload(BaseModel):
     sporty_match_id: str
-    home: list[str] = []  # player UUIDs playing for the home team
-    away: list[str] = []  # player UUIDs playing for the away team
+    home: list[str] = []  # starting player UUIDs, home team
+    away: list[str] = []  # starting player UUIDs, away team
+    # Bench players (may enter as substitutes); optional so older feeder
+    # pushes without bench data stay valid.
+    home_bench: list[str] = []
+    away_bench: list[str] = []
 
 
 class PlayerRatingEntry(BaseModel):
