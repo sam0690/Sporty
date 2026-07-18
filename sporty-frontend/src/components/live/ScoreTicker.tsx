@@ -5,19 +5,29 @@ import Image from "next/image";
 
 import { useMatchStore } from "@/store/matchStore";
 import { teamIdentity } from "@/lib/teamIdentity";
+import { REGULATION_MINUTES, wentToExtraTime } from "@/lib/matchPhase";
 import { Badge } from "@/components/ui";
 import { formatDateTime } from "@/utils/dateUtils";
 import { SignalIcon } from "./icons";
 
 type Phase = "pre" | "live" | "post";
 
-function describeStatus(status: string): { label: string; phase: Phase } {
+function describeStatus(
+  status: string,
+  finish?: { extraTime: boolean; shootout: boolean },
+): { label: string; phase: Phase } {
   const s = status.toLowerCase();
   if (s === "live" || s === "in_progress" || s === "playing") {
     return { label: "Live", phase: "live" };
   }
   if (s === "finished" || s === "ft" || s === "completed") {
-    return { label: "Full Time", phase: "post" };
+    // Broadcast finish qualifiers: decided on penalties beats after extra time.
+    const suffix = finish?.shootout
+      ? " · Pens"
+      : finish?.extraTime
+        ? " · AET"
+        : "";
+    return { label: `Full Time${suffix}`, phase: "post" };
   }
   return { label: status.replace(/_/g, " ") || "Scheduled", phase: "pre" };
 }
@@ -144,11 +154,19 @@ export function ScoreTicker({
   const lastUpdatedTs = useMatchStore((s) => s.lastUpdatedTs);
   const possession = useMatchStore((s) => s.possession);
   const shootout = useMatchStore((s) => s.shootout);
+  const hadExtraTime = useMatchStore((s) =>
+    wentToExtraTime(s.events, s.shootout),
+  );
 
-  const { label, phase } = describeStatus(status);
+  const { label, phase } = describeStatus(status, {
+    extraTime: hadExtraTime,
+    shootout: shootout != null,
+  });
   const home = teamIdentity(homeTeam ?? "Home");
   const away = teamIdentity(awayTeam ?? "Away");
   const showPossession = possession != null && phase !== "pre";
+  const inExtraTime =
+    phase === "live" && (minute ?? 0) > REGULATION_MINUTES;
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -294,13 +312,20 @@ export function ScoreTicker({
                   </span>
                 </div>
                 {phase === "live" && matchClock ? (
-                  <Badge
-                    tone="danger"
-                    className="mt-3.5 gap-1.5 tracking-[1.5px] tabular-nums"
-                  >
-                    <span className="size-1 rounded-full bg-danger animate-live-pulse" />
-                    {matchClock}
-                  </Badge>
+                  <>
+                    <Badge
+                      tone="danger"
+                      className="mt-3.5 gap-1.5 tracking-[1.5px] tabular-nums"
+                    >
+                      <span className="size-1 rounded-full bg-danger animate-live-pulse" />
+                      {matchClock}
+                    </Badge>
+                    {inExtraTime && (
+                      <p className="mt-2 font-sans text-[10px] font-700 uppercase tracking-[0.25em] text-fg-1">
+                        Extra Time
+                      </p>
+                    )}
+                  </>
                 ) : (
                   <p className="section-label mt-3.5">{label}</p>
                 )}
@@ -383,8 +408,15 @@ export function MiniScoreBar({ visible }: { visible: boolean }) {
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
   const minute = useMatchStore((s) => s.minute);
+  const shootout = useMatchStore((s) => s.shootout);
+  const hadExtraTime = useMatchStore((s) =>
+    wentToExtraTime(s.events, s.shootout),
+  );
 
-  const { label, phase } = describeStatus(status);
+  const { label, phase } = describeStatus(status, {
+    extraTime: hadExtraTime,
+    shootout: shootout != null,
+  });
   const home = teamIdentity(homeTeam ?? "Home");
   const away = teamIdentity(awayTeam ?? "Away");
 
@@ -419,7 +451,9 @@ export function MiniScoreBar({ visible }: { visible: boolean }) {
           {phase === "live" ? (
             <Badge tone="danger" className="gap-1.5 tracking-[1.5px] tabular-nums">
               <span className="size-1 rounded-full bg-danger animate-live-pulse" />
-              {minute != null ? `${minute}'` : "Live"}
+              {minute != null
+                ? `${minute > REGULATION_MINUTES ? "ET " : ""}${minute}'`
+                : "Live"}
             </Badge>
           ) : (
             <span className="section-label">{label}</span>
