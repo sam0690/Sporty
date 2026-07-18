@@ -1973,42 +1973,38 @@ def get_dashboard_stats(
         )
     }
 
-    gameweek_breakdown = []
+    # Multisport leagues run one TransferWindow chain per sport, each numbered
+    # independently from 1 — so football window #7 and basketball window #7
+    # both surface as "gameweek 7" here. Merge same-numbered windows into one
+    # row (summing points) so the UI shows one GW7, not one per sport.
+    by_gameweek: dict[int, dict] = {}
     for row in weekly_rows:
         deducted = penalty_by_window.get(row.transfer_window_id, Decimal("0"))
-        gameweek_breakdown.append(
+        entry = by_gameweek.setdefault(
+            row.gameweek,
             {
                 "gameweek": row.gameweek,
                 "transfer_window_id": row.transfer_window_id,
-                "points": row.points - deducted,
-                "points_deducted": deducted,
-                "rank": row.rank,
-            }
+                "points": Decimal("0"),
+                "points_deducted": Decimal("0"),
+                "rank": None,
+            },
         )
+        entry["points"] += row.points - deducted
+        entry["points_deducted"] += deducted
+        if row.rank is not None and (entry["rank"] is None or row.rank < entry["rank"]):
+            entry["rank"] = row.rank
+    gameweek_breakdown = sorted(by_gameweek.values(), key=lambda r: r["gameweek"])
 
     gameweek_points: Decimal | None = None
     gameweek_points_deducted = Decimal("0")
     rank: int | None = None
     if active_window:
-        active = next(
-            (
-                r
-                for r in gameweek_breakdown
-                if r["transfer_window_id"] == active_window.id
-            ),
-            None,
-        )
+        active = by_gameweek.get(active_window.number)
         if active:
             gameweek_points = active["points"]
             gameweek_points_deducted = active["points_deducted"]
-            rank = next(
-                (
-                    r.rank
-                    for r in weekly_rows
-                    if r.transfer_window_id == active_window.id
-                ),
-                None,
-            )
+            rank = active["rank"]
 
     total_points_deducted = sum(penalty_by_window.values(), Decimal("0"))
     total_points = (

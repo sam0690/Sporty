@@ -92,7 +92,7 @@ export function Topbar({
               href={`/leagues/${selectedLeagueId}`}
               className="group flex items-center gap-1.5 rounded-[3px] border border-accent/25 bg-accent/8 px-3.5 py-2 font-sans text-xs font-700 uppercase tracking-[1px] text-accent-dim transition-colors hover:border-accent/40 hover:text-accent"
             >
-              Open Workspace
+              Open Field
               <ChevronRight className="size-3.5 transition-colors group-hover:translate-x-0.5" />
             </Link>
           )}

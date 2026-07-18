@@ -336,3 +336,28 @@ def test_my_leagues_points_reflect_penalty() -> None:
         my_league = next(l for l in leagues if l.id == league.id)
         assert my_league.my_team["points"] == Decimal("100") - penalty.points_charged
         assert my_league.my_team["points_deducted"] == penalty.points_charged
+
+
+def test_multisport_dashboard_merges_same_numbered_gameweeks() -> None:
+    """A mixed league runs one TransferWindow chain per sport, each numbered
+    independently from 1 — football window #1 and basketball window #1 both
+    read as "gameweek 1" and must collapse to a single breakdown row."""
+    with session_scope() as db:
+        sport, real_team, owner, league, team, player_out, past_window, future_window = _setup_league_with_team(db)
+
+        other_sport = Sport(name="basketball", display_name="Basketball")
+        db.add(other_sport)
+        db.flush()
+        other_season = _create_season(db, other_sport)
+        other_window = _create_transfer_window(db, other_season, number=past_window.number, past=True)
+
+        db.add(TeamWeeklyScore(fantasy_team_id=team.id, transfer_window_id=past_window.id, points=20, rank_in_league=1))
+        db.add(TeamWeeklyScore(fantasy_team_id=team.id, transfer_window_id=other_window.id, points=9, rank_in_league=2))
+        db.flush()
+
+        stats = league_service.get_dashboard_stats(db, league.id, owner.id)
+
+        gw1_rows = [r for r in stats["gameweek_breakdown"] if r["gameweek"] == past_window.number]
+        assert len(gw1_rows) == 1
+        assert gw1_rows[0]["points"] == Decimal("29")
+        assert gw1_rows[0]["rank"] == 1
