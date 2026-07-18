@@ -11,9 +11,10 @@ from __future__ import annotations
 import uuid
 from decimal import Decimal
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.league.models import FantasyTeam, TeamWeeklyScore, TransferWindow
+from app.league.models import FantasyTeam, PointsPenalty, TeamWeeklyScore, TransferWindow
 
 # A team counts as "hot" while it stays inside the top N ranks; the streak
 # badge is how many *consecutive* most-recent windows it's stayed there.
@@ -27,6 +28,7 @@ def get_power_rankings(db: Session, league_id: uuid.UUID) -> list[dict]:
             TeamWeeklyScore.fantasy_team_id,
             TeamWeeklyScore.rank_in_league,
             TeamWeeklyScore.points,
+            TeamWeeklyScore.transfer_window_id,
             TransferWindow.number,
         )
         .join(FantasyTeam, FantasyTeam.id == TeamWeeklyScore.fantasy_team_id)
@@ -42,10 +44,29 @@ def get_power_rankings(db: Session, league_id: uuid.UUID) -> list[dict]:
     if not rows:
         return []
 
+    # Net budget-overage penalties same as get_dashboard_stats — rank_in_league
+    # is already penalty-net (ranking.py), but raw TeamWeeklyScore.points isn't,
+    # so the points shown here disagreed with the rank right next to them.
+    penalty_by_key: dict[tuple[uuid.UUID, uuid.UUID], Decimal] = {
+        (fid, wid): charged
+        for fid, wid, charged in (
+            db.query(
+                PointsPenalty.fantasy_team_id,
+                PointsPenalty.transfer_window_id,
+                func.sum(PointsPenalty.points_charged),
+            )
+            .join(FantasyTeam, FantasyTeam.id == PointsPenalty.fantasy_team_id)
+            .filter(FantasyTeam.league_id == league_id)
+            .group_by(PointsPenalty.fantasy_team_id, PointsPenalty.transfer_window_id)
+            .all()
+        )
+    }
+
     by_team: dict[uuid.UUID, list[tuple[int, int, Decimal]]] = {}
     latest_window_number = 0
-    for team_id, rank, points, window_number in rows:
-        by_team.setdefault(team_id, []).append((window_number, rank, points))
+    for team_id, rank, points, window_id, window_number in rows:
+        deducted = penalty_by_key.get((team_id, window_id), Decimal("0"))
+        by_team.setdefault(team_id, []).append((window_number, rank, points - deducted))
         latest_window_number = max(latest_window_number, window_number)
 
     team_names = {

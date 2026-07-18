@@ -10,6 +10,7 @@ from app.auth.models import User
 from app.league.models import (
     FantasyTeam,
     LeagueMembership,
+    PointsPenalty,
     Sport,
     TeamGameweekLineup,
     TeamWeeklyScore,
@@ -89,6 +90,24 @@ def get_user_public_stats(db: Session, user_id: uuid.UUID) -> dict:
             .all()
         )
         aggregates = {fid: (_to_float(pts), rank) for fid, pts, rank in rows}
+
+        # Budget-overage points penalties, netted out same as get_dashboard_stats —
+        # TeamWeeklyScore.points stays untouched at write time, so raw sums here
+        # were showing pre-penalty totals, inconsistent with the dashboard.
+        penalty_rows = (
+            db.query(
+                PointsPenalty.fantasy_team_id,
+                func.coalesce(func.sum(PointsPenalty.points_charged), 0),
+            )
+            .filter(PointsPenalty.fantasy_team_id.in_([t.id for t in teams]))
+            .group_by(PointsPenalty.fantasy_team_id)
+            .all()
+        )
+        penalty_by_team = {fid: _to_float(charged) for fid, charged in penalty_rows}
+        aggregates = {
+            fid: (pts - penalty_by_team.get(fid, 0.0), rank)
+            for fid, (pts, rank) in aggregates.items()
+        }
 
     leagues: list[dict] = []
     total_points = 0.0

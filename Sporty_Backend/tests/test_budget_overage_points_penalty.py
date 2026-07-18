@@ -30,7 +30,8 @@ import app.match.models  # noqa: F401
 import app.player.models_nba  # noqa: F401
 from app.core.config import settings
 from app.league import services as league_service
-from app.services import transfer_service
+from app.services import transfer_service, waiver_service, power_rankings_service
+from app.user import services as user_service
 from app.services.scoring import ranking
 from app.league.models import (
     FantasyTeam,
@@ -43,6 +44,7 @@ from app.league.models import (
     TeamPlayer,
     TeamWeeklyScore,
     TransferWindow,
+    WaiverOrder,
 )
 from app.league.schemas import LeagueCreate
 from app.player.models import Player, RealTeam
@@ -361,3 +363,91 @@ def test_multisport_dashboard_merges_same_numbered_gameweeks() -> None:
         assert len(gw1_rows) == 1
         assert gw1_rows[0]["points"] == Decimal("29")
         assert gw1_rows[0]["rank"] == 1
+
+
+def test_profile_public_stats_net_penalty() -> None:
+    """The profile page's TOTAL POINTS / per-league PTS must match the
+    dashboard's penalty-netted totals, not raw TeamWeeklyScore.points."""
+    with session_scope() as db:
+        sport, real_team, owner, league, team, player_out, past_window, future_window = _setup_league_with_team(db)
+
+        db.add(TeamWeeklyScore(fantasy_team_id=team.id, transfer_window_id=future_window.id, points=100))
+        db.flush()
+
+        expensive = _create_player(db, sport, real_team, name="Star Keeper", cost=50)
+        league_service.make_transfer(
+            db, league.id, player_out.id, expensive.id, owner, pay_shortfall_with_points=True,
+        )
+        db.flush()
+
+        penalty = db.query(PointsPenalty).filter(PointsPenalty.fantasy_team_id == team.id).first()
+        dashboard_stats = league_service.get_dashboard_stats(db, league.id, owner.id)
+        profile_stats = user_service.get_user_public_stats(db, owner.id)
+
+        assert profile_stats["total_points"] == float(dashboard_stats["total_points"])
+        league_row = next(l for l in profile_stats["leagues"] if l["league_id"] == league.id)
+        assert league_row["points"] == float(Decimal("100") - penalty.points_charged)
+
+
+def test_waiver_order_from_standings_nets_penalty() -> None:
+    """A penalty can flip who actually finished worse — waiver order (worst
+    picks first) must sort by net points, not raw TeamWeeklyScore.points."""
+    with session_scope() as db:
+        sport, real_team, owner_a, source_league, team_a, _po, past_window, _fw = _setup_league_with_team(db)
+        owner_b = _create_user(db, "owner_b")
+        team_b = FantasyTeam(
+            league_id=source_league.id, user_id=owner_b.id, name="Team B",
+            current_budget=Decimal("2.00"), starting_budget=Decimal("103.00"), starting_squad_size=1,
+        )
+        db.add(team_b)
+        db.flush()
+
+        # Raw points would rank A worse (80 < 100), but B's penalty drops it
+        # below A once netted (70 < 80) — B should pick first, not A.
+        db.add(TeamWeeklyScore(fantasy_team_id=team_a.id, transfer_window_id=past_window.id, points=80))
+        db.add(TeamWeeklyScore(fantasy_team_id=team_b.id, transfer_window_id=past_window.id, points=100))
+        db.add(PointsPenalty(
+            league_id=source_league.id, fantasy_team_id=team_b.id, transfer_window_id=past_window.id,
+            points_charged=Decimal("30"), reason="budget_overage",
+        ))
+        db.flush()
+
+        source_season = db.query(Season).filter(Season.id == source_league.season_id).one()
+        new_league = _create_budget_league(db, owner_a, source_season, budget_per_team=Decimal("103.00"))
+        new_team_a = FantasyTeam(
+            league_id=new_league.id, user_id=owner_a.id, name="Team A",
+            current_budget=Decimal("103.00"), starting_budget=Decimal("103.00"), starting_squad_size=15,
+        )
+        new_team_b = FantasyTeam(
+            league_id=new_league.id, user_id=owner_b.id, name="Team B",
+            current_budget=Decimal("103.00"), starting_budget=Decimal("103.00"), starting_squad_size=15,
+        )
+        db.add_all([new_team_a, new_team_b])
+        db.flush()
+
+        waiver_service.init_waiver_order_from_standings(db, new_league, source_league.id)
+        db.flush()
+
+        order = {
+            row.fantasy_team_id: row.position
+            for row in db.query(WaiverOrder).filter(WaiverOrder.league_id == new_league.id).all()
+        }
+        assert order[new_team_b.id] == 1
+        assert order[new_team_a.id] == 2
+
+
+def test_power_rankings_points_net_penalty() -> None:
+    with session_scope() as db:
+        sport, real_team, owner, league, team, _po, past_window, _fw = _setup_league_with_team(db)
+
+        db.add(TeamWeeklyScore(
+            fantasy_team_id=team.id, transfer_window_id=past_window.id, points=100, rank_in_league=1,
+        ))
+        db.add(PointsPenalty(
+            league_id=league.id, fantasy_team_id=team.id, transfer_window_id=past_window.id,
+            points_charged=Decimal("30"), reason="budget_overage",
+        ))
+        db.flush()
+
+        rankings = power_rankings_service.get_power_rankings(db, league.id)
+        assert rankings[0]["points"] == 70.0

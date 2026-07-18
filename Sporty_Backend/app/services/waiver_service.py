@@ -21,6 +21,7 @@ from app.league.models import (
     League,
     LeagueMembership,
     LeagueMembershipStatus,
+    PointsPenalty,
     TeamWeeklyScore,
     TransferWindow,
     WaiverClaim,
@@ -82,12 +83,26 @@ def init_waiver_order_from_standings(
 
     total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
     source_standings = (
-        db.query(FantasyTeam.user_id, total_points.label("points"))
+        db.query(FantasyTeam.user_id, FantasyTeam.id, total_points.label("points"))
         .outerjoin(TeamWeeklyScore, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
         .filter(FantasyTeam.league_id == source_league_id)
-        .group_by(FantasyTeam.user_id)
-        .order_by(total_points.asc())  # worst first
+        .group_by(FantasyTeam.user_id, FantasyTeam.id)
         .all()
+    )
+
+    # Net budget-overage penalties same as get_dashboard_stats — a penalized
+    # team's raw points overstate how well it actually finished, which would
+    # hand it a worse (later) waiver slot than it deserves.
+    penalty_by_team = dict(
+        db.query(PointsPenalty.fantasy_team_id, func.sum(PointsPenalty.points_charged))
+        .join(FantasyTeam, FantasyTeam.id == PointsPenalty.fantasy_team_id)
+        .filter(FantasyTeam.league_id == source_league_id)
+        .group_by(PointsPenalty.fantasy_team_id)
+        .all()
+    )
+    source_standings = sorted(
+        source_standings,
+        key=lambda row: row.points - penalty_by_team.get(row.id, 0),  # worst first
     )
 
     teams = {
@@ -95,8 +110,8 @@ def init_waiver_order_from_standings(
         for t in db.query(FantasyTeam).filter(FantasyTeam.league_id == league.id)
     }
     position = 1
-    for user_id, _points in source_standings:
-        team = teams.get(user_id)
+    for row in source_standings:
+        team = teams.get(row.user_id)
         if not team:
             continue
         db.add(
