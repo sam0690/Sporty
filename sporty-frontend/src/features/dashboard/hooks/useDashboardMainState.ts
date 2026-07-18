@@ -9,6 +9,7 @@ import {
   useRecentActivity,
 } from "@/hooks/dashboard/useDashboardData";
 import { useLocalStorage } from "@/hooks/general/useLocalStorage";
+import { deriveCompetitionType } from "@/hooks/leagues/useLeagueCompetitionMode";
 import { LocalStorageKeys } from "@/lib/storage.keys";
 import type { ActivityItem, OverviewStat } from "../types";
 
@@ -75,6 +76,10 @@ export function useDashboardMainState() {
     leagueOptions.find((league) => league.id === activeLeagueId)?.name ??
     "League";
 
+  const activeLeague =
+    (leagues ?? []).find((league) => league.id === activeLeagueId) ?? null;
+  const isDraftLeague = deriveCompetitionType(activeLeague) === "draft";
+
   // On a failed stats fetch show "—", never fake zeros.
   const statValue = (value: string) => (statsError ? "—" : value);
   const stats: OverviewStat[] = [
@@ -88,11 +93,18 @@ export function useDashboardMainState() {
       value: statValue(dashboardStats?.rank ? `#${dashboardStats.rank}` : "-"),
       change: selectedLeagueName,
     },
-    {
-      label: "Budget",
-      value: statValue(`£${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`),
-      change: "Current budget",
-    },
+    // Draft leagues have no budget — rosters are built by picks, not purchases.
+    ...(isDraftLeague
+      ? []
+      : [
+          {
+            label: "Budget",
+            value: statValue(
+              `£${Number(dashboardStats?.budget ?? 0).toFixed(1)}M`,
+            ),
+            change: "Current budget",
+          },
+        ]),
     {
       label: "Gameweek Points",
       value: statValue(

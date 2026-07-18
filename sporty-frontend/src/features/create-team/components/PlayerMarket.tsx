@@ -22,6 +22,8 @@ type PlayerMarketProps = {
   onSportChange: (value: string) => void;
   onMinCostChange: (value: string) => void;
   onMaxCostChange: (value: string) => void;
+  /** Draft leagues have no budget: hides prices/cost filters and affordability gating. */
+  showPrices?: boolean;
   canAddPlayers?: boolean;
   addDisabledReason?: string;
   currentPage: number;
@@ -50,6 +52,7 @@ export function PlayerMarket({
   onSportChange,
   onMinCostChange,
   onMaxCostChange,
+  showPrices = true,
   canAddPlayers = true,
   addDisabledReason = "Action unavailable",
   currentPage,
@@ -104,31 +107,35 @@ export function PlayerMarket({
           />
         </label>
 
-        <label className="space-y-1.5">
-          <span className="section-label">Min cost</span>
-          <input
-            type="number"
-            min="0"
-            step="0.1"
-            value={minCost}
-            onChange={(event) => onMinCostChange(event.target.value)}
-            placeholder="0"
-            className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-3 py-2 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
-          />
-        </label>
+        {showPrices ? (
+          <>
+            <label className="space-y-1.5">
+              <span className="section-label">Min cost</span>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={minCost}
+                onChange={(event) => onMinCostChange(event.target.value)}
+                placeholder="0"
+                className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-3 py-2 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
+              />
+            </label>
 
-        <label className="space-y-1.5">
-          <span className="section-label">Max cost</span>
-          <input
-            type="number"
-            min="0"
-            step="0.1"
-            value={maxCost}
-            onChange={(event) => onMaxCostChange(event.target.value)}
-            placeholder="Any"
-            className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-3 py-2 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
-          />
-        </label>
+            <label className="space-y-1.5">
+              <span className="section-label">Max cost</span>
+              <input
+                type="number"
+                min="0"
+                step="0.1"
+                value={maxCost}
+                onChange={(event) => onMaxCostChange(event.target.value)}
+                placeholder="Any"
+                className="w-full rounded-[3px] border border-white/8 bg-surface-2 px-3 py-2 text-sm text-fg-1 outline-none transition-colors focus:border-accent"
+              />
+            </label>
+          </>
+        ) : null}
       </div>
 
       {sport === "multisport" ? (
@@ -202,7 +209,8 @@ export function PlayerMarket({
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {players.map((player) => {
               const isSelected = selectedPlayerIds.includes(player.id);
-              const canAfford = isSelected || remainingBudget >= player.price;
+              const canAfford =
+                !showPrices || isSelected || remainingBudget >= player.price;
 
               return (
                 <PlayerCard
@@ -212,6 +220,7 @@ export function PlayerMarket({
                   onRemove={onRemovePlayer}
                   isSelected={isSelected}
                   canAfford={canAfford}
+                  showPrice={showPrices}
                   showSportIcon={sport === "multisport"}
                   canAddPlayer={canAddPlayers}
                   addDisabledReason={addDisabledReason}

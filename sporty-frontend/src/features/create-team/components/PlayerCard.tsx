@@ -24,6 +24,8 @@ type PlayerCardProps = {
   onRemove: (playerId: string) => void;
   isSelected: boolean;
   canAfford: boolean;
+  /** Draft leagues have no budget — hides the price tag. */
+  showPrice?: boolean;
   showSportIcon?: boolean;
   canAddPlayer?: boolean;
   addDisabledReason?: string;
@@ -35,6 +37,7 @@ export function PlayerCard({
   onRemove,
   isSelected,
   canAfford,
+  showPrice = true,
   showSportIcon = true,
   canAddPlayer = true,
   addDisabledReason = "Action unavailable",
@@ -75,9 +78,11 @@ export function PlayerCard({
                 {player.realTeam}
               </span>
             ) : null}
-            <span className="font-display text-base leading-none tracking-[-0.02em] text-accent">
-              £{player.price.toFixed(1)}M
-            </span>
+            {showPrice ? (
+              <span className="font-display text-base leading-none tracking-[-0.02em] text-accent">
+                £{player.price.toFixed(1)}M
+              </span>
+            ) : null}
           </div>
           <p className="mt-1 text-xs text-fg-3">
             Proj <span className="tabular-nums">{player.projected.toFixed(1)}</span>

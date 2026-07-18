@@ -5,10 +5,13 @@ import type { MarketPlayer } from "./PlayerCard";
 
 type CurrentTeamProps = {
   players: MarketPlayer[];
-  onRemovePlayer: (playerId: string) => void;
+  /** Omit when players can't be removed (draft picks are final) — hides the ✕ button. */
+  onRemovePlayer?: (playerId: string) => void;
   budget: number;
   totalCost: number;
   requiredPlayers: number;
+  /** Draft leagues have no budget — hides prices and the Total/Remaining footer. */
+  showBudget?: boolean;
 };
 
 export function CurrentTeam({
@@ -17,6 +20,7 @@ export function CurrentTeam({
   budget,
   totalCost,
   requiredPlayers,
+  showBudget = true,
 }: CurrentTeamProps) {
   const remaining = budget - totalCost;
   const overBudget = remaining < 0;
@@ -58,23 +62,31 @@ export function CurrentTeam({
                   {player.name}
                 </p>
                 <p className="mt-0.5 text-xs text-fg-3">
-                  {player.icon} {player.position} ·{" "}
-                  <span className="text-fg-2">£{player.price.toFixed(1)}M</span>
+                  {player.icon} {player.position}
+                  {showBudget ? (
+                    <>
+                      {" "}
+                      · <span className="text-fg-2">£{player.price.toFixed(1)}M</span>
+                    </>
+                  ) : null}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onRemovePlayer(player.id)}
-                className="grid size-7 shrink-0 place-items-center rounded-[3px] text-fg-3 transition-colors hover:bg-[rgba(255,59,48,0.1)] hover:text-danger"
-                aria-label={`Remove ${player.name}`}
-              >
-                <X size={14} />
-              </button>
+              {onRemovePlayer ? (
+                <button
+                  type="button"
+                  onClick={() => onRemovePlayer(player.id)}
+                  className="grid size-7 shrink-0 place-items-center rounded-[3px] text-fg-3 transition-colors hover:bg-[rgba(255,59,48,0.1)] hover:text-danger"
+                  aria-label={`Remove ${player.name}`}
+                >
+                  <X size={14} />
+                </button>
+              ) : null}
             </article>
           ))
         )}
       </div>
 
+      {showBudget ? (
       <div className="mt-4 space-y-1.5 border-t border-white/8 pt-3">
         <div className="flex items-center justify-between text-sm">
           <span className="section-label">Total</span>
@@ -93,6 +105,7 @@ export function CurrentTeam({
           </span>
         </div>
       </div>
+      ) : null}
     </aside>
   );
 }

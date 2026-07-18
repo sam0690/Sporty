@@ -126,13 +126,13 @@ export function DraftRoom({ league }: { league: { id: string; name: string; stat
               <div className="lg:col-span-2">
                 <CurrentTeam
                   players={draftedPlayers}
-                  onRemovePlayer={() => {}}
                   budget={budget}
                   totalCost={(draftedPlayers as { price: number }[]).reduce(
                     (sum, p) => sum + p.price,
                     0,
                   )}
                   requiredPlayers={requiredPlayers}
+                  showBudget={false}
                 />
               </div>
               <div className="lg:col-span-1">
@@ -182,6 +182,7 @@ export function DraftRoom({ league }: { league: { id: string; name: string; stat
                   onSportChange={handleSportChange}
                   onMinCostChange={handleMinCostChange}
                   onMaxCostChange={handleMaxCostChange}
+                  showPrices={false}
                   canAddPlayers={isMyDraftTurn}
                   addDisabledReason="Waiting for your draft turn"
                   currentPage={playersCurrentPage}
@@ -196,13 +197,13 @@ export function DraftRoom({ league }: { league: { id: string; name: string; stat
               <div className="space-y-6 lg:col-span-1">
                 <CurrentTeam
                   players={draftedPlayers}
-                  onRemovePlayer={() => {}}
                   budget={budget}
                   totalCost={(draftedPlayers as { price: number }[]).reduce(
                     (sum, p) => sum + p.price,
                     0,
                   )}
                   requiredPlayers={requiredPlayers}
+                  showBudget={false}
                 />
                 <SquadValidationChecklist rules={squadValidation} clubWarnings={clubCounts} />
               </div>
@@ -230,13 +231,13 @@ export function DraftRoom({ league }: { league: { id: string; name: string; stat
             </div>
             <CurrentTeam
               players={draftedPlayers}
-              onRemovePlayer={() => {}}
               budget={budget}
               totalCost={(draftedPlayers as { price: number }[]).reduce(
                 (sum, p) => sum + p.price,
                 0,
               )}
               requiredPlayers={requiredPlayers}
+              showBudget={false}
             />
           </div>
         ) : (
