@@ -18,9 +18,12 @@ DEFAULT_MAX_PER_CLUB = 3
 # auto-pick ILP rejects every pool with "cannot satisfy required position".
 # Football's "single" minimums (2/5/5/3) sum to exactly the 15-player squad
 # size, so a valid single-sport football squad is fully constrained (no flex
-# slots). Basketball has no position constraints (all players are position
-# "UNK"; the quota already fixes the count, and any UNK minimum above the
-# mixed-league basketball quota of 7 would make the ILP infeasible).
+# slots). Basketball intentionally has no position constraints: most players
+# now carry a real PG/SG/SF/PF/C code (backfilled 2026-07-18, see
+# scripts/backfill_basketball_positions.py), but ~76 players not on a
+# current NBA roster are still "UNK" and never will be, so any per-position
+# minimum here risks making the ILP infeasible for pools that draw one of
+# them. Add real minimums only alongside a plan for that permanent UNK tail.
 # ═══════════════════════════════════════════════════════════════════════════
 
 SPORT_REGISTRY: dict[str, dict[str, Any]] = {
