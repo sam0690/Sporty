@@ -19,6 +19,7 @@ export type SocketStatus = "connecting" | "live" | "reconnecting";
 
 type MatchStoreState = {
   matchId: string | null;
+  sport: string | null;
   homeTeam: string | null;
   awayTeam: string | null;
   homeTeamLogoUrl: string | null;
@@ -84,6 +85,7 @@ function isForCurrentMatch(state: MatchStoreState, matchId: string): boolean {
 
 export const useMatchStore = create<MatchStoreState>((set) => ({
   matchId: null,
+  sport: null,
   homeTeam: null,
   awayTeam: null,
   homeTeamLogoUrl: null,
@@ -106,6 +108,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   hydrate: (snapshot) =>
     set({
       matchId: snapshot.match_id,
+      sport: snapshot.sport ?? null,
       homeTeam: snapshot.home_team,
       awayTeam: snapshot.away_team,
       homeTeamLogoUrl: snapshot.home_team_logo_url,

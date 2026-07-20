@@ -18,6 +18,7 @@ export type PlayerInfo = {
   name: string | null;
   position?: string | null;
   team?: string | null;
+  photo_url?: string | null;
 };
 
 export type MatchEvent = {
@@ -55,6 +56,7 @@ export type LineupPlayer = {
   name: string | null;
   position?: string | null;
   team?: string | null;
+  photo_url?: string | null;
 };
 
 export type MatchLineups = {
@@ -67,6 +69,8 @@ export type MatchLineups = {
 
 export type MatchSnapshot = {
   match_id: string;
+  /** Sport slug ("football" | "basketball" | …); drives which lineup view. */
+  sport?: string | null;
   home_team: string | null;
   away_team: string | null;
   home_team_logo_url: string | null;

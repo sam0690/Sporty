@@ -67,7 +67,7 @@ async def _resolve_players(db, player_ids: set[str]) -> dict[str, dict]:
         await db.execute(
             text(
                 """
-                SELECT id::text AS id, external_api_id, name, position, real_team
+                SELECT id::text AS id, external_api_id, name, position, real_team, photo_url
                 FROM players
                 WHERE lower(id::text) = ANY(:lowered) OR external_api_id = ANY(:ids)
                 """
@@ -79,7 +79,12 @@ async def _resolve_players(db, player_ids: set[str]) -> dict[str, dict]:
     by_lower_id: dict[str, dict] = {}
     by_ext: dict[str, dict] = {}
     for r in rows:
-        info = {"name": r["name"], "position": r["position"], "team": r["real_team"]}
+        info = {
+            "name": r["name"],
+            "position": r["position"],
+            "team": r["real_team"],
+            "photo_url": r["photo_url"],
+        }
         if r["id"]:
             by_lower_id[r["id"].lower()] = info
         if r["external_api_id"]:
@@ -133,7 +138,8 @@ async def get_match_state(
             text(
                 """
                 SELECT id::text AS id, sport_id::text AS sport_id, home_team, away_team,
-                       home_score, away_score, status, match_date
+                       home_score, away_score, status, match_date,
+                       (SELECT name FROM sports WHERE sports.id = matches.sport_id) AS sport
                 FROM matches
                 WHERE id::text = :match_id OR external_api_id = :match_id
                 LIMIT 1
@@ -217,6 +223,7 @@ async def get_match_state(
             "name": info["name"] if info else None,
             "position": info["position"] if info else None,
             "team": info["team"] if info else None,
+            "photo_url": info["photo_url"] if info else None,
         }
 
     events = []
@@ -254,6 +261,7 @@ async def get_match_state(
 
     return {
         "match_id": row["id"],
+        "sport": row["sport"],
         "home_team": row["home_team"],
         "away_team": row["away_team"],
         "home_team_logo_url": home_team_logo_url,

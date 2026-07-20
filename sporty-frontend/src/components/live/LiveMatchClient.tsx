@@ -6,6 +6,7 @@ import { ChevronLeft } from "lucide-react";
 
 import { EventFeed } from "@/components/live/EventFeed";
 import { LineupsCard } from "@/components/live/LineupsCard";
+import { MatchLineupPitch } from "@/components/live/MatchLineupPitch";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
 import { MiniScoreBar, ScoreTicker } from "@/components/live/ScoreTicker";
@@ -191,7 +192,7 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr] lg:items-start">
           <div className="min-w-0 space-y-6">
             {phase === "post" && <RatingsCard ratings={ratings} />}
-            {phase === "pre" ? <LineupsCard /> : <EventFeed />}
+            {phase === "pre" ? <MatchLineupPitch /> : <EventFeed />}
             {phase !== "pre" && hasLineupChanges && <LineupCard />}
           </div>
           <div className="min-w-0 space-y-6">
