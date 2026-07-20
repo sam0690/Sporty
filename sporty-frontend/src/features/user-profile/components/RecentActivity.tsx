@@ -166,7 +166,7 @@ export function RecentActivity({
         </div>
       </div>
 
-      <div className="px-5">
+      <div className="max-h-[32rem] overflow-y-auto px-5">
         {isLoading && (
           <div className="my-5 space-y-3">
             {Array.from({ length: 3 }, (_, index) => (

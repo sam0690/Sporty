@@ -36,7 +36,7 @@ export function LeagueHistory({ leagues }: LeagueHistoryProps) {
         <p className="section-label">League History</p>
       </header>
 
-      <div className="px-5">
+      <div className="max-h-80 overflow-y-auto px-5">
         {leagues.length === 0 ? (
           <p className="py-5 text-sm text-fg-3">Not in any leagues yet.</p>
         ) : (
