@@ -13,6 +13,7 @@ from app.auth import services as auth_services
 from app.auth.models import User, UserRole
 from app.core.redis_lock import redis_lock
 from app.league import services as league_service
+from app.league.service_helpers import SUPPORTED_LEAGUE_SPORTS
 from app.league.models import (
     BudgetTransaction,
     FantasyTeam,
@@ -389,6 +390,116 @@ def create_season_admin(
         target_id=season.id,
         reason=reason,
         metadata={"sport_id": str(sport_id), "name": name},
+    )
+    db.commit()
+    return season
+
+
+def create_unified_season_admin(
+    db: Session,
+    actor: User,
+    *,
+    component_sport_ids: list[uuid.UUID],
+    name: str,
+    label: str | None = None,
+    reason: str | None = None,
+) -> Season:
+    """Create a UNIFIED multisport season (sport_id IS NULL).
+
+    Its dates are derived, not supplied: the overlap of the component sports'
+    CURRENT seasons (later start → earlier end, e.g. NBA-start → football-end).
+    Requiring every component sport to be current right now is what binds both
+    creation and competition to the real multisport window — a component
+    gameweek falling outside these dates simply has no unified window and never
+    scores (see UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §5/§6).
+
+    Does commit (top-level admin entry point, repo convention).
+    """
+    # Import here to avoid a module-load cycle (league_service imports scoring,
+    # admin/services already imports league.services facade for other calls).
+    from app.league.league_service import _current_season_for_sport
+
+    ids = list(dict.fromkeys(component_sport_ids))  # dedupe, preserve order
+    if len(ids) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="A unified season needs at least two distinct sports",
+        )
+
+    sports = {s.id: s for s in db.query(Sport).filter(Sport.id.in_(ids)).all()}
+    missing = [str(sid) for sid in ids if sid not in sports]
+    if missing:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sport(s) not found: {', '.join(missing)}",
+        )
+
+    for sid in ids:
+        sport = sports[sid]
+        if sport.name not in SUPPORTED_LEAGUE_SPORTS:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Sport '{sport.name}' is not supported for leagues",
+            )
+
+    # Derive the overlap window from each sport's current season. Hard-block if
+    # any sport has no current season — there is no valid multisport period then.
+    component_seasons = []
+    for sid in ids:
+        current = _current_season_for_sport(db, sid)
+        if current is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    f"'{sports[sid].name}' has no current season — every sport in a "
+                    "unified season must be in-season right now."
+                ),
+            )
+        component_seasons.append(current)
+
+    start_date = max(cs.start_date for cs in component_seasons)  # later start
+    end_date = min(cs.end_date for cs in component_seasons)      # earlier end
+    if start_date >= end_date:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=(
+                "The selected sports' current seasons don't overlap — there is no "
+                "valid unified multisport period."
+            ),
+        )
+
+    season = Season(
+        sport_id=None,
+        name=name,
+        start_date=start_date,
+        end_date=end_date,
+        label=label,
+        component_sport_ids=[str(sid) for sid in ids],
+    )
+    db.add(season)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A unified season with this name already exists",
+        )
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.SEASON_CREATE,
+        target_type="season",
+        target_id=season.id,
+        reason=reason,
+        metadata={
+            "unified": True,
+            "component_sport_ids": [str(sid) for sid in ids],
+            "name": name,
+            "derived_start_date": str(start_date),
+            "derived_end_date": str(end_date),
+        },
     )
     db.commit()
     return season

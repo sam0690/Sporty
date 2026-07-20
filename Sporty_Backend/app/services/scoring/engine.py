@@ -134,9 +134,31 @@ def score_transfer_window_for_league(
     league_sport_id = (
         db.query(Season.sport_id).filter(Season.id == league.season_id).scalar()
     )
-    native_window = find_equivalent_window_for_sport(
-        db, league_id=league_id, window=window, sport_id=league_sport_id
-    )
+    if league_sport_id is None:
+        # UNIFIED-season league: its lineups and TeamWeeklyScore rows live under
+        # the unified season's OWN windows. Translate the incoming (real-sport)
+        # window to the unified window covering the same instant — a covering-
+        # date lookup on the unified season's own windows (identical in shape to
+        # find_equivalent_window_for_sport, but keyed straight to league.season_id
+        # instead of a per-sport LeagueSport mapping, which resolves real sports
+        # only). If no unified window covers this date, the incoming window is
+        # outside the multisport overlap period → nothing to score for this
+        # league (which is how "compete only within the overlap" is enforced —
+        # no explicit date check needed). See UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §3/§5.
+        native_window = (
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                TransferWindow.start_at <= window.start_at,
+                TransferWindow.end_at > window.start_at,
+            )
+            .order_by(TransferWindow.start_at.desc())
+            .first()
+        )
+    else:
+        native_window = find_equivalent_window_for_sport(
+            db, league_id=league_id, window=window, sport_id=league_sport_id
+        )
     if native_window is None:
         # The league's own schedule has no window covering this date range
         # (season not started / ended / off week) — nothing to score. Loud,
@@ -208,6 +230,26 @@ def score_transfer_window_for_season_leagues(
             raise ValueError(f"TransferWindow {transfer_window_id} not found")
 
         window_sport_id = db.query(Season.sport_id).filter(Season.id == window.season_id).scalar()
+
+        if window_sport_id is None:
+            # A UNIFIED-season window has no real sport to map leagues by, and
+            # must NOT self-trigger scoring. Unified leagues are scored via their
+            # COMPONENT sports' window passes (that's when new PlayerGameweekStat
+            # rows actually land), translated onto this unified window inside
+            # score_transfer_window_for_league. Player-stat scoring is always
+            # real-sport-keyed and already booked via the real windows, so there
+            # is nothing to do for the unified window's own activation — it is
+            # inert as a discovery driver. See UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §4/§5.
+            if commit:
+                db.commit()
+            return {
+                "leagues_scored": 0,
+                "leagues_skipped": 0,
+                "football_players_updated": 0,
+                "cricket_players_updated": 0,
+                "basketball_players_updated": 0,
+                "leagues_skipped_no_equivalent_season": 0,
+            }
 
         league_ids = [
             league_id

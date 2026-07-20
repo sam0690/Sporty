@@ -91,6 +91,17 @@ class SeasonCreateRequest(BaseModel):
     reason: str | None = Field(default=None, max_length=1000)
 
 
+class UnifiedSeasonCreateRequest(BaseModel):
+    # A unified multisport season composes 2+ sports. Its dates are NOT supplied
+    # — they are derived server-side as the overlap of the component sports'
+    # current seasons (later start → earlier end), so create + compete are bound
+    # to the real multisport window. See UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §6.
+    component_sport_ids: list[uuid.UUID] = Field(min_length=2)
+    name: str = Field(min_length=1, max_length=100)
+    label: str | None = Field(default=None, max_length=20)
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 class SeasonUpdateRequest(BaseModel):
     # No sport_id — a season's sport is immutable after creation (windows
     # and league scoring are keyed to it).

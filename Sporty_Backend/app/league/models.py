@@ -20,7 +20,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import ExcludeConstraint, UUID
+from sqlalchemy.dialects.postgresql import ExcludeConstraint, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -119,10 +119,25 @@ class Season(Base):
         UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
     )
 
-    sport_id: Mapped[uuid.UUID] = mapped_column(
+    # Nullable ONLY for "unified" multisport seasons — a Season whose dates are
+    # the overlap window of two+ sports' seasons (later start → earlier end),
+    # under which a multisport league schedules lineups/transfers/scoring with
+    # its own independent gameweek numbering. sport_id IS NULL is the
+    # discriminator: a real-sport season always has a sport_id; a unified season
+    # never does. See docs/UNIFIED_MULTISPORT_SCHEDULE_PLAN.md.
+    sport_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("sports.id"),
-        nullable=False, index=True,
+        nullable=True, index=True,
     )
+
+    # For UNIFIED seasons only (sport_id IS NULL): the sports this schedule
+    # composes, as a list of sport UUID strings. Display + admin UX only
+    # ("Football + Basketball 2026/27") and to record which sports' seasons the
+    # overlap dates were derived from — it is NEVER read by scoring, which is
+    # driven entirely by each league's own LeagueSport.season_id mappings. NULL
+    # for real-sport seasons. No FK integrity (JSONB) — sports are a tiny static
+    # set. See docs/UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §6.
+    component_sport_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
 
     # Human-readable label: "2025/26", "Summer 2025"
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -153,8 +168,9 @@ class Season(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    # Relationships
-    sport: Mapped["Sport"] = relationship(back_populates="seasons")
+    # Relationships. Optional: a unified multisport season has no owning sport
+    # (sport_id IS NULL) — sport is None there. Season.sport_name already guards.
+    sport: Mapped["Sport | None"] = relationship(back_populates="seasons")
 
     @property
     def sport_name(self) -> str | None:
@@ -203,6 +219,25 @@ class Season(Base):
             (text("sport_id"), "="),
             using="gist",
             name="excl_season_sport_no_overlap",
+        ),
+        # The three constraints above all key off sport_id, so none of them
+        # protect UNIFIED seasons (sport_id IS NULL): SQL NULL is never equal to
+        # NULL, so two unified rows never collide on name/start_date and the
+        # GIST exclude's `sport_id WITH =` never yields TRUE for NULL pairs. We
+        # add ONE partial guard — unique name among unified seasons — so an
+        # admin can't create "Football+Basketball 2026/27" twice. We deliberately
+        # do NOT add a date-overlap exclude for unified rows: two different
+        # unified seasons (football+basketball vs football+cricket) may legitimately
+        # run at the same time. See docs/UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §1.
+        Index(
+            "uq_unified_season_name",
+            "name",
+            unique=True,
+            postgresql_where=text("sport_id IS NULL"),
+            # sqlite_where too, so throwaway-SQLite tests get the SAME partial
+            # index and not a full unique-on-name (which would reject two
+            # real-sport seasons that legitimately share a name across sports).
+            sqlite_where=text("sport_id IS NULL"),
         ),
     )
 

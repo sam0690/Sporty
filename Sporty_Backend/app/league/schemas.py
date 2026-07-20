@@ -699,9 +699,14 @@ class BudgetDiscardResponse(BaseModel):
 class SeasonResponse(BaseModel):
     """What gets returned for public season listings."""
     id: uuid.UUID
-    sport_id: uuid.UUID
+    # Null for a UNIFIED multisport season (its sports live in component_sport_ids).
+    sport_id: uuid.UUID | None = None
     # Resolved display name (model property) — clients show this, not the id.
+    # Null for a unified season (no single owning sport).
     sport_name: str | None = None
+    # Unified seasons only: the sports this schedule composes (display/admin).
+    # Null for a real single-sport season.
+    component_sport_ids: list[uuid.UUID] | None = None
     name: str
     start_date: datetime | date
     end_date: datetime | date

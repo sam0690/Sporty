@@ -77,7 +77,16 @@ def get_league_sport_season(
     )
     if league_row is not None:
         league_season_id, league_season_sport_id = league_row
-        if league_season_sport_id == sport_id:
+        # `sport_id is not None` guard is load-bearing: for a UNIFIED-season
+        # league `league_season_sport_id` is None, and a bare `== sport_id`
+        # comparison would be `None == None` → True whenever a caller passes
+        # sport_id=None, wrongly short-circuiting to the unified season instead
+        # of resolving the requested real sport via the LeagueSport mapping
+        # below. The native-resolution path (engine.score_transfer_window_for_league)
+        # is the only caller that ever passed None, and it now handles unified
+        # seasons explicitly, so None here means "no such mapping" → fall
+        # through (and return None). See docs/UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §3/§7.
+        if sport_id is not None and league_season_sport_id == sport_id:
             return db.query(Season).filter(Season.id == league_season_id).first()
 
     return (

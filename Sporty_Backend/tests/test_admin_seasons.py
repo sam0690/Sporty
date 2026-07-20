@@ -233,3 +233,71 @@ def test_update_season_endpoint_allows_admin_tier_and_returns_status():
         assert body["name"] == "Renamed via API"
         assert body["status"] == "running"
         assert body["is_current"] is True
+
+
+# ── create_unified_season_admin (unified multisport season) ─────────────────
+
+
+def test_create_unified_season_derives_overlap_dates_and_stores_components():
+    with session_scope() as db:
+        actor = _make_user(db)
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        today = date.today()
+        # Both current; overlap = later start (today-40) -> earlier end (today+60).
+        _make_season(db, football, start=today - timedelta(days=60), end=today + timedelta(days=60))
+        _make_season(db, basketball, start=today - timedelta(days=40), end=today + timedelta(days=80))
+        db.commit()
+
+        season = admin_services.create_unified_season_admin(
+            db, actor,
+            component_sport_ids=[football.id, basketball.id],
+            name="Football + Basketball 2026",
+            reason="demo",
+        )
+        assert season.sport_id is None
+        assert season.start_date == today - timedelta(days=40)   # later start
+        assert season.end_date == today + timedelta(days=60)     # earlier end
+        assert set(season.component_sport_ids) == {str(football.id), str(basketball.id)}
+
+        log = db.query(AdminAuditLog).filter(AdminAuditLog.action == AdminActionType.SEASON_CREATE).first()
+        assert log is not None and log.metadata_json.get("unified") is True
+
+
+def test_create_unified_season_rejects_fewer_than_two_sports():
+    with session_scope() as db:
+        actor = _make_user(db)
+        football = Sport(name="football", display_name="Football")
+        db.add(football)
+        db.flush()
+        today = date.today()
+        _make_season(db, football, start=today - timedelta(days=30), end=today + timedelta(days=30))
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            admin_services.create_unified_season_admin(
+                db, actor, component_sport_ids=[football.id], name="solo",
+            )
+        assert exc.value.status_code == 422
+
+
+def test_create_unified_season_rejects_sport_with_no_current_season():
+    with session_scope() as db:
+        actor = _make_user(db)
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        today = date.today()
+        _make_season(db, football, start=today - timedelta(days=30), end=today + timedelta(days=30))
+        # basketball's season is already over -> not current.
+        _make_season(db, basketball, start=today - timedelta(days=100), end=today - timedelta(days=10))
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc:
+            admin_services.create_unified_season_admin(
+                db, actor, component_sport_ids=[football.id, basketball.id], name="mix",
+            )
+        assert exc.value.status_code == 409

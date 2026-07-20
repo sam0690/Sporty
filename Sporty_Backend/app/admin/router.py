@@ -34,6 +34,7 @@ from app.admin.schemas import (
     SeasonCreateRequest,
     SeasonGenerateWindowsRequest,
     SeasonUpdateRequest,
+    UnifiedSeasonCreateRequest,
     SystemConfigResponse,
     TicketUpdateRequest,
     TradeActionResponse,
@@ -259,6 +260,29 @@ def create_season(
         name=data.name,
         start_date=data.start_date,
         end_date=data.end_date,
+        label=data.label,
+        reason=data.reason,
+    )
+
+
+@router.post(
+    "/seasons/unified",
+    response_model=SeasonResponse,
+    status_code=201,
+    summary="Create a unified multisport season (admin)",
+)
+def create_unified_season(
+    data: UnifiedSeasonCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    """Compose a unified season from 2+ sports. Dates are derived server-side as
+    the overlap of the component sports' current seasons — not supplied."""
+    return services.create_unified_season_admin(
+        db,
+        current_user,
+        component_sport_ids=data.component_sport_ids,
+        name=data.name,
         label=data.label,
         reason=data.reason,
     )

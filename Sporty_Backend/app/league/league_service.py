@@ -97,18 +97,25 @@ def create_league(
             detail="Season not found",
         )
 
-    season_sport = db.query(Sport).filter(Sport.id == season.sport_id).first()
-    if not season_sport:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Season sport not found",
-        )
+    # A UNIFIED multisport season has no owning sport (sport_id IS NULL) — every
+    # sport it plays resolves its own current season via the LeagueSport loop
+    # below, so the single-season-sport validation here is skipped for it. See
+    # docs/UNIFIED_MULTISPORT_SCHEDULE_PLAN.md §2.
+    is_unified = season.sport_id is None
+    season_sport = None
+    if not is_unified:
+        season_sport = db.query(Sport).filter(Sport.id == season.sport_id).first()
+        if not season_sport:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Season sport not found",
+            )
 
-    if season_sport.name not in SUPPORTED_LEAGUE_SPORTS:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Sport '{season_sport.name}' is not supported",
-        )
+        if season_sport.name not in SUPPORTED_LEAGUE_SPORTS:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Sport '{season_sport.name}' is not supported",
+            )
 
     league_start: date = data.start_date or season.start_date
     league_end: date = data.end_date or season.end_date
@@ -172,7 +179,7 @@ def create_league(
     # for this league. A multisport league's season is deliberately only one
     # of its N sports (see find_equivalent_window_for_sport), so this only
     # rejects a season whose sport isn't in the list at all.
-    if season_sport.name not in requested_sports:
+    if not is_unified and season_sport.name not in requested_sports:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=(
@@ -180,6 +187,16 @@ def create_league(
                 f"league is for {', '.join(requested_sports)}. Choose a "
                 "season that matches one of the league's sports."
             ),
+        )
+
+    # A unified season is a multisport schedule — it makes no sense for a
+    # single-sport league. Soft validation otherwise (chosen): any all-current
+    # sport combo may use it; the per-sport current-season hard-block in the
+    # LeagueSport loop below is the real validator. See PLAN §2.
+    if is_unified and len(requested_sports) < 2:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A unified multisport season requires a league with at least two sports.",
         )
 
     # Multisport leagues are only creatable while every sport involved has a
@@ -218,7 +235,8 @@ def create_league(
     for s in sport_records:
         if s.id == season.sport_id:
             # The season the creator explicitly picked — no lookup needed,
-            # no ambiguity.
+            # no ambiguity. (Never taken for a unified season: season.sport_id
+            # is None, so every sport falls to the self-resolving else branch.)
             mapped_season_id = season.id
         else:
             # A secondary sport: resolve its own current season. Hard-block
@@ -1867,12 +1885,17 @@ def build_initial_team(
 
 
 def get_active_seasons(db: Session) -> list[Season]:
-    """Return all active seasons across all sports."""
+    """Return all active seasons for league creation: real single-sport seasons
+    of supported sports, PLUS unified multisport seasons (sport_id IS NULL).
+
+    Uses an OUTER join and an explicit `sport_id IS NULL` allowance — an inner
+    join on Sport would silently drop every unified season (no sport row to
+    match), hiding them from the create-league season picker."""
     return (
         db.query(Season)
-        .join(Sport, Season.sport_id == Sport.id)
+        .outerjoin(Sport, Season.sport_id == Sport.id)
         .filter(Season.is_active.is_(True))
-        .filter(Sport.name.in_(SUPPORTED_LEAGUE_SPORTS))
+        .filter(or_(Sport.name.in_(SUPPORTED_LEAGUE_SPORTS), Season.sport_id.is_(None)))
         .order_by(Season.name.asc())
         .all()
     )
