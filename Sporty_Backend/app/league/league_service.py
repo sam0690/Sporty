@@ -395,6 +395,50 @@ def _attach_my_team_summaries(
         ):
             penalty_by_team[row.team_id] = row.charged
 
+    # ── Attention/triage fields (batched over every league's season) ────────
+    # editable window = soonest window whose lineup deadline is still in the
+    # future (mirrors _find_editable_transfer_window); live = a window is in
+    # progress and locked (a gameweek is playing).
+    now = datetime.now(timezone.utc)
+    season_ids = {lg.season_id for lg in leagues if lg.season_id}
+    editable_by_season: dict[uuid.UUID, TransferWindow] = {}
+    live_by_season: dict[uuid.UUID, bool] = {}
+    if season_ids:
+        for w in (
+            db.query(TransferWindow)
+            .filter(TransferWindow.season_id.in_(season_ids))
+            .order_by(TransferWindow.start_at.asc())
+            .all()
+        ):
+            if w.lineup_deadline_at > now and w.season_id not in editable_by_season:
+                editable_by_season[w.season_id] = w
+            if w.start_at <= now <= w.end_at and w.lineup_locked:
+                live_by_season[w.season_id] = True
+
+    # Which teams already have a starting XI saved for their editable window.
+    lineup_set: set[tuple[uuid.UUID, uuid.UUID]] = set()
+    editable_pairs = [
+        (team.id, editable_by_season[lg.season_id].id)
+        for lg in leagues
+        if (team := my_team_by_league.get(lg.id)) is not None
+        and lg.season_id in editable_by_season
+    ]
+    if editable_pairs:
+        for row in (
+            db.query(
+                TeamGameweekLineup.fantasy_team_id,
+                TeamGameweekLineup.transfer_window_id,
+            )
+            .filter(
+                TeamGameweekLineup.fantasy_team_id.in_({p[0] for p in editable_pairs}),
+                TeamGameweekLineup.transfer_window_id.in_({p[1] for p in editable_pairs}),
+                TeamGameweekLineup.is_starter.is_(True),
+            )
+            .distinct()
+            .all()
+        ):
+            lineup_set.add((row.fantasy_team_id, row.transfer_window_id))
+
     for league in leagues:
         team = my_team_by_league.get(league.id)
         if team is None:
@@ -417,12 +461,16 @@ def _attach_my_team_summaries(
             else None
         )
 
+        editable = editable_by_season.get(league.season_id)
         league.my_team = {
             "id": team.id,
             "name": team.name,
             "rank": rank,
             "points": my_total,
             "points_deducted": my_deducted,
+            "lineup_deadline_at": editable.lineup_deadline_at if editable else None,
+            "has_lineup": bool(editable and (team.id, editable.id) in lineup_set),
+            "live": live_by_season.get(league.season_id, False),
         }
 
 

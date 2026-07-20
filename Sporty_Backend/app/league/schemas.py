@@ -142,6 +142,13 @@ class MyTeamBrief(BaseModel):
     rank: int | None = None
     points: Decimal = Decimal("0")
     points_deducted: Decimal = Decimal("0")
+    # Attention/triage fields for the leagues list. lineup_deadline_at is the
+    # next not-yet-locked gameweek's XI deadline (None when the season is over);
+    # has_lineup is whether the user has already set a starting XI for it; live
+    # is True while a gameweek is in progress (current window locked).
+    lineup_deadline_at: datetime | None = None
+    has_lineup: bool = False
+    live: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
