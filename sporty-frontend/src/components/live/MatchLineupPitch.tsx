@@ -2,7 +2,7 @@
 
 import { PlayerAvatar } from "@/components/ui";
 import { CourtRenderer } from "@/components/dashboard/shared/formation/CourtRenderer";
-import { PitchRenderer } from "@/components/dashboard/shared/formation/PitchRenderer";
+import { MatchPitchSurface } from "./MatchPitchSurface";
 import { teamIdentity } from "@/lib/teamIdentity";
 import { useMatchStore } from "@/store/matchStore";
 import type { LineupPlayer } from "@/types/events";
@@ -152,7 +152,7 @@ export function MatchLineupPitch() {
   const awayColor = teamIdentity(awayName).color;
   const homeLayout = placeMatchTeam(home, "home", lineupSport);
   const awayLayout = placeMatchTeam(away, "away", lineupSport);
-  const Surface = lineupSport === "basketball" ? CourtRenderer : PitchRenderer;
+  const Surface = lineupSport === "basketball" ? CourtRenderer : MatchPitchSurface;
 
   const renderChips = (placed: PlacedPlayer[], color: string) =>
     placed.map((p: PlacedPlayer & { player: PitchPlayer }) => (
@@ -176,11 +176,14 @@ export function MatchLineupPitch() {
       </div>
 
       <Surface className="max-w-[460px]">
-        {/* Halfway divider between the two facing teams. */}
-        <span
-          aria-hidden
-          className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/15"
-        />
+        {/* Basketball keeps a manual halfway divider; the football pitch SVG
+            draws its own. */}
+        {lineupSport === "basketball" ? (
+          <span
+            aria-hidden
+            className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/15"
+          />
+        ) : null}
         {renderChips(awayLayout.placed, awayColor)}
         {renderChips(homeLayout.placed, homeColor)}
       </Surface>
