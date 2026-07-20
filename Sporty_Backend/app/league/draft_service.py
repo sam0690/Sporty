@@ -154,13 +154,7 @@ def start_draft(
         member.draft_position = pos
 
     # b. Create a FantasyTeam for each member
-    #
-    # Bulk-load all users in ONE query instead of N queries in a loop.
-    # The original pattern:
-    #   for member in members:
-    #       user = db.query(User).filter(User.id == member.user_id).first()
-    # fires one SELECT per member — classic N+1. With 20 members that's
-    # 20 round-trips for data we could fetch in one WHERE ... IN (...).
+    
     member_user_ids = [m.user_id for m in members]
     users_by_id: dict[uuid.UUID, User] = {
         u.id: u
