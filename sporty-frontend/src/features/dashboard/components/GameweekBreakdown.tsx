@@ -18,7 +18,7 @@ export function GameweekBreakdown({
   isLoading,
   isError,
 }: GameweekBreakdownProps) {
-  const { rows, maxPoints, total, best, average } = useMemo(() => {
+  const { rows, maxPoints, best, average } = useMemo(() => {
     const sorted = [...breakdown].sort((a, b) => a.gameweek - b.gameweek);
     const max = sorted.reduce((m, r) => Math.max(m, Number(r.points)), 0);
     const sum = sorted.reduce((s, r) => s + Number(r.points), 0);
@@ -28,7 +28,7 @@ export function GameweekBreakdown({
       null,
     );
     const avg = sorted.length ? sum / sorted.length : 0;
-    return { rows: sorted, maxPoints: max, total: sum, best: bestGw, average: avg };
+    return { rows: sorted, maxPoints: max, best: bestGw, average: avg };
   }, [breakdown]);
 
   return (
@@ -38,19 +38,11 @@ export function GameweekBreakdown({
           Gameweek Points
         </h2>
         {rows.length > 0 && (
-          <div className="flex items-center gap-5">
-            <div className="text-right">
-              <p className="num font-display text-xl leading-none tracking-[-0.02em] text-fg-2">
-                {Math.round(average)}
-              </p>
-              <p className="section-label mt-1">Avg</p>
-            </div>
-            <div className="text-right">
-              <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-accent">
-                {Math.round(total)}
-              </p>
-              <p className="section-label mt-1">Total</p>
-            </div>
+          <div className="text-right">
+            <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
+              {Math.round(average)}
+            </p>
+            <p className="mt-1 text-xs text-fg-3">Avg / GW</p>
           </div>
         )}
       </header>

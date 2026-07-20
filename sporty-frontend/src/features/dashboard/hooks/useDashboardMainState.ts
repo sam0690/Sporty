@@ -8,6 +8,7 @@ import {
   useDashboardTeamPreview,
   useRecentActivity,
 } from "@/hooks/dashboard/useDashboardData";
+import { useEditableWindow } from "@/hooks/leagues/useLeagueCore";
 import { useLocalStorage } from "@/hooks/general/useLocalStorage";
 import { deriveCompetitionType } from "@/hooks/leagues/useLeagueCompetitionMode";
 import { LocalStorageKeys } from "@/lib/storage.keys";
@@ -65,6 +66,9 @@ export function useDashboardMainState() {
     isPlaceholderData: activitySwitching,
     error: recentActivityError,
   } = useRecentActivity(activeLeagueId);
+
+  // The next not-yet-locked window drives the deadline spine's countdown + CTA.
+  const { data: editableWindow } = useEditableWindow(activeLeagueId ?? "");
 
   // Optimistic league switch: previous league's data stays rendered (via
   // keepPreviousData in the queries) and the UI dims until fresh data lands.
@@ -148,5 +152,9 @@ export function useDashboardMainState() {
     recentActivityError,
     leaguesLoading,
     isSwitching,
+    // Deadline spine
+    lineupDeadlineAt: editableWindow?.lineup_deadline_at ?? null,
+    lineupLocked: editableWindow?.lineup_locked ?? false,
+    hasLineup: previews.length > 0,
   };
 }

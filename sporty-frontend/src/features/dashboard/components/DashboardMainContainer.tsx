@@ -29,11 +29,16 @@ export function DashboardMainContainer() {
     recentActivityError,
     leaguesLoading,
     isSwitching,
+    lineupDeadlineAt,
+    lineupLocked,
+    hasLineup,
   } = useDashboardMainState();
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <main>
+        <LiveMatchTicker />
+
         <Topbar
           userName={userName}
           avatar={me?.avatar_url ?? ""}
@@ -45,23 +50,12 @@ export function DashboardMainContainer() {
           pointsDeducted={pointsDeducted}
           statsLoading={statsLoading && hasLeagues}
           isSwitching={isSwitching}
+          lineupDeadlineAt={lineupDeadlineAt}
+          lineupLocked={lineupLocked}
+          hasLineup={hasLineup}
         />
 
-        <LiveMatchTicker />
-
         <FavouritesNudge />
-
-        {hasLeagues && (
-          <div
-            className={`mb-6 transition-opacity duration-200 ${isSwitching ? "opacity-50" : ""}`}
-          >
-            <GameweekBreakdown
-              breakdown={dashboardStats?.gameweek_breakdown ?? []}
-              isLoading={statsLoading}
-              isError={Boolean(statsError)}
-            />
-          </div>
-        )}
 
         <div
           className={`grid grid-cols-1 gap-6 transition-opacity duration-200 lg:grid-cols-[1.35fr_1fr] ${isSwitching ? "opacity-50" : ""}`}
@@ -82,6 +76,18 @@ export function DashboardMainContainer() {
             isError={Boolean(recentActivityError)}
           />
         </div>
+
+        {hasLeagues && (
+          <div
+            className={`mt-6 transition-opacity duration-200 ${isSwitching ? "opacity-50" : ""}`}
+          >
+            <GameweekBreakdown
+              breakdown={dashboardStats?.gameweek_breakdown ?? []}
+              isLoading={statsLoading}
+              isError={Boolean(statsError)}
+            />
+          </div>
+        )}
       </main>
     </div>
   );

@@ -80,7 +80,7 @@ export function RecentActivity({
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-3">
-                      <p className="font-sans text-sm font-700 uppercase tracking-[1px] text-fg-1">
+                      <p className="font-sans text-sm font-600 text-fg-1">
                         {item.title}
                       </p>
                       <span className="shrink-0 section-label whitespace-nowrap text-fg-3 transition-colors group-hover:text-fg-2">
