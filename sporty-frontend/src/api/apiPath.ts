@@ -164,6 +164,17 @@ export const API_PATHS = {
     LIVE_FAVOURITES: "/matches/live-for-favourites",
   },
 
+  PREDICTIONS: {
+    CREATE: "/predictions",
+    ME: (resolved?: boolean) =>
+      resolved == null ? "/predictions/me" : `/predictions/me?resolved=${resolved}`,
+    FOR_MATCH: (matchId: string) => `/predictions/match/${matchId}`,
+    LEADERBOARD: (leagueId?: string) =>
+      leagueId
+        ? `/predictions/leaderboard?league_id=${leagueId}`
+        : "/predictions/leaderboard",
+  },
+
   ADMIN: {
     USERS: (opts?: {
       page?: number;

@@ -7,6 +7,7 @@ import {
   Trophy,
   Users,
   CalendarDays,
+  Target,
   Lock,
 } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
@@ -38,6 +39,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
             { label: "Leagues", href: "/leagues", icon: Trophy },
             { label: "My Team", href: "/my-team", icon: Shield },
             { label: "Fixtures", href: "/fixtures", icon: CalendarDays },
+            { label: "Predictor", href: "/predictions", icon: Target },
             { label: "Players", href: "/players", icon: Users },
           ]),
       ...(isAdmin ? [{ label: "Admin", href: "/admin", icon: Lock }] : []),

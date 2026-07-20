@@ -23,7 +23,7 @@ import {
 import { useMatchStore } from "@/store/matchStore";
 import type { MatchPrediction, MatchRatings } from "@/types/events";
 
-const TAB_VALUES: FixtureTab[] = ["summary", "lineups", "stats"];
+const TAB_VALUES: FixtureTab[] = ["summary", "lineups", "stats", "predict"];
 function isFixtureTab(value: string | null): value is FixtureTab {
   return value != null && (TAB_VALUES as string[]).includes(value);
 }
@@ -262,7 +262,7 @@ export default function LiveMatchClient({
               <div className="skeleton h-40 rounded-[3px]" />
             </div>
           ) : (
-            <FixtureTabPanels active={activeTab} ratings={ratings} />
+            <FixtureTabPanels active={activeTab} ratings={ratings} matchId={matchId} />
           )}
         </div>
 

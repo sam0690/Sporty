@@ -39,6 +39,7 @@ from app.league.models import (  # noqa: F401
     WaiverOrder, WaiverClaim, TradeOffer
 )
 from app.match.models import Match  # noqa: F401
+from app.prediction.models import PredictionEntry  # noqa: F401
 from app.player.models import (  # noqa: F401
   Player,
   PlayerGameweekStat,
@@ -71,6 +72,7 @@ from app.player.router import router as player_router
 from app.notification.router import router as notification_router
 from app.scoring.router import router as scoring_router
 from app.match.router import router as match_router
+from app.prediction.router import router as prediction_router
 from app.user.router import router as user_router
 from app.api.v1.transfers import router as transfers_router
 from app.api.v1.draft_roster import router as draft_roster_router
@@ -590,6 +592,7 @@ app.include_router(player_router,  prefix="/api/v1")
 app.include_router(notification_router, prefix="/api/v1")
 app.include_router(scoring_router, prefix="/api/v1")
 app.include_router(match_router, prefix="/api/v1")
+app.include_router(prediction_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(transfers_router, prefix="/api/v1")
 app.include_router(draft_roster_router, prefix="/api/v1")

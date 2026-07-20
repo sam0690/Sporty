@@ -749,6 +749,21 @@ async def ingest_match_result(
                 live_key,
             )
             scoring_enqueued = 0
+        # Score user Predictor entries off the final score. Idempotent (only
+        # touches unresolved rows), so re-running on every "finished" push is
+        # safe. Best-effort: never let it break the live feed / stat booking.
+        try:
+            from app.prediction.services import resolve_predictions_for_match
+
+            resolved_preds = resolve_predictions_for_match(db, match)
+            if resolved_preds:
+                db.commit()
+        except Exception:
+            db.rollback()
+            logger.exception(
+                "Feeder finish %s: prediction resolution failed (leaderboard may lag)",
+                live_key,
+            )
         logger.info(
             "Feeder finished match %s (newly finished=%s): booked stats for %s player(s), enqueued scoring for %s window(s)",
             live_key,

@@ -9,15 +9,17 @@ import { LineupCard } from "./LineupCard";
 import { LiveLeaderboard } from "./LiveLeaderboard";
 import { MatchLineupPitch } from "./MatchLineupPitch";
 import { RatingsCard } from "./RatingsCard";
+import { PredictCard } from "./PredictCard";
 import { PanelEmpty } from "./Panel";
-import { ChartIcon, ListIcon, ShieldIcon } from "./icons";
+import { ChartIcon, ListIcon, ShieldIcon, TrophyIcon } from "./icons";
 
-export type FixtureTab = "summary" | "lineups" | "stats";
+export type FixtureTab = "summary" | "lineups" | "stats" | "predict";
 
 const TABS: { id: FixtureTab; label: string; icon: ReactNode }[] = [
   { id: "summary", label: "Summary", icon: <ListIcon className="size-3.5" /> },
   { id: "lineups", label: "Lineups", icon: <ShieldIcon className="size-3.5" /> },
   { id: "stats", label: "Stats", icon: <ChartIcon className="size-3.5" /> },
+  { id: "predict", label: "Predict", icon: <TrophyIcon className="size-3.5" /> },
 ];
 
 /** The default tab when the user hasn't picked one: lead with the pitch when a
@@ -36,13 +38,18 @@ export function FixtureTabBar({
   active: FixtureTab;
   onChange: (tab: FixtureTab) => void;
 }) {
+  // Predictor is football-only (MVP) — hide the tab on other sports.
+  const sport = useMatchStore((s) => s.sport);
+  const tabs = TABS.filter(
+    (t) => t.id !== "predict" || sport == null || sport === "football",
+  );
   return (
     <div
       role="tablist"
       aria-label="Match sections"
       className="flex gap-1 overflow-x-auto px-1"
     >
-      {TABS.map((tab) => {
+      {tabs.map((tab) => {
         const isActive = tab.id === active;
         return (
           <button
@@ -122,9 +129,11 @@ function Stats({ ratings }: { ratings: MatchRatings | null }) {
 export function FixtureTabPanels({
   active,
   ratings,
+  matchId,
 }: {
   active: FixtureTab;
   ratings: MatchRatings | null;
+  matchId: string;
 }) {
   // key on the active tab so a switch crossfades the incoming panel in.
   const content = useMemo(() => {
@@ -133,10 +142,12 @@ export function FixtureTabPanels({
         return <Lineups />;
       case "stats":
         return <Stats ratings={ratings} />;
+      case "predict":
+        return <PredictCard matchId={matchId} />;
       default:
         return <Summary />;
     }
-  }, [active, ratings]);
+  }, [active, ratings, matchId]);
 
   return (
     <div
