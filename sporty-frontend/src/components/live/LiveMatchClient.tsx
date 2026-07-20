@@ -5,7 +5,6 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 import { EventFeed } from "@/components/live/EventFeed";
-import { LineupsCard } from "@/components/live/LineupsCard";
 import { MatchLineupPitch } from "@/components/live/MatchLineupPitch";
 import { PredictionCard } from "@/components/live/PredictionCard";
 import { RatingsCard } from "@/components/live/RatingsCard";
@@ -192,12 +191,15 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
         <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr] lg:items-start">
           <div className="min-w-0 space-y-6">
             {phase === "post" && <RatingsCard ratings={ratings} />}
-            {phase === "pre" ? <MatchLineupPitch /> : <EventFeed />}
+            {phase !== "pre" && <EventFeed />}
+            {/* Lineup pitch shows in every phase (self-hides when the feeder
+                pushed no lineup) — FotMob-style, not just pre-match. */}
+            <MatchLineupPitch />
             {phase !== "pre" && hasLineupChanges && <LineupCard />}
           </div>
           <div className="min-w-0 space-y-6">
             {phase !== "pre" && <LiveLeaderboard />}
-            {phase === "pre" ? <EventFeed /> : <LineupsCard />}
+            {phase === "pre" && <EventFeed />}
           </div>
         </div>
 
