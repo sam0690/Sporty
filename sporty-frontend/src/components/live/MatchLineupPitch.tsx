@@ -1,123 +1,153 @@
 "use client";
 
 import { PlayerAvatar } from "@/components/ui";
-import { CourtRenderer } from "@/components/dashboard/shared/formation/CourtRenderer";
-import { MatchPitchSurface } from "./MatchPitchSurface";
+import { MatchCourtSurface } from "./MatchCourtSurface";
 import { teamIdentity } from "@/lib/teamIdentity";
 import { useMatchStore } from "@/store/matchStore";
 import type { LineupPlayer } from "@/types/events";
 import { LineupsCard } from "./LineupsCard";
-import { Panel } from "./Panel";
-import { ListIcon } from "./icons";
+import { MatchPitchSurface } from "./MatchPitchSurface";
+import { PanelEmpty } from "./Panel";
+import { ShieldIcon } from "./icons";
 import {
-  placeMatchTeam,
-  type LineupSport,
-  type PlacedPlayer,
-  type PitchPlayer,
-} from "./matchLineupLayout";
+  buildTeamCourt,
+  buildTeamFormation,
+  type MatchChip,
+} from "./matchFormation";
 
-// Surname only, so the on-pitch label stays inside the chip width.
+// Goalkeepers get their own ring colour so they read distinctly from outfielders
+// of either team (mirrors how broadcast graphics treat the keeper).
+const GK_RING = "#e2c368";
+
+type RenderChip = MatchChip & { color: string };
+
+// Surname only, so the label stays inside the chip footprint.
 function shortName(name: string): string {
   const parts = name.trim().split(/\s+/);
   return parts.length > 1 ? parts[parts.length - 1] : name;
 }
 
-function PitchChip({ placed, color }: { placed: PlacedPlayer; color: string }) {
+// Football uses the purpose-built layout; basketball reuses the court placer.
+function teamChips(
+  lineup: LineupPlayer[],
+  side: "home" | "away",
+  sport: "football" | "basketball",
+  color: string,
+): { label: string; chips: RenderChip[] } {
+  const { label, chips } =
+    sport === "basketball"
+      ? buildTeamCourt(lineup, side)
+      : buildTeamFormation(lineup, side);
+  return {
+    label,
+    chips: chips.map((c) => ({ ...c, color: c.isGk ? GK_RING : color })),
+  };
+}
+
+function PitchChip({ chip, index }: { chip: RenderChip; index: number }) {
   return (
     <div
-      className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
-      style={{ left: `${placed.x * 100}%`, top: `${placed.y * 100}%` }}
+      className="pop-in absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
+      style={{
+        left: `${chip.x * 100}%`,
+        top: `${chip.y * 100}%`,
+        animationDelay: `${Math.min(index, 11) * 35}ms`,
+      }}
     >
       <div
-        className="h-9 w-9 overflow-hidden rounded-full border-2 bg-black/30 shadow-md sm:h-11 sm:w-11"
-        style={{ borderColor: color }}
+        className="relative h-9 w-9 rounded-full p-[2px] shadow-[0_4px_12px_rgba(0,0,0,0.45)] sm:h-11 sm:w-11"
+        style={{ background: chip.color }}
       >
-        <PlayerAvatar
-          name={placed.player.name}
-          photoUrl={placed.player.photoUrl}
-          size="sm"
-          className="!h-full !w-full !rounded-full !border-0 !bg-transparent"
-        />
+        <div className="h-full w-full overflow-hidden rounded-full bg-surface-1">
+          <PlayerAvatar
+            name={chip.name}
+            photoUrl={chip.photoUrl}
+            size="sm"
+            className="!h-full !w-full !rounded-full !border-0 !bg-transparent"
+          />
+        </div>
+        <span
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-[2px] px-1 py-px font-sans text-[7px] font-700 uppercase leading-none tracking-[0.5px] text-surface-0"
+          style={{ background: chip.color }}
+        >
+          {chip.role}
+        </span>
       </div>
-      <span className="max-w-16 truncate rounded bg-black/55 px-1 py-0.5 text-center font-sans text-[9px] font-700 uppercase tracking-[0.5px] text-white backdrop-blur-xs">
-        {shortName(placed.player.name)}
+      <span className="max-w-16 truncate rounded-[2px] bg-black/55 px-1 py-0.5 text-center font-sans text-[9px] font-700 uppercase leading-none tracking-[0.5px] text-white backdrop-blur-xs">
+        {shortName(chip.name)}
       </span>
     </div>
   );
 }
 
-function BenchColumn({
+function TeamHeader({
   teamName,
-  players,
+  label,
+  color,
   align,
 }: {
   teamName: string;
-  players: LineupPlayer[];
+  label: string;
+  color: string;
   align: "left" | "right";
 }) {
-  const { color } = teamIdentity(teamName);
-  const isRight = align === "right";
-  if (players.length === 0) {
-    return null;
-  }
-  return (
-    <div>
-      <p
-        className={`section-label mb-2 ${isRight ? "text-right" : ""}`}
-      >
-        {teamName} bench
-      </p>
-      <ul className="space-y-1.5">
-        {players.map((p) => (
-          <li
-            key={p.player_id}
-            className={`flex items-center gap-2 ${isRight ? "flex-row-reverse text-right" : ""}`}
-          >
-            <div
-              className="h-7 w-7 shrink-0 overflow-hidden rounded-full border bg-black/30"
-              style={{ borderColor: `${color}66` }}
-            >
-              <PlayerAvatar
-                name={p.name ?? "Unknown"}
-                photoUrl={p.photo_url}
-                size="sm"
-                className="!h-full !w-full !rounded-full !border-0 !bg-transparent !text-[9px]"
-              />
-            </div>
-            <span className="truncate text-sm text-fg-2">{p.name ?? "Unknown"}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-function TeamLegend({
-  teamName,
-  formationLabel,
-  align,
-}: {
-  teamName: string;
-  formationLabel: string;
-  align: "left" | "right";
-}) {
-  const { color } = teamIdentity(teamName);
   const isRight = align === "right";
   return (
     <div
       className={`flex min-w-0 items-center gap-2 ${isRight ? "flex-row-reverse text-right" : ""}`}
     >
-      <span
-        className="size-3 shrink-0 rounded-full"
-        style={{ background: color }}
-        aria-hidden
-      />
+      <span className="size-2.5 shrink-0 rounded-full" style={{ background: color }} aria-hidden />
       <div className="min-w-0">
         <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
           {teamName}
         </p>
-        <p className="section-label mt-0.5">{formationLabel}</p>
+        <p className="section-label mt-0.5 tabular-nums">{label}</p>
       </div>
+    </div>
+  );
+}
+
+function Bench({
+  teamName,
+  players,
+  color,
+  align,
+}: {
+  teamName: string;
+  players: LineupPlayer[];
+  color: string;
+  align: "left" | "right";
+}) {
+  const isRight = align === "right";
+  if (players.length === 0) return null;
+  return (
+    <div>
+      <p className={`section-label mb-2.5 ${isRight ? "text-right" : ""}`}>
+        {teamName} · Bench
+      </p>
+      <ul className="space-y-2">
+        {players.map((p) => (
+          <li
+            key={p.player_id}
+            className={`flex items-center gap-2.5 ${isRight ? "flex-row-reverse text-right" : ""}`}
+          >
+            <div
+              className="h-7 w-7 shrink-0 rounded-full p-px"
+              style={{ background: `${color}80` }}
+            >
+              <div className="h-full w-full overflow-hidden rounded-full bg-surface-1">
+                <PlayerAvatar
+                  name={p.name ?? "Unknown"}
+                  photoUrl={p.photo_url}
+                  size="sm"
+                  className="!h-full !w-full !rounded-full !border-0 !bg-transparent !text-[8px]"
+                />
+              </div>
+            </div>
+            <span className="truncate text-sm text-fg-2">{p.name ?? "Unknown"}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -128,72 +158,69 @@ export function MatchLineupPitch() {
   const homeTeam = useMatchStore((s) => s.homeTeam);
   const awayTeam = useMatchStore((s) => s.awayTeam);
 
-  // Football and basketball each get their own surface; other sports (cricket,
-  // …) keep the text list until they have a court/pitch layout of their own.
   const normalizedSport = (sport ?? "").toLowerCase();
-  const lineupSport: LineupSport | null =
+  const lineupSport =
     normalizedSport === "football"
-      ? "football"
+      ? ("football" as const)
       : normalizedSport === "basketball"
-        ? "basketball"
+        ? ("basketball" as const)
         : null;
+
+  // Cricket / unknown sports have no pitch layout yet — fall back to the list.
   if (lineupSport === null) {
     return <LineupsCard />;
   }
 
-  const { home, away, home_bench = [], away_bench = [] } = startingLineups;
+  // The pitch keeps every starter (unmapped ones get slotted into an open line
+  // by buildTeamFormation); the bench list only drops fully-unmapped rows, where
+  // a nameless entry would read as noise.
+  const { home, away } = startingLineups;
+  const home_bench = (startingLineups.home_bench ?? []).filter((p) => p.name);
+  const away_bench = (startingLineups.away_bench ?? []).filter((p) => p.name);
   if (home.length === 0 && away.length === 0) {
-    return null;
+    return (
+      <div className="card-surface p-5">
+        <PanelEmpty
+          icon={<ShieldIcon className="size-5" />}
+          title="Lineups not available"
+          hint="Confirmed lineups appear here about an hour before kick-off."
+        />
+      </div>
+    );
   }
 
   const homeName = homeTeam ?? "Home";
   const awayName = awayTeam ?? "Away";
   const homeColor = teamIdentity(homeName).color;
   const awayColor = teamIdentity(awayName).color;
-  const homeLayout = placeMatchTeam(home, "home", lineupSport);
-  const awayLayout = placeMatchTeam(away, "away", lineupSport);
-  const Surface = lineupSport === "basketball" ? CourtRenderer : MatchPitchSurface;
-
-  const renderChips = (placed: PlacedPlayer[], color: string) =>
-    placed.map((p: PlacedPlayer & { player: PitchPlayer }) => (
-      <PitchChip key={p.player.id} placed={p} color={color} />
-    ));
+  const homeSide = teamChips(home, "home", lineupSport, homeColor);
+  const awaySide = teamChips(away, "away", lineupSport, awayColor);
+  const Surface =
+    lineupSport === "basketball" ? MatchCourtSurface : MatchPitchSurface;
 
   return (
-    <Panel title="Lineups" icon={<ListIcon className="size-3.5" />}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <TeamLegend
-          teamName={awayName}
-          formationLabel={awayLayout.formationLabel}
-          align="left"
-        />
-        <span className="section-label shrink-0">vs</span>
-        <TeamLegend
-          teamName={homeName}
-          formationLabel={homeLayout.formationLabel}
-          align="right"
-        />
+    <div className="card-surface p-4 sm:p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <TeamHeader teamName={awayName} label={awaySide.label} color={awayColor} align="left" />
+        <span className="section-label shrink-0 px-2">vs</span>
+        <TeamHeader teamName={homeName} label={homeSide.label} color={homeColor} align="right" />
       </div>
 
-      <Surface className="max-w-[460px]">
-        {/* Basketball keeps a manual halfway divider; the football pitch SVG
-            draws its own. */}
-        {lineupSport === "basketball" ? (
-          <span
-            aria-hidden
-            className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/15"
-          />
-        ) : null}
-        {renderChips(awayLayout.placed, awayColor)}
-        {renderChips(homeLayout.placed, homeColor)}
+      <Surface className="max-w-[440px]">
+        {awaySide.chips.map((chip, i) => (
+          <PitchChip key={chip.id} chip={chip} index={i} />
+        ))}
+        {homeSide.chips.map((chip, i) => (
+          <PitchChip key={chip.id} chip={chip} index={i} />
+        ))}
       </Surface>
 
       {(home_bench.length > 0 || away_bench.length > 0) && (
-        <div className="mt-4 grid grid-cols-2 gap-5">
-          <BenchColumn teamName={awayName} players={away_bench} align="left" />
-          <BenchColumn teamName={homeName} players={home_bench} align="right" />
+        <div className="mt-5 grid grid-cols-2 gap-5 border-t border-white/8 pt-5">
+          <Bench teamName={awayName} players={away_bench} color={awayColor} align="left" />
+          <Bench teamName={homeName} players={home_bench} color={homeColor} align="right" />
         </div>
       )}
-    </Panel>
+    </div>
   );
 }

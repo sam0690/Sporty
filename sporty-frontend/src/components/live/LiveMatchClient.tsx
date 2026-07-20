@@ -4,15 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
-import { EventFeed } from "@/components/live/EventFeed";
-import { MatchLineupPitch } from "@/components/live/MatchLineupPitch";
 import { PredictionCard } from "@/components/live/PredictionCard";
-import { RatingsCard } from "@/components/live/RatingsCard";
-import { MiniScoreBar, ScoreTicker } from "@/components/live/ScoreTicker";
-import { LiveLeaderboard } from "@/components/live/LiveLeaderboard";
-import { LineupCard } from "@/components/live/LineupCard";
+import { ScoreTicker } from "@/components/live/ScoreTicker";
 import { ToastAlert } from "@/components/live/ToastAlert";
+import {
+  FixtureTabBar,
+  FixtureTabPanels,
+  useDefaultTab,
+  type FixtureTab,
+} from "@/components/live/FixtureTabs";
 import { useMatchSocket } from "@/hooks/useMatchSocket";
+import { teamIdentity } from "@/lib/teamIdentity";
 import {
   fetchMatchPrediction,
   fetchMatchRatings,
@@ -21,11 +23,21 @@ import {
 import { useMatchStore } from "@/store/matchStore";
 import type { MatchPrediction, MatchRatings } from "@/types/events";
 
+const TAB_VALUES: FixtureTab[] = ["summary", "lineups", "stats"];
+function isFixtureTab(value: string | null): value is FixtureTab {
+  return value != null && (TAB_VALUES as string[]).includes(value);
+}
+
 type LiveMatchClientProps = {
   matchId: string;
+  /** Deep-linked tab from the server (?tab=), so first paint matches the URL. */
+  initialTab?: string;
 };
 
-export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
+export default function LiveMatchClient({
+  matchId,
+  initialTab,
+}: LiveMatchClientProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [prediction, setPrediction] = useState<MatchPrediction | null>(null);
@@ -33,8 +45,25 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
 
   const hydrate = useMatchStore((s) => s.hydrate);
   const status = useMatchStore((s) => s.status);
-  const lineup = useMatchStore((s) => s.lineup);
-  const hasLineupChanges = Object.keys(lineup).length > 0;
+  const score = useMatchStore((s) => s.score);
+  const homeTeam = useMatchStore((s) => s.homeTeam);
+  const awayTeam = useMatchStore((s) => s.awayTeam);
+  const minute = useMatchStore((s) => s.minute);
+
+  // Tab selection: seeded from the server-resolved ?tab= (so first paint matches
+  // a deep link with no hydration flicker), otherwise null until the user picks
+  // one and a per-phase default fills in. Writes stay shallow (History API).
+  const [selectedTab, setSelectedTab] = useState<FixtureTab | null>(
+    isFixtureTab(initialTab ?? null) ? (initialTab as FixtureTab) : null,
+  );
+  const defaultTab = useDefaultTab();
+  const activeTab = selectedTab ?? defaultTab;
+  const changeTab = (tab: FixtureTab) => {
+    setSelectedTab(tab);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", tab);
+    window.history.replaceState(null, "", url);
+  };
 
   // The condensed score bar fades in once the hero card leaves the viewport
   // (offset by the 64px sticky navbar it slides under).
@@ -155,9 +184,12 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
   // so we decide on the real status, not the default "scheduled".
   useMatchSocket(matchId, !loading && phase !== "post");
 
+  const home = teamIdentity(homeTeam ?? "Home");
+  const away = teamIdentity(awayTeam ?? "Away");
+
   return (
     <div className="relative">
-      <main className="relative mx-auto max-w-[1400px] px-4 py-8 sm:px-6">
+      <main className="relative mx-auto max-w-[1200px] px-4 py-8 sm:px-6">
         <Link
           href="/fixtures"
           className="mb-4 inline-flex items-center gap-1 font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3 transition-colors hover:text-fg-1"
@@ -176,7 +208,46 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
             }
           />
         </div>
-        <MiniScoreBar visible={heroOffscreen && !loading} />
+
+        {/* Sticky navigator: the tab bar always, plus a condensed scoreline that
+            drops in once the hero scrolls under the navbar — score + tabs stay
+            reachable on long live pages without a second floating bar. */}
+        <div className="sticky top-16 z-30 mt-6 border-b border-white/8 bg-surface-0/95 backdrop-blur-sm">
+          <div
+            aria-hidden={!heroOffscreen}
+            className={`overflow-hidden transition-[max-height,opacity] duration-200 ease-out motion-reduce:transition-none ${
+              heroOffscreen && !loading
+                ? "max-h-12 opacity-100"
+                : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="flex h-11 items-center justify-between gap-3 px-3">
+              <span className="min-w-0 flex-1 truncate text-right font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+                {homeTeam ?? "Home"}
+              </span>
+              <span className="flex shrink-0 items-center font-display text-lg leading-none tracking-[-0.02em] tabular-nums">
+                {phase === "pre" ? (
+                  <span className="text-white/25">vs</span>
+                ) : (
+                  <>
+                    <span style={{ color: home.color }}>{score.home}</span>
+                    <span className="px-1.5 text-white/20">:</span>
+                    <span style={{ color: away.color }}>{score.away}</span>
+                  </>
+                )}
+              </span>
+              <span className="min-w-0 flex-1 truncate font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+                {awayTeam ?? "Away"}
+              </span>
+              {phase === "live" && minute != null && (
+                <span className="shrink-0 rounded-[3px] bg-danger/14 px-1.5 py-0.5 font-sans text-[11px] font-700 tabular-nums text-danger-soft">
+                  {minute}&apos;
+                </span>
+              )}
+            </div>
+          </div>
+          <FixtureTabBar active={activeTab} onChange={changeTab} />
+        </div>
 
         {error && (
           <p className="mt-4 rounded-[3px] border border-danger/25 bg-danger/8 px-3 py-2 text-sm text-danger-soft">
@@ -184,23 +255,15 @@ export default function LiveMatchClient({ matchId }: LiveMatchClientProps) {
           </p>
         )}
 
-        {/* One shell for every phase — a wide main column and a rail. Only the
-            slotting changes as the match moves pre → live → post, so the page
-            never re-architects mid-watch, and DOM order matches the mobile
-            reading order (main first, rail second). */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.7fr_1fr] lg:items-start">
-          <div className="min-w-0 space-y-6">
-            {phase === "post" && <RatingsCard ratings={ratings} />}
-            {phase !== "pre" && <EventFeed />}
-            {/* Lineup pitch shows in every phase (self-hides when the feeder
-                pushed no lineup) — FotMob-style, not just pre-match. */}
-            <MatchLineupPitch />
-            {phase !== "pre" && hasLineupChanges && <LineupCard />}
-          </div>
-          <div className="min-w-0 space-y-6">
-            {phase !== "pre" && <LiveLeaderboard />}
-            {phase === "pre" && <EventFeed />}
-          </div>
+        <div className="mt-6">
+          {loading ? (
+            <div className="space-y-4">
+              <div className="skeleton h-64 rounded-[3px]" />
+              <div className="skeleton h-40 rounded-[3px]" />
+            </div>
+          ) : (
+            <FixtureTabPanels active={activeTab} ratings={ratings} />
+          )}
         </div>
 
         <ToastAlert />
