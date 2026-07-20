@@ -7,42 +7,138 @@ import { teamIdentity } from "@/lib/teamIdentity";
 import { buildFeedItems, isShootoutEvent, type FeedItem } from "@/lib/matchPhase";
 import type { MatchEvent } from "@/types/events";
 import { Panel, PanelEmpty } from "./Panel";
-import { ClockIcon, ListIcon, eventVisual } from "./icons";
+import { ClockIcon, ListIcon, eventVisual, type EventVisual } from "./icons";
+
+/** Feeder detail refinements folded into the base label: penalty goals, injury
+ *  severity, injury-forced subs. */
+function eventLabel(event: MatchEvent, base: string): string {
+  const extra = event.extra ?? {};
+  if (event.type === "goal" && extra.penalty === true) return "Goal · Penalty";
+  if (event.type === "injury") {
+    return extra.severity === "forced_off"
+      ? "Injury · Forced Off"
+      : "Injury · Knock";
+  }
+  if (event.type === "substitution" && extra.reason === "injury") {
+    return "Substitution · Injury";
+  }
+  return base;
+}
+
+/** Circular event glyph — colour + tint come from the event type. Goals get a
+ *  soft outer ring so the match's turning points read first. */
+function EventGlyph({
+  visual,
+  emphasised,
+}: {
+  visual: EventVisual;
+  emphasised: boolean;
+}) {
+  const { Icon, color } = visual;
+  return (
+    <span
+      className="relative z-10 grid size-9 shrink-0 place-items-center rounded-full border"
+      style={{
+        color,
+        borderColor: `${color}59`,
+        background: `${color}17`,
+        boxShadow: emphasised ? `0 0 0 4px ${color}12` : undefined,
+      }}
+    >
+      <Icon className="size-[1.05rem]" />
+    </span>
+  );
+}
+
+/** Player / assist line under an event's label. Team is encoded by which side
+ *  of the spine the row sits on, so it isn't repeated as text here. */
+function EventDetail({ event }: { event: MatchEvent }) {
+  if (event.type === "substitution") {
+    return (
+      <span className="text-fg-2">
+        {event.player_name ?? "Unknown player"}
+        <span className="text-fg-3"> for </span>
+        {event.related_player_name ?? "Unknown player"}
+      </span>
+    );
+  }
+  return <span className="text-fg-2">{event.player_name ?? "Unknown player"}</span>;
+}
 
 function EventRow({
   event,
+  homeTeam,
+  awayTeam,
   last,
   index,
 }: {
   event: MatchEvent;
+  homeTeam: string | null;
+  awayTeam: string | null;
   last: boolean;
   index: number;
 }) {
-  const { Icon, color, label } = eventVisual(event.type);
-  const teamColor = event.team ? teamIdentity(event.team).color : color;
+  // Event → side of the spine. Team names come from the same snapshot as
+  // home/away, so an exact match is expected; anything unmatched (or teamless,
+  // e.g. the full-time whistle) sits centred on the spine.
+  const side: "home" | "away" | "center" =
+    event.team && event.team === awayTeam
+      ? "away"
+      : event.team && event.team === homeTeam
+        ? "home"
+        : "center";
+  const teamColor =
+    side === "away"
+      ? teamIdentity(awayTeam).color
+      : side === "home"
+        ? teamIdentity(homeTeam).color
+        : "#a0a0aa";
 
-  // Feeder detail refinements: penalty goals, injury severity, injury subs.
-  const extra = event.extra ?? {};
-  let displayLabel = label;
-  if (event.type === "goal" && extra.penalty === true) {
-    displayLabel = "Goal (Penalty)";
-  } else if (event.type === "injury") {
-    displayLabel =
-      extra.severity === "forced_off" ? "Injury · Forced Off" : "Injury · Knock";
-  } else if (event.type === "substitution" && extra.reason === "injury") {
-    displayLabel = "Substitution · Injury";
-  }
+  const visual = eventVisual(event.type);
+  const label = eventLabel(event, visual.label);
+  const emphasised = event.type === "goal" || event.type === "shootout_goal";
+
+  // Shootout kicks carry a synthetic minute (past 120') — show a dot, not "121'".
+  const minute = isShootoutEvent(event)
+    ? null
+    : event.minute != null
+      ? `${event.minute}'`
+      : null;
+
+  const node = (
+    <span
+      className="relative z-10 grid min-w-9 place-items-center rounded-full border bg-surface-1 px-2 py-1 font-display text-sm leading-none tracking-[-0.02em] tabular-nums text-fg-2"
+      style={{ borderColor: side === "center" ? undefined : `${teamColor}40` }}
+    >
+      {minute ?? <span className="size-1.5 rounded-full bg-fg-3" />}
+    </span>
+  );
+
+  const content = (
+    <div className="min-w-0">
+      <div
+        className="font-sans text-sm font-700 uppercase tracking-[0.5px]"
+        style={{ color: emphasised ? visual.color : "var(--color-fg-1)" }}
+      >
+        {label}
+      </div>
+      <div className="mt-0.5 truncate text-xs">
+        <EventDetail event={event} />
+      </div>
+    </div>
+  );
 
   return (
     <li
-      className="pop-in relative flex gap-4 pb-5 last:pb-0"
+      className="pop-in relative grid grid-cols-[1fr_3.5rem_1fr] items-start gap-3 pb-6 last:pb-0"
       style={{ animationDelay: `${Math.min(index, 10) * 45}ms` }}
     >
-      {/* timeline spine — fades out toward the end of the feed */}
+      {/* Continuous centre spine — masked at each node, broken at phase
+          boundaries and the feed's end (see `last`). */}
       {!last && (
         <span
           aria-hidden
-          className="absolute left-[1.4rem] top-11 bottom-0 w-px"
+          className="absolute top-9 bottom-0 left-1/2 w-px -translate-x-1/2"
           style={{
             background:
               "linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))",
@@ -50,50 +146,28 @@ function EventRow({
         />
       )}
 
-      <span className="w-8 shrink-0 pt-1.5 text-right font-display text-lg leading-none tracking-[-0.02em] tabular-nums text-fg-2">
-        {/* Shootout kicks have a synthetic minute — blank gutter, not "121'". */}
-        {isShootoutEvent(event)
-          ? null
-          : event.minute != null
-            ? `${event.minute}'`
-            : "—"}
-      </span>
-
-      <span
-        className="relative z-10 grid size-9 shrink-0 place-items-center rounded-full border"
-        style={{
-          color,
-          borderColor: `${color}59`,
-          background: `${color}17`,
-        }}
-      >
-        <Icon className="size-[1.05rem]" />
-      </span>
-
-      <div className="min-w-0 flex-1 pt-0.5">
-        <div className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-          {displayLabel}
+      {side === "center" ? (
+        <div className="col-span-3 flex flex-col items-center gap-2 text-center">
+          <EventGlyph visual={visual} emphasised={emphasised} />
+          {content}
         </div>
-        <div className="mt-0.5 truncate text-xs text-fg-3">
-          {event.type === "substitution" ? (
-            <span className="text-fg-2">
-              {event.player_name ?? "Unknown player"}
-              {" on for "}
-              {event.related_player_name ?? "Unknown player"}
-            </span>
-          ) : (
-            <span className="text-fg-2">
-              {event.player_name ?? "Unknown player"}
-            </span>
-          )}
-          {event.team && (
-            <>
-              {" · "}
-              <span style={{ color: teamColor }}>{event.team}</span>
-            </>
-          )}
-        </div>
-      </div>
+      ) : side === "home" ? (
+        <>
+          <div className="col-start-1 flex items-start justify-end gap-3 pt-0.5 text-right">
+            {content}
+            <EventGlyph visual={visual} emphasised={emphasised} />
+          </div>
+          <div className="col-start-2 flex justify-center pt-1">{node}</div>
+        </>
+      ) : (
+        <>
+          <div className="col-start-2 flex justify-center pt-1">{node}</div>
+          <div className="col-start-3 flex items-start justify-start gap-3 pt-0.5 text-left">
+            <EventGlyph visual={visual} emphasised={emphasised} />
+            {content}
+          </div>
+        </>
+      )}
     </li>
   );
 }
@@ -118,7 +192,7 @@ function PhaseDivider({
 }) {
   return (
     <li
-      className="pop-in flex items-center gap-3 pb-5"
+      className="pop-in flex items-center gap-3 pb-6"
       style={{ animationDelay: `${Math.min(index, 10) * 45}ms` }}
     >
       <span
@@ -151,9 +225,49 @@ function PhaseDivider({
   );
 }
 
+/** Home/away header rail sitting above the timeline, anchoring which side each
+ *  branch of the spine belongs to. */
+function TeamAxis({
+  home,
+  away,
+}: {
+  home: string | null;
+  away: string | null;
+}) {
+  const homeColor = teamIdentity(home ?? "Home").color;
+  const awayColor = teamIdentity(away ?? "Away").color;
+  return (
+    <div className="mb-5 grid grid-cols-[1fr_3.5rem_1fr] items-center gap-3">
+      <div className="flex items-center justify-end gap-2 truncate text-right">
+        <span className="truncate font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+          {home ?? "Home"}
+        </span>
+        <span
+          aria-hidden
+          className="size-2.5 shrink-0 rounded-full"
+          style={{ background: homeColor }}
+        />
+      </div>
+      <div aria-hidden className="mx-auto h-4 w-px bg-white/10" />
+      <div className="flex items-center justify-start gap-2 truncate text-left">
+        <span
+          aria-hidden
+          className="size-2.5 shrink-0 rounded-full"
+          style={{ background: awayColor }}
+        />
+        <span className="truncate font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+          {away ?? "Away"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function EventFeed() {
   const events = useMatchStore((s) => s.events);
   const shootout = useMatchStore((s) => s.shootout);
+  const homeTeam = useMatchStore((s) => s.homeTeam);
+  const awayTeam = useMatchStore((s) => s.awayTeam);
 
   // Most recent first for a live ticker feel, with phase dividers (shootout /
   // extra time / full-time boundary) inserted once the match crosses 90'.
@@ -184,22 +298,27 @@ export function EventFeed() {
           hint="Goals, cards and assists will stream here live."
         />
       ) : (
-        <ul>
-          {items.map((item, idx) =>
-            item.kind === "divider" ? (
-              <PhaseDivider key={item.id} item={item} index={idx} />
-            ) : (
-              <EventRow
-                key={item.event.event_id}
-                event={item.event}
-                // Spine only continues into the next row when it's an event —
-                // it breaks at phase dividers and at the end of the feed.
-                last={items[idx + 1]?.kind !== "event"}
-                index={idx}
-              />
-            ),
-          )}
-        </ul>
+        <>
+          <TeamAxis home={homeTeam} away={awayTeam} />
+          <ul>
+            {items.map((item, idx) =>
+              item.kind === "divider" ? (
+                <PhaseDivider key={item.id} item={item} index={idx} />
+              ) : (
+                <EventRow
+                  key={item.event.event_id}
+                  event={item.event}
+                  homeTeam={homeTeam}
+                  awayTeam={awayTeam}
+                  // Spine only continues into the next row when it's an event —
+                  // it breaks at phase dividers and the feed's end.
+                  last={items[idx + 1]?.kind !== "event"}
+                  index={idx}
+                />
+              ),
+            )}
+          </ul>
+        </>
       )}
     </Panel>
   );
