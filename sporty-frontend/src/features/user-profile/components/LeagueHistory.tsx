@@ -31,12 +31,12 @@ const SPORT_META: Record<
 
 export function LeagueHistory({ leagues }: LeagueHistoryProps) {
   return (
-    <section className="overflow-hidden card-surface">
+    <section className="flex h-full flex-col overflow-hidden card-surface">
       <header className="border-b border-white/7 px-5 py-4">
         <p className="section-label">League History</p>
       </header>
 
-      <div className="max-h-80 overflow-y-auto px-5">
+      <div className="max-h-[32rem] min-h-0 flex-1 overflow-y-auto px-5">
         {leagues.length === 0 ? (
           <p className="py-5 text-sm text-fg-3">Not in any leagues yet.</p>
         ) : (

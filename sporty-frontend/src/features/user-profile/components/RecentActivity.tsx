@@ -145,7 +145,7 @@ export function RecentActivity({
   }, [activeFilter, recentActivity]);
 
   return (
-    <section className="overflow-hidden card-surface">
+    <section className="flex h-full flex-col overflow-hidden card-surface">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/7 px-5 py-4">
         <p className="section-label">Recent Activity</p>
         <div className="flex flex-wrap gap-1.5">
@@ -166,7 +166,7 @@ export function RecentActivity({
         </div>
       </div>
 
-      <div className="max-h-[32rem] overflow-y-auto px-5">
+      <div className="max-h-[32rem] min-h-0 flex-1 overflow-y-auto px-5">
         {isLoading && (
           <div className="my-5 space-y-3">
             {Array.from({ length: 3 }, (_, index) => (
