@@ -24,7 +24,26 @@ type PlayerCardProps = {
   avgPoints: number;
   gameweekPoints: number;
   teamName?: string;
+  isCaptain?: boolean;
+  isViceCaptain?: boolean;
 };
+
+// Captain wears the armband and doubles their score; vice is the fallback.
+function Armband({ letter, active }: { letter: "C" | "V"; active: boolean }) {
+  return (
+    <span
+      className={`inline-flex size-5 shrink-0 items-center justify-center rounded-full font-display text-[11px] font-800 leading-none ${
+        active
+          ? "bg-accent text-surface-0"
+          : "border border-white/15 text-fg-2"
+      }`}
+      title={active ? "Captain" : "Vice-captain"}
+      aria-label={active ? "Captain" : "Vice-captain"}
+    >
+      {letter}
+    </span>
+  );
+}
 
 const SPORT_META: Record<Sport, { Icon: typeof FootballGlyph; color: string; label: string }> = {
   football: { Icon: FootballGlyph, color: "#00ff88", label: "Football" },
@@ -44,6 +63,8 @@ export function PlayerCard({
   totalPoints,
   avgPoints,
   gameweekPoints,
+  isCaptain,
+  isViceCaptain,
 }: PlayerCardProps) {
   const meta = SPORT_META[sport];
   const Icon = meta.Icon;
@@ -61,6 +82,11 @@ export function PlayerCard({
             <p className="truncate font-sans text-base font-700 uppercase tracking-[1px] text-fg-1">
               {name}
             </p>
+            {isCaptain ? (
+              <Armband letter="C" active />
+            ) : isViceCaptain ? (
+              <Armband letter="V" active={false} />
+            ) : null}
             <span className="shrink-0 font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-3">
               {position}
             </span>

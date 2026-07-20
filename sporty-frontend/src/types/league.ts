@@ -103,6 +103,12 @@ export type TLeague = {
     rank: number | null;
     points: number | null;
     points_deducted: number | null;
+    // Attention/triage fields (leagues list). lineup_deadline_at is the next
+    // not-yet-locked gameweek's XI deadline (null when the season is over);
+    // has_lineup = user already set that XI; live = a gameweek is in progress.
+    lineup_deadline_at?: string | null;
+    has_lineup?: boolean;
+    live?: boolean;
   };
 };
 

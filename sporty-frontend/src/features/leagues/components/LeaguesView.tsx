@@ -1,55 +1,103 @@
 "use client";
 
 import Link from "next/link";
-import { useMe } from "@/hooks/auth/useMe";
+import { useMemo } from "react";
 import { useMyLeagues } from "@/hooks/leagues/useLeagues";
+import { useRelativeTime } from "@/hooks/general/useRelativeTime";
 import {
-  LeagueCard,
+  LeagueRow,
+  type LeagueRowItem,
+  type LeagueRowState,
   type Sport,
-} from "@/features/leagues/components/LeagueCard";
-import { StatsRow } from "@/features/leagues/components/StatsRow";
+} from "./LeagueRow";
 import { EmptyState, ErrorState, PageHeader } from "@/components/ui";
 import { Trophy } from "lucide-react";
-import { LeagueCardSkeleton } from "@/components/ui/skeletons";
+import { PlayerCardSkeleton } from "@/components/ui/skeletons";
+
+type Group = {
+  key: LeagueRowState;
+  label: string;
+  hint: string;
+  leagues: LeagueRowItem[];
+};
+
+// Order matters — this is the triage order the page renders top to bottom.
+const GROUP_ORDER: { key: LeagueRowState; label: string; hint: string }[] = [
+  { key: "action", label: "Needs action", hint: "Set your lineup before it locks" },
+  { key: "live", label: "Live now", hint: "A gameweek is in progress" },
+  { key: "settled", label: "Your leagues", hint: "Nothing needs you right now" },
+];
+
+function deriveState(league: LeagueRowItem, nowMs: number): LeagueRowState {
+  if (league.live) return "live";
+  const deadlineMs = league.lineupDeadlineAt
+    ? new Date(league.lineupDeadlineAt).getTime()
+    : null;
+  const editable = deadlineMs != null && deadlineMs > nowMs;
+  if (editable && !league.hasLineup) return "action";
+  return "settled";
+}
 
 export function LeaguesView() {
-  const { username } = useMe();
   const { data: leaguesData, isLoading, isError } = useMyLeagues();
+  // One shared clock for every row's countdown / live derivation.
+  const nowMs = useRelativeTime({ refreshIntervalMs: 30_000 });
 
-  const userName = username || "Sporty User";
+  const leagues: LeagueRowItem[] = useMemo(
+    () =>
+      (leaguesData || []).map((l) => ({
+        id: l.id,
+        name: l.name,
+        // A league with more than one sport is multisport, not its first sport.
+        sport:
+          (l.sports?.length ?? 0) > 1
+            ? ("multisport" as Sport)
+            : ((l.sports?.[0]?.sport.name as Sport) || "multisport"),
+        teamName: l.my_team?.name || "No team yet",
+        memberCount: l.member_count,
+        rank: l.my_team?.rank ?? 0,
+        points: Number(l.my_team?.points ?? 0),
+        lineupDeadlineAt: l.my_team?.lineup_deadline_at ?? null,
+        hasLineup: Boolean(l.my_team?.has_lineup),
+        live: Boolean(l.my_team?.live),
+      })),
+    [leaguesData],
+  );
 
-  const leagues = (leaguesData || []).map((l) => ({
-    id: l.id,
-    name: l.name,
-    // A league with more than one sport is multisport, not its first sport.
-    sport:
-      (l.sports?.length ?? 0) > 1
-        ? ("multisport" as Sport)
-        : ((l.sports?.[0]?.sport.name as Sport) || "multisport"),
-    memberCount: l.member_count,
-    yourRank: l.my_team?.rank ?? 0,
-    teamName: l.my_team?.name || "No Team",
-    points: Number(l.my_team?.points ?? 0),
-  }));
+  const groups: Group[] = useMemo(() => {
+    const buckets: Record<LeagueRowState, LeagueRowItem[]> = {
+      action: [],
+      live: [],
+      settled: [],
+    };
+    for (const league of leagues) {
+      buckets[deriveState(league, nowMs)].push(league);
+    }
+    // Action: soonest deadline first. Others: best rank first (unranked last).
+    buckets.action.sort(
+      (a, b) =>
+        new Date(a.lineupDeadlineAt ?? 0).getTime() -
+        new Date(b.lineupDeadlineAt ?? 0).getTime(),
+    );
+    const byRank = (a: LeagueRowItem, b: LeagueRowItem) =>
+      (a.rank || Infinity) - (b.rank || Infinity) || b.points - a.points;
+    buckets.live.sort(byRank);
+    buckets.settled.sort(byRank);
 
-  const rankedPositions = leagues
-    .map((l) => l.yourRank)
-    .filter((rank) => rank > 0);
+    return GROUP_ORDER.map((g) => ({ ...g, leagues: buckets[g.key] })).filter(
+      (g) => g.leagues.length > 0,
+    );
+  }, [leagues, nowMs]);
 
-  const stats = {
-    totalLeagues: leagues.length,
-    highestRank: rankedPositions.length ? Math.min(...rankedPositions) : 0,
-    // Round the client-side sum: adding backend-rounded floats reintroduces
-    // FP noise (0 + 55.2 + 9 + 29.6 + 5 === 98.80000000000001).
-    totalPoints: Math.round(leagues.reduce((sum, l) => sum + l.points, 0) * 10) / 10,
-  };
+  // A single league doesn't need triage headers — just show the row.
+  const showGroupHeaders = leagues.length > 1 && groups.length > 0;
+  let rowIndex = 0;
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 text-fg-1 sm:px-6 lg:px-8 lg:py-10">
+    <section className="mx-auto max-w-4xl px-4 py-8 text-fg-1 sm:px-6 lg:py-10">
       <PageHeader
-        eyebrow={`Welcome back, ${userName}`}
         title="My Leagues"
-        subtitle="Your fantasy leagues at a glance"
+        subtitle="What needs you, first"
         actions={
           <>
             <Link
@@ -69,18 +117,10 @@ export function LeaguesView() {
       />
 
       <div className="mt-8">
-        <StatsRow
-          totalLeagues={stats.totalLeagues}
-          highestRank={stats.highestRank}
-          totalPoints={stats.totalPoints}
-        />
-      </div>
-
-      <div className="mt-8">
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }, (_, index) => (
-              <LeagueCardSkeleton key={index} />
+          <div className="space-y-2">
+            {Array.from({ length: 5 }, (_, index) => (
+              <PlayerCardSkeleton key={index} />
             ))}
           </div>
         ) : isError ? (
@@ -96,19 +136,29 @@ export function LeaguesView() {
             ]}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {leagues.map((league, index) => (
-              <LeagueCard
-                key={league.id}
-                id={league.id}
-                name={league.name}
-                sport={league.sport}
-                memberCount={league.memberCount}
-                yourRank={league.yourRank}
-                teamName={league.teamName}
-                points={league.points}
-                animationDelay={index * 70}
-              />
+          <div className="space-y-8">
+            {groups.map((group) => (
+              <div key={group.key} className="space-y-2.5">
+                {showGroupHeaders && (
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h2 className="section-label">{group.label}</h2>
+                    <span className="hidden text-xs text-fg-3 sm:block">
+                      {group.hint}
+                    </span>
+                  </div>
+                )}
+                <div className="space-y-2">
+                  {group.leagues.map((league) => (
+                    <LeagueRow
+                      key={league.id}
+                      league={league}
+                      state={group.key}
+                      nowMs={nowMs}
+                      animationDelay={rowIndex++ * 60}
+                    />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}

@@ -19,6 +19,9 @@ export type MyTeamPlayerView = {
   totalPoints: number;
   avgPoints: number;
   gameweekPoints: number;
+  isStarter: boolean;
+  isCaptain: boolean;
+  isViceCaptain: boolean;
 };
 
 export type MyTeamLeagueView = {
@@ -27,4 +30,7 @@ export type MyTeamLeagueView = {
   sports: Sport[];
   players: MyTeamPlayerView[];
   teamName: string;
+  // True once we have real starter/bench data from the lineup endpoint. When
+  // false the squad is shown as one group (roster-only / no lineup set yet).
+  hasLineupSplit: boolean;
 };

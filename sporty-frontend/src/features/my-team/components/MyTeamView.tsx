@@ -1,63 +1,13 @@
 "use client";
 
 import { Trophy, Users } from "lucide-react";
-import { EmptyState, ErrorState, Select } from "@/components/ui";
+import { EmptyState, ErrorState } from "@/components/ui";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import { EmptyTeamState } from "./EmptyTeamState";
 import { LeagueGroup } from "./LeagueGroup";
-import { TeamHeader } from "./TeamHeader";
-import type { MyTeamLeagueView, MyTeamPlayerView, LeagueOption } from "../types";
-
-function SquadStats({ players }: { players: MyTeamPlayerView[] }) {
-  const totalPoints = players.reduce((sum, p) => sum + p.totalPoints, 0);
-  const squadValue = players.reduce((sum, p) => sum + (Number(p.cost) || 0), 0);
-  // "Top Scorer" is this gameweek's leader, not the season leader — otherwise
-  // it just duplicates the "Total Points" stat next to it.
-  const topScorer = players.reduce<MyTeamPlayerView | null>(
-    (best, p) => (best === null || p.gameweekPoints > best.gameweekPoints ? p : best),
-    null,
-  );
-
-  return (
-    <section className="card-surface px-5 py-4 sm:px-6 sm:py-5">
-      <div className="flex flex-wrap items-end gap-x-8 gap-y-4">
-        <div>
-          <p className="num font-display text-5xl leading-none tracking-[-0.02em] text-accent sm:text-6xl">
-            {Math.round(totalPoints)}
-          </p>
-          <p className="section-label mt-1.5">Total Points</p>
-        </div>
-
-        <span className="hidden h-10 w-px bg-white/8 sm:block" />
-
-        <div>
-          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
-            {players.length}
-          </p>
-          <p className="section-label mt-1.5">Players</p>
-        </div>
-
-        <div>
-          <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
-            £{squadValue.toFixed(1)}M
-          </p>
-          <p className="section-label mt-1.5">Squad Value</p>
-        </div>
-
-        {topScorer && (
-          <div>
-            <p className="num font-display text-2xl leading-none tracking-[-0.02em] text-fg-1">
-              {Math.round(topScorer.gameweekPoints)}
-            </p>
-            <p className="section-label mt-1.5">
-              Top Scorer <span className="text-fg-3 normal-case">· {topScorer.name}</span>
-            </p>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
+import { PlayerCard } from "./PlayerCard";
+import { SquadSpine } from "./SquadSpine";
+import type { MyTeamLeagueView, LeagueOption } from "../types";
 
 type MyTeamViewProps = {
   username?: string;
@@ -66,6 +16,11 @@ type MyTeamViewProps = {
   selectedLeagueName: string;
   selectedTeamName?: string;
   teamLeague: MyTeamLeagueView | null;
+  rank: number | null;
+  seasonPoints: number;
+  lineupDeadlineAt: string | null;
+  hasLineup: boolean;
+  live: boolean;
   isLoading: boolean;
   isSwitching: boolean;
   hasLeagues: boolean;
@@ -78,9 +33,13 @@ type MyTeamViewProps = {
 export function MyTeamView({
   leagueOptions,
   activeLeague,
-  selectedLeagueName,
   selectedTeamName,
   teamLeague,
+  rank,
+  seasonPoints,
+  lineupDeadlineAt,
+  hasLineup,
+  live,
   isLoading,
   isSwitching,
   hasLeagues,
@@ -89,66 +48,32 @@ export function MyTeamView({
   selectedTeamError,
   onLeagueChange,
 }: MyTeamViewProps) {
-  const leagueSelector = hasLeagues ? (
-    leagueOptions.length <= 4 ? (
-      <div className="flex flex-wrap gap-2">
-        {leagueOptions.map((league) => {
-          const isActive = league.id === activeLeague?.id;
-
-          return (
-            <button
-              key={league.id}
-              type="button"
-              onClick={() => onLeagueChange(league.id)}
-              className={`rounded-[3px] border px-4 py-2.5 text-left transition-colors ${
-                isActive
-                  ? "border-accent/35 bg-accent/8"
-                  : "border-white/8 bg-surface-1 hover:border-white/16"
-              }`}
-              aria-pressed={isActive}
-            >
-              <span
-                className={`block font-sans text-sm font-700 uppercase tracking-[0.5px] ${
-                  isActive ? "text-accent" : "text-fg-1"
-                }`}
-              >
-                {league.name}
-              </span>
-              <span className="block text-xs text-fg-3">
-                {league.teamName ?? "No team yet"}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    ) : (
-      <div className="max-w-xl">
-        <Select
-          label="Select league"
-          value={activeLeague?.id ?? ""}
-          onChange={onLeagueChange}
-          className="w-full"
-          options={leagueOptions.map((league) => ({
-            value: league.id,
-            label: league.label,
-          }))}
-        />
-      </div>
-    )
-  ) : null;
+  const players = teamLeague?.players ?? [];
+  const starters = players.filter((p) => p.isStarter);
+  const bench = players.filter((p) => !p.isStarter);
+  const startersLabel = teamLeague?.hasLineupSplit ? "Starting XI" : "Squad";
 
   return (
-    <section className="mx-auto max-w-6xl space-y-6 px-6 py-8 text-fg-1">
-      <TeamHeader
-        leagueName={selectedLeagueName}
-        teamName={selectedTeamName}
-      />
-
-      {leagueSelector}
+    <section className="mx-auto max-w-6xl space-y-6 px-4 py-8 text-fg-1 sm:px-6">
+      {hasLeagues && (
+        <SquadSpine
+          leagueOptions={leagueOptions}
+          activeLeague={activeLeague}
+          teamName={selectedTeamName}
+          players={players}
+          rank={rank}
+          seasonPoints={seasonPoints}
+          lineupDeadlineAt={lineupDeadlineAt}
+          hasLineup={hasLineup}
+          live={live}
+          isSwitching={isSwitching}
+          onLeagueChange={onLeagueChange}
+        />
+      )}
 
       {isLoading ? (
         <div className="space-y-2">
-          {Array.from({ length: 5 }, (_, index) => (
+          {Array.from({ length: 6 }, (_, index) => (
             <PlayerCardSkeleton key={index} />
           ))}
         </div>
@@ -166,29 +91,57 @@ export function MyTeamView({
         />
       ) : isEmptyTeam ? (
         <EmptyTeamState leagueId={activeLeague?.id} />
-      ) : teamLeague && teamLeague.players.length > 0 ? (
+      ) : teamLeague && players.length > 0 ? (
         <div
           className={`space-y-6 transition-opacity duration-200 ${
             isSwitching ? "opacity-50" : ""
           }`}
           aria-busy={isSwitching}
         >
-          <SquadStats players={teamLeague.players} />
           <section className="overflow-hidden card-surface">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
-              <span className="section-label">Squad</span>
+              <span className="section-label">{startersLabel}</span>
               <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
-                {teamLeague.teamName}
+                {starters.length} {starters.length === 1 ? "player" : "players"}
               </span>
             </header>
             <div className="p-5">
               <LeagueGroup
                 leagueName={teamLeague.leagueName}
-                players={teamLeague.players}
+                players={starters}
                 sports={teamLeague.sports}
               />
             </div>
           </section>
+
+          {bench.length > 0 && (
+            <section className="overflow-hidden card-surface opacity-[0.85]">
+              <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
+                <span className="section-label">Bench</span>
+                <span className="font-sans text-xs font-700 uppercase tracking-[1px] text-fg-3">
+                  {bench.length}
+                </span>
+              </header>
+              <div className="space-y-2 p-5">
+                {bench.map((player) => (
+                  <PlayerCard
+                    key={player.id}
+                    id={player.id}
+                    name={player.name}
+                    sport={player.sport}
+                    position={player.position}
+                    realTeam={player.realTeam}
+                    photoUrl={player.photoUrl}
+                    realTeamLogoUrl={player.realTeamLogoUrl}
+                    cost={player.cost}
+                    totalPoints={player.totalPoints}
+                    avgPoints={player.avgPoints}
+                    gameweekPoints={player.gameweekPoints}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
         </div>
       ) : (
         <EmptyState

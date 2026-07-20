@@ -58,8 +58,10 @@ import {
 
 
 export const useLineup = (leagueId: string) => {
-  return useApiQuery(["leagues", leagueId, "lineup"], () =>
-    LeagueService.getLineup(leagueId),
+  return useApiQuery(
+    ["leagues", leagueId, "lineup"],
+    () => LeagueService.getLineup(leagueId),
+    { enabled: !!leagueId },
   );
 };
 

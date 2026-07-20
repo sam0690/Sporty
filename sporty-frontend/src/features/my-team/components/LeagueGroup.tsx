@@ -24,6 +24,8 @@ type LeaguePlayer = {
   avgPoints: number;
   gameweekPoints: number;
   teamName?: string;
+  isCaptain?: boolean;
+  isViceCaptain?: boolean;
 };
 
 type LeagueGroupProps = {
@@ -124,6 +126,8 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
                   avgPoints={player.avgPoints}
                   gameweekPoints={player.gameweekPoints}
                   teamName={player.teamName}
+                  isCaptain={player.isCaptain}
+                  isViceCaptain={player.isViceCaptain}
                 />
               ))}
             </div>
