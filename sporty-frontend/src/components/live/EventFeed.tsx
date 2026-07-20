@@ -114,13 +114,37 @@ function EventRow({
     </span>
   );
 
+  // Running score stamped onto the goal by the feeder (extra.score_home/away) —
+  // turns the timeline into a scoreboard. Absent on non-goals and older feeds.
+  const score =
+    emphasised &&
+    typeof event.extra?.score_home === "number" &&
+    typeof event.extra?.score_away === "number"
+      ? `${event.extra.score_home}–${event.extra.score_away}`
+      : null;
+
   const content = (
     <div className="min-w-0">
       <div
-        className="font-sans text-sm font-700 uppercase tracking-[0.5px]"
-        style={{ color: emphasised ? visual.color : "var(--color-fg-1)" }}
+        className={`flex items-center gap-2 ${
+          side === "home"
+            ? "justify-end"
+            : side === "away"
+              ? "justify-start"
+              : "justify-center"
+        }`}
       >
-        {label}
+        <span
+          className="font-sans text-sm font-700 uppercase tracking-[0.5px]"
+          style={{ color: emphasised ? visual.color : "var(--color-fg-1)" }}
+        >
+          {label}
+        </span>
+        {score && (
+          <span className="rounded-[3px] bg-white/8 px-1.5 py-0.5 font-display text-xs leading-none tracking-[-0.02em] tabular-nums text-fg-1">
+            {score}
+          </span>
+        )}
       </div>
       <div className="mt-0.5 truncate text-xs">
         <EventDetail event={event} />
