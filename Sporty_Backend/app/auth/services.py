@@ -67,6 +67,16 @@ def _build_tokens(db: Session, user: User) -> TokenResponse:
     return TokenResponse(access_token=access_token, refresh_token=raw_refresh)
 
 
+def is_username_available(db: Session, username: str) -> bool:
+    """Whether `username` is free to register. Mirrors the exact-match check in
+    `register` (usernames are case-sensitive-unique at the DB level). Blank or
+    out-of-range input is reported unavailable so the client shows an error."""
+    username = (username or "").strip()
+    if not 3 <= len(username) <= 50:
+        return False
+    return db.query(User).filter(User.username == username).first() is None
+
+
 def _generate_unique_username(db: Session, base: str) -> str:
     """
     Generate a unique username from a base string (e.g. email prefix).

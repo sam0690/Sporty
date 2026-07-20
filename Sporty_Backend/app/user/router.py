@@ -143,6 +143,34 @@ def get_public_user_stats(user_id: uuid.UUID, db: Session = Depends(get_db)):
     return services.get_user_public_stats(db, user_id)
 
 
+@router.get(
+    "/by-username/{username}/public-stats",
+    response_model=UserPublicStatsResponse,
+    summary="Get a user's public profile stats by username",
+)
+def get_user_public_stats_by_username(
+    username: str,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_active_user),
+):
+    """Username-keyed variant of /{user_id}/public-stats — lets profile URLs
+    read /user/{username} instead of exposing the raw id."""
+    user = services.resolve_user_by_key(db, username)
+    return services.get_user_public_stats(db, user.id)
+
+
+@router.get(
+    "/public/by-username/{username}/stats",
+    response_model=UserPublicStatsResponse,
+    summary="Get a user's manager stats by username (no auth — shareable link)",
+)
+def get_public_user_stats_by_username(username: str, db: Session = Depends(get_db)):
+    """No-auth, username-keyed variant of /public/{user_id}/stats for shareable
+    /u/{username} links."""
+    user = services.resolve_user_by_key(db, username)
+    return services.get_user_public_stats(db, user.id)
+
+
 @router.patch("/{user_id}", response_model=UserProfileResponse, summary="Update user profile")
 def update_user(
     user_id: uuid.UUID,

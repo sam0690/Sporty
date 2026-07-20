@@ -10,7 +10,6 @@ import { LogoutConfirmationModal } from "@/components/dashboard/navigation/Logou
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
 import { isActiveRoute } from "@/lib/route.utils";
 import { cn } from "@/utils/classUtils";
-import { profileSlug } from "@/utils/profileSlug";
 
 export type DashboardNavItem = {
   label: string;
@@ -95,7 +94,7 @@ export function Sidebar({ items, userId, userName, avatarUrl }: SidebarProps) {
       {/* Bottom actions */}
       <div className="space-y-2 border-t border-white/8 p-3 lg:p-4">
         <Link
-          href={`/user/${profileSlug(userName, userId)}`}
+          href={`/user/${encodeURIComponent(userName || userId)}`}
           title={userName ? `View ${userName}'s profile` : "View profile"}
           className="flex items-center justify-center gap-2 rounded-[3px] px-1 py-2 hover:no-underline lg:justify-start"
         >

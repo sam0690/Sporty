@@ -19,6 +19,8 @@ export const API_PATHS = {
     GOOGLE_LINK: "/auth/google/link",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
+    USERNAME_AVAILABLE: (username: string) =>
+      `/auth/username-available?username=${encodeURIComponent(username)}`,
   },
 
   USERS: {
@@ -27,7 +29,11 @@ export const API_PATHS = {
     DETAIL: (id: string) => `/users/${id}`,
     ACTIVITY: (id: string) => `/users/${id}/activity`,
     PUBLIC_STATS: (id: string) => `/users/${id}/public-stats`,
+    PUBLIC_STATS_BY_USERNAME: (username: string) =>
+      `/users/by-username/${encodeURIComponent(username)}/public-stats`,
     PUBLIC_MANAGER_STATS: (id: string) => `/users/public/${id}/stats`,
+    PUBLIC_MANAGER_STATS_BY_USERNAME: (username: string) =>
+      `/users/public/by-username/${encodeURIComponent(username)}/stats`,
     UPDATE: (id: string) => `/users/${id}`,
     DELETE: (id: string) => `/users/${id}`,
     UPLOAD_AVATAR: (id: string) => `/users/${id}/avatar`,

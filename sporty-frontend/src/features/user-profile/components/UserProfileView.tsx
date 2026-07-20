@@ -11,9 +11,11 @@ import {
 } from "./RecentActivity";
 import { StatsCards } from "./StatsCards";
 import { ShareProfileButton } from "@/components/shared/ShareProfileButton";
-import { profileSlug } from "@/utils/profileSlug";
 import { useMe } from "@/hooks/auth/useMe";
-import { useUserActivity, useUserPublicStats } from "@/hooks/users/useUsers";
+import {
+  useUserActivity,
+  useUserPublicStatsByUsername,
+} from "@/hooks/users/useUsers";
 
 function toSport(value: string): LeagueRow["sport"] {
   if (
@@ -27,12 +29,13 @@ function toSport(value: string): LeagueRow["sport"] {
   return "football";
 }
 
-export function UserProfileView({ userId }: { userId?: string }) {
+export function UserProfileView({ username }: { username?: string }) {
   const { data: me } = useMe();
-  const targetUserId = userId ?? me?.id ?? "";
+  const resolvedUsername = username || me?.username || "";
 
   const { data: stats, isLoading: statsLoading } =
-    useUserPublicStats(targetUserId);
+    useUserPublicStatsByUsername(resolvedUsername);
+  const targetUserId = stats?.user_id ?? "";
   const {
     data: activityFeed,
     isLoading: activityLoading,
@@ -55,12 +58,12 @@ export function UserProfileView({ userId }: { userId?: string }) {
     <section className="mx-auto w-full max-w-7xl px-6 py-8 text-fg-1">
       <div className="mb-6 flex items-center justify-between">
         <p className="section-label">
-          {targetUserId === me?.id ? "Your Profile" : "Player Profile"}
+          {targetUserId && targetUserId === me?.id
+            ? "Your Profile"
+            : "Player Profile"}
         </p>
-        {targetUserId && (
-          <ShareProfileButton
-            path={`/u/${profileSlug(stats?.username, targetUserId)}`}
-          />
+        {resolvedUsername && (
+          <ShareProfileButton path={`/u/${resolvedUsername}`} />
         )}
       </div>
 

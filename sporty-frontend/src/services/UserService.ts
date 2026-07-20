@@ -261,11 +261,38 @@ export const UserService = {
     return unwrapResponseData(res.data);
   },
 
+  /** Username-keyed variant — powers /user/{username} profile URLs. */
+  async getUserPublicStatsByUsername(
+    username: string,
+  ): Promise<TUserPublicStats> {
+    const res = await authApi.get(
+      API_PATHS.USERS.PUBLIC_STATS_BY_USERNAME(username),
+    );
+    return unwrapResponseData(res.data);
+  },
+
   /** Same data as getUserPublicStats, no login required — for shareable
-   * manager-profile links (/u/[id]). */
+   * manager-profile links (/u/[username]). */
   async getPublicManagerStats(id: string): Promise<TUserPublicStats> {
     const res = await publicApi.get(API_PATHS.USERS.PUBLIC_MANAGER_STATS(id));
     return unwrapResponseData(res.data);
+  },
+
+  async getPublicManagerStatsByUsername(
+    username: string,
+  ): Promise<TUserPublicStats> {
+    const res = await publicApi.get(
+      API_PATHS.USERS.PUBLIC_MANAGER_STATS_BY_USERNAME(username),
+    );
+    return unwrapResponseData(res.data);
+  },
+
+  /** Whether a username is free to register (live sign-up check). */
+  async isUsernameAvailable(username: string): Promise<boolean> {
+    const res = await publicApi.get<{ available: boolean }>(
+      API_PATHS.AUTH.USERNAME_AVAILABLE(username),
+    );
+    return unwrapResponseData(res.data).available;
   },
 
   async getUserActivity(id: string): Promise<TUserActivityItem[]> {

@@ -129,6 +129,13 @@ def _clear_auth_cookies(response: Response) -> None:
 
 # ── Public endpoints (no token required) ──────────────────────────────────────
 
+@router.get("/username-available", summary="Check whether a username is free")
+def username_available(username: str, db: Session = Depends(get_db)):
+    # ponytail: unauthenticated username-enumeration is acceptable here —
+    # usernames are already public on profile pages. Add a rate limit if abused.
+    return {"available": services.is_username_available(db, username)}
+
+
 @router.post("/register", response_model=RegisterResponse)
 def register(data: RegisterRequest, response: Response, db: Session = Depends(get_db)):
     """Register a new user. Set auto_login=true to receive tokens immediately."""

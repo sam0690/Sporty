@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { PublicManagerProfileView } from "@/features/user-profile/components/PublicManagerProfileView";
-import { idFromSlug } from "@/utils/profileSlug";
 
 export const metadata: Metadata = {
   title: "Manager Profile | Sporty",
@@ -11,8 +10,8 @@ export const metadata: Metadata = {
 export default async function PublicManagerPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ username: string }>;
 }) {
-  const { id } = await params;
-  return <PublicManagerProfileView userId={idFromSlug(id)} />;
+  const { username } = await params;
+  return <PublicManagerProfileView username={decodeURIComponent(username)} />;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Lock, Mail, User } from "lucide-react";
+import { CheckCircle2, Loader2, Lock, Mail, User } from "lucide-react";
 import { Button } from "@/components/ui";
 import { AuthCard, AuthLink } from "@/components/auth/shared/AuthCard";
 import { AuthTextField, ButtonSpinner } from "@/components/auth/shared/AuthTextField";
@@ -16,6 +16,7 @@ export function SignUpForm() {
     register: registerField,
     formState,
     password,
+    usernameStatus,
     showPassword,
     setShowPassword,
     showConfirmPassword,
@@ -54,7 +55,20 @@ export function SignUpForm() {
               autoComplete: "username",
               ...registerField("username"),
             }}
-          />
+          >
+            {usernameStatus === "checking" && (
+              <span className="mt-1 flex items-center gap-1.5 text-xs text-fg-3">
+                <Loader2 className="size-3.5 animate-spin" />
+                Checking availability…
+              </span>
+            )}
+            {usernameStatus === "available" && (
+              <span className="mt-1 flex items-center gap-1.5 text-xs text-success">
+                <CheckCircle2 className="size-3.5" />
+                Username is available
+              </span>
+            )}
+          </AuthTextField>
 
           <AuthTextField
             id="email"

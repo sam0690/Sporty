@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { LeagueHistory, type LeagueRow } from "./LeagueHistory";
 import { ProfileHeader } from "./ProfileHeader";
 import { StatsCards } from "./StatsCards";
-import { usePublicManagerStats } from "@/hooks/users/useUsers";
+import { usePublicManagerStatsByUsername } from "@/hooks/users/useUsers";
 
 function toSport(value: string): LeagueRow["sport"] {
   if (
@@ -23,8 +23,8 @@ function toSport(value: string): LeagueRow["sport"] {
 /** Shareable, no-login manager profile — reached via /u/[id]. Reuses the
  * same building blocks as the in-app profile (UserProfileView), minus the
  * activity feed (too noisy/private for a public share page). */
-export function PublicManagerProfileView({ userId }: { userId: string }) {
-  const { data: stats, isLoading } = usePublicManagerStats(userId);
+export function PublicManagerProfileView({ username }: { username: string }) {
+  const { data: stats, isLoading } = usePublicManagerStatsByUsername(username);
 
   const leagues = useMemo<LeagueRow[]>(
     () =>

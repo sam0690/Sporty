@@ -63,6 +63,21 @@ def _league_payload(team: FantasyTeam) -> dict:
     }
 
 
+def resolve_user_by_key(db: Session, key: str) -> User:
+    """Resolve a user by username (the primary, unique key used in profile
+    URLs). Falls back to UUID lookup so legacy id-based share links still work.
+    404 if neither matches."""
+    user = db.query(User).filter(User.username == key).first()
+    if user is None:
+        try:
+            user = db.query(User).filter(User.id == uuid.UUID(key)).first()
+        except (ValueError, TypeError):
+            user = None
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+
 def get_user_public_stats(db: Session, user_id: uuid.UUID) -> dict:
     """Public profile stats for ANY user: their leagues with per-league points
     and best rank, plus aggregate totals. Unlike the dashboard, this is keyed by

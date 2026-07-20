@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-import { profileSlug } from "@/utils/profileSlug";
 import type { OverviewStat } from "../types";
 
 type TopbarProps = {
@@ -100,7 +99,7 @@ export function Topbar({
 
           <button
             type="button"
-            onClick={() => router.push(`/user/${profileSlug(userName, userId)}`)}
+            onClick={() => router.push(`/user/${encodeURIComponent(userName || userId)}`)}
             className="group flex items-center gap-2 rounded-[3px] border border-white/10 p-1 pr-3 transition-colors hover:border-accent/30"
             aria-label="Open public profile"
           >

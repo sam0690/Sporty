@@ -105,12 +105,29 @@ export function useUserPublicStats(userId: string) {
   );
 }
 
-/** No-auth variant for the shareable /u/[id] manager-profile page. */
+/** Username-keyed variant — powers the /user/{username} profile route. */
+export function useUserPublicStatsByUsername(username: string) {
+  return useApiQuery<TUserPublicStats>(
+    ["users", "by-username", username, "public-stats"],
+    () => UserService.getUserPublicStatsByUsername(username),
+    { enabled: !!username },
+  );
+}
+
+/** No-auth variant for the shareable /u/[username] manager-profile page. */
 export function usePublicManagerStats(userId: string) {
   return useApiQuery<TUserPublicStats>(
     ["users", "public", userId, "stats"],
     () => UserService.getPublicManagerStats(userId),
     { enabled: !!userId },
+  );
+}
+
+export function usePublicManagerStatsByUsername(username: string) {
+  return useApiQuery<TUserPublicStats>(
+    ["users", "public", "by-username", username, "stats"],
+    () => UserService.getPublicManagerStatsByUsername(username),
+    { enabled: !!username },
   );
 }
 
