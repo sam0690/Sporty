@@ -734,13 +734,15 @@ function buildMixedLayout<TPlayer extends FormationPlayerLike>(
   const bbPool = [...basketballPlayers, ...others];
 
   // Football at the TOP (scaled to top 50% of surface) — matches the pitch
-  // half of multisport-court.png.
+  // half of multisport-court.png. The band is mirrored (0.51 - y*0.5 instead
+  // of y*0.5 + 0.08) so the keeper sits at the top goal and the forwards face
+  // the centre line, rather than the keeper floating mid-pitch.
   const fbRows = buildFootballRows(footballPlayers, MULTISPORT_STARTER_REQUIREMENTS.football)
     .rows;
   const footballSlots = generateCoordinates(
     fbRows.map((row) => ({
       ...row,
-      y: Number((row.y * 0.5 + 0.08).toFixed(3)),
+      y: Number((0.51 - row.y * 0.5).toFixed(3)),
     })),
   );
 
