@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Badge, PlayerAvatar } from "@/components/ui";
+import { profileSlug } from "@/utils/profileSlug";
 import type { TPlayer } from "@/types";
 
 export function PlayerBrowserCard({ player }: { player: TPlayer }) {
@@ -9,7 +10,7 @@ export function PlayerBrowserCard({ player }: { player: TPlayer }) {
 
   return (
     <Link
-      href={`/players/${player.id}`}
+      href={`/players/${profileSlug(name, player.id)}`}
       className="flex items-center justify-between gap-3 card-surface p-4 transition-colors hover:border-accent/30"
     >
       <div className="flex min-w-0 items-center gap-3">

@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { UserProfileView, useUserProfileDashboard } from "@/features/user-profile";
+import { idFromSlug } from "@/utils/profileSlug";
 
 export default function UserProfilePage({
   params
@@ -10,5 +11,5 @@ export default function UserProfilePage({
 }) {
   const resolvedParams = use(params);
   const vm = useUserProfileDashboard();
-  return <UserProfileView {...vm} userId={resolvedParams.id} />;
+  return <UserProfileView {...vm} userId={idFromSlug(resolvedParams.id)} />;
 }

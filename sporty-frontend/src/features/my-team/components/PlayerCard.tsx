@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { profileSlug } from "@/utils/profileSlug";
 import {
   BasketballGlyph,
   CricketGlyph,
@@ -50,7 +51,7 @@ export function PlayerCard({
   return (
     <article className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 card-surface px-4 py-3 transition-colors hover:border-white/16">
       <Link
-        href={`/players/${id}`}
+        href={`/players/${profileSlug(name, id)}`}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-[3px] text-left hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-1"
       >
         <PlayerAvatar name={name} photoUrl={photoUrl} size="md" className="shrink-0" />

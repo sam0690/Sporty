@@ -1,4 +1,5 @@
 import { PlayerDetailPageView } from "@/components/shared/player-detail/PlayerDetailPageView";
+import { idFromSlug } from "@/utils/profileSlug";
 
 export default async function PlayerDetailPage({
   params,
@@ -6,5 +7,5 @@ export default async function PlayerDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <PlayerDetailPageView playerId={id} />;
+  return <PlayerDetailPageView playerId={idFromSlug(id)} />;
 }

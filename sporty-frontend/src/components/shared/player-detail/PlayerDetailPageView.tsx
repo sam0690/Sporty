@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ShareProfileButton } from "@/components/shared/ShareProfileButton";
 import { usePlayer, usePlayerRecentStats } from "@/hooks/players/usePlayers";
+import { profileSlug } from "@/utils/profileSlug";
 import { PlayerHero } from "./PlayerHero";
 import { PlayerRecentStats } from "./PlayerRecentStats";
 import { PlayerStatSparkline } from "./PlayerStatSparkline";
@@ -60,7 +61,7 @@ export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
-        <ShareProfileButton path={`/p/${playerId}`} />
+        <ShareProfileButton path={`/p/${profileSlug(player?.name, playerId)}`} />
       </div>
 
       <div className="overflow-hidden card-surface text-fg-1">

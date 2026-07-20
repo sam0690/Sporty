@@ -11,6 +11,7 @@ import {
 } from "./RecentActivity";
 import { StatsCards } from "./StatsCards";
 import { ShareProfileButton } from "@/components/shared/ShareProfileButton";
+import { profileSlug } from "@/utils/profileSlug";
 import { useMe } from "@/hooks/auth/useMe";
 import { useUserActivity, useUserPublicStats } from "@/hooks/users/useUsers";
 
@@ -56,7 +57,11 @@ export function UserProfileView({ userId }: { userId?: string }) {
         <p className="section-label">
           {targetUserId === me?.id ? "Your Profile" : "Player Profile"}
         </p>
-        {targetUserId && <ShareProfileButton path={`/u/${targetUserId}`} />}
+        {targetUserId && (
+          <ShareProfileButton
+            path={`/u/${profileSlug(stats?.username, targetUserId)}`}
+          />
+        )}
       </div>
 
       {statsLoading ? (

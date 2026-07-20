@@ -1,4 +1,5 @@
 import { PlayerDetailModalRoute } from "@/components/shared/player-detail/PlayerDetailModalRoute";
+import { idFromSlug } from "@/utils/profileSlug";
 
 export default async function InterceptedPlayerDetailModal({
   params,
@@ -6,5 +7,5 @@ export default async function InterceptedPlayerDetailModal({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  return <PlayerDetailModalRoute playerId={id} />;
+  return <PlayerDetailModalRoute playerId={idFromSlug(id)} />;
 }

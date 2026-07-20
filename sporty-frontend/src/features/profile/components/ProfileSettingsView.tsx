@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useMe } from "@/hooks/auth/useMe";
 import { toastifier } from "@/lib/toastifier";
-import { AvatarUpload } from "./AvatarUpload";
 import { DangerZone } from "./DangerZone";
 import { FavouritesForm } from "./FavouritesForm";
 import {
@@ -177,40 +176,49 @@ export function ProfileSettingsView() {
   }
 
   return (
-    <section className="mx-auto max-w-3xl px-6 py-8 text-fg-1">
-      <ProfileHeader
-        userName={userData.name}
-        userEmail={userData.email}
-        avatarUrl={userData.avatar}
-      />
-
-      <div className="mt-6 space-y-6">
-        <AvatarUpload
-          currentAvatar={userData.avatar}
-          onAvatarChange={handleAvatarChange}
-        />
-
-        <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
-        <PreferencesForm
-          preferences={preferences}
-          onUpdate={handleUpdatePreferences}
-        />
-        <FavouritesForm
-          favouriteTeams={me?.favourite_teams ?? []}
-          favouritePlayers={me?.favourite_players ?? []}
-          onTeamChange={handleTeamChange}
-          onTeamClear={handleTeamClear}
-          onPlayerChange={handlePlayerChange}
-          onPlayerClear={handlePlayerClear}
-        />
-        <DangerZone onDeleteAccount={handleDeleteAccount} />
+    <section className="mx-auto max-w-5xl px-6 py-8 text-fg-1">
+      <div className="mb-6">
+        <p className="section-label">Account</p>
+        <h1 className="mt-2 font-display text-4xl tracking-[-0.02em] text-fg-1 sm:text-5xl">
+          Profile
+        </h1>
+        <p className="mt-1 text-sm text-fg-3">
+          Manage your account, preferences, and favourites.
+        </p>
       </div>
 
-      {isDeleting ? (
-        <p className="mt-4 text-sm text-fg-3">
-          Processing account deletion...
-        </p>
-      ) : null}
+      <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+        <div className="lg:sticky lg:top-8">
+          <ProfileHeader
+            userName={userData.name}
+            userEmail={userData.email}
+            avatarUrl={userData.avatar}
+            memberSince={me?.created_at}
+            onAvatarChange={handleAvatarChange}
+          />
+        </div>
+
+        <div className="space-y-6">
+          <ProfileForm user={profileFormUser} onUpdate={handleUpdateProfile} />
+          <PreferencesForm
+            preferences={preferences}
+            onUpdate={handleUpdatePreferences}
+          />
+          <FavouritesForm
+            favouriteTeams={me?.favourite_teams ?? []}
+            favouritePlayers={me?.favourite_players ?? []}
+            onTeamChange={handleTeamChange}
+            onTeamClear={handleTeamClear}
+            onPlayerChange={handlePlayerChange}
+            onPlayerClear={handlePlayerClear}
+          />
+          <DangerZone onDeleteAccount={handleDeleteAccount} />
+
+          {isDeleting ? (
+            <p className="text-sm text-fg-3">Processing account deletion…</p>
+          ) : null}
+        </div>
+      </div>
     </section>
   );
 }
