@@ -7,6 +7,7 @@ import {
   type TSeasonCreateRequest,
   type TSeasonGenerateWindowsRequest,
   type TSeasonUpdateRequest,
+  type TUnifiedSeasonCreateRequest,
 } from "@/services/AdminService";
 
 const SEASONS_KEY = ["admin", "seasons"];
@@ -25,6 +26,20 @@ export function useCreateSeason() {
         queryClient.invalidateQueries({ queryKey: ["admin", "audit-log"] });
       },
       successMessage: "Season created",
+    },
+  );
+}
+
+export function useCreateUnifiedSeason() {
+  const queryClient = useQueryClient();
+  return useApiMutation<TAdminSeason, TUnifiedSeasonCreateRequest>(
+    (data) => AdminService.createUnifiedSeason(data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: SEASONS_KEY });
+        queryClient.invalidateQueries({ queryKey: ["admin", "audit-log"] });
+      },
+      successMessage: "Unified multisport season created",
     },
   );
 }

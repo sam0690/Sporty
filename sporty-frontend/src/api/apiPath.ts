@@ -194,6 +194,7 @@ export const API_PATHS = {
     LEAGUE_DELETE: (id: string) => `/admin/leagues/${id}`,
     LEAGUE_SETTINGS: (id: string) => `/admin/leagues/${id}/settings`,
     SEASONS: "/admin/seasons",
+    SEASONS_UNIFIED: "/admin/seasons/unified",
     SEASON_DETAIL: (id: string) => `/admin/seasons/${id}`,
     SEASON_GENERATE_WINDOWS: (id: string) => `/admin/seasons/${id}/generate-windows`,
     AUDIT_LOG: (opts?: { page?: number; pageSize?: number }) => {

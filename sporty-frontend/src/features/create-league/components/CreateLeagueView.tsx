@@ -115,6 +115,28 @@ export function CreateLeagueView() {
       return "";
     }
 
+    // Multisport: prefer a current UNIFIED season (sport_id null) composing
+    // exactly the selected sports — it gives the league its own independent
+    // gameweek schedule bounded to the sports' overlap window. Falls through to
+    // the legacy "primary season" behavior below when no such unified season
+    // exists, so multisport leagues keep working either way.
+    if (selectedSports.length > 1) {
+      const selectedIds = selectedSports
+        .map((name) => sports.find((sport) => sport.name === name)?.id)
+        .filter((id): id is string => Boolean(id));
+      const unified = seasons.find(
+        (season) =>
+          season.sport_id == null &&
+          season.is_current &&
+          Array.isArray(season.component_sport_ids) &&
+          season.component_sport_ids.length === selectedIds.length &&
+          selectedIds.every((id) => season.component_sport_ids!.includes(id)),
+      );
+      if (unified?.id) {
+        return unified.id;
+      }
+    }
+
     // Multisport leagues use one "primary" season (matching the backend's
     // find_equivalent_window_for_sport architecture, where a league's
     // season_id is deliberately only one of its N sports) — selectedSports[0]

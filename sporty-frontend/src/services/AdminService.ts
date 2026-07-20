@@ -59,6 +59,15 @@ export type TSeasonCreateRequest = {
   reason?: string;
 };
 
+export type TUnifiedSeasonCreateRequest = {
+  /** 2+ sports; dates are derived server-side as the overlap of their current
+   * seasons (later start → earlier end). Not supplied by the client. */
+  component_sport_ids: string[];
+  name: string;
+  label?: string;
+  reason?: string;
+};
+
 export type TSeasonUpdateRequest = {
   name?: string;
   start_date?: string;
@@ -349,6 +358,11 @@ export const AdminService = {
 
   async createSeason(data: TSeasonCreateRequest): Promise<TAdminSeason> {
     const res = await authApi.post(API_PATHS.ADMIN.SEASONS, data);
+    return res.data;
+  },
+
+  async createUnifiedSeason(data: TUnifiedSeasonCreateRequest): Promise<TAdminSeason> {
+    const res = await authApi.post(API_PATHS.ADMIN.SEASONS_UNIFIED, data);
     return res.data;
   },
 

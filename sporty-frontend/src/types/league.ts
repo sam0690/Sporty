@@ -18,11 +18,18 @@ export type TSeasonBrief = {
 };
 
 export type TSeason = TSeasonBrief & {
-  sport_id: string;
+  /** Null for a UNIFIED multisport season — its sports are in
+   * component_sport_ids and it has no single owning sport. */
+  sport_id: string | null;
   /** Resolved sport display name from the backend — prefer this over
    * resolving sport_id client-side (the /leagues/sports lookup only lists
-   * league-playable sports, so e.g. Cricket resolved to a raw UUID). */
+   * league-playable sports, so e.g. Cricket resolved to a raw UUID).
+   * Null for a unified multisport season. */
   sport_name?: string | null;
+  /** UNIFIED seasons only: the sports this schedule composes. Null for a
+   * real single-sport season. Used to label "Football + Basketball" and to
+   * match a unified season to a multisport league's selected sports. */
+  component_sport_ids?: string[] | null;
   is_active: boolean;
   /** Date-derived: today falls within [start_date, end_date]. At most one
    * season per sport can be current at a time (DB-enforced, no overlaps). */

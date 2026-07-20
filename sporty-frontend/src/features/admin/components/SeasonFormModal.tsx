@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useSports } from "@/hooks/leagues/useLeagues";
-import { useCreateSeason, useUpdateSeason } from "@/hooks/admin/useAdminSeasons";
+import {
+  useCreateSeason,
+  useCreateUnifiedSeason,
+  useUpdateSeason,
+} from "@/hooks/admin/useAdminSeasons";
 import type { TAdminSeason } from "@/services/AdminService";
 
 type SeasonFormModalProps = {
@@ -35,8 +39,9 @@ function SeasonFormBody({
 }) {
   const { data: sports } = useSports();
   const createSeason = useCreateSeason();
+  const createUnifiedSeason = useCreateUnifiedSeason();
   const updateSeason = useUpdateSeason();
-  const isPending = createSeason.isPending || updateSeason.isPending;
+  const isPending = createSeason.isPending || createUnifiedSeason.isPending || updateSeason.isPending;
 
   const [sportId, setSportId] = useState(season?.sport_id ?? "");
   const [name, setName] = useState(season?.name ?? "");
@@ -45,9 +50,28 @@ function SeasonFormBody({
   const [endDate, setEndDate] = useState(season?.end_date ?? "");
   const [isActive, setIsActive] = useState(season?.is_active ?? true);
   const [reason, setReason] = useState("");
+  // Unified multisport season: dates are derived server-side from the overlap
+  // of the selected sports' current seasons, so no sport/date inputs here.
+  const [isUnified, setIsUnified] = useState(false);
+  const [componentSportIds, setComponentSportIds] = useState<string[]>([]);
+
+  const toggleComponentSport = (id: string) =>
+    setComponentSportIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
 
   const handleSubmit = () => {
-    if (mode === "create") {
+    if (mode === "create" && isUnified) {
+      createUnifiedSeason.mutate(
+        {
+          component_sport_ids: componentSportIds,
+          name,
+          label: label || undefined,
+          reason: reason || undefined,
+        },
+        { onSuccess: onClose },
+      );
+    } else if (mode === "create") {
       createSeason.mutate(
         {
           sport_id: sportId, name, start_date: startDate, end_date: endDate,
@@ -69,19 +93,58 @@ function SeasonFormBody({
     }
   };
 
-  const canSubmit = name.trim() !== "" && startDate !== "" && endDate !== "" && (mode === "edit" || sportId !== "");
+  const canSubmit =
+    name.trim() !== "" &&
+    (mode === "create" && isUnified
+      ? componentSportIds.length >= 2
+      : startDate !== "" && endDate !== "" && (mode === "edit" || sportId !== ""));
+
+  const sportOptions = (sports ?? []).filter((s) => s.id);
 
   return (
     <div className="space-y-4">
       <h3 className="font-display text-xl text-fg-1">{mode === "create" ? "Create Season" : "Edit Season"}</h3>
 
-      {mode === "create" ? (
+      {mode === "create" && (
+        <label className="flex items-center gap-2 text-sm text-fg-1">
+          <input
+            type="checkbox"
+            checked={isUnified}
+            onChange={(e) => setIsUnified(e.target.checked)}
+          />
+          Multisport (unified) season
+        </label>
+      )}
+
+      {mode === "create" && isUnified ? (
+        <div>
+          <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+            Sports (pick 2 or more)
+          </span>
+          <div className="space-y-1.5">
+            {sportOptions.map((s) => (
+              <label key={s.id} className="flex items-center gap-2 text-sm text-fg-1">
+                <input
+                  type="checkbox"
+                  checked={componentSportIds.includes(s.id as string)}
+                  onChange={() => toggleComponentSport(s.id as string)}
+                />
+                {s.display_name}
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-fg-3">
+            Dates are derived automatically as the overlap of the selected sports&apos; current
+            seasons (later start → earlier end). Every selected sport must be in-season now.
+          </p>
+        </div>
+      ) : mode === "create" ? (
         <Select
           label="Sport"
           value={sportId}
           onChange={setSportId}
           placeholder="Select a sport…"
-          options={(sports ?? []).filter((s) => s.id).map((s) => ({ value: s.id as string, label: s.display_name }))}
+          options={sportOptions.map((s) => ({ value: s.id as string, label: s.display_name }))}
         />
       ) : (
         <div>
@@ -111,16 +174,18 @@ function SeasonFormBody({
         </p>
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block">
-          <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">Start Date</span>
-          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-        </label>
-        <label className="block">
-          <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">End Date</span>
-          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-        </label>
-      </div>
+      {!(mode === "create" && isUnified) && (
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">Start Date</span>
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          </label>
+          <label className="block">
+            <span className="mb-2 block font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">End Date</span>
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          </label>
+        </div>
+      )}
 
       {mode === "edit" && (
         <label className="flex items-center gap-2 text-sm text-fg-1">

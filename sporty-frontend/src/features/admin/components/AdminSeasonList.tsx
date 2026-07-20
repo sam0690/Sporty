@@ -30,8 +30,18 @@ export function AdminSeasonList() {
     // Prefer the backend-resolved name: /leagues/sports only lists
     // league-playable sports, so ids outside it (e.g. Cricket) used to
     // render as raw UUIDs here.
-    return (season: { sport_id: string; sport_name?: string | null }) =>
-      season.sport_name ?? byId.get(season.sport_id) ?? season.sport_id;
+    return (season: {
+      sport_id: string | null;
+      sport_name?: string | null;
+      component_sport_ids?: string[] | null;
+    }) => {
+      // Unified multisport season (no single sport) — label with its components.
+      if (season.sport_id == null) {
+        const names = (season.component_sport_ids ?? []).map((id) => byId.get(id) ?? id);
+        return names.length ? `Multisport: ${names.join(" + ")}` : "Multisport";
+      }
+      return season.sport_name ?? byId.get(season.sport_id) ?? season.sport_id;
+    };
   }, [sports]);
 
   const rows = useMemo(() => {
