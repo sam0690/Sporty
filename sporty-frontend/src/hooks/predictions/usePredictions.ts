@@ -10,11 +10,13 @@ import type {
   TPredictionListResponse,
 } from "@/types/prediction";
 
-/** The current user's prediction for one fixture (null if not made yet). */
-export const useMyPrediction = (matchId: string) =>
+/** The current user's prediction for one fixture (null if not made yet).
+ *  `enabled` is false for guests so we never fire an authed request that 401s. */
+export const useMyPrediction = (matchId: string, enabled = true) =>
   useApiQuery<TPrediction | null>(
     ["predictions", "match", matchId],
     () => PredictionService.forMatch(matchId),
+    { enabled },
   );
 
 /** Submit/update a prediction; refreshes this fixture's prediction on success. */

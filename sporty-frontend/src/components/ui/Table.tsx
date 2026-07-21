@@ -14,6 +14,8 @@ type TableProps<T> = {
   rows: T[];
   rowKey: (row: T) => string;
   emptyMessage?: string;
+  /** Optional per-row classes, e.g. to highlight the current user's row. */
+  rowClassName?: (row: T) => string;
 };
 
 export function Table<T>({
@@ -21,6 +23,7 @@ export function Table<T>({
   rows,
   rowKey,
   emptyMessage = "No results.",
+  rowClassName,
 }: TableProps<T>) {
   return (
     <section className="overflow-hidden card-surface">
@@ -52,7 +55,10 @@ export function Table<T>({
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={rowKey(row)} className="text-sm transition-colors hover:bg-surface-3">
+                <tr
+                  key={rowKey(row)}
+                  className={`text-sm transition-colors hover:bg-surface-3 ${rowClassName?.(row) ?? ""}`}
+                >
                   {columns.map((col) => (
                     <td
                       key={col.key}
