@@ -30,12 +30,22 @@ def _to_asyncpg_url(database_url: str) -> tuple[str, dict]:
     "connect() got an unexpected keyword argument 'sslmode'") — it wants an
     `ssl` connect_arg instead. Strip sslmode from the URL and translate it
     to connect_args so hosts that require TLS (Render/Neon-style managed
-    Postgres, `sslmode=require` in DATABASE_URL) still connect over TLS
-    instead of the async engine failing to construct at all.
+    Postgres, `sslmode=require` in DATABASE_URL) still connect over TLS.
+
+    `channel_binding` is dropped for the same reason — Neon puts it in the
+    URL it hands you and asyncpg has no such kwarg. TLS still applies via
+    the `ssl` connect_arg; channel binding is a SCRAM detail libpq handles
+    and asyncpg negotiates on its own.
+
+    Both leak through as a TypeError on first *connect*, not at engine
+    construction — create_async_engine() succeeds either way, so the app
+    boots clean and only the realtime paths that actually open an async
+    session fail. Verified 2026-07-22; don't "simplify" this away.
     """
     parts = urlsplit(database_url)
     query = parse_qs(parts.query)
     sslmode = query.pop("sslmode", [None])[0]
+    query.pop("channel_binding", None)
     new_query = urlencode(query, doseq=True)
     rebuilt = urlunsplit((parts.scheme, parts.netloc, parts.path, new_query, parts.fragment))
 
