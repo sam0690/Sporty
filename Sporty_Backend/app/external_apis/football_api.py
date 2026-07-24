@@ -154,15 +154,19 @@ class FootballAPIClient:
         """
         return await self._get("fixtures", {"date": day})
 
-    async def get_live_fixtures(self, league_id: int = 39) -> dict[str, Any]:
+    async def get_live_fixtures(self, league_id: int | None = None) -> dict[str, Any]:
         """
-        Fetch currently live matches for a league. Each live fixture embeds
-        its `events` array, so no per-fixture events call is needed.
+        Fetch currently live matches — every league in ONE request when
+        league_id is None (callers filter client-side). Each live fixture
+        embeds its `events` array, so no per-fixture events call is needed.
 
         Returns:
-            {"response": [{"fixture": {...}, "goals": {...}, "events": [...]}, ...]}
+            {"response": [{"fixture": {...}, "league": {...}, "goals": {...}, "events": [...]}, ...]}
         """
-        return await self._get("fixtures", {"league": league_id, "live": "all"})
+        params: dict[str, Any] = {"live": "all"}
+        if league_id is not None:
+            params["league"] = league_id
+        return await self._get("fixtures", params)
 
     async def get_fixture_players(self, fixture_id: int) -> dict[str, Any]:
         """

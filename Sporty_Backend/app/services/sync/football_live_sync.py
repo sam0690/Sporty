@@ -54,6 +54,7 @@ from app.services.feed_scoring import (
     persist_football_stats_from_sheet,
     persist_match_stats,
 )
+from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
 from app.services.scoring.trigger import enqueue_scoring_for_finished_match
 
 logger = logging.getLogger(__name__)
@@ -285,8 +286,12 @@ async def sync_football_live_matches(db: Session) -> str:
     fixtures: list = []
     if live_candidates:
         try:
-            payload = await client.get_live_fixtures(league_id=settings.FOOTBALL_LIVE_LEAGUE_ID)
-            fixtures = payload.get("response", [])
+            # Unfiltered live=all: one request covers every tracked league.
+            payload = await client.get_live_fixtures()
+            fixtures = [
+                f for f in payload.get("response", [])
+                if (f.get("league") or {}).get("id") in FOOTBALL_COMPETITIONS
+            ]
         except FootballQuotaExhausted as exc:
             logger.warning("Football live poll paused: %s", exc)
             return "ok: daily API budget spent; polling paused until 00:00 UTC"

@@ -1,7 +1,7 @@
 """One-off (applied to prod 2026-07-24): seed missing 2026-27 EPL players +
 promoted-club RealTeams (Coventry/Ipswich/Hull) + R2-hosted club logos and
 player photos. Idempotent; dry run by default; --apply commits.
-Run from Sporty_Backend/: venv/bin/python scripts/seed_missing_players.py
+Run from Sporty_Backend/: PYTHONPATH=. venv/bin/python scripts/seed_missing_players.py
 """
 import json
 import os

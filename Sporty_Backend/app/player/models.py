@@ -59,6 +59,11 @@ class RealTeam(Base):
     conference: Mapped[str | None] = mapped_column(String(50), nullable=True)
     division: Mapped[str | None] = mapped_column(String(50), nullable=True)
     logo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    # Current top-flight competition tag ("EPL" | "LALIGA" | "BUNDESLIGA",
+    # see app/services/sync/football_competitions.py). NULL = not in a
+    # tracked competition (relegated clubs, feeder test teams, NBA teams).
+    # Basis for competition-scoped fantasy-league player pools.
+    competition: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     sport: Mapped["Sport"] = relationship(foreign_keys=[sport_id], overlaps="real_teams")
     players: Mapped[list["Player"]] = relationship(back_populates="real_team_ref")

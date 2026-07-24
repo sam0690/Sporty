@@ -59,9 +59,9 @@ def sync_football_players_task(league_id: int = 39, season: int | None = None) -
 
 
 @shared_task(name="sync.football.matches")
-def sync_football_matches_task(league_id: int = 39, season: int | None = None) -> dict[str, Any]:
+def sync_football_matches_task(league_id: int | None = None, season: int | None = None) -> dict[str, Any]:
     season = season or _current_football_season()
-    lock_key = f"lock:sync:football:matches:league:{league_id}:season:{season}"
+    lock_key = f"lock:sync:football:matches:league:{league_id or 'all'}:season:{season}"
     with redis_lock(lock_key, ttl_seconds=60 * 10) as acquired:
         if not acquired:
             return {"ok": True, "skipped": True, "reason": "lock_held", "task": "sync.football.matches"}

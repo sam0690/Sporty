@@ -22,8 +22,9 @@ from app.core.config import settings
 from app.external_apis.basketball_api import BasketballAPIClient
 from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
-from app.external_apis.football_data_org import get_pl_matches
+from app.external_apis.football_data_org import get_competition_matches
 from app.league.models import Sport
+from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS, Competition
 from app.match.models import Match
 from app.services.scoring.trigger import enqueue_scoring_for_finished_match
 
@@ -42,8 +43,11 @@ _FDO_STATUS_MAP = {
 
 # football-data.org full names -> API-Football team names (the form stored in
 # Match.home_team/away_team). Explicit map, not fuzzy — same policy as
-# app/core/team_names.py. Names not listed just get the FC/AFC affixes stripped.
+# app/core/team_names.py. Names not listed just get the FC/AFC affixes
+# stripped. Verified against both providers' live data 2026-07-24; update on
+# promotion/relegation.
 _FDO_NAME_ALIASES = {
+    # Premier League
     "Brighton & Hove Albion": "Brighton",
     "Ipswich Town": "Ipswich",
     "Leeds United": "Leeds",
@@ -52,6 +56,33 @@ _FDO_NAME_ALIASES = {
     "Coventry City": "Coventry",
     "West Ham United": "West Ham",
     "Wolverhampton Wanderers": "Wolves",
+    # La Liga
+    "CA Osasuna": "Osasuna",
+    "Club Atlético de Madrid": "Atletico Madrid",
+    "Deportivo Alavés": "Alaves",
+    "Elche CF": "Elche",
+    "FC Barcelona": "Barcelona",
+    "Getafe CF": "Getafe",
+    "Levante UD": "Levante",
+    "Málaga CF": "Malaga",
+    "RC Celta de Vigo": "Celta Vigo",
+    "RC Deportivo La Coruña": "Deportivo La Coruna",
+    "RCD Espanyol de Barcelona": "Espanyol",
+    "Rayo Vallecano de Madrid": "Rayo Vallecano",
+    "Real Betis Balompié": "Real Betis",
+    "Real Madrid CF": "Real Madrid",
+    "Real Racing Club de Santander": "Racing Santander",
+    "Real Sociedad de Fútbol": "Real Sociedad",
+    "Valencia CF": "Valencia",
+    "Villarreal CF": "Villarreal",
+    # Bundesliga
+    "1. FC Union Berlin": "Union Berlin",
+    "1. FSV Mainz 05": "FSV Mainz 05",
+    "Bayer 04 Leverkusen": "Bayer Leverkusen",
+    "FC Bayern München": "Bayern München",
+    "SV 07 Elversberg": "SV Elversberg",
+    "SV Werder Bremen": "Werder Bremen",
+    "TSG 1899 Hoffenheim": "1899 Hoffenheim",
 }
 
 
@@ -81,8 +112,8 @@ def _find_same_fixture(db: Session, sport_id, home: str, away: str, match_date: 
     )
 
 
-async def _sync_football_schedule_fdo(db: Session, sport_id) -> tuple[int, int]:
-    """Upsert the full current-season EPL schedule from football-data.org.
+async def _sync_football_schedule_fdo(db: Session, sport_id, comp: Competition) -> tuple[int, int]:
+    """Upsert one competition's full current-season schedule from football-data.org.
 
     Schedule only: creates/updates kickoff times and scheduled/postponed/
     cancelled statuses. Never writes scores or 'finished' — finals and stats
@@ -90,7 +121,7 @@ async def _sync_football_schedule_fdo(db: Session, sport_id) -> tuple[int, int]:
     never bypassed. Rows already claimed by API-Football (numeric id) only
     get kickoff-time updates while still scheduled.
     """
-    payload = await get_pl_matches()
+    payload = await get_competition_matches(comp.fdo_code)
     added = updated = 0
     for m in payload.get("matches", []):
         fdo_id = m.get("id")
@@ -115,7 +146,7 @@ async def _sync_football_schedule_fdo(db: Session, sport_id) -> tuple[int, int]:
                 away_team=away,
                 match_date=match_date,
                 status=status,
-                competition="Premier League",
+                competition=comp.name,
                 season=str((m.get("season") or {}).get("startDate", ""))[:4]
                 or str(match_date.year if match_date.month >= 7 else match_date.year - 1),
             ))
@@ -137,17 +168,18 @@ async def _sync_football_schedule_fdo(db: Session, sport_id) -> tuple[int, int]:
 
 
 async def sync_football_matches(
-    db: Session, league_id: int = 39, season: int = 2024
+    db: Session, league_id: int | None = None, season: int | None = None
 ):
     """
-    Fetch and sync football fixtures from API-Football.
-
-    Args:
-        db: Database session
-        league_id: League ID (39 = Premier League, 140 = La Liga)
-        season: Year (e.g., 2024)
+    Fetch and sync football fixtures for every tracked competition
+    (FOOTBALL_COMPETITIONS). `league_id` limits to one; `season` defaults
+    to the current European season.
     """
-    print(f"⚽ Syncing football matches (League {league_id}, Season {season})...")
+    league_ids = [league_id] if league_id else list(FOOTBALL_COMPETITIONS)
+    if season is None:
+        now = datetime.now(timezone.utc)
+        season = now.year if now.month >= 7 else now.year - 1
+    print(f"⚽ Syncing football matches (Leagues {league_ids}, Season {season})...")
 
     # Get sport
     football = db.query(Sport).filter(Sport.name == "football").first()
@@ -155,33 +187,45 @@ async def sync_football_matches(
         print("❌ Football sport not found in database. Create it first.")
         return
 
-    # Season schedule from football-data.org (skipped without a token; the
+    # Season schedules from football-data.org (skipped without a token; the
     # date-window fallback below still creates rows day-of).
     if settings.FOOTBALL_DATA_ORG_TOKEN:
-        try:
-            added, updated = await _sync_football_schedule_fdo(db, football.id)
-            print(f"  📅 Schedule (football-data.org): {added} added, {updated} updated")
-        except Exception as e:  # noqa: BLE001 — schedule layer is optional
-            print(f"  ⚠️ football-data.org schedule sync failed: {e}")
+        for lid in league_ids:
+            comp = FOOTBALL_COMPETITIONS.get(lid)
+            if comp is None:
+                continue
+            try:
+                added, updated = await _sync_football_schedule_fdo(db, football.id, comp)
+                print(f"  📅 {comp.name} (football-data.org): {added} added, {updated} updated")
+            except Exception as e:  # noqa: BLE001 — schedule layer is optional
+                print(f"  ⚠️ football-data.org {comp.name} schedule sync failed: {e}")
 
-    # Fetch from API
+    # Fetch from API-Football
     client = FootballAPIClient()
     total_added = 0
     total_updated = 0
 
     try:
-        response = await client.get_fixtures(league_id=league_id, season=season)
-        fixtures = response.get("response", [])
-        errors = response.get("errors") or None
+        fixtures = []
+        season_blocked = False
+        for lid in league_ids:
+            if season_blocked:
+                break  # one plan error means they're all blocked — don't
+                # burn a request per league re-learning that
+            response = await client.get_fixtures(league_id=lid, season=season)
+            got = response.get("response", [])
+            if not got and response.get("errors"):
+                print(f"  Season list unavailable ({response['errors']}); falling back to date window")
+                season_blocked = True
+            fixtures += got
 
-        if not fixtures and errors:
+        if season_blocked:
             # The Free plan blocks current-season fixture lists (a "plan"
             # error) but allows date queries within today ± 1 day, unfiltered.
-            # Fall back to today+tomorrow and filter to our league client-side
-            # — match rows then exist before the live poll's window gate needs
-            # them. ponytail: full-season schedule visibility needs the paid tier.
-            print(f"  Season list unavailable ({errors}); falling back to date window")
-            fixtures = []
+            # One today+tomorrow pass covers every tracked league (filtered
+            # client-side) — match rows then exist before the live poll's
+            # window gate needs them. ponytail: full-season schedule
+            # visibility comes from football-data.org above.
             today = datetime.now(timezone.utc).date()
             for offset in (0, 1):
                 day_payload = await client.get_fixtures_by_date(
@@ -189,7 +233,7 @@ async def sync_football_matches(
                 )
                 fixtures += [
                     f for f in day_payload.get("response", [])
-                    if (f.get("league") or {}).get("id") == league_id
+                    if (f.get("league") or {}).get("id") in league_ids
                 ]
 
         for fixture_data in fixtures:

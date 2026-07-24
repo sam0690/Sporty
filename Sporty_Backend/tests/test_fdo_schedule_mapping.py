@@ -28,6 +28,53 @@ FDO_TO_AF = {
     "Tottenham Hotspur FC": "Tottenham",
 }
 
+# La Liga + Bundesliga 2026-27 (verified against both providers 2026-07-24)
+FDO_TO_AF_ES_DE = {
+    "Athletic Club": "Athletic Club",
+    "CA Osasuna": "Osasuna",
+    "Club Atlético de Madrid": "Atletico Madrid",
+    "Deportivo Alavés": "Alaves",
+    "Elche CF": "Elche",
+    "FC Barcelona": "Barcelona",
+    "Getafe CF": "Getafe",
+    "Levante UD": "Levante",
+    "Málaga CF": "Malaga",
+    "RC Celta de Vigo": "Celta Vigo",
+    "RC Deportivo La Coruña": "Deportivo La Coruna",
+    "RCD Espanyol de Barcelona": "Espanyol",
+    "Rayo Vallecano de Madrid": "Rayo Vallecano",
+    "Real Betis Balompié": "Real Betis",
+    "Real Madrid CF": "Real Madrid",
+    "Real Racing Club de Santander": "Racing Santander",
+    "Real Sociedad de Fútbol": "Real Sociedad",
+    "Sevilla FC": "Sevilla",
+    "Valencia CF": "Valencia",
+    "Villarreal CF": "Villarreal",
+    "1. FC Köln": "1. FC Köln",
+    "1. FC Union Berlin": "Union Berlin",
+    "1. FSV Mainz 05": "FSV Mainz 05",
+    "Bayer 04 Leverkusen": "Bayer Leverkusen",
+    "Borussia Dortmund": "Borussia Dortmund",
+    "Borussia Mönchengladbach": "Borussia Mönchengladbach",
+    "Eintracht Frankfurt": "Eintracht Frankfurt",
+    "FC Augsburg": "FC Augsburg",
+    "FC Bayern München": "Bayern München",
+    "FC Schalke 04": "FC Schalke 04",
+    "Hamburger SV": "Hamburger SV",
+    "RB Leipzig": "RB Leipzig",
+    "SC Freiburg": "SC Freiburg",
+    "SC Paderborn 07": "SC Paderborn 07",
+    "SV 07 Elversberg": "SV Elversberg",
+    "SV Werder Bremen": "Werder Bremen",
+    "TSG 1899 Hoffenheim": "1899 Hoffenheim",
+    "VfB Stuttgart": "VfB Stuttgart",
+}
+
+
+def test_all_laliga_bundesliga_names_map():
+    for fdo, af in FDO_TO_AF_ES_DE.items():
+        assert _fdo_team_name(fdo) == af, f"{fdo!r} -> {_fdo_team_name(fdo)!r}, want {af!r}"
+
 
 def test_all_2026_27_club_names_map():
     for fdo, af in FDO_TO_AF.items():

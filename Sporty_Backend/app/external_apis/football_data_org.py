@@ -60,12 +60,12 @@ async def _fdo_get(path: str) -> dict[str, Any]:
     raise RuntimeError("unreachable")  # both attempts returned above or raised
 
 
-async def get_pl_matches() -> dict[str, Any]:
-    """Full current-season Premier League match list.
+async def get_competition_matches(code: str) -> dict[str, Any]:
+    """Full current-season match list for one competition (PL/PD/BL1/...).
 
     Returns:
         {"matches": [{"id":..., "utcDate":..., "status": "TIMED", "matchday":...,
                       "homeTeam": {"name": "Manchester United FC", ...},
                       "awayTeam": {...}, "season": {...}}, ...]}
     """
-    return await _fdo_get("competitions/PL/matches")
+    return await _fdo_get(f"competitions/{code}/matches")

@@ -1,7 +1,7 @@
 """One-off (applied to prod 2026-07-24): link football players to numeric
 API-Football ids by name, per 2026-27 EPL squad. Replaced the CSV-era slug
 external_api_ids for matched players. Dry run by default; --apply commits.
-Run from Sporty_Backend/: venv/bin/python scripts/link_epl_players.py
+Run from Sporty_Backend/: PYTHONPATH=. venv/bin/python scripts/link_epl_players.py
 """
 import html
 import json
