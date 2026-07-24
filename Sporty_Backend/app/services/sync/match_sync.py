@@ -14,7 +14,7 @@ Usage:
 """
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
@@ -53,6 +53,25 @@ async def sync_football_matches(
     try:
         response = await client.get_fixtures(league_id=league_id, season=season)
         fixtures = response.get("response", [])
+        errors = response.get("errors") or None
+
+        if not fixtures and errors:
+            # The Free plan blocks current-season fixture lists (a "plan"
+            # error) but allows date queries within today ± 1 day, unfiltered.
+            # Fall back to today+tomorrow and filter to our league client-side
+            # — match rows then exist before the live poll's window gate needs
+            # them. ponytail: full-season schedule visibility needs the paid tier.
+            print(f"  Season list unavailable ({errors}); falling back to date window")
+            fixtures = []
+            today = datetime.now(timezone.utc).date()
+            for offset in (0, 1):
+                day_payload = await client.get_fixtures_by_date(
+                    (today + timedelta(days=offset)).isoformat()
+                )
+                fixtures += [
+                    f for f in day_payload.get("response", [])
+                    if (f.get("league") or {}).get("id") == league_id
+                ]
 
         for fixture_data in fixtures:
             fixture = fixture_data.get("fixture", {})

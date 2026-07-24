@@ -143,6 +143,17 @@ class FootballAPIClient:
         """
         return await self._get("fixtures/events", {"fixture": fixture_id})
 
+    async def get_fixtures_by_date(self, day: str) -> dict[str, Any]:
+        """
+        All fixtures on one YYYY-MM-DD date (UTC), across all leagues — the
+        only forward-looking fixtures query the Free plan allows (today ± 1
+        day); callers filter by league id client-side.
+
+        Returns:
+            {"response": [{"fixture": {...}, "league": {...}, "teams": {...}}, ...]}
+        """
+        return await self._get("fixtures", {"date": day})
+
     async def get_live_fixtures(self, league_id: int = 39) -> dict[str, Any]:
         """
         Fetch currently live matches for a league. Each live fixture embeds
