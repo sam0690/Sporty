@@ -42,20 +42,3 @@ export function competitionMeta(
   return BY_TAG[tag] ?? null;
 }
 
-// Competition display NAME (as stored on Match.competition / FixtureResponse)
-// -> meta. Used by the fixtures page, which carries names, not tags.
-const NAME_TO_META: Record<string, DisplayMeta> = {
-  "Premier League": BY_TAG.EPL,
-  "La Liga": BY_TAG.LALIGA,
-  Bundesliga: BY_TAG.BUNDESLIGA,
-  "Champions League": BY_TAG.UCL,
-};
-
-/** Display meta for a competition's display name, or null (e.g. NBA/Cricket
- *  fall back to a sport glyph). */
-export function competitionMetaByName(
-  name: string | null | undefined,
-): DisplayMeta | null {
-  if (!name) return null;
-  return NAME_TO_META[name] ?? null;
-}

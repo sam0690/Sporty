@@ -136,3 +136,21 @@ def test_ucl_is_display_only_not_fantasy():
             name="x", season_id=uuid.uuid4(), sports=["football"],
             competition_filters={"football": "UCL"},
         )
+
+
+def test_get_match_finds_and_misses(db):
+    from app.models.db.competition_snapshot import CompetitionSnapshot
+
+    db.add(CompetitionSnapshot(
+        competition="UCL", season=2025, kind="matches",
+        payload={"matches": [
+            {"id": 900, "utcDate": "2026-05-30T20:00:00Z", "status": "FINISHED",
+             "stage": "FINAL", "homeTeam": {"name": "PSG"}, "awayTeam": {"name": "Arsenal"},
+             "score": {"fullTime": {"home": 2, "away": 1}}},
+        ]},
+    ))
+    db.commit()
+    found = service.get_match(db, "UCL", "900")
+    assert found is not None and found["stage"] == "FINAL" and found["homeTeam"]["name"] == "PSG"
+    assert service.get_match(db, "UCL", "404") is None      # unknown id
+    assert service.get_match(db, "SERIEA", "900") is None    # unknown competition

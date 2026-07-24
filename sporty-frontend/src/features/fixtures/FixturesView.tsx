@@ -23,12 +23,28 @@ function makeFilters(sport: string, date: string) {
 function Skeleton() {
   return (
     <div className="space-y-4">
-      {Array.from({ length: 4 }, (_, i) => (
+      {Array.from({ length: 3 }, (_, i) => (
         <div
           key={i}
-          className="skeleton h-32 rounded-[3px] border border-white/6"
+          className="overflow-hidden card-surface"
           style={{ animationDelay: `${i * 60}ms` }}
-        />
+        >
+          <div className="flex items-center gap-2.5 px-4 py-3">
+            <div className="skeleton size-6 rounded-[4px]" />
+            <div className="skeleton h-3 w-32 rounded-[2px]" />
+          </div>
+          <div className="divide-y divide-white/5 border-t border-white/7">
+            {Array.from({ length: 2 }, (_, r) => (
+              <div key={r} className="flex items-center gap-4 px-4 py-3.5">
+                <div className="skeleton h-8 w-10 rounded-[2px]" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-3 w-40 rounded-[2px]" />
+                  <div className="skeleton h-3 w-32 rounded-[2px]" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -145,13 +161,18 @@ export function FixturesView() {
       {/* Rail + main */}
       <div className="grid gap-6 lg:grid-cols-[248px_1fr]">
         <aside className="hidden lg:block">
-          <div className="sticky top-40 card-surface max-h-[calc(100vh-11rem)] overflow-y-auto p-2">
-            <LeagueList
-              entries={leagues}
-              active={activeComp}
-              onSelect={setActiveComp}
-              onToggleFollow={toggle}
-            />
+          <div className="sticky top-40 card-surface max-h-[calc(100vh-11rem)] overflow-y-auto">
+            <p className="border-b border-white/8 px-3 py-3 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+              Competitions
+            </p>
+            <div className="p-2">
+              <LeagueList
+                entries={leagues}
+                active={activeComp}
+                onSelect={setActiveComp}
+                onToggleFollow={toggle}
+              />
+            </div>
           </div>
         </aside>
 
