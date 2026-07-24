@@ -166,6 +166,7 @@ export const API_PATHS = {
 
   FIXTURES: {
     LIST: "/fixtures",
+    NEXT: "/fixtures/next",
   },
 
   COMPETITIONS: {

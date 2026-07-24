@@ -21,3 +21,12 @@ export const useFixtures = (filters: TFixtureFilter = {}) => {
     },
   );
 };
+
+// Enabled only when the current day is empty — finds the next day with games.
+export const useNextMatchday = (after: string, sport?: string, enabled = true) => {
+  return useApiQuery<{ date: string | null }>(
+    ["fixtures", "next", after, sport ?? "all"],
+    () => FixturesService.nextMatchday(after, sport),
+    { enabled, staleTime: 5 * 60_000 },
+  );
+};

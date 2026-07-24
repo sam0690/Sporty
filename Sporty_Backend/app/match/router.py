@@ -256,6 +256,59 @@ def list_fixtures(
     return FixtureListResponse(items=fixtures, total=len(fixtures), date=date_str)
 
 
+def _next_fixture_date(db: Session, after: str, sport_name: str | None) -> str | None:
+    """Earliest calendar day strictly after `after` that has any fixture
+    (fantasy or display-only). Powers the empty-day 'jump to next matchday'."""
+    after_day = datetime.strptime(after, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    next_start = after_day + timedelta(days=1)
+
+    q = db.query(func.min(Match.match_date)).join(Sport, Match.sport_id == Sport.id).filter(
+        Match.match_date >= next_start
+    )
+    if sport_name:
+        q = q.filter(Sport.name == sport_name.strip().lower())
+    fantasy_min = q.scalar()
+
+    candidates: list[str] = []
+    if fantasy_min is not None:
+        dt = fantasy_min if fantasy_min.tzinfo else fantasy_min.replace(tzinfo=timezone.utc)
+        candidates.append(dt.astimezone(timezone.utc).strftime("%Y-%m-%d"))
+
+    if not sport_name or sport_name.strip().lower() == "football":
+        from app.models.db.competition_snapshot import CompetitionSnapshot
+        from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
+
+        display = [c.tag for c in FOOTBALL_COMPETITIONS.values() if not c.fantasy]
+        if display:
+            rows = db.query(CompetitionSnapshot).filter(
+                CompetitionSnapshot.competition.in_(display),
+                CompetitionSnapshot.kind == "matches",
+            ).all()
+            future = [
+                str(m.get("utcDate"))[:10]
+                for row in rows
+                for m in (row.payload or {}).get("matches", [])
+                if str(m.get("utcDate") or "")[:10] > after
+            ]
+            if future:
+                candidates.append(min(future))
+
+    return min(candidates) if candidates else None
+
+
+@router.get("/fixtures/next", summary="Next calendar day with fixtures after a date")
+def next_matchday(
+    after: str = Query(description="Find the next fixture day strictly after this YYYY-MM-DD"),
+    sport_name: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    try:
+        datetime.strptime(after, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=422, detail="after must be in YYYY-MM-DD format")
+    return {"date": _next_fixture_date(db, after, sport_name)}
+
+
 @router.get(
     "/matches/public",
     response_model=MatchListResponse,

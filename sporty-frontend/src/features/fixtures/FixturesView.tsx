@@ -7,7 +7,7 @@ import { Radio, SlidersHorizontal } from "lucide-react";
 import { CalendarPopover } from "@/components/matches-browser/CalendarPopover";
 import { MatchDateStrip, shiftDateKey, toDateKey } from "@/components/matches-browser/MatchDateStrip";
 import { SportFilterChips } from "@/components/matches-browser/SportFilterChips";
-import { useFixtures } from "@/hooks/fixtures/useFixtures";
+import { useFixtures, useNextMatchday } from "@/hooks/fixtures/useFixtures";
 import { useFollowedLeagues } from "@/hooks/fixtures/useFollowedLeagues";
 import { FixturesService } from "@/services/FixturesService";
 import type { TFixture } from "@/types/fixture";
@@ -76,6 +76,22 @@ export function FixturesView() {
     () => groupFixturesByCompetition(visible, followed),
     [visible, followed],
   );
+
+  // When the whole day is empty (not just a filter), find the next matchday.
+  const dayEmpty = !isLoading && !isError && items.length === 0;
+  const { data: next } = useNextMatchday(
+    date,
+    sport === "all" ? undefined : sport,
+    dayEmpty,
+  );
+  const nextDate = next?.date ?? null;
+  const nextLabel = nextDate
+    ? new Date(`${nextDate}T00:00:00`).toLocaleDateString(undefined, {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      })
+    : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
@@ -156,9 +172,18 @@ export function FixturesView() {
                     : "No matches on this day."}
               </p>
               <p className="mt-1.5 text-xs text-fg-3">
-                Matchdays cluster around weekends — try a nearby day.
+                Matchdays cluster around weekends — jump to the next one.
               </p>
-              <div className="mt-4 flex justify-center gap-2">
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
+                {dayEmpty && nextDate && nextDate !== date && (
+                  <button
+                    type="button"
+                    onClick={() => setDate(nextDate)}
+                    className="rounded-[3px] bg-accent px-3 py-1.5 font-sans text-xs font-700 uppercase tracking-[1px] text-surface-0 transition-colors hover:bg-accent-bright"
+                  >
+                    Next matchday — {nextLabel}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setDate(shiftDateKey(date, 1))}

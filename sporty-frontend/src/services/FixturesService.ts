@@ -13,4 +13,13 @@ export const FixturesService = {
     const res = await publicApi.get(API_PATHS.FIXTURES.LIST, { params });
     return res.data as TFixtureListResponse;
   },
+
+  /** The next calendar day (after `after`) that has any fixture, for the
+   *  empty-day "jump to next matchday" affordance. */
+  async nextMatchday(after: string, sport_name?: string): Promise<{ date: string | null }> {
+    const res = await publicApi.get(API_PATHS.FIXTURES.NEXT, {
+      params: { after, sport_name },
+    });
+    return res.data as { date: string | null };
+  },
 };
