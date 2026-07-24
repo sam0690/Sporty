@@ -8,11 +8,9 @@ CELERY_BEAT_SCHEDULE = {
     # see FOOTBALL_API_DAILY_BUDGET). All three tasks no-op while
     # LIVE_POLLING_ENABLED / the live_polling_enabled admin flag is off.
     #
-    # Daily request math (worst-case EPL Saturday): fixtures 1 + predictions
-    # ~10 + live polling ~70 (5-min polls, only inside kickoff windows, 1
-    # request per poll since events are embedded) + FT stat sheets ~10 (one
-    # /fixtures/players per finished fixture) ≈ 91; the budget guard clips
-    # gracefully (FT sheet falls back to event booking). Non-matchdays: ~1.
+    # Daily request math (worst-case EPL Saturday): fixtures 3 + predictions
+    # ~10 + live snapshots ≤4 + reconcile date queries ~2 + FT stat sheets
+    # ~10 ≈ 30. The budget guard clips gracefully either way.
     "sync-football-matches-daily": {
         "task": "sync.football.matches",
         "schedule": crontab(minute=0, hour=6),
@@ -23,11 +21,15 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour=7),
         "args": (),
     },
-    # Every 5 min all day is safe: the task gates on DB state (fixtures in a
-    # live window) before touching the API, so idle runs cost zero requests.
-    "poll-live-football-every-5m": {
+    # Deliberately coarse (user decision 2026-07-24): scores land hours after
+    # full time, not live. The task's reconcile pass books finals + FT stat
+    # sheets for matches that started and ended between ticks, so nothing is
+    # lost — only delayed. Idle ticks still cost zero requests (DB gate).
+    # For real-time UX, tighten to crontab(minute="*/5") — the window gate +
+    # budget keep that safe too (~91 req worst case).
+    "poll-live-football-every-6h": {
         "task": "live.football.poll",
-        "schedule": crontab(minute="*/5"),
+        "schedule": crontab(minute=30, hour="*/6"),
         "args": (),
     },
 

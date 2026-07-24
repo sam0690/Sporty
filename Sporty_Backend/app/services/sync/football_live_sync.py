@@ -9,9 +9,15 @@ scoring — so a real match would show up identically to a simulated one.
 
 Quota discipline (free tier = 100 req/day, budget = FOOTBALL_API_DAILY_BUDGET):
 the poll makes ZERO API calls unless a fixture with a numeric external id is
-inside a live window (kickoff-5min .. kickoff+3h, or already status='live');
-each poll is ONE request because live fixtures embed their events; and
-FootballQuotaExhausted pauses polling for the rest of the UTC day.
+inside a live window (kickoff-5min .. kickoff+3h, or already status='live')
+or awaiting a missed final; each live poll is ONE request because live
+fixtures embed their events; FootballQuotaExhausted pauses everything for
+the rest of the UTC day.
+
+The Beat cadence is coarse (every 6h, user decision) so most matches start
+and finish between ticks; the reconcile pass fetches those finals via the
+Free-plan-allowed fixtures?date= query and books their FT stat sheets, so
+scores/fantasy points arrive hours late but never go missing.
 
 Only matches with a numeric (real, API-Football-sourced) external_api_id are
 touched; feeder-simulated matches (external_api_id = "feeder:<uuid>") are
@@ -145,6 +151,114 @@ def _fixtures_in_live_window(db: Session, sport_id) -> list[Match]:
     return [m for m in candidates if (m.external_api_id or "").isdigit()]
 
 
+# Anything that kicked off this long ago is over (90' + stoppage + HT + ET/pens).
+_SURELY_FINISHED_AFTER = timedelta(hours=3, minutes=30)
+
+
+def _missed_finish_candidates(db: Session, sport_id) -> list[Match]:
+    """Fixtures that kicked off long enough ago to be over but never reached
+    'finished'. At a multi-hour poll cadence, whole matches start AND end
+    between ticks — and fixtures?live=all only shows in-progress games — so
+    these need a date-query reconciliation pass. Lookback capped at 26h
+    because the Free plan only serves fixtures?date= within today ± 1 day."""
+    now = datetime.now(timezone.utc)
+    candidates = (
+        db.query(Match)
+        .filter(
+            Match.sport_id == sport_id,
+            Match.status.in_(["scheduled", "live"]),
+            Match.match_date >= now - timedelta(hours=26),
+            Match.match_date <= now - _SURELY_FINISHED_AFTER,
+        )
+        .all()
+    )
+    return [m for m in candidates if (m.external_api_id or "").isdigit()]
+
+
+async def _finish_match(db, client, match: Match, live_key: str, fixture_data: dict, resolve_player) -> None:
+    """live->finished transition: book the full FT stat sheet (saves/minutes/
+    clean sheets; 1 extra request), falling back to event-count booking if the
+    fetch fails or the daily budget is spent, then enqueue scoring."""
+    stats_by_player: dict = {}
+    try:
+        players_payload = await client.get_fixture_players(fixture_id=int(match.external_api_id))
+        stats_by_player = _parse_player_sheet(players_payload, fixture_data, resolve_player)
+    except FootballQuotaExhausted as exc:
+        logger.warning("Football FT sheet skipped for %s: %s", live_key, exc)
+    except Exception:
+        logger.exception("Football FT sheet request failed for fixture %s", match.external_api_id)
+    if stats_by_player:
+        persist_football_stats_from_sheet(
+            db, match=match, live_key=live_key, stats_by_player=stats_by_player
+        )
+    else:
+        persist_match_stats(db, match=match, live_key=live_key, sport="football")
+    db.commit()
+    try:
+        enqueue_scoring_for_finished_match(
+            db, match_date=match.match_date, sport_id=match.sport_id
+        )
+    except Exception:
+        logger.exception(
+            "Football live poll: finish %s stats booked but scoring enqueue failed", live_key
+        )
+
+
+async def _reconcile_missed_finishes(db, client, redis, candidates: list[Match], resolve_player) -> int:
+    """Fetch finals for matches the live poll skipped over (one date query per
+    distinct kickoff day) and run the normal finish path for each."""
+    by_day: dict[str, list[Match]] = {}
+    for match in candidates:
+        day = match.match_date.astimezone(timezone.utc).date().isoformat()
+        by_day.setdefault(day, []).append(match)
+
+    finished = 0
+    for day, day_matches in sorted(by_day.items()):
+        try:
+            payload = await client.get_fixtures_by_date(day)
+        except FootballQuotaExhausted as exc:
+            logger.warning("Football reconcile paused: %s", exc)
+            return finished
+        except Exception:
+            logger.exception("Football reconcile: date query failed for %s", day)
+            continue
+        by_id = {
+            str((f.get("fixture") or {}).get("id")): f for f in payload.get("response", [])
+        }
+        for match in day_matches:
+            fixture_data = by_id.get(match.external_api_id)
+            if fixture_data is None:
+                continue
+            fixture = fixture_data.get("fixture", {}) or {}
+            goals = fixture_data.get("goals", {}) or {}
+            new_status = _STATUS_MAP.get((fixture.get("status") or {}).get("short", "NS"), "scheduled")
+            finished_now = new_status == "finished" and match.status != "finished"
+            match.home_score = goals.get("home")
+            match.away_score = goals.get("away")
+            match.status = new_status
+            db.commit()
+
+            live_key = match.external_api_id or str(match.id)
+            channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
+            await redis.publish(channel, WSMessage(
+                event="SCORE_UPDATE",
+                data={
+                    "kind": "LIVE_API_RECONCILE",
+                    "match_id": live_key,
+                    "sport": "football",
+                    "status": new_status,
+                    "home": match.home_score,
+                    "away": match.away_score,
+                    "minute": 90,
+                },
+            ).model_dump_json())
+
+            if finished_now:
+                await _finish_match(db, client, match, live_key, fixture_data, resolve_player)
+                finished += 1
+    return finished
+
+
 async def sync_football_live_matches(db: Session) -> str:
     if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
         return "ok: live polling disabled (LIVE_POLLING_ENABLED=false)"
@@ -153,25 +267,13 @@ async def sync_football_live_matches(db: Session) -> str:
     if sport is None:
         return "ok: football sport not seeded"
 
-    if not _fixtures_in_live_window(db, sport.id):
-        return "ok: no fixtures in live window; API not called"
+    live_candidates = _fixtures_in_live_window(db, sport.id)
+    missed_candidates = _missed_finish_candidates(db, sport.id)
+    if not live_candidates and not missed_candidates:
+        return "ok: no fixtures in live window or awaiting finals; API not called"
 
     client = FootballAPIClient()
-    try:
-        payload = await client.get_live_fixtures(league_id=settings.FOOTBALL_LIVE_LEAGUE_ID)
-    except FootballQuotaExhausted as exc:
-        logger.warning("Football live poll paused: %s", exc)
-        return "ok: daily API budget spent; polling paused until 00:00 UTC"
-    except Exception:
-        logger.exception("Football live poll: live fixtures request failed")
-        return "error: live fixtures request failed"
-
-    fixtures = payload.get("response", [])
-    if not fixtures:
-        return "ok: no live football fixtures"
-
     redis = await get_async_redis()
-    updated = 0
 
     def _resolve_player(api_player_id) -> Player | None:
         return (
@@ -179,6 +281,19 @@ async def sync_football_live_matches(db: Session) -> str:
             .filter(Player.sport_id == sport.id, Player.external_api_id == str(api_player_id))
             .first()
         )
+
+    fixtures: list = []
+    if live_candidates:
+        try:
+            payload = await client.get_live_fixtures(league_id=settings.FOOTBALL_LIVE_LEAGUE_ID)
+            fixtures = payload.get("response", [])
+        except FootballQuotaExhausted as exc:
+            logger.warning("Football live poll paused: %s", exc)
+            return "ok: daily API budget spent; polling paused until 00:00 UTC"
+        except Exception:
+            logger.exception("Football live poll: live fixtures request failed")
+
+    updated = 0
 
     for fixture_data in fixtures:
         fixture = fixture_data.get("fixture", {}) or {}
@@ -319,38 +434,22 @@ async def sync_football_live_matches(db: Session) -> str:
             )
 
         if finished_now:
-            # Prefer the full FT stat sheet (adds saves/minutes/clean sheets;
-            # 1 extra request per fixture); fall back to counting the match's
-            # live_events if the fetch fails or the daily budget is spent.
-            stats_by_player: dict = {}
-            try:
-                players_payload = await client.get_fixture_players(fixture_id=fixture_id)
-                stats_by_player = _parse_player_sheet(
-                    players_payload, fixture_data, _resolve_player
-                )
-            except FootballQuotaExhausted as exc:
-                logger.warning("Football FT sheet skipped for %s: %s", live_key, exc)
-            except Exception:
-                logger.exception(
-                    "Football FT sheet request failed for fixture %s", fixture_id
-                )
-            if stats_by_player:
-                persist_football_stats_from_sheet(
-                    db, match=match, live_key=live_key, stats_by_player=stats_by_player
-                )
-            else:
-                persist_match_stats(db, match=match, live_key=live_key, sport="football")
-            db.commit()
-            try:
-                enqueue_scoring_for_finished_match(
-                    db, match_date=match.match_date, sport_id=match.sport_id
-                )
-            except Exception:
-                logger.exception(
-                    "Football live poll: finish %s stats booked but scoring enqueue failed", live_key
-                )
+            await _finish_match(db, client, match, live_key, fixture_data, _resolve_player)
 
-    return f"ok: polled {len(fixtures)} live fixture(s), updated {updated}"
+    # Catch-up: finals + stats for matches that started and ended between
+    # ticks (a multi-hour cadence skips whole games; live=all can't see them).
+    db.expire_all()
+    still_missed = [m for m in _missed_finish_candidates(db, sport.id)]
+    reconciled = 0
+    if still_missed:
+        reconciled = await _reconcile_missed_finishes(
+            db, client, redis, still_missed, _resolve_player
+        )
+
+    return (
+        f"ok: polled {len(fixtures)} live fixture(s), updated {updated}, "
+        f"reconciled {reconciled} missed finish(es)"
+    )
 
 
 # ── Pre-match predictions (once per matchday) ────────────────────────────────
