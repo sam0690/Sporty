@@ -164,6 +164,10 @@ export const API_PATHS = {
     LIVE_FAVOURITES: "/matches/live-for-favourites",
   },
 
+  FIXTURES: {
+    LIST: "/fixtures",
+  },
+
   COMPETITIONS: {
     LIST: "/competitions",
     STANDINGS: (tag: string) => `/competitions/${tag}/standings`,
