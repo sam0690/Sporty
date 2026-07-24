@@ -69,10 +69,10 @@ class FootballAPIClient:
     BASE_URL = "https://v3.football.api-sports.io"
 
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("RAPIDAPI_FOOTBALL_KEY")
+        self.api_key = api_key or os.getenv("FOOTBALL_API_KEY")
         if not self.api_key:
             raise ValueError(
-                "RAPIDAPI_FOOTBALL_KEY not found in environment variables"
+                "FOOTBALL_API_KEY not found in environment variables"
             )
 
         # Both header schemes: x-apisports-key is what direct api-sports.io

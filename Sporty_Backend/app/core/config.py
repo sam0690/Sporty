@@ -116,7 +116,7 @@ class Settings(BaseSettings):
     # free-tier 100 req/day quota is handled by window-gated 5-min polling +
     # the FOOTBALL_API_DAILY_BUDGET counter, see celery_schedule.py. Flip on
     # via env or the live_polling_enabled admin feature flag once
-    # RAPIDAPI_FOOTBALL_KEY is set.
+    # FOOTBALL_API_KEY is set.
     LIVE_POLLING_ENABLED: bool = False
 
     # Daily API-Football request budget (Redis-counted, UTC reset). Kept
@@ -148,12 +148,12 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str = "https://sportyyy.tech/auth/google/callback"
 
     # ── External APIs ─────────────────────────────────────────
-    RAPIDAPI_FOOTBALL_KEY: str = ""
+    FOOTBALL_API_KEY: str = ""
     RAPIDAPI_NBA_KEY: str = ""
     CRICKET_API_KEY: str = ""
 
     # Fixed hosts - these are the actual working endpoints
-    RAPIDAPI_FOOTBALL_HOST: str = "v3.football.api-sports.io"
+    FOOTBALL_API_HOST: str = "v3.football.api-sports.io"
     RAPIDAPI_NBA_HOST: str = "api-basketball-nba.p.rapidapi.com"
     RAPIDAPI_CRICKET_HOST: str = "cricbuzz-cricket.p.rapidapi.com"
 

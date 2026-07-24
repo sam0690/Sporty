@@ -7,7 +7,7 @@ directly from NBA's public CDN — no API call needed.
 Football: no such linkage exists (the CSV's own IDs were discarded
 during seeding), so team logos are fetched once from API-Football by
 name match and re-hosted in our own R2 bucket (requires
-RAPIDAPI_FOOTBALL_KEY). Player photos instead come from two free,
+FOOTBALL_API_KEY). Player photos instead come from two free,
 keyless sources, tried in order:
 
   1. TheSportsDB - one bulk request per club roster (~19 requests

@@ -54,8 +54,8 @@ def test_rapidapi_client():
     try:
         # Create a client instance
         client = RapidAPIClient(
-            api_key=settings.RAPIDAPI_FOOTBALL_KEY,
-            api_host=settings.RAPIDAPI_FOOTBALL_HOST,
+            api_key=settings.FOOTBALL_API_KEY,
+            api_host=settings.FOOTBALL_API_HOST,
             timeout=10,
             cache_ttl=300,
         )

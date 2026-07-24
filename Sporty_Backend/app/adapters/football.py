@@ -27,7 +27,7 @@ class FootballAdapter(ISportAdapter):
         # then mark success/failure around the awaited request.
         self.breaker.call(lambda: True)
 
-        api_key = settings.RAPIDAPI_FOOTBALL_KEY
+        api_key = settings.FOOTBALL_API_KEY
         if not api_key:
             return {}
 
@@ -44,7 +44,7 @@ class FootballAdapter(ISportAdapter):
 
         url = f"{self._base_url}{path}"
         headers = {
-            "x-rapidapi-host": settings.RAPIDAPI_FOOTBALL_HOST,
+            "x-rapidapi-host": settings.FOOTBALL_API_HOST,
             "x-rapidapi-key": api_key,
         }
 
