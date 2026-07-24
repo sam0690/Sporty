@@ -68,7 +68,16 @@ type Envelope<K extends string, D> = {
 
 export type TStandingsResponse = Envelope<
   "standings",
-  { standings: { type?: string; table: TStandingRow[] }[] }
+  {
+    standings: { type?: string; table: TStandingRow[] }[];
+    // football-data.org's season object — startDate/currentMatchday reveal
+    // whether the labelled season has actually kicked off yet.
+    season?: {
+      startDate?: string;
+      endDate?: string;
+      currentMatchday?: number | null;
+    };
+  }
 >;
 export type TScorersResponse = Envelope<"scorers", { scorers: TScorer[] }>;
 export type TCompetitionMatchesResponse = Envelope<

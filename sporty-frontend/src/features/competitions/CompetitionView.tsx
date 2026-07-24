@@ -72,6 +72,16 @@ export function CompetitionView({ tag }: { tag: string }) {
   const scorerRows = scorers.data?.data.scorers ?? [];
   const matchRows = matches.data?.data.matches ?? [];
 
+  // Before a season kicks off, football-data.org returns last season's final
+  // table as a placeholder (tagged with the upcoming season). Detect that so
+  // we can tell the user the table isn't the labelled season's yet.
+  const stSeason = standings.data?.data.season;
+  const seasonNotStarted = stSeason?.startDate
+    ? new Date(stSeason.startDate) > new Date()
+    : (stSeason?.currentMatchday ?? 99) <= 1;
+  const showingLastSeason =
+    seasonNotStarted && table.length > 0 && (table[0]?.playedGames ?? 0) > 0;
+
   // The season actually served — a competition resolves its own current (CL's
   // calendar lags the domestic leagues, so it differs from index.current_season).
   const activeSeason =
@@ -193,6 +203,13 @@ export function CompetitionView({ tag }: { tag: string }) {
           error={standings.isError}
           empty={table.length === 0}
         >
+          {showingLastSeason && (
+            <div className="mb-3 rounded-[3px] border border-white/10 bg-surface-2 px-4 py-2.5 text-xs text-fg-2">
+              {activeSeason ? seasonLabel(activeSeason) : "This season"} hasn&apos;t
+              kicked off yet — showing last season&apos;s final table. Live standings
+              appear after the first matchday.
+            </div>
+          )}
           <StandingsTable table={table} />
         </TabPanel>
       )}
