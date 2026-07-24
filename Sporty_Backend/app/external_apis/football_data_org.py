@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 _resume_at = 0.0
 
 
-async def _fdo_get(path: str) -> dict[str, Any]:
+async def _fdo_get(path: str, params: dict[str, str] | None = None) -> dict[str, Any]:
     global _resume_at
     token = settings.FOOTBALL_DATA_ORG_TOKEN
     if not token:
@@ -45,7 +45,8 @@ async def _fdo_get(path: str) -> dict[str, Any]:
     async with httpx.AsyncClient() as client:
         for attempt in (1, 2):
             response = await client.get(
-                f"{BASE_URL}/{path}", headers={"X-Auth-Token": token}, timeout=30
+                f"{BASE_URL}/{path}", headers={"X-Auth-Token": token},
+                params=params or {}, timeout=30,
             )
             reset = int(response.headers.get("X-RequestCounter-Reset", 60) or 60)
             available = response.headers.get("x-requests-available-minute")
@@ -60,12 +61,46 @@ async def _fdo_get(path: str) -> dict[str, Any]:
     raise RuntimeError("unreachable")  # both attempts returned above or raised
 
 
-async def get_competition_matches(code: str) -> dict[str, Any]:
-    """Full current-season match list for one competition (PL/PD/BL1/...).
+# Free-tier history horizon: the current season plus the three before it
+# (verified 2026-07-24 — season=2023 works, 2022 is 403). Season is the start
+# year (2026 = the 2026-27 season).
+FDO_MIN_SEASON = 2023
+
+
+def _season_param(season: int | None) -> dict[str, str]:
+    return {"season": str(season)} if season is not None else {}
+
+
+async def get_competition_matches(code: str, season: int | None = None) -> dict[str, Any]:
+    """Match list for one competition (PL/PD/BL1/...). Current season when
+    `season` is omitted, else that season's start year (>= FDO_MIN_SEASON).
 
     Returns:
         {"matches": [{"id":..., "utcDate":..., "status": "TIMED", "matchday":...,
                       "homeTeam": {"name": "Manchester United FC", ...},
                       "awayTeam": {...}, "season": {...}}, ...]}
     """
-    return await _fdo_get(f"competitions/{code}/matches")
+    return await _fdo_get(f"competitions/{code}/matches", _season_param(season))
+
+
+async def get_competition_standings(code: str, season: int | None = None) -> dict[str, Any]:
+    """League table for one competition/season.
+
+    Returns:
+        {"standings": [{"type": "TOTAL", "table": [{"position":..., "team": {...},
+          "playedGames":..., "won":..., "draw":..., "lost":..., "points":...,
+          "goalsFor":..., "goalsAgainst":..., "goalDifference":..., "form": "W,L,..."}]}]}
+    """
+    return await _fdo_get(f"competitions/{code}/standings", _season_param(season))
+
+
+async def get_competition_scorers(code: str, season: int | None = None, limit: int = 20) -> dict[str, Any]:
+    """Top scorers for one competition/season.
+
+    Returns:
+        {"scorers": [{"player": {...}, "team": {...}, "goals":..., "assists":...,
+                      "penalties":..., "playedMatches":...}]}
+    """
+    params = {"limit": str(limit)}
+    params.update(_season_param(season))
+    return await _fdo_get(f"competitions/{code}/scorers", params)

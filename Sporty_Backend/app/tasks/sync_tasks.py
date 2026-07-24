@@ -74,6 +74,25 @@ def sync_football_matches_task(league_id: int | None = None, season: int | None 
             db.close()
 
 
+@shared_task(name="sync.football.competition_data")
+def sync_football_competition_data_task() -> dict[str, Any]:
+    """Refresh current-season standings/scorers/matches snapshots for the
+    public competition pages (~9 football-data.org calls)."""
+    from app.competition.service import refresh_current_season
+
+    lock_key = "lock:sync:football:competition_data"
+    with redis_lock(lock_key, ttl_seconds=60 * 10) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held", "task": "sync.football.competition_data"}
+
+        db = SessionLocal()
+        try:
+            result = _run_async(refresh_current_season(db))
+            return {"ok": True, "task": "sync.football.competition_data", "result": result}
+        finally:
+            db.close()
+
+
 @shared_task(name="sync.football.predictions")
 def sync_football_predictions_task() -> dict[str, Any]:
     lock_key = "lock:sync:football:predictions"

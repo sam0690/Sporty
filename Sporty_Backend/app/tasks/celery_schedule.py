@@ -21,6 +21,14 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=0, hour=7),
         "args": (),
     },
+    # Public competition pages: standings/scorers/matches snapshots (current
+    # season). ~9 football-data.org calls/day; historical seasons load on
+    # demand and cache forever.
+    "sync-football-competition-data-daily": {
+        "task": "sync.football.competition_data",
+        "schedule": crontab(minute=30, hour=6),
+        "args": (),
+    },
     # Deliberately coarse (user decision 2026-07-24): scores land hours after
     # full time, not live. The task's reconcile pass books finals + FT stat
     # sheets for matches that started and ended between ticks, so nothing is
