@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 
 import { CompetitionView } from "@/features/competitions/CompetitionView";
 
-const VALID = new Set(["epl", "laliga", "bundesliga"]);
+const VALID = new Set(["epl", "laliga", "bundesliga", "ucl"]);
 const NAMES: Record<string, string> = {
   epl: "Premier League",
   laliga: "La Liga",
   bundesliga: "Bundesliga",
+  ucl: "Champions League",
 };
 
 export async function generateMetadata({

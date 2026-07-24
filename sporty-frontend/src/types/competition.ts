@@ -42,10 +42,14 @@ export type TCompetitionMatch = {
   utcDate: string;
   status: string; // TIMED | SCHEDULED | IN_PLAY | PAUSED | FINISHED | POSTPONED ...
   matchday: number | null;
+  // Knockout rounds carry a stage (LAST_16 / QUARTER_FINALS / SEMI_FINALS /
+  // FINAL / PLAYOFFS); the league phase is LEAGUE_STAGE (or GROUP_STAGE).
+  stage?: string | null;
   homeTeam: { id: number; name: string; crest?: string | null };
   awayTeam: { id: number; name: string; crest?: string | null };
   score?: {
     fullTime?: { home: number | null; away: number | null };
+    winner?: string | null; // HOME_TEAM | AWAY_TEAM | DRAW
   };
 };
 

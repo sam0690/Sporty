@@ -21,14 +21,23 @@ export const FOOTBALL_COMPETITIONS: CompetitionMeta[] = [
   { value: "BUNDESLIGA", label: "Bundesliga", short: "Bundes.", flag: "🇩🇪" },
 ];
 
-const BY_TAG: Record<string, CompetitionMeta> = Object.fromEntries(
-  FOOTBALL_COMPETITIONS.map((c) => [c.value, c]),
-);
+// Display-only meta (competition pages), NOT fantasy-selectable — kept out of
+// the picker array above so it can never be chosen for a league's pool.
+type DisplayMeta = { label: string; short: string; flag: string };
 
-/** Display meta for a stored tag ("EPL"|"LALIGA"|"BUNDESLIGA"), or null. */
+const DISPLAY_ONLY: Record<string, DisplayMeta> = {
+  UCL: { label: "Champions League", short: "UCL", flag: "🏆" },
+};
+
+const BY_TAG: Record<string, DisplayMeta> = {
+  ...Object.fromEntries(FOOTBALL_COMPETITIONS.map((c) => [c.value, c])),
+  ...DISPLAY_ONLY,
+};
+
+/** Display meta for a stored tag ("EPL"|"LALIGA"|"BUNDESLIGA"|"UCL"), or null. */
 export function competitionMeta(
   tag: string | null | undefined,
-): CompetitionMeta | null {
+): DisplayMeta | null {
   if (!tag) return null;
   return BY_TAG[tag] ?? null;
 }

@@ -15,9 +15,10 @@ import {
 import { StandingsTable } from "./components/StandingsTable";
 import { ScorersTable } from "./components/ScorersTable";
 import { CompetitionMatches } from "./components/CompetitionMatches";
+import { KnockoutBracket, hasKnockout } from "./components/KnockoutBracket";
 
-type Tab = "standings" | "fixtures" | "results" | "stats";
-const TABS: { key: Tab; label: string }[] = [
+type Tab = "standings" | "bracket" | "fixtures" | "results" | "stats";
+const BASE_TABS: { key: Tab; label: string }[] = [
   { key: "standings", label: "Standings" },
   { key: "fixtures", label: "Fixtures" },
   { key: "results", label: "Results" },
@@ -61,7 +62,6 @@ export function CompetitionView({ tag }: { tag: string }) {
 
   const meta = competitionMeta(tag);
   const competitions = index?.competitions ?? [];
-  const activeSeason = season ?? index?.current_season;
 
   const standings = useCompetitionStandings(tag, season);
   const scorers = useCompetitionScorers(tag, season);
@@ -70,6 +70,27 @@ export function CompetitionView({ tag }: { tag: string }) {
   const table = standings.data?.data.standings?.[0]?.table ?? [];
   const scorerRows = scorers.data?.data.scorers ?? [];
   const matchRows = matches.data?.data.matches ?? [];
+
+  // The season actually served — a competition resolves its own current (CL's
+  // calendar lags the domestic leagues, so it differs from index.current_season).
+  const activeSeason =
+    season ?? standings.data?.season ?? matches.data?.season ?? index?.current_season;
+
+  // Bracket tab only for competitions that have a knockout stage (CL does).
+  const showBracket = hasKnockout(matchRows);
+  const tabs = useMemo(
+    () =>
+      showBracket
+        ? [
+            BASE_TABS[0],
+            { key: "bracket" as Tab, label: "Bracket" },
+            ...BASE_TABS.slice(1),
+          ]
+        : BASE_TABS,
+    [showBracket],
+  );
+  // Keep the active tab valid when switching to a competition without a bracket.
+  const activeTab = tabs.some((t) => t.key === tab) ? tab : "standings";
 
   const seasonOptions = useMemo(
     () =>
@@ -134,9 +155,9 @@ export function CompetitionView({ tag }: { tag: string }) {
       </h1>
 
       {/* Tabs */}
-      <div className="mb-5 flex gap-1 border-b border-white/8" role="tablist">
-        {TABS.map((t) => {
-          const active = t.key === tab;
+      <div className="mb-5 flex gap-1 overflow-x-auto border-b border-white/8" role="tablist">
+        {tabs.map((t) => {
+          const active = t.key === activeTab;
           return (
             <button
               key={t.key}
@@ -165,7 +186,7 @@ export function CompetitionView({ tag }: { tag: string }) {
         })}
       </div>
 
-      {tab === "standings" && (
+      {activeTab === "standings" && (
         <TabPanel
           loading={standings.isLoading}
           error={standings.isError}
@@ -174,17 +195,22 @@ export function CompetitionView({ tag }: { tag: string }) {
           <StandingsTable table={table} />
         </TabPanel>
       )}
-      {tab === "fixtures" && (
+      {activeTab === "bracket" && (
+        <TabPanel loading={matches.isLoading} error={matches.isError}>
+          <KnockoutBracket matches={matchRows} />
+        </TabPanel>
+      )}
+      {activeTab === "fixtures" && (
         <TabPanel loading={matches.isLoading} error={matches.isError}>
           <CompetitionMatches matches={matchRows} mode="fixtures" />
         </TabPanel>
       )}
-      {tab === "results" && (
+      {activeTab === "results" && (
         <TabPanel loading={matches.isLoading} error={matches.isError}>
           <CompetitionMatches matches={matchRows} mode="results" />
         </TabPanel>
       )}
-      {tab === "stats" && (
+      {activeTab === "stats" && (
         <TabPanel
           loading={scorers.isLoading}
           error={scorers.isError}
