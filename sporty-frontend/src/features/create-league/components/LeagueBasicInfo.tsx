@@ -44,11 +44,11 @@ export function LeagueBasicInfo({
     return selected ? `Selected: ${selected.label}` : "";
   }, [sport]);
 
-  // The competition scope is a refinement of the football choice, so it only
-  // applies when football is the sole sport (multisport draws its football
-  // pool from every league). Shown as a compact secondary row under the sport
-  // grid, not a peer of it.
-  const showCompetitionPicker = sport === "football";
+  // The competition scope refines the football pool, so it shows whenever
+  // football is involved — a football-only league or the football half of a
+  // multisport league. Shown as a compact secondary row under the sport grid.
+  const showCompetitionPicker = sport === "football" || sport === "multisport";
+  const isMultisport = sport === "multisport";
 
   return (
     <div className="space-y-6">
@@ -123,7 +123,7 @@ export function LeagueBasicInfo({
           >
             <div className="pt-1">
               <p className="mb-2 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
-                Player Pool
+                {isMultisport ? "Football Pool" : "Player Pool"}
               </p>
               <div
                 role="radiogroup"
@@ -162,11 +162,15 @@ export function LeagueBasicInfo({
               </div>
               <p className="mt-2 text-xs text-fg-3">
                 {competition === "ALL"
-                  ? "Squads can draft from all three leagues."
-                  : `Squads are limited to ${
+                  ? isMultisport
+                    ? "Football players come from all three leagues (plus NBA)."
+                    : "Squads can draft from all three leagues."
+                  : `${
+                      isMultisport ? "Football players" : "Squads"
+                    } are limited to ${
                       FOOTBALL_COMPETITIONS.find((c) => c.value === competition)
                         ?.label ?? "this league"
-                    } players.`}
+                    }${isMultisport ? " (plus NBA)" : " players"}.`}
               </p>
             </div>
           </motion.div>

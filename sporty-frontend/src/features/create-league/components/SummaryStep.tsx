@@ -77,12 +77,13 @@ export function SummaryStep({
                 "-"}
             </p>
           </div>
-          {selectedSports.length === 1 &&
-            selectedSports[0] === "football" &&
+          {selectedSports.includes("football") &&
             leagueData.competition &&
             leagueData.competition !== "ALL" && (
               <div className="grid grid-cols-2 gap-2 border-b border-white/8 px-4 py-3">
-                <p className="text-sm text-fg-3">Player Pool</p>
+                <p className="text-sm text-fg-3">
+                  {selectedSports.length > 1 ? "Football Pool" : "Player Pool"}
+                </p>
                 <p className="flex items-center gap-1.5 text-sm text-fg-1">
                   <span aria-hidden="true">
                     {competitionMeta(leagueData.competition)?.flag}

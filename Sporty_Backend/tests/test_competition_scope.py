@@ -47,7 +47,7 @@ from app.league.competition_scope import (  # noqa: E402
 )
 from app.auth.models import AuthProvider, User  # noqa: E402
 from app.league import services as league_service  # noqa: E402
-from app.league.models import LeagueSport, Season, Sport  # noqa: E402
+from app.league.models import League, LeagueSport, LeagueStatus, Season, Sport  # noqa: E402
 from app.league.schemas import LeagueCreate  # noqa: E402
 from app.player.models import Player, RealTeam  # noqa: E402
 
@@ -158,3 +158,37 @@ def test_filter_pool_by_scope_on_materialized_pool():
         kept = filter_pool_by_scope(pool, scoped)
         assert len(kept) == 1
         assert kept[0].real_team_id == str(epl_p.real_team_id)
+
+
+def test_multisport_scopes_football_but_keeps_all_nba():
+    """A multisport league can pin its football pool to one competition while
+    the basketball (NBA) pool stays fully included — the crux of extending the
+    picker to multisport."""
+    with session_scope() as db:
+        football, _, epl_p, laliga_p, _ = _fixture(db, filter_comp="EPL")
+        # league from _fixture is football-only; add a basketball sport, an
+        # NBA player, and a basketball LeagueSport with NO competition filter.
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add(basketball)
+        db.flush()
+        nba_team = RealTeam(sport_id=basketball.id, name="Lakers",
+                            external_api_id="nba-1", competition=None)
+        db.add(nba_team)
+        db.flush()
+        nba_p = Player(sport_id=basketball.id, external_api_id="nba-p1", name="LeBron",
+                       position="F", real_team=nba_team.name, real_team_id=nba_team.id,
+                       cost=Decimal("9"), is_available=True)
+        db.add(nba_p)
+        # reuse the football-only league as multisport by attaching basketball
+        league = db.query(League).first()
+        db.add(LeagueSport(league_id=league.id, sport_id=basketball.id, competition_filter=None))
+        db.flush()
+
+        crit = competition_scope_criterion(db, league.id)
+        q = db.query(Player)
+        if crit is not None:
+            q = q.filter(crit)
+        ids = {p.id for p in q.all()}
+        assert epl_p.id in ids          # football: EPL kept
+        assert laliga_p.id not in ids   # football: other competition dropped
+        assert nba_p.id in ids          # basketball: fully included, unscoped

@@ -268,11 +268,11 @@ export function CreateLeagueView() {
     setError(null);
     try {
       const competitionType = values.draft_mode ? "draft" : "budget";
-      // Only a football-only league carries a competition scope, and only
-      // when it's narrower than "all". Anything else sends no filter.
+      // Any league with football (football-only or multisport) can scope its
+      // football pool; the filter applies to the football sub-pool only and
+      // is sent only when narrower than "all".
       const competitionFilters =
-        selectedSports.length === 1 &&
-        selectedSports[0] === "football" &&
+        selectedSports.includes("football") &&
         values.football_competition !== "ALL"
           ? { football: values.football_competition }
           : undefined;
@@ -348,10 +348,10 @@ export function CreateLeagueView() {
       shouldValidate: true,
     });
 
-    // Competition scope only applies to a football-only league; reset it when
-    // leaving football so a multisport/basketball league never carries a
-    // stale filter into the payload.
-    if (sport !== "football") {
+    // Competition scope applies to any league with football in it (football
+    // or multisport); reset it only when football drops out entirely (i.e.
+    // basketball-only) so a stale filter never leaks into the payload.
+    if (sport === "basketball") {
       setValue("football_competition", "ALL", { shouldDirty: true });
     }
 
