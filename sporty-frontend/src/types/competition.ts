@@ -49,8 +49,14 @@ export type TCompetitionMatch = {
   awayTeam: { id: number; name: string; crest?: string | null };
   score?: {
     fullTime?: { home: number | null; away: number | null };
+    halfTime?: { home: number | null; away: number | null };
     winner?: string | null; // HOME_TEAM | AWAY_TEAM | DRAW
   };
+};
+
+export type TCompetitionMatchDetail = {
+  competition: string; // tag, e.g. "UCL"
+  match: TCompetitionMatch;
 };
 
 type Envelope<K extends string, D> = {

@@ -3,6 +3,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../api/useApiQuery";
 import { CompetitionService } from "@/services/CompetitionService";
 import type {
+  TCompetitionMatchDetail,
   TCompetitionMatchesResponse,
   TCompetitionsIndex,
   TScorersResponse,
@@ -39,4 +40,11 @@ export const useCompetitionMatches = (tag: string, season?: number) =>
     ["competitions", tag, "matches", season ?? "current"],
     () => CompetitionService.matches(tag, season),
     { ...SLOW, enabled: Boolean(tag) },
+  );
+
+export const useCompetitionMatch = (tag: string, id: string) =>
+  useApiQuery<TCompetitionMatchDetail>(
+    ["competitions", tag, "match", id],
+    () => CompetitionService.match(tag, id),
+    { staleTime: 60_000, enabled: Boolean(tag && id) },
   );

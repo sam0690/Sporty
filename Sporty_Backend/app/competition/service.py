@@ -151,6 +151,24 @@ def _upsert(db: Session, tag: str, season: int, kind: str, payload: dict) -> Non
     db.commit()
 
 
+def get_match(db: Session, tag: str, match_id: str) -> dict | None:
+    """A single display-only competition match by football-data.org id, found
+    in the cached matches snapshots. Powers the CL match detail page."""
+    tag = tag.upper()
+    if tag not in _TAG_TO_FDO:
+        return None
+    rows = (
+        db.query(CompetitionSnapshot)
+        .filter(CompetitionSnapshot.competition == tag, CompetitionSnapshot.kind == "matches")
+        .all()
+    )
+    for row in rows:
+        for m in (row.payload or {}).get("matches", []):
+            if str(m.get("id")) == str(match_id):
+                return m
+    return None
+
+
 async def refresh_current_season(db: Session) -> dict:
     """Daily sync entry point: refresh standings + scorers + matches for every
     tracked competition's CURRENT season (no season param — each competition

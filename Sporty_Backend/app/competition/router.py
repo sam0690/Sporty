@@ -46,3 +46,14 @@ def _snapshot(kind: str):
 router.add_api_route("/{tag}/standings", _snapshot("standings"), methods=["GET"])
 router.add_api_route("/{tag}/scorers", _snapshot("scorers"), methods=["GET"])
 router.add_api_route("/{tag}/matches", _snapshot("matches"), methods=["GET"])
+
+
+@router.get("/{tag}/matches/{match_id}")
+def get_competition_match(tag: str, match_id: str, db=Depends(get_db)):
+    """Detail for a single display-only competition match (from the snapshot).
+    football-data.org's free tier has no events/lineups, so this is the match
+    card data: teams, score, stage, matchday, date, status."""
+    match = service.get_match(db, tag.upper(), match_id)
+    if match is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
+    return {"competition": tag.upper(), "match": match}

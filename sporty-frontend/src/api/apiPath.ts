@@ -174,6 +174,7 @@ export const API_PATHS = {
     STANDINGS: (tag: string) => `/competitions/${tag}/standings`,
     SCORERS: (tag: string) => `/competitions/${tag}/scorers`,
     MATCHES: (tag: string) => `/competitions/${tag}/matches`,
+    MATCH: (tag: string, id: string) => `/competitions/${tag}/matches/${id}`,
   },
 
   PREDICTIONS: {

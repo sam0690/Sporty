@@ -1,6 +1,7 @@
 import { publicApi } from "@/api/public-api-client";
 import { API_PATHS } from "@/api/apiPath";
 import type {
+  TCompetitionMatchDetail,
   TCompetitionMatchesResponse,
   TCompetitionsIndex,
   TScorersResponse,
@@ -34,5 +35,10 @@ export const CompetitionService = {
       params: season ? { season } : {},
     });
     return res.data as TCompetitionMatchesResponse;
+  },
+
+  async match(tag: string, id: string): Promise<TCompetitionMatchDetail> {
+    const res = await publicApi.get(API_PATHS.COMPETITIONS.MATCH(tag, id));
+    return res.data as TCompetitionMatchDetail;
   },
 };
