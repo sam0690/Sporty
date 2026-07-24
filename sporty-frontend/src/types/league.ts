@@ -57,6 +57,9 @@ export type TLeagueSport = {
    * is the league's own season_id, not this field) or a stale pre-
    * migration row. See LeagueSport.season_id on the backend. */
   season: TSeasonBrief | null;
+  /** Competition the player pool is scoped to for this sport
+   * ("EPL"|"LALIGA"|"BUNDESLIGA"); null = all competitions. */
+  competition_filter?: string | null;
   created_at: string;
 };
 

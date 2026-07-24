@@ -83,6 +83,7 @@ export const LeagueService = {
     name: string;
     season_id: string;
     sports?: string[];
+    competition_filters?: Record<string, string>;
     competitionType?: TCompetitionType;
     is_public?: boolean;
     max_teams?: number;

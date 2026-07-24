@@ -57,6 +57,10 @@ export const CreateLeagueSchema = z.object({
   draft_pick_seconds: z.coerce.number().int().min(15).max(600).optional(),
   is_head_to_head: z.boolean(),
   is_public: z.boolean(),
+  // Football-only player-pool scope. "ALL" = no scope (all competitions).
+  football_competition: z
+    .enum(["ALL", "EPL", "LALIGA", "BUNDESLIGA"])
+    .default("ALL"),
 });
 
 export const JoinLeagueSchema = z.object({

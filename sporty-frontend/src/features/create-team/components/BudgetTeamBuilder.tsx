@@ -6,6 +6,7 @@ import { CurrentTeam } from "./CurrentTeam";
 import { PlayerMarket } from "./PlayerMarket";
 import { TeamNameForm } from "./TeamNameForm";
 import { SquadValidationChecklist } from "./SquadValidationChecklist";
+import { CompetitionBadge } from "@/components/ui/CompetitionBadge";
 import { MULTISPORT_MIN_BY_SPORT } from "@/lib/squad/squadRules";
 import type { CreateTeamViewModel } from "../hooks/useCreateTeamDashboard";
 
@@ -129,9 +130,12 @@ export function BudgetTeamBuilder({
     <section className="mx-auto max-w-7xl space-y-6 px-6 py-8 text-fg-1">
       <div className="flex items-center justify-between">
         <p className="section-label">Manager: {username || "Sporty User"}</p>
-        <span className="rounded-[3px] border border-white/8 bg-surface-3 px-3 py-1 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
-          {league.sports[0]?.sport.display_name || "Multisport"}
-        </span>
+        <div className="flex items-center gap-2">
+          <CompetitionBadge tag={league.sports[0]?.competition_filter} />
+          <span className="rounded-[3px] border border-white/8 bg-surface-3 px-3 py-1 font-sans text-xs font-700 uppercase tracking-[1.5px] text-fg-2">
+            {league.sports[0]?.sport.display_name || "Multisport"}
+          </span>
+        </div>
       </div>
 
       <CreateTeamHeader

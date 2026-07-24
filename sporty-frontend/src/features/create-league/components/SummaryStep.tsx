@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  competitionMeta,
+  type CompetitionChoice,
+} from "@/lib/footballCompetitions";
+
 type LeagueSportName = "football" | "basketball";
 
 type ScoringRuleDisplay = {
@@ -17,6 +22,7 @@ type SummaryStepProps = {
     competitionType: "draft" | "budget";
     isHeadToHead: boolean;
     draftDate: string;
+    competition?: CompetitionChoice;
   };
   selectedSports: LeagueSportName[];
   scoringRulesBySport: Record<LeagueSportName, ScoringRuleDisplay[]>;
@@ -71,6 +77,20 @@ export function SummaryStep({
                 "-"}
             </p>
           </div>
+          {selectedSports.length === 1 &&
+            selectedSports[0] === "football" &&
+            leagueData.competition &&
+            leagueData.competition !== "ALL" && (
+              <div className="grid grid-cols-2 gap-2 border-b border-white/8 px-4 py-3">
+                <p className="text-sm text-fg-3">Player Pool</p>
+                <p className="flex items-center gap-1.5 text-sm text-fg-1">
+                  <span aria-hidden="true">
+                    {competitionMeta(leagueData.competition)?.flag}
+                  </span>
+                  {competitionMeta(leagueData.competition)?.label}
+                </p>
+              </div>
+            )}
           <div className="grid grid-cols-2 gap-2 border-b border-white/8 px-4 py-3">
             <p className="text-sm text-fg-3">Type</p>
             <p className="text-sm text-fg-1">

@@ -12,6 +12,7 @@ import { SuccessModal } from "./SuccessModal";
 import { useDefaultScoringRules } from "@/hooks/scoring/useScoring";
 import { useSeasons, useSports, useCreateLeague } from "@/hooks/leagues/useLeagues";
 import { CreateLeagueSchema, type CreateLeagueValues } from "@/lib/validations";
+import type { CompetitionChoice } from "@/lib/footballCompetitions";
 import type { TCompetitionType } from "@/types";
 
 type SportKey = "football" | "basketball" | "multisport";
@@ -77,6 +78,7 @@ export function CreateLeagueView() {
       draft_pick_seconds: 90,
       is_head_to_head: false,
       is_public: true,
+      football_competition: "ALL",
     },
     mode: "onSubmit",
   });
@@ -88,6 +90,8 @@ export function CreateLeagueView() {
   const draftPickSeconds = useWatch({ control, name: "draft_pick_seconds" }) ?? 90;
   const isHeadToHead = useWatch({ control, name: "is_head_to_head" }) ?? false;
   const isPublic = useWatch({ control, name: "is_public" }) ?? true;
+  const footballCompetition =
+    useWatch({ control, name: "football_competition" }) ?? "ALL";
 
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [createdLeagueInfo, setCreatedLeagueInfo] = useState<{
@@ -191,6 +195,7 @@ export function CreateLeagueView() {
       isHeadToHead,
       draftDate,
       draftPickSeconds,
+      competition: footballCompetition,
     }),
     [
       draftDate,
@@ -202,6 +207,7 @@ export function CreateLeagueView() {
       effectiveSeasonId,
       selectedSports,
       maxTeams,
+      footballCompetition,
     ],
   );
 
@@ -262,10 +268,19 @@ export function CreateLeagueView() {
     setError(null);
     try {
       const competitionType = values.draft_mode ? "draft" : "budget";
+      // Only a football-only league carries a competition scope, and only
+      // when it's narrower than "all". Anything else sends no filter.
+      const competitionFilters =
+        selectedSports.length === 1 &&
+        selectedSports[0] === "football" &&
+        values.football_competition !== "ALL"
+          ? { football: values.football_competition }
+          : undefined;
       const result = await createMutation.mutateAsync({
         name: values.name,
         season_id: effectiveSeasonId,
         sports: selectedSports,
+        competition_filters: competitionFilters,
         competitionType,
         is_public: values.is_public,
         max_teams: values.max_teams,
@@ -333,7 +348,18 @@ export function CreateLeagueView() {
       shouldValidate: true,
     });
 
+    // Competition scope only applies to a football-only league; reset it when
+    // leaving football so a multisport/basketball league never carries a
+    // stale filter into the payload.
+    if (sport !== "football") {
+      setValue("football_competition", "ALL", { shouldDirty: true });
+    }
+
     setSeasonId("");
+  };
+
+  const handleCompetitionChange = (value: CompetitionChoice) => {
+    setValue("football_competition", value, { shouldDirty: true });
   };
 
   const handleSettingsChange = (next: {
@@ -425,8 +451,10 @@ export function CreateLeagueView() {
               <LeagueBasicInfo
                 leagueName={leagueData.leagueName}
                 sport={leagueData.sport}
+                competition={footballCompetition}
                 onLeagueNameChange={handleLeagueNameChange}
                 onSportChange={handleSportChange}
+                onCompetitionChange={handleCompetitionChange}
               />
             ) : null}
 
