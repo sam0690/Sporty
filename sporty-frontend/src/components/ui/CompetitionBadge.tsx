@@ -1,6 +1,9 @@
 "use client";
 
+import { sportGlyph } from "@/components/landing/sport-icons";
 import { competitionMeta } from "@/lib/footballCompetitions";
+
+const FB_GLYPH = sportGlyph("football");
 
 type CompetitionBadgeProps = {
   /** Stored tag: "EPL" | "LALIGA" | "BUNDESLIGA". Null/absent renders nothing
@@ -21,8 +24,8 @@ export function CompetitionBadge({ tag, className = "" }: CompetitionBadgeProps)
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-surface-2 px-2.5 py-1 font-sans text-[11px] font-700 uppercase tracking-[0.5px] text-fg-2 ${className}`}
     >
-      <span className="text-xs leading-none" aria-hidden="true">
-        {meta.flag}
+      <span className="inline-flex" style={{ color: FB_GLYPH.color }} aria-hidden="true">
+        <FB_GLYPH.Icon className="size-3" />
       </span>
       {meta.label}
     </span>

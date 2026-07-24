@@ -7,26 +7,27 @@ export const FOOTBALL_COMPETITION_TAGS = ["EPL", "LALIGA", "BUNDESLIGA"] as cons
 export type FootballCompetitionTag = (typeof FOOTBALL_COMPETITION_TAGS)[number];
 export type CompetitionChoice = "ALL" | FootballCompetitionTag;
 
+// Icons are rendered by consumers (lucide Globe for "ALL", the football sport
+// glyph for competitions) — no emoji flags.
 type CompetitionMeta = {
   value: CompetitionChoice;
   label: string;
   short: string;
-  flag: string;
 };
 
 export const FOOTBALL_COMPETITIONS: CompetitionMeta[] = [
-  { value: "ALL", label: "All Leagues", short: "All", flag: "🌍" },
-  { value: "EPL", label: "Premier League", short: "EPL", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  { value: "LALIGA", label: "La Liga", short: "La Liga", flag: "🇪🇸" },
-  { value: "BUNDESLIGA", label: "Bundesliga", short: "Bundes.", flag: "🇩🇪" },
+  { value: "ALL", label: "All Leagues", short: "All" },
+  { value: "EPL", label: "Premier League", short: "EPL" },
+  { value: "LALIGA", label: "La Liga", short: "La Liga" },
+  { value: "BUNDESLIGA", label: "Bundesliga", short: "Bundes." },
 ];
 
 // Display-only meta (competition pages), NOT fantasy-selectable — kept out of
 // the picker array above so it can never be chosen for a league's pool.
-type DisplayMeta = { label: string; short: string; flag: string };
+type DisplayMeta = { label: string; short: string };
 
 const DISPLAY_ONLY: Record<string, DisplayMeta> = {
-  UCL: { label: "Champions League", short: "UCL", flag: "🏆" },
+  UCL: { label: "Champions League", short: "UCL" },
 };
 
 const BY_TAG: Record<string, DisplayMeta> = {

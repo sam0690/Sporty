@@ -4,15 +4,18 @@ import { useMemo } from "react";
 
 import type { TCompetitionMatch } from "@/types/competition";
 
-// Knockout rounds in progression order (new UCL format has a Play-offs round).
-const STAGES: { key: string; label: string }[] = [
-  { key: "PLAYOFFS", label: "Play-offs" },
-  { key: "LAST_16", label: "Round of 16" },
-  { key: "QUARTER_FINALS", label: "Quarter-finals" },
-  { key: "SEMI_FINALS", label: "Semi-finals" },
-  { key: "FINAL", label: "Final" },
-];
-const KNOCKOUT = new Set(STAGES.map((s) => s.key));
+// Rounds that form the converging bracket (outermost -> innermost), excluding
+// the final (centre) and the play-offs (shown separately, since their winners
+// feed the round of 16 rather than nesting cleanly).
+const BRACKET_ROUNDS = ["LAST_16", "QUARTER_FINALS", "SEMI_FINALS"] as const;
+const KNOCKOUT = new Set(["PLAYOFFS", "LAST_16", "QUARTER_FINALS", "SEMI_FINALS", "FINAL"]);
+const LABEL: Record<string, string> = {
+  PLAYOFFS: "Play-offs",
+  LAST_16: "Round of 16",
+  QUARTER_FINALS: "Quarter-finals",
+  SEMI_FINALS: "Semi-finals",
+  FINAL: "Final",
+};
 
 export function hasKnockout(matches: TCompetitionMatch[]): boolean {
   return matches.some((m) => m.stage && KNOCKOUT.has(m.stage));
@@ -22,8 +25,7 @@ type Side = { id: number; name: string; crest?: string | null; goals: number };
 type Tie = { sides: [Side, Side]; played: boolean; winnerId: number | null; date: string };
 
 // Fold a stage's legs into ties (two-legged except the final), aggregating
-// goals across both legs. A tie level with an equal aggregate is left with no
-// winner highlighted (penalties/away-goals aren't in the free feed).
+// goals. Equal aggregate = no winner highlighted (pens/away goals absent).
 function tiesForStage(matches: TCompetitionMatch[], stage: string): Tie[] {
   const legs = matches.filter((m) => m.stage === stage);
   const byPair = new Map<string, TCompetitionMatch[]>();
@@ -31,7 +33,6 @@ function tiesForStage(matches: TCompetitionMatch[], stage: string): Tie[] {
     const key = [m.homeTeam.id, m.awayTeam.id].sort((a, b) => a - b).join("-");
     (byPair.get(key) ?? byPair.set(key, []).get(key)!).push(m);
   }
-
   const ties: Tie[] = [];
   for (const group of byPair.values()) {
     const agg = new Map<number, Side>();
@@ -67,39 +68,92 @@ function tiesForStage(matches: TCompetitionMatch[], stage: string): Tie[] {
   return ties;
 }
 
-function TeamRow({ side, winner }: { side: Side; winner: boolean }) {
+function TeamRow({
+  side,
+  winner,
+  dim,
+  played,
+}: {
+  side: Side;
+  winner: boolean;
+  dim: boolean;
+  played: boolean;
+}) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2">
+    <div className="flex items-center gap-2 px-2.5 py-1.5">
       {side.crest ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={side.crest} alt="" className="size-5 shrink-0 object-contain" loading="lazy" />
+        <img src={side.crest} alt="" className="size-4 shrink-0 object-contain" loading="lazy" />
       ) : (
-        <span className="size-5 shrink-0 rounded-full bg-surface-3" />
+        <span className="size-4 shrink-0 rounded-full bg-surface-3" />
       )}
       <span
-        className={`min-w-0 flex-1 truncate text-sm ${
-          winner ? "font-700 text-fg-1" : "font-500 text-fg-2"
+        className={`min-w-0 flex-1 truncate text-xs ${
+          winner ? "font-700 text-fg-1" : dim ? "font-500 text-fg-3" : "font-500 text-fg-2"
         }`}
       >
         {side.name}
       </span>
-      <span className={`tabular-nums text-sm ${winner ? "font-700 text-accent" : "text-fg-3"}`}>
-        {side.goals}
+      <span className={`tabular-nums text-xs ${winner ? "font-700 text-accent" : "text-fg-3"}`}>
+        {played ? side.goals : ""}
       </span>
     </div>
   );
 }
 
-export function KnockoutBracket({ matches }: { matches: TCompetitionMatch[] }) {
-  const columns = useMemo(
-    () =>
-      STAGES.map((s) => ({ ...s, ties: tiesForStage(matches, s.key) })).filter(
-        (c) => c.ties.length > 0,
-      ),
-    [matches],
+function TieCard({ tie, emphasized = false }: { tie: Tie; emphasized?: boolean }) {
+  return (
+    <div
+      className={`overflow-hidden rounded-[4px] border divide-y divide-white/6 ${
+        emphasized ? "border-accent/40 bg-accent/5" : "border-white/8 bg-surface-2"
+      }`}
+    >
+      <TeamRow
+        side={tie.sides[0]}
+        winner={tie.winnerId === tie.sides[0].id}
+        dim={tie.winnerId != null && tie.winnerId !== tie.sides[0].id}
+        played={tie.played}
+      />
+      <TeamRow
+        side={tie.sides[1]}
+        winner={tie.winnerId === tie.sides[1].id}
+        dim={tie.winnerId != null && tie.winnerId !== tie.sides[1].id}
+        played={tie.played}
+      />
+      {!tie.played && (
+        <p className="px-2.5 py-1 text-[10px] uppercase tracking-wide text-fg-3">
+          {new Date(tie.date).toLocaleDateString(undefined, { day: "numeric", month: "short" })}
+        </p>
+      )}
+    </div>
   );
+}
 
-  if (columns.length === 0) {
+function RoundColumn({ label, ties }: { label: string; ties: Tie[] }) {
+  return (
+    <div className="flex w-52 shrink-0 flex-col">
+      <p className="section-label mb-2 text-center">{label}</p>
+      <div className="flex flex-1 flex-col justify-around gap-3">
+        {ties.map((tie, i) => (
+          <TieCard key={i} tie={tie} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function KnockoutBracket({ matches }: { matches: TCompetitionMatch[] }) {
+  const { columns, finalTie, playoffs } = useMemo(() => {
+    const cols = BRACKET_ROUNDS.map((stage) => {
+      const ties = tiesForStage(matches, stage);
+      const half = Math.ceil(ties.length / 2);
+      return { stage, left: ties.slice(0, half), right: ties.slice(half) };
+    }).filter((c) => c.left.length + c.right.length > 0);
+    const fin = tiesForStage(matches, "FINAL")[0] ?? null;
+    return { columns: cols, finalTie: fin, playoffs: tiesForStage(matches, "PLAYOFFS") };
+  }, [matches]);
+
+  if (columns.length === 0 && !finalTie && playoffs.length === 0) {
     return (
       <div className="card-surface px-6 py-12 text-center text-sm text-fg-2">
         The knockout bracket appears once the league phase finishes.
@@ -108,28 +162,41 @@ export function KnockoutBracket({ matches }: { matches: TCompetitionMatch[] }) {
   }
 
   return (
-    <div className="overflow-x-auto pb-2">
-      <div className="flex min-w-max gap-4">
-        {columns.map((col) => (
-          <div key={col.key} className="w-64 shrink-0 space-y-3">
-            <p className="section-label px-1">{col.label}</p>
-            {col.ties.map((tie, i) => (
-              <div key={i} className="overflow-hidden card-surface divide-y divide-white/6">
-                <TeamRow side={tie.sides[0]} winner={tie.winnerId === tie.sides[0].id} />
-                <TeamRow side={tie.sides[1]} winner={tie.winnerId === tie.sides[1].id} />
-                {!tie.played && (
-                  <p className="px-3 py-1.5 text-[11px] uppercase tracking-wide text-fg-3">
-                    {new Date(tie.date).toLocaleDateString(undefined, {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </p>
-                )}
-              </div>
+    <div className="space-y-6">
+      {playoffs.length > 0 && (
+        <div>
+          <p className="section-label mb-3">Knockout play-offs</p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {playoffs.map((tie, i) => (
+              <TieCard key={i} tie={tie} />
             ))}
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {(columns.length > 0 || finalTie) && (
+        <div className="overflow-x-auto pb-2">
+          <div className="flex min-w-max items-stretch justify-center gap-3">
+            {/* Left side: outermost -> innermost */}
+            {columns.map((c) => (
+              <RoundColumn key={`l-${c.stage}`} label={LABEL[c.stage]} ties={c.left} />
+            ))}
+
+            {/* Centre: the final */}
+            {finalTie && (
+              <div className="flex w-56 shrink-0 flex-col justify-center">
+                <p className="section-label mb-2 text-center text-accent">Final</p>
+                <TieCard tie={finalTie} emphasized />
+              </div>
+            )}
+
+            {/* Right side: innermost -> outermost (mirrored) */}
+            {[...columns].reverse().map((c) => (
+              <RoundColumn key={`r-${c.stage}`} label={LABEL[c.stage]} ties={c.right} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
