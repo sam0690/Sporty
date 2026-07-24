@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import { competitionMeta } from "@/lib/footballCompetitions";
 import { useCompetitionMatch } from "@/hooks/competitions/useCompetitions";
 import type { TCompetitionMatch } from "@/types/competition";
@@ -108,6 +109,7 @@ export function CompetitionMatchDetail({ tag, matchId }: { tag: string; matchId:
         className="mb-5 inline-flex items-center gap-1.5 text-xs font-700 uppercase tracking-[1.5px] text-fg-3 transition-colors hover:text-accent"
       >
         <ArrowLeft className="size-3.5" />
+        <CompetitionLogo tag={tag.toUpperCase()} className="size-4" />
         {meta?.label ?? "Competition"}
       </Link>
 

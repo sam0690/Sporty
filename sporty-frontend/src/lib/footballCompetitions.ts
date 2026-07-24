@@ -43,6 +43,22 @@ export function competitionMeta(
   return BY_TAG[tag] ?? null;
 }
 
+// Official competition emblems (football-data.org CDN — the same source as the
+// club crests we already display). Shown wherever a competition is named,
+// falling back to the sport glyph for competitions without one (NBA/Cricket).
+const COMPETITION_LOGO: Record<string, string> = {
+  EPL: "https://crests.football-data.org/PL.png",
+  LALIGA: "https://crests.football-data.org/laliga.png",
+  BUNDESLIGA: "https://crests.football-data.org/BL1.png",
+  UCL: "https://crests.football-data.org/CL.png",
+};
+
+/** Competition emblem URL for a tag ("EPL"|…|"UCL"), or null. */
+export function competitionLogo(tag: string | null | undefined): string | null {
+  if (!tag) return null;
+  return COMPETITION_LOGO[tag] ?? null;
+}
+
 // Competition display NAME (as stored on Match.competition / FixtureResponse)
 // -> tag, for the competitions that have a standings page. NBA/Cricket return
 // null (no competition page).
@@ -52,6 +68,12 @@ const NAME_TO_TAG: Record<string, string> = {
   Bundesliga: "BUNDESLIGA",
   "Champions League": "UCL",
 };
+
+/** Competition emblem URL for a competition's display name, or null. */
+export function competitionLogoByName(name: string | null | undefined): string | null {
+  if (!name) return null;
+  return competitionLogo(NAME_TO_TAG[name]);
+}
 
 /** Route tag (lowercase, e.g. "epl") for a competition's display name, or null
  *  if it has no competition/standings page. */

@@ -4,13 +4,11 @@ import { useMemo } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Globe } from "lucide-react";
 
-import { sportGlyph } from "@/components/landing/sport-icons";
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import {
   FOOTBALL_COMPETITIONS,
   type CompetitionChoice,
 } from "@/lib/footballCompetitions";
-
-const FB_GLYPH = sportGlyph("football");
 
 type LeagueBasicInfoProps = {
   leagueName: string;
@@ -156,13 +154,7 @@ export function LeagueBasicInfo({
                           aria-hidden="true"
                         />
                       ) : (
-                        <span
-                          className={`inline-flex shrink-0 ${isSelected ? "text-accent" : ""}`}
-                          style={isSelected ? undefined : { color: FB_GLYPH.color }}
-                          aria-hidden="true"
-                        >
-                          <FB_GLYPH.Icon className="size-4" />
-                        </span>
+                        <CompetitionLogo tag={option.value} className="size-4" />
                       )}
                       <span
                         className={`font-sans text-xs font-700 uppercase tracking-[0.5px] ${

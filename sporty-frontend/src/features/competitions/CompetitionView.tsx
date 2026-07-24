@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { Select } from "@/components/ui/Select";
-import { sportGlyph } from "@/components/landing/sport-icons";
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import { competitionMeta } from "@/lib/footballCompetitions";
 import {
   useCompetitionMatches,
@@ -63,9 +63,6 @@ export function CompetitionView({ tag }: { tag: string }) {
 
   const meta = competitionMeta(tag);
   const competitions = index?.competitions ?? [];
-  // Competition pages are all football — one glyph, icon-based (no emoji flags).
-  const fbGlyph = sportGlyph("football");
-  const GlyphIcon = fbGlyph.Icon;
 
   const standings = useCompetitionStandings(tag, season);
   const scorers = useCompetitionScorers(tag, season);
@@ -130,7 +127,7 @@ export function CompetitionView({ tag }: { tag: string }) {
                       : "border-white/8 bg-surface-2 text-fg-2 hover:border-white/18"
                   }`}
                 >
-                  <GlyphIcon className="size-3.5" aria-hidden="true" />
+                  <CompetitionLogo tag={c.tag} className="size-4" />
                   {cm?.label ?? c.name}
                 </button>
               );
@@ -149,13 +146,7 @@ export function CompetitionView({ tag }: { tag: string }) {
       </div>
 
       <h1 className="mb-5 flex items-center gap-2.5 text-2xl font-800 tracking-tight text-fg-1">
-        <span
-          className="grid size-7 shrink-0 place-items-center rounded-[5px]"
-          style={{ color: fbGlyph.color, background: `${fbGlyph.color}1a` }}
-          aria-hidden="true"
-        >
-          <GlyphIcon className="size-4" />
-        </span>
+        <CompetitionLogo tag={tag} className="size-8" />
         {meta?.label ?? tag}
         {activeSeason && (
           <span className="text-base font-500 text-fg-3">

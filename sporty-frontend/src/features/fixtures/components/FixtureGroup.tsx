@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ChevronDown, ListOrdered, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui";
-import { sportGlyph } from "@/components/landing/sport-icons";
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import { competitionRouteTag } from "@/lib/footballCompetitions";
 import type { FixtureGroup as Group } from "../fixtureFormat";
 import { FixtureRow } from "./FixtureRow";
@@ -20,21 +20,13 @@ export function FixtureGroup({
   onToggleFollow: (competition: string) => void;
   style?: React.CSSProperties;
 }) {
-  const glyph = sportGlyph(group.sport);
-  const Glyph = glyph.Icon;
   const routeTag = competitionRouteTag(group.competition);
 
   return (
     <details open className="group/panel pop-in overflow-hidden card-surface" style={style}>
       <summary className="flex cursor-pointer select-none list-none items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-white/3 [&::-webkit-details-marker]:hidden">
         <div className="flex min-w-0 items-center gap-2.5">
-          <span
-            className="grid size-6 shrink-0 place-items-center rounded-[4px]"
-            style={{ color: glyph.color, background: `${glyph.color}1a` }}
-            aria-hidden="true"
-          >
-            <Glyph className="size-3.5" />
-          </span>
+          <CompetitionLogo name={group.competition} sport={group.sport} className="size-6" />
           <span className="truncate font-sans text-xs font-700 uppercase tracking-[2px] text-fg-1">
             {group.competition}
           </span>

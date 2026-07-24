@@ -2,7 +2,7 @@
 
 import { Globe, Star } from "lucide-react";
 
-import { sportGlyph } from "@/components/landing/sport-icons";
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import type { LeagueEntry } from "../fixtureFormat";
 
 type LeagueListProps = {
@@ -12,20 +12,6 @@ type LeagueListProps = {
   onSelect: (competition: string | null) => void;
   onToggleFollow: (competition: string) => void;
 };
-
-function LeagueIcon({ sport }: { sport: string }) {
-  const glyph = sportGlyph(sport);
-  const Glyph = glyph.Icon;
-  return (
-    <span
-      className="grid size-5 shrink-0 place-items-center rounded-[4px]"
-      style={{ color: glyph.color, background: `${glyph.color}1a` }}
-      aria-hidden="true"
-    >
-      <Glyph className="size-3" />
-    </span>
-  );
-}
 
 export function LeagueList({ entries, active, onSelect, onToggleFollow }: LeagueListProps) {
   const followedEntries = entries.filter((e) => e.followed);
@@ -118,7 +104,7 @@ function LeagueRow({
           active ? "font-700 text-accent" : "font-500 text-fg-2 hover:text-fg-1"
         }`}
       >
-        <LeagueIcon sport={e.sport} />
+        <CompetitionLogo name={e.competition} sport={e.sport} className="size-5" />
         <span className="min-w-0 flex-1 truncate">{e.competition}</span>
         {e.live > 0 ? (
           <span className="inline-flex items-center gap-1 text-[10px] font-700 uppercase tracking-[1px] text-danger">

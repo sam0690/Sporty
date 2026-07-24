@@ -1,6 +1,6 @@
 "use client";
 
-import { sportGlyph } from "@/components/landing/sport-icons";
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import {
   competitionMeta,
   type CompetitionChoice,
@@ -86,14 +86,7 @@ export function SummaryStep({
                   {selectedSports.length > 1 ? "Football Pool" : "Player Pool"}
                 </p>
                 <p className="flex items-center gap-1.5 text-sm text-fg-1">
-                  {(() => {
-                    const g = sportGlyph("football");
-                    return (
-                      <span className="inline-flex" style={{ color: g.color }} aria-hidden="true">
-                        <g.Icon className="size-3.5" />
-                      </span>
-                    );
-                  })()}
+                  <CompetitionLogo tag={leagueData.competition} className="size-4" />
                   {competitionMeta(leagueData.competition)?.label}
                 </p>
               </div>
