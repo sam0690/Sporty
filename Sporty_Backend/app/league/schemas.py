@@ -73,9 +73,9 @@ class LeagueCreate(BaseModel):
     @field_validator("competition_filters")
     @classmethod
     def competitions_valid(cls, v: dict[str, str]) -> dict[str, str]:
-        from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
+        from app.services.sync.football_competitions import fantasy_competitions
 
-        valid = {c.tag for c in FOOTBALL_COMPETITIONS.values()}
+        valid = {c.tag for c in fantasy_competitions().values()}
         for sport_name, comp in v.items():
             if comp not in valid:
                 raise ValueError(

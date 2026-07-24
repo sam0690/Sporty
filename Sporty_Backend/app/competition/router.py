@@ -30,9 +30,12 @@ def _snapshot(kind: str):
             payload = await service.get_snapshot(db, tag.upper(), kind, season)
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+        # Report the season actually served — for a current-view request the
+        # competition resolves its own (CL differs from the domestic leagues).
+        actual = season or service.resolved_season(payload) or service.current_season()
         return {
             "competition": tag.upper(),
-            "season": season or service.current_season(),
+            "season": actual,
             "kind": kind,
             "data": payload,
         }

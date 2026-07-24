@@ -71,27 +71,30 @@ def test_historical_season_fetched_once(db, monkeypatch):
 
 def test_current_season_refetches_when_stale(db, monkeypatch):
     calls = []
-    _patch_standings(monkeypatch, {"standings": [{"table": []}], "v": 1}, calls)
-    season = service.current_season()
+    # Current-view fetch (season=None); payload carries a season object so the
+    # service can resolve which year to store under.
+    payload = {"season": {"startDate": "2026-08-01"}, "standings": [{"table": []}], "v": 1}
+    _patch_standings(monkeypatch, payload, calls)
 
-    asyncio.run(service.get_snapshot(db, "EPL", "standings", season))
+    asyncio.run(service.get_snapshot(db, "EPL", "standings", None))
     assert len(calls) == 1
     # A second immediate read is within TTL — no refetch.
-    asyncio.run(service.get_snapshot(db, "EPL", "standings", season))
+    asyncio.run(service.get_snapshot(db, "EPL", "standings", None))
     assert len(calls) == 1
     # Age the row past the TTL → next read refetches.
     row = db.query(CompetitionSnapshot).one()
+    assert row.season == 2026  # stored under the resolved season, not forced
     row.updated_at = datetime.now(timezone.utc) - timedelta(hours=12)
     db.commit()
-    asyncio.run(service.get_snapshot(db, "EPL", "standings", season))
+    asyncio.run(service.get_snapshot(db, "EPL", "standings", None))
     assert len(calls) == 2
 
 
 def test_serves_stale_on_fetch_failure(db, monkeypatch):
     calls = []
-    _patch_standings(monkeypatch, {"v": "good"}, calls)
-    season = service.current_season()
-    asyncio.run(service.get_snapshot(db, "EPL", "standings", season))
+    payload = {"season": {"startDate": "2026-08-01"}, "v": "good"}
+    _patch_standings(monkeypatch, payload, calls)
+    asyncio.run(service.get_snapshot(db, "EPL", "standings", None))
 
     async def boom(code, season=None, *a, **k):
         raise RuntimeError("fdo down")
@@ -100,8 +103,8 @@ def test_serves_stale_on_fetch_failure(db, monkeypatch):
     row = db.query(CompetitionSnapshot).one()
     row.updated_at = datetime.now(timezone.utc) - timedelta(hours=12)  # force refetch attempt
     db.commit()
-    result = asyncio.run(service.get_snapshot(db, "EPL", "standings", season))
-    assert result == {"v": "good"}  # stale served, no raise
+    result = asyncio.run(service.get_snapshot(db, "EPL", "standings", None))
+    assert result == payload  # stale served, no raise
 
 
 def test_invalid_tag_and_season_rejected(db):
@@ -109,3 +112,27 @@ def test_invalid_tag_and_season_rejected(db):
         asyncio.run(service.get_snapshot(db, "SERIEA", "standings", service.current_season()))
     with pytest.raises(ValueError):
         asyncio.run(service.get_snapshot(db, "EPL", "standings", 2019))  # before horizon
+
+
+def test_ucl_is_display_only_not_fantasy():
+    """Champions League must appear on the competition pages but never be a
+    fantasy option (no player pools, not a valid competition_filter)."""
+    import uuid
+
+    from app.league.schemas import LeagueCreate
+    from app.services.sync.football_competitions import (
+        FOOTBALL_COMPETITIONS,
+        fantasy_competitions,
+    )
+
+    all_tags = {c.tag for c in FOOTBALL_COMPETITIONS.values()}
+    fantasy_tags = {c.tag for c in fantasy_competitions().values()}
+    assert "UCL" in all_tags        # shown on competition pages
+    assert "UCL" not in fantasy_tags  # never a fantasy competition
+
+    # The create-league validator must reject UCL as a football pool filter.
+    with pytest.raises(Exception):
+        LeagueCreate(
+            name="x", season_id=uuid.uuid4(), sports=["football"],
+            competition_filters={"football": "UCL"},
+        )

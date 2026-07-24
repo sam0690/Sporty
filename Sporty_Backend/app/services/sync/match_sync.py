@@ -24,7 +24,7 @@ from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
 from app.external_apis.football_data_org import get_competition_matches
 from app.league.models import Sport
-from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS, Competition
+from app.services.sync.football_competitions import Competition, fantasy_competitions
 from app.match.models import Match
 from app.services.scoring.trigger import enqueue_scoring_for_finished_match
 
@@ -175,7 +175,7 @@ async def sync_football_matches(
     (FOOTBALL_COMPETITIONS). `league_id` limits to one; `season` defaults
     to the current European season.
     """
-    league_ids = [league_id] if league_id else list(FOOTBALL_COMPETITIONS)
+    league_ids = [league_id] if league_id else list(fantasy_competitions())
     if season is None:
         now = datetime.now(timezone.utc)
         season = now.year if now.month >= 7 else now.year - 1
@@ -191,7 +191,7 @@ async def sync_football_matches(
     # date-window fallback below still creates rows day-of).
     if settings.FOOTBALL_DATA_ORG_TOKEN:
         for lid in league_ids:
-            comp = FOOTBALL_COMPETITIONS.get(lid)
+            comp = fantasy_competitions().get(lid)
             if comp is None:
                 continue
             try:
