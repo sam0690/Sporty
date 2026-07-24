@@ -1,11 +1,19 @@
 "use client";
 
+import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
 import type { TScorer } from "@/types/competition";
 
-export function ScorersTable({ scorers }: { scorers: TScorer[] }) {
+export function ScorersTable({ scorers, tag }: { scorers: TScorer[]; tag?: string }) {
   return (
-    <div className="overflow-x-auto card-surface">
-      <table className="w-full min-w-[420px] border-collapse text-sm">
+    <div className="overflow-hidden card-surface">
+      {tag && (
+        <div className="flex items-center gap-2 border-b border-white/8 px-4 py-3">
+          <CompetitionLogo tag={tag} className="size-5" />
+          <p className="section-label">Top Scorers</p>
+        </div>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[420px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-white/8 text-left">
             <th className="px-3 py-2.5 text-right font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3">
@@ -52,7 +60,8 @@ export function ScorersTable({ scorers }: { scorers: TScorer[] }) {
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 }

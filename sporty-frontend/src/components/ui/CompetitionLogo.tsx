@@ -28,16 +28,23 @@ export function CompetitionLogo({
   const [errored, setErrored] = useState(false);
 
   if (logo && !errored) {
+    // Seat the emblem on a light chip — several league logos (Premier League,
+    // Champions League) are dark-toned and designed for light backgrounds, so
+    // they blend into the dark UI otherwise.
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={logo}
-        alt=""
+      <span
+        className={`${className} grid shrink-0 place-items-center overflow-hidden rounded-[4px] bg-white/95 p-[2px]`}
         aria-hidden="true"
-        loading="lazy"
-        onError={() => setErrored(true)}
-        className={`${className} shrink-0 object-contain`}
-      />
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={logo}
+          alt=""
+          loading="lazy"
+          onError={() => setErrored(true)}
+          className="size-full object-contain"
+        />
+      </span>
     );
   }
 

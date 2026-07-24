@@ -203,14 +203,21 @@ export function CompetitionView({ tag }: { tag: string }) {
           error={standings.isError}
           empty={table.length === 0}
         >
-          {showingLastSeason && (
-            <div className="mb-3 rounded-[3px] border border-white/10 bg-surface-2 px-4 py-2.5 text-xs text-fg-2">
-              {activeSeason ? seasonLabel(activeSeason) : "This season"} hasn&apos;t
-              kicked off yet — showing last season&apos;s final table. Live standings
-              appear after the first matchday.
+          {showingLastSeason ? (
+            <div className="card-surface px-6 py-16 text-center">
+              <CompetitionLogo tag={tag} className="mx-auto size-12" />
+              <p className="mt-4 text-sm font-700 text-fg-1">
+                {activeSeason ? seasonLabel(activeSeason) : "This season"} hasn&apos;t
+                kicked off yet
+              </p>
+              <p className="mt-1.5 text-xs text-fg-3">
+                The table will appear after the first matchday. Pick an earlier season
+                above to see final standings.
+              </p>
             </div>
+          ) : (
+            <StandingsTable table={table} tag={tag} />
           )}
-          <StandingsTable table={table} />
         </TabPanel>
       )}
       {activeTab === "bracket" && (
@@ -234,8 +241,7 @@ export function CompetitionView({ tag }: { tag: string }) {
           error={scorers.isError}
           empty={scorerRows.length === 0}
         >
-          <p className="section-label mb-3">Top Scorers</p>
-          <ScorersTable scorers={scorerRows} />
+          <ScorersTable scorers={scorerRows} tag={tag} />
         </TabPanel>
       )}
     </div>
