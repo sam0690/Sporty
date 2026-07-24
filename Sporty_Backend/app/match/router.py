@@ -25,7 +25,13 @@ from app.auth.models import User
 from app.database import get_db
 from app.league.models import Sport
 from app.match.models import Match
-from app.match.schemas import MatchListResponse, MatchResponse
+from app.match.schemas import (
+    FDO_MATCH_STATUS,
+    FixtureListResponse,
+    FixtureResponse,
+    MatchListResponse,
+    MatchResponse,
+)
 from app.models.db.live_event import LiveEvent
 from app.player.models import RealTeam, UserFavouriteTeam
 
@@ -125,6 +131,129 @@ def list_matches(
     logo_lookup = _real_team_logo_lookup(db)
     items = [_to_match_response(match, name, logo_lookup) for match, name in rows]
     return MatchListResponse(items=items, total=len(items))
+
+
+# ── Unified fixtures (fantasy matches + display-only competition snapshots) ──
+
+
+def _fantasy_to_fixture(match, sport_name, logo_lookup) -> FixtureResponse:
+    return FixtureResponse(
+        id=str(match.id),
+        source="fantasy",
+        sport=sport_name,
+        competition=match.competition,
+        home_team=match.home_team,
+        away_team=match.away_team,
+        home_team_logo_url=_team_logo_url(logo_lookup, match.sport_id, match.home_team),
+        away_team_logo_url=_team_logo_url(logo_lookup, match.sport_id, match.away_team),
+        match_date=match.match_date,
+        status=match.status,
+        home_score=match.home_score,
+        away_score=match.away_score,
+    )
+
+
+def _normalize_display_match(m: dict, comp_name: str, comp_tag: str) -> FixtureResponse | None:
+    """football-data.org match -> FixtureResponse. Crests come straight from
+    the snapshot (CL has clubs outside our leagues, e.g. PSG, so RealTeam
+    logos don't cover them)."""
+    utc = m.get("utcDate")
+    home, away = m.get("homeTeam") or {}, m.get("awayTeam") or {}
+    if not utc or not home.get("name") or not away.get("name"):
+        return None
+    ft = (m.get("score") or {}).get("fullTime") or {}
+    return FixtureResponse(
+        id=str(m.get("id")),
+        source=comp_tag,
+        sport="football",
+        competition=comp_name,
+        home_team=home["name"],
+        away_team=away["name"],
+        home_team_logo_url=home.get("crest"),
+        away_team_logo_url=away.get("crest"),
+        match_date=datetime.fromisoformat(utc.replace("Z", "+00:00")),
+        status=FDO_MATCH_STATUS.get(m.get("status"), "scheduled"),
+        home_score=ft.get("home"),
+        away_score=ft.get("away"),
+        stage=m.get("stage"),
+    )
+
+
+def _display_fixtures_for_date(db: Session, date_str: str) -> list[FixtureResponse]:
+    """Display-only competition (e.g. Champions League) matches on `date_str`,
+    read from the cached season snapshots and filtered by kickoff day."""
+    from app.models.db.competition_snapshot import CompetitionSnapshot
+    from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
+
+    display = {c.tag: c.name for c in FOOTBALL_COMPETITIONS.values() if not c.fantasy}
+    if not display:
+        return []
+    rows = (
+        db.query(CompetitionSnapshot)
+        .filter(
+            CompetitionSnapshot.competition.in_(list(display)),
+            CompetitionSnapshot.kind == "matches",
+        )
+        .all()
+    )
+    out: list[FixtureResponse] = []
+    for row in rows:
+        comp_name = display[row.competition]
+        for m in (row.payload or {}).get("matches", []):
+            if str(m.get("utcDate") or "")[:10] != date_str:
+                continue
+            fx = _normalize_display_match(m, comp_name, row.competition)
+            if fx is not None:
+                out.append(fx)
+    return out
+
+
+def build_fixtures(db: Session, date_str: str, sport_name: str | None) -> list[FixtureResponse]:
+    """Fantasy matches + display-only competition matches for one day, merged
+    and ordered (live first, then by kickoff). Testable core of GET /fixtures."""
+    day_start = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    query = db.query(Match, Sport.name.label("sport_name")).join(Sport, Match.sport_id == Sport.id)
+    query = query.filter(
+        Match.match_date >= day_start, Match.match_date < day_start + timedelta(days=1)
+    )
+    if sport_name:
+        query = query.filter(Sport.name == sport_name.strip().lower())
+    logo_lookup = _real_team_logo_lookup(db)
+    fixtures = [_fantasy_to_fixture(m, n, logo_lookup) for m, n in query.all()]
+
+    # Display-only competitions are football; skip when filtered to another sport.
+    if not sport_name or sport_name.strip().lower() == "football":
+        fixtures += _display_fixtures_for_date(db, date_str)
+
+    # tz-safe: fantasy dates are tz-aware (Postgres) or naive (SQLite tests);
+    # display dates are always aware. Treat naive as UTC so the sort never mixes.
+    def _key(f: FixtureResponse):
+        dt = f.match_date
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return (0 if f.status == "live" else 1, dt)
+
+    fixtures.sort(key=_key)
+    return fixtures
+
+
+@router.get(
+    "/fixtures",
+    response_model=FixtureListResponse,
+    summary="Unified fixtures for a day (fantasy + display-only competitions)",
+)
+def list_fixtures(
+    date: str | None = Query(default=None, description="Calendar day, YYYY-MM-DD (UTC); defaults to today"),
+    sport_name: str | None = Query(default=None, description='Filter by sport slug'),
+    db: Session = Depends(get_db),
+):
+    date_str = date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    try:
+        datetime.strptime(date_str, "%Y-%m-%d")
+    except ValueError:
+        raise HTTPException(status_code=422, detail="date must be in YYYY-MM-DD format")
+    fixtures = build_fixtures(db, date_str, sport_name)
+    return FixtureListResponse(items=fixtures, total=len(fixtures), date=date_str)
 
 
 @router.get(
