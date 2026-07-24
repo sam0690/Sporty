@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarPopover } from "./CalendarPopover";
 import { MatchDateStrip } from "./MatchDateStrip";
 import { SportFilterChips } from "./SportFilterChips";
 
@@ -35,8 +36,9 @@ export function FixturesToolbar({
             </span>
           )}
         </div>
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
           <MatchDateStrip selectedDate={date} onDateChange={onDateChange} />
+          <CalendarPopover selectedDate={date} onDateChange={onDateChange} />
         </div>
       </div>
       <div className="mt-3 flex justify-center">
