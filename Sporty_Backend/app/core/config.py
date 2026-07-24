@@ -127,6 +127,11 @@ class Settings(BaseSettings):
     FOOTBALL_LIVE_LEAGUE_ID: int = 39
     BASKETBALL_LIVE_LEAGUE_ID: int = 12
 
+    # football-data.org (free tier) — season schedule only; API-Football's
+    # Free plan can't list current-season fixtures. Empty = schedule sync
+    # silently skipped (fixtures then appear day-of via the date fallback).
+    FOOTBALL_DATA_ORG_TOKEN: str = ""
+
     # ── Push Notifications ─────────────────────────────────────
     FIREBASE_CREDENTIALS_PATH: str = ""
     APNS_USE_SANDBOX: bool = True

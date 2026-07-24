@@ -18,12 +18,122 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.external_apis.basketball_api import BasketballAPIClient
 from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
+from app.external_apis.football_data_org import get_pl_matches
 from app.league.models import Sport
 from app.match.models import Match
 from app.services.scoring.trigger import enqueue_scoring_for_finished_match
+
+# ── football-data.org schedule layer ────────────────────────────────────────
+# Season schedule rows are created as external_api_id="fdo:<id>" placeholders;
+# the API-Football date-window pass "claims" them day-of by swapping in the
+# numeric fixture id (matched on kickoff date + team names), which is what the
+# live poll / predictions / FT-sheet paths key on.
+
+_FDO_STATUS_MAP = {
+    "SCHEDULED": "scheduled", "TIMED": "scheduled",
+    "IN_PLAY": "live", "PAUSED": "live",
+    "FINISHED": "finished",
+    "POSTPONED": "postponed", "SUSPENDED": "postponed", "CANCELLED": "cancelled",
+}
+
+# football-data.org full names -> API-Football team names (the form stored in
+# Match.home_team/away_team). Explicit map, not fuzzy — same policy as
+# app/core/team_names.py. Names not listed just get the FC/AFC affixes stripped.
+_FDO_NAME_ALIASES = {
+    "Brighton & Hove Albion": "Brighton",
+    "Ipswich Town": "Ipswich",
+    "Leeds United": "Leeds",
+    "Newcastle United": "Newcastle",
+    "Tottenham Hotspur": "Tottenham",
+    "Coventry City": "Coventry",
+    "West Ham United": "West Ham",
+    "Wolverhampton Wanderers": "Wolves",
+}
+
+
+def _fdo_team_name(raw: str) -> str:
+    name = raw.strip()
+    for suffix in (" FC", " AFC"):
+        if name.endswith(suffix):
+            name = name[: -len(suffix)]
+    if name.startswith("AFC "):
+        name = name[len("AFC "):]
+    return _FDO_NAME_ALIASES.get(name, name)
+
+
+def _find_same_fixture(db: Session, sport_id, home: str, away: str, match_date: datetime) -> Match | None:
+    """Same two teams on the same UTC day — unambiguous within one league."""
+    day_start = match_date.astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    return (
+        db.query(Match)
+        .filter(
+            Match.sport_id == sport_id,
+            Match.home_team == home,
+            Match.away_team == away,
+            Match.match_date >= day_start,
+            Match.match_date < day_start + timedelta(days=1),
+        )
+        .first()
+    )
+
+
+async def _sync_football_schedule_fdo(db: Session, sport_id) -> tuple[int, int]:
+    """Upsert the full current-season EPL schedule from football-data.org.
+
+    Schedule only: creates/updates kickoff times and scheduled/postponed/
+    cancelled statuses. Never writes scores or 'finished' — finals and stats
+    always flow through the API-Football live/reconcile path so scoring is
+    never bypassed. Rows already claimed by API-Football (numeric id) only
+    get kickoff-time updates while still scheduled.
+    """
+    payload = await get_pl_matches()
+    added = updated = 0
+    for m in payload.get("matches", []):
+        fdo_id = m.get("id")
+        utc = m.get("utcDate")
+        home = _fdo_team_name((m.get("homeTeam") or {}).get("name") or "")
+        away = _fdo_team_name((m.get("awayTeam") or {}).get("name") or "")
+        status = _FDO_STATUS_MAP.get(m.get("status"), "scheduled")
+        if not fdo_id or not utc or not home or not away:
+            continue
+        match_date = datetime.fromisoformat(utc.replace("Z", "+00:00"))
+
+        row = db.query(Match).filter(Match.external_api_id == f"fdo:{fdo_id}").first()
+        if row is None:
+            row = _find_same_fixture(db, sport_id, home, away, match_date)
+        if row is None:
+            if status in ("live", "finished"):
+                continue  # in-play/final data belongs to the API-Football path
+            db.add(Match(
+                sport_id=sport_id,
+                external_api_id=f"fdo:{fdo_id}",
+                home_team=home,
+                away_team=away,
+                match_date=match_date,
+                status=status,
+                competition="Premier League",
+                season=str((m.get("season") or {}).get("startDate", ""))[:4]
+                or str(match_date.year if match_date.month >= 7 else match_date.year - 1),
+            ))
+            added += 1
+        elif (row.external_api_id or "").isdigit():
+            if row.status == "scheduled" and row.match_date != match_date:
+                row.match_date = match_date  # TV-pick kickoff shifts
+                updated += 1
+        else:
+            changed = row.match_date != match_date or (
+                status in ("scheduled", "postponed", "cancelled") and row.status != status
+            )
+            row.match_date = match_date
+            if status in ("scheduled", "postponed", "cancelled"):
+                row.status = status
+            updated += changed
+    db.commit()
+    return added, updated
 
 
 async def sync_football_matches(
@@ -44,6 +154,15 @@ async def sync_football_matches(
     if not football:
         print("❌ Football sport not found in database. Create it first.")
         return
+
+    # Season schedule from football-data.org (skipped without a token; the
+    # date-window fallback below still creates rows day-of).
+    if settings.FOOTBALL_DATA_ORG_TOKEN:
+        try:
+            added, updated = await _sync_football_schedule_fdo(db, football.id)
+            print(f"  📅 Schedule (football-data.org): {added} added, {updated} updated")
+        except Exception as e:  # noqa: BLE001 — schedule layer is optional
+            print(f"  ⚠️ football-data.org schedule sync failed: {e}")
 
     # Fetch from API
     client = FootballAPIClient()
@@ -119,6 +238,16 @@ async def sync_football_matches(
                 .filter(Match.external_api_id == str(fixture_id))
                 .first()
             )
+            if existing is None:
+                # Claim the football-data.org schedule placeholder for this
+                # fixture: swap in the numeric id the live poll / predictions
+                # / FT-sheet paths key on.
+                placeholder = _find_same_fixture(
+                    db, football.id, home_team, away_team, match_date
+                )
+                if placeholder is not None and not (placeholder.external_api_id or "").isdigit():
+                    placeholder.external_api_id = str(fixture_id)
+                    existing = placeholder
 
             if existing:
                 # Update existing
