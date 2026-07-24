@@ -659,6 +659,13 @@ class LeagueSport(Base):
         UUID(as_uuid=True), ForeignKey("seasons.id"), nullable=True,
     )
 
+    # Competition scope for THIS sport's player pool ("EPL" | "LALIGA" |
+    # "BUNDESLIGA" — RealTeam.competition values, see
+    # app/services/sync/football_competitions.py). NULL = all competitions.
+    # Enforced by app/league/competition_scope.py at every pool/roster
+    # entry point.
+    competition_filter: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

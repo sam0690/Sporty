@@ -96,7 +96,14 @@ def _apply_league_player_pool(query, db: Session, league_id: uuid.UUID):
     allowed_sport_ids = _league_supported_sport_ids(db, league_id)
     if not allowed_sport_ids:
         return query.filter(false())
-    return query.filter(Player.sport_id.in_(allowed_sport_ids))
+    query = query.filter(Player.sport_id.in_(allowed_sport_ids))
+    # Competition scope (e.g. EPL-only football pool) — see competition_scope.py
+    from app.league.competition_scope import competition_scope_criterion
+
+    scope = competition_scope_criterion(db, league_id)
+    if scope is not None:
+        query = query.filter(scope)
+    return query
 
 
 def _exclude_owned_players(query, league_id: uuid.UUID):

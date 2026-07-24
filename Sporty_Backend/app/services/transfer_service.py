@@ -155,6 +155,10 @@ def _ensure_player_allowed_for_league_pool(
             detail="Player is outside this league's allowed player pool",
         )
 
+    from app.league.competition_scope import ensure_player_in_league_scope
+
+    ensure_player_in_league_scope(db, league_id, player)
+
 
 def _current_window_id(db: Session, league: League) -> uuid.UUID:
     # Transfers/lineups target the next not-yet-locked gameweek (the one you're

@@ -58,6 +58,10 @@ class LeagueCreate(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
     sports: list[str] = Field(default_factory=list)
+    # Optional per-sport competition scope: {sport_name: "EPL"|"LALIGA"|
+    # "BUNDESLIGA"}. Omitted/absent sport = pool spans all competitions.
+    # Enforced via LeagueSport.competition_filter (app/league/competition_scope.py).
+    competition_filters: dict[str, str] = Field(default_factory=dict)
 
     @field_validator("name")
     @classmethod
@@ -65,6 +69,19 @@ class LeagueCreate(BaseModel):
         if not v.strip():
             raise ValueError("League name cannot be blank")
         return v.strip()
+
+    @field_validator("competition_filters")
+    @classmethod
+    def competitions_valid(cls, v: dict[str, str]) -> dict[str, str]:
+        from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
+
+        valid = {c.tag for c in FOOTBALL_COMPETITIONS.values()}
+        for sport_name, comp in v.items():
+            if comp not in valid:
+                raise ValueError(
+                    f"Unknown competition '{comp}' for {sport_name}; expected one of {sorted(valid)}"
+                )
+        return {k.strip().lower(): val for k, val in v.items()}
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -105,6 +122,9 @@ class LeagueSportResponse(BaseModel):
     # migration row. None for the league's own primary sport, whose season
     # is League.season_id, not this field (see remap_sport_season).
     season: SeasonBrief | None = None
+    # Competition scope for this sport's player pool ("EPL"|"LALIGA"|
+    # "BUNDESLIGA"); null = all competitions.
+    competition_filter: str | None = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

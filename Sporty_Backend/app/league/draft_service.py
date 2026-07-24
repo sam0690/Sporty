@@ -228,6 +228,11 @@ def _require_draftable_player(
             detail="This player's sport is not part of this league",
         )
 
+    # Player's club must be inside the league's competition scope (if any)
+    from app.league.competition_scope import ensure_player_in_league_scope
+
+    ensure_player_in_league_scope(db, league_id, player)
+
     # Already drafted in this league?
     already_drafted = (
         db.query(DraftPick)
@@ -555,7 +560,7 @@ def select_auto_pick_player(
     """
     sport_type, mode = _league_sport_mode(db, league_id)
     drafted_player_ids = db.query(DraftPick.player_id).filter(DraftPick.league_id == league_id)
-    candidates = (
+    candidates_query = (
         db.query(Player)
         .join(LeagueSport, LeagueSport.sport_id == Player.sport_id)
         .filter(
@@ -563,6 +568,14 @@ def select_auto_pick_player(
             Player.is_available.is_(True),
             Player.id.notin_(drafted_player_ids),
         )
+    )
+    from app.league.competition_scope import competition_scope_criterion
+
+    scope = competition_scope_criterion(db, league_id)
+    if scope is not None:
+        candidates_query = candidates_query.filter(scope)
+    candidates = (
+        candidates_query
         .options(selectinload(Player.sport))
         .order_by(Player.cost.desc())
         .limit(50)

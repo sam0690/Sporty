@@ -115,6 +115,11 @@ def get_free_agents(
         Player.sport_id.in_(sport_ids),
         Player.is_available.is_(True),
     )
+    from app.league.competition_scope import competition_scope_criterion
+
+    scope = competition_scope_criterion(db, league_id)
+    if scope is not None:
+        q = q.filter(scope)
     if owned:
         q = q.filter(~Player.id.in_(owned))
     if position:
@@ -193,6 +198,11 @@ def check_add_drop(
     sport_ids = _league_sport_ids(db, league.id)
     if add_player.sport_id not in sport_ids:
         return "Player is outside this league's allowed pool", None
+
+    from app.league.competition_scope import player_in_league_scope
+
+    if not player_in_league_scope(db, league.id, add_player):
+        return "Player is outside this league's competition scope", None
 
     if len(sport_ids) > 1 and add_player.sport_id != drop_player.sport_id:
         return (

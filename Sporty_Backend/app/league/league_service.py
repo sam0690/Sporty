@@ -249,7 +249,10 @@ def create_league(
                     detail=f"Cannot create this league: '{s.name}' has no current season yet",
                 )
             mapped_season_id = mapped_season.id
-        league.sports.append(LeagueSport(sport_id=s.id, season_id=mapped_season_id))
+        comp_filter = getattr(data, "competition_filters", {}).get(s.name.strip().lower())
+        league.sports.append(
+            LeagueSport(sport_id=s.id, season_id=mapped_season_id, competition_filter=comp_filter)
+        )
 
     # 3. Auto-enrol owner
     membership = LeagueMembership(
@@ -723,7 +726,12 @@ def renew_league(
     db.add(new_league)
 
     for league_sport in source.sports:
-        new_league.sports.append(LeagueSport(sport_id=league_sport.sport_id))
+        new_league.sports.append(
+            LeagueSport(
+                sport_id=league_sport.sport_id,
+                competition_filter=league_sport.competition_filter,
+            )
+        )
 
     source_slots = db.query(LineupSlot).filter(LineupSlot.league_id == source.id).all()
     for slot in source_slots:

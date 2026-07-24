@@ -225,6 +225,10 @@ def make_transfer(
             detail="player_in's sport is not part of this league",
         )
 
+    from app.league.competition_scope import ensure_player_in_league_scope
+
+    ensure_player_in_league_scope(db, league_id, player_in)
+
     # ── Budget check ────────────────────────────────────────────────
     # Refund outgoing player with fixed transaction penalty.
     refund_amount, penalty = calculate_refund(team_player_out.cost_at_acquisition)

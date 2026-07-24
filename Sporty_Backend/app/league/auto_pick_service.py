@@ -502,6 +502,11 @@ def auto_pick_team(
     sport_config = _sport_config_for_league(league)
     sport_type = sport_config["sportType"]
     pool = _load_player_pool(db, league, sport_type, day_seven=False)
+    # The cached pool is shared across leagues, so competition scope is
+    # applied after loading — see competition_scope.py.
+    from app.league.competition_scope import filter_pool_by_scope, scoped_team_ids_by_sport_name
+
+    pool = filter_pool_by_scope(pool, scoped_team_ids_by_sport_name(db, league.id))
     try:
         selected, total_cost, budget_remaining = autoPickSquad(
             pool,
