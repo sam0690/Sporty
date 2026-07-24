@@ -29,15 +29,17 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=30, hour=6),
         "args": (),
     },
-    # Deliberately coarse (user decision 2026-07-24): scores land hours after
-    # full time, not live. The task's reconcile pass books finals + FT stat
-    # sheets for matches that started and ended between ticks, so nothing is
-    # lost — only delayed. Idle ticks still cost zero requests (DB gate).
-    # For real-time UX, tighten to crontab(minute="*/5") — the window gate +
-    # budget keep that safe too (~91 req worst case).
-    "poll-live-football-every-6h": {
+    # Coarse by design (user decision 2026-07-25: 3h, quota-conscious). Scores
+    # still land mostly after full time via the reconcile pass (books finals +
+    # FT stat sheets for matches that started and ended between ticks) — a 3h
+    # tick only occasionally lands mid-match for live in-play points. Idle
+    # ticks cost zero requests (DB window gate). For genuinely live UX, tighten
+    # to crontab(minute="*/5") — still fits the 95/day budget (~1 req/poll,
+    # gated to match windows; FT sheets + predictions dominate the daily total,
+    # not the poll interval).
+    "poll-live-football-every-3h": {
         "task": "live.football.poll",
-        "schedule": crontab(minute=30, hour="*/6"),
+        "schedule": crontab(minute=30, hour="*/3"),
         "args": (),
     },
 
