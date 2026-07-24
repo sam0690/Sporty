@@ -43,3 +43,21 @@ export function competitionMeta(
   return BY_TAG[tag] ?? null;
 }
 
+// Competition display NAME (as stored on Match.competition / FixtureResponse)
+// -> tag, for the competitions that have a standings page. NBA/Cricket return
+// null (no competition page).
+const NAME_TO_TAG: Record<string, string> = {
+  "Premier League": "EPL",
+  "La Liga": "LALIGA",
+  Bundesliga: "BUNDESLIGA",
+  "Champions League": "UCL",
+};
+
+/** Route tag (lowercase, e.g. "epl") for a competition's display name, or null
+ *  if it has no competition/standings page. */
+export function competitionRouteTag(name: string | null | undefined): string | null {
+  if (!name) return null;
+  const tag = NAME_TO_TAG[name];
+  return tag ? tag.toLowerCase() : null;
+}
+

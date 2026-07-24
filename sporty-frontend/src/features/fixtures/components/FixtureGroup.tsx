@@ -1,9 +1,11 @@
 "use client";
 
-import { ChevronDown, Star } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, ListOrdered, Star } from "lucide-react";
 
 import { Badge } from "@/components/ui";
 import { sportGlyph } from "@/components/landing/sport-icons";
+import { competitionRouteTag } from "@/lib/footballCompetitions";
 import type { FixtureGroup as Group } from "../fixtureFormat";
 import { FixtureRow } from "./FixtureRow";
 
@@ -20,6 +22,7 @@ export function FixtureGroup({
 }) {
   const glyph = sportGlyph(group.sport);
   const Glyph = glyph.Icon;
+  const routeTag = competitionRouteTag(group.competition);
 
   return (
     <details open className="group/panel pop-in overflow-hidden card-surface" style={style}>
@@ -51,6 +54,17 @@ export function FixtureGroup({
           </button>
         </div>
         <div className="flex shrink-0 items-center gap-2.5">
+          {routeTag && (
+            <Link
+              href={`/competitions/${routeTag}`}
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`${group.competition} standings`}
+              className="inline-flex items-center gap-1 rounded-[3px] border border-white/10 px-2 py-1 font-sans text-[10px] font-700 uppercase tracking-[1px] text-fg-3 transition-colors hover:border-accent/40 hover:text-accent hover:no-underline"
+            >
+              <ListOrdered className="size-3" />
+              <span className="hidden sm:inline">Standings</span>
+            </Link>
+          )}
           {group.live > 0 ? (
             <Badge tone="danger" size="sm" className="gap-1.5">
               <span className="size-1.5 rounded-full bg-danger animate-live-pulse" />
