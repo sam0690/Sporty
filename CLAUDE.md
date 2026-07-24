@@ -65,7 +65,7 @@ Path alias `@/*` → `src/*` (`tsconfig.json`). Layered data flow is **Backend �
 - `src/lib/` — cross-cutting client utilities: `realtimeApi.ts` / `socket.ts` (WebSocket/SSE for live scoring), `league-lifecycle.ts`, `storage.*` (typed localStorage/session helpers), `route.config.ts`, `sanitize.ts`, `validations.ts`.
 - `src/features/` — feature modules (`create-league`, `create-team`, `my-team`, `transfers`, `leagues`, …) composing components + hooks.
 
-The realtime/live-scoring frontend (`src/lib/realtimeApi.ts`, `socket.ts`, `components/live/`) consumes the backend's feeder → Redis pub/sub → WebSocket/SSE chain. (A Kafka pipeline also exists but is dormant — flag off, deps uninstalled — kept for a future real-matches API; see `Sporty_Backend/CLAUDE.md`.)
+The realtime/live-scoring frontend (`src/lib/realtimeApi.ts`, `socket.ts`, `components/live/`) consumes the backend's live-data → Redis pub/sub → WebSocket/SSE chain. Football live data comes from API-Football polling (2026-07; the SportyDataFeeder push path is commented out in `app/main.py` but kept re-enableable — see `Sporty_Backend/CLAUDE.md`). (A Kafka pipeline also exists but is dormant — flag off, deps uninstalled — kept for a future real-matches API.)
 
 ## Backend architecture (summary — full detail in `Sporty_Backend/CLAUDE.md`)
 

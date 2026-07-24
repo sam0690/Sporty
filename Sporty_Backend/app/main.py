@@ -79,7 +79,11 @@ from app.api.v1.draft_roster import router as draft_roster_router
 from app.api.v1.waivers import router as waivers_router
 from app.api.v1.trades import router as trades_router
 from app.api.v1.matchups import router as matchups_router
-from app.api.v1.feed import router as feed_router
+# SportyDataFeeder ingest — disabled 2026-07: football live data now comes
+# from API-Football polling (app/services/sync/football_live_sync.py).
+# Uncomment this import + the include_router below to re-enable feeder sims
+# (football AND basketball demos both push through /api/v1/feed/*).
+# from app.api.v1.feed import router as feed_router
 from app.api.routes.match import router as realtime_match_router
 from app.api.routes.websocket import router as realtime_websocket_router
 from app.api.routes.sse import router as realtime_sse_router
@@ -599,7 +603,7 @@ app.include_router(draft_roster_router, prefix="/api/v1")
 app.include_router(waivers_router, prefix="/api/v1")
 app.include_router(trades_router, prefix="/api/v1")
 app.include_router(matchups_router, prefix="/api/v1")
-app.include_router(feed_router, prefix="/api/v1")
+# app.include_router(feed_router, prefix="/api/v1")  # feeder disabled — see import note above
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(support_router, prefix="/api/v1")
 app.include_router(league_chat_router, prefix="/api/v1")

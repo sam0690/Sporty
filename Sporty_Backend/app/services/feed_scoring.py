@@ -152,16 +152,21 @@ def _get_or_create_base_stat(db: Session, player_id: uuid.UUID, window_id: uuid.
     return stat
 
 
-def _apply_football_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
-    # Assignment, not +=: `counts` is always the FULL recount of this match's
-    # live_events (see _aggregate_match_events), so this must be idempotent —
-    # persist_match_stats can be called more than once for the same match
-    # (see its docstring) and must converge to the same result each time.
+def _get_or_create_football_child(db: Session, base_stat: PlayerGameweekStat) -> FootballStat:
     child = db.query(FootballStat).filter(FootballStat.base_stat_id == base_stat.id).first()
     if child is None:
         child = FootballStat(base_stat_id=base_stat.id)
         db.add(child)
         db.flush()
+    return child
+
+
+def _apply_football_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
+    # Assignment, not +=: `counts` is always the FULL recount of this match's
+    # live_events (see _aggregate_match_events), so this must be idempotent —
+    # persist_match_stats can be called more than once for the same match
+    # (see its docstring) and must converge to the same result each time.
+    child = _get_or_create_football_child(db, base_stat)
     child.goals = counts.get("goal", 0)
     child.assists = counts.get("assist", 0)
     child.yellow_cards = counts.get("yellow_card", 0)
@@ -241,6 +246,75 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
 
     logger.info(
         "Feed scoring for match %s: booked stats for %s players across %s window(s)",
+        live_key,
+        len(known_player_ids),
+        len(window_ids),
+    )
+    return {"players": len(known_player_ids), "windows": len(window_ids), "stat_rows": booked}
+
+
+# Full-sheet columns booked from API-Football's /fixtures/players at FT.
+# clean_sheets and minutes are derived/read by the parser in
+# football_live_sync; own_goals/bonus aren't in the API sheet and stay 0.
+FOOTBALL_SHEET_FIELDS = (
+    "goals",
+    "assists",
+    "clean_sheets",
+    "yellow_cards",
+    "red_cards",
+    "penalties_saved",
+    "penalties_missed",
+    "saves",
+    "goals_conceded",
+)
+
+
+def persist_football_stats_from_sheet(
+    db: Session, *, match: Match, live_key: str, stats_by_player: dict[uuid.UUID, dict]
+) -> dict:
+    """Book a finished real-API match's gameweek stats from the full
+    /fixtures/players sheet instead of counting live_events — this is what
+    fills saves/minutes/clean sheets, which never exist as poll events.
+
+    Same contract as persist_match_stats: assignment (not +=) so re-booking
+    the same match converges, and the caller owns the transaction. Values are
+    clamped to the FootballStat check constraints (e.g. a data glitch
+    reporting 3 yellows must not abort the whole booking commit).
+    """
+    if not stats_by_player:
+        return {"players": 0, "windows": 0}
+
+    window_ids = find_transfer_window_ids_for_datetime(
+        db, match_date=match.match_date, sport_id=match.sport_id
+    )
+    if not window_ids:
+        logger.warning(
+            "Sheet booking for match %s: no transfer window covers %s; stats not booked",
+            live_key,
+            match.match_date,
+        )
+        return {"players": 0, "windows": 0}
+
+    known_player_ids = {
+        player_id
+        for (player_id,) in db.query(Player.id).filter(Player.id.in_(stats_by_player.keys())).all()
+    }
+
+    caps = {"yellow_cards": 2, "red_cards": 1, "clean_sheets": 1}
+    booked = 0
+    for window_id in window_ids:
+        for player_id in known_player_ids:
+            sheet = stats_by_player[player_id]
+            base_stat = _get_or_create_base_stat(db, player_id, window_id)
+            base_stat.minutes_played = sheet.get("minutes", 0)
+            child = _get_or_create_football_child(db, base_stat)
+            for field in FOOTBALL_SHEET_FIELDS:
+                value = max(0, int(sheet.get(field, 0) or 0))
+                setattr(child, field, min(value, caps.get(field, value)))
+            booked += 1
+
+    logger.info(
+        "Sheet booking for match %s: booked stats for %s players across %s window(s)",
         live_key,
         len(known_player_ids),
         len(window_ids),

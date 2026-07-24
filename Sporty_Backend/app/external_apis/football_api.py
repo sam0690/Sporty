@@ -1,19 +1,26 @@
 """
-Football API client — API-Football (RapidAPI).
+Football API client — API-Football (api-sports.io v3).
 
-Provider: https://rapidapi.com/api-sports/api/api-football
-Free Tier: 100 requests/day
-Coverage: Players, fixtures, live scores, statistics
+Provider: https://www.api-football.com/ (direct) or via RapidAPI
+Free Tier: 100 requests/day, 10 requests/minute
+Coverage: Players, fixtures, live scores, events, predictions, statistics
+
+Every request is counted against a daily Redis budget
+(settings.FOOTBALL_API_DAILY_BUDGET, default 95 — headroom under the
+provider's 100/day hard cap). When the budget is spent, calls raise
+FootballQuotaExhausted *before* hitting the network; callers treat it as
+"polling paused for today", not an error.
 
 Usage:
     client = FootballAPIClient()
-    players = await client.get_players(league_id=39, season=2024)
-    fixtures = await client.get_fixtures(league_id=39, season=2024)
-    stats = await client.get_match_stats(fixture_id=12345)
+    fixtures = await client.get_fixtures(league_id=39, season=2026)
     live = await client.get_live_fixtures(league_id=39)
+    prediction = await client.get_predictions(fixture_id=12345)
 """
 
+import logging
 import os
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 import httpx
@@ -21,9 +28,43 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
+
+class FootballQuotaExhausted(RuntimeError):
+    """Daily API-Football request budget is spent; retry after 00:00 UTC."""
+
+
+def _spend_quota() -> None:
+    """INCR the shared daily counter; raise once the budget is spent.
+
+    Counter key rolls with the UTC date to match the provider's 00:00 UTC
+    reset. Fails open on Redis errors — the provider's own hard cap is the
+    backstop, and losing quota accounting must not stop live data.
+    """
+    from app.core.config import settings
+    from app.core.redis import get_redis
+
+    budget = settings.FOOTBALL_API_DAILY_BUDGET
+    if budget <= 0:  # 0 = unlimited (paid plan)
+        return
+    try:
+        redis = get_redis()
+        key = f"quota:api-football:{datetime.now(timezone.utc):%Y%m%d}"
+        used = redis.incr(key)
+        if used == 1:
+            redis.expire(key, 172800)  # 2 days; date in the key does the real rollover
+    except Exception:  # noqa: BLE001
+        logger.warning("API-Football quota counter unavailable; failing open", exc_info=True)
+        return
+    if used > budget:
+        raise FootballQuotaExhausted(
+            f"API-Football daily budget spent ({budget}/{budget})"
+        )
+
 
 class FootballAPIClient:
-    """Client for API-Football (RapidAPI)."""
+    """Client for API-Football (api-sports.io v3)."""
 
     BASE_URL = "https://v3.football.api-sports.io"
 
@@ -34,10 +75,23 @@ class FootballAPIClient:
                 "RAPIDAPI_FOOTBALL_KEY not found in environment variables"
             )
 
+        # Both header schemes: x-apisports-key is what direct api-sports.io
+        # accounts use; the x-rapidapi-* pair covers RapidAPI-issued keys.
         self.headers = {
+            "x-apisports-key": self.api_key,
             "x-rapidapi-host": "v3.football.api-sports.io",
             "x-rapidapi-key": self.api_key,
         }
+
+    async def _get(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
+        _spend_quota()
+        url = f"{self.BASE_URL}/{path}"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                url, headers=self.headers, params=params, timeout=30
+            )
+            response.raise_for_status()
+            return response.json()
 
     async def get_players(
         self, league_id: int = 39, season: int = 2024, page: int = 1
@@ -53,15 +107,9 @@ class FootballAPIClient:
         Returns:
             {"response": [{"player": {...}, "statistics": [...]}], ...}
         """
-        url = f"{self.BASE_URL}/players"
-        params = {"league": league_id, "season": season, "page": page}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        return await self._get(
+            "players", {"league": league_id, "season": season, "page": page}
+        )
 
     async def get_fixtures(
         self, league_id: int = 39, season: int = 2024
@@ -72,15 +120,7 @@ class FootballAPIClient:
         Returns:
             {"response": [{"fixture": {...}, "teams": {...}, "goals": {...}}, ...]}
         """
-        url = f"{self.BASE_URL}/fixtures"
-        params = {"league": league_id, "season": season}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        return await self._get("fixtures", {"league": league_id, "season": season})
 
     async def get_match_stats(self, fixture_id: int) -> dict[str, Any]:
         """
@@ -92,15 +132,7 @@ class FootballAPIClient:
         Returns:
             {"response": [{"team": {...}, "players": [...]}, ...]}
         """
-        url = f"{self.BASE_URL}/fixtures/statistics"
-        params = {"fixture": fixture_id}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        return await self._get("fixtures/statistics", {"fixture": fixture_id})
 
     async def get_match_events(self, fixture_id: int) -> dict[str, Any]:
         """
@@ -109,32 +141,36 @@ class FootballAPIClient:
         Returns:
             {"response": [{"time": {...}, "team": {...}, "player": {...}, "type": "Goal"}, ...]}
         """
-        url = f"{self.BASE_URL}/fixtures/events"
-        params = {"fixture": fixture_id}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        return await self._get("fixtures/events", {"fixture": fixture_id})
 
     async def get_live_fixtures(self, league_id: int = 39) -> dict[str, Any]:
         """
-        Fetch currently live matches for a league.
+        Fetch currently live matches for a league. Each live fixture embeds
+        its `events` array, so no per-fixture events call is needed.
 
         Returns:
-            {"response": [{"fixture": {...}, "live": {...}}, ...]}
+            {"response": [{"fixture": {...}, "goals": {...}, "events": [...]}, ...]}
         """
-        url = f"{self.BASE_URL}/fixtures"
-        params = {"league": league_id, "live": "all"}
+        return await self._get("fixtures", {"league": league_id, "live": "all"})
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+    async def get_fixture_players(self, fixture_id: int) -> dict[str, Any]:
+        """
+        Fetch the full per-player stat sheet for one fixture (minutes, goals,
+        assists, saves, conceded, cards, penalties, rating).
+
+        Returns:
+            {"response": [{"team": {...}, "players": [{"player": {...}, "statistics": [{...}]}]}]}
+        """
+        return await self._get("fixtures/players", {"fixture": fixture_id})
+
+    async def get_predictions(self, fixture_id: int) -> dict[str, Any]:
+        """
+        Fetch the pre-match outcome prediction for one fixture.
+
+        Returns:
+            {"response": [{"predictions": {"percent": {"home": "45%", ...}, ...}, ...}]}
+        """
+        return await self._get("predictions", {"fixture": fixture_id})
 
     async def get_teams(
         self, league_id: int = 39, season: int = 2024
@@ -145,15 +181,7 @@ class FootballAPIClient:
         Returns:
             {"response": [{"team": {"id":..., "name":..., "logo": "https://..."}, "venue": {...}}, ...]}
         """
-        url = f"{self.BASE_URL}/teams"
-        params = {"league": league_id, "season": season}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        return await self._get("teams", {"league": league_id, "season": season})
 
     async def get_player_by_id(
         self, player_id: int, season: int = 2024
@@ -164,12 +192,4 @@ class FootballAPIClient:
         Returns:
             {"response": [{"player": {...}, "statistics": [...]}]}
         """
-        url = f"{self.BASE_URL}/players"
-        params = {"id": player_id, "season": season}
-
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                url, headers=self.headers, params=params, timeout=30
-            )
-            response.raise_for_status()
-            return response.json()
+        return await self._get("players", {"id": player_id, "season": season})

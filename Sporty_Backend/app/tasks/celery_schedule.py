@@ -4,38 +4,44 @@ from celery.schedules import crontab
 
 
 CELERY_BEAT_SCHEDULE = {
-    # Daily sync (players change less often)
+    # ── Football via API-Football (free tier: 100 req/day, budget 95 —
+    # see FOOTBALL_API_DAILY_BUDGET). All three tasks no-op while
+    # LIVE_POLLING_ENABLED / the live_polling_enabled admin flag is off.
+    #
+    # Daily request math (worst-case EPL Saturday): fixtures 1 + predictions
+    # ~10 + live polling ~70 (5-min polls, only inside kickoff windows, 1
+    # request per poll since events are embedded) + FT stat sheets ~10 (one
+    # /fixtures/players per finished fixture) ≈ 91; the budget guard clips
+    # gracefully (FT sheet falls back to event booking). Non-matchdays: ~1.
+    "sync-football-matches-daily": {
+        "task": "sync.football.matches",
+        "schedule": crontab(minute=0, hour=6),
+        "args": (),  # league 39 / current season defaults
+    },
+    "sync-football-predictions-daily": {
+        "task": "sync.football.predictions",
+        "schedule": crontab(minute=0, hour=7),
+        "args": (),
+    },
+    # Every 5 min all day is safe: the task gates on DB state (fixtures in a
+    # live window) before touching the API, so idle runs cost zero requests.
+    "poll-live-football-every-5m": {
+        "task": "live.football.poll",
+        "schedule": crontab(minute="*/5"),
+        "args": (),
+    },
+
+    # Daily sync (players change less often) — run manually after transfer
+    # windows for now; ~40 requests per full-league run (paginated).
     # "sync-football-players-daily": {
     #     "task": "sync.football.players",
     #     "schedule": crontab(minute=0, hour=3),
-    #     "args": (39, 2024),
-    # },
-    # Keep fixtures reasonably fresh
-    # "sync-football-matches-hourly": {
-    #     "task": "sync.football.matches",
-    #     "schedule": crontab(minute=0),
-    #     "args": (39, 2024),
+    #     "args": (),
     # },
     # Catch just-finished matches
     # "sync-finished-match-stats-every-15m": {
     #     "task": "sync.stats.finished",
     #     "schedule": crontab(minute="*/15"),
-    #     "args": (),
-    # },
-    # Live polling (during match hours this matters; safe if no live matches)
-    # "sync-live-match-stats-every-1m": {
-    #     "task": "sync.stats.live",
-    #     "schedule": crontab(minute="*/1"),
-    #     "args": (),
-    # },
-
-    # Live polling (distributed-lock protected). Every 4h rather than every
-    # minute: RapidAPI free-tier quotas (100 req/day) can't sustain a tight
-    # interval, and LIVE_POLLING_ENABLED is off by default anyway (see
-    # app/core/config.py) — this only matters once it's flipped on.
-    # "poll-live-football-every-4h": {
-    #     "task": "live.football.poll",
-    #     "schedule": crontab(minute=0, hour="*/4"),
     #     "args": (),
     # },
     # "poll-live-nba-every-4h": {

@@ -111,13 +111,18 @@ class Settings(BaseSettings):
 
     # Real-API live-match polling (app/services/sync/football_live_sync.py,
     # nba_live_sync.py) — separate from REALTIME_PIPELINE_ENABLED (the Kafka
-    # pipeline). Off by default: live match data currently comes from the
-    # SportyDataFeeder simulator via /api/v1/feed/*. The polling code is fully
-    # implemented and writes into the same Match/LiveEvent/Redis-pubsub model
-    # the feeder uses, so flipping this on is the only step needed later —
-    # but RapidAPI free-tier quotas (100 req/day) will not sustain a 1-minute
-    # poll interval against real fixtures without a paid plan.
+    # pipeline). This is now the football live-data source (the feeder's
+    # /api/v1/feed/* router is commented out in main.py as of 2026-07); the
+    # free-tier 100 req/day quota is handled by window-gated 5-min polling +
+    # the FOOTBALL_API_DAILY_BUDGET counter, see celery_schedule.py. Flip on
+    # via env or the live_polling_enabled admin feature flag once
+    # RAPIDAPI_FOOTBALL_KEY is set.
     LIVE_POLLING_ENABLED: bool = False
+
+    # Daily API-Football request budget (Redis-counted, UTC reset). Kept
+    # under the provider's 100/day hard cap for headroom; 0 = unlimited
+    # (paid plan).
+    FOOTBALL_API_DAILY_BUDGET: int = 95
 
     FOOTBALL_LIVE_LEAGUE_ID: int = 39
     BASKETBALL_LIVE_LEAGUE_ID: int = 12
