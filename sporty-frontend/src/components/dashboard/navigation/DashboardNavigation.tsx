@@ -8,6 +8,7 @@ import {
   Users,
   CalendarDays,
   Target,
+  ListOrdered,
   Lock,
 } from "lucide-react";
 import { MobileBottomNav } from "@/components/dashboard/navigation/MobileBottomNav";
@@ -39,6 +40,7 @@ export function DashboardNavigation({ children }: DashboardNavigationProps) {
             { label: "Leagues", href: "/leagues", icon: Trophy },
             { label: "My Team", href: "/my-team", icon: Shield },
             { label: "Fixtures", href: "/fixtures", icon: CalendarDays },
+            { label: "Competitions", href: "/competitions/epl", icon: ListOrdered },
             { label: "Predictor", href: "/predictions", icon: Target },
             { label: "Players", href: "/players", icon: Users },
           ]),
