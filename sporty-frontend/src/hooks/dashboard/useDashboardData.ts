@@ -102,7 +102,11 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
         (lineupQuery.isLoading || windowQuery.isLoading)),
     // True while showing the previous league's data during a switch.
     isSwitching: lineupQuery.isPlaceholderData || windowQuery.isPlaceholderData,
-    error: leaguesQuery.error || lineupQuery.error || windowQuery.error || null,
+    // windowQuery (active-window) is deliberately NOT fatal: it 409s whenever no
+    // gameweek is live (pre-season, between gameweeks) — the normal state, not a
+    // failure. It only feeds the optional GW badge (handles null). Only a real
+    // leagues/lineup failure is a preview error.
+    error: leaguesQuery.error || lineupQuery.error || null,
     // Refetch every query the preview depends on — wired to the card's retry.
     refetch: () =>
       Promise.all([

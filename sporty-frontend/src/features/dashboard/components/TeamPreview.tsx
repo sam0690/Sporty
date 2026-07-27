@@ -1,5 +1,5 @@
 import { useRouter } from "next/navigation";
-import { ChevronRight, ClipboardList, Trophy } from "lucide-react";
+import { CalendarClock, ChevronRight, ClipboardList, Trophy } from "lucide-react";
 
 import { CardErrorState, EmptyState } from "@/components/ui";
 import { sportGlyph } from "@/components/landing/sport-icons";
@@ -104,6 +104,26 @@ export function TeamPreview({
                 ? [
                     {
                       label: "Set lineup",
+                      href: `/leagues/${activeLeagueId}/lineup`,
+                      variant: "primary",
+                    },
+                  ]
+                : []
+            }
+          />
+        ) : activeSlide.players.length === 0 ? (
+          // No gameweek is live right now (pre-season / between gameweeks) — the
+          // live lineup is empty. Not an error: point them at their upcoming XI.
+          <EmptyState
+            className={EMPTY_STATE_INSET}
+            icon={CalendarClock}
+            title="No live gameweek"
+            description="No match is live right now. Your matchday XI appears here once the gameweek kicks off."
+            actions={
+              activeLeagueId
+                ? [
+                    {
+                      label: "Review lineup",
                       href: `/leagues/${activeLeagueId}/lineup`,
                       variant: "primary",
                     },
