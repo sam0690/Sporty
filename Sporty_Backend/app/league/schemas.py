@@ -888,7 +888,9 @@ class LineupResponse(BaseModel):
     """Result of GET /leagues/{id}/my-team/lineup."""
     fantasy_team_id: uuid.UUID
     team_name: str
-    transfer_window_id: uuid.UUID
+    # Null when no window is live/editable (pre-season, between gameweeks) — the
+    # live-lineup endpoint returns an empty starting_lineup in that case.
+    transfer_window_id: uuid.UUID | None = None
     starting_lineup: list[LineupEntryResponse]
     bench: list[LineupEntryResponse] = Field(default_factory=list)
     squad_players: list[TeamPlayerResponse] = Field(default_factory=list)

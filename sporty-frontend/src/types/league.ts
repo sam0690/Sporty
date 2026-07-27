@@ -147,8 +147,9 @@ export type TLineupEntry = {
 
 export type TLineupResponse = {
   fantasy_team_id: string;
+  // Null when no window is live/editable (pre-season, between gameweeks).
+  transfer_window_id: string | null;
   team_name: string;
-  transfer_window_id: string;
   starting_lineup: TLineupEntry[];
   squad_players: TTeamPlayer[];
 };
