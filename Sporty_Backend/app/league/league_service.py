@@ -49,7 +49,7 @@ from app.squad.services import (
     validate_position_slots,
     validate_squad_size,
 )
-from app.league.service_helpers import SUPPORTED_LEAGUE_SPORTS, VALID_TRANSITIONS, _LEAGUE_OPTIONS, _MEMBERSHIP_OPTIONS, _current_transfer_window, _editable_transfer_window, _generate_invite_code, _league_window_competition, _require_fantasy_team, _require_league, _require_membership, _serialize_window, _window_competition_clause
+from app.league.service_helpers import SUPPORTED_LEAGUE_SPORTS, VALID_TRANSITIONS, _LEAGUE_OPTIONS, _MEMBERSHIP_OPTIONS, _current_transfer_window, _editable_transfer_window, _generate_invite_code, _league_window_competition, _league_window_total, _require_fantasy_team, _require_league, _require_membership, _serialize_window, _window_competition_clause
 
 logger = logging.getLogger(__name__)
 
