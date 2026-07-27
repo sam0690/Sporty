@@ -1296,12 +1296,17 @@ def add_ticket_message_admin(
 # ── Browse endpoints for the Scoring/Transactions pickers ──────────────────────
 
 def list_transfer_windows_for_league(db: Session, league_id: uuid.UUID) -> list[TransferWindow]:
+    from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
     league = db.query(League).filter(League.id == league_id).first()
     if not league:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
     return (
         db.query(TransferWindow)
-        .filter(TransferWindow.season_id == league.season_id)
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
+        )
         .order_by(TransferWindow.number.asc())
         .all()
     )

@@ -390,6 +390,23 @@ export type TTransferWindow = {
   lineup_locked: boolean;
 };
 
+export type TSeasonPhase =
+  | "PRE_SEASON"
+  | "LIVE"
+  | "BETWEEN_GAMEWEEKS"
+  | "COMPLETED";
+
+// Non-raising season-phase summary (GET /leagues/:id/season-state). Drives the
+// pre-season / team-building UI so the header never falls back to a fake "GW n/16".
+export type TSeasonState = {
+  phase: TSeasonPhase;
+  current_gw: number;
+  total_gw: number;
+  season_start_at: string | null;
+  first_deadline_at: string | null;
+  next_deadline_at: string | null;
+};
+
 export type TStageOutRequest = {
   league_id: string;
   gameweek_id: string;

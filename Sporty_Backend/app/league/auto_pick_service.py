@@ -98,10 +98,14 @@ def _require_team_free(db: Session, league_id: uuid.UUID, user_id: uuid.UUID) ->
 
 
 def _active_transfer_window(db: Session, league: League) -> TransferWindow:
-    # The window you're setting up: the next gameweek whose lineup hasn't locked.
+    # The window you're setting up: the next gameweek whose lineup hasn't locked,
+    # on THIS league's own competition schedule.
+    from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
     window = (
         db.query(TransferWindow)
         .filter(TransferWindow.season_id == league.season_id)
+        .filter(_window_competition_clause(_league_window_competition(db, league)))
         .filter(TransferWindow.lineup_deadline_at > func.now())
         .order_by(TransferWindow.start_at.asc())
         .first()

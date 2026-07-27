@@ -762,7 +762,7 @@ export function useLineupState() {
       teamName: lineupData?.team_name,
       sport,
       currentWeek: activeWindow?.number || 1,
-      totalWeeks: activeWindow?.total_number || 16,
+      totalWeeks: activeWindow?.total_number || 0,
       deadline: activeWindow?.lineup_deadline_at || FALLBACK_DEADLINE,
     };
   }, [league, activeWindow, lineupData?.team_name]);

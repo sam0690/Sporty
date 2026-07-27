@@ -74,6 +74,7 @@ from app.league.schemas import (
     TeamBuildRequest,
     TransferCreate,
     TransferResponse,
+    LeagueSeasonStateResponse,
     TransferWindowResponse,
     UserTransferHistoryLeagueResponse,
 )
@@ -1090,6 +1091,20 @@ def get_editable_window(
     """Return the next not-yet-locked gameweek — the one users set up while the
     current one plays. Drives the lineup and transfers pages."""
     return league_service.get_editable_transfer_window(db, league.id)
+
+
+@router.get(
+    "/{league_id}/season-state",
+    response_model=LeagueSeasonStateResponse,
+    summary="Season phase summary (pre-season / live / between / completed)",
+)
+def get_season_state(
+    league: League = Depends(require_league_member),
+    db: Session = Depends(get_db),
+):
+    """Non-raising phase summary for the team-building / pre-season UI — never
+    404/409s the way active-window/editable-window do at the season edges."""
+    return league_service.get_league_season_state(db, league.id)
 
 
 @router.get(

@@ -49,7 +49,7 @@ from app.squad.services import (
     validate_position_slots,
     validate_squad_size,
 )
-from app.league.service_helpers import _require_fantasy_team, _require_league
+from app.league.service_helpers import _league_window_competition, _require_fantasy_team, _require_league, _window_competition_clause
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +96,7 @@ def get_gameweek_recap(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
                 TransferWindow.number == gameweek,
             )
             .first()
@@ -126,6 +127,7 @@ def get_gameweek_recap(
                 db.query(TransferWindow)
                 .filter(
                     TransferWindow.season_id == league.season_id,
+                    _window_competition_clause(_league_window_competition(db, league)),
                     TransferWindow.end_at <= func.now(),
                 )
                 .order_by(TransferWindow.number.desc())
@@ -271,6 +273,7 @@ def get_league_leaderboard(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
                 TransferWindow.number == gameweek,
             )
             .first()

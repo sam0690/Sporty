@@ -163,10 +163,13 @@ def _ensure_player_allowed_for_league_pool(
 def _current_window_id(db: Session, league: League) -> uuid.UUID:
     # Transfers/lineups target the next not-yet-locked gameweek (the one you're
     # setting up), not the in-progress one — its lineup deadline hasn't passed.
+    from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
     row = (
         db.query(TransferWindow.id)
         .filter(
             TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
             TransferWindow.lineup_deadline_at > func.now(),
         )
         .order_by(TransferWindow.start_at.asc())

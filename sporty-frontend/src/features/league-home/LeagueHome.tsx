@@ -25,6 +25,7 @@ import {
   useLeague,
   useLeaveLeague,
   useMyTeam,
+  useSeasonState,
   useStartDraft,
 } from "@/hooks/leagues/useLeagues";
 import { useDashboardLeagueStats } from "@/hooks/dashboard/useDashboardData";
@@ -49,6 +50,7 @@ export function LeagueHome() {
   } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: windowLoading } =
     useActiveWindow(leagueId);
+  const { data: seasonState } = useSeasonState(leagueId);
   // Transfers/lineups edit the next not-yet-locked gameweek; the quick-transfer
   // widget is open while that window's transfer deadline hasn't passed.
   const { data: editableWindow, isLoading: transferWindowLoading } =
@@ -298,6 +300,7 @@ export function LeagueHome() {
                 yourScore={weekStanding.yourScore}
                 weeklyRank={weekStanding.weeklyRank}
                 pointsBehind={weekStanding.pointsBehind}
+                preSeason={seasonState?.phase === "PRE_SEASON"}
               />
             </div>
             <div className="order-2 lg:order-1 lg:col-span-2 space-y-2">
