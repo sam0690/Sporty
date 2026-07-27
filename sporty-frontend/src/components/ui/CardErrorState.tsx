@@ -20,7 +20,7 @@ type CardErrorStateProps = {
  */
 export function CardErrorState({
   title = "Couldn't load your team",
-  description = "The connection dropped for a moment. Nothing's lost — give it another go.",
+  description = "We couldn't load this just now. Nothing's lost — give it another go.",
   onRetry,
   className = "",
 }: CardErrorStateProps) {
