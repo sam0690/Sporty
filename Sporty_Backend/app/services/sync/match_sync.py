@@ -132,6 +132,7 @@ async def _sync_football_schedule_fdo(db: Session, sport_id, comp: Competition) 
         if not fdo_id or not utc or not home or not away:
             continue
         match_date = datetime.fromisoformat(utc.replace("Z", "+00:00"))
+        matchday = m.get("matchday")  # fdo gameweek number (1..38/34), may be None
 
         row = db.query(Match).filter(Match.external_api_id == f"fdo:{fdo_id}").first()
         if row is None:
@@ -147,6 +148,7 @@ async def _sync_football_schedule_fdo(db: Session, sport_id, comp: Competition) 
                 match_date=match_date,
                 status=status,
                 competition=comp.name,
+                matchday=matchday,
                 season=str((m.get("season") or {}).get("startDate", ""))[:4]
                 or str(match_date.year if match_date.month >= 7 else match_date.year - 1),
             ))
@@ -155,11 +157,15 @@ async def _sync_football_schedule_fdo(db: Session, sport_id, comp: Competition) 
             if row.status == "scheduled" and row.match_date != match_date:
                 row.match_date = match_date  # TV-pick kickoff shifts
                 updated += 1
+            if matchday is not None and row.matchday != matchday:
+                row.matchday = matchday
         else:
             changed = row.match_date != match_date or (
                 status in ("scheduled", "postponed", "cancelled") and row.status != status
             )
             row.match_date = match_date
+            if matchday is not None:
+                row.matchday = matchday
             if status in ("scheduled", "postponed", "cancelled"):
                 row.status = status
             updated += changed

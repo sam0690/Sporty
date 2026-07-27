@@ -26,6 +26,7 @@ import {
   TLeaderboardResponse,
   TGameweekRecapResponse,
   TTransferWindow,
+  TSeasonState,
   TDraftPick,
   TStageOutRequest,
   TStageOutResponse,
@@ -351,6 +352,23 @@ export function useActiveWindow(
   return useApiQuery<TTransferWindow>(
     ["leagues", leagueId, "active-window"],
     () => LeagueService.getActiveWindow(leagueId),
+    {
+      enabled: !!leagueId,
+      ...options,
+    },
+  );
+}
+
+// Non-raising season-phase summary — the single source of truth for the header
+// and pre-season/team-building UI (replaces guessing from a null active-window
+// and the hardcoded "GW n/16" fallback).
+export function useSeasonState(
+  leagueId: string,
+  options?: Omit<UseQueryOptions<TSeasonState, Error>, "queryKey" | "queryFn">,
+) {
+  return useApiQuery<TSeasonState>(
+    ["leagues", leagueId, "season-state"],
+    () => LeagueService.getSeasonState(leagueId),
     {
       enabled: !!leagueId,
       ...options,

@@ -296,7 +296,18 @@ class TransferWindow(Base):
         nullable=False, index=True,
     )
 
-    # Window number within the season (1, 2, 3, …)
+    # Which competition's gameweek schedule this window belongs to, within the
+    # season: "EPL" | "LALIGA" | "BUNDESLIGA" for per-competition football
+    # gameweeks, NULL for the "combined" schedule (all-competitions football
+    # leagues) and for single-competition sports (basketball/cricket). A match
+    # books its stats into its own competition window AND the NULL/combined
+    # window; a league reads whichever matches its competition_filter. See
+    # window_locator.py. Constraints below partition uniqueness + no-overlap by
+    # COALESCE(competition,'') so the combined (NULL) windows still can't
+    # overlap each other, and per-competition windows may overlap in real time.
+    competition: Mapped[str | None] = mapped_column(String(20), nullable=True)
+
+    # Window number within the (season, competition) schedule (1, 2, 3, …)
     number: Mapped[int] = mapped_column(SmallInteger, nullable=False)
 
     # Precise timezone-aware boundaries
@@ -348,10 +359,21 @@ class TransferWindow(Base):
             name="ck_transfer_window_lineup_before_end",
         ),
         CheckConstraint("number > 0", name="ck_transfer_window_number_positive"),
-        UniqueConstraint("season_id", "number", name="uq_transfer_window_season_number"),
+        # Uniqueness + no-overlap partition by (season_id, competition), with
+        # NULL coalesced to '' so the combined schedule (competition IS NULL) is
+        # one partition — its windows can't collide/overlap each other, while
+        # windows of different competitions may overlap in real time.
+        Index(
+            "uq_transfer_window_season_comp_number",
+            "season_id",
+            text("COALESCE(competition, '')"),
+            "number",
+            unique=True,
+        ),
         ExcludeConstraint(
             (text("tstzrange(start_at, end_at, '[]')"), "&&"),
             (text("season_id"), "="),
+            (text("COALESCE(competition, '')"), "="),
             using="gist",
             name="excl_transfer_window_season_no_overlap",
         ),

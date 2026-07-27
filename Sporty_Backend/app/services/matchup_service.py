@@ -71,9 +71,14 @@ def generate_matchups_for_league(db: Session, league: League) -> None:
     if db.query(LeagueMatchup).filter(LeagueMatchup.league_id == league.id).first():
         return
 
+    from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
     windows = (
         db.query(TransferWindow)
-        .filter(TransferWindow.season_id == league.season_id)
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
+        )
         .order_by(TransferWindow.number)
         .all()
     )
@@ -237,11 +242,15 @@ def get_h2h_standings(db: Session, league_id: uuid.UUID) -> list[dict]:
 def _current_window_for_league(db: Session, league: League) -> TransferWindow | None:
     """The window whose [start_at, end_at] contains now, else the most
     recently started window (season not started yet / already ended)."""
+    from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
     now = datetime.now(timezone.utc)
+    comp_clause = _window_competition_clause(_league_window_competition(db, league))
     current = (
         db.query(TransferWindow)
         .filter(
             TransferWindow.season_id == league.season_id,
+            comp_clause,
             TransferWindow.start_at <= now,
             TransferWindow.end_at >= now,
         )
@@ -251,7 +260,11 @@ def _current_window_for_league(db: Session, league: League) -> TransferWindow | 
         return current
     return (
         db.query(TransferWindow)
-        .filter(TransferWindow.season_id == league.season_id, TransferWindow.start_at <= now)
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            comp_clause,
+            TransferWindow.start_at <= now,
+        )
         .order_by(TransferWindow.number.desc())
         .first()
     )

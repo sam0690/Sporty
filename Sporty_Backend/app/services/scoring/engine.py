@@ -149,6 +149,9 @@ def score_transfer_window_for_league(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == league.season_id,
+                # Unified/combined schedules are competition-agnostic (NULL) —
+                # a unified season never holds per-competition football windows.
+                TransferWindow.competition.is_(None),
                 TransferWindow.start_at <= window.start_at,
                 TransferWindow.end_at > window.start_at,
             )

@@ -66,9 +66,14 @@ def auto_update_league_statuses(db: Session) -> dict[str, int]:
             skipped_min_members += 1
             continue
 
+        from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
         has_windows = db.query(
             db.query(TransferWindow)
-            .filter(TransferWindow.season_id == league.season_id)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
+            )
             .exists()
         ).scalar()
         if not has_windows:

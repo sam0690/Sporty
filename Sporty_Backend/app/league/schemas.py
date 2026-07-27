@@ -779,6 +779,17 @@ class TransferWindowResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LeagueSeasonStateResponse(BaseModel):
+    """Non-raising season-phase summary — drives the pre-season / team-building
+    UI. phase ∈ {PRE_SEASON, LIVE, BETWEEN_GAMEWEEKS, COMPLETED}."""
+    phase: str
+    current_gw: int
+    total_gw: int
+    season_start_at: datetime | None
+    first_deadline_at: datetime | None
+    next_deadline_at: datetime | None
+
+
 class SportResponse(BaseModel):
     """What gets returned for public sport listings."""
     id: uuid.UUID

@@ -20,6 +20,7 @@ import type {
   TTransfer,
   TUserTransferLeagueGroup,
   TTransferWindow,
+  TSeasonState,
   TLeagueDashboardStats,
   TStageOutRequest,
   TStageOutResponse,
@@ -509,6 +510,12 @@ export const LeagueService = {
       await authApi.get<TTransferWindow>(
         API_PATHS.LEAGUES.EDITABLE_WINDOW(leagueId),
       )
+    ).data;
+  },
+
+  async getSeasonState(leagueId: string): Promise<TSeasonState> {
+    return (
+      await authApi.get<TSeasonState>(API_PATHS.LEAGUES.SEASON_STATE(leagueId))
     ).data;
   },
 

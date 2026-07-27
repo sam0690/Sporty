@@ -208,6 +208,51 @@ def _require_fantasy_team(
 
 
 
+def _league_window_competition(db: Session, league: League) -> str | None:
+    """The competition tag whose window schedule THIS league runs on
+    ("EPL"/"LALIGA"/"BUNDESLIGA"), or None for an all-competitions football
+    league, a unified multisport season, or a single-competition sport.
+
+    A football season now holds several overlapping window schedules (one per
+    competition + a combined NULL schedule), so every league-facing window
+    lookup must pick the one matching the league's competition_filter — else it
+    could read a sibling competition's gameweek or miscount the total."""
+    season = league.season
+    if season is None or season.sport_id is None:
+        return None
+    return (
+        db.query(LeagueSport.competition_filter)
+        .filter(
+            LeagueSport.league_id == league.id,
+            LeagueSport.sport_id == season.sport_id,
+        )
+        .scalar()
+    )
+
+
+def _window_competition_clause(comp: str | None):
+    """Filter confining a query to the league's own window schedule."""
+    return (
+        TransferWindow.competition.is_(None)
+        if comp is None
+        else TransferWindow.competition == comp
+    )
+
+
+def _league_window_total(db: Session, league: League) -> int:
+    """Number of gameweeks in the league's OWN competition schedule (e.g. EPL
+    38, Bundesliga 34, combined 42) — NOT every window in the season, which now
+    spans several competitions' schedules."""
+    return (
+        db.query(func.count(TransferWindow.id))
+        .filter(
+            TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
+        )
+        .scalar()
+    ) or 0
+
+
 def _find_transfer_window(db: Session, league: League) -> TransferWindow | None:
     """Return the current active transfer window, or None if none exists."""
     from datetime import datetime, timezone
@@ -217,6 +262,7 @@ def _find_transfer_window(db: Session, league: League) -> TransferWindow | None:
         db.query(TransferWindow)
         .filter(
             TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
             TransferWindow.start_at <= now,
             TransferWindow.end_at >= now,
         )
@@ -254,6 +300,7 @@ def _find_editable_transfer_window(db: Session, league: League) -> TransferWindo
         db.query(TransferWindow)
         .filter(
             TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
             TransferWindow.lineup_deadline_at > now,
         )
         .order_by(TransferWindow.start_at.asc())

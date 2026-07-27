@@ -123,6 +123,7 @@ export const API_PATHS = {
     },
     ACTIVE_WINDOW: (id: string) => `/leagues/${id}/active-window`,
     EDITABLE_WINDOW: (id: string) => `/leagues/${id}/editable-window`,
+    SEASON_STATE: (id: string) => `/leagues/${id}/season-state`,
     DASHBOARD_STATS: (id: string) => `/leagues/${id}/dashboard/stats`,
     POWER_RANKINGS: (id: string) => `/leagues/${id}/power-rankings`,
     CHAT_MESSAGES: (id: string) => `/leagues/${id}/chat/messages`,

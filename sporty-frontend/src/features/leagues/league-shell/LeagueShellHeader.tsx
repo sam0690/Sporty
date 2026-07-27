@@ -1,15 +1,16 @@
 "use client";
 
 import { Badge } from "@/components/ui";
+import type { TSeasonState } from "@/types/league";
+import { formatDateTime } from "@/utils/dateUtils";
 
 type Sport = "football" | "basketball";
 
 type LeagueShellHeaderProps = {
   leagueName: string;
   sport: Sport;
-  currentWeek: number;
-  totalWeeks: number;
   isDraftMode: boolean;
+  seasonState?: TSeasonState;
 };
 
 const sportGlow: Record<Sport, string> = {
@@ -17,17 +18,67 @@ const sportGlow: Record<Sport, string> = {
   basketball: "#ff6b35",
 };
 
+// The right-hand status block, driven entirely by the season phase — no more
+// falling back to a fake "GW 1/16" when nothing is live yet (pre-season).
+function StatusBlock({ state }: { state?: TSeasonState }) {
+  if (!state) return null;
+
+  if (state.phase === "PRE_SEASON") {
+    return (
+      <div className="min-w-[240px] shrink-0">
+        <div className="flex items-center justify-between gap-3">
+          <span className="section-label">Pre-season</span>
+          <Badge tone="neutral" size="sm">
+            Building squads
+          </Badge>
+        </div>
+        {state.first_deadline_at ? (
+          <p className="mt-2 text-sm text-fg-3">
+            No matches yet — first deadline{" "}
+            <span className="font-600 text-fg-1">
+              {formatDateTime(state.first_deadline_at)}
+            </span>
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-fg-3">
+            Season fixtures not scheduled yet.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const total = state.total_gw || 0;
+  const label = state.phase === "COMPLETED" ? "Final Standings" : "Season Progress";
+  const shown = state.phase === "COMPLETED" ? total : state.current_gw;
+  const pct =
+    total > 0 ? Math.min(100, Math.max(0, Math.round((shown / total) * 100))) : 0;
+
+  return (
+    <div className="min-w-[220px] shrink-0">
+      <div className="flex items-center justify-between gap-3">
+        <span className="section-label">{label}</span>
+        <span className="font-display text-xl tracking-[-0.02em] text-accent">
+          GW {shown}
+          <span className="text-fg-3">/{total}</span>
+        </span>
+      </div>
+      <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+        <div
+          className="h-full rounded-full bg-accent transition-all duration-300"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function LeagueShellHeader({
   leagueName,
   sport,
-  currentWeek,
-  totalWeeks,
   isDraftMode,
+  seasonState,
 }: LeagueShellHeaderProps) {
-  const progressPercent =
-    totalWeeks > 0
-      ? Math.min(100, Math.max(0, Math.round((currentWeek / totalWeeks) * 100)))
-      : 0;
   const glow = sportGlow[sport];
 
   return (
@@ -56,21 +107,7 @@ export function LeagueShellHeader({
           </h1>
         </div>
 
-        <div className="min-w-[220px] shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <span className="section-label">Season Progress</span>
-            <span className="font-display text-xl tracking-[-0.02em] text-accent">
-              GW {currentWeek}
-              <span className="text-fg-3">/{totalWeeks}</span>
-            </span>
-          </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
-            <div
-              className="h-full rounded-full bg-accent transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
+        <StatusBlock state={seasonState} />
       </div>
     </header>
   );
