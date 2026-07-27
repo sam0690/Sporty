@@ -8,6 +8,7 @@ export { ConfirmDialog } from "./ConfirmDialog";
 export { SuccessModal, type SuccessModalAction } from "./SuccessModal";
 export { EmptyState, type EmptyStateAction } from "./EmptyState";
 export { ErrorState } from "./ErrorState";
+export { CardErrorState } from "./CardErrorState";
 export { PageContainer } from "./PageContainer";
 export { PageHeader } from "./PageHeader";
 export { Tabs, type TabItem } from "./Tabs";

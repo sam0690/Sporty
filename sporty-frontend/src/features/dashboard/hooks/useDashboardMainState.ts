@@ -53,6 +53,7 @@ export function useDashboardMainState() {
     isLoading: previewLoading,
     isSwitching: previewSwitching,
     error: previewError,
+    refetch: previewRefetch,
   } = useDashboardTeamPreview(activeLeagueId);
   const {
     data: dashboardStats,
@@ -142,6 +143,7 @@ export function useDashboardMainState() {
     hasLeagues,
     previewLoading,
     previewError,
+    previewRefetch,
     dashboardStats,
     stats,
     pointsDeducted,
