@@ -19,6 +19,7 @@ import {
   useLeague,
   useMyTeam,
   useActiveWindow,
+  useSeasonState,
   usePowerRankings,
 } from "@/hooks/leagues/useLeagues";
 import type { TPowerRankingEntry } from "@/types";
@@ -35,6 +36,7 @@ export function LeagueLeaderboard() {
   const { data: myTeam, isLoading: isTeamLoading } = useMyTeam(leagueId);
   const { data: activeWindow, isLoading: isWindowLoading } =
     useActiveWindow(leagueId);
+  const { data: seasonState } = useSeasonState(leagueId);
 
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeek>("overall");
   const [historical, setHistorical] = useState(true);
@@ -146,8 +148,8 @@ export function LeagueLeaderboard() {
       <div className="flex flex-wrap items-center justify-between gap-3 card-surface p-3">
         <div className="flex flex-wrap items-center gap-2">
           <WeekSelector
-            currentWeek={activeWindow?.number || 1}
-            totalWeeks={activeWindow?.total_number || 16}
+            currentWeek={seasonState?.current_gw || activeWindow?.number || 1}
+            totalWeeks={seasonState?.total_gw || activeWindow?.total_number || 0}
             selectedWeek={selectedWeek}
             onWeekChange={setSelectedWeek}
           />

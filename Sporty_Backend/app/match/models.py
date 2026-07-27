@@ -62,6 +62,12 @@ class Match(Base):
     )  # "Premier League", "NBA", "IPL"
     season: Mapped[str] = mapped_column(String(20), nullable=False)  # "2024", "2024-25"
 
+    # Real-world gameweek/round number within the competition (football-data.org
+    # `matchday`, 1..38/34). Nullable: only football schedule fixtures carry it;
+    # other sports and pre-matchday rows leave it NULL. Drives per-competition
+    # gameweek-aligned transfer windows.
+    matchday: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     # Relationships
     sport: Mapped["Sport"] = relationship("Sport", back_populates="matches")
 

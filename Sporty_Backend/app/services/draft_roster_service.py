@@ -75,10 +75,13 @@ def _actively_owned_player_ids(db: Session, league_id: uuid.UUID) -> set[uuid.UU
 
 def _next_editable_window_id(db: Session, league: League) -> uuid.UUID:
     """The next not-yet-locked gameweek — where an add takes effect."""
+    from app.league.service_helpers import _league_window_competition, _window_competition_clause
+
     row = (
         db.query(TransferWindow.id)
         .filter(
             TransferWindow.season_id == league.season_id,
+            _window_competition_clause(_league_window_competition(db, league)),
             TransferWindow.lineup_deadline_at > func.now(),
         )
         .order_by(TransferWindow.start_at.asc())

@@ -37,3 +37,18 @@ def fantasy_competitions() -> dict[int, Competition]:
     the Champions League). Player pools, scoping, match sync, and live scoring
     use THIS, not the full registry."""
     return {k: v for k, v in FOOTBALL_COMPETITIONS.items() if v.fantasy}
+
+
+# Reverse lookup: Match.competition display name → fantasy tag ("Premier
+# League" → "EPL"). Returns None for non-fantasy/unknown competitions (incl.
+# non-football sports and display-only UCL), which is exactly what the window
+# locator wants — a NULL tag means "no per-competition schedule, use the
+# combined/NULL windows".
+_NAME_TO_TAG: dict[str, str] = {
+    c.name: c.tag for c in FOOTBALL_COMPETITIONS.values() if c.fantasy
+}
+
+
+def fantasy_tag_for_competition_name(name: str | None) -> str | None:
+    """Fantasy competition tag for a Match.competition display name, or None."""
+    return _NAME_TO_TAG.get(name or "")

@@ -49,7 +49,7 @@ from app.squad.services import (
     validate_position_slots,
     validate_squad_size,
 )
-from app.league.service_helpers import _DRAFT_PICK_OPTIONS, _league_sport_mode, _require_fantasy_team, _require_league
+from app.league.service_helpers import _DRAFT_PICK_OPTIONS, _league_sport_mode, _league_window_competition, _require_fantasy_team, _require_league, _window_competition_clause
 
 logger = logging.getLogger(__name__)
 
@@ -408,10 +408,12 @@ def _execute_draft_pick(
     # Player.cost still gets recorded (cost_at_acquisition below) purely for
     # squad-value display/history, same as a budget-mode league.
 
-    # We need the first transfer window as the acquired_window for TeamPlayer
+    # We need the first transfer window as the acquired_window for TeamPlayer —
+    # on this league's own competition schedule (a season now holds several).
     first_window = (
         db.query(TransferWindow)
         .filter(TransferWindow.season_id == league.season_id)
+        .filter(_window_competition_clause(_league_window_competition(db, league)))
         .order_by(TransferWindow.number)
         .first()
     )

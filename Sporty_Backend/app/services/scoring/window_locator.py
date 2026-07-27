@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.league.models import League, LeagueSport, Season, TransferWindow
@@ -32,14 +33,32 @@ def find_transfer_window_ids_for_datetime(
     *,
     match_date: datetime,
     sport_id: UUID | None = None,
+    competition_tag: str | None = None,
 ) -> list[UUID]:
-    """Return all transfer window IDs covering a given datetime."""
+    """Return all transfer window IDs covering a given datetime — the windows a
+    match's stats should be booked into.
+
+    competition_tag (football only): when given, a match books ONLY into its
+    own competition's window ("EPL"/"LALIGA"/"BUNDESLIGA") AND the combined
+    schedule (competition IS NULL) — never into a sibling competition's window
+    that happens to overlap the same instant. When None (non-football sports,
+    or callers that don't scope), no competition filter is applied — every
+    covering window matches, which for single-competition sports is just their
+    own NULL windows.
+    """
 
     # Algorithm: list all transfer window IDs satisfying start_at <= match_date < end_at.
     q = db.query(TransferWindow.id).join(Season, Season.id == TransferWindow.season_id)
     q = q.filter(TransferWindow.start_at <= match_date, TransferWindow.end_at > match_date)
     if sport_id is not None:
         q = q.filter(Season.sport_id == sport_id)
+    if competition_tag is not None:
+        q = q.filter(
+            or_(
+                TransferWindow.competition == competition_tag,
+                TransferWindow.competition.is_(None),
+            )
+        )
 
     return [wid for (wid,) in q.all()]
 
@@ -109,6 +128,23 @@ def find_equivalent_season_for_sport(
     return get_league_sport_season(db, league_id=league_id, sport_id=sport_id)
 
 
+def league_competition_filter(
+    db: Session,
+    *,
+    league_id: UUID,
+    sport_id: UUID,
+) -> str | None:
+    """This league's competition_filter for a sport ("EPL"/"LALIGA"/
+    "BUNDESLIGA"), or None for an all-competitions league or a
+    single-competition sport (basketball/cricket). This is what selects which
+    per-competition window schedule the league runs on."""
+    return (
+        db.query(LeagueSport.competition_filter)
+        .filter(LeagueSport.league_id == league_id, LeagueSport.sport_id == sport_id)
+        .scalar()
+    )
+
+
 def find_equivalent_window_for_sport(
     db: Session,
     *,
@@ -116,36 +152,40 @@ def find_equivalent_window_for_sport(
     window: TransferWindow,
     sport_id: UUID,
 ) -> TransferWindow | None:
-    """Translate a window from one sport's schedule to THIS league's
-    resolved season for another sport.
+    """The window THIS league runs on for `sport_id` that covers the same
+    instant as `window`.
 
-    Resolves the league's explicit season mapping for sport_id (see
-    get_league_sport_season), then finds whichever window in THAT season
-    covers the same point in real time as `window` — a covering-date
-    lookup, not an exact start_at/end_at match, since two sports' seasons
-    won't share a weekly cadence even once correctly paired (e.g. football
-    generating Monday windows vs. a basketball season generating windows on
-    a different weekday). Returns None if the league has no resolved season
-    for that sport, or that season has no window covering this date —
-    callers must treat that as "nothing to score for this sport this
-    cycle" only when it's a genuine off-week; a missing season mapping
-    itself should already be impossible post-creation (see league_service)
-    and callers should log loudly if they hit it (see engine.py).
+    Resolves the league's season mapping for sport_id (get_league_sport_season)
+    AND its competition schedule (league_competition_filter), then finds the
+    covering window in that (season, competition) — a covering-date lookup, not
+    an exact start/end match, since sibling schedules don't share a cadence.
+
+    The competition filter is load-bearing now that one football season holds
+    several overlapping schedules (EPL/LALIGA/BUNDESLIGA gameweeks + the
+    combined NULL schedule): without it, several windows cover the same instant
+    and the answer would be arbitrary. An EPL-scoped league resolves to the EPL
+    window; an all-competitions (filter NULL) league resolves to the combined
+    (competition IS NULL) window. A same-sport pass no longer short-circuits —
+    it must still be translated to the league's OWN competition schedule.
+
+    Returns None if the league has no resolved season for that sport, or that
+    (season, competition) has no window covering this date — callers treat that
+    as "nothing to score this cycle" for a genuine off-week, but should log
+    loudly for the league's own native sport (see engine.py).
     """
-    if window.season_id and _season_sport_id(db, window.season_id) == sport_id:
-        return window
-
     target_season = get_league_sport_season(db, league_id=league_id, sport_id=sport_id)
     if target_season is None:
         return None
 
-    return (
-        db.query(TransferWindow)
-        .filter(
-            TransferWindow.season_id == target_season.id,
-            TransferWindow.start_at <= window.start_at,
-            TransferWindow.end_at > window.start_at,
-        )
-        .order_by(TransferWindow.start_at.desc())
-        .first()
+    comp = league_competition_filter(db, league_id=league_id, sport_id=sport_id)
+    q = db.query(TransferWindow).filter(
+        TransferWindow.season_id == target_season.id,
+        TransferWindow.start_at <= window.start_at,
+        TransferWindow.end_at > window.start_at,
     )
+    q = q.filter(
+        TransferWindow.competition.is_(None)
+        if comp is None
+        else TransferWindow.competition == comp
+    )
+    return q.order_by(TransferWindow.start_at.desc()).first()

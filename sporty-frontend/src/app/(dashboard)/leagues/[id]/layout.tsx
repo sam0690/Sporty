@@ -8,10 +8,11 @@ import { PageContainer } from "@/components/ui";
 import {
   LeagueShellHeader,
   LeagueTabs,
+  PreSeasonBanner,
   type Sport,
 } from "@/features/leagues/league-shell";
 import { useMe } from "@/hooks/auth/useMe";
-import { useActiveWindow, useLeague } from "@/hooks/leagues/useLeagues";
+import { useLeague, useSeasonState } from "@/hooks/leagues/useLeagues";
 import { useLeagueCompetitionMode } from "@/hooks/leagues/useLeagueCompetitionMode";
 import { setLastActiveLeagueId } from "@/lib/storage.index";
 
@@ -30,7 +31,7 @@ export default function LeagueLayout({
   const isCreateTeamRoute = pathname?.endsWith("/create-team") ?? false;
 
   const { data: league, isLoading, isError } = useLeague(leagueId);
-  const { data: activeWindow } = useActiveWindow(leagueId);
+  const { data: seasonState } = useSeasonState(leagueId);
   const { username } = useMe();
   const { isDraftMode } = useLeagueCompetitionMode(league);
 
@@ -76,10 +77,10 @@ export default function LeagueLayout({
           <LeagueShellHeader
             leagueName={league.name}
             sport={sport}
-            currentWeek={activeWindow?.number ?? 1}
-            totalWeeks={activeWindow?.total_number || 16}
             isDraftMode={isDraftMode}
+            seasonState={seasonState}
           />
+          <PreSeasonBanner state={seasonState} />
           <LeagueTabs
             leagueId={leagueId}
             isDraftMode={isDraftMode}

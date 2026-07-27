@@ -49,7 +49,7 @@ from app.squad.services import (
     validate_position_slots,
     validate_squad_size,
 )
-from app.league.service_helpers import SUPPORTED_LEAGUE_SPORTS, VALID_TRANSITIONS, _LEAGUE_OPTIONS, _MEMBERSHIP_OPTIONS, _current_transfer_window, _editable_transfer_window, _generate_invite_code, _require_fantasy_team, _require_league, _require_membership, _serialize_window
+from app.league.service_helpers import SUPPORTED_LEAGUE_SPORTS, VALID_TRANSITIONS, _LEAGUE_OPTIONS, _MEMBERSHIP_OPTIONS, _current_transfer_window, _editable_transfer_window, _generate_invite_code, _league_window_competition, _require_fantasy_team, _require_league, _require_membership, _serialize_window, _window_competition_clause
 
 logger = logging.getLogger(__name__)
 
@@ -554,7 +554,10 @@ def update_league_status(
 
         has_windows = db.query(
             db.query(TransferWindow)
-            .filter(TransferWindow.season_id == league.season_id)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
+            )
             .exists()
         ).scalar()
         if not has_windows:
@@ -999,6 +1002,7 @@ def join_league(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
                 TransferWindow.start_at > now,
             )
             .order_by(TransferWindow.start_at.asc())
@@ -1600,6 +1604,7 @@ def _attach_midseason_join_info(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
                 TransferWindow.start_at > now,
             )
             .order_by(TransferWindow.start_at.asc())
@@ -1886,7 +1891,10 @@ def build_initial_team(
     else:
         first_window = (
             db.query(TransferWindow)
-            .filter(TransferWindow.season_id == league.season_id)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
+            )
             .order_by(TransferWindow.number)
             .first()
         )
@@ -1975,8 +1983,7 @@ def get_active_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
     display and scoring. For the window users EDIT, use the editable one."""
     league = _require_league(db, league_id)
     window = _current_transfer_window(db, league)
-    season = league.season
-    total_windows = len(season.transfer_windows) if season and season.transfer_windows else 0
+    total_windows = _league_window_total(db, league)
     return _serialize_window(window, total_windows)
 
 
@@ -1987,9 +1994,67 @@ def get_editable_transfer_window(db: Session, league_id: uuid.UUID) -> dict:
     the current one plays."""
     league = _require_league(db, league_id)
     window = _editable_transfer_window(db, league)
-    season = league.season
-    total_windows = len(season.transfer_windows) if season and season.transfer_windows else 0
+    total_windows = _league_window_total(db, league)
     return _serialize_window(window, total_windows)
+
+
+
+def get_league_season_state(db: Session, league_id: uuid.UUID) -> dict:
+    """Non-raising season-phase summary for a league — drives the pre-season /
+    team-building UI so the frontend never has to infer state from a 409 or a
+    hardcoded gameweek total.
+
+    phase:
+      PRE_SEASON        — no window has started yet (team-building; no real
+                          matches played). first_deadline_at is GW1's deadline.
+      LIVE              — a gameweek is in progress right now.
+      BETWEEN_GAMEWEEKS — season underway but no gameweek live at this instant.
+      COMPLETED         — the last gameweek has ended.
+    """
+    league = _require_league(db, league_id)
+    now = datetime.now(timezone.utc)
+    comp = _window_competition_clause(_league_window_competition(db, league))
+    base = db.query(TransferWindow).filter(
+        TransferWindow.season_id == league.season_id, comp
+    )
+    total = _league_window_total(db, league)
+    first = base.order_by(TransferWindow.start_at.asc()).first()
+    last = base.order_by(TransferWindow.start_at.desc()).first()
+
+    if first is None:
+        return {
+            "phase": "PRE_SEASON", "current_gw": 0, "total_gw": 0,
+            "season_start_at": None, "first_deadline_at": None, "next_deadline_at": None,
+        }
+
+    active = base.filter(
+        TransferWindow.start_at <= now, TransferWindow.end_at >= now
+    ).order_by(TransferWindow.number.desc()).first()
+    editable = base.filter(TransferWindow.lineup_deadline_at > now).order_by(
+        TransferWindow.start_at.asc()
+    ).first()
+
+    if now < first.start_at:
+        phase, current_gw = "PRE_SEASON", 0
+    elif last is not None and now > last.end_at:
+        phase, current_gw = "COMPLETED", last.number
+    elif active is not None:
+        phase, current_gw = "LIVE", active.number
+    else:
+        phase = "BETWEEN_GAMEWEEKS"
+        last_ended = base.filter(TransferWindow.end_at < now).order_by(
+            TransferWindow.number.desc()
+        ).first()
+        current_gw = last_ended.number if last_ended else 0
+
+    return {
+        "phase": phase,
+        "current_gw": current_gw,
+        "total_gw": total,
+        "season_start_at": first.start_at,
+        "first_deadline_at": first.transfer_deadline_at,
+        "next_deadline_at": editable.transfer_deadline_at if editable else None,
+    }
 
 
 
@@ -2009,6 +2074,7 @@ def get_dashboard_stats(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
                 TransferWindow.start_at <= now,
                 TransferWindow.end_at >= now,
             )

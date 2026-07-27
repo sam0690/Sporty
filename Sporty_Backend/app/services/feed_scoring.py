@@ -34,6 +34,7 @@ from app.models.schemas.events import WSMessage
 from app.player.models import FootballStat, Player, PlayerGameweekStat
 from app.player.models_nba import NBAStat
 from app.services.scoring.window_locator import find_transfer_window_ids_for_datetime
+from app.services.sync.football_competitions import fantasy_tag_for_competition_name
 
 logger = logging.getLogger(__name__)
 
@@ -209,7 +210,8 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
         return {"players": 0, "windows": 0}
 
     window_ids = find_transfer_window_ids_for_datetime(
-        db, match_date=match.match_date, sport_id=match.sport_id
+        db, match_date=match.match_date, sport_id=match.sport_id,
+        competition_tag=fantasy_tag_for_competition_name(match.competition),
     )
     if not window_ids:
         logger.warning(
@@ -285,7 +287,8 @@ def persist_football_stats_from_sheet(
         return {"players": 0, "windows": 0}
 
     window_ids = find_transfer_window_ids_for_datetime(
-        db, match_date=match.match_date, sport_id=match.sport_id
+        db, match_date=match.match_date, sport_id=match.sport_id,
+        competition_tag=fantasy_tag_for_competition_name(match.competition),
     )
     if not window_ids:
         logger.warning(
