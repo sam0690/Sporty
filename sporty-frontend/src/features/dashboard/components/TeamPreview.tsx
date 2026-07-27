@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 import { ChevronRight, ClipboardList, Trophy } from "lucide-react";
 
-import { EmptyState, ErrorState } from "@/components/ui";
+import { CardErrorState, EmptyState } from "@/components/ui";
 import { sportGlyph } from "@/components/landing/sport-icons";
 import { FormationRenderer } from "@/components/dashboard/shared/formation/FormationRenderer";
 import { buildTeamLayout } from "@/lib/formation/formationEngine";
@@ -14,6 +14,7 @@ type TeamPreviewProps = {
   isError: boolean;
   hasLeagues: boolean;
   activeLeagueId: string | null;
+  onRetry?: () => void | Promise<unknown>;
 };
 
 function LoadingPitch() {
@@ -50,6 +51,7 @@ export function TeamPreview({
   isError,
   hasLeagues,
   activeLeagueId,
+  onRetry,
 }: TeamPreviewProps) {
   const router = useRouter();
   const activeSlide = slides[0] ?? null;
@@ -79,7 +81,7 @@ export function TeamPreview({
         {isLoading ? (
           <LoadingPitch />
         ) : isError ? (
-          <ErrorState title="Failed to load team preview" />
+          <CardErrorState onRetry={onRetry} />
         ) : !hasLeagues ? (
           <EmptyState
             className={EMPTY_STATE_INSET}

@@ -19,6 +19,7 @@ export function DashboardMainContainer() {
     hasLeagues,
     previewLoading,
     previewError,
+    previewRefetch,
     dashboardStats,
     stats,
     pointsDeducted,
@@ -66,6 +67,7 @@ export function DashboardMainContainer() {
             isError={Boolean(previewError)}
             hasLeagues={hasLeagues}
             activeLeagueId={activeLeagueId}
+            onRetry={previewRefetch}
           />
           <RecentActivity
             items={mappedActivity}

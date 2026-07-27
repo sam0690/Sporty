@@ -103,6 +103,13 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
     // True while showing the previous league's data during a switch.
     isSwitching: lineupQuery.isPlaceholderData || windowQuery.isPlaceholderData,
     error: leaguesQuery.error || lineupQuery.error || windowQuery.error || null,
+    // Refetch every query the preview depends on — wired to the card's retry.
+    refetch: () =>
+      Promise.all([
+        leaguesQuery.refetch(),
+        lineupQuery.refetch(),
+        windowQuery.refetch(),
+      ]),
   };
 }
 
