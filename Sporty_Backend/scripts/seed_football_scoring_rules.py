@@ -10,9 +10,14 @@ Run from Sporty_Backend/:
 Dry run by default (prints the resulting rule set, rolls back).
 """
 import sys
+from pathlib import Path
 
-import app.main  # noqa: F401  (register mappers)
-from app.database import SessionLocal
+# Run as `python scripts/seed_football_scoring_rules.py` (Docker boot) puts
+# scripts/ on sys.path, not the project root — add it so `import app` resolves.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import app.main  # noqa: E402,F401  (register mappers)
+from app.database import SessionLocal  # noqa: E402
 from app.league.models import Sport
 from app.scoring.models import DefaultScoringRule
 from sqlalchemy import text
