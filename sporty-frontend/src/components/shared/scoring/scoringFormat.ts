@@ -20,6 +20,18 @@ const ACTION_LABELS: Record<string, string> = {
   shot_on_target: "Shots on Target",
   dribble: "Dribbles",
   bonus: "Bonus",
+  // Basketball
+  nba_points_10: "Points Scored",
+  nba_assists_10: "Assists",
+  nba_rebound: "Rebounds",
+  nba_steal: "Steals",
+  nba_block: "Blocks",
+  // Cricket
+  cricket_run: "Runs Scored",
+  cricket_wicket: "Wickets",
+  cricket_catch: "Catches",
+  cricket_run_out: "Run Outs",
+  cricket_maiden: "Maiden Overs",
 };
 
 export function scoreActionLabel(action: string): string {
