@@ -1,6 +1,7 @@
 "use client";
 
 import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
+import { SportScoringOverview } from "@/components/shared/scoring";
 import {
   competitionMeta,
   type CompetitionChoice,
@@ -36,12 +37,6 @@ const sportLabels: Record<LeagueSportName, string> = {
   football: "Football",
   basketball: "Basketball",
 };
-
-function formatRuleLabel(action: string): string {
-  return action
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
 
 export function SummaryStep({
   leagueData,
@@ -126,39 +121,17 @@ export function SummaryStep({
 
       <div className="overflow-hidden card-surface">
         <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
-          <p className="section-label">Scoring Rules</p>
+          <p className="section-label">Scoring Overview</p>
         </div>
-        <div className="space-y-3 px-4 py-3">
-          {selectedSports.map((sport) => {
-            const rules = scoringRulesBySport[sport] ?? [];
-
-            return (
-              <div
-                key={sport}
-                className="overflow-hidden rounded-[3px] border border-white/8 bg-surface-2"
-              >
-                <div className="flex items-center justify-between border-b border-white/8 px-3 py-2">
-                  <p className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-                    {sportLabels[sport]}
-                  </p>
-                  <p className="text-xs text-fg-3">Default scoring</p>
-                </div>
-                <div className="space-y-0">
-                  {rules.map((rule) => (
-                    <div
-                      key={`${sport}-${rule.action}`}
-                      className="grid grid-cols-2 border-b border-white/8 px-3 py-2 last:border-b-0"
-                    >
-                      <p className="text-sm text-fg-3">
-                        {formatRuleLabel(rule.action)}
-                      </p>
-                      <p className="text-sm text-fg-1">{rule.points}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+        <div className="space-y-5 px-4 py-4">
+          {selectedSports.map((sport) => (
+            <SportScoringOverview
+              key={sport}
+              sport={sport}
+              sportLabel={sportLabels[sport]}
+              rules={scoringRulesBySport[sport] ?? []}
+            />
+          ))}
         </div>
       </div>
 

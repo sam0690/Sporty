@@ -1,5 +1,12 @@
 export { FantasyPointsBadge } from "./FantasyPointsBadge";
 export { ScoreEventList } from "./ScoreEventList";
+export { SportScoringOverview } from "./SportScoringOverview";
+export {
+  groupRulesIntoCategories,
+  scoringPhilosophy,
+  type ScoringRuleInput,
+  type ScoringCategoryView,
+} from "./scoringCategories";
 export { FantasyPointsBreakdown } from "./FantasyPointsBreakdown";
 export { BonusPointsChip } from "./BonusPointsChip";
 export { LivePointsIndicator } from "./LivePointsIndicator";
