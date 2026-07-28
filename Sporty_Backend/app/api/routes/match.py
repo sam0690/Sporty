@@ -253,6 +253,36 @@ async def get_match_state(
         db, row["sport_id"], row["home_team"], row["away_team"]
     )
 
+    # Per-player fantasy breakdown for the match centre (from the per-match
+    # scoring layer; populated at full-time). One row per player — a player's
+    # window rows share the same score/breakdown — keyed by player id.
+    breakdown_rows = (
+        await db.execute(
+            text(
+                """
+                SELECT DISTINCT ON (player_id)
+                       player_id::text AS player_id, position,
+                       fantasy_points, bonus_points, breakdown,
+                       stats->>'rating' AS rating
+                FROM player_match_scores
+                WHERE match_id = :mid
+                ORDER BY player_id, transfer_window_id
+                """
+            ),
+            {"mid": row["id"]},
+        )
+    ).mappings().all()
+    player_breakdowns = {
+        r["player_id"]: {
+            "position": r["position"],
+            "points": float(r["fantasy_points"] or 0),
+            "bonus": float(r["bonus_points"] or 0),
+            "rating": float(r["rating"]) if r["rating"] else None,
+            "breakdown": r["breakdown"] if isinstance(r["breakdown"], list) else [],
+        }
+        for r in breakdown_rows
+    }
+
     # Possession/shootout snapshot pushed by the feeder: Redis while the match
     # is live, durable feed cache once finished.
     extras = await _get_cached_match_json(redis, "extras", _match)
@@ -275,6 +305,7 @@ async def get_match_state(
         "players": players,
         "events": events,
         "player_points": points,
+        "player_breakdowns": player_breakdowns,
         "lineups": {
             "home": [_lineup_entry(pid) for pid in lineup_home],
             "away": [_lineup_entry(pid) for pid in lineup_away],
