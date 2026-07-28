@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Sporty">
+  <rect width="96" height="96" rx="22" fill="#0a0a0f"/>
+  <path d="M64 32 C64 22 34 22 34 36 C34 46 62 49 62 60 C62 74 34 74 34 64"
+        fill="none" stroke="#e2c368" stroke-width="10" stroke-linecap="round"/>
+  <circle cx="48" cy="48" r="9" fill="#e2c368"/>
+  <circle cx="48" cy="48" r="3.6" fill="#0a0a0f"/>
+</svg>
