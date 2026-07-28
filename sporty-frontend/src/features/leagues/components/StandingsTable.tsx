@@ -1,7 +1,9 @@
 "use client";
 
+import { useRef } from "react";
 import { ChevronDown, ChevronUp, MinusCircle } from "lucide-react";
 import { Tooltip } from "@mantine/core";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { LivePointsIndicator } from "@/components/shared/scoring";
 
 type PointsPenalty = {
@@ -82,6 +84,103 @@ function RankDeltaBadge({ delta }: { delta: number | null | undefined }) {
   );
 }
 
+function StandingRowItem({ team, isUser }: { team: StandingRow; isUser: boolean }) {
+  const medalClass = MEDAL_STYLE[team.rank];
+  return (
+    <div
+      className={`flex items-center gap-4 border-b border-white/6 px-5 py-3.5 transition-colors hover:bg-surface-3 ${
+        isUser ? "border-l-2 border-l-accent bg-accent/5" : "border-l-2 border-l-transparent"
+      }`}
+    >
+      <div className="flex shrink-0 flex-col items-center gap-0.5">
+        <span
+          className={`flex h-9 w-9 items-center justify-center rounded-[3px] border font-display text-lg tracking-[-0.02em] ${
+            medalClass ?? "border-white/8 bg-surface-3 text-fg-2"
+          }`}
+        >
+          {team.rank}
+        </span>
+        <RankDeltaBadge delta={team.rankDelta} />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
+          {team.teamName}
+          {isUser && <span className="ml-2 section-label text-accent-dim">You</span>}
+          {team.isManagerOfTheWeek && (
+            <span className="ml-2 text-xs" title="Manager of the Week — highest points last gameweek">
+              🔥
+            </span>
+          )}
+          {team.record && (
+            <span className="ml-1.5 text-xs text-fg-2" title="Head-to-head record (W-L-T)">
+              {team.record}
+            </span>
+          )}
+          {team.streak && team.streak >= 2 ? (
+            <span className="ml-1.5 text-xs text-fg-2" title={`Top 3 for ${team.streak} gameweeks running`}>
+              {team.streak}W
+            </span>
+          ) : null}
+        </p>
+        <p className="mt-0.5 truncate text-xs text-fg-3">{team.manager}</p>
+      </div>
+
+      <span className="flex shrink-0 items-center gap-1.5">
+        {team.pointsDeducted ? (
+          <Tooltip
+            label={<PenaltyBreakdown penalties={team.penalties ?? []} total={team.pointsDeducted} />}
+            multiline
+            withArrow
+          >
+            <MinusCircle
+              className="h-3.5 w-3.5 text-danger"
+              aria-label={`${team.pointsDeducted.toFixed(2)} points deducted this week`}
+            />
+          </Tooltip>
+        ) : null}
+        <LivePointsIndicator points={team.points} size="lg" className="!text-accent" />
+      </span>
+    </div>
+  );
+}
+
+// Above this many rows, the list is windowed (only on-screen rows are in the
+// DOM) so a large league leaderboard stays fast; below it, plain rendering
+// (windowing overhead isn't worth it for short lists, and it keeps
+// measurement simple).
+const VIRTUALIZE_THRESHOLD = 30;
+
+function VirtualStandings({ standings, userTeamId }: { standings: StandingRow[]; userTeamId: string }) {
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: standings.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 65,
+    overscan: 10,
+  });
+
+  return (
+    <div ref={parentRef} className="max-h-[70vh] overflow-y-auto overflow-x-hidden">
+      <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
+        {virtualizer.getVirtualItems().map((vi) => {
+          const team = standings[vi.index];
+          return (
+            <div
+              key={team.teamId}
+              data-index={vi.index}
+              ref={virtualizer.measureElement}
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)` }}
+            >
+              <StandingRowItem team={team} isUser={team.teamId === userTeamId} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function StandingsTable({
   standings,
   userTeamId,
@@ -105,90 +204,17 @@ export function StandingsTable({
         </div>
       ) : standings.length === 0 ? (
         <div className="p-6 text-sm text-fg-3">{emptyMessage}</div>
+      ) : standings.length > VIRTUALIZE_THRESHOLD ? (
+        <VirtualStandings standings={standings} userTeamId={userTeamId} />
       ) : (
-        <div className="divide-y divide-white/6">
-          {standings.map((team) => {
-            const isUser = team.teamId === userTeamId;
-            const medalClass = MEDAL_STYLE[team.rank];
-
-            return (
-              <div
-                key={team.teamId}
-                className={`flex items-center gap-4 px-5 py-3.5 transition-colors hover:bg-surface-3 ${
-                  isUser
-                    ? "border-l-2 border-accent bg-accent/5"
-                    : "border-l-2 border-transparent"
-                }`}
-              >
-                <div className="flex shrink-0 flex-col items-center gap-0.5">
-                  <span
-                    className={`flex h-9 w-9 items-center justify-center rounded-[3px] border font-display text-lg tracking-[-0.02em] ${
-                      medalClass ?? "border-white/8 bg-surface-3 text-fg-2"
-                    }`}
-                  >
-                    {team.rank}
-                  </span>
-                  <RankDeltaBadge delta={team.rankDelta} />
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-                    {team.teamName}
-                    {isUser && (
-                      <span className="ml-2 section-label text-accent-dim">You</span>
-                    )}
-                    {team.isManagerOfTheWeek && (
-                      <span
-                        className="ml-2 text-xs"
-                        title="Manager of the Week — highest points last gameweek"
-                      >
-                        🔥
-                      </span>
-                    )}
-                    {team.record && (
-                      <span className="ml-1.5 text-xs text-fg-2" title="Head-to-head record (W-L-T)">
-                        {team.record}
-                      </span>
-                    )}
-                    {team.streak && team.streak >= 2 ? (
-                      <span
-                        className="ml-1.5 text-xs text-fg-2"
-                        title={`Top 3 for ${team.streak} gameweeks running`}
-                      >
-                        {team.streak}W
-                      </span>
-                    ) : null}
-                  </p>
-                  <p className="mt-0.5 truncate text-xs text-fg-3">{team.manager}</p>
-                </div>
-
-                <span className="flex shrink-0 items-center gap-1.5">
-                  {team.pointsDeducted ? (
-                    <Tooltip
-                      label={
-                        <PenaltyBreakdown
-                          penalties={team.penalties ?? []}
-                          total={team.pointsDeducted}
-                        />
-                      }
-                      multiline
-                      withArrow
-                    >
-                      <MinusCircle
-                        className="h-3.5 w-3.5 text-danger"
-                        aria-label={`${team.pointsDeducted.toFixed(2)} points deducted this week`}
-                      />
-                    </Tooltip>
-                  ) : null}
-                  <LivePointsIndicator
-                    points={team.points}
-                    size="lg"
-                    className="!text-accent"
-                  />
-                </span>
-              </div>
-            );
-          })}
+        <div>
+          {standings.map((team) => (
+            <StandingRowItem
+              key={team.teamId}
+              team={team}
+              isUser={team.teamId === userTeamId}
+            />
+          ))}
         </div>
       )}
     </section>
