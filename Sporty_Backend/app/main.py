@@ -27,7 +27,7 @@ import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_fastapi_instrumentator import Instrumentator, metrics
 
 # Import all models FIRST to ensure SQLAlchemy registers them before routers load
 # This prevents "failed to locate a name" errors in relationships
@@ -477,7 +477,13 @@ def _custom_openapi():
 app.openapi = _custom_openapi
 
 # ── Prometheus metrics ────────────────────────────────────────────
-Instrumentator().instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
+# Fine latency buckets around the 200ms/300ms P95 targets — the library default
+# is only (0.1, 0.5, 1.0), too coarse to place a sub-200ms P95 with any accuracy.
+Instrumentator().add(
+    metrics.default(
+        latency_lowr_buckets=(0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 0.75, 1.0, 2.0),
+    )
+).instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
 
 
 # Per-request SQL query count → Prometheus. Complements the HTTP latency
