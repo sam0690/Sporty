@@ -17,6 +17,10 @@ type LeagueBasicInfoProps = {
   onLeagueNameChange: (value: string) => void;
   onSportChange: (value: string) => void;
   onCompetitionChange: (value: CompetitionChoice) => void;
+  /** Multi-sport is only offerable when every sport it needs (football +
+   * basketball) has a live season right now — the backend rejects it
+   * otherwise. Hide the option instead of letting a create attempt 409. */
+  multisportAvailable?: boolean;
 };
 
 type SportOption = {
@@ -38,8 +42,17 @@ export function LeagueBasicInfo({
   onLeagueNameChange,
   onSportChange,
   onCompetitionChange,
+  multisportAvailable = false,
 }: LeagueBasicInfoProps) {
   const prefersReducedMotion = useReducedMotion();
+  // Only show multi-sport when both its sports are in-season (see prop doc).
+  const visibleSportOptions = useMemo(
+    () =>
+      multisportAvailable
+        ? sportOptions
+        : sportOptions.filter((option) => option.value !== "multisport"),
+    [multisportAvailable],
+  );
   const helperText = useMemo(() => {
     if (!sport) return "Select a sport to get started.";
     const selected = sportOptions.find((option) => option.value === sport);
@@ -80,7 +93,7 @@ export function LeagueBasicInfo({
           Select Sport
         </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {sportOptions.map((option) => {
+          {visibleSportOptions.map((option) => {
             const isSelected = option.value === sport;
             return (
               <motion.button
@@ -111,6 +124,12 @@ export function LeagueBasicInfo({
           })}
         </div>
         <p className="mt-2 text-xs text-fg-3">{helperText}</p>
+        {!multisportAvailable && (
+          <p className="mt-1 text-xs text-fg-3">
+            Multi-sport unlocks when the football and basketball seasons are
+            both live.
+          </p>
+        )}
       </div>
 
       <AnimatePresence initial={false}>

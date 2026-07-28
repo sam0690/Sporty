@@ -19,6 +19,7 @@ export type MyTeamPlayerView = {
   totalPoints: number;
   avgPoints: number;
   gameweekPoints: number;
+  gameweekBreakdown?: import("@/types/player").TScoreEvent[] | null;
   isStarter: boolean;
   isCaptain: boolean;
   isViceCaptain: boolean;

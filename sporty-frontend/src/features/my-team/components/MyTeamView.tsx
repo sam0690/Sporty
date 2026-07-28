@@ -140,6 +140,7 @@ export function MyTeamView({
                     totalPoints={player.totalPoints}
                     avgPoints={player.avgPoints}
                     gameweekPoints={player.gameweekPoints}
+                    gameweekBreakdown={player.gameweekBreakdown}
                   />
                 ))}
               </div>

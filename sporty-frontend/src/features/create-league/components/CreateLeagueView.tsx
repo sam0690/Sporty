@@ -44,6 +44,18 @@ function normalizeScoringRules(
 
 export function CreateLeagueView() {
   const { data: seasons } = useSeasons();
+  // Multi-sport needs a live season for every sport it composes (football +
+  // basketball). Only offer it when both are current, mirroring the backend
+  // guard in create_league — else the create would 409.
+  const multisportAvailable = useMemo(() => {
+    if (!seasons) return false;
+    const currentSports = new Set(
+      seasons
+        .filter((s) => s.is_current && s.sport_name)
+        .map((s) => s.sport_name as string),
+    );
+    return currentSports.has("football") && currentSports.has("basketball");
+  }, [seasons]);
   const { data: sports } = useSports();
   const { data: footballRules } = useDefaultScoringRules("football");
   const { data: basketballRules } = useDefaultScoringRules("basketball");
@@ -455,6 +467,7 @@ export function CreateLeagueView() {
                 onLeagueNameChange={handleLeagueNameChange}
                 onSportChange={handleSportChange}
                 onCompetitionChange={handleCompetitionChange}
+                multisportAvailable={multisportAvailable}
               />
             ) : null}
 

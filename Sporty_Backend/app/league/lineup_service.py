@@ -125,6 +125,7 @@ def _attach_player_points(
         team_player.total_points = Decimal("0")
         team_player.avg_points = Decimal("0")
         team_player.gameweek_points = Decimal("0")
+        team_player.gameweek_breakdown = None
 
     if not rows:
         return
@@ -145,6 +146,7 @@ def _attach_player_points(
 
     totals_by_player: dict[uuid.UUID, tuple[Decimal, int]] = {}
     gameweek_by_player: dict[uuid.UUID, Decimal] = {}
+    gameweek_breakdown_by_player: dict[uuid.UUID, list] = {}
     now = datetime.now(timezone.utc)
 
     for sport_id, this_season_id in sport_season_ids.items():
@@ -189,10 +191,11 @@ def _attach_player_points(
             .first()
         )
         if active_window is not None:
-            for player_id, points in (
+            for player_id, points, breakdown in (
                 db.query(
                     PlayerGameweekStat.player_id,
                     PlayerGameweekStat.fantasy_points,
+                    PlayerGameweekStat.breakdown,
                 )
                 .filter(
                     PlayerGameweekStat.transfer_window_id == active_window.id,
@@ -201,6 +204,8 @@ def _attach_player_points(
                 .all()
             ):
                 gameweek_by_player[player_id] = Decimal(points)
+                if breakdown:
+                    gameweek_breakdown_by_player[player_id] = breakdown
 
     for team_player in rows:
         total, gameweeks = totals_by_player.get(
@@ -214,6 +219,9 @@ def _attach_player_points(
         )
         team_player.gameweek_points = gameweek_by_player.get(
             team_player.player_id, Decimal("0")
+        )
+        team_player.gameweek_breakdown = gameweek_breakdown_by_player.get(
+            team_player.player_id
         )
 
 
