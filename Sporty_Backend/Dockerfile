@@ -29,4 +29,4 @@ EXPOSE 10000
 # non-fatal — a seed hiccup should never keep the API from booting, so they run
 # in a subshell whose failure is swallowed. They only INSERT/upsert reference
 # rows (sports + default scoring rules), so re-running on every boot is safe.
-CMD ["sh", "-c", "alembic upgrade head && { python scripts/create_sports.py && python scripts/seed_default_scoring_rules.py || echo '[boot] seed step failed, continuing'; } && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-10000}\""]
+CMD ["sh", "-c", "alembic upgrade head && { python scripts/create_sports.py && python scripts/seed_default_scoring_rules.py && python scripts/seed_football_scoring_rules.py --apply || echo '[boot] seed step failed, continuing'; } && exec uvicorn app.main:app --host 0.0.0.0 --port \"${PORT:-10000}\""]
