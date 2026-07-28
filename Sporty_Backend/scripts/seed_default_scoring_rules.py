@@ -22,7 +22,7 @@ import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import sessionmaker
 
@@ -84,8 +84,11 @@ def _upsert_rules(db, *, sport_id: uuid.UUID, rules: list[dict]) -> int:
     ]
 
     stmt = insert(table).values(values)
+    # Uniqueness is now (sport_id, action, COALESCE(position,'')) — the
+    # functional index uq_default_rule_sport_action_pos (b3d5f7a9c1e2). These
+    # cricket/NBA rules have NULL position → COALESCE '' → one slot per action.
     stmt = stmt.on_conflict_do_update(
-        index_elements=[table.c.sport_id, table.c.action],
+        index_elements=[table.c.sport_id, table.c.action, text("COALESCE(position, '')")],
         set_={
             "points": stmt.excluded.points,
             "description": stmt.excluded.description,
@@ -111,15 +114,9 @@ def seed_default_scoring_rules() -> None:
 
         total = 0
 
-        if football:
-            football_rules = [
-                {"action": "football_goal", "points": 5, "description": "Goal scored"},
-                {"action": "football_assist", "points": 3, "description": "Assist"},
-                {"action": "football_yellow_card", "points": -1, "description": "Yellow card"},
-                {"action": "football_red_card", "points": -2, "description": "Red card"},
-            ]
-            total += _upsert_rules(db, sport_id=football.id, rules=football_rules)
-            print("✅ Seeded football default scoring rules")
+        # Football is seeded by scripts/seed_football_scoring_rules.py (the
+        # position-aware, config-driven rule set). The legacy flat football_goal
+        # rules were retired — do NOT seed them here.
 
         if basketball:
             basketball_rules = [
