@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 96" role="img" aria-label="Sporty">
+  <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66"
+        fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="48" cy="48" r="10" fill="#e2c368"/>
+  <text x="108" y="63" font-family="'Segoe UI', system-ui, -apple-system, Roboto, Arial, sans-serif"
+        font-size="46" font-weight="600" letter-spacing="-1.5" fill="#f2f2f0">sporty</text>
+</svg>

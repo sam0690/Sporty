@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, DM_Sans } from "next/font/google";
 import "@mantine/core/styles.css";
 import "@mantine/carousel/styles.css";
@@ -20,8 +20,28 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Sporty",
-  description: "Your ultimate sports companion",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  ),
+  title: {
+    default: "Sporty — one league, every game",
+    template: "%s · Sporty",
+  },
+  description:
+    "Multi-sport fantasy leagues across football, basketball and cricket. Build one squad, score from real matches, live.",
+  applicationName: "Sporty",
+  openGraph: {
+    title: "Sporty — one league, every game",
+    description:
+      "Multi-sport fantasy leagues across football, basketball and cricket. Build one squad, score from real matches, live.",
+    siteName: "Sporty",
+    type: "website",
+  },
+};
+
+// Ink & Gold — the mask/address bar is the brand's page floor.
+export const viewport: Viewport = {
+  themeColor: "#0a0a0f",
 };
 
 export default function RootLayout({
