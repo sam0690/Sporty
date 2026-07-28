@@ -82,8 +82,18 @@ export type MatchSnapshot = {
   events: MatchEvent[];
   lineups: MatchLineups;
   player_points: Record<string, number>;
+  /** Per-player fantasy breakdown for the match centre (populated at FT). */
+  player_breakdowns?: Record<string, MatchPlayerBreakdown>;
   possession?: Possession | null;
   shootout?: Shootout | null;
+};
+
+export type MatchPlayerBreakdown = {
+  position: string | null;
+  points: number;
+  bonus: number;
+  rating: number | null;
+  breakdown: import("./player").TScoreEvent[];
 };
 
 export type FantasyPointsDelta = {

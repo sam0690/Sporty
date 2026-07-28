@@ -31,6 +31,7 @@ type MatchStoreState = {
   players: Record<string, PlayerInfo>;
   events: MatchEvent[];
   playerPoints: Record<string, number>;
+  playerBreakdowns: Record<string, import("@/types/events").MatchPlayerBreakdown>;
   startingLineups: MatchLineups;
   lineup: Record<string, unknown>;
   possession: Possession | null;
@@ -97,6 +98,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   players: {},
   events: [],
   playerPoints: {},
+  playerBreakdowns: {},
   startingLineups: EMPTY_LINEUPS,
   lineup: {},
   possession: null,
@@ -118,6 +120,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
       players: snapshot.players,
       events: snapshot.events,
       playerPoints: snapshot.player_points,
+      playerBreakdowns: snapshot.player_breakdowns ?? {},
       startingLineups: snapshot.lineups ?? EMPTY_LINEUPS,
       lineup: {},
       possession: snapshot.possession ?? null,

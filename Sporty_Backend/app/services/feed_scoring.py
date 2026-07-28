@@ -316,6 +316,7 @@ def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_
                 "shots_on_target": int(sheet.get("shots_on_target", 0) or 0),
                 "dribbles_won": int(sheet.get("dribbles_won", 0) or 0),
                 "duels_won": int(sheet.get("duels_won", 0) or 0),
+                "rating": sheet.get("rating"),
             }
             upsert_player_match_score(
                 db, player_id=player_id, match_id=match.id,
