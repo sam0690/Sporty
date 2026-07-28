@@ -7,11 +7,13 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Numeric,
+    SmallInteger,
     String,
+    UniqueConstraint,
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -105,5 +107,83 @@ class DefaultScoringRule(Base):
             "action",
             text("COALESCE(position, '')"),
             unique=True,
+        ),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# PlayerMatchScore  (per player, per match — the scoring source of truth)
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# The per-match granularity the gameweek-aggregate PlayerGameweekStat lacked.
+# `stats` is the metric snapshot for THIS match (JSONB so advanced metrics add
+# keys without a migration); `fantasy_points`/`breakdown` are the engine's
+# output over those stats. A player's PlayerGameweekStat.fantasy_points for a
+# window = SUM of their PlayerMatchScore rows in that window — which also fixes
+# the old bug where a second match in one window overwrote the first.
+#
+# Consolidates the requested PlayerMatchScore + FantasyPointsBreakdown: the
+# breakdown lives inline as JSONB rather than a separate table.
+
+
+class PlayerMatchScore(Base):
+    __tablename__ = "player_match_scores"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    player_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("players.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    match_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("matches.id", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+    # Which gameweek window this match falls in — denormalized so the window
+    # total can aggregate its match scores in one query.
+    transfer_window_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("transfer_windows.id"),
+        nullable=False, index=True,
+    )
+
+    # Snapshot of the player's position when scored (GKP/DEF/MID/FWD) — keeps a
+    # historical score reproducible even if the player's listed position later
+    # changes.
+    position: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    minutes: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+
+    # Metric snapshot for this match (goals, saves, tackles, key_passes, …) —
+    # the source of truth for re-scoring with changed rules (no re-fetch).
+    stats: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    fantasy_points: Mapped[Decimal] = mapped_column(
+        Numeric(precision=8, scale=2), nullable=False, default=Decimal("0.00")
+    )
+    # Bonus layer (Phase 4): bps = raw bonus-points-score used to rank the
+    # match's performers; bonus_points = the 3/2/1 awarded from that ranking.
+    bps: Mapped[Decimal] = mapped_column(
+        Numeric(precision=8, scale=2), nullable=False, default=Decimal("0.00")
+    )
+    bonus_points: Mapped[Decimal] = mapped_column(
+        Numeric(precision=6, scale=2), nullable=False, default=Decimal("0.00")
+    )
+    breakdown: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+    __table_args__ = (
+        # Per (player, match, window): a match maps to BOTH its competition
+        # window and the combined window (see per-competition schedules), and
+        # the player has a PlayerGameweekStat under each — so the match's score
+        # aggregates into each window's total independently.
+        UniqueConstraint(
+            "player_id", "match_id", "transfer_window_id",
+            name="uq_player_match_score",
         ),
     )

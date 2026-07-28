@@ -184,9 +184,17 @@ def score_football_players_for_window(
         logger.warning("No football scoring rules seeded for sport=%s — skipping", sport_id)
         return 0
 
+    # Per-match layer (Phase 2): re-score stored match rows with the current
+    # rules and get each player's window total = SUM of their matches. Authoritative
+    # when present; a row with only a window-aggregate FootballStat (and no match
+    # rows) falls back to computing from that.
+    from app.services.scoring.match_scoring import rescore_window_match_scores
+    match_agg = rescore_window_match_scores(db, transfer_window_id=transfer_window_id, rules=rules)
+
     rows = (
         db.query(
             PlayerGameweekStat.id,
+            PlayerGameweekStat.player_id,
             PlayerGameweekStat.minutes_played,
             FootballStat,
             Player.position,
@@ -203,10 +211,13 @@ def score_football_players_for_window(
         return 0
 
     updates = []
-    for pgs_id, minutes, fs, position in rows:
-        total, breakdown = compute_football_score(
-            position, _football_stats_dict(minutes, fs), rules
-        )
+    for pgs_id, player_id, minutes, fs, position in rows:
+        if player_id in match_agg:
+            total, breakdown = match_agg[player_id]
+        else:
+            total, breakdown = compute_football_score(
+                position, _football_stats_dict(minutes, fs), rules
+            )
         updates.append({"id": pgs_id, "fantasy_points": total, "breakdown": breakdown})
 
     _run_window_write(
