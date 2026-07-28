@@ -7,6 +7,7 @@ import { EmptyTeamState } from "./EmptyTeamState";
 import { LeagueGroup } from "./LeagueGroup";
 import { PlayerCard } from "./PlayerCard";
 import { SquadSpine } from "./SquadSpine";
+import { TeamSummaryCard } from "./TeamSummaryCard";
 import type { MyTeamLeagueView, LeagueOption } from "../types";
 
 type MyTeamViewProps = {
@@ -98,6 +99,8 @@ export function MyTeamView({
           }`}
           aria-busy={isSwitching}
         >
+          {teamLeague.hasLineupSplit && <TeamSummaryCard players={players} />}
+
           <section className="overflow-hidden card-surface">
             <header className="flex flex-wrap items-center justify-between gap-2 border-b border-white/7 px-5 py-4">
               <span className="section-label">{startersLabel}</span>

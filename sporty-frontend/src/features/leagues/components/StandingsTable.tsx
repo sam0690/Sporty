@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronUp, MinusCircle } from "lucide-react";
 import { Tooltip } from "@mantine/core";
+import { LivePointsIndicator } from "@/components/shared/scoring";
 
 type PointsPenalty = {
   points_charged: number;
@@ -179,9 +180,11 @@ export function StandingsTable({
                       />
                     </Tooltip>
                   ) : null}
-                  <span className="num font-display text-2xl tracking-[-0.02em] text-accent">
-                    {Math.round(team.points)}
-                  </span>
+                  <LivePointsIndicator
+                    points={team.points}
+                    size="lg"
+                    className="!text-accent"
+                  />
                 </span>
               </div>
             );
