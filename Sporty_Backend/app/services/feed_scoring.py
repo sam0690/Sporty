@@ -268,6 +268,15 @@ FOOTBALL_SHEET_FIELDS = (
     "penalties_missed",
     "saves",
     "goals_conceded",
+    # Advanced (Phase 3) — absent from the sheet dict default to 0 via .get.
+    "tackles",
+    "interceptions",
+    "blocks",
+    "clearances",
+    "key_passes",
+    "shots_on_target",
+    "dribbles_won",
+    "duels_won",
 )
 
 
@@ -299,6 +308,14 @@ def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_
                 "goals_conceded": int(sheet.get("goals_conceded", 0) or 0),
                 "yellow_cards": min(2, int(sheet.get("yellow_cards", 0) or 0)),
                 "red_cards": min(1, int(sheet.get("red_cards", 0) or 0)),
+                "tackles": int(sheet.get("tackles", 0) or 0),
+                "interceptions": int(sheet.get("interceptions", 0) or 0),
+                "blocks": int(sheet.get("blocks", 0) or 0),
+                "clearances": int(sheet.get("clearances", 0) or 0),
+                "key_passes": int(sheet.get("key_passes", 0) or 0),
+                "shots_on_target": int(sheet.get("shots_on_target", 0) or 0),
+                "dribbles_won": int(sheet.get("dribbles_won", 0) or 0),
+                "duels_won": int(sheet.get("duels_won", 0) or 0),
             }
             upsert_player_match_score(
                 db, player_id=player_id, match_id=match.id,
