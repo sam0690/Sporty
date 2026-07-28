@@ -67,4 +67,6 @@ class ConnectionManager:
             return "leaderboard"
         if channel.startswith("league-chat:"):
             return "league-chat"
+        if channel == "live-index":
+            return "live-index"
         return "match"

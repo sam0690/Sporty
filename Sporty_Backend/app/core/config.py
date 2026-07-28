@@ -107,6 +107,9 @@ class Settings(BaseSettings):
     MATCH_SCHEDULER_REFRESH_SECONDS: float = 10.0
     REDIS_PUBSUB_PREFIX: str = "match"
     LEAGUE_CHAT_PUBSUB_PREFIX: str = "league-chat"
+    # Single global channel the live-sync rings when it ingests new live data.
+    # Dashboard tickers subscribe here and refetch instead of polling.
+    LIVE_INDEX_CHANNEL: str = "live-index"
     REALTIME_PIPELINE_ENABLED: bool = False
 
     # Real-API live-match polling (app/services/sync/football_live_sync.py,

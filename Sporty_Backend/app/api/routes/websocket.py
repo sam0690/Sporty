@@ -5,6 +5,7 @@ import uuid
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
 from app.api.deps import (
+    get_current_active_user_ws,
     require_league_member_ws,
     require_match_access_ws,
     settings,
@@ -13,6 +14,26 @@ from app.services.connection_manager import ConnectionManager
 from app.api.deps import get_connection_manager
 
 router = APIRouter(tags=["Realtime"])
+
+
+@router.websocket("/ws/live")
+async def live_index_websocket(
+    ws: WebSocket,
+    _user=Depends(get_current_active_user_ws),
+    manager: ConnectionManager = Depends(get_connection_manager),
+) -> None:
+    """Global 'live set changed' bell for dashboard tickers. Data-free — the
+    sync publishes an empty ping here when it ingests live data; clients then
+    refetch the per-user (authenticated) favourites endpoint. Auth'd via the
+    same short-lived ws-ticket the chat socket uses (a logged-in user is the
+    only caller), even though nothing sensitive rides the channel itself."""
+    channel = settings.LIVE_INDEX_CHANNEL
+    await manager.connect(ws, channel)
+    try:
+        while True:
+            await ws.receive_text()
+    except WebSocketDisconnect:
+        await manager.disconnect(ws, channel)
 
 
 @router.websocket("/ws/match/{match_id}")

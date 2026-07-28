@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 _redis_client: Optional[Redis] = None
 _async_redis_client: Optional[aioredis.Redis] = None
 
+# Short-TTL cache for the global (all live matches) part of the dashboard
+# favourites ticker — the live-sync busts this on ingest; the endpoint filters
+# it per-user. Shared by app/match/router.py and the football live sync.
+LIVE_FAVOURITES_CACHE_KEY = "live-for-favourites:global"
+
 
 async def create_redis_pool() -> aioredis.Redis:
     """Create or return an async Redis client for realtime services."""

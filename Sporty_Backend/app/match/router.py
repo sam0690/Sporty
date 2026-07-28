@@ -45,6 +45,7 @@ router = APIRouter(tags=["Matches"])
 # importer and feeder registration share the exact same canonicalisation
 # (re-exported here for existing importers).
 from app.core.team_names import TEAM_NAME_ALIASES as MATCH_TEAM_NAME_ALIASES
+from app.core.redis import LIVE_FAVOURITES_CACHE_KEY, cache_get, cache_set
 
 
 def _real_team_logo_lookup(db: Session) -> dict[tuple[uuid.UUID, str], str]:
@@ -394,9 +395,30 @@ def list_live_matches_for_favourites(
     )
     if not favourites:
         return MatchListResponse(items=[], total=0)
+    # Keys stringified to match the cached (JSON-serialised) global blob.
     favourite_keys = {
-        (sport_id, MATCH_TEAM_NAME_ALIASES.get(name, name)) for sport_id, name in favourites
+        (str(sport_id), MATCH_TEAM_NAME_ALIASES.get(name, name)) for sport_id, name in favourites
     }
+
+    items = [
+        MatchResponse(**entry["response"])
+        for entry in _live_matches_global(db)
+        if (entry["sport_id"], entry["home_key"]) in favourite_keys
+        or (entry["sport_id"], entry["away_key"]) in favourite_keys
+    ]
+    return MatchListResponse(items=items, total=len(items))
+
+
+def _live_matches_global(db: Session) -> list[dict]:
+    """All currently-live matches as serialisable entries (response + the
+    sport/team keys the per-user favourites filter matches on). Identical for
+    every caller, so it's cached under a single key with a short TTL — the
+    live-sync busts it on ingest, so N dashboards refetching on one bell cost
+    one DB build, not N. ponytail: 15s TTL absorbs the bell's refetch burst;
+    live data itself only changes ~3-hourly (the sync cadence)."""
+    cached = cache_get(LIVE_FAVOURITES_CACHE_KEY)
+    if cached is not None:
+        return cached["items"]
 
     live_rows = (
         db.query(Match, Sport.name.label("sport_name"))
@@ -405,33 +427,30 @@ def list_live_matches_for_favourites(
         .order_by(Match.match_date.asc())
         .all()
     )
-    matched = [
-        (match, sport_name)
-        for match, sport_name in live_rows
-        if (match.sport_id, MATCH_TEAM_NAME_ALIASES.get(match.home_team, match.home_team)) in favourite_keys
-        or (match.sport_id, MATCH_TEAM_NAME_ALIASES.get(match.away_team, match.away_team)) in favourite_keys
-    ]
-    if not matched:
-        return MatchListResponse(items=[], total=0)
-
-    # Current minute per match: live_events are keyed by external_api_id (or
-    # the UUID as a string), one grouped query for all matched matches.
-    live_keys = {match.id: (match.external_api_id or str(match.id)) for match, _ in matched}
-    minute_rows = (
-        db.query(
-            LiveEvent.match_id,
-            func.max(LiveEvent.meta["minute"].astext.cast(Integer)),
+    live_keys = {match.id: (match.external_api_id or str(match.id)) for match, _ in live_rows}
+    minute_by_key = {}
+    if live_keys:
+        minute_by_key = dict(
+            db.query(
+                LiveEvent.match_id,
+                func.max(LiveEvent.meta["minute"].astext.cast(Integer)),
+            )
+            .filter(LiveEvent.match_id.in_(live_keys.values()))
+            .group_by(LiveEvent.match_id)
+            .all()
         )
-        .filter(LiveEvent.match_id.in_(live_keys.values()))
-        .group_by(LiveEvent.match_id)
-        .all()
-    )
-    minute_by_key = dict(minute_rows)
 
     logo_lookup = _real_team_logo_lookup(db)
-    items = []
-    for match, sport_name in matched:
+    entries = []
+    for match, sport_name in live_rows:
         response = _to_match_response(match, sport_name, logo_lookup)
         response.minute = minute_by_key.get(live_keys[match.id])
-        items.append(response)
-    return MatchListResponse(items=items, total=len(items))
+        entries.append({
+            "sport_id": str(match.sport_id),
+            "home_key": MATCH_TEAM_NAME_ALIASES.get(match.home_team, match.home_team),
+            "away_key": MATCH_TEAM_NAME_ALIASES.get(match.away_team, match.away_team),
+            "response": response.model_dump(mode="json"),
+        })
+
+    cache_set(LIVE_FAVOURITES_CACHE_KEY, {"items": entries}, ttl_seconds=15)
+    return entries
