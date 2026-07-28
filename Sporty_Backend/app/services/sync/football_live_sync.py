@@ -41,7 +41,7 @@ from sqlalchemy.orm import Session
 
 from app.admin.feature_flags import get_effective_flag
 from app.core.config import settings
-from app.core.redis import get_async_redis
+from app.core.redis import LIVE_FAVOURITES_CACHE_KEY, cache_delete, get_async_redis
 from app.external_apis.football_api import FootballAPIClient, FootballQuotaExhausted
 from app.league.models import Sport
 from app.match.models import Match
@@ -467,6 +467,13 @@ async def sync_football_live_matches(db: Session) -> str:
         reconciled = await _reconcile_missed_finishes(
             db, client, redis, still_missed, _resolve_player
         )
+
+    # Ring the global bell so dashboard tickers refetch (they no longer poll).
+    # Only when something actually changed; bust the endpoint's short-TTL cache
+    # first so the triggered refetch reads fresh, not a pre-change snapshot.
+    if updated or reconciled:
+        cache_delete(LIVE_FAVOURITES_CACHE_KEY)
+        await redis.publish(settings.LIVE_INDEX_CHANNEL, "{}")
 
     return (
         f"ok: polled {len(fixtures)} live fixture(s), updated {updated}, "

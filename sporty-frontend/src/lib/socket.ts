@@ -38,6 +38,23 @@ export function buildMatchSocketUrl(matchId: string): string {
   return url.toString();
 }
 
+/** Global "live set changed" bell — the dashboard ticker subscribes here and
+ *  refetches instead of polling. Data-free, but auth'd via the same short-lived
+ *  ws-ticket as chat (the socket handshake carries no httpOnly cookie). */
+export function buildLiveSocketUrl(ticket?: string): string {
+  const wsBase = WS_BASE;
+  if (!wsBase) {
+    throw new Error(
+      "NEXT_PUBLIC_WS_URL or NEXT_PUBLIC_API_URL must be configured for websocket connections.",
+    );
+  }
+  const url = new URL(`${wsBase.replace(/^http/, "ws")}/api/ws/live`);
+  if (ticket) {
+    url.searchParams.set("token", ticket);
+  }
+  return url.toString();
+}
+
 export function buildLeagueChatSocketUrl(leagueId: string, ticket?: string): string {
   const wsBase = WS_BASE;
   if (!wsBase) {
