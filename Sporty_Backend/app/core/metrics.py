@@ -51,3 +51,24 @@ ws_messages_sent_total = Counter(
     "Messages sent over websocket channels",
     ["channel_type"],
 )
+
+# ── Per-request DB + cache instrumentation (perf audit, 2026-07) ──────────────
+# HTTP P50-P99 latency already comes from prometheus_fastapi_instrumentator;
+# these fill the gap it can't see: how much of a request is SQL, and cache hit
+# ratio. Wired via SQLAlchemy events in app/database.py + cache_get in core/redis.
+db_query_duration_seconds = Histogram(
+    "sporty_db_query_duration_seconds",
+    "Duration of a single SQL statement",
+)
+
+db_queries_per_request = Histogram(
+    "sporty_db_queries_per_request",
+    "Number of SQL statements executed while serving one HTTP request",
+    buckets=(1, 2, 5, 10, 20, 50, 100, 200),
+)
+
+cache_ops_total = Counter(
+    "sporty_cache_ops_total",
+    "Redis read-cache lookups by outcome",
+    ["result"],  # hit | miss
+)

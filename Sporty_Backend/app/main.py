@@ -480,9 +480,29 @@ app.openapi = _custom_openapi
 Instrumentator().instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
 
 
+# Per-request SQL query count → Prometheus. Complements the HTTP latency
+# histograms above with "how much of this request was DB round-trips".
+from app.database import get_query_count, reset_query_count
+from app.core.metrics import db_queries_per_request
+
+
+@app.middleware("http")
+async def _record_query_count(request, call_next):
+    reset_query_count()
+    response = await call_next(request)
+    db_queries_per_request.observe(get_query_count())
+    return response
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # Middleware (order matters — outermost first)
 # ═══════════════════════════════════════════════════════════════════════════════
+
+# 0. Response compression — shrinks large JSON payloads (league lists, player
+# lists, leaderboards) ~70-80% over the wire. minimum_size skips tiny bodies
+# where the gzip header would cost more than it saves.
+from starlette.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # 1. Security headers — applied to ALL responses
 # Adds CSP, HSTS, X-Frame-Options, X-Content-Type-Options, etc.

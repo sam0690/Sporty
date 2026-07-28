@@ -13,6 +13,7 @@ import redis.asyncio as aioredis
 from redis.connection import ConnectionPool
 
 from app.core.config import settings
+from app.core.metrics import cache_ops_total
 
 logger = logging.getLogger(__name__)
 
@@ -108,10 +109,12 @@ def cache_get(key: str) -> Optional[dict]:
         redis = get_redis()
         value = redis.get(key)
         if value:
+            cache_ops_total.labels(result="hit").inc()
             return json.loads(value)
     except Exception as e:
         logger.warning(f"⚠️  Cache get failed for key '{key}': {e}")
-    
+
+    cache_ops_total.labels(result="miss").inc()
     return None
 
 
