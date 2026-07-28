@@ -23,6 +23,13 @@ STREAK_MIN_TO_SHOW = 2
 
 
 def get_power_rankings(db: Session, league_id: uuid.UUID) -> list[dict]:
+    from app.league import read_cache
+
+    cache_key = read_cache.power_rankings_key(league_id)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
     rows = (
         db.query(
             TeamWeeklyScore.fantasy_team_id,
@@ -113,4 +120,5 @@ def get_power_rankings(db: Session, league_id: uuid.UUID) -> list[dict]:
             if r["points"] == top_points:
                 r["manager_of_the_week"] = True
 
+    read_cache.set_cached(cache_key, results, read_cache.POWER_RANKINGS_TTL)
     return results

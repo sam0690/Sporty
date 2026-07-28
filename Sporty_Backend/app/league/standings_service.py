@@ -265,6 +265,12 @@ def get_league_leaderboard(
     """
     from app.league.models import FantasyTeam, TeamWeeklyScore
     from app.auth.models import User
+    from app.league import read_cache
+
+    cache_key = read_cache.leaderboard_key(league_id, window_id, historical, gameweek)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
 
     # Resolve a gameweek number to its window for this league's season.
     if window_id is None and gameweek is not None:
@@ -467,8 +473,10 @@ def get_league_leaderboard(
             "rank": rank,
         })
 
-    return {
+    result = {
         "league_id": league_id,
         "transfer_window_id": window_id,
         "entries": entries,
     }
+    read_cache.set_cached(cache_key, result, read_cache.LEADERBOARD_TTL)
+    return result

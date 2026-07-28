@@ -93,11 +93,17 @@ def compute_and_store_rankings(window_id: uuid.UUID, db: Session) -> None:
         logger.info("compute_and_store_rankings: no scores found for window %s, skipping", window_id)
         return
 
+    from app.league import read_cache
+
     total_updated = 0
     for league_id in league_ids:
         total_updated += apply_rankings_for_league_window(
             db, league_id=league_id, transfer_window_id=window_id
         )
+        # New ranks/points persisted for this league — drop its cached
+        # leaderboard + power-rankings so the change shows immediately rather
+        # than waiting out the TTL.
+        read_cache.bust_league(league_id)
 
     logger.info(
         "compute_and_store_rankings: window=%s leagues=%d rows_updated=%d",
