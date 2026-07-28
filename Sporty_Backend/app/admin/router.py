@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 
 from app.admin import services
 from app.admin.dependencies import require_admin_role
-from app.admin.schemas import (
+from app.admin.schemas import (  # noqa: F401 (extended below)
+    ScoringRuleCreate,
+    ScoringRuleListResponse,
+    ScoringRuleResponse,
+    ScoringRuleUpdate,
     AdminActionReason,
     AdminAuditLogListResponse,
     AdminLeagueListItem,
@@ -690,3 +694,49 @@ def list_transfers(
     _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
 ):
     return services.list_transfers_for_league(db, league.id, only_reversible=only_reversible)
+
+
+# ── Scoring rules (admin-editable, config-driven scoring) ──────────────────────
+
+@router.get("/scoring-rules", response_model=ScoringRuleListResponse,
+            summary="List scoring rules (admin)")
+def list_scoring_rules(
+    sport_id: uuid.UUID | None = Query(default=None),
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    rules = services.list_scoring_rules(db, sport_id)
+    return ScoringRuleListResponse(
+        rules=[ScoringRuleResponse.model_validate(r) for r in rules], total=len(rules),
+    )
+
+
+@router.post("/scoring-rules", response_model=ScoringRuleResponse, status_code=201,
+             summary="Create a scoring rule (admin)")
+def create_scoring_rule(
+    data: ScoringRuleCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return ScoringRuleResponse.model_validate(services.create_scoring_rule(db, current_user, data))
+
+
+@router.put("/scoring-rules/{rule_id}", response_model=ScoringRuleResponse,
+            summary="Update a scoring rule's value/mode/param (admin)")
+def update_scoring_rule(
+    rule_id: uuid.UUID,
+    data: ScoringRuleUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    return ScoringRuleResponse.model_validate(services.update_scoring_rule(db, current_user, rule_id, data))
+
+
+@router.delete("/scoring-rules/{rule_id}", status_code=204,
+               summary="Delete a scoring rule (admin)")
+def delete_scoring_rule(
+    rule_id: uuid.UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.ADMIN)),
+):
+    services.delete_scoring_rule(db, current_user, rule_id)
