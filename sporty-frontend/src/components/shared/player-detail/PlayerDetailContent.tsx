@@ -5,6 +5,7 @@ import { usePlayer, usePlayerRecentStats } from "@/hooks/players/usePlayers";
 import { profileSlug } from "@/utils/profileSlug";
 import { PlayerHero } from "./PlayerHero";
 import { PlayerRecentStats } from "./PlayerRecentStats";
+import { FantasyPointsBreakdown } from "@/components/shared/scoring";
 import { PlayerStatSparkline } from "./PlayerStatSparkline";
 
 type PlayerDetailContentProps = {
@@ -78,6 +79,25 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
           <PlayerStatSparkline stats={recentStats} />
         </div>
       )}
+
+      {(() => {
+        // Latest gameweek that carries a breakdown → show the explainable
+        // Fantasy Points section (Task 1). Generic: renders whatever actions
+        // the engine recorded, no hardcoded categories.
+        const latest = [...(recentStats ?? [])]
+          .filter((s) => s.breakdown && s.breakdown.length > 0)
+          .sort((a, b) => b.transfer_window.number - a.transfer_window.number)[0];
+        if (!latest) return null;
+        return (
+          <div className="border-t border-white/6 px-6 py-4">
+            <FantasyPointsBreakdown
+              title={`Fantasy Points · GW ${latest.transfer_window.number}`}
+              total={latest.fantasy_points}
+              events={latest.breakdown ?? []}
+            />
+          </div>
+        );
+      })()}
 
       <div className="border-t border-white/6 px-6 py-4">
         <div className="micro-label mb-3 text-fg-3">Recent Performance</div>

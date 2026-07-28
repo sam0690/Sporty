@@ -50,6 +50,7 @@ class AdminActionType(str, enum.Enum):
     SEASON_UPDATE = "season_update"
     SEASON_GENERATE_WINDOWS = "season_generate_windows"
     SCORING_RECALCULATE = "scoring_recalculate"
+    SCORING_RULE_EDIT = "scoring_rule_edit"
     SCORING_WINDOW_LOCK = "scoring_window_lock"
     SCORING_WINDOW_UNLOCK = "scoring_window_unlock"
     PLAYER_PRICE_OVERRIDE = "player_price_override"

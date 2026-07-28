@@ -1406,3 +1406,81 @@ def list_transfers_for_league(
         }
         for transfer, team_name, out_name, in_name in rows
     ]
+
+
+# ── Scoring rules (admin-editable, config-driven scoring) ──────────────────────
+
+_VALID_MODES = {"per_unit", "per_n", "threshold", "flat"}
+_VALID_POSITIONS = {"GKP", "DEF", "MID", "FWD"}
+
+
+def list_scoring_rules(db: Session, sport_id: uuid.UUID | None):
+    from app.scoring.models import DefaultScoringRule
+    q = db.query(DefaultScoringRule)
+    if sport_id is not None:
+        q = q.filter(DefaultScoringRule.sport_id == sport_id)
+    return q.order_by(DefaultScoringRule.action, DefaultScoringRule.position).all()
+
+
+def _validate_rule(mode: str, position: str | None):
+    if mode not in _VALID_MODES:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail=f"mode must be one of {sorted(_VALID_MODES)}")
+    if position is not None and position not in _VALID_POSITIONS:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail=f"position must be one of {sorted(_VALID_POSITIONS)} or null")
+
+
+def create_scoring_rule(db: Session, actor: User, data) -> "DefaultScoringRule":
+    from app.scoring.models import DefaultScoringRule
+    _validate_rule(data.mode, data.position)
+    rule = DefaultScoringRule(
+        sport_id=data.sport_id, action=data.action, position=data.position,
+        mode=data.mode, param=data.param, points=data.points, description=data.description,
+    )
+    db.add(rule)
+    try:
+        db.flush()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status.HTTP_409_CONFLICT,
+                            detail="A rule for this sport/action/position already exists")
+    record_admin_action(db, actor, AdminActionType.SCORING_RULE_EDIT, "scoring_rule", rule.id,
+                        metadata={"op": "create", "action": rule.action, "position": rule.position,
+                                  "points": float(rule.points)})
+    db.commit()
+    db.refresh(rule)
+    return rule
+
+
+def update_scoring_rule(db: Session, actor: User, rule_id: uuid.UUID, data) -> "DefaultScoringRule":
+    from app.scoring.models import DefaultScoringRule
+    rule = db.query(DefaultScoringRule).filter(DefaultScoringRule.id == rule_id).first()
+    if rule is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Scoring rule not found")
+    if data.mode is not None:
+        _validate_rule(data.mode, rule.position)
+        rule.mode = data.mode
+    if data.points is not None:
+        rule.points = data.points
+    if data.param is not None:
+        rule.param = data.param
+    if data.description is not None:
+        rule.description = data.description
+    record_admin_action(db, actor, AdminActionType.SCORING_RULE_EDIT, "scoring_rule", rule.id,
+                        metadata={"op": "update", "action": rule.action, "position": rule.position,
+                                  "points": float(rule.points)})
+    db.commit()
+    db.refresh(rule)
+    return rule
+
+
+def delete_scoring_rule(db: Session, actor: User, rule_id: uuid.UUID) -> None:
+    from app.scoring.models import DefaultScoringRule
+    rule = db.query(DefaultScoringRule).filter(DefaultScoringRule.id == rule_id).first()
+    if rule is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Scoring rule not found")
+    record_admin_action(db, actor, AdminActionType.SCORING_RULE_EDIT, "scoring_rule", rule.id,
+                        metadata={"op": "delete", "action": rule.action, "position": rule.position})
+    db.delete(rule)
+    db.commit()

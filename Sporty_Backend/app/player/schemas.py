@@ -219,6 +219,16 @@ class FootballStatResponse(BaseModel):
     saves: int
     goals_conceded: int
     bonus: int
+    # Advanced metrics (nullable-safe defaults keep older rows valid).
+    tackles: int = 0
+    interceptions: int = 0
+    blocks: int = 0
+    clearances: int = 0
+    key_passes: int = 0
+    shots_on_target: int = 0
+    dribbles_won: int = 0
+    duels_won: int = 0
+    rating: Decimal | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -275,6 +285,11 @@ class PlayerGameweekStatResponse(BaseModel):
     transfer_window: TransferWindowBrief
     minutes_played: int
     fantasy_points: Decimal
+
+    # Explainable per-window points breakdown (list of {action, count,
+    # points_each, subtotal, position}) written by the scoring engine. Generic
+    # so the UI renders it without hardcoded categories. None for legacy rows.
+    breakdown: list[dict] | None = None
 
     # At most one of these will be non-None
     football_stat: FootballStatResponse | None = None
