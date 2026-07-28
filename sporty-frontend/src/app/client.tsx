@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { MantineProvider } from "@mantine/core";
 import { QueryProvider } from "@/context/Query-context";
 import { AuthProvider } from "@/context/auth-context";
+import { BrandSplash } from "@/components/brand/BrandSplash";
 
 /**
  * Root client-side provider wrapper.
@@ -15,7 +16,10 @@ export function ClientProviders({ children }: { children: ReactNode }) {
   return (
     <MantineProvider defaultColorScheme="dark">
       <QueryProvider>
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <BrandSplash />
+          {children}
+        </AuthProvider>
       </QueryProvider>
     </MantineProvider>
   );
