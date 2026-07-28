@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BoltGlyph } from "@/components/landing/sport-icons";
+import { SportyMark } from "@/components/ui";
 
 const LINK_GROUPS: { title: string; links: { label: string; href: string }[] }[] =
   [
@@ -38,10 +38,8 @@ export function LandingFooterContainer() {
       <div className="mx-auto w-full max-w-7xl px-4 pb-12 pt-14 sm:px-6 lg:px-8 lg:pb-14 lg:pt-16">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="max-w-xs">
-            <div className="flex items-center gap-2">
-              <span className="grid size-8 place-items-center rounded-[3px] bg-accent text-surface-0">
-                <BoltGlyph className="size-4" />
-              </span>
+            <div className="flex items-center gap-2.5">
+              <SportyMark className="size-8 text-accent" />
               <span
                 id="landing-footer-title"
                 className="font-display text-2xl leading-none tracking-[-0.02em] text-fg-1"

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { SportyMark } from "@/components/ui/SportyMark";
 
 // Card shell for the auth forms: back-to-home link, surface, header rhythm.
 // Title/description only — no eyebrow; the card is compact and task-focused.
@@ -25,6 +26,7 @@ export function AuthCard({
 
       <div className="animate-fade-in mt-5 overflow-hidden card-surface">
         <div className="space-y-2 p-8 pb-4">
+          <SportyMark className="mb-3 size-9 text-accent" />
           <h1 className="font-display text-4xl leading-none tracking-[-0.02em] text-fg-1">
             {title}
           </h1>

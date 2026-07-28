@@ -8,6 +8,7 @@ import { useAuth } from "@/context/auth-context";
 import { NotificationBell } from "@/components/dashboard/navigation/NotificationBell";
 import { LogoutConfirmationModal } from "@/components/dashboard/navigation/LogoutConfirmationModal";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
+import { SportyMark } from "@/components/ui/SportyMark";
 import { isActiveRoute } from "@/lib/route.utils";
 import { cn } from "@/utils/classUtils";
 
@@ -45,10 +46,8 @@ export function Sidebar({ items, userId, userName, avatarUrl }: SidebarProps) {
           href="/dashboard"
           className="inline-flex w-full items-center justify-center gap-2 rounded-[3px] hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-2 lg:w-auto lg:justify-start"
         >
-          <span className="font-display text-2xl tracking-[-0.02em] text-accent lg:hidden">
-            S
-          </span>
-          <span className="hidden font-display text-2xl tracking-[-0.02em] text-accent lg:inline">
+          <SportyMark className="size-7 shrink-0 text-accent" />
+          <span className="hidden font-display text-2xl leading-none tracking-[-0.02em] text-fg-1 lg:inline">
             SPORTY
           </span>
         </Link>
