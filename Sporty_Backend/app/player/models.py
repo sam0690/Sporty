@@ -336,6 +336,12 @@ class PlayerGameweekStat(Base):
         Numeric(precision=8, scale=2), nullable=False, default=Decimal("0.00")
     )
 
+    # Explainable breakdown of how fantasy_points was reached, as a list of
+    # {action, count, points_each, subtotal, position} entries. Written by the
+    # scoring engine alongside fantasy_points; powers the "why did I get these
+    # points" UI and admin auditing. NULL for rows scored before this existed.
+    breakdown: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

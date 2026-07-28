@@ -117,7 +117,34 @@ def _base_stat(db, player, window, minutes=90):
     return stat
 
 
-def test_football_scoring_uses_fallback_points_when_no_default_rule_set(monkeypatch):
+def _seed_football_rules(db, sport):
+    """Minimal position-aware rule set for the new engine (subset of
+    scripts/seed_football_scoring_rules.py)."""
+    rules = [
+        ("appearance", None, "threshold", 1, 1),
+        ("appearance_full", None, "threshold", 60, 1),
+        ("goal", "GKP", "per_unit", None, 6),
+        ("goal", "DEF", "per_unit", None, 6),
+        ("goal", "MID", "per_unit", None, 5),
+        ("goal", "FWD", "per_unit", None, 4),
+        ("assist", None, "per_unit", None, 3),
+        ("clean_sheet", "GKP", "per_unit", None, 4),
+        ("clean_sheet", "DEF", "per_unit", None, 4),
+        ("save", "GKP", "per_n", 3, 1),
+        ("yellow_card", None, "per_unit", None, -1),
+    ]
+    for action, position, mode, param, pts in rules:
+        db.add(DefaultScoringRule(
+            sport_id=sport.id, action=action, position=position, mode=mode,
+            param=(Decimal(param) if param is not None else None),
+            points=Decimal(pts), description=f"{action}/{position or 'ALL'}",
+        ))
+    db.flush()
+
+
+def test_football_scoring_is_noop_without_rules(monkeypatch):
+    # New engine has no code-side fallback: with nothing seeded it is a no-op
+    # and must NOT clobber existing scores (vs the old fallback formula).
     monkeypatch.setattr(player_scoring, "redis_lock", _no_redis_lock)
     with session_scope() as db:
         sport = _sport(db, "football")
@@ -127,37 +154,66 @@ def test_football_scoring_uses_fallback_points_when_no_default_rule_set(monkeypa
         window = _window(db, sport)
         player = _player(db, sport, rt)
         base = _base_stat(db, player, window)
+        base.fantasy_points = Decimal("99.00")  # sentinel — must be preserved
         db.add(FootballStat(base_stat_id=base.id, goals=2, assists=1, yellow_cards=1, red_cards=0))
         db.commit()
 
         updated = score_football_players_for_window(db, sport_id=sport.id, transfer_window_id=window.id)
         db.commit()
 
-        assert updated == 1
+        assert updated == 0
         db.refresh(base)
-        # fallback: goal=5, assist=3, yellow=-1 -> 2*5 + 1*3 + 1*-1 = 12
-        assert base.fantasy_points == Decimal("12.00")
+        assert base.fantasy_points == Decimal("99.00")
 
 
-def test_football_scoring_prefers_default_scoring_rule_over_fallback(monkeypatch):
+def test_football_scoring_is_position_aware_with_appearance(monkeypatch):
+    # A midfielder: appearance(90') 2 + goal 2*5 + assist 3 + yellow -1 = 14,
+    # and the explainable breakdown is written alongside.
     monkeypatch.setattr(player_scoring, "redis_lock", _no_redis_lock)
     with session_scope() as db:
         sport = _sport(db, "football")
+        _seed_football_rules(db, sport)
         rt = RealTeam(sport_id=sport.id, name="Club A", external_api_id="rt:a")
         db.add(rt)
         db.flush()
         window = _window(db, sport)
-        player = _player(db, sport, rt)
+        player = _player(db, sport, rt)  # position MID
         base = _base_stat(db, player, window)
-        db.add(FootballStat(base_stat_id=base.id, goals=1, assists=0, yellow_cards=0, red_cards=0))
-        db.add(DefaultScoringRule(sport_id=sport.id, action="football_goal", points=Decimal("10"), description="test"))
+        db.add(FootballStat(base_stat_id=base.id, goals=2, assists=1, yellow_cards=1, red_cards=0))
         db.commit()
 
         score_football_players_for_window(db, sport_id=sport.id, transfer_window_id=window.id)
         db.commit()
 
         db.refresh(base)
-        assert base.fantasy_points == Decimal("10.00")
+        assert base.fantasy_points == Decimal("14.00")
+        actions = {b["action"] for b in (base.breakdown or [])}
+        assert {"appearance", "goal", "assist", "yellow_card"} <= actions
+
+
+def test_football_goalkeeper_clean_sheet_and_saves_score(monkeypatch):
+    # The regression that scored 0 under the old formula: a keeper with a clean
+    # sheet + saves now earns. appearance 2 + clean_sheet 4 + saves(6//3=2) = 8.
+    monkeypatch.setattr(player_scoring, "redis_lock", _no_redis_lock)
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        _seed_football_rules(db, sport)
+        rt = RealTeam(sport_id=sport.id, name="Club A", external_api_id="rt:a")
+        db.add(rt)
+        db.flush()
+        window = _window(db, sport)
+        gk = _player(db, sport, rt, name="Keeper")
+        gk.position = "GKP"
+        db.flush()
+        base = _base_stat(db, gk, window)
+        db.add(FootballStat(base_stat_id=base.id, clean_sheets=1, saves=6, goals=0, assists=0))
+        db.commit()
+
+        score_football_players_for_window(db, sport_id=sport.id, transfer_window_id=window.id)
+        db.commit()
+
+        db.refresh(base)
+        assert base.fantasy_points == Decimal("8.00")
 
 
 def test_cricket_scoring_is_zero_without_any_default_scoring_rule(monkeypatch):
@@ -243,12 +299,13 @@ def test_football_scoring_only_touches_the_targeted_window(monkeypatch):
     monkeypatch.setattr(player_scoring, "redis_lock", _no_redis_lock)
     with session_scope() as db:
         sport = _sport(db, "football")
+        _seed_football_rules(db, sport)
         rt = RealTeam(sport_id=sport.id, name="Club A", external_api_id="rt:a")
         db.add(rt)
         db.flush()
         window_a = _window(db, sport)
         window_b = _window(db, sport)
-        player = _player(db, sport, rt)
+        player = _player(db, sport, rt)  # MID
         base_a = _base_stat(db, player, window_a)
         db.flush()
         player_b = _player(db, sport, rt, name="P2")
@@ -263,5 +320,6 @@ def test_football_scoring_only_touches_the_targeted_window(monkeypatch):
         assert updated == 1
         db.refresh(base_a)
         db.refresh(base_b)
-        assert base_a.fantasy_points == Decimal("5.00")
+        # MID: appearance(90') 2 + goal 5 = 7
+        assert base_a.fantasy_points == Decimal("7.00")
         assert base_b.fantasy_points == Decimal("0.00")

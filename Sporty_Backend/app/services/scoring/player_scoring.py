@@ -13,6 +13,8 @@ from sqlalchemy.orm import Session
 from app.core.redis_lock import redis_lock
 from app.player.models import CricketStat, FootballStat, Player, PlayerGameweekStat
 from app.player.models_nba import NBAStat
+from app.scoring.models import DefaultScoringRule
+from app.services.scoring.football_engine import Rule, compute_football_score
 from app.services.scoring.rules import resolve_effective_rules, to_decimal
 
 
@@ -27,17 +29,12 @@ def _is_deadlock(exc: OperationalError) -> bool:
     return getattr(getattr(exc, "orig", None), "pgcode", None) == _DEADLOCK_PGCODE
 
 
-def _execute_window_stat_update(db: Session, stmt, *, sport_id: uuid.UUID, transfer_window_id: uuid.UUID):
-    # The same (sport, window) player_gameweek_stats rows can be targeted at
-    # once by the Beat-scheduled active-window sweep and the ad-hoc
-    # match-finish trigger — they acquire non-overlapping Redis lock keys, so
-    # neither serializes against the other today. Serialize the actual write
-    # here (scoped to this sport+window only, not globally) so concurrent
-    # callers queue instead of racing, and retry the rare residual deadlock
-    # via SAVEPOINT rather than let two unordered bulk UPDATEs collide on
-    # Postgres row locks. begin_nested() means a failed attempt only rolls
-    # back to the savepoint, not the whole caller transaction (which may
-    # already hold other leagues' not-yet-committed work).
+def _run_window_write(db: Session, writer, *, sport_id: uuid.UUID, transfer_window_id: uuid.UUID):
+    """Run `writer()` under the (sport, window)-scoped Redis lock + SAVEPOINT
+    with deadlock retry — the shared write discipline for player_gameweek_stats
+    (see the long note in _execute_window_stat_update, which now delegates
+    here). `writer` is any callable that performs the write and returns a value.
+    """
     lock_key = f"lock:score:stats:{sport_id}:{transfer_window_id}"
     for attempt in range(1, _MAX_ATTEMPTS + 1):
         with redis_lock(lock_key, ttl_seconds=30, wait_seconds=10) as acquired:
@@ -50,7 +47,7 @@ def _execute_window_stat_update(db: Session, stmt, *, sport_id: uuid.UUID, trans
                 continue
             try:
                 with db.begin_nested():
-                    return db.execute(stmt)
+                    return writer()
             except OperationalError as exc:
                 if not _is_deadlock(exc) or attempt == _MAX_ATTEMPTS:
                     raise
@@ -61,6 +58,17 @@ def _execute_window_stat_update(db: Session, stmt, *, sport_id: uuid.UUID, trans
                 )
                 time.sleep(delay)
     raise RuntimeError("unreachable")
+
+
+def _execute_window_stat_update(db: Session, stmt, *, sport_id: uuid.UUID, transfer_window_id: uuid.UUID):
+    # The same (sport, window) player_gameweek_stats rows can be targeted at
+    # once by the Beat-scheduled active-window sweep and the ad-hoc
+    # match-finish trigger — serialize + deadlock-retry the write (see
+    # _run_window_write). Thin wrapper kept for the cricket/NBA bulk-SQL path.
+    return _run_window_write(
+        db, lambda: db.execute(stmt),
+        sport_id=sport_id, transfer_window_id=transfer_window_id,
+    )
 
 
 FOOTBALL_ACTIONS = {
@@ -115,42 +123,97 @@ def compute_nba_fantasy_points(
     )
 
 
+def load_football_rules(db: Session, sport_id: uuid.UUID) -> list[Rule]:
+    """The football sport's full DB rule set as engine Rule objects."""
+    rows = (
+        db.query(
+            DefaultScoringRule.action,
+            DefaultScoringRule.position,
+            DefaultScoringRule.mode,
+            DefaultScoringRule.param,
+            DefaultScoringRule.points,
+        )
+        .filter(DefaultScoringRule.sport_id == sport_id)
+        .all()
+    )
+    return [
+        Rule(action=a, position=p, mode=m,
+             param=(to_decimal(param) if param is not None else None),
+             points=to_decimal(pts))
+        for a, p, m, param, pts in rows
+    ]
+
+
+def _football_stats_dict(minutes: int, fs: FootballStat) -> dict:
+    """Flatten a FootballStat (+ minutes) into the metric dict the engine reads.
+    getattr with default keeps this working before the advanced columns exist."""
+    return {
+        "minutes": minutes or 0,
+        "goals": fs.goals, "assists": fs.assists, "clean_sheets": fs.clean_sheets,
+        "saves": fs.saves, "penalties_saved": fs.penalties_saved,
+        "penalties_missed": fs.penalties_missed, "own_goals": fs.own_goals,
+        "goals_conceded": fs.goals_conceded, "yellow_cards": fs.yellow_cards,
+        "red_cards": fs.red_cards,
+        "tackles": getattr(fs, "tackles", 0) or 0,
+        "interceptions": getattr(fs, "interceptions", 0) or 0,
+        "blocks": getattr(fs, "blocks", 0) or 0,
+        "clearances": getattr(fs, "clearances", 0) or 0,
+        "key_passes": getattr(fs, "key_passes", 0) or 0,
+        "shots_on_target": getattr(fs, "shots_on_target", 0) or 0,
+        "dribbles_won": getattr(fs, "dribbles_won", 0) or 0,
+        "duels_won": getattr(fs, "duels_won", 0) or 0,
+    }
+
+
 def score_football_players_for_window(
     db: Session,
     *,
     sport_id: uuid.UUID,
     transfer_window_id: uuid.UUID,
 ) -> int:
-    # Algorithm: update player_gameweek_stats fantasy_points using football child stats and default rules for goal/assist/cards.
-    rules = resolve_effective_rules(
-        db,
-        sport_id=sport_id,
-        actions=FOOTBALL_ACTIONS.keys(),
-        fallback_points=FOOTBALL_ACTIONS,
-    )
+    """Position-aware, config-driven gameweek scoring for football.
 
-    pgs = PlayerGameweekStat.__table__
-    stats = FootballStat.__table__
-    players = Player.__table__
+    Interprets the DB rule set per player (appearance, position goals, clean
+    sheets, saves, pen save/miss, own goals, conceded, cards, defensive
+    contribution) and writes fantasy_points + an explainable breakdown. Falls
+    back to a no-op if no rules are seeded (never silently zeroes existing
+    scores). Replaces the old goals/assists/cards-only bulk UPDATE.
+    """
+    rules = load_football_rules(db, sport_id)
+    if not rules:
+        logger.warning("No football scoring rules seeded for sport=%s — skipping", sport_id)
+        return 0
 
-    stmt = (
-        update(pgs)
-        .where(pgs.c.id == stats.c.base_stat_id)
-        .where(pgs.c.transfer_window_id == transfer_window_id)
-        .where(pgs.c.player_id == players.c.id)
-        .where(players.c.sport_id == sport_id)
-        .values(
-            fantasy_points=(
-                (func.coalesce(stats.c.goals, 0) * rules.points_by_action["football_goal"])
-                + (func.coalesce(stats.c.assists, 0) * rules.points_by_action["football_assist"])
-                + (func.coalesce(stats.c.yellow_cards, 0) * rules.points_by_action["football_yellow_card"])
-                + (func.coalesce(stats.c.red_cards, 0) * rules.points_by_action["football_red_card"])
-            )
+    rows = (
+        db.query(
+            PlayerGameweekStat.id,
+            PlayerGameweekStat.minutes_played,
+            FootballStat,
+            Player.position,
         )
-        .execution_options(synchronize_session=False)
+        .join(FootballStat, FootballStat.base_stat_id == PlayerGameweekStat.id)
+        .join(Player, Player.id == PlayerGameweekStat.player_id)
+        .filter(
+            PlayerGameweekStat.transfer_window_id == transfer_window_id,
+            Player.sport_id == sport_id,
+        )
+        .all()
     )
-    result = _execute_window_stat_update(db, stmt, sport_id=sport_id, transfer_window_id=transfer_window_id)
-    return int(result.rowcount or 0)
+    if not rows:
+        return 0
+
+    updates = []
+    for pgs_id, minutes, fs, position in rows:
+        total, breakdown = compute_football_score(
+            position, _football_stats_dict(minutes, fs), rules
+        )
+        updates.append({"id": pgs_id, "fantasy_points": total, "breakdown": breakdown})
+
+    _run_window_write(
+        db, lambda: db.bulk_update_mappings(PlayerGameweekStat, updates),
+        sport_id=sport_id, transfer_window_id=transfer_window_id,
+    )
+    return len(updates)
 
 
 def score_cricket_players_for_window(
