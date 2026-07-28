@@ -326,6 +326,8 @@ export type TTeamPlayer = {
   total_points?: string;
   avg_points?: string;
   gameweek_points?: string;
+  /** Explainable breakdown for the active gameweek — powers the squad card. */
+  gameweek_breakdown?: import("./player").TScoreEvent[] | null;
 };
 
 export type TTransferPlayer = {

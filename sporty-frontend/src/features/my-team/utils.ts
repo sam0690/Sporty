@@ -65,6 +65,7 @@ export const mapTeamLeagueView = (
       totalPoints: Number(teamPlayer.total_points ?? 0),
       avgPoints: Number(teamPlayer.avg_points ?? 0),
       gameweekPoints: Number(teamPlayer.gameweek_points ?? 0),
+      gameweekBreakdown: teamPlayer.gameweek_breakdown ?? null,
       // No split → treat every player as a starter so the single group renders.
       isStarter: hasLineupSplit ? Boolean(entry) : true,
       isCaptain: Boolean(entry?.is_captain),

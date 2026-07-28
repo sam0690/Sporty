@@ -23,6 +23,7 @@ type LeaguePlayer = {
   totalPoints: number;
   avgPoints: number;
   gameweekPoints: number;
+  gameweekBreakdown?: import("@/types/player").TScoreEvent[] | null;
   teamName?: string;
   isCaptain?: boolean;
   isViceCaptain?: boolean;
@@ -125,6 +126,7 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
                   totalPoints={player.totalPoints}
                   avgPoints={player.avgPoints}
                   gameweekPoints={player.gameweekPoints}
+                  gameweekBreakdown={player.gameweekBreakdown}
                   teamName={player.teamName}
                   isCaptain={player.isCaptain}
                   isViceCaptain={player.isViceCaptain}

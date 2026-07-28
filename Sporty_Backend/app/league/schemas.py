@@ -360,6 +360,10 @@ class TeamPlayerResponse(BaseModel):
     total_points: Decimal = Decimal("0")
     avg_points: Decimal = Decimal("0")
     gameweek_points: Decimal = Decimal("0")
+    # Explainable breakdown for the active gameweek (list of scoring events).
+    # None when the player wasn't scored this gameweek. Powers the squad card's
+    # inline breakdown.
+    gameweek_breakdown: list[dict] | None = None
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
