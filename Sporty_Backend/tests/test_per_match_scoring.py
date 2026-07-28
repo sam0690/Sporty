@@ -38,7 +38,9 @@ import app.player.models_nba  # noqa: F401,E402
 from app.scoring.models import DefaultScoringRule, PlayerMatchScore  # noqa: E402
 import app.services.scoring.player_scoring as player_scoring  # noqa: E402
 from app.services.scoring.player_scoring import load_football_rules, score_football_players_for_window  # noqa: E402
-from app.services.scoring.match_scoring import upsert_player_match_score, rescore_window_match_scores  # noqa: E402
+from app.services.scoring.match_scoring import (  # noqa: E402
+    award_match_bonus, rescore_window_match_scores, upsert_player_match_score,
+)
 
 ENGINE = create_engine(os.environ["DATABASE_URL"])
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
@@ -143,6 +145,46 @@ def test_batch_scorer_aggregates_match_scores_into_window(monkeypatch):
         # Aggregated from the two match scores (7+5=12), NOT the single-window
         # FootballStat compute (which would be appearance 2 + goal 5 + assist 3 = 10).
         assert pgs.fantasy_points == Decimal(12)
+
+
+def test_bonus_points_awarded_3_2_1_by_bps(monkeypatch):
+    monkeypatch.setattr(player_scoring, "redis_lock", _no_redis_lock)
+    with session_scope() as db:
+        sport, window, p1 = _setup(db)
+        rules = load_football_rules(db, sport.id)
+        # two more players in the same match
+        rt_id = p1.real_team_id
+        p2 = Player(sport_id=sport.id, external_api_id="p2", name="P2", position="MID",
+                    real_team="Club", real_team_id=rt_id, cost=Decimal("5"), is_available=True)
+        p3 = Player(sport_id=sport.id, external_api_id="p3", name="P3", position="MID",
+                    real_team="Club", real_team_id=rt_id, cost=Decimal("5"), is_available=True)
+        db.add_all([p2, p3])
+        db.flush()
+        m = _match(db, sport)
+        # p1 best (2 goals), p2 middle (1 goal), p3 least (just plays)
+        upsert_player_match_score(db, player_id=p1.id, match_id=m.id, transfer_window_id=window.id,
+                                  position="MID", minutes=90, stats={"minutes": 90, "goals": 2}, rules=rules)
+        upsert_player_match_score(db, player_id=p2.id, match_id=m.id, transfer_window_id=window.id,
+                                  position="MID", minutes=90, stats={"minutes": 90, "goals": 1}, rules=rules)
+        upsert_player_match_score(db, player_id=p3.id, match_id=m.id, transfer_window_id=window.id,
+                                  position="MID", minutes=90, stats={"minutes": 90}, rules=rules)
+        db.commit()
+
+        award_match_bonus(db, match_id=m.id)
+        db.commit()
+
+        def bonus(pid):
+            return db.query(PlayerMatchScore).filter(
+                PlayerMatchScore.player_id == pid, PlayerMatchScore.match_id == m.id
+            ).first().bonus_points
+
+        assert bonus(p1.id) == Decimal(3)
+        assert bonus(p2.id) == Decimal(2)
+        assert bonus(p3.id) == Decimal(1)
+
+        # bonus flows into the window total: p1 = appearance 2 + goal*2 10 + bonus 3 = 15
+        agg = rescore_window_match_scores(db, transfer_window_id=window.id, rules=rules)
+        assert agg[p1.id][0] == Decimal(15)
 
 
 if __name__ == "__main__":

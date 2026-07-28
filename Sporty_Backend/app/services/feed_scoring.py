@@ -285,7 +285,7 @@ def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_
     match, from the per-match stat sheet. Lazy imports break the
     feed_scoring ↔ player_scoring cycle."""
     from app.services.scoring.player_scoring import load_football_rules
-    from app.services.scoring.match_scoring import upsert_player_match_score
+    from app.services.scoring.match_scoring import award_match_bonus, upsert_player_match_score
 
     rules = load_football_rules(db, match.sport_id)
     if not rules:
@@ -322,6 +322,8 @@ def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_
                 transfer_window_id=window_id, position=positions.get(player_id),
                 minutes=stats["minutes"], stats=stats, rules=rules,
             )
+    # Rank this match's performers and award 3/2/1 bonus once all are booked.
+    award_match_bonus(db, match_id=match.id)
 
 
 def persist_football_stats_from_sheet(

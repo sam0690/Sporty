@@ -18,7 +18,7 @@ from decimal import Decimal
 from sqlalchemy.orm import Session
 
 from app.scoring.models import PlayerMatchScore
-from app.services.scoring.football_engine import Rule, compute_football_score
+from app.services.scoring.football_engine import Rule, compute_bps, compute_football_score
 
 
 def upsert_player_match_score(
@@ -56,8 +56,28 @@ def upsert_player_match_score(
     row.stats = stats
     row.fantasy_points = total
     row.breakdown = breakdown
+    row.bps = compute_bps(position, stats)
     db.flush()
     return row
+
+
+def award_match_bonus(db: Session, *, match_id: uuid.UUID) -> None:
+    """Award the 3/2/1 bonus points to a match's top performers by BPS.
+
+    Ranks by DISTINCT bps value (FPL tie handling): everyone at the top value
+    gets 3, everyone at the 2nd-highest gets 2, 3rd-highest gets 1. A player's
+    bps is identical across their per-window rows, so all their rows for this
+    match get the same bonus. Idempotent — recomputed in full each call.
+    """
+    rows = db.query(PlayerMatchScore).filter(PlayerMatchScore.match_id == match_id).all()
+    if not rows:
+        return
+    bps_by_player = {r.player_id: r.bps for r in rows}
+    ranked_values = sorted({v for v in bps_by_player.values() if v > 0}, reverse=True)
+    award_for_value = {val: Decimal(3 - i) for i, val in enumerate(ranked_values[:3])}
+    for r in rows:
+        r.bonus_points = award_for_value.get(bps_by_player[r.player_id], Decimal("0"))
+    db.flush()
 
 
 def rescore_window_match_scores(

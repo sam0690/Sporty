@@ -8,7 +8,7 @@ designed.
 """
 from decimal import Decimal
 
-from app.services.scoring.football_engine import Rule, compute_football_score
+from app.services.scoring.football_engine import Rule, compute_bps, compute_football_score
 
 # Mirror of the seeded rule set (scripts/seed_football_scoring_rules.py) — the
 # subset the tests exercise.
@@ -75,3 +75,16 @@ def test_position_weighting_and_conceded():
 def test_sub_sixty_minutes_is_one_appearance_point():
     total, _ = _score("MID", minutes=30)
     assert total == Decimal(1)
+
+
+def test_bps_rewards_all_around_and_is_position_aware():
+    # A forward's single goal.
+    fwd = compute_bps("FWD", {"minutes": 90, "goals": 1})  # 6 + 24
+    assert fwd == Decimal(30)
+    # A defender with a clean sheet + heavy defensive work and no goal is
+    # competitive on BPS — the point of the system.
+    defn = compute_bps("DEF", {"minutes": 90, "clean_sheets": 1,
+                               "tackles": 5, "interceptions": 3, "blocks": 2})
+    assert defn == Decimal(6 + 12 + 10 + 3 + 2)  # 33
+    # Cards/own goals drag BPS down.
+    assert compute_bps("MID", {"minutes": 90, "red_cards": 1}) == Decimal(6 - 9)

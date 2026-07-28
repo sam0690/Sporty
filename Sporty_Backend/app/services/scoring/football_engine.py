@@ -72,6 +72,40 @@ def _apply(mode: str, points: Decimal, param: Decimal | None, count: int) -> Dec
     return Decimal("0")
 
 
+# Bonus Points System weights — a per-match all-around contribution score used
+# ONLY to rank a match's performers for the 3/2/1 bonus (award_match_bonus). It
+# is deliberately separate from fantasy points: because it is match-relative
+# (only the ranking matters, not the absolute value) it rewards busy all-round
+# games and stops one lucky event from dominating. Weights are a tuned code
+# constant, not config — the ranking is robust to the exact numbers.
+_BPS_GOAL_BY_POS = {"GKP": 12, "DEF": 12, "MID": 18, "FWD": 24}
+
+
+def compute_bps(position: str | None, stats: dict) -> Decimal:
+    s = stats
+    bps = 0
+    minutes = s.get("minutes", 0) or 0
+    bps += 6 if minutes >= 60 else (3 if minutes >= 1 else 0)
+    bps += (s.get("goals", 0) or 0) * _BPS_GOAL_BY_POS.get(position, 18)
+    bps += (s.get("assists", 0) or 0) * 9
+    if position in ("GKP", "DEF"):
+        bps += (s.get("clean_sheets", 0) or 0) * 12
+        bps += ((s.get("goals_conceded", 0) or 0) // 2) * -4
+    bps += (s.get("saves", 0) or 0) * 2
+    bps += (s.get("penalties_saved", 0) or 0) * 15
+    # All-around contribution — the point of BPS.
+    for metric, w in (
+        ("tackles", 2), ("interceptions", 1), ("blocks", 1), ("clearances", 1),
+        ("key_passes", 1), ("shots_on_target", 1), ("dribbles_won", 1), ("duels_won", 1),
+    ):
+        bps += (s.get(metric, 0) or 0) * w
+    bps += (s.get("yellow_cards", 0) or 0) * -3
+    bps += (s.get("red_cards", 0) or 0) * -9
+    bps += (s.get("own_goals", 0) or 0) * -6
+    bps += (s.get("penalties_missed", 0) or 0) * -6
+    return Decimal(bps)
+
+
 def compute_football_score(
     position: str | None,
     stats: dict,
