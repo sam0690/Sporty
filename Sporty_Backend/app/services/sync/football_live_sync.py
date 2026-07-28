@@ -119,6 +119,11 @@ def _parse_player_sheet(payload: dict, fixture_data: dict, resolve_player) -> di
             goal_stats = stats.get("goals") or {}
             cards = stats.get("cards") or {}
             penalty = stats.get("penalty") or {}
+            shots = stats.get("shots") or {}
+            passes = stats.get("passes") or {}
+            tackles = stats.get("tackles") or {}
+            duels = stats.get("duels") or {}
+            dribbles = stats.get("dribbles") or {}
             minutes = games.get("minutes") or 0
             out[player.id] = {
                 "minutes": minutes,
@@ -131,6 +136,18 @@ def _parse_player_sheet(payload: dict, fixture_data: dict, resolve_player) -> di
                 "penalties_saved": penalty.get("saved") or 0,
                 "penalties_missed": penalty.get("missed") or 0,
                 "clean_sheets": 1 if (team_conceded == 0 and minutes >= 60) else 0,
+                # Advanced metrics (Phase 3) — drive defensive contribution +
+                # advanced attacking rules. API-Football has no clearances field,
+                # so it stays 0; the rest come straight off the statistics block.
+                "shots_on_target": shots.get("on") or 0,
+                "key_passes": passes.get("key") or 0,
+                "tackles": tackles.get("total") or 0,
+                "blocks": tackles.get("blocks") or 0,
+                "interceptions": tackles.get("interceptions") or 0,
+                "clearances": 0,
+                "duels_won": duels.get("won") or 0,
+                "dribbles_won": dribbles.get("success") or 0,
+                "rating": float(games["rating"]) if games.get("rating") else None,
             }
     return out
 

@@ -52,7 +52,7 @@ from app.player.models import (  # noqa: F401
 from app.player.models_nba import NBAStat  # noqa: F401
 from app.ingestion.models import IngestionPlayer, IngestionTeam  # noqa: F401
 from app.notification.models import Notification  # noqa: F401
-from app.scoring.models import DefaultScoringRule  # noqa: F401
+from app.scoring.models import DefaultScoringRule, PlayerMatchScore  # noqa: F401
 from app.admin.models import AdminAuditLog  # noqa: F401
 from app.support.models import SupportTicket, TicketMessage  # noqa: F401
 from app.league_chat.models import LeagueChatMessage, LeagueChatReaction  # noqa: F401

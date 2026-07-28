@@ -350,3 +350,41 @@ class AdminTransferItem(BaseModel):
     cost_at_transfer: float
     reversed_at: datetime | None
     created_at: datetime
+
+
+# ── Scoring rules (admin-editable scoring config) ──────────────────────────────
+
+class ScoringRuleResponse(BaseModel):
+    id: uuid.UUID
+    sport_id: uuid.UUID
+    action: str
+    position: str | None
+    mode: str
+    param: float | None
+    points: float
+    description: str
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ScoringRuleListResponse(BaseModel):
+    rules: list[ScoringRuleResponse]
+    total: int
+
+
+class ScoringRuleCreate(BaseModel):
+    sport_id: uuid.UUID
+    action: str = Field(min_length=1, max_length=50)
+    position: str | None = Field(default=None, max_length=3)
+    mode: str = Field(default="per_unit")  # per_unit | per_n | threshold | flat
+    param: float | None = None
+    points: float
+    description: str = Field(min_length=1, max_length=200)
+
+
+class ScoringRuleUpdate(BaseModel):
+    # Only the tunable fields — action/position/sport identify the rule and
+    # don't change (delete + recreate to re-key).
+    points: float | None = None
+    mode: str | None = None
+    param: float | None = None
+    description: str | None = Field(default=None, max_length=200)

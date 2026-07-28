@@ -336,6 +336,12 @@ class PlayerGameweekStat(Base):
         Numeric(precision=8, scale=2), nullable=False, default=Decimal("0.00")
     )
 
+    # Explainable breakdown of how fantasy_points was reached, as a list of
+    # {action, count, points_each, subtotal, position} entries. Written by the
+    # scoring engine alongside fantasy_points; powers the "why did I get these
+    # points" UI and admin auditing. NULL for rows scored before this existed.
+    breakdown: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -418,6 +424,22 @@ class FootballStat(Base):
     saves: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     goals_conceded: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
     bonus: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+
+    # Advanced metrics (Phase 3) — captured from the API-Football /fixtures/
+    # players sheet we already fetch; drive defensive-contribution + advanced
+    # attacking scoring. clearances stays 0 (API-Football has no such field).
+    tackles: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    interceptions: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    blocks: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    clearances: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    key_passes: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    shots_on_target: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    dribbles_won: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    duels_won: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=0)
+    # Match rating (e.g. 7.50) — API-Football provides it; kept for BPS/display.
+    rating: Mapped[Decimal | None] = mapped_column(
+        Numeric(precision=4, scale=2), nullable=True
+    )
 
     # Relationship back to base stat
     base_stat: Mapped["PlayerGameweekStat"] = relationship(

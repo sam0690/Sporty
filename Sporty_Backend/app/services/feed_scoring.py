@@ -268,7 +268,62 @@ FOOTBALL_SHEET_FIELDS = (
     "penalties_missed",
     "saves",
     "goals_conceded",
+    # Advanced (Phase 3) — absent from the sheet dict default to 0 via .get.
+    "tackles",
+    "interceptions",
+    "blocks",
+    "clearances",
+    "key_passes",
+    "shots_on_target",
+    "dribbles_won",
+    "duels_won",
 )
+
+
+def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_by_player) -> None:
+    """Write a PlayerMatchScore per (player, covering window) for a finished
+    match, from the per-match stat sheet. Lazy imports break the
+    feed_scoring ↔ player_scoring cycle."""
+    from app.services.scoring.player_scoring import load_football_rules
+    from app.services.scoring.match_scoring import award_match_bonus, upsert_player_match_score
+
+    rules = load_football_rules(db, match.sport_id)
+    if not rules:
+        return
+    positions = dict(
+        db.query(Player.id, Player.position).filter(Player.id.in_(known_player_ids)).all()
+    )
+    for window_id in window_ids:
+        for player_id in known_player_ids:
+            sheet = stats_by_player[player_id]
+            stats = {
+                "minutes": int(sheet.get("minutes", 0) or 0),
+                "goals": int(sheet.get("goals", 0) or 0),
+                "assists": int(sheet.get("assists", 0) or 0),
+                "clean_sheets": min(1, int(sheet.get("clean_sheets", 0) or 0)),
+                "saves": int(sheet.get("saves", 0) or 0),
+                "penalties_saved": int(sheet.get("penalties_saved", 0) or 0),
+                "penalties_missed": int(sheet.get("penalties_missed", 0) or 0),
+                "own_goals": int(sheet.get("own_goals", 0) or 0),
+                "goals_conceded": int(sheet.get("goals_conceded", 0) or 0),
+                "yellow_cards": min(2, int(sheet.get("yellow_cards", 0) or 0)),
+                "red_cards": min(1, int(sheet.get("red_cards", 0) or 0)),
+                "tackles": int(sheet.get("tackles", 0) or 0),
+                "interceptions": int(sheet.get("interceptions", 0) or 0),
+                "blocks": int(sheet.get("blocks", 0) or 0),
+                "clearances": int(sheet.get("clearances", 0) or 0),
+                "key_passes": int(sheet.get("key_passes", 0) or 0),
+                "shots_on_target": int(sheet.get("shots_on_target", 0) or 0),
+                "dribbles_won": int(sheet.get("dribbles_won", 0) or 0),
+                "duels_won": int(sheet.get("duels_won", 0) or 0),
+            }
+            upsert_player_match_score(
+                db, player_id=player_id, match_id=match.id,
+                transfer_window_id=window_id, position=positions.get(player_id),
+                minutes=stats["minutes"], stats=stats, rules=rules,
+            )
+    # Rank this match's performers and award 3/2/1 bonus once all are booked.
+    award_match_bonus(db, match_id=match.id)
 
 
 def persist_football_stats_from_sheet(
@@ -315,6 +370,13 @@ def persist_football_stats_from_sheet(
                 value = max(0, int(sheet.get(field, 0) or 0))
                 setattr(child, field, min(value, caps.get(field, value)))
             booked += 1
+
+    # Per-match layer (Phase 2): record each player's PlayerMatchScore for this
+    # match under every covering window. The window total is aggregated later by
+    # the scoring task (score_football_players_for_window), which re-scores from
+    # these; here we persist the stats snapshot + an initial score.
+    _book_player_match_scores(db, match=match, window_ids=window_ids,
+                              known_player_ids=known_player_ids, stats_by_player=stats_by_player)
 
     logger.info(
         "Sheet booking for match %s: booked stats for %s players across %s window(s)",

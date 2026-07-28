@@ -33,11 +33,26 @@ export type TPlayer = {
   social_links?: Record<string, string> | null;
 };
 
+// One entry of an explainable fantasy-points breakdown (backend engine output).
+// Generic on purpose so the UI renders any sport's actions without hardcoding.
+export type TScoreEvent = {
+  action: string;
+  position?: string | null;
+  count?: number;
+  mode?: string;
+  points_each?: number;
+  subtotal: number;
+  match_id?: string;
+};
+
+export type TFantasyPointsBreakdown = TScoreEvent[];
+
 export type TPlayerGameweekStat = {
   player: TPlayerBrief;
   transfer_window: { id: string; number: number; start_at: string; end_at: string };
   minutes_played: number;
   fantasy_points: number;
+  breakdown?: TFantasyPointsBreakdown | null;
   football_stat?: {
     goals: number;
     assists: number;
@@ -50,6 +65,16 @@ export type TPlayerGameweekStat = {
     saves: number;
     goals_conceded: number;
     bonus: number;
+    // Advanced metrics (Phase 3). Optional so older rows stay valid.
+    tackles?: number;
+    interceptions?: number;
+    blocks?: number;
+    clearances?: number;
+    key_passes?: number;
+    shots_on_target?: number;
+    dribbles_won?: number;
+    duels_won?: number;
+    rating?: number | null;
   } | null;
   cricket_stat?: {
     runs_scored?: number | null;
