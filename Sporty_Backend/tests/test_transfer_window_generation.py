@@ -99,6 +99,52 @@ def test_happy_path_generates_one_window_per_week(monkeypatch: pytest.MonkeyPatc
         assert season.transfer_day == 1
 
 
+def test_windows_are_contiguous_seven_day_spans(monkeypatch: pytest.MonkeyPatch):
+    """1-day windows left 6-day gaps, and fixtures landing in them scored into
+    nothing (the bug scripts/fix_real_season_windows.py repaired for football).
+    Every day of the season must belong to exactly one window."""
+    monkeypatch.setattr(transfer_window_service, "redis_lock", _lock_acquired)
+
+    with session_scope() as db:
+        season = _season(db, weeks=4)
+
+        windows = generate_transfer_windows_for_season(db, season, transfer_day=1)
+
+        for window in windows:
+            assert window.end_at - window.start_at == timedelta(days=7, seconds=-1)
+
+        # No gaps and no overlaps: each window opens 1s after the last one closes.
+        for earlier, later in zip(windows, windows[1:]):
+            assert later.start_at - earlier.end_at == timedelta(seconds=1)
+
+
+def test_first_window_covers_a_midweek_season_start(monkeypatch: pytest.MonkeyPatch):
+    """Anchoring forward to the next transfer_day would leave the opening days
+    of a mid-week season uncovered — NBA 2026-27 tips off on a Tuesday."""
+    monkeypatch.setattr(transfer_window_service, "redis_lock", _lock_acquired)
+
+    with session_scope() as db:
+        sport = Sport(name="basketball", display_name="Basketball")
+        db.add(sport)
+        db.flush()
+        # A Tuesday, mirroring the real NBA 2026-27 tip-off.
+        start = date(2026, 10, 20)
+        season = Season(
+            sport_id=sport.id, name="S-midweek",
+            start_date=start, end_date=date(2027, 4, 12),
+        )
+        db.add(season)
+        db.flush()
+
+        windows = generate_transfer_windows_for_season(db, season, transfer_day=1)
+
+        # Backs up to Monday the 19th so opening night is inside window 1.
+        assert windows[0].start_at.date() == date(2026, 10, 19)
+        assert windows[0].start_at.date() <= start <= windows[0].end_at.date()
+        # And the far end still reaches the season's last day.
+        assert windows[-1].end_at.date() >= season.end_date
+
+
 def test_idempotent_second_call_reuses_existing_windows(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(transfer_window_service, "redis_lock", _lock_acquired)
 
