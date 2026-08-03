@@ -217,6 +217,28 @@ export function ScoreTicker({
         }}
       />
 
+      {/* Brand wash: each side's colour bleeds in from its own edge and is
+          spent well before the centre line, so the card reads as this exact
+          fixture without becoming a block of colour. Sits under the content
+          (DOM order) and is skipped for teams we hold no colour for, since a
+          grey haze is worse than none. */}
+      {(home.branded || away.branded) && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 top-1"
+          style={{
+            background: [
+              home.branded &&
+                `linear-gradient(90deg, ${home.color}24, transparent 42%)`,
+              away.branded &&
+                `linear-gradient(270deg, ${away.color}24, transparent 42%)`,
+            ]
+              .filter(Boolean)
+              .join(", "),
+          }}
+        />
+      )}
+
       <div className="relative">
         <div className="flex items-center justify-between gap-3 border-b border-white/8 px-5 py-3 sm:px-6">
           {phase === "live" ? (
@@ -263,6 +285,11 @@ export function ScoreTicker({
               <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {homeTeam ?? "Home"}
               </p>
+              <span
+                aria-hidden
+                className="mx-auto mt-2 block h-0.5 w-10 rounded-full sm:ml-auto sm:mr-0"
+                style={{ background: home.color }}
+              />
               <p className="section-label mt-1.5">
                 Home{phase === "post" && homeLead ? " · Won" : ""}
               </p>
@@ -350,6 +377,11 @@ export function ScoreTicker({
               <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1 sm:text-4xl">
                 {awayTeam ?? "Away"}
               </p>
+              <span
+                aria-hidden
+                className="mx-auto mt-2 block h-0.5 w-10 rounded-full sm:ml-0 sm:mr-auto"
+                style={{ background: away.color }}
+              />
               <p className="section-label mt-1.5">
                 Away{phase === "post" && awayLead ? " · Won" : ""}
               </p>
