@@ -32,6 +32,10 @@ def generate_transfer_windows_for_season(
 ) -> List[TransferWindow]:
     """Generate one transfer window per week for a season, admin-triggered.
 
+    Windows are contiguous 7-day spans (not 1-day markers), anchored so the
+    first covers season.start_date — every day of the season belongs to exactly
+    one gameweek, so no fixture can fall between windows.
+
     Season-scoped, not league-scoped: every league on this season shares the
     resulting windows (see app/league/models.py Season.transfer_windows and
     the note on Season.transfer_day). Superseded League.generate_transfer_windows
@@ -81,21 +85,30 @@ def generate_transfer_windows_for_season(
                 detail="Transfer windows are already being generated for this season — try again shortly",
             )
 
-        # Each window is a single day on the designated weekday.
+        # Each window is a contiguous 7-day span starting on the designated
+        # weekday, so every day of the season falls in exactly one gameweek.
+        # (These used to be 1-day markers, which left 6-day gaps — fixtures
+        # landing in them scored into nothing. scripts/fix_real_season_windows.py
+        # was the football-specific repair for exactly that; this is the fix at
+        # source so new seasons don't need one.)
+        #
+        # The first window is anchored BACKWARD onto the weekday on or before
+        # season.start_date — anchoring forward would leave the opening days
+        # uncovered whenever a season starts mid-week.
+        #
         # transfer_day: 1=Monday..7=Sunday (Python weekday(): Monday=0..Sunday=6).
-        current_date = season.start_date
         target_weekday = (transfer_day - 1) % 7
-
+        current_date = season.start_date
         while current_date.weekday() != target_weekday:
-            current_date += timedelta(days=1)
-            if current_date > season.end_date:
-                break
+            current_date -= timedelta(days=1)
 
         window_number = 1
         windows: List[TransferWindow] = []
         while current_date <= season.end_date:
             start_at = datetime.combine(current_date, datetime.min.time()).replace(tzinfo=timezone.utc)
-            end_at = start_at + timedelta(hours=23, minutes=59, seconds=59)
+            # Ends 1s before the next window opens: the overlap EXCLUDE
+            # constraint uses inclusive bounds, so spans must not share an edge.
+            end_at = start_at + timedelta(days=7) - timedelta(seconds=1)
 
             # Deadlines anchored to the START of the gameweek: transfers + lineup
             # lock as the window opens, BEFORE its matches play, so no one can
