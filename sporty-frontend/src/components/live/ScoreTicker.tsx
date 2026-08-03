@@ -48,12 +48,8 @@ function Crest({
 
   return (
     <span
-      className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[3px] font-display text-xl leading-none tracking-[-0.02em] sm:size-[4.5rem] sm:text-3xl"
-      style={{
-        color,
-        background: `${color}14`,
-        border: `1px solid ${color}40`,
-      }}
+      className="grid size-14 shrink-0 place-items-center overflow-hidden rounded-[3px] bg-surface-2 font-display text-xl leading-none tracking-[-0.02em] text-fg-1 sm:size-[4.5rem] sm:text-3xl"
+      style={{ border: `2px solid ${color}` }}
       aria-label={name}
     >
       {showImage ? (
@@ -296,18 +292,15 @@ export function ScoreTicker({
               </>
             ) : (
               <>
-                <div className="flex items-center justify-center font-display text-[3.25rem] leading-none tracking-[-0.02em] sm:text-8xl">
-                  <span
-                    style={{ color: home.color }}
-                    className="min-w-[1.1ch] text-right tabular-nums"
-                  >
+                {/* Score stays on the neutral foreground: at this size it is
+                    the page's primary text, and a 3:1 brand colour is an
+                    accent, not a typeface colour. */}
+                <div className="flex items-center justify-center font-display text-[3.25rem] leading-none tracking-[-0.02em] text-fg-1 sm:text-8xl">
+                  <span className="min-w-[1.1ch] text-right tabular-nums">
                     {score.home}
                   </span>
                   <span className="px-2 text-white/20 sm:px-4">:</span>
-                  <span
-                    style={{ color: away.color }}
-                    className="min-w-[1.1ch] text-left tabular-nums"
-                  >
+                  <span className="min-w-[1.1ch] text-left tabular-nums">
                     {score.away}
                   </span>
                 </div>
@@ -332,9 +325,9 @@ export function ScoreTicker({
                 {shootout && (
                   <p className="section-label mt-2 tabular-nums">
                     Penalties{" "}
-                    <span style={{ color: home.color }}>{shootout.home}</span>
+                    <span className="text-fg-1">{shootout.home}</span>
                     <span className="px-0.5 text-white/25">–</span>
-                    <span style={{ color: away.color }}>{shootout.away}</span>
+                    <span className="text-fg-1">{shootout.away}</span>
                   </p>
                 )}
               </>

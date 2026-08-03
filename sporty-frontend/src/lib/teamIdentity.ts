@@ -1,42 +1,37 @@
-// Deterministic visual identity for a team from its name alone — so the same
-// team always gets the same colour + crest across the match page, with no
-// assets or backend changes. Palette is drawn from the system's accent family.
+// Visual identity for a team: its real brand colour (see teamColors.ts, which
+// also handles the dark-surface contrast tuning) plus initials for the crest
+// fallback. Teams we have no colour on file for get a neutral — a wrong club
+// colour reads worse than no colour, and the crest is the identifier anyway.
 
-const TEAM_PALETTE = [
-  "#00e07f", // football green
-  "#ff6b35", // basketball orange
-  "#00d4ff", // cricket cyan
-  "#e2c368", // volt
-  "#9b59b6", // playoff purple
-  "#37aee2", // sky
-  "#ffd86b", // gold
-  "#ff5c8a", // pink
-];
+import { brandColor } from "@/lib/teamColors";
 
-function hashString(value: string): number {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
-}
+const NEUTRAL = "#a0a0aa";
 
 export type TeamIdentity = {
   color: string;
+  /** True when `color` is the club's real colour rather than the neutral
+   *  fallback — lets callers skip decorative washes that would otherwise be
+   *  a meaningless grey. */
+  branded: boolean;
   initials: string;
 };
 
 export function teamIdentity(name?: string | null): TeamIdentity {
-  const clean = (name ?? "").trim();
+  const clean = (name ?? "").replace(/&amp;/gi, "&").trim();
   if (!clean) {
-    return { color: "#a0a0aa", initials: "?" };
+    return { color: NEUTRAL, branded: false, initials: "?" };
   }
-  const color = TEAM_PALETTE[hashString(clean.toLowerCase()) % TEAM_PALETTE.length];
+  const color = brandColor(clean);
   const initials = clean
     .split(/\s+/)
+    .filter((word) => /[a-z0-9]/i.test(word))
     .map((word) => word[0])
     .join("")
     .slice(0, 3)
     .toUpperCase();
-  return { color, initials };
+  return {
+    color: color ?? NEUTRAL,
+    branded: color != null,
+    initials: initials || "?",
+  };
 }
