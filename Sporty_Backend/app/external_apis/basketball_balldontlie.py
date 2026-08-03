@@ -12,14 +12,27 @@ Usage:
     teams = await client.get_teams()
 """
 
+import asyncio
 import logging
 from typing import Any, Optional
 
+import httpx
 from balldontlie import BalldontlieAPI
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.core.redis import cache_get, cache_set, cache_pattern_delete
 
 logger = logging.getLogger(__name__)
+
+# BallDontLie's free tier allows 5 requests/minute. A full NBA season is ~1,300
+# games = ~13 pages, so pace the pages rather than discovering the limit via
+# 429s. Lower this if you move to a paid key.
+PAGE_DELAY_SECONDS = 12.5
 
 
 class BasketballBallDontLieClient:
@@ -35,6 +48,7 @@ class BasketballBallDontLieClient:
         if not api_key:
             raise ValueError("BallDontLie API key is required")
         
+        self.api_key = api_key
         self.client = BalldontlieAPI(api_key=api_key)
         self.cache_ttl = 3600  # 1 hour for players/teams, configurable per method
 
@@ -93,60 +107,67 @@ class BasketballBallDontLieClient:
 
     async def get_all_games(self, season: int = 2024, use_cache: bool = True) -> list[dict[str, Any]]:
         """
-        Fetch all NBA games for a season (handles pagination automatically).
+        Fetch all NBA games for a season (cursor-paginated).
+
+        Hits the REST endpoint rather than the SDK: the SDK's NBAGame model
+        drops the `datetime` field (UTC tip-off) and keeps only the US-local
+        `date`, but Match.match_date needs the real tip-off for lineup
+        deadlines and live-poll windows.
 
         Args:
-            season: NBA season year
+            season: NBA season start year (2026 = the 2026-27 season)
             use_cache: Whether to use Redis cache
 
         Returns:
             List of all game dictionaries for the season
         """
         cache_key = f"basketball:games:season:{season}:all"
-        
+
         if use_cache:
             cached = cache_get(cache_key)
             if cached:
                 logger.info(f"Cache hit: {cache_key}")
                 return cached.get("data", []) if isinstance(cached, dict) else cached
 
-        all_games = []
+        all_games: list[dict[str, Any]] = []
+        params: dict[str, Any] = {"seasons[]": season, "per_page": 100}
 
-        try:
-            # Use the balldontlie SDK's list() method for games with season filter
-            response = self.client.nba.games.list(seasons=[season])
-            
-            # The balldontlie SDK returns dict-like responses
-            cursor = None
-            while response is not None:
-                # Extract data from response
-                if isinstance(response, dict):
-                    data = response.get("data", [])
-                    meta = response.get("meta", {})
-                    cursor = meta.get("next_cursor")
-                else:
-                    data = []
-                    cursor = None
-                
-                all_games.extend(data)
-                logger.debug(f"Fetched {len(data)} games, next_cursor: {cursor}")
-                
-                # Check if there are more pages
-                if cursor:
-                    response = self.client.nba.games.list(seasons=[season], cursor=cursor)
-                else:
+        # The free tier allows 5 requests/minute and a full season is ~13 pages,
+        # so 429s are expected mid-pagination, not exceptional.
+        @retry(
+            stop=stop_after_attempt(8),
+            wait=wait_exponential(multiplier=1, min=5, max=60),
+            retry=retry_if_exception_type(httpx.HTTPError),
+            reraise=True,
+        )
+        async def _page(http: httpx.AsyncClient, page_params: dict[str, Any]) -> dict:
+            response = await http.get(
+                "https://api.balldontlie.io/v1/games",
+                params=page_params,
+                headers={"Authorization": self.api_key},
+            )
+            response.raise_for_status()
+            return response.json()
+
+        async with httpx.AsyncClient(timeout=30.0) as http:
+            while True:
+                payload = await _page(http, params)
+                all_games.extend(payload.get("data", []))
+
+                cursor = (payload.get("meta") or {}).get("next_cursor")
+                if not cursor:
                     break
+                params = {**params, "cursor": cursor}
+                await asyncio.sleep(PAGE_DELAY_SECONDS)
 
-            if use_cache and all_games:
-                cache_set(cache_key, {"data": all_games}, self.cache_ttl)
-                logger.info(f"Cached {len(all_games)} total games for season {season}")
+        # Never cache an empty result: before the NBA publishes a schedule this
+        # endpoint legitimately returns 0 games, and a cached [] would mask the
+        # first successful pull for an hour.
+        if use_cache and all_games:
+            cache_set(cache_key, {"data": all_games}, self.cache_ttl)
 
-            logger.info(f"Fetched {len(all_games)} games from BallDontLie")
-            return all_games
-
-        except Exception as e:
-            logger.error(f"Error fetching all games: {e}", exc_info=True)
-            return all_games  # Return partial results if available
+        logger.info(f"Fetched {len(all_games)} games from BallDontLie (season {season})")
+        return all_games
 
     async def get_teams(self, use_cache: bool = True) -> list[dict[str, Any]]:
         """
