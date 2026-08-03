@@ -35,11 +35,21 @@ function TickerItem({
       <span className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1 transition-colors group-hover/item:text-accent">
         {match.home_team}
       </span>
-      <span className="font-display text-base leading-none tracking-[-0.02em] tabular-nums">
-        <span style={{ color: home.color }}>{match.home_score ?? 0}</span>
+      <span
+        aria-hidden
+        className="size-2 shrink-0 rounded-full"
+        style={{ background: home.color }}
+      />
+      <span className="font-display text-base leading-none tracking-[-0.02em] tabular-nums text-fg-1">
+        <span>{match.home_score ?? 0}</span>
         <span className="px-0.5 text-white/25">:</span>
-        <span style={{ color: away.color }}>{match.away_score ?? 0}</span>
+        <span>{match.away_score ?? 0}</span>
       </span>
+      <span
+        aria-hidden
+        className="size-2 shrink-0 rounded-full"
+        style={{ background: away.color }}
+      />
       <span className="font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1 transition-colors group-hover/item:text-accent">
         {match.away_team}
       </span>

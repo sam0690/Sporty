@@ -28,12 +28,8 @@ export function TeamBadge({ name, logoUrl, size = "sm" }: TeamBadgeProps) {
   return (
     <span
       title={name}
-      className={`grid shrink-0 place-items-center overflow-hidden rounded-[3px] font-display leading-none tracking-[-0.02em] ${SIZE_CLASS[size]}`}
-      style={{
-        color,
-        background: `${color}14`,
-        border: `1px solid ${color}40`,
-      }}
+      className={`grid shrink-0 place-items-center overflow-hidden rounded-[3px] bg-surface-2 font-display leading-none tracking-[-0.02em] text-fg-1 ${SIZE_CLASS[size]}`}
+      style={{ border: `2px solid ${color}` }}
       aria-hidden={!showImage}
     >
       {showImage ? (

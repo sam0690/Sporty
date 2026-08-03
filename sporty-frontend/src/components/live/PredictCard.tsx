@@ -19,13 +19,11 @@ function Stepper({
   value,
   onChange,
   disabled,
-  accent,
   ariaLabel,
 }: {
   value: number;
   onChange: (v: number) => void;
   disabled: boolean;
-  accent: string;
   ariaLabel: string;
 }) {
   return (
@@ -39,10 +37,7 @@ function Stepper({
       >
         <Minus className="size-4" strokeWidth={2.5} />
       </button>
-      <span
-        className="w-14 text-center font-display text-5xl leading-none tabular-nums"
-        style={{ color: accent }}
-      >
+      <span className="w-14 text-center font-display text-5xl leading-none tabular-nums text-fg-1">
         {value}
       </span>
       <button
@@ -221,10 +216,7 @@ export function PredictCard({ matchId }: { matchId: string }) {
         <div className="flex flex-col items-center gap-3">
           <TeamHead name={homeTeam} logoUrl={homeLogo} color={homeColor} />
           {locked ? (
-            <span
-              className="font-display text-5xl leading-none tabular-nums"
-              style={{ color: homeColor }}
-            >
+            <span className="font-display text-5xl leading-none tabular-nums text-fg-1">
               {home}
             </span>
           ) : (
@@ -232,7 +224,6 @@ export function PredictCard({ matchId }: { matchId: string }) {
               value={home}
               onChange={setDraftHome}
               disabled={isLoading}
-              accent={homeColor}
               ariaLabel={`${homeTeam} score`}
             />
           )}
@@ -245,10 +236,7 @@ export function PredictCard({ matchId }: { matchId: string }) {
         <div className="flex flex-col items-center gap-3">
           <TeamHead name={awayTeam} logoUrl={awayLogo} color={awayColor} />
           {locked ? (
-            <span
-              className="font-display text-5xl leading-none tabular-nums"
-              style={{ color: awayColor }}
-            >
+            <span className="font-display text-5xl leading-none tabular-nums text-fg-1">
               {away}
             </span>
           ) : (
@@ -256,7 +244,6 @@ export function PredictCard({ matchId }: { matchId: string }) {
               value={away}
               onChange={setDraftAway}
               disabled={isLoading}
-              accent={awayColor}
               ariaLabel={`${awayTeam} score`}
             />
           )}

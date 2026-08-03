@@ -66,9 +66,11 @@ function PitchChip({ chip, index }: { chip: RenderChip; index: number }) {
             className="!h-full !w-full !rounded-full !border-0 !bg-transparent"
           />
         </div>
+        {/* Ink on a dark chip rather than on the brand fill — 7px type needs
+            more contrast than a brand colour is allowed to carry. */}
         <span
-          className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-[2px] px-1 py-px font-sans text-[7px] font-700 uppercase leading-none tracking-[0.5px] text-surface-0"
-          style={{ background: chip.color }}
+          className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-[2px] bg-surface-0 px-1 py-px font-sans text-[7px] font-700 uppercase leading-none tracking-[0.5px] text-fg-1"
+          style={{ border: `1px solid ${chip.color}` }}
         >
           {chip.role}
         </span>

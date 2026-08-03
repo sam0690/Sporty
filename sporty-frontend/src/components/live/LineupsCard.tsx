@@ -27,12 +27,10 @@ function PlayerRow({
       }`}
     >
       <span
-        className="grid h-6 min-w-8 shrink-0 place-items-center rounded-[3px] px-1 font-sans text-[10px] font-700 uppercase tracking-[0.5px]"
-        style={{
-          color,
-          background: `${color}${dimmed ? "0d" : "17"}`,
-          border: `1px solid ${color}${dimmed ? "26" : "33"}`,
-        }}
+        className={`grid h-6 min-w-8 shrink-0 place-items-center rounded-[3px] bg-surface-2 px-1 font-sans text-[10px] font-700 uppercase tracking-[0.5px] ${
+          dimmed ? "text-fg-3" : "text-fg-2"
+        }`}
+        style={{ border: `1px solid ${color}${dimmed ? "40" : "80"}` }}
       >
         {player.position ?? "—"}
       </span>
@@ -68,12 +66,8 @@ function TeamColumn({
         className={`flex items-center gap-2.5 ${isRight ? "flex-row-reverse text-right" : ""}`}
       >
         <span
-          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[3px] font-display text-sm leading-none tracking-[-0.02em]"
-          style={{
-            color,
-            background: `${color}14`,
-            border: `1px solid ${color}40`,
-          }}
+          className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-[3px] bg-surface-2 font-display text-sm leading-none tracking-[-0.02em] text-fg-1"
+          style={{ border: `2px solid ${color}` }}
         >
           {showImage ? (
             <Image

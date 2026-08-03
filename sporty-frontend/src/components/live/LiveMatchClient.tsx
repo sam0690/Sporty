@@ -222,22 +222,34 @@ export default function LiveMatchClient({
             }`}
           >
             <div className="flex h-11 items-center justify-between gap-3 px-3">
-              <span className="min-w-0 flex-1 truncate text-right font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
-                {homeTeam ?? "Home"}
+              {/* Crest-less at this size, so a brand dot carries identity —
+                  same vocabulary as the event feed's team axis. */}
+              <span className="flex min-w-0 flex-1 items-center justify-end gap-2 font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+                <span className="truncate">{homeTeam ?? "Home"}</span>
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ background: home.color }}
+                />
               </span>
-              <span className="flex shrink-0 items-center font-display text-lg leading-none tracking-[-0.02em] tabular-nums">
+              <span className="flex shrink-0 items-center font-display text-lg leading-none tracking-[-0.02em] tabular-nums text-fg-1">
                 {phase === "pre" ? (
                   <span className="text-white/25">vs</span>
                 ) : (
                   <>
-                    <span style={{ color: home.color }}>{score.home}</span>
+                    <span>{score.home}</span>
                     <span className="px-1.5 text-white/20">:</span>
-                    <span style={{ color: away.color }}>{score.away}</span>
+                    <span>{score.away}</span>
                   </>
                 )}
               </span>
-              <span className="min-w-0 flex-1 truncate font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
-                {awayTeam ?? "Away"}
+              <span className="flex min-w-0 flex-1 items-center gap-2 font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-1">
+                <span
+                  aria-hidden
+                  className="size-2 shrink-0 rounded-full"
+                  style={{ background: away.color }}
+                />
+                <span className="truncate">{awayTeam ?? "Away"}</span>
               </span>
               {phase === "live" && minute != null && (
                 <span className="shrink-0 rounded-[3px] bg-danger/14 px-1.5 py-0.5 font-sans text-[11px] font-700 tabular-nums text-danger-soft">
