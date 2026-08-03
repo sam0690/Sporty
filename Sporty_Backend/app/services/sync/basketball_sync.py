@@ -7,7 +7,8 @@ Game syncing still uses the existing BallDontLie flow.
 
 import asyncio
 import logging
-from datetime import datetime, date
+from datetime import datetime, date, timezone
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -20,17 +21,74 @@ from app.services.sync.player_sync import sync_basketball_players
 logger = logging.getLogger(__name__)
 
 
-async def sync_basketball_games(db: Session, season: int = 2024) -> dict:
+def season_label(season: int) -> str:
+    """2026 -> '2026-27' (the form stored on Match.season for basketball)."""
+    return f"{season}-{str(season + 1)[-2:]}"
+
+
+def current_nba_season() -> int:
+    """Season start year for today. NBA years roll over at the August schedule drop."""
+    today = date.today()
+    return today.year if today.month >= 8 else today.year - 1
+
+
+def match_fields(game: dict[str, Any], sport_id, season: int) -> dict[str, Any] | None:
+    """Map a BallDontLie game payload onto Match columns. None = unusable row.
+
+    Teams are stored as abbreviations ("LAL") because that is what basketball
+    RealTeam.name holds — full names here would not join to the roster.
+    """
+    external_id = game.get("id")
+    home = (game.get("home_team") or {}).get("abbreviation")
+    away = (game.get("visitor_team") or {}).get("abbreviation")
+    if not external_id or not home or not away:
+        return None
+
+    # `datetime` is the UTC tip-off; `date` is the US-local calendar date and
+    # is all we get for games the NBA has not time-stamped yet.
+    raw = game.get("datetime")
+    if raw:
+        kickoff = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    else:
+        kickoff = datetime.fromisoformat(game["date"]).replace(tzinfo=timezone.utc)
+
+    status = (game.get("status") or "").lower()
+    if "final" in status:
+        state = "finished"
+    elif game.get("period"):
+        state = "live"
+    else:
+        state = "scheduled"
+
+    return {
+        "sport_id": sport_id,
+        "external_api_id": f"bdl:{external_id}",
+        "home_team": home,
+        "away_team": away,
+        "match_date": kickoff,
+        "status": state,
+        "home_score": game.get("home_team_score") if state != "scheduled" else None,
+        "away_score": game.get("visitor_team_score") if state != "scheduled" else None,
+        "competition": "NBA",
+        "season": season_label(season),
+    }
+
+
+async def sync_basketball_games(db: Session, season: int | None = None) -> dict:
     """
     Sync all NBA games for a season from BallDontLie API.
 
+    Safe to re-run: matches are upserted on external_api_id, so running this
+    before the NBA publishes the schedule is a no-op that costs one request.
+
     Args:
         db: SQLAlchemy Session for database operations
-        season: NBA season year (default: 2024)
+        season: NBA season start year (default: the current season)
 
     Returns:
         Dict with sync statistics: {total: int, new: int, updated: int, errors: int}
     """
+    season = season if season is not None else current_nba_season()
     logger.info(f"🏀 Starting basketball games sync for season {season}...")
     stats = {"total": 0, "new": 0, "updated": 0, "errors": 0}
 
@@ -42,20 +100,16 @@ async def sync_basketball_games(db: Session, season: int = 2024) -> dict:
             logger.error("Basketball sport not found in database")
             return stats
 
-        # Get a season for basketball that is active (we'll use the first active season)
-        # In reality, you'd map the year to a specific Season record
-        # For now, just get any active season for basketball
-        season_obj = (
+        # Guard only — Match rows carry a season *string*, not a Season FK. This
+        # refuses to ingest fixtures for a season the app has no Season row for,
+        # which is what leagues/transfer windows actually hang off.
+        has_season = (
             db.query(Season)
-            .filter((Season.sport_id == sport.id) & (Season.is_active == True))
+            .filter(Season.sport_id == sport.id, Season.is_active.is_(True))
             .first()
         )
-
-        if not season_obj:
-            logger.error(f"No active basketball season found in database")
-            logger.warning("Creating a default season for basketball games...")
-            # Instead of failing, we'll just skip game sync
-            # In production, you'd create seasons via a separate management command
+        if not has_season:
+            logger.error("No active basketball season in the database — create one first")
             return stats
 
         # Initialize API client lazily so importing this module does not require
@@ -70,39 +124,27 @@ async def sync_basketball_games(db: Session, season: int = 2024) -> dict:
 
         for game_data in games_data:
             try:
-                external_id = game_data.get("id")
-                home_team_id = game_data.get("home_team_id")
-                visitor_team_id = game_data.get("visitor_team_id")
-                game_date = game_data.get("date")
-
-                if not external_id or not home_team_id or not visitor_team_id:
+                fields = match_fields(game_data, sport.id, season)
+                if fields is None:
                     logger.warning(f"Skipping game with incomplete data: {game_data}")
                     stats["errors"] += 1
                     continue
 
-                # Check if match already exists
                 existing_match = (
                     db.query(Match)
-                    .filter(Match.external_api_id == str(external_id))
+                    .filter(Match.external_api_id == fields["external_api_id"])
                     .first()
                 )
 
                 if existing_match:
-                    # Update existing match
-                    existing_match.updated_at = datetime.utcnow()
+                    # Fixtures get rescheduled and scores land later, so refresh
+                    # everything rather than just bumping updated_at.
+                    for key, value in fields.items():
+                        setattr(existing_match, key, value)
                     stats["updated"] += 1
-                    logger.debug(f"Updated match: {external_id}")
                 else:
-                    # Create new match
-                    new_match = Match(
-                        season_id=season_obj.id,
-                        external_api_id=str(external_id),
-                        match_date=game_date if game_date else datetime.utcnow(),
-                        status="scheduled",
-                    )
-                    db.add(new_match)
+                    db.add(Match(**fields))
                     stats["new"] += 1
-                    logger.debug(f"Added match: {external_id}")
 
                 stats["total"] += 1
 
