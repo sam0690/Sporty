@@ -1,0 +1,414 @@
+<title>Sporty — The Convergence Mark</title>
+<style>
+  :root{
+    --ink:#0a0a0f; --s1:#111117; --s2:#0d0d12; --s3:#1d1d26;
+    --gold:#e2c368; --gold-bright:#f0d382; --gold-dim:#b39a55;
+    --fg1:#f2f2f0; --fg2:#a0a0aa; --fg3:#71717d;
+    --football:#00ff88; --basketball:#ff6b35; --cricket:#00d4ff; --playoff:#9b59b6;
+    --hair:color-mix(in oklab, var(--gold) 22%, transparent);
+    --hair-soft:color-mix(in oklab, #ffffff 8%, transparent);
+    --maxw:1080px;
+    --display:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;
+    --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--ink);color:var(--fg1);
+    font-family:var(--display);font-weight:400;line-height:1.55;
+    letter-spacing:-.01em;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(120% 60% at 50% -10%, color-mix(in oklab,var(--gold) 6%, transparent), transparent 60%);}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  section{padding:72px 0;border-top:1px solid var(--hair-soft)}
+  section:first-of-type{border-top:0}
+
+  .eyebrow{font-family:var(--mono);font-size:12px;font-weight:500;
+    letter-spacing:.28em;text-transform:uppercase;color:var(--gold);
+    display:flex;align-items:center;gap:12px;margin:0 0 22px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--gold)}
+  h1,h2,h3{text-wrap:balance;margin:0;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+  h2{font-size:clamp(26px,4vw,40px)}
+  h3{font-size:19px;letter-spacing:-.02em}
+  p{margin:0;color:var(--fg2);max-width:64ch}
+  .lede{color:var(--fg1);font-size:clamp(16px,2vw,19px)}
+  a{color:var(--gold-bright);text-decoration:none}
+
+  /* ── Hero ─────────────────────────── */
+  .hero{min-height:74vh;display:grid;place-items:center;text-align:center;
+    padding:96px 0 84px;border-top:0}
+  .hero .mark{width:min(240px,52vw);height:auto;display:block;margin:0 auto 34px;
+    filter:drop-shadow(0 0 60px color-mix(in oklab,var(--gold) 26%,transparent))}
+  .hero h1{font-size:clamp(40px,9vw,92px);font-weight:800;letter-spacing:-.055em}
+  .hero .brand{color:var(--gold)}
+  .hero .tag{margin:20px auto 0;font-size:clamp(15px,2.2vw,20px);color:var(--fg2)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--fg3);margin-bottom:30px}
+
+  /* draw-on */
+  .mark .stroke{stroke-dasharray:230;stroke-dashoffset:230;
+    animation:draw 1.6s cubic-bezier(.5,.05,.2,1) .2s forwards}
+  .mark .knot{transform-origin:48px 48px;transform:scale(0);
+    animation:pop .5s cubic-bezier(.2,.8,.2,1.2) 1.5s forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes pop{to{transform:scale(1)}}
+
+  /* ── Layout helpers ───────────────── */
+  .grid{display:grid;gap:20px}
+  .two{grid-template-columns:1fr 1fr}
+  .three{grid-template-columns:repeat(3,1fr)}
+  .four{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:760px){.two,.three,.four{grid-template-columns:1fr 1fr}}
+  @media(max-width:480px){.two,.three,.four{grid-template-columns:1fr}}
+  .card{background:var(--s1);border:1px solid var(--hair-soft);border-radius:16px;
+    padding:22px;display:flex;flex-direction:column;gap:12px}
+  .stage{display:grid;place-items:center;border-radius:14px;min-height:150px;padding:26px}
+  .cap{font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--fg3)}
+  .cap b{color:var(--fg1);font-weight:600}
+  .lead-in{max-width:64ch;margin-bottom:38px}
+  .lead-in.lede{color:var(--fg1)}
+
+  /* swatch rows */
+  .tok{display:grid;grid-template-columns:44px 1fr auto;align-items:center;
+    gap:14px;padding:12px 0;border-bottom:1px solid var(--hair-soft)}
+  .tok:last-child{border-bottom:0}
+  .chip{width:44px;height:44px;border-radius:10px;border:1px solid var(--hair-soft)}
+  .tok .name{font-weight:600;color:var(--fg1)}
+  .tok .role{color:var(--fg3);font-size:13px}
+  .tok code{font-family:var(--mono);font-size:12.5px;color:var(--gold);
+    font-variant-numeric:tabular-nums}
+
+  .spec{font-family:var(--mono);font-size:13px;color:var(--fg2);
+    font-variant-numeric:tabular-nums;display:flex;justify-content:space-between;
+    gap:16px;padding:9px 0;border-bottom:1px solid var(--hair-soft)}
+  .spec:last-child{border-bottom:0}
+  .spec b{color:var(--fg1);font-weight:600}
+
+  /* clearspace / sizing */
+  .sizerow{display:flex;align-items:flex-end;gap:28px;flex-wrap:wrap}
+  .sizecell{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .sizecell .box{background:var(--s2);border:1px solid var(--hair-soft);
+    border-radius:8px;display:grid;place-items:center}
+
+  /* do / dont */
+  .rule{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:600}
+  .ok{color:var(--football)} .no{color:var(--danger,#ff3b5c)}
+  .mini{width:66px;height:66px}
+
+  .foot{color:var(--fg3);font-size:13px;text-align:center;padding:40px 0 60px}
+  .foot code{font-family:var(--mono);color:var(--gold-dim)}
+
+  @media (prefers-reduced-motion:reduce){
+    .mark .stroke{stroke-dashoffset:0;animation:none}
+    .mark .knot{transform:none;animation:none}
+    .conv *{animation:none!important}
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div>
+      <div class="kicker">Brand System · v1</div>
+      <svg class="mark" viewBox="0 0 96 96" aria-label="Sporty mark">
+        <path class="stroke" d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66"
+              fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/>
+        <circle class="knot" cx="48" cy="48" r="10" fill="#e2c368"/>
+      </svg>
+      <h1><span class="brand">sporty</span></h1>
+      <p class="tag">The Convergence Mark — one league, every game.</p>
+    </div>
+  </section>
+
+  <!-- CONCEPT -->
+  <section>
+    <p class="eyebrow">The idea</p>
+    <h2>Distinct sports, resolved to one point.</h2>
+    <p class="lede lead-in" style="margin-top:22px">
+      The mark is a single geometric <b style="color:var(--fg1)">S</b> whose spine passes exactly
+      through a central node — the point where football, basketball and cricket converge into one
+      squad. Read a second way, that node is a broadcast aperture: the moment the match comes into
+      focus and points move live. It is the one thing no competitor's mark can claim — fusion —
+      drawn in champagne gold on broadcast ink.
+    </p>
+    <div class="grid three">
+      <div class="card"><h3>Convergence</h3><p>Three sports, one lineup. The strokes of the S lead the eye into a single meeting point.</p></div>
+      <div class="card"><h3>Live focus</h3><p>The node reads as a lens aperture — the real-time heartbeat of match-driven scoring.</p></div>
+      <div class="card"><h3>Earned status</h3><p>Gold on ink: premium and warm, never sportsbook-loud, never fintech-cold.</p></div>
+    </div>
+  </section>
+
+  <!-- CONSTRUCTION -->
+  <section>
+    <p class="eyebrow">Construction</p>
+    <h2>Built on a point-symmetric grid.</h2>
+    <div class="grid two" style="margin-top:30px;align-items:center">
+      <div class="stage" style="background:var(--s2)">
+        <svg viewBox="0 0 96 96" width="300" height="300" aria-label="Construction grid">
+          <defs><pattern id="g" width="8" height="8" patternUnits="userSpaceOnUse">
+            <path d="M8 0H0V8" fill="none" stroke="#ffffff" stroke-opacity=".05" stroke-width="1"/>
+          </pattern></defs>
+          <rect width="96" height="96" fill="url(#g)"/>
+          <rect x="30" y="18" width="36" height="60" fill="none"
+                stroke="#e2c368" stroke-opacity=".35" stroke-width=".6" stroke-dasharray="3 3"/>
+          <line x1="48" y1="6" x2="48" y2="90" stroke="#e2c368" stroke-opacity=".3" stroke-width=".6"/>
+          <line x1="12" y1="48" x2="84" y2="48" stroke="#e2c368" stroke-opacity=".3" stroke-width=".6"/>
+          <circle cx="48" cy="48" r="18" fill="none" stroke="#00d4ff" stroke-opacity=".3" stroke-width=".6"/>
+          <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66"
+                fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/>
+          <circle cx="48" cy="48" r="10" fill="#e2c368"/>
+          <circle cx="48" cy="48" r="1.4" fill="#0a0a0f"/>
+        </svg>
+      </div>
+      <div>
+        <div class="spec"><span>Canvas</span><b>96 × 96 units</b></div>
+        <div class="spec"><span>Optical extents</span><b>x 30–66 · y 18–78</b></div>
+        <div class="spec"><span>Stroke weight</span><b>12 u · round caps</b></div>
+        <div class="spec"><span>Convergence node</span><b>r = 10 u @ (48, 48)</b></div>
+        <div class="spec"><span>Node : stroke ratio</span><b>1.67 ×</b></div>
+        <div class="spec"><span>Symmetry</span><b>180° rotational about centre</b></div>
+        <p style="margin-top:20px">The spine's midpoint lands on exactly (48, 48), so the node is
+          never approximate — it sits on the true inflection. Rotate the mark 180° and it is
+          identical. Never redraw by hand; scale the vector.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VARIANTS -->
+  <section>
+    <p class="eyebrow">Core variants</p>
+    <h2>One mark, four registers.</h2>
+    <div class="grid four" style="margin-top:30px">
+      <div class="card">
+        <div class="stage" style="background:var(--ink)">
+          <svg viewBox="0 0 96 96" class="mini" style="width:76px;height:76px">
+            <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+        </div>
+        <span class="cap"><b>Primary</b> · gold on ink</span>
+      </div>
+      <div class="card">
+        <div class="stage" style="background:var(--ink)">
+          <svg viewBox="0 0 96 96" style="width:76px;height:76px;color:#f2f2f0">
+            <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor"/></svg>
+        </div>
+        <span class="cap"><b>Mono</b> · white on ink</span>
+      </div>
+      <div class="card">
+        <div class="stage" style="background:#f2f2f0">
+          <svg viewBox="0 0 96 96" style="width:76px;height:76px;color:#0a0a0f">
+            <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor"/></svg>
+        </div>
+        <span class="cap"><b>Light</b> · ink on white</span>
+      </div>
+      <div class="card">
+        <div class="stage" style="background:var(--ink)">
+          <svg viewBox="0 0 96 96" style="width:76px;height:76px">
+            <defs><linearGradient id="c2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd86b"/><stop offset=".5" stop-color="#ff6b35"/><stop offset="1" stop-color="#9b59b6"/></linearGradient></defs>
+            <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="url(#c2)" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="url(#c2)"/></svg>
+        </div>
+        <span class="cap"><b>Champion</b> · title moments</span>
+      </div>
+    </div>
+    <p style="margin-top:22px">On white, bright gold fails contrast — switch to ink or
+      <code style="font-family:var(--mono);color:var(--gold-dim)">--accent-dim #b39a55</code>.
+      The champion gradient is reserved for trophy lifts and season awards, never the default UI.</p>
+  </section>
+
+  <!-- SPORT SKINS -->
+  <section>
+    <p class="eyebrow">Contextual skins</p>
+    <h2>The master stays gold. Context flexes.</h2>
+    <p class="lead-in" style="margin-top:16px">In-app, a sport's page may tint the icon with its
+      reserved neon token — never the master mark, never marketing. The geometry never changes; only
+      the single colour does.</p>
+    <div class="grid four">
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" style="width:70px;height:70px;color:#00ff88;filter:drop-shadow(0 0 14px color-mix(in oklab,#00ff88 55%,transparent))"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor"/></svg>
+      </div><span class="cap"><b>Football</b> · #00ff88</span></div>
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" style="width:70px;height:70px;color:#ff6b35;filter:drop-shadow(0 0 14px color-mix(in oklab,#ff6b35 55%,transparent))"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor"/></svg>
+      </div><span class="cap"><b>Basketball</b> · #ff6b35</span></div>
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" style="width:70px;height:70px;color:#00d4ff;filter:drop-shadow(0 0 14px color-mix(in oklab,#00d4ff 55%,transparent))"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor"/></svg>
+      </div><span class="cap"><b>Cricket</b> · #00d4ff</span></div>
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" style="width:70px;height:70px;color:#9b59b6;filter:drop-shadow(0 0 14px color-mix(in oklab,#9b59b6 55%,transparent))"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="currentColor"/></svg>
+      </div><span class="cap"><b>Playoff</b> · #9b59b6</span></div>
+    </div>
+  </section>
+
+  <!-- LOCKUP + CLEARSPACE + SIZING -->
+  <section>
+    <p class="eyebrow">Lockup, clear space &amp; scale</p>
+    <h2>Room to breathe, legible to 16px.</h2>
+    <div class="grid two" style="margin-top:30px;align-items:stretch">
+      <div class="card">
+        <div class="stage" style="background:var(--s2);min-height:170px">
+          <!-- lockup with clearspace guides = node radius on all sides -->
+          <svg viewBox="0 0 320 96" style="width:100%;max-width:320px">
+            <rect x="1" y="1" width="318" height="94" fill="none" stroke="#e2c368" stroke-opacity=".25" stroke-dasharray="4 4"/>
+            <path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/>
+            <circle cx="48" cy="48" r="10" fill="#e2c368"/>
+            <text x="108" y="63" font-family="var(--display)" font-size="46" font-weight="700" letter-spacing="-2" fill="#f2f2f0">sporty</text>
+          </svg>
+        </div>
+        <span class="cap">Horizontal lockup — clear space = <b>one node radius (10u)</b> on every side.</span>
+      </div>
+      <div class="card">
+        <div class="stage" style="background:var(--s2);min-height:170px">
+          <div class="sizerow" style="justify-content:center">
+            <div class="sizecell"><div class="box" style="width:48px;height:48px">
+              <svg viewBox="0 0 96 96" width="36" height="36"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+            </div><span class="cap">48</span></div>
+            <div class="sizecell"><div class="box" style="width:32px;height:32px">
+              <svg viewBox="0 0 96 96" width="24" height="24"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+            </div><span class="cap">32</span></div>
+            <div class="sizecell"><div class="box" style="width:24px;height:24px">
+              <svg viewBox="0 0 96 96" width="18" height="18"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+            </div><span class="cap">24</span></div>
+            <div class="sizecell"><div class="box" style="width:16px;height:16px">
+              <svg viewBox="0 0 96 96" width="13" height="13"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="13" stroke-linecap="round"/><circle cx="48" cy="48" r="11" fill="#e2c368"/></svg>
+            </div><span class="cap">16</span></div>
+          </div>
+        </div>
+        <span class="cap">Favicon ladder. At <b>16px</b> the stroke thickens to 13u so the node
+          survives — the mark never disappears.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOTION -->
+  <section>
+    <p class="eyebrow">Motion</p>
+    <h2>It resolves — then it pulses on the play.</h2>
+    <p class="lead-in" style="margin-top:16px">Two states only. On load, three sport strokes slide
+      into the node and settle to gold (below). Live, on a goal / basket / wicket, the node gives a
+      single gold pulse. Motion is the exception, not the ambience.</p>
+    <div class="stage conv" style="background:var(--s2);min-height:230px">
+      <svg viewBox="0 0 96 96" style="width:150px;height:150px" aria-label="Convergence animation">
+        <style>
+          @keyframes cf{0%{transform:translate(-34px,-26px);opacity:0}
+            34%{opacity:1}60%,100%{transform:translate(0,0);opacity:0}}
+          @keyframes cb{0%{transform:translate(34px,-30px);opacity:0}
+            40%{opacity:1}66%,100%{transform:translate(0,0);opacity:0}}
+          @keyframes cc{0%{transform:translate(30px,30px);opacity:0}
+            46%{opacity:1}72%,100%{transform:translate(0,0);opacity:0}}
+          @keyframes ns{0%,58%{transform:scale(.2);opacity:0}
+            72%{transform:scale(1.25);opacity:1}82%,100%{transform:scale(1);opacity:1}}
+          @keyframes ss{0%,60%{stroke-dashoffset:230}92%,100%{stroke-dashoffset:0}}
+          .conv .df{fill:#00ff88;animation:cf 3.4s ease-in-out infinite}
+          .conv .db{fill:#ff6b35;animation:cb 3.4s ease-in-out infinite}
+          .conv .dc{fill:#00d4ff;animation:cc 3.4s ease-in-out infinite}
+          .conv .path{stroke-dasharray:230;animation:ss 3.4s ease-in-out infinite}
+          .conv .node{transform-origin:48px 48px;animation:ns 3.4s ease-in-out infinite}
+        </style>
+        <path class="path" d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66"
+              fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/>
+        <circle class="df" cx="48" cy="48" r="6"/>
+        <circle class="db" cx="48" cy="48" r="6"/>
+        <circle class="dc" cx="48" cy="48" r="6"/>
+        <circle class="node" cx="48" cy="48" r="10" fill="#e2c368"/>
+      </svg>
+    </div>
+    <div class="spec" style="margin-top:20px"><span>Resolve (load)</span><b>~1.4s · ease-in-out · once</b></div>
+    <div class="spec"><span>Pulse (live event)</span><b>320ms · scale 1 → 1.25 → 1</b></div>
+    <div class="spec"><span>Reduced motion</span><b>static gold mark, no play</b></div>
+  </section>
+
+  <!-- COLOR -->
+  <section>
+    <p class="eyebrow">Colour system</p>
+    <h2>Ink &amp; Gold — straight from the tokens.</h2>
+    <div class="grid two" style="margin-top:28px">
+      <div class="card">
+        <span class="cap" style="margin-bottom:6px">Brand core</span>
+        <div class="tok"><span class="chip" style="background:#e2c368"></span><span><span class="name">Champagne Gold</span><br><span class="role">Primary mark · accent</span></span><code>#e2c368</code></div>
+        <div class="tok"><span class="chip" style="background:#f0d382"></span><span><span class="name">Gold Bright</span><br><span class="role">Hover · interactive lift</span></span><code>#f0d382</code></div>
+        <div class="tok"><span class="chip" style="background:#b39a55"></span><span><span class="name">Gold Dim</span><br><span class="role">On-light · de-emphasis</span></span><code>#b39a55</code></div>
+        <div class="tok"><span class="chip" style="background:#0a0a0f"></span><span><span class="name">Ink</span><br><span class="role">Page floor · brand home</span></span><code>#0a0a0f</code></div>
+        <div class="tok"><span class="chip" style="background:#f2f2f0"></span><span><span class="name">Bone</span><br><span class="role">Text on ink</span></span><code>#f2f2f0</code></div>
+      </div>
+      <div class="card">
+        <span class="cap" style="margin-bottom:6px">Sport signals — accent only</span>
+        <div class="tok"><span class="chip" style="background:#00ff88"></span><span><span class="name">Football</span><br><span class="role">Pitch green</span></span><code>#00ff88</code></div>
+        <div class="tok"><span class="chip" style="background:#ff6b35"></span><span><span class="name">Basketball</span><br><span class="role">Court orange</span></span><code>#ff6b35</code></div>
+        <div class="tok"><span class="chip" style="background:#00d4ff"></span><span><span class="name">Cricket</span><br><span class="role">Sky cyan</span></span><code>#00d4ff</code></div>
+        <div class="tok"><span class="chip" style="background:#9b59b6"></span><span><span class="name">Playoff</span><br><span class="role">Knockout purple</span></span><code>#9b59b6</code></div>
+        <div class="tok"><span class="chip" style="background:linear-gradient(135deg,#ffd86b,#ff6b35 50%,#9b59b6)"></span><span><span class="name">Champion</span><br><span class="role">Title gradient</span></span><code>gradient</code></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPE -->
+  <section>
+    <p class="eyebrow">Typography</p>
+    <h2>Geometric grotesque, set quiet.</h2>
+    <div class="grid two" style="margin-top:28px;align-items:start">
+      <div class="card">
+        <div style="font-size:60px;font-weight:800;letter-spacing:-.05em;color:var(--fg1);line-height:1">sporty</div>
+        <div style="font-weight:700;letter-spacing:-.03em;font-size:22px;margin-top:4px">Aa Gg Ry 0189</div>
+        <span class="cap">Display / wordmark — lowercase, weight 800, tracking −5%. The gold carries
+          the premium; the type stays calm.</span>
+      </div>
+      <div class="card">
+        <div class="spec"><span>Wordmark</span><b>Geometric grotesque · 500–800</b></div>
+        <div class="spec"><span>Case</span><b>lowercase</b></div>
+        <div class="spec"><span>Tracking</span><b>−1% to −5%</b></div>
+        <div class="spec"><span>Corners</span><b>low radius — engineered, not soft</b></div>
+        <div class="spec"><span>Data / labels</span><b>mono · .28em · UPPERCASE</b></div>
+        <p style="margin-top:14px">Production face: a <b style="color:var(--fg1)">General Sans / Söhne
+          class</b> geometric grotesque, outlined in the final lockup. This page falls back to the
+          system geometric stack — final artwork ships the licensed face as outlines.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MISUSE -->
+  <section>
+    <p class="eyebrow">Guardrails</p>
+    <h2>Protect the mark.</h2>
+    <div class="grid three" style="margin-top:28px">
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" class="mini"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+      </div><span class="rule ok">✓ Gold on ink, full clear space</span></div>
+
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" class="mini" style="transform:skewX(-12deg)"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+      </div><span class="rule no">✗ Never skew, rotate or stretch</span></div>
+
+      <div class="card"><div class="stage" style="background:#2a6cff">
+        <svg viewBox="0 0 96 96" class="mini"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+      </div><span class="rule no">✗ No off-brand backgrounds</span></div>
+
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" class="mini" style="filter:drop-shadow(2px 3px 0 #ff3b5c)"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#e2c368"/></svg>
+      </div><span class="rule no">✗ No drop shadows or bevels</span></div>
+
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" class="mini"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#e2c368" stroke-width="4" stroke-linecap="round"/><circle cx="48" cy="48" r="4" fill="#e2c368"/></svg>
+      </div><span class="rule no">✗ Never alter stroke or node weight</span></div>
+
+      <div class="card"><div class="stage" style="background:var(--ink)">
+        <svg viewBox="0 0 96 96" class="mini"><path d="M66 30 C66 18 30 18 30 34 C30 46 66 50 66 62 C66 78 30 78 30 66" fill="none" stroke="#00ff88" stroke-width="12" stroke-linecap="round"/><circle cx="48" cy="48" r="10" fill="#ff6b35"/></svg>
+      </div><span class="rule no">✗ Node &amp; stroke are always one colour</span></div>
+    </div>
+  </section>
+
+  <!-- FILES -->
+  <section>
+    <p class="eyebrow">Delivered assets</p>
+    <h2>Vector source, ready to ship.</h2>
+    <div class="grid two" style="margin-top:26px">
+      <div class="card"><div class="spec"><span>Master icon</span><b>brand/icon.svg</b></div>
+        <div class="spec"><span>Mono (currentColor)</span><b>brand/icon-mono.svg</b></div>
+        <div class="spec"><span>App / favicon tile</span><b>brand/app-icon.svg</b></div></div>
+      <div class="card"><div class="spec"><span>Horizontal lockup</span><b>brand/logo.svg</b></div>
+        <div class="spec"><span>Champion gradient</span><b>brand/icon-champion.svg</b></div>
+        <div class="spec"><span>Sport skins</span><b>icon-mono.svg + color token</b></div></div>
+    </div>
+  </section>
+
+  <p class="foot">Sporty Brand System v1 · The Convergence Mark · palette from
+    <code>globals.css</code> "Ink &amp; Gold" — this document is set in the brand's native dark.</p>
+
+</div>

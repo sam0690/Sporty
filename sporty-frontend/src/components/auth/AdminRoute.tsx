@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { ROUTES } from "@/lib/route.config";
+import { AuthGateSpinner } from "./AuthGateSpinner";
 import { hasMinRole, type UserRole } from "@/lib/roles";
 
 type AdminRouteProps = {
@@ -29,15 +30,13 @@ export function AdminRoute({
   }, [isAllowed, isLoading, redirectTo, router]);
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-1-50">
-        <div className="h-8 w-8 animate-spin rounded-[3px] border-2 border-primary border-t-transparent" />
-      </div>
-    );
+    return <AuthGateSpinner />;
   }
 
   if (!isAllowed) {
-    return null;
+    // Spinner, not null: the redirect above is in flight, and a null render
+    // here is a blank page the user is stuck on if it never lands.
+    return <AuthGateSpinner />;
   }
 
   return <>{children}</>;
