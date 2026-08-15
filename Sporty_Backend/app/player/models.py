@@ -156,6 +156,20 @@ class Player(Base):
         Numeric(precision=10, scale=2), nullable=False, index=True
     )
 
+    # The price this player was seeded at for the season — the fixed point
+    # repricing is allowed to drift away from, bounded by
+    # MAX_DRIFT_FROM_ANCHOR in app/services/pricing/repricing.py. Distinct
+    # from cost, which moves daily. NULL = never seeded, in which case
+    # repricing falls back to the raw policy min/max bounds.
+    #
+    # Exists because repricing accumulates deltas: without a fixed reference
+    # a sustained above-baseline signal walks price to max_cost one step per
+    # run, which is how 165 football players ended up pinned at exactly 17.0
+    # in 2026-07. Written by scripts/reseed_prices_from_fpl.py.
+    anchor_cost: Mapped[Decimal | None] = mapped_column(
+        Numeric(precision=10, scale=2), nullable=True
+    )
+
     # Can this player be picked / transferred in?
     # False = injured, suspended, or removed from the game.
     is_available: Mapped[bool] = mapped_column(Boolean, default=True)

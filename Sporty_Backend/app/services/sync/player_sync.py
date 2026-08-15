@@ -24,9 +24,41 @@ from app.external_apis.cricket_api import CricketAPIClient
 from app.external_apis.football_api import FootballAPIClient
 from app.league.models import Sport
 from app.player.models import Player, RealTeam
+from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
 
 
-def _ensure_real_team(db: Session, sport_id, team_name: str, external_api_id: str | None = None) -> RealTeam:
+# API-Football reports long-form positions; the rest of the app (squad rules,
+# position minimums, ILP auto-pick, lineup formation) speaks the four-letter
+# codes. Writing the raw value straight onto Player.position silently breaks
+# every one of those, so it is mapped here — the one place the live sync
+# writes positions. Several scripts/ one-offs carry their own copy of this
+# map; they are not worth churning, but new code should use this one.
+FOOTBALL_POSITION_MAP = {
+    "Goalkeeper": "GKP",
+    "Defender": "DEF",
+    "Midfielder": "MID",
+    "Attacker": "FWD",
+}
+
+
+def _football_position(raw: str | None) -> str | None:
+    """Normalise an API-Football position, or None if unrecognised.
+
+    None means "leave whatever is already stored" — an unknown upstream label
+    must never overwrite a good code with junk.
+    """
+    if not raw:
+        return None
+    return FOOTBALL_POSITION_MAP.get(raw.strip())
+
+
+def _ensure_real_team(
+    db: Session,
+    sport_id,
+    team_name: str,
+    external_api_id: str | None = None,
+    competition: str | None = None,
+) -> RealTeam:
     team_name = team_name.strip() or "Unknown"
     team = (
         db.query(RealTeam)
@@ -38,10 +70,15 @@ def _ensure_real_team(db: Session, sport_id, team_name: str, external_api_id: st
             team.external_api_id = external_api_id
         return team
 
+    # A club created without a competition tag drops every one of its players
+    # out of the competition-scoped fantasy pools (app/league/competition_scope
+    # .py), silently — they simply stop being selectable. Callers that know
+    # which competition they are syncing must pass it.
     team = RealTeam(
         sport_id=sport_id,
         external_api_id=external_api_id,
         name=team_name,
+        competition=competition,
     )
     db.add(team)
     db.flush()
@@ -144,6 +181,11 @@ async def sync_football_players(
         print("❌ Football sport not found in database. Create it first.")
         return
 
+    # So any club this run has to create lands in the right fantasy pool
+    # instead of being tagged NULL and disappearing from it.
+    competition = FOOTBALL_COMPETITIONS.get(league_id)
+    competition_tag = competition.tag if competition else None
+
     # Fetch from API
     client = FootballAPIClient()
 
@@ -175,9 +217,12 @@ async def sync_football_players(
                 name = player_info.get("name")
                 photo = player_info.get("photo")
                 position = stats.get("games", {}).get("position", "Unknown")
+                mapped_position = _football_position(position)
                 team = stats.get("team", {}).get("name", "Unknown")
 
-                team_row = _ensure_real_team(db, football.id, team)
+                team_row = _ensure_real_team(
+                    db, football.id, team, competition=competition_tag
+                )
 
                 if not player_id or not name:
                     continue
@@ -194,7 +239,8 @@ async def sync_football_players(
                     existing.name = name
                     existing.real_team = team
                     existing.real_team_id = team_row.id
-                    existing.position = position
+                    if mapped_position:
+                        existing.position = mapped_position
                     existing.is_available = True
                     existing.photo_url = photo or existing.photo_url
                     total_updated += 1
@@ -208,7 +254,7 @@ async def sync_football_players(
                         photo_url=photo,
                         real_team=team,
                         real_team_id=team_row.id,
-                        position=position,
+                        position=mapped_position or "MID",
                         cost=Decimal("7.0"),  # Default cost
                         is_available=True,
                     )

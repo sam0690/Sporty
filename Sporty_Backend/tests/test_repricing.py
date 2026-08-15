@@ -8,7 +8,7 @@ import sys
 import tempfile
 import uuid
 from contextlib import contextmanager
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -68,17 +68,17 @@ def _sport(db, name: str) -> Sport:
     db.add(s); db.flush(); return s
 
 
-def _season(db, sport: Sport) -> Season:
+def _season(db, sport: Sport, start_date: date = date(2026, 1, 1),
+            end_date: date = date(2026, 12, 31)) -> Season:
     s = Season(sport_id=sport.id, name=f"S-{uuid.uuid4().hex[:6]}",
-               start_date=date(2026, 1, 1), end_date=date(2026, 12, 31))
+               start_date=start_date, end_date=end_date)
     db.add(s); db.flush(); return s
 
 
-def _window(db, season: Season, end_at: datetime) -> TransferWindow:
-    from datetime import timedelta
+def _window(db, season: Season, end_at: datetime, number: int = 1) -> TransferWindow:
     start_at = end_at - timedelta(days=6)
     w = TransferWindow(
-        season_id=season.id, number=1,
+        season_id=season.id, number=number,
         start_at=start_at, end_at=end_at,
         transfer_deadline_at=start_at,
         lineup_deadline_at=start_at + timedelta(days=1),
@@ -355,3 +355,104 @@ def test_basketball_post_fix_scale_gives_sane_delta() -> None:
         delta = abs(player.cost - Decimal("13.46"))
         assert delta < policy.max_step_per_run
         assert player.cost == Decimal("13.80")
+
+
+def test_inactive_season_windows_are_ignored() -> None:
+    """Regression for the 2026-07 ceiling pile-up.
+
+    The CSV importer mints synthetic `dataset-import-*` seasons dated 2098/2099
+    holding season aggregates in a single gameweek row. Window selection used to
+    be a bare `ORDER BY end_at DESC LIMIT n`, so those windows won every run and
+    real gameweeks were never priced. Only active-season windows may count."""
+    with session_scope() as db:
+        sport = _sport(db, "football")
+
+        live_season = _season(db, sport)
+        live_window = _window(db, live_season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+
+        junk_season = _season(db, sport, start_date=date(2099, 8, 1),
+                              end_date=date(2100, 5, 31))
+        junk_season.name = "dataset-import-2025-26"
+        junk_season.is_active = False
+        db.flush()
+        # Dated far in the future, exactly like the real rows.
+        junk_window = _window(db, junk_season, datetime(2099, 8, 2, tzinfo=timezone.utc))
+
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("8.00"))
+        _stat(db, player, live_window, Decimal("6.00"))       # exactly baseline -> no move
+        _stat(db, player, junk_window, Decimal("144.00"))     # season aggregate
+
+        recalculate_player_prices(db, lookback_windows=3)
+
+        db.refresh(player)
+        # Had the junk window been included it would dominate the weighting and
+        # slam the player into the +1.50 step cap.
+        assert player.cost == Decimal("8.00")
+
+
+def test_implausible_gameweek_rows_are_skipped() -> None:
+    """A season aggregate sitting inside a legitimate window is not priced in."""
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("8.00"))
+        _stat(db, player, window, Decimal("144.00"))
+
+        result = recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        assert player.cost == Decimal("8.00")
+        assert result["evaluated"] == 0
+
+
+def test_anchor_bounds_total_drift_so_price_cannot_ratchet_to_ceiling() -> None:
+    """The core regression: a sustained above-baseline signal must converge.
+
+    Before the anchor bound, each run added up to max_step_per_run against the
+    same unchanged form, so a player walked from 8.95 to the 17.0 ceiling in
+    days — this is precisely what happened to Alex Iwobi (+1.50/day for six
+    consecutive days). Drift from anchor_cost is now bounded."""
+    from app.services.pricing.repricing import MAX_DRIFT_FROM_ANCHOR
+
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("8.00"))
+        player.anchor_cost = Decimal("8.00")
+        db.flush()
+
+        policy = SPORT_POLICIES["football"]
+
+        # Twenty daily runs, each with a fresh window carrying a strong but
+        # entirely plausible per-gameweek score. Distinct windows keep the
+        # unchanged-signal guard from masking the ratchet we're testing.
+        for day in range(20):
+            window = _window(db, season, datetime(2026, 3, 1, tzinfo=timezone.utc)
+                             + timedelta(days=day), number=day + 1)
+            _stat(db, player, window, Decimal("20.00"))
+            recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        assert player.cost <= Decimal("8.00") + MAX_DRIFT_FROM_ANCHOR
+        assert player.cost < policy.max_cost
+
+
+def test_anchor_absent_falls_back_to_policy_bounds() -> None:
+    """Players never seeded keep the old behaviour — the column is additive."""
+    with session_scope() as db:
+        sport = _sport(db, "football")
+        season = _season(db, sport)
+        window = _window(db, season, datetime(2026, 2, 1, tzinfo=timezone.utc))
+        rt = _real_team(db, sport)
+        player = _player(db, sport, rt, cost=Decimal("8.00"))
+        assert player.anchor_cost is None
+        _stat(db, player, window, Decimal("20.00"))
+
+        recalculate_player_prices(db, lookback_windows=1)
+
+        db.refresh(player)
+        assert player.cost > Decimal("8.00")

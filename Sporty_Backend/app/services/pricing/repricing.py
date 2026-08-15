@@ -14,7 +14,7 @@ import uuid
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
-from app.league.models import Transfer, TransferWindow
+from app.league.models import Season, Transfer, TransferWindow
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 
 
@@ -65,6 +65,25 @@ SPORT_POLICIES: dict[str, PricingPolicy] = {
 }
 
 
+# A player may drift at most this far from their anchor_cost (the price they
+# were seeded at for the season). The per-run step is already bounded, but a
+# sustained above-baseline signal used to walk price to max_cost one step at a
+# time — that is what pinned 165 football players at the 17.0 ceiling in
+# 2026-07. Bounding total drift makes the runaway structurally impossible
+# rather than merely unlikely, so a wrong input produces a wrong-but-stable
+# price instead of a ceiling pile-up. Ignored for players with no anchor.
+MAX_DRIFT_FROM_ANCHOR = Decimal("3.0")
+
+# Defensive backstop on stat rows. A single gameweek cannot plausibly produce
+# these; values beyond them mean season aggregates have been written into a
+# gameweek row, which is exactly how the 2026-07 incident started (the CSV
+# importer's dataset-import seasons carried 120-minute, 144-point rows).
+# The active-season filter below is the real fix — this only stops a
+# malformed row inside a legitimate window from being priced in.
+MAX_PLAUSIBLE_GAMEWEEK_MINUTES = 120
+MAX_PLAUSIBLE_GAMEWEEK_POINTS = Decimal("60")
+
+
 def _clamp(value: Decimal, lower: Decimal, upper: Decimal) -> Decimal:
     return max(lower, min(upper, value))
 
@@ -72,6 +91,19 @@ def _clamp(value: Decimal, lower: Decimal, upper: Decimal) -> Decimal:
 def _quantize_cost(value: Decimal) -> Decimal:
     # Use 0.1 increments to keep market prices readable in UI.
     return value.quantize(Decimal("0.10"), rounding=ROUND_HALF_UP)
+
+
+def _is_plausible_gameweek(
+    fantasy_points: Decimal | None, minutes_played: int | None
+) -> bool:
+    """Reject stat rows that can only be season aggregates, not one gameweek."""
+    if fantasy_points is None:
+        return False
+    if abs(fantasy_points) > MAX_PLAUSIBLE_GAMEWEEK_POINTS:
+        return False
+    if minutes_played is not None and minutes_played > MAX_PLAUSIBLE_GAMEWEEK_MINUTES:
+        return False
+    return True
 
 
 def _window_weights(window_ids: list[uuid.UUID]) -> dict[uuid.UUID, Decimal]:
@@ -129,8 +161,15 @@ def recalculate_player_prices(
     if lookback_windows < 1:
         raise ValueError("lookback_windows must be >= 1")
 
+    # Only windows belonging to an ACTIVE season count. Without this join the
+    # query is "the N windows with the greatest end_at", which the CSV
+    # importer's synthetic dataset-import seasons win permanently — their
+    # windows are dated 2099/2100, so they sorted to the top on every run and
+    # real gameweeks were never seen. See scripts/purge_dataset_import_stats.py.
     recent_windows = (
         db.query(TransferWindow)
+        .join(Season, Season.id == TransferWindow.season_id)
+        .filter(Season.is_active.is_(True))
         .order_by(TransferWindow.end_at.desc())
         .limit(lookback_windows)
         .all()
@@ -153,6 +192,7 @@ def recalculate_player_prices(
             PlayerGameweekStat.player_id,
             PlayerGameweekStat.transfer_window_id,
             PlayerGameweekStat.fantasy_points,
+            PlayerGameweekStat.minutes_played,
         )
         .filter(PlayerGameweekStat.transfer_window_id.in_(window_ids))
         .all()
@@ -161,9 +201,11 @@ def recalculate_player_prices(
     weighted_points_sum: dict[uuid.UUID, Decimal] = defaultdict(lambda: Decimal("0"))
     weighted_total: dict[uuid.UUID, Decimal] = defaultdict(lambda: Decimal("0"))
 
-    for player_id, transfer_window_id, fantasy_points in stat_rows:
+    for player_id, transfer_window_id, fantasy_points, minutes_played in stat_rows:
         weight = weights.get(transfer_window_id)
         if weight is None:
+            continue
+        if not _is_plausible_gameweek(fantasy_points, minutes_played):
             continue
         weighted_points_sum[player_id] += fantasy_points * weight
         weighted_total[player_id] += weight
@@ -251,8 +293,16 @@ def recalculate_player_prices(
             policy.max_step_per_run,
         )
 
+        lower_bound = policy.min_cost
+        upper_bound = policy.max_cost
+        if player.anchor_cost is not None:
+            # Bound total drift, not just the per-run step. Without this a
+            # sustained above-baseline signal reaches max_cost by repetition.
+            lower_bound = max(lower_bound, player.anchor_cost - MAX_DRIFT_FROM_ANCHOR)
+            upper_bound = min(upper_bound, player.anchor_cost + MAX_DRIFT_FROM_ANCHOR)
+
         next_cost = _quantize_cost(
-            _clamp(player.cost + bounded_delta, policy.min_cost, policy.max_cost)
+            _clamp(player.cost + bounded_delta, lower_bound, upper_bound)
         )
 
         if next_cost == player.cost:

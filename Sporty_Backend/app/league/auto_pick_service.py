@@ -23,6 +23,7 @@ from app.league.models import (
     League,
     LeagueSport,
     LeagueStatus,
+    Season,
     TeamPlayer,
     TransferWindow,
 )
@@ -126,12 +127,24 @@ def _player_value_map(db: Session, player_ids: list[uuid.UUID]) -> dict[uuid.UUI
     if not player_ids:
         return {}
 
+    # Restricted to ACTIVE seasons for the same reason repricing is: the CSV
+    # importer's dataset-import seasons hold season aggregates in a single
+    # gameweek row (120 minutes, up to 144 points), and averaging those in
+    # ranks players by career output rather than current form.
     rows = (
         db.query(
             PlayerGameweekStat.player_id.label("player_id"),
             func.avg(PlayerGameweekStat.fantasy_points).label("avg_points"),
         )
-        .filter(PlayerGameweekStat.player_id.in_(player_ids))
+        .join(
+            TransferWindow,
+            TransferWindow.id == PlayerGameweekStat.transfer_window_id,
+        )
+        .join(Season, Season.id == TransferWindow.season_id)
+        .filter(
+            PlayerGameweekStat.player_id.in_(player_ids),
+            Season.is_active.is_(True),
+        )
         .group_by(PlayerGameweekStat.player_id)
         .all()
     )
