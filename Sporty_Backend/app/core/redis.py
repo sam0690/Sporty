@@ -105,16 +105,17 @@ def cache_get(key: str) -> Optional[dict]:
     Returns:
         Parsed JSON object or None if not found
     """
+    namespace = key.split(":", 1)[0]
     try:
         redis = get_redis()
         value = redis.get(key)
         if value:
-            cache_ops_total.labels(result="hit").inc()
+            cache_ops_total.labels(cache=namespace, result="hit").inc()
             return json.loads(value)
     except Exception as e:
         logger.warning(f"⚠️  Cache get failed for key '{key}': {e}")
 
-    cache_ops_total.labels(result="miss").inc()
+    cache_ops_total.labels(cache=namespace, result="miss").inc()
     return None
 
 
@@ -170,10 +171,19 @@ def cache_pattern_delete(pattern: str) -> int:
     """
     try:
         redis = get_redis()
-        keys = redis.keys(pattern)
-        if keys:
-            return redis.delete(*keys)
-        return 0
+        # SCAN, not KEYS: KEYS blocks the entire Redis server for the duration
+        # of the scan. Deletes are batched so a large match set is a handful of
+        # round-trips rather than one per key.
+        deleted = 0
+        batch: list[str] = []
+        for key in redis.scan_iter(match=pattern, count=500):
+            batch.append(key)
+            if len(batch) >= 500:
+                deleted += redis.delete(*batch)
+                batch.clear()
+        if batch:
+            deleted += redis.delete(*batch)
+        return deleted
     except Exception as e:
         logger.warning(f"⚠️  Cache pattern delete failed for pattern '{pattern}': {e}")
         return 0

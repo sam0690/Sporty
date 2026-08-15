@@ -144,7 +144,8 @@ def _capture_scoring_calls(monkeypatch) -> list[uuid.UUID]:
     monkeypatch.setattr(scoring_engine, "upsert_team_weekly_scores", fake_upsert)
     monkeypatch.setattr(scoring_engine, "apply_rankings_for_league_window",
                         lambda db, *, league_id, transfer_window_id: None)
-    monkeypatch.setattr(scoring_engine, "cache_delete", lambda key: None)
+    monkeypatch.setattr(scoring_engine.read_cache, "bust_league", lambda league_id: None)
+    monkeypatch.setattr(scoring_engine.player_read_cache, "bust_all", lambda: None)
     return seen
 
 

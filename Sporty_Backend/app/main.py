@@ -501,8 +501,15 @@ async def _record_query_count(request, call_next):
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Middleware (order matters — outermost first)
+# Middleware (order matters)
 # ═══════════════════════════════════════════════════════════════════════════════
+# Starlette's add_middleware() inserts at the FRONT of the stack, so the LAST
+# one registered here is the OUTERMOST at runtime. The numbering below is
+# registration order; actual request order is the reverse:
+#   RateLimit → CSRF → CORS → SecurityHeaders → GZip → route
+# In particular SecurityHeaders sees the response after the route has set its
+# own headers, which is what lets a route opt out of the blanket `no-store`
+# (see app/core/http_cache.py).
 
 # 0. Response compression — shrinks large JSON payloads (league lists, player
 # lists, leaderboards) ~70-80% over the wire. minimum_size skips tiny bodies

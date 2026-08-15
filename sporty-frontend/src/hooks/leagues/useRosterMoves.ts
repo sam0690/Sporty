@@ -79,6 +79,14 @@ export const useClaimFreeAgent = (leagueId: string) => {
         queryClient.invalidateQueries({
           queryKey: ["leagues", leagueId, "my-team"],
         });
+        // A claim can resolve a pending waiver and always changes the roster
+        // other members see when building a trade.
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "waivers"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "trade-rosters"],
+        });
       },
       successMessage: "Roster move complete!",
     },
@@ -144,6 +152,11 @@ export const useReorderWaiverClaims = (leagueId: string) => {
       onSuccess: () => {
         queryClient.invalidateQueries({
           queryKey: ["leagues", leagueId, "waivers"],
+        });
+        // Reordering is precisely what changes this — and it is a separate
+        // key, not a child of ["leagues", id, "waivers"].
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "waiver-order"],
         });
       },
       successMessage: "Priority updated",
@@ -230,6 +243,17 @@ export const useTradeAction = (leagueId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "trades"] });
       queryClient.invalidateQueries({ queryKey: ["leagues", leagueId, "my-team"] });
+      // An accepted trade moves players between two rosters, which changes
+      // both squads' projected strength and any H2H matchup built from them.
+      queryClient.invalidateQueries({
+        queryKey: ["leagues", leagueId, "trade-rosters"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["leagues", leagueId, "power-rankings"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["leagues", leagueId, "matchups"],
+      });
     },
     successMessage: "Trade updated",
   });

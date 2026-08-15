@@ -25,7 +25,8 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
-from app.core.redis import cache_get, cache_set, get_redis
+from app.core import reference_cache
+from app.core.redis import get_redis
 from app.database import get_db
 from app.league.dependencies import require_league_member, require_league_owner
 from app.league import services as league_service
@@ -266,7 +267,15 @@ def get_seasons(
     _current_user: User = Depends(get_current_active_user),
 ):
     """Return all active seasons for league creation."""
-    return league_service.get_active_seasons(db)
+    cached = reference_cache.get_cached(reference_cache.seasons_key())
+    if cached is not None:
+        return cached
+
+    result = [
+        SeasonResponse.model_validate(s) for s in league_service.get_active_seasons(db)
+    ]
+    reference_cache.set_cached(reference_cache.seasons_key(), result)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -284,7 +293,15 @@ def get_sports(
     _current_user: User = Depends(get_current_active_user),
 ):
     """Return all active sports available on the platform."""
-    return league_service.get_active_sports(db)
+    cached = reference_cache.get_cached(reference_cache.sports_key())
+    if cached is not None:
+        return cached
+
+    result = [
+        SportResponse.model_validate(s) for s in league_service.get_active_sports(db)
+    ]
+    reference_cache.set_cached(reference_cache.sports_key(), result)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

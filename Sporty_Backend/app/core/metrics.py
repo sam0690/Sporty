@@ -69,6 +69,10 @@ db_queries_per_request = Histogram(
 
 cache_ops_total = Counter(
     "sporty_cache_ops_total",
-    "Redis read-cache lookups by outcome",
-    ["result"],  # hit | miss
+    "Redis read-cache lookups by cache namespace and outcome",
+    # `cache` is the key's prefix (league_read | player_read | reference |
+    # api-football | …), derived in cache_get. Without it this is a single
+    # blended hit ratio across every cache in the app, which tells you nothing
+    # about which one is actually working.
+    ["cache", "result"],  # result: hit | miss
 )

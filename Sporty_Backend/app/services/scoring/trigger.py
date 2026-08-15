@@ -6,7 +6,7 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.core.redis import cache_delete, cache_pattern_delete, get_redis
+from app.core.redis import get_redis
 from app.services.scoring.window_locator import find_transfer_window_ids_for_datetime
 
 
@@ -21,7 +21,8 @@ def enqueue_scoring_for_finished_match(
     league_id: UUID | None = None,
     throttle_seconds: int = 300,
 ) -> int:
-    # Algorithm: locate transfer windows containing match_date, enqueue score.transfer_window(window_id), and invalidate leaderboard cache keys for that window.
+    # Algorithm: locate transfer windows containing match_date and enqueue
+    # score.transfer_window(window_id) for each.
     # celery_app is imported lazily: it pulls in the task modules (incl.
     # match_sync, which imports this module at top level), so a module-level
     # import here creates a circular import whenever `trigger` is the entry
@@ -70,10 +71,10 @@ def enqueue_scoring_for_finished_match(
                 pass
             continue
 
-        if league_id is not None:
-            cache_delete(f"leaderboard:{league_id}:{window_id}")
-        else:
-            cache_pattern_delete(f"leaderboard:*:{window_id}")
+        # No cache bust here: this runs *before* the enqueued task scores the
+        # window, so dropping the leaderboard now just lets the next reader
+        # repopulate it with the same stale data. The bust that matters happens
+        # after the write, in engine.py / ranking.py.
 
     if enqueued:
         logger.info("Enqueued scoring for %d transfer windows", enqueued)

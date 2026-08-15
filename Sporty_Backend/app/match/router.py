@@ -45,6 +45,7 @@ router = APIRouter(tags=["Matches"])
 # importer and feeder registration share the exact same canonicalisation
 # (re-exported here for existing importers).
 from app.core.team_names import TEAM_NAME_ALIASES as MATCH_TEAM_NAME_ALIASES
+from app.core.http_cache import public_cache
 from app.core.redis import LIVE_FAVOURITES_CACHE_KEY, cache_get, cache_set
 
 
@@ -92,6 +93,7 @@ def _to_match_response(
     "/matches",
     response_model=MatchListResponse,
     summary="List fixtures (public)",
+    dependencies=[Depends(public_cache(30))],
 )
 def list_matches(
     status: str | None = Query(
@@ -242,6 +244,9 @@ def build_fixtures(db: Session, date_str: str, sport_name: str | None) -> list[F
     "/fixtures",
     response_model=FixtureListResponse,
     summary="Unified fixtures for a day (fantasy + display-only competitions)",
+    # Unauthenticated and keyed entirely on (date, sport_name) — identical for
+    # every visitor. Short max-age because the payload carries live scores.
+    dependencies=[Depends(public_cache(60))],
 )
 def list_fixtures(
     date: str | None = Query(default=None, description="Calendar day, YYYY-MM-DD (UTC); defaults to today"),
@@ -297,7 +302,11 @@ def _next_fixture_date(db: Session, after: str, sport_name: str | None) -> str |
     return min(candidates) if candidates else None
 
 
-@router.get("/fixtures/next", summary="Next calendar day with fixtures after a date")
+@router.get(
+    "/fixtures/next",
+    summary="Next calendar day with fixtures after a date",
+    dependencies=[Depends(public_cache(60))],
+)
 def next_matchday(
     after: str = Query(description="Find the next fixture day strictly after this YYYY-MM-DD"),
     sport_name: str | None = Query(default=None),
@@ -314,6 +323,8 @@ def next_matchday(
     "/matches/public",
     response_model=MatchListResponse,
     summary="Public fixtures for the landing page (no auth)",
+    # Blends live → upcoming → recent, so it moves with `now`: keep it short.
+    dependencies=[Depends(public_cache(30))],
 )
 def list_public_matches(
     sport_name: str | None = Query(

@@ -6,8 +6,9 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
-from app.core.redis import cache_delete
 from app.core.redis_lock import redis_lock
+from app.league import read_cache
+from app.player import read_cache as player_read_cache
 from app.league.models import League, LeagueSport, LeagueStatus, Season, Sport, TransferWindow
 from app.services.scoring.player_scoring import (
     score_cricket_players_for_window,
@@ -211,7 +212,10 @@ def score_transfer_window_for_league(
             transfer_window_id=transfer_window_id,
         )
 
-        cache_delete(f"leaderboard:{league_id}:{transfer_window_id}")
+        # Ranks/points just changed for this league — drop its cached
+        # leaderboard + power-rankings. Must use read_cache's `league_read:*`
+        # namespace; `leaderboard:*` is a pub/sub channel name, not a cache key.
+        read_cache.bust_league(league_id)
 
         return {}
 
@@ -300,6 +304,8 @@ def score_transfer_window_for_season_leagues(
         }
         if commit:
             db.commit()
+            # fantasy_points just changed for a whole window of players.
+            player_read_cache.bust_all()
         return output
     except Exception:
         if commit:
@@ -347,6 +353,7 @@ def score_active_transfer_windows(db: Session, *, commit: bool = True) -> dict[s
         }
         if commit:
             db.commit()
+            player_read_cache.bust_all()
         return output
     except Exception:
         if commit:

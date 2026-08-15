@@ -69,6 +69,7 @@ export const useMakeTransfer = (leagueId: string) => {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
         queryClient.invalidateQueries({ queryKey: ["players"] });
+        queryClient.invalidateQueries({ queryKey: ["transfers", "me"] });
         void refreshActiveWindow(queryClient, leagueId);
       },
       onError: (error) => {
@@ -153,6 +154,7 @@ export function useConfirmTransfers(leagueId: string) {
         });
         queryClient.invalidateQueries({ queryKey: ["leagues", leagueId] });
         queryClient.invalidateQueries({ queryKey: ["players"] });
+        queryClient.invalidateQueries({ queryKey: ["transfers", "me"] });
         void refreshActiveWindow(queryClient, leagueId);
       },
       onError: (error) => {
@@ -173,6 +175,9 @@ export function useCancelTransfers(leagueId: string) {
       queryClient.invalidateQueries({
         queryKey: ["leagues", leagueId, "my-team"],
       });
+      // Cancelling frees the staged slots back up, same as its stage/confirm
+      // siblings — the window's transfers-remaining count has changed.
+      void refreshActiveWindow(queryClient, leagueId);
     },
     successMessage: "Transfer session canceled",
     silent: true,
@@ -189,7 +194,10 @@ export function useTransfers(leagueId: string) {
 
 export function useUserTransfers() {
   return useApiQuery<TUserTransferLeagueGroup[]>(
-    ["leagues", "me", "transfers"],
+    // Deliberately NOT ["leagues","me","transfers"]: ["leagues","me"] is both
+    // useMyLeagues' own key and a prefix, so all seven invalidateQueries calls
+    // for the league list were refetching this transfer history as collateral.
+    ["transfers", "me"],
     () => LeagueService.getMyTransfersGrouped(),
   );
 }
