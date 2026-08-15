@@ -14,9 +14,17 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    computed_field,
+    field_validator,
+)
 
 from app.schemas.common import TransferWindowBrief, PlayerBrief, SportBrief  # noqa: F401 — re-export
+from app.services.sync.nationalities import flag_url
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -44,8 +52,10 @@ class PlayerResponse(BaseModel):
     is_available: bool
     created_at: datetime
 
-    # Biographical enrichment (from TheSportsDB) - all optional, not every
-    # player has every field populated. See scripts/backfill_player_team_images.py.
+    # Biographical enrichment — all optional, not every player has every
+    # field populated. nationality/date_of_birth come from football-data.org
+    # (scripts/backfill_player_bio.py); height/weight/jersey_number are only
+    # available on paid tiers of our providers, so they are widely null.
     nationality: str | None = None
     date_of_birth: date | None = None
     height: str | None = None
@@ -68,6 +78,31 @@ class PlayerResponse(BaseModel):
     sport: SportBrief
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def flag_url(self) -> str | None:
+        """Flag for `nationality`, served from our own R2 bucket.
+
+        Derived rather than stored: ~1780 players share ~96 nationalities, so
+        a column would repeat the same handful of URLs. Returns None when the
+        nationality is unknown or unmapped — the UI must handle a missing flag
+        regardless, since not every player has a nationality at all.
+        """
+        return flag_url(self.nationality)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def age(self) -> int | None:
+        """Age in whole years, so clients don't each re-derive it from the DOB."""
+        if self.date_of_birth is None:
+            return None
+        today = date.today()
+        had_birthday = (today.month, today.day) >= (
+            self.date_of_birth.month,
+            self.date_of_birth.day,
+        )
+        return today.year - self.date_of_birth.year - (0 if had_birthday else 1)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

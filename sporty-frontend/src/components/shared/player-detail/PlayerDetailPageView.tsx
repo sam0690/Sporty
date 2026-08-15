@@ -6,6 +6,7 @@ import { ShareProfileButton } from "@/components/shared/ShareProfileButton";
 import { usePlayer, usePlayerRecentStats } from "@/hooks/players/usePlayers";
 import { profileSlug } from "@/utils/profileSlug";
 import { PlayerHero } from "./PlayerHero";
+import { BioField, NationalityField, playerAge } from "./BioField";
 import { PlayerRecentStats } from "./PlayerRecentStats";
 import { PlayerStatSparkline } from "./PlayerStatSparkline";
 
@@ -14,31 +15,6 @@ type PlayerDetailPageViewProps = {
 };
 
 const RECENT_STATS_LIMIT = 10;
-
-function calculateAge(dateOfBirth: string): number {
-  const dob = new Date(dateOfBirth);
-  const now = new Date();
-  let age = now.getFullYear() - dob.getFullYear();
-  const hasNotHadBirthdayThisYear =
-    now.getMonth() < dob.getMonth() ||
-    (now.getMonth() === dob.getMonth() && now.getDate() < dob.getDate());
-  if (hasNotHadBirthdayThisYear) {
-    age -= 1;
-  }
-  return age;
-}
-
-function BioField({ label, value }: { label: string; value: string | number | null | undefined }) {
-  if (value === null || value === undefined || value === "") {
-    return null;
-  }
-  return (
-    <div>
-      <div className="micro-label text-fg-3">{label}</div>
-      <div className="mt-1 text-sm text-fg-1">{value}</div>
-    </div>
-  );
-}
 
 /** Rich standalone profile — the real players/[id]/page.tsx, reached by
  * direct navigation or refresh (not through the intercepted modal). */
@@ -84,11 +60,8 @@ export function PlayerDetailPageView({ playerId }: PlayerDetailPageViewProps) {
             <PlayerHero player={player} size="large" />
 
             <div className="grid grid-cols-2 gap-4 border-t border-white/6 px-6 py-5 sm:grid-cols-3">
-              <BioField label="Nationality" value={player.nationality} />
-              <BioField
-                label="Age"
-                value={player.date_of_birth ? calculateAge(player.date_of_birth) : null}
-              />
+              <NationalityField player={player} />
+              <BioField label="Age" value={playerAge(player)} />
               <BioField label="Height" value={player.height} />
               <BioField label="Weight" value={player.weight} />
               <BioField label="Squad Number" value={player.jersey_number} />

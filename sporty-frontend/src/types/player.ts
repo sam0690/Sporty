@@ -19,9 +19,15 @@ export type TPlayer = {
   // Recency-weighted average of the last 3 gameweeks — a smarter stat, not
   // a trained prediction. null if the player has no stats in that window.
   projected_points?: number | null;
-  // Biographical enrichment (from TheSportsDB) - not every player has every field.
+  // Biographical enrichment - not every player has every field.
+  // nationality/date_of_birth come from football-data.org; height/weight/
+  // jersey_number are only on paid provider tiers, so they are widely null.
   nationality?: string | null;
   date_of_birth?: string | null;
+  // Computed server-side: flag for `nationality`, served from our R2 bucket,
+  // and age in whole years so each client doesn't re-derive it.
+  flag_url?: string | null;
+  age?: number | null;
   height?: string | null;
   weight?: string | null;
   jersey_number?: number | null;

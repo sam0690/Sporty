@@ -3,6 +3,7 @@ export { Input } from "./Input";
 export { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./Card";
 export { PlayerAvatar } from "./PlayerAvatar";
 export { TeamLogo } from "./TeamLogo";
+export { CountryFlag } from "./CountryFlag";
 export { SportyMark } from "./SportyMark";
 export { Modal } from "./Modal";
 export { ConfirmDialog } from "./ConfirmDialog";

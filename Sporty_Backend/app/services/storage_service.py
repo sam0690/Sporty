@@ -112,3 +112,25 @@ def upload_team_logo(team_id: uuid.UUID, contents: bytes, content_type: str, ext
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Unable to upload team logo",
         )
+
+
+def upload_country_flag(code: str, contents: bytes, content_type: str = "image/svg+xml") -> str:
+    """Upload a national flag to R2 and return its public URL.
+
+    Keyed by country rather than by player: ~100 objects serve the whole
+    pool, so the URL is derived from the nationality at read time instead of
+    being stored per player. See app/services/sync/nationalities.py.
+
+    Flags never change, so they are cached as aggressively as photos.
+    """
+    key = f"flags/{code}.svg"
+    try:
+        return _put_object(key, contents, content_type, cache_control="public, max-age=31536000, immutable")
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to upload flag for %s", code)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to upload country flag",
+        )
