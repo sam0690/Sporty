@@ -11,6 +11,7 @@ from app.admin.models import AdminActionType, AdminAuditLog, SystemConfig
 from app.admin.audit import record_admin_action
 from app.auth import services as auth_services
 from app.auth.models import User, UserRole
+from app.core import reference_cache
 from app.core.redis_lock import redis_lock
 from app.league import services as league_service
 from app.league.service_helpers import SUPPORTED_LEAGUE_SPORTS
@@ -28,6 +29,7 @@ from app.league.models import (
     TransferWindow,
     WaiverClaim,
 )
+from app.player import read_cache as player_read_cache
 from app.player.models import Player
 from app.services import trade_service
 from app.services.pricing.repricing import recalculate_player_prices
@@ -392,6 +394,7 @@ def create_season_admin(
         metadata={"sport_id": str(sport_id), "name": name},
     )
     db.commit()
+    reference_cache.bust_all()
     return season
 
 
@@ -580,6 +583,7 @@ def update_season_admin(
     )
     db.commit()
     db.refresh(season)
+    reference_cache.bust_all()
     return season
 
 
@@ -748,6 +752,7 @@ def edit_player(
     )
     db.commit()
     db.refresh(player)
+    player_read_cache.bust_all()
     return player
 
 
@@ -1450,6 +1455,7 @@ def create_scoring_rule(db: Session, actor: User, data) -> "DefaultScoringRule":
                                   "points": float(rule.points)})
     db.commit()
     db.refresh(rule)
+    reference_cache.bust_all()
     return rule
 
 
@@ -1472,6 +1478,7 @@ def update_scoring_rule(db: Session, actor: User, rule_id: uuid.UUID, data) -> "
                                   "points": float(rule.points)})
     db.commit()
     db.refresh(rule)
+    reference_cache.bust_all()
     return rule
 
 
@@ -1484,3 +1491,4 @@ def delete_scoring_rule(db: Session, actor: User, rule_id: uuid.UUID) -> None:
                         metadata={"op": "delete", "action": rule.action, "position": rule.position})
     db.delete(rule)
     db.commit()
+    reference_cache.bust_all()

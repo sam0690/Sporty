@@ -9,12 +9,18 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.competition import service
+from app.core.http_cache import public_cache
 from app.database import get_db
 
 router = APIRouter(prefix="/competitions", tags=["competitions"])
 
+# Every route here is unauthenticated and identical for all callers, and the
+# underlying snapshots refresh on a 6h TTL — so a shared cache is safe and the
+# stale window is generous.
+_CACHE = [Depends(public_cache(300, stale_while_revalidate=600))]
 
-@router.get("")
+
+@router.get("", dependencies=_CACHE)
 def list_competitions():
     """Tracked competitions + the season window available on the data source."""
     return {
@@ -43,12 +49,12 @@ def _snapshot(kind: str):
     return handler
 
 
-router.add_api_route("/{tag}/standings", _snapshot("standings"), methods=["GET"])
-router.add_api_route("/{tag}/scorers", _snapshot("scorers"), methods=["GET"])
-router.add_api_route("/{tag}/matches", _snapshot("matches"), methods=["GET"])
+router.add_api_route("/{tag}/standings", _snapshot("standings"), methods=["GET"], dependencies=_CACHE)
+router.add_api_route("/{tag}/scorers", _snapshot("scorers"), methods=["GET"], dependencies=_CACHE)
+router.add_api_route("/{tag}/matches", _snapshot("matches"), methods=["GET"], dependencies=_CACHE)
 
 
-@router.get("/{tag}/matches/{match_id}")
+@router.get("/{tag}/matches/{match_id}", dependencies=_CACHE)
 def get_competition_match(tag: str, match_id: str, db=Depends(get_db)):
     """Detail for a single display-only competition match (from the snapshot).
     football-data.org's free tier has no events/lineups, so this is the match

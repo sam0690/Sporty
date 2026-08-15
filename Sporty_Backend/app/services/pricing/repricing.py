@@ -15,6 +15,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
 from app.league.models import Season, Transfer, TransferWindow
+from app.player import read_cache as player_read_cache
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 
 
@@ -329,6 +330,10 @@ def recalculate_player_prices(
         db.add_all(history_rows)
 
     db.commit()
+
+    # New prices are live — drop the cached player lists/details/price history
+    # so the market shows them now rather than after the TTL.
+    player_read_cache.bust_all()
 
     return {
         "lookback_windows": lookback_windows,

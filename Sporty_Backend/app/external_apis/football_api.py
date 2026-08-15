@@ -26,6 +26,8 @@ from typing import Any, Optional
 import httpx
 from dotenv import load_dotenv
 
+from app.core.redis import cache_get, cache_set
+
 load_dotenv()
 
 logger = logging.getLogger(__name__)
@@ -33,6 +35,19 @@ logger = logging.getLogger(__name__)
 
 class FootballQuotaExhausted(RuntimeError):
     """Daily API-Football request budget is spent; retry after 00:00 UTC."""
+
+
+# Response-cache TTLs, opted into per endpoint (see _get). Only endpoints whose
+# payload is stable for the TTL are listed — anything live is left uncached.
+_SEASON_TTL = 86400   # squad rosters / teams: change in a transfer window
+_SCHEDULE_TTL = 3600  # season fixture list: kept short because it carries
+                      # final scores, and because a transient plan-error
+                      # response would otherwise be cached for a whole day
+
+
+def _cache_key(path: str, params: dict[str, Any]) -> str:
+    qs = "&".join(f"{k}={params[k]}" for k in sorted(params))
+    return f"api-football:{path}?{qs}"
 
 
 def _spend_quota() -> None:
@@ -83,7 +98,23 @@ class FootballAPIClient:
             "x-rapidapi-key": self.api_key,
         }
 
-    async def _get(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
+    async def _get(
+        self, path: str, params: dict[str, Any], cache_ttl: int = 0
+    ) -> dict[str, Any]:
+        """GET an API-Football endpoint, optionally serving from Redis.
+
+        cache_ttl defaults to 0 (no caching) so live endpoints can never be
+        served stale by accident — each caller opts in explicitly. The cache
+        read happens *before* _spend_quota(), which is the point: a hit costs
+        no daily quota. Only static-ish endpoints (season rosters, schedules,
+        teams) opt in; live scores, events and player stats never do.
+        """
+        cache_key = _cache_key(path, params) if cache_ttl > 0 else None
+        if cache_key:
+            cached = cache_get(cache_key)
+            if cached is not None:
+                return cached
+
         _spend_quota()
         url = f"{self.BASE_URL}/{path}"
         async with httpx.AsyncClient() as client:
@@ -91,7 +122,11 @@ class FootballAPIClient:
                 url, headers=self.headers, params=params, timeout=30
             )
             response.raise_for_status()
-            return response.json()
+            payload = response.json()
+
+        if cache_key:
+            cache_set(cache_key, payload, ttl_seconds=cache_ttl)
+        return payload
 
     async def get_players(
         self, league_id: int = 39, season: int = 2024, page: int = 1
@@ -108,7 +143,9 @@ class FootballAPIClient:
             {"response": [{"player": {...}, "statistics": [...]}], ...}
         """
         return await self._get(
-            "players", {"league": league_id, "season": season, "page": page}
+            "players",
+            {"league": league_id, "season": season, "page": page},
+            cache_ttl=_SEASON_TTL,
         )
 
     async def get_fixtures(
@@ -120,7 +157,11 @@ class FootballAPIClient:
         Returns:
             {"response": [{"fixture": {...}, "teams": {...}, "goals": {...}}, ...]}
         """
-        return await self._get("fixtures", {"league": league_id, "season": season})
+        return await self._get(
+            "fixtures",
+            {"league": league_id, "season": season},
+            cache_ttl=_SCHEDULE_TTL,
+        )
 
     async def get_match_stats(self, fixture_id: int) -> dict[str, Any]:
         """
@@ -196,7 +237,9 @@ class FootballAPIClient:
         Returns:
             {"response": [{"team": {"id":..., "name":..., "logo": "https://..."}, "venue": {...}}, ...]}
         """
-        return await self._get("teams", {"league": league_id, "season": season})
+        return await self._get(
+            "teams", {"league": league_id, "season": season}, cache_ttl=_SEASON_TTL
+        )
 
     async def get_player_by_id(
         self, player_id: int, season: int = 2024
@@ -207,4 +250,6 @@ class FootballAPIClient:
         Returns:
             {"response": [{"player": {...}, "statistics": [...]}]}
         """
-        return await self._get("players", {"id": player_id, "season": season})
+        return await self._get(
+            "players", {"id": player_id, "season": season}, cache_ttl=_SEASON_TTL
+        )

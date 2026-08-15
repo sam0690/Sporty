@@ -20,8 +20,10 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.auth.dependencies import get_current_active_user
 from app.auth.models import User
+from app.core.http_cache import public_cache
 from app.database import get_db
 from app.league.models import Sport
+from app.player import read_cache
 from app.player import services as player_service
 from app.player.models import RealTeam
 from app.player.schemas import (
@@ -35,6 +37,35 @@ from app.player.schemas import (
 from app.schemas.common import TeamBrief
 
 router = APIRouter(prefix="/players", tags=["Players"])
+
+
+# ── Cached readers shared by the authed and /public twins ──────────────────
+# Both variants serve identical data (see the /public section below), so they
+# share one cache entry rather than each warming its own.
+
+
+def _cached_player_detail(db: Session, player_id: uuid.UUID):
+    cache_key = read_cache.detail_key(player_id)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    # Raises 404 when the player doesn't exist — nothing is cached on that path.
+    result = PlayerResponse.model_validate(player_service.get_player(db, player_id))
+    read_cache.set_cached(cache_key, result, read_cache.DETAIL_TTL)
+    return result
+
+
+def _cached_recent_stats(db: Session, player_id: uuid.UUID, limit: int):
+    cache_key = read_cache.recent_stats_key(player_id, limit)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    rows = player_service.get_player_recent_stats(db, player_id, limit=limit)
+    result = PlayerRecentStatsResponse(items=rows)
+    read_cache.set_cached(cache_key, result, read_cache.RECENT_STATS_TTL)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -74,15 +105,22 @@ def get_players(
         (used for transfer pool and draft pool views)
       - page / page_size — pagination (default: page 1, 20 per page)
     """
+    cache_key = read_cache.list_key(filters)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
     players, total = player_service.get_players(db, filters)
 
-    return PlayerListResponse(
+    result = PlayerListResponse(
         items=players,
         total=total,
         page=filters.page,
         page_size=filters.page_size,
         has_next=(filters.page * filters.page_size) < total,
     )
+    read_cache.set_cached(cache_key, result, read_cache.LIST_TTL)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -102,12 +140,21 @@ def list_real_teams(
 ):
     """Return every real-world team — a small reference table (dozens of
     rows), no pagination needed. Used by the favourite-team picker."""
+    cache_key = read_cache.teams_key(sport_name)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
     query = db.query(RealTeam).options(joinedload(RealTeam.sport))
     if sport_name:
         query = query.join(Sport, Sport.id == RealTeam.sport_id).filter(
             Sport.name == sport_name.strip().lower()
         )
-    return query.order_by(RealTeam.name).all()
+    # Validate into the response model before caching: jsonable_encoder on raw
+    # ORM instances would walk _sa_instance_state.
+    result = [TeamBrief.model_validate(t) for t in query.order_by(RealTeam.name).all()]
+    read_cache.set_cached(cache_key, result, read_cache.TEAMS_TTL)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -127,7 +174,15 @@ def get_player_stats_for_gameweek(
     _current_user: User = Depends(get_current_active_user),
 ):
     """Return all stats rows for a single gameweek and sport."""
-    return player_service.get_player_stats_for_gameweek(db, gameweek_id, sport)
+    cache_key = read_cache.gameweek_stats_key(gameweek_id, sport)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
+    rows = player_service.get_player_stats_for_gameweek(db, gameweek_id, sport)
+    result = [PlayerGameweekStatResponse.model_validate(r) for r in rows]
+    read_cache.set_cached(cache_key, result, read_cache.GAMEWEEK_STATS_TTL)
+    return result
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -151,7 +206,7 @@ def get_player(
     one of the cases where the service owns the error because
     "player not found" is always a 404 regardless of context.
     """
-    return player_service.get_player(db, player_id)
+    return _cached_player_detail(db, player_id)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -213,8 +268,15 @@ def get_player_price_history(
     _current_user: User = Depends(get_current_active_user),
 ):
     """Return newest-first price change records for a player."""
+    cache_key = read_cache.price_history_key(player_id, limit)
+    cached = read_cache.get_cached(cache_key)
+    if cached is not None:
+        return cached
+
     rows = player_service.get_player_price_history(db, player_id, limit=limit)
-    return PlayerPriceHistoryResponse(items=rows)
+    result = PlayerPriceHistoryResponse(items=rows)
+    read_cache.set_cached(cache_key, result, read_cache.PRICE_HISTORY_TTL)
+    return result
 
 
 @router.get(
@@ -229,8 +291,7 @@ def get_player_recent_stats(
     _current_user: User = Depends(get_current_active_user),
 ):
     """Return newest-first gameweek stats for a player's detail view."""
-    rows = player_service.get_player_recent_stats(db, player_id, limit=limit)
-    return PlayerRecentStatsResponse(items=rows)
+    return _cached_recent_stats(db, player_id, limit)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -247,18 +308,19 @@ def get_player_recent_stats(
     "/public/{player_id}",
     response_model=PlayerResponse,
     summary="Get player details (no auth — shareable profile link)",
+    dependencies=[Depends(public_cache(300))],
 )
 def get_public_player(player_id: uuid.UUID, db: Session = Depends(get_db)):
-    return player_service.get_player(db, player_id)
+    return _cached_player_detail(db, player_id)
 
 
 @router.get(
     "/public/{player_id}/recent-stats",
     response_model=PlayerRecentStatsResponse,
     summary="Get a player's recent gameweek performance (no auth)",
+    dependencies=[Depends(public_cache(300))],
 )
 def get_public_player_recent_stats(
     player_id: uuid.UUID, limit: int = 5, db: Session = Depends(get_db)
 ):
-    rows = player_service.get_player_recent_stats(db, player_id, limit=limit)
-    return PlayerRecentStatsResponse(items=rows)
+    return _cached_recent_stats(db, player_id, limit)

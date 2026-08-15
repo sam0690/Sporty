@@ -713,22 +713,14 @@ def confirm_transfers(
             team.id, points_charge,
         )
 
-    # Redis sync.
+    # Drop the in-progress transfer session — the confirm consumed it.
+    # (The old `team:{uid}` / `budget:{uid}` / `player:prices` mirrors that
+    # used to be written here were removed: nothing ever read them back, and
+    # _player_price above documents why the price mirror was untrustworthy.)
     try:
-        pipe = redis.pipeline(transaction=False)
-        team_key = f"team:{user_id}"
-        for pid in pending_out_ids:
-            pipe.srem(team_key, str(pid))
-        for pid in pending_in_ids:
-            pipe.sadd(team_key, str(pid))
-        pipe.set(f"budget:{user_id}", str(new_budget))
-        price_updates = {str(pid): str(cost) for pid, cost in price_map.items()}
-        if price_updates:
-            pipe.hset("player:prices", mapping=price_updates)
-        pipe.delete(f"session:{user_id}")
-        pipe.execute()
+        redis.delete(f"session:{user_id}")
     except Exception:
-        logger.exception("Redis sync failed after confirm for user=%s", user_id)
+        logger.exception("Redis session clear failed after confirm for user=%s", user_id)
 
     transfers_remaining = int(session["transfersAllowed"]) - int(session["transfersUsed"])
     return {
