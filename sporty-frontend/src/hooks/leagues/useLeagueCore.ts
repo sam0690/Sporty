@@ -5,6 +5,7 @@
  * everything, so existing imports keep working.
  */
 import {
+  keepPreviousData,
   useQueries,
   useQueryClient,
   type UseQueryOptions,
@@ -12,6 +13,7 @@ import {
 import { useApiQuery } from "../api/useApiQuery";
 import { useApiMutation } from "../api/useApiMutation";
 import { LeagueService } from "@/services/LeagueService";
+import { TeamService } from "@/services/TeamService";
 import {
   TCompetitionType,
   TLeague,
@@ -90,23 +92,38 @@ export const useLeague = (id: string) => {
 
 /**
  * Hook to fetch the current user's fantasy team in a league.
+ *
+ * Canonical owner of the ["leagues", id, "my-team"] key. There used to be a
+ * second useMyTeam in hooks/my-team publishing the SAME key with a different
+ * fetcher and a different staleTime — whichever mounted first won, so the
+ * freshness of this data depended on render order. Both now route here.
+ *
+ * TeamService (not LeagueService) is the fetcher because it maps a 404 to
+ * null: a member who has not built a squad yet is a normal state, not an error.
  */
-export function useMyTeam(id: string) {
-  return useApiQuery<TFantasyTeam>(
-    ["leagues", id, "my-team"],
-    ({ signal }) => LeagueService.getMyTeam(id, signal),
+export function useMyTeam(id: string | null | undefined) {
+  return useApiQuery<TFantasyTeam | null>(
+    ["leagues", id ?? "", "my-team"],
+    ({ signal }) => TeamService.getMyTeam(id ?? "", signal),
     {
-      enabled: !!id,
+      enabled: Boolean(id),
+      staleTime: 60_000,
+      // League switches keep the previous squad on screen (dimmed) instead
+      // of flashing skeletons; consumers with a fixed leagueId are unaffected.
+      placeholderData: keepPreviousData,
     },
   );
 }
 
 export function useMyTeamsForLeagues(leagueIds: string[]) {
   return useQueries({
+    // Same key as useMyTeam above, so it must be the same fetcher.
     queries: leagueIds.map((leagueId) => ({
       queryKey: ["leagues", leagueId, "my-team"],
-      queryFn: ({ signal }) => LeagueService.getMyTeam(leagueId, signal),
+      queryFn: ({ signal }: { signal: AbortSignal }) =>
+        TeamService.getMyTeam(leagueId, signal),
       enabled: !!leagueId,
+      staleTime: 60_000,
     })),
   });
 }

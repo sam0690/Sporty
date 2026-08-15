@@ -7,7 +7,7 @@ import { Radio, SlidersHorizontal } from "lucide-react";
 import { CalendarPopover } from "@/components/matches-browser/CalendarPopover";
 import { MatchDateStrip, shiftDateKey, toDateKey } from "@/components/matches-browser/MatchDateStrip";
 import { SportFilterChips } from "@/components/matches-browser/SportFilterChips";
-import { useFixtures, useNextMatchday } from "@/hooks/fixtures/useFixtures";
+import { fixturesKey, useFixtures, useNextMatchday } from "@/hooks/fixtures/useFixtures";
 import { useFollowedLeagues } from "@/hooks/fixtures/useFollowedLeagues";
 import { FixturesService } from "@/services/FixturesService";
 import type { TFixture } from "@/types/fixture";
@@ -68,7 +68,7 @@ export function FixturesView() {
     for (const delta of [-1, 1]) {
       const near = makeFilters(sport, shiftDateKey(date, delta));
       void queryClient.prefetchQuery({
-        queryKey: ["fixtures", "list", JSON.stringify(near)],
+        queryKey: fixturesKey(near),
         queryFn: () => FixturesService.getFixtures(near),
         staleTime: 30_000,
       });

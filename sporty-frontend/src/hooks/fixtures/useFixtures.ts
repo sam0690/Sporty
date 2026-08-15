@@ -4,9 +4,20 @@ import { useApiQuery } from "../api/useApiQuery";
 import { FixturesService } from "@/services/FixturesService";
 import type { TFixtureFilter, TFixtureListResponse } from "@/types/fixture";
 
+/**
+ * Single source of truth for the fixtures-list key.
+ *
+ * Three places need to produce it identically — this hook, FixturesView's
+ * adjacent-day prefetch, and the server prefetch in the /fixtures page. It was
+ * hand-inlined at each, so changing the key here would have silently turned
+ * both prefetches into cache misses.
+ */
+export const fixturesKey = (filters: TFixtureFilter = {}) =>
+  ["fixtures", "list", JSON.stringify(filters)] as const;
+
 export const useFixtures = (filters: TFixtureFilter = {}) => {
   return useApiQuery<TFixtureListResponse>(
-    ["fixtures", "list", JSON.stringify(filters)],
+    fixturesKey(filters),
     () => FixturesService.getFixtures(filters),
     {
       placeholderData: keepPreviousData,

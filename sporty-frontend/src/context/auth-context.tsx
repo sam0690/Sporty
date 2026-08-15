@@ -13,6 +13,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { API_PATHS } from "@/api/apiPath";
 import { authApi } from "@/api/auth-api-client";
 import { publicApi } from "@/api/public-api-client";
+import { UserService, type TMe } from "@/services/UserService";
 import { subscribeAuthInvalidated } from "@/lib/auth-events";
 import { LocalStorageKeys } from "@/lib/storage.keys";
 import { removeLocalStorage } from "@/lib/storage.local";
@@ -157,6 +158,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     removeLocalStorage(LocalStorageKeys.DASHBOARD_SELECTED_LEAGUE_ID);
   }, [queryClient]);
 
+  // Fetch /auth/me and seed the query cache under the key useMe() reads, so
+  // the ~10 components using useMe() reuse this response instead of firing
+  // their own. It used to be fetched twice on every cold load of an
+  // authenticated page, at the head of the request waterfall.
+  const loadMe = useCallback(async (): Promise<TMe> => {
+    const me = await UserService.me();
+    queryClient.setQueryData(["auth", "me"], me);
+    return me;
+  }, [queryClient]);
+
   const setLoading = useCallback(
     (action: AuthAction, loading: boolean): void => {
       setActionLoading((prev) => ({ ...prev, [action]: loading }));
@@ -171,9 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const bootstrapSession = async (): Promise<void> => {
       try {
-        const response = await authApi.get(API_PATHS.AUTH.ME);
+        const me = await loadMe();
         if (isMounted) {
-          setUser(toUser(response.data));
+          setUser(toUser(me));
         }
       } catch {
         // Auth tokens are httpOnly cookies - handled by backend
@@ -190,7 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [loadMe]);
 
   useEffect(() => {
     return subscribeAuthInvalidated(() => {
@@ -212,8 +223,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           identifier,
           password,
         });
-        const meResponse = await authApi.get(API_PATHS.AUTH.ME);
-        const me = toUser(meResponse.data);
+        const me = toUser(await loadMe());
         setUser(me);
 
         return { success: true, role: me.role };
@@ -225,7 +235,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading("login", false);
       }
     },
-    [setLoading],
+    [loadMe, setLoading],
   );
 
   const register = useCallback(
@@ -243,8 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           auto_login: true,
         });
 
-        const meResponse = await authApi.get(API_PATHS.AUTH.ME);
-        setUser(toUser(meResponse.data));
+        setUser(toUser(await loadMe()));
 
         return { success: true };
       } catch (error) {
@@ -255,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading("register", false);
       }
     },
-    [setLoading],
+    [loadMe, setLoading],
   );
 
   const linkGoogle = useCallback(
@@ -312,8 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const tokenResponse = await publicApi.post(API_PATHS.AUTH.GOOGLE, {
           code,
         });
-        const meResponse = await authApi.get(API_PATHS.AUTH.ME);
-        const me = toUser(meResponse.data);
+        const me = toUser(await loadMe());
         setUser(me);
         return {
           success: true,
@@ -367,7 +375,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading("google", false);
       }
     },
-    [setLoading],
+    [loadMe, setLoading],
   );
 
   const logout = useCallback(async (): Promise<AuthResult> => {

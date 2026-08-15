@@ -74,6 +74,15 @@ export function useUpdateLineup(leagueId: string) {
         queryClient.invalidateQueries({
           queryKey: ["leagues", leagueId, "lineup"],
         });
+        // The dashboard's team preview reads "live-lineup", a different key
+        // from "lineup" — without this it showed the pre-save XI until its
+        // staleTime expired.
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "live-lineup"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["leagues", leagueId, "dashboard-stats"],
+        });
         void refreshActiveWindow(queryClient, leagueId);
         toastifier.success("Lineup saved successfully");
       },
