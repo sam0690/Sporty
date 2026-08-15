@@ -66,10 +66,24 @@ REQUEST_INTERVAL_SECONDS = 6.5
 COMMIT_EVERY = 25
 
 
-def _get(client: httpx.Client, url: str, token: str, retries: int = 3) -> httpx.Response | None:
-    """GET with backoff on 429. Returns None if it never succeeded."""
+def _get(client: httpx.Client, url: str, token: str, retries: int = 4) -> httpx.Response | None:
+    """GET with backoff on 429 and on transport failures.
+
+    Transport errors must be caught, not propagated: a single DNS hiccup
+    killed a run at 100/1265 once, and losing a two-hour sweep to one blip is
+    the difference between resumable and useless. Returns None when every
+    attempt failed, which the caller treats as "no number for this player"
+    rather than as a reason to stop.
+    """
     for attempt in range(retries):
-        response = client.get(url, headers={"X-Auth-Token": token}, timeout=30)
+        try:
+            response = client.get(url, headers={"X-Auth-Token": token}, timeout=30)
+        except httpx.TransportError as exc:
+            wait = REQUEST_INTERVAL_SECONDS * (attempt + 2)
+            print(f"    transport error ({exc!s}), retrying in {wait:.0f}s")
+            time.sleep(wait)
+            continue
+
         if response.status_code == 429:
             wait = REQUEST_INTERVAL_SECONDS * (attempt + 2)
             print(f"    rate limited, sleeping {wait:.0f}s")
@@ -77,6 +91,11 @@ def _get(client: httpx.Client, url: str, token: str, retries: int = 3) -> httpx.
             continue
         if response.status_code == 404:
             return None
+        if response.status_code >= 500:
+            wait = REQUEST_INTERVAL_SECONDS * (attempt + 2)
+            print(f"    server error {response.status_code}, retrying in {wait:.0f}s")
+            time.sleep(wait)
+            continue
         response.raise_for_status()
         return response
     return None
@@ -164,29 +183,41 @@ def main() -> int:
                 return 0
 
             # Phase 2 — one /persons request each.
+            #
+            # A player we fail to resolve is left NULL rather than flagged, so
+            # a later run simply retries them. That is what makes giving up on
+            # one player safe and stopping the whole sweep unnecessary.
             filled = 0
             missing = 0
-            for done, (player, person_id) in enumerate(targets, start=1):
-                response = _get(client, f"{FDO_BASE_URL}/persons/{person_id}", token)
-                if response is not None:
-                    number = response.json().get("shirtNumber")
-                    if isinstance(number, int):
-                        player.jersey_number = number
-                        filled += 1
+            done = 0
+            try:
+                for done, (player, person_id) in enumerate(targets, start=1):
+                    response = _get(client, f"{FDO_BASE_URL}/persons/{person_id}", token)
+                    if response is not None:
+                        number = response.json().get("shirtNumber")
+                        if isinstance(number, int):
+                            player.jersey_number = number
+                            filled += 1
+                        else:
+                            missing += 1
                     else:
                         missing += 1
-                else:
-                    missing += 1
 
-                if done % COMMIT_EVERY == 0:
-                    db.commit()
-                    print(f"  {done}/{len(targets)}  filled={filled} missing={missing}")
+                    if done % COMMIT_EVERY == 0:
+                        db.commit()
+                        print(f"  {done}/{len(targets)}  filled={filled} missing={missing}", flush=True)
 
-                if done < len(targets):
-                    time.sleep(REQUEST_INTERVAL_SECONDS)
-
-            db.commit()
-            print(f"\njersey_number set: {filled}   no number returned: {missing}")
+                    if done < len(targets):
+                        time.sleep(REQUEST_INTERVAL_SECONDS)
+            finally:
+                # Keep whatever this run resolved even if it is cut short —
+                # the next run resumes from here instead of redoing it.
+                db.commit()
+                print(
+                    f"\njersey_number set: {filled}   no number returned: {missing}"
+                    f"   (reached {done}/{len(targets)})",
+                    flush=True,
+                )
             return 0
     finally:
         db.close()
