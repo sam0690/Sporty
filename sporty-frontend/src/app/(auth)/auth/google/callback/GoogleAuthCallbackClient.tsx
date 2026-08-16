@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 import { GoogleAccountLinkModal } from "@/components/auth/google-link/components/GoogleAccountLinkModal";
 import { useAuth } from "@/context/auth-context";
@@ -14,8 +14,7 @@ import {
 
 export function GoogleAuthCallbackClient() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user, login, loginWithGoogle, linkGoogle, isLoading } = useAuth();
+  const { login, loginWithGoogle, linkGoogle } = useAuth();
   const [isProcessing, setIsProcessing] = useState(true);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [pendingLinkToken, setPendingLinkToken] = useState("");
@@ -23,29 +22,27 @@ export function GoogleAuthCallbackClient() {
   const [isReauthenticating, setIsReauthenticating] = useState(false);
   const [linkError, setLinkError] = useState<string | undefined>();
   const hasStarted = useRef(false);
+  const redirectTo = useRef<string | null>(null);
 
+  // Runs exactly once, guarded by the ref. Deliberately has no deps and no
+  // "still mounted" check: loginWithGoogle flips the auth context's loading
+  // flag synchronously, so any dep on it would tear this effect down mid
+  // flight and drop the result — which left the spinner up forever. Every
+  // path below navigates or opens the link modal, so there is nothing to
+  // clean up.
   useEffect(() => {
-    // Only handles arriving at the callback already authenticated. Once the
-    // code exchange starts, its success/link/error paths own navigation
-    // (new users route through /onboarding/favourites) — don't race them.
-    if (isLoading || isLinkModalOpen || isReauthenticating || hasStarted.current) {
+    if (hasStarted.current) {
       return;
     }
+    hasStarted.current = true;
 
-    if (user) {
-      window.location.replace(
-        getSafeRedirectPath(searchParams.get("state")) ??
-          postAuthHomePath(user.role),
-      );
-    }
-  }, [isLoading, isLinkModalOpen, isReauthenticating, searchParams, user]);
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+    redirectTo.current = getSafeRedirectPath(params.get("state"));
 
-  useEffect(() => {
-    if (isLoading || hasStarted.current) {
-      return;
-    }
-
-    const code = searchParams.get("code");
+    // Drop the code from the URL before using it: Google rejects a second
+    // exchange of the same code, so a reload of this page must not replay it.
+    window.history.replaceState(null, "", window.location.pathname);
 
     if (!code) {
       toastifier.error("Google authorization code is missing.");
@@ -53,21 +50,14 @@ export function GoogleAuthCallbackClient() {
       return;
     }
 
-    hasStarted.current = true;
-    let isMounted = true;
-
     const exchangeCode = async (): Promise<void> => {
       const result = await loginWithGoogle(code);
-      if (!isMounted) {
-        return;
-      }
 
       if (result.success) {
-        const redirect = getSafeRedirectPath(searchParams.get("state"));
         window.location.replace(
           result.isNewUser
-            ? buildFavouritesOnboardingUrl(redirect)
-            : redirect ?? postAuthHomePath(result.role),
+            ? buildFavouritesOnboardingUrl(redirectTo.current)
+            : redirectTo.current ?? postAuthHomePath(result.role),
         );
         return;
       }
@@ -92,16 +82,8 @@ export function GoogleAuthCallbackClient() {
       router.replace("/login");
     };
 
-    void exchangeCode().finally(() => {
-      if (isMounted) {
-        setIsProcessing(false);
-      }
-    });
-
-    return () => {
-      isMounted = false;
-    };
-  }, [isLoading, loginWithGoogle, router, searchParams]);
+    void exchangeCode().finally(() => setIsProcessing(false));
+  }, [loginWithGoogle, router]);
 
   const closeLinkModal = () => {
     if (isReauthenticating) {
@@ -146,10 +128,7 @@ export function GoogleAuthCallbackClient() {
       setPendingLinkToken("");
       setPendingEmail(undefined);
       setLinkError(undefined);
-      router.replace(
-        getSafeRedirectPath(searchParams.get("state")) ??
-          postAuthHomePath(reauthResult.role),
-      );
+      router.replace(redirectTo.current ?? postAuthHomePath(reauthResult.role));
       return;
     }
 
