@@ -53,13 +53,19 @@ CELERY_BEAT_SCHEDULE = {
         "args": (),
     },
     # Team stats (possession/shots/xG) skipped at full time because the day's
-    # budget was inside the reserve. 00:20 UTC — after the provider's midnight
-    # quota reset, before the 06:00 fixture sync, so it uses budget nobody else
-    # wants yet. Capped at 5 fixtures and a 14-day lookback, so it can never
-    # run away into the ~380 finished 2024/25 fixtures.
-    "backfill-football-team-stats-daily": {
+    # budget was inside the reserve. Capped at 5 fixtures and a 14-day lookback,
+    # so it can never run away into the ~380 finished 2024/25 fixtures.
+    #
+    # HOURLY, not once a day at the quota reset, because Beat does not run
+    # around the clock — a single fixed UTC moment is simply missed if the
+    # machine running Beat is asleep, and the fixture then never gets stats at
+    # all. An idle tick costs ZERO API requests and one indexed query: with
+    # nothing missing the task returns before touching the client, and when
+    # something is missing it still yields to FOOTBALL_LINEUP_QUOTA_RESERVE, so
+    # it naturally succeeds early in the UTC day and skips later.
+    "backfill-football-team-stats-hourly": {
         "task": "sync.football.team_stats_backfill",
-        "schedule": crontab(minute=20, hour=0),
+        "schedule": crontab(minute=20),
         "args": (),
     },
     # ── SportScore (keyless, ~10k req/day) — display-only liveness ──
