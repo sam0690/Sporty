@@ -27,9 +27,15 @@ def normalize_match_status(provider_status: str | None) -> str:
     # Common football short codes (API-Football, etc.)
     if upper in {"NS", "TBD", "SCHEDULED"}:
         return "scheduled"
-    if upper in {"1H", "2H", "HT", "ET", "BT", "P", "LIVE", "IN PLAY", "INPLAY"}:
+    # SUSP (suspended) and INT (interrupted) are in-progress states, not
+    # terminal ones — the match is expected to resume, so keep polling it.
+    if upper in {
+        "1H", "2H", "HT", "ET", "BT", "P", "SUSP", "INT",
+        "LIVE", "IN PLAY", "INPLAY",
+    }:
         return "live"
-    if upper in {"FT", "AET", "PEN", "FIN", "FINAL", "FINISHED", "ENDED"}:
+    # AWD (technical/awarded result) and WO (walkover) are final outcomes.
+    if upper in {"FT", "AET", "PEN", "AWD", "WO", "FIN", "FINAL", "FINISHED", "ENDED"}:
         return "finished"
     if upper in {"PST", "POSTPONED", "POSTP"}:
         return "postponed"

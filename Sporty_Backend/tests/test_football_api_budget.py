@@ -143,3 +143,208 @@ def test_parse_prediction_rejects_empty_and_malformed():
     assert _parse_prediction(
         {"response": [{"predictions": {"percent": {"home": "n/a", "draw": "", "away": ""}}}]}
     ) is None
+
+
+# ── FT sheet: provider player-id drift ───────────────────────────────────────
+# API-Football reports some people under two ids — Mikel Rodríguez is 332645 in
+# /fixtures/events and /players/squads but 389022 on the stat sheet. The sheet
+# parser used to skip unresolvable ids silently, which cost him a goal in La
+# Liga fixture 1570333. Resolution now falls back to name matching scoped to
+# the player's own club.
+
+
+class _NamedPlayer:
+    def __init__(self, uuid_, name):
+        self.id = uuid_
+        self.name = name
+
+
+class _FakePool:
+    """Stands in for db.query(Player).filter(...).all()."""
+
+    def __init__(self, by_club):
+        self._by_club = by_club
+        self._club = None
+
+    def query(self, _model):
+        return self
+
+    def filter(self, *criteria):
+        # The club predicate is Player.real_team == <name>; pull the literal out.
+        for crit in criteria:
+            right = getattr(crit, "right", None)
+            value = getattr(right, "value", None)
+            if isinstance(value, str):
+                self._club = value
+        return self
+
+    def all(self):
+        return self._by_club.get(self._club, [])
+
+
+def _sheet_payload(team_name, api_id, player_name):
+    return {
+        "response": [
+            {
+                "team": {"id": 1, "name": team_name},
+                "players": [
+                    {
+                        "player": {"id": api_id, "name": player_name},
+                        "statistics": [{
+                            "games": {"minutes": 33},
+                            "goals": {"total": 1, "conceded": 0},
+                        }],
+                    }
+                ],
+            }
+        ]
+    }
+
+
+_FIXTURE = {"teams": {"home": {"id": 1}, "away": {"id": 2}}, "goals": {"home": 3, "away": 0}}
+
+
+def test_sheet_falls_back_to_name_match_within_the_same_club():
+    from app.services.sync.football_live_sync import _parse_player_sheet
+
+    ours = _NamedPlayer("uuid-mikel", "Mikel Rodríguez")
+    db = _FakePool({"Alaves": [ours]})
+
+    sheet = _parse_player_sheet(
+        _sheet_payload("Alaves", 389022, "Mikel Rodriguez"),
+        _FIXTURE,
+        lambda api_id: None,  # id 389022 is unknown to us
+        db=db,
+        sport_id="football-uuid",
+    )
+
+    assert set(sheet) == {"uuid-mikel"}
+    assert sheet["uuid-mikel"]["goals"] == 1
+    assert sheet["uuid-mikel"]["minutes"] == 33
+
+
+def test_sheet_name_fallback_never_matches_a_player_from_another_club():
+    """The guard that matters: matching against the whole pool resolved a La
+    Liga 'Adrián Rodríguez' onto Bournemouth's 'Á. Rodríguez'. Club scoping
+    must drop the row instead of attributing it to the wrong person."""
+    from app.services.sync.football_live_sync import _parse_player_sheet
+
+    bournemouth = _NamedPlayer("uuid-wrong", "Á. Rodríguez")
+    db = _FakePool({"Bournemouth": [bournemouth], "Alaves": []})
+
+    sheet = _parse_player_sheet(
+        _sheet_payload("Alaves", 163060, "Adrián Rodríguez"),
+        _FIXTURE,
+        lambda api_id: None,
+        db=db,
+        sport_id="football-uuid",
+    )
+
+    assert sheet == {}
+
+
+def test_sheet_declines_ambiguous_names_within_one_club():
+    """Two same-surname team-mates and only an initial to go on -> no guess."""
+    from app.services.sync.football_live_sync import _parse_player_sheet
+
+    db = _FakePool({"Alaves": [
+        _NamedPlayer("uuid-mikel", "Mikel Rodríguez"),
+        _NamedPlayer("uuid-miguel", "Miguel Rodríguez"),
+    ]})
+
+    sheet = _parse_player_sheet(
+        _sheet_payload("Alaves", 999999, "M. Rodríguez"),
+        _FIXTURE,
+        lambda api_id: None,
+        db=db,
+        sport_id="football-uuid",
+    )
+
+    assert sheet == {}
+
+
+def test_sheet_reports_unresolved_players_instead_of_dropping_them_silently(caplog):
+    from app.services.sync.football_live_sync import _parse_player_sheet
+
+    with caplog.at_level("WARNING"):
+        sheet = _parse_player_sheet(
+            _sheet_payload("Getafe", 24882, "Orel Mangala"),
+            _FIXTURE,
+            lambda api_id: None,
+            db=_FakePool({"Getafe": []}),
+            sport_id="football-uuid",
+        )
+
+    assert sheet == {}
+    assert "Orel Mangala" in caplog.text
+    assert "1 of 1 entries unresolved" in caplog.text
+
+
+# ── Confirmed lineups ────────────────────────────────────────────────────────
+# The match-state pitch view had no producer at all after the feeder's
+# /api/v1/feed/match-lineups was unmounted; sync_football_lineups fills it.
+
+
+def _lineup_block(team_name, starters, subs):
+    return {
+        "team": {"id": abs(hash(team_name)) % 1000, "name": team_name},
+        "formation": "4-2-3-1",
+        "startXI": [{"player": {"id": pid, "name": nm}} for pid, nm in starters],
+        "substitutes": [{"player": {"id": pid, "name": nm}} for pid, nm in subs],
+    }
+
+
+def test_parse_lineups_splits_sides_by_home_team_name_not_response_order():
+    """Getting sides backwards silently swaps both teams on the pitch, so the
+    away block appearing first must not flip them."""
+    from app.services.sync.football_live_sync import _parse_lineups
+
+    known = {1: _FakePlayer("u-home-1"), 2: _FakePlayer("u-home-sub"),
+             3: _FakePlayer("u-away-1"), 4: _FakePlayer("u-away-sub")}
+    payload = {"response": [
+        _lineup_block("Rayo Vallecano", [(3, "Away One")], [(4, "Away Sub")]),
+        _lineup_block("Sevilla", [(1, "Home One")], [(2, "Home Sub")]),
+    ]}
+
+    doc = _parse_lineups(payload, "Sevilla", lambda pid: known.get(pid))
+
+    assert doc["home"] == ["u-home-1"]
+    assert doc["home_bench"] == ["u-home-sub"]
+    assert doc["away"] == ["u-away-1"]
+    assert doc["away_bench"] == ["u-away-sub"]
+
+
+def test_parse_lineups_returns_none_before_the_provider_publishes():
+    """Empty must not be cached — a later tick has to retry."""
+    from app.services.sync.football_live_sync import _parse_lineups
+
+    assert _parse_lineups({"response": []}, "Sevilla", lambda pid: None) is None
+
+
+def test_parse_lineups_reports_unresolved_players_instead_of_hiding_them(caplog):
+    from app.services.sync.football_live_sync import _parse_lineups
+
+    known = {1: _FakePlayer("u-1")}
+    payload = {"response": [
+        _lineup_block("Sevilla", [(1, "Known")], [(99, "Robbie Ure")]),
+        _lineup_block("Rayo Vallecano", [], []),
+    ]}
+
+    with caplog.at_level("WARNING"):
+        doc = _parse_lineups(payload, "Sevilla", lambda pid: known.get(pid))
+
+    assert doc["home"] == ["u-1"]
+    assert doc["home_bench"] == []  # dropped...
+    assert "Robbie Ure" in caplog.text  # ...but not silently
+
+
+def test_parse_lineups_always_emits_all_four_keys():
+    """The frontend does startingLineups.home.length unguarded, and its
+    `?? EMPTY_LINEUPS` fallback won't fire on a truthy partial object."""
+    from app.services.sync.football_live_sync import _parse_lineups
+
+    payload = {"response": [_lineup_block("Sevilla", [(1, "Known")], [])]}
+    doc = _parse_lineups(payload, "Sevilla", lambda pid: _FakePlayer("u-1"))
+
+    assert set(doc) == {"home", "away", "home_bench", "away_bench"}
+    assert all(isinstance(v, list) for v in doc.values())

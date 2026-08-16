@@ -127,6 +127,14 @@ class Settings(BaseSettings):
     # (paid plan).
     FOOTBALL_API_DAILY_BUDGET: int = 95
 
+    # Requests held back from the lineups sync so it can never starve the
+    # feeds that matter more. Lineups are fetched PRE-kickoff, so without a
+    # reserve a busy matchday would spend the budget before the post-match
+    # finals and FT stat sheets need it — and a missed final freezes a match
+    # at a partial score. Lineups are cosmetic by comparison, so they yield
+    # first: the sync stops once used > FOOTBALL_API_DAILY_BUDGET - reserve.
+    FOOTBALL_LINEUP_QUOTA_RESERVE: int = 25
+
     FOOTBALL_LIVE_LEAGUE_ID: int = 39
     BASKETBALL_LIVE_LEAGUE_ID: int = 12
 
