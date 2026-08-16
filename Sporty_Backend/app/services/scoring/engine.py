@@ -18,10 +18,40 @@ from app.services.scoring.player_scoring import (
 from app.services.matchup_service import resolve_matchups_for_window
 from app.services.scoring.ranking import apply_rankings_for_league_window
 from app.services.scoring.team_scoring import upsert_team_weekly_scores
-from app.services.scoring.window_locator import find_equivalent_window_for_sport
+from app.services.scoring.window_locator import (
+    find_equivalent_window_for_sport,
+    league_competition_filter,
+)
 
 
 logger = logging.getLogger(__name__)
+
+# A league only scores from ACTIVE onwards; before that (SETUP/DRAFTING) squads
+# aren't finalized. COMPLETED still scores — final gameweek + idempotent
+# re-scoring. Enforced again inside score_transfer_window_for_league for
+# callers that don't come through the sweep.
+SCORABLE_LEAGUE_STATUSES = (LeagueStatus.ACTIVE, LeagueStatus.COMPLETED)
+
+
+def _off_schedule(
+    db: Session,
+    *,
+    league_id: uuid.UUID,
+    sport_id: uuid.UUID | None,
+    window: TransferWindow,
+) -> bool:
+    """True when this league simply doesn't run on this window's schedule.
+
+    Routine since per-competition windows landed: the sweep hands every league
+    of a sport EVERY active window of that sport, so an EPL league is offered
+    the LALIGA and combined windows every cycle and correctly resolves neither.
+    That is not worth a warning — only a league whose OWN competition has no
+    covering window is.
+    """
+    return (
+        league_competition_filter(db, league_id=league_id, sport_id=sport_id)
+        != window.competition
+    )
 
 
 def _score_player_stats_once_per_sport(
@@ -65,7 +95,12 @@ def _score_player_stats_once_per_sport(
         )
         if sport_window is None:
             totals["leagues_skipped_no_equivalent_season"] += 1
-            logger.warning(
+            log = (
+                logger.info
+                if _off_schedule(db, league_id=league_id, sport_id=sport_id, window=window)
+                else logger.warning
+            )
+            log(
                 "No equivalent %s window for league=%s (window=%s) — skipping "
                 "player-stat scoring for this league/sport this cycle",
                 sport_name, league_id, window.id,
@@ -165,13 +200,18 @@ def score_transfer_window_for_league(
         )
     if native_window is None:
         # The league's own schedule has no window covering this date range
-        # (season not started / ended / off week) — nothing to score. Loud,
-        # not silent: this is the league's OWN native sport, so unlike the
-        # off-week case for a secondary sport, this should basically never
-        # fire post-creation (create_league/add_sport hard-block leagues
-        # from existing without a resolvable season) — worth a log line if
-        # it ever does.
-        logger.warning(
+        # (season not started / ended / off week) — nothing to score. Loud
+        # only when it's the league's OWN competition that came up empty:
+        # being handed a sibling competition's window is routine (see
+        # _off_schedule), and warning on it buried the real signal.
+        log = (
+            logger.info
+            if _off_schedule(
+                db, league_id=league_id, sport_id=league_sport_id, window=window
+            )
+            else logger.warning
+        )
+        log(
             "No native window for league=%s (window=%s, sport=%s) — skipping scoring",
             league_id, window.id, league_sport_id,
         )
@@ -269,12 +309,32 @@ def score_transfer_window_for_season_leagues(
             )
         ]
 
+        # Player stats are shared across every league of the sport and are read
+        # by pricing/squad-building/"my team" too, so this pass keeps the FULL
+        # league list — a window whose only leagues are still in SETUP must
+        # still have its player stats scored, or they'd be zero the moment one
+        # of those leagues goes ACTIVE.
         player_stat_totals = _score_player_stats_once_per_sport(
             db, league_ids=league_ids, window=window
         )
 
+        # Team scoring, though, is per-league and pointless before ACTIVE —
+        # filter here rather than walking every SETUP league through a window
+        # translation just to skip it (that's what filled the logs).
+        scorable_league_ids = [
+            league_id
+            for (league_id,) in (
+                db.query(League.id)
+                .filter(
+                    League.id.in_(league_ids),
+                    League.status.in_(SCORABLE_LEAGUE_STATUSES),
+                )
+                .all()
+            )
+        ]
+
         leagues_skipped = 0
-        for league_id in league_ids:
+        for league_id in scorable_league_ids:
             try:
                 # Each league gets its own SAVEPOINT: if this league's scoring
                 # raises (deadlock, deleted mid-run, etc.), only its savepoint
@@ -298,7 +358,7 @@ def score_transfer_window_for_season_leagues(
                 continue
 
         output = {
-            "leagues_scored": len(league_ids) - leagues_skipped,
+            "leagues_scored": len(scorable_league_ids) - leagues_skipped,
             "leagues_skipped": leagues_skipped,
             **player_stat_totals,
         }
