@@ -93,6 +93,16 @@ def _map_event_type(event_type: str, detail: str) -> str | None:
     return _EVENT_TYPE_MAP.get((event_type.strip().lower(), detail.strip().lower()))
 
 
+def _subst_ids(raw: dict) -> tuple[int | None, int | None]:
+    """(coming on, coming off) provider ids for a `subst` event.
+
+    API-Football inverts what the field names suggest: `player` is the one
+    going OFF, `assist` is the one coming ON (verified against fixture
+    1570333, where every `player` was in the published startXI).
+    """
+    return (raw.get("assist") or {}).get("id"), (raw.get("player") or {}).get("id")
+
+
 def _club_name_index(db, sport_id, team_name: str) -> NameIndex:
     """Name index over our players at one club, for id-drift fallback."""
     rows = (
@@ -482,6 +492,10 @@ async def sync_football_live_matches(db: Session) -> str:
         # apply_live_points is incremental (hincrbyfloat). Keyed by event_id;
         # the insert's RETURNING tells us which rows were actually new.
         scorable_by_event_id: dict[str, LiveEventLike] = {}
+        # Same deal for the LINEUP_CHANGE messages substitutions publish: only
+        # the subs this poll actually inserted, or the pitch re-swaps players
+        # already swapped on every subsequent tick.
+        sub_message_by_event_id: dict[str, dict] = {}
 
         for raw in raw_events:
             event_minute = (raw.get("time") or {}).get("elapsed", 0)
@@ -514,6 +528,50 @@ async def sync_football_live_matches(db: Session) -> str:
 
             player = raw.get("player", {}) or {}
             api_player_id = player.get("id")
+
+            # Substitutions: stored under the same contract the feeder pushes
+            # (player_id = the player coming ON, meta.related_player_id = the
+            # one coming OFF), which is what the match centre renders as
+            # "X for Y". The provider's own name for the outgoing player is
+            # kept as a display fallback for when we can't resolve their id.
+            if api_type.strip().lower() == "subst":
+                in_api_id, out_api_id = _subst_ids(raw)
+                player_in = _resolve_player(in_api_id) if in_api_id else None
+                if player_in is None:
+                    continue  # not a player we know about (not drafted/synced)
+                player_out = _resolve_player(out_api_id) if out_api_id else None
+                sub_event_id = f"{fixture_id}:{event_minute}:{api_type}:{out_api_id}:{detail}"
+                sub_message_by_event_id[sub_event_id] = {
+                    "match_id": live_key,
+                    # LineupCard keys and labels by this field, and everything
+                    # else in the match centre identifies clubs by name, so the
+                    # provider's numeric team id would render as a bare number.
+                    "team_id": team.get("name") or "",
+                    "player_in": str(player_in.id),
+                    "player_out": str(player_out.id) if player_out else None,
+                    "player_in_name": player_in.name,
+                    "player_out_name": player_out.name if player_out else player.get("name"),
+                    "minute": event_minute,
+                }
+                rows.append({
+                    "match_id": live_key,
+                    "event_id": sub_event_id,
+                    "sport": "football",
+                    "event_type": "substitution",
+                    "player_id": str(player_in.id),
+                    "team_id": str(team.get("id") or ""),
+                    "value": 0.0,
+                    "meta": {
+                        "minute": event_minute,
+                        "detail": detail,
+                        "source": "api-football",
+                        "related_player_id": str(player_out.id) if player_out else None,
+                        "related_player_name": player.get("name"),
+                    },
+                    "ts": now,
+                })
+                continue
+
             if api_player_id is None:
                 continue
 
@@ -537,6 +595,7 @@ async def sync_football_live_matches(db: Session) -> str:
                 scorable_by_event_id[event_id] = LiveEventLike(str(sporty_player.id), mapped_type)
 
         scorable_events: list[LiveEventLike] = []
+        new_sub_messages: list[dict] = []
         if rows:
             statement = (
                 pg_insert(LiveEvent)
@@ -547,6 +606,10 @@ async def sync_football_live_matches(db: Session) -> str:
             inserted_ids = {row[0] for row in db.execute(statement)}
             scorable_events = [
                 event for event_id, event in scorable_by_event_id.items()
+                if event_id in inserted_ids
+            ]
+            new_sub_messages = [
+                data for event_id, data in sub_message_by_event_id.items()
                 if event_id in inserted_ids
             ]
 
@@ -577,6 +640,11 @@ async def sync_football_live_matches(db: Session) -> str:
             },
         )
         await redis.publish(channel, message.model_dump_json())
+        for sub_data in new_sub_messages:
+            await redis.publish(
+                channel,
+                WSMessage(event="LINEUP_CHANGE", data=sub_data).model_dump_json(),
+            )
         if scorable_events:
             await apply_live_points(
                 redis, live_key=live_key, sport="football", events=scorable_events, channel=channel

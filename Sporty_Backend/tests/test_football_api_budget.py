@@ -377,3 +377,20 @@ def test_parse_lineups_carries_grid_and_played_position():
     assert doc["match_position"] == {"u-gk": "G", "u-lb": "D", "u-sub": "M"}
     # Bench players have no slot on the pitch.
     assert "u-sub" not in doc["grid"]
+
+
+def test_subst_event_reads_the_incoming_player_from_assist():
+    """Real payload shape from fixture 1570333: `player` (Davinchi) started,
+    so `player` is going off and `assist` is coming on."""
+    from app.services.sync.football_live_sync import _subst_ids
+
+    raw = {
+        "time": {"elapsed": 46},
+        "team": {"id": 546, "name": "Getafe"},
+        "player": {"id": 332645, "name": "Davinchi"},
+        "assist": {"id": 2482, "name": "E. Unal"},
+        "type": "subst",
+        "detail": "Substitution 1",
+    }
+    assert _subst_ids(raw) == (2482, 332645)
+    assert _subst_ids({"type": "subst", "player": {"id": 1}}) == (None, 1)

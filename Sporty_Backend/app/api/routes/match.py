@@ -255,7 +255,9 @@ async def get_match_state(
                 "player_name": info["name"] if info else None,
                 "team": info["team"] if info else None,
                 "related_player_id": related_pid,
-                "related_player_name": related_info["name"] if related_info else None,
+                "related_player_name": (
+                    related_info["name"] if related_info else meta.get("related_player_name")
+                ),
                 "related_team": related_info["team"] if related_info else None,
                 # Feeder detail: penalty flag on goals, injury severity,
                 # substitution reason.
