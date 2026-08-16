@@ -23,7 +23,34 @@ type Row = {
   rating: number | null;
   bonus: number;
   breakdown: TScoreEvent[];
+  stats: Record<string, number | null>;
 };
+
+// The match stat line shown under a player's scoring breakdown, in display
+// order. Deliberately excludes what the breakdown already itemises (goals,
+// assists, cards, clean sheets) — this is the context those points came from,
+// not a second copy of them. Minutes always show; the rest only when non-zero,
+// so a centre-back's row isn't padded with "0 Saves".
+const STAT_LINE: ReadonlyArray<[key: string, label: string]> = [
+  ["minutes", "Mins"],
+  ["shots_on_target", "Shots OT"],
+  ["key_passes", "Key passes"],
+  ["dribbles_won", "Dribbles"],
+  ["duels_won", "Duels won"],
+  ["tackles", "Tackles"],
+  ["interceptions", "Intercept"],
+  ["clearances", "Clearances"],
+  ["blocks", "Blocks"],
+  ["saves", "Saves"],
+  ["goals_conceded", "Conceded"],
+];
+
+function statEntries(stats: Record<string, number | null>) {
+  return STAT_LINE.filter(([key]) => {
+    const value = stats[key];
+    return typeof value === "number" && (value > 0 || key === "minutes");
+  }).map(([key, label]) => [label, stats[key] as number] as const);
+}
 
 // Podium tints for the top three ranks; everyone else is neutral.
 const MEDAL: Record<number, string> = {
@@ -101,6 +128,7 @@ export function LiveLeaderboard() {
           rating: b?.rating ?? null,
           bonus: b?.bonus ?? 0,
           breakdown: b?.breakdown ?? [],
+          stats: b?.stats ?? {},
         };
       })
       .sort(
@@ -123,7 +151,8 @@ export function LiveLeaderboard() {
         <ol className="space-y-1">
           {rows.map((row, idx) => {
             const medal = MEDAL[idx];
-            const hasBreakdown = row.breakdown.length > 0;
+            const stats = statEntries(row.stats);
+            const hasBreakdown = row.breakdown.length > 0 || stats.length > 0;
             const open = openId === row.playerId;
             return (
               <li key={row.playerId} className="pop-in" style={{ animationDelay: `${idx * 40}ms` }}>
@@ -172,8 +201,28 @@ export function LiveLeaderboard() {
                   )}
                 </button>
                 {open && hasBreakdown && (
-                  <div className="mb-1 ml-10 mr-2 rounded-[3px] border border-white/6 bg-black/20 px-3 py-2">
-                    <ScoreEventList events={row.breakdown} compact />
+                  <div className="mb-1 ml-10 mr-2 space-y-2 rounded-[3px] border border-white/6 bg-black/20 px-3 py-2">
+                    {row.breakdown.length > 0 && (
+                      <ScoreEventList events={row.breakdown} compact />
+                    )}
+                    {stats.length > 0 && (
+                      <dl
+                        className={`grid grid-cols-3 gap-x-3 gap-y-1.5 sm:grid-cols-4 ${
+                          row.breakdown.length > 0 ? "border-t border-white/6 pt-2" : ""
+                        }`}
+                      >
+                        {stats.map(([label, value]) => (
+                          <div key={label} className="min-w-0">
+                            <dt className="truncate font-sans text-[9px] font-700 uppercase tracking-[1px] text-fg-3">
+                              {label}
+                            </dt>
+                            <dd className="font-display text-sm leading-tight tabular-nums text-fg-1">
+                              {value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
                   </div>
                 )}
               </li>

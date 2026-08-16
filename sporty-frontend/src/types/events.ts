@@ -38,7 +38,16 @@ export type MatchEvent = {
   extra?: Record<string, unknown> | null;
 };
 
-/** Running possession split pushed by the feeder (football only). */
+/** Team match stats booked at full time (possession, shots, xG, pass accuracy).
+ *  Values are the provider's raw ones — "52%", 1.83, 0, or null when the stat
+ *  wasn't reported — so the UI must format and null-check, not assume numbers. */
+export type MatchTeamStats = {
+  home: Record<string, string | number | null>;
+  away: Record<string, string | number | null>;
+};
+
+/** Possession split — from the feeder while live, else derived at FT from the
+ *  team stat sheet's "Ball Possession". */
 export type Possession = {
   home_pct: number;
   away_pct: number;
@@ -101,6 +110,8 @@ export type MatchSnapshot = {
   player_breakdowns?: Record<string, MatchPlayerBreakdown>;
   possession?: Possession | null;
   shootout?: Shootout | null;
+  /** Team stat sheet; absent until full time and for non-football matches. */
+  team_stats?: MatchTeamStats | null;
 };
 
 export type MatchPlayerBreakdown = {
@@ -109,6 +120,9 @@ export type MatchPlayerBreakdown = {
   bonus: number;
   rating: number | null;
   breakdown: import("./player").TScoreEvent[];
+  /** The player's real match stat line, booked at full time (minutes,
+   *  shots_on_target, tackles, duels_won, …). Empty until FT. */
+  stats?: Record<string, number | null> | null;
 };
 
 export type FantasyPointsDelta = {

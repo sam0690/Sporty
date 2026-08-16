@@ -6,6 +6,7 @@ import type {
   MatchEvent,
   MatchLineups,
   MatchSnapshot,
+  MatchTeamStats,
   PlayerInfo,
   Possession,
   Score,
@@ -36,6 +37,7 @@ type MatchStoreState = {
   lineup: Record<string, unknown>;
   possession: Possession | null;
   shootout: Shootout | null;
+  teamStats: MatchTeamStats | null;
   status: string;
   socketStatus: SocketStatus;
   lastUpdatedTs: number | null;
@@ -103,6 +105,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   lineup: {},
   possession: null,
   shootout: null,
+  teamStats: null,
   status: "scheduled",
   socketStatus: "connecting",
   lastUpdatedTs: null,
@@ -125,6 +128,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
       lineup: {},
       possession: snapshot.possession ?? null,
       shootout: snapshot.shootout ?? null,
+      teamStats: snapshot.team_stats ?? null,
       status: snapshot.status,
       minuteStartedTs: null,
       lastUpdatedTs: Date.now(),

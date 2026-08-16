@@ -125,6 +125,28 @@ async def _get_persisted_match_json(db, kind: str, match_id) -> dict | None:
     return row["payload"] if row else None
 
 
+def _possession_from_team_stats(team_stats: dict) -> dict | None:
+    """{"home": {"Ball Possession": "52%"}, ...} -> {"home_pct": 52.0, ...}.
+
+    The provider reports possession as a percentage STRING; anything else
+    (missing, "-", None) means it wasn't reported, and no meter is better than
+    a meter reading zero.
+    """
+    def pct(side: str) -> float | None:
+        raw = (team_stats.get(side) or {}).get("Ball Possession")
+        if not isinstance(raw, str) or not raw.endswith("%"):
+            return None
+        try:
+            return float(raw[:-1])
+        except ValueError:
+            return None
+
+    home, away = pct("home"), pct("away")
+    if home is None or away is None:
+        return None
+    return {"home_pct": home, "away_pct": away}
+
+
 @router.get("/match/{match_id}/state")
 async def get_match_state(
     match_id: str,
@@ -218,6 +240,26 @@ async def get_match_state(
     # join the name-resolution batch below alongside every other player id.
     event_metas = [e["meta"] if isinstance(e["meta"], dict) else {} for e in event_rows]
 
+    # Two providers can hold events for the same football match: API-Football
+    # (authoritative, hourly, feeds scoring) and SportScore (display-only, every
+    # 60s). Both sets are kept — their ids are namespaced so they can't collide —
+    # and the choice is made HERE, at display time: SportScore while the match is
+    # in flight, because it's an hour fresher; API-Football once the match is
+    # finished, because that's the set the final stats were booked from. Matches
+    # with only one source (basketball, feeder pushes, anything pre-SportScore)
+    # are untouched by this.
+    sources = {meta.get("source") for meta in event_metas}
+    if "sportscore" in sources and len(sources) > 1:
+        preferred = "api-football" if row["status"] == "finished" else "sportscore"
+        kept = [
+            (event, meta)
+            for event, meta in zip(event_rows, event_metas)
+            if meta.get("source") == preferred
+        ]
+        if kept:
+            event_rows = [event for event, _ in kept]
+            event_metas = [meta for _, meta in kept]
+
     # Resolve every player UUID seen (events + point hashes + lineups) to a name.
     player_ids = {e["player_id"] for e in event_rows if e["player_id"]}
     player_ids |= {meta.get("related_player_id") for meta in event_metas if meta.get("related_player_id")}
@@ -252,8 +294,11 @@ async def get_match_state(
                 "type": e["event_type"],
                 "minute": meta.get("minute"),
                 "player_id": pid,
-                "player_name": info["name"] if info else None,
-                "team": info["team"] if info else None,
+                # SportScore identifies players by display name only, so an
+                # unresolved one still has a name to show — without this
+                # fallback every such event renders as a nameless row.
+                "player_name": info["name"] if info else meta.get("player_name"),
+                "team": info["team"] if info else meta.get("team"),
                 "related_player_id": related_pid,
                 "related_player_name": (
                     related_info["name"] if related_info else meta.get("related_player_name")
@@ -279,6 +324,7 @@ async def get_match_state(
                 SELECT DISTINCT ON (player_id)
                        player_id::text AS player_id, position,
                        fantasy_points, bonus_points, breakdown,
+                       stats,
                        stats->>'rating' AS rating
                 FROM player_match_scores
                 WHERE match_id = :mid
@@ -295,6 +341,12 @@ async def get_match_state(
             "bonus": float(r["bonus_points"] or 0),
             "rating": float(r["rating"]) if r["rating"] else None,
             "breakdown": r["breakdown"] if isinstance(r["breakdown"], list) else [],
+            # The player's actual match stat line (minutes, shots on target,
+            # tackles, duels won, …). Already booked off API-Football's
+            # full-time sheet by persist_football_stats_from_sheet — it was
+            # being stored and then thrown away here, with only `rating`
+            # pulled out of it.
+            "stats": r["stats"] if isinstance(r["stats"], dict) else {},
         }
         for r in breakdown_rows
     }
@@ -304,6 +356,17 @@ async def get_match_state(
     extras = await _get_cached_match_json(redis, "extras", _match)
     if extras is None:
         extras = await _get_persisted_match_json(db, "extras", row["id"]) or {}
+
+    # Team match stats (possession, shots, xG, pass accuracy), booked once at
+    # full time by _cache_team_stats. Football only, and absent for matches
+    # that finished before it existed.
+    team_stats = await _get_persisted_match_json(db, "team_stats", row["id"])
+
+    # The possession meter predates this and was fed only by the feeder, which
+    # is switched off — so derive it from the stat sheet when nothing else has.
+    possession = extras.get("possession")
+    if possession is None and team_stats:
+        possession = _possession_from_team_stats(team_stats)
 
     return {
         "match_id": row["id"],
@@ -333,8 +396,9 @@ async def get_match_state(
             "home_formation": home_formation,
             "away_formation": away_formation,
         },
-        "possession": extras.get("possession"),
+        "possession": possession,
         "shootout": extras.get("shootout"),
+        "team_stats": team_stats,
     }
 
 

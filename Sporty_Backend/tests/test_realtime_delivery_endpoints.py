@@ -38,6 +38,9 @@ class _FakeAsyncDB:
                 row={
                     "id": "match-1",
                     "sport_id": "sport-1",
+                    # The state query selects the sport NAME as `sport` too; the
+                    # endpoint returns it, so the fake row has to carry it.
+                    "sport": "football",
                     "home_team": "A",
                     "away_team": "B",
                     "home_score": 2,

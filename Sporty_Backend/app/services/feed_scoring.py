@@ -113,10 +113,21 @@ async def apply_live_points(redis, *, live_key: str, sport: str, events, channel
 
 def _aggregate_match_events(db: Session, live_key: str) -> dict[uuid.UUID, Counter]:
     """Per-player event-type counts from the stored live_events of a match,
-    keyed by Sporty player UUID. Events without a valid player id are skipped."""
+    keyed by Sporty player UUID. Events without a valid player id are skipped.
+
+    SportScore rows are EXCLUDED, and that exclusion is load-bearing. This is
+    the event-count fallback _finish_match uses when the FT stat sheet can't be
+    fetched, and it *assigns* (not accumulates) counts. SportScore mirrors the
+    same real-world goals API-Football reports, under its own `ss:`-prefixed
+    event ids, so counting both would credit every goal twice. It is only
+    display data — API-Football is the sole source of anything that scores.
+    """
     rows = (
         db.query(LiveEvent.player_id, LiveEvent.event_type)
-        .filter(LiveEvent.match_id == live_key)
+        .filter(
+            LiveEvent.match_id == live_key,
+            LiveEvent.meta["source"].astext.is_distinct_from("sportscore"),
+        )
         .all()
     )
     per_player: dict[uuid.UUID, Counter] = defaultdict(Counter)

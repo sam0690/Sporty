@@ -22,10 +22,12 @@ from app.tasks._async_bridge import run_async
 from app.database import SessionLocal
 from app.services.sync.cricket_live_sync import sync_cricket_live_matches
 from app.services.sync.football_live_sync import (
+    backfill_football_team_stats,
     sync_football_lineups,
     sync_football_live_matches,
 )
 from app.services.sync.nba_live_sync import sync_nba_live_matches
+from app.services.sync.sportscore_live_sync import sync_sportscore_live
 
 
 # Shared bridge: see app/tasks/_async_bridge.py for the loop/Redis caveat.
@@ -43,6 +45,42 @@ def poll_live_football_task() -> dict[str, Any]:
         try:
             result = _run_async(sync_football_live_matches(db))
             return {"ok": True, "task": "live.football.poll", "result": result}
+        finally:
+            db.close()
+
+
+@shared_task(name="sync.football.team_stats_backfill")
+def backfill_team_stats_task() -> dict[str, Any]:
+    """Catch fixtures whose team stats were skipped for budget. Daily, just
+    after the provider's 00:00 UTC quota reset, when the budget is fresh."""
+    lock_key = "lock:sync:football:team-stats-backfill"
+    with redis_lock(lock_key, ttl_seconds=300) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held",
+                    "task": "sync.football.team_stats_backfill"}
+
+        db = SessionLocal()
+        try:
+            result = _run_async(backfill_football_team_stats(db))
+            return {"ok": True, "task": "sync.football.team_stats_backfill", "result": result}
+        finally:
+            db.close()
+
+
+@shared_task(name="live.sportscore.poll")
+def poll_live_sportscore_task() -> dict[str, Any]:
+    """60-second display-only tick (SportScore, keyless). Separate lock from
+    live.football.poll on purpose — the two providers run independently, and a
+    stalled API-Football poll must never hold up liveness."""
+    lock_key = "lock:live:sportscore:poll"
+    with redis_lock(lock_key, ttl_seconds=55) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held", "task": "live.sportscore.poll"}
+
+        db = SessionLocal()
+        try:
+            result = _run_async(sync_sportscore_live(db))
+            return {"ok": True, "task": "live.sportscore.poll", "result": result}
         finally:
             db.close()
 

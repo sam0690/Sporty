@@ -52,6 +52,31 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=30),  # every hour at :30
         "args": (),
     },
+    # Team stats (possession/shots/xG) skipped at full time because the day's
+    # budget was inside the reserve. 00:20 UTC — after the provider's midnight
+    # quota reset, before the 06:00 fixture sync, so it uses budget nobody else
+    # wants yet. Capped at 5 fixtures and a 14-day lookback, so it can never
+    # run away into the ~380 finished 2024/25 fixtures.
+    "backfill-football-team-stats-daily": {
+        "task": "sync.football.team_stats_backfill",
+        "schedule": crontab(minute=20, hour=0),
+        "args": (),
+    },
+    # ── SportScore (keyless, ~10k req/day) — display-only liveness ──
+    # The hourly poll above stays exactly as it is: it remains the ONLY source
+    # of full-time stats, fantasy points, and the flip to 'finished'. This tick
+    # just makes the score and event feed current in between, which the free
+    # API-Football tier cannot pay for.
+    #
+    # Cost: ~10 concurrent fixtures x 60 ticks/hr ~= 600 requests on a heavy
+    # Saturday, against their ~10,000/day/IP. No budget guard needed.
+    # Idle ticks are free — the same DB window gate as the football poll means
+    # no in-play fixture => no outbound request at all.
+    "poll-live-sportscore-every-60s": {
+        "task": "live.sportscore.poll",
+        "schedule": 60.0,
+        "args": (),
+    },
     # Confirmed lineups land ~1h before kick-off, which the hourly live poll
     # would miss by up to an hour (its window opens at kickoff-5min). This is
     # deliberately tighter, and it is FREE to run tight: each fixture is

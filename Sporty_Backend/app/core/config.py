@@ -122,6 +122,14 @@ class Settings(BaseSettings):
     # FOOTBALL_API_KEY is set.
     LIVE_POLLING_ENABLED: bool = False
 
+    # SportScore (sportscore.com/api/widget/*) — keyless, ~10k req/day/IP, so
+    # it can tick every 60s where API-Football's 100/day forces hourly. It is a
+    # DISPLAY-ONLY live layer: score, minute, event feed, lineups. It carries no
+    # per-player stats at all, so scoring stays entirely on API-Football's
+    # full-time sheet. Off = exactly today's behaviour. Also togglable at
+    # runtime via the sportscore_live_enabled admin feature flag.
+    SPORTSCORE_LIVE_ENABLED: bool = False
+
     # Daily API-Football request budget (Redis-counted, UTC reset). Kept
     # under the provider's 100/day hard cap for headroom; 0 = unlimited
     # (paid plan).

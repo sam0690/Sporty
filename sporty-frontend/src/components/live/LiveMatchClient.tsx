@@ -278,6 +278,22 @@ export default function LiveMatchClient({
           )}
         </div>
 
+        {/* Attribution for SportScore's live score/event feed. Their free tier
+            requires a visible DOFOLLOW link on pages using the data — do not
+            add rel="nofollow" here, and do not remove this while the
+            sportscore_live_enabled flag is on. */}
+        <p className="mt-8 text-center font-sans text-[11px] tracking-[0.5px] text-fg-3">
+          Live scores &amp; match events powered by{" "}
+          <a
+            href="https://sportscore.com/"
+            target="_blank"
+            rel="noopener"
+            className="text-fg-2 underline decoration-fg-3/40 underline-offset-2 transition-colors hover:text-accent"
+          >
+            SportScore
+          </a>
+        </p>
+
         <ToastAlert />
       </main>
     </div>

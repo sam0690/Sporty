@@ -40,6 +40,7 @@ import json
 import logging
 from datetime import datetime, timedelta, timezone
 
+from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
@@ -101,6 +102,17 @@ def _subst_ids(raw: dict) -> tuple[int | None, int | None]:
     1570333, where every `player` was in the published startXI).
     """
     return (raw.get("assist") or {}).get("id"), (raw.get("player") or {}).get("id")
+
+
+def live_key_for(match: Match) -> str:
+    """The key a match's live_events, Redis channel and fantasy hashes are filed
+    under — API-Football's fixture id when we have one, else our UUID.
+
+    Shared deliberately: a second provider that derives this differently would
+    file its rows under a different bucket, and the two event sets would never
+    colocate on the same match. See sportscore_live_sync.
+    """
+    return match.external_api_id or str(match.id)
 
 
 def _club_name_index(db, sport_id, team_name: str) -> NameIndex:
@@ -274,6 +286,132 @@ def _missed_finish_candidates(db: Session, sport_id) -> list[Match]:
 # would mean the match is never booked at all.
 _SHEET_RETRY_UNTIL = timedelta(hours=12)
 
+# How far back the team-stats backfill will look. Deliberately short: the
+# table holds ~380 finished fixtures from 2024/25, and they are not what the
+# current-season match centre shows.
+_BACKFILL_LOOKBACK = timedelta(days=14)
+
+
+def _parse_team_stats(
+    payload: dict, fixture_data: dict, match: Match | None = None
+) -> dict | None:
+    """API-Football /fixtures/statistics -> {"home": {type: value}, "away": {...}}.
+
+    Sides are matched by team id, never by response order, which the provider
+    does not guarantee. Team NAME is the fallback: the backfill path has no live
+    fixture payload to take ids from, and our home_team/away_team strings came
+    from this same provider, so they match exactly.
+
+    Values are kept RAW ("52%", 1.83, None) — formatting is the UI's business,
+    and coercing here would lose the difference between 0 and "not reported".
+    """
+    teams_obj = fixture_data.get("teams") or {}
+    side_by_id = {
+        str(((teams_obj.get("home") or {}).get("id"))): "home",
+        str(((teams_obj.get("away") or {}).get("id"))): "away",
+    }
+    side_by_name = (
+        {match.home_team: "home", match.away_team: "away"} if match is not None else {}
+    )
+    out: dict[str, dict] = {"home": {}, "away": {}}
+    for block in payload.get("response", []) or []:
+        team = block.get("team") or {}
+        side = side_by_id.get(str(team.get("id"))) or side_by_name.get(team.get("name"))
+        if side is None:
+            continue
+        for entry in block.get("statistics", []) or []:
+            stat_type = entry.get("type")
+            if stat_type:
+                out[side][str(stat_type)] = entry.get("value")
+    return out if (out["home"] or out["away"]) else None
+
+
+async def _cache_team_stats(db, client, match: Match, fixture_data: dict) -> bool:
+    """Cache the FT team stat sheet (possession, shots, xG, pass accuracy) for
+    the match centre. One request, once per match, at full time.
+
+    Cosmetic, so it YIELDS: it spends nothing once the day's budget is inside
+    FOOTBALL_LINEUP_QUOTA_RESERVE, the same reserve that stops pre-match lineups
+    starving the finals and FT sheets that scoring actually depends on. Every
+    failure here is swallowed — a missing stats card must never block a finish.
+    """
+    budget = settings.FOOTBALL_API_DAILY_BUDGET
+    if budget > 0 and quota_used_today() >= budget - settings.FOOTBALL_LINEUP_QUOTA_RESERVE:
+        logger.info("Football team stats skipped for %s: budget reserve reached", match.id)
+        return False
+    try:
+        payload = await client.get_match_stats(fixture_id=int(match.external_api_id))
+        doc = _parse_team_stats(payload, fixture_data, match)
+        if doc is None:
+            return False
+        from app.api.v1.feed import _persist_feed_cache
+
+        _persist_feed_cache(db, match.id, "team_stats", doc)
+        return True
+    except FootballQuotaExhausted as exc:
+        logger.info("Football team stats skipped for %s: %s", match.id, exc)
+    except Exception:
+        logger.warning(
+            "Football team stats failed for fixture %s", match.external_api_id, exc_info=True
+        )
+    return False
+
+
+async def backfill_football_team_stats(db: Session, limit: int = 5) -> str:
+    """Fill in team stats for recently finished fixtures that never got them.
+
+    _cache_team_stats YIELDS when the day's budget is inside the reserve, and
+    without this nothing would ever retry — the match would sit statless
+    forever. Runs after the UTC quota reset, when the budget is fresh.
+
+    Scoped to the last _BACKFILL_LOOKBACK on purpose: there are ~380 finished
+    fixtures from 2024/25 in the table, and chewing through those at one
+    request each would burn five days of budget re-decorating matches from two
+    seasons before the current-season cutover.
+    """
+    if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
+        return "ok: live polling disabled"
+
+    sport = db.query(Sport).filter(Sport.name == "football").first()
+    if sport is None:
+        return "ok: football sport not seeded"
+
+    cutoff = datetime.now(timezone.utc) - _BACKFILL_LOOKBACK
+    rows = db.execute(
+        text(
+            """
+            SELECT m.id::text AS id, m.external_api_id, m.home_team, m.away_team
+            FROM matches m
+            LEFT JOIN match_feed_cache c
+                   ON c.match_id = m.id AND c.kind = 'team_stats'
+            WHERE m.sport_id = :sport_id
+              AND m.status = 'finished'
+              AND m.match_date >= :cutoff
+              AND m.external_api_id ~ '^[0-9]+$'
+              AND c.id IS NULL
+            ORDER BY m.match_date DESC
+            LIMIT :limit
+            """
+        ),
+        {"sport_id": sport.id, "cutoff": cutoff, "limit": limit},
+    ).mappings().all()
+    if not rows:
+        return "ok: no recent fixtures missing team stats; API not called"
+
+    client = FootballAPIClient()
+    filled = 0
+    for row in rows:
+        match = db.query(Match).filter(Match.id == row["id"]).first()
+        if match is None:
+            continue
+        # No live fixture payload here, so _parse_team_stats matches sides by
+        # team name instead of id — one request per fixture, not two.
+        if await _cache_team_stats(db, client, match, {}):
+            filled += 1
+
+    return f"ok: team stats backfilled for {filled} of {len(rows)} fixture(s)"
+
+
 
 async def _finish_match(db, client, match: Match, live_key: str, fixture_data: dict, resolve_player) -> bool:
     """live->finished transition: book the full FT stat sheet (saves/minutes/
@@ -332,6 +470,10 @@ async def _finish_match(db, client, match: Match, live_key: str, fixture_data: d
         persist_match_stats(db, match=match, live_key=live_key, sport="football")
     match.status = "finished"
     db.commit()
+
+    # After the commit on purpose: the stats card is cosmetic and must never
+    # sit inside the transaction that books the result.
+    await _cache_team_stats(db, client, match, fixture_data)
     try:
         enqueue_scoring_for_finished_match(
             db, match_date=match.match_date, sport_id=match.sport_id
@@ -383,7 +525,7 @@ async def _reconcile_missed_finishes(db, client, redis, candidates: list[Match],
             # persists the provider's result and leaves nothing pending.
             db.commit()
 
-            live_key = match.external_api_id or str(match.id)
+            live_key = live_key_for(match)
             if finished_now:
                 if not await _finish_match(
                     db, client, match, live_key, fixture_data, resolve_player
@@ -484,7 +626,7 @@ async def sync_football_live_matches(db: Session) -> str:
                 )
                 raw_events = []
 
-        live_key = match.external_api_id or str(match.id)
+        live_key = live_key_for(match)
         now = datetime.now(timezone.utc)
         rows: list[dict] = []
         # Fantasy deltas must only be applied for events not seen in earlier

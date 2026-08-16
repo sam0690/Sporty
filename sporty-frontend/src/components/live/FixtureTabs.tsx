@@ -10,6 +10,7 @@ import { LiveLeaderboard } from "./LiveLeaderboard";
 import { MatchLineupPitch } from "./MatchLineupPitch";
 import { RatingsCard } from "./RatingsCard";
 import { PredictCard } from "./PredictCard";
+import { TeamStatsCard } from "./TeamStatsCard";
 import { PanelEmpty } from "./Panel";
 import { ChartIcon, ListIcon, ShieldIcon, TrophyIcon } from "./icons";
 
@@ -103,10 +104,11 @@ function Lineups() {
 function Stats({ ratings }: { ratings: MatchRatings | null }) {
   const playerPoints = useMatchStore((s) => s.playerPoints);
   const events = useMatchStore((s) => s.events);
+  const teamStats = useMatchStore((s) => s.teamStats);
   const hasRatings = ratings != null && ratings.ratings.length > 0;
   const hasBoard = Object.keys(playerPoints).length > 0 || events.length > 0;
 
-  if (!hasRatings && !hasBoard) {
+  if (!hasRatings && !hasBoard && !teamStats) {
     return (
       <div className="card-surface p-5">
         <PanelEmpty
@@ -120,6 +122,7 @@ function Stats({ ratings }: { ratings: MatchRatings | null }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+      <TeamStatsCard />
       <RatingsCard ratings={ratings} />
       <LiveLeaderboard />
     </div>
