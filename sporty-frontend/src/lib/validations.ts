@@ -34,7 +34,9 @@ export const CreateLeagueSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "League name is required.")
+    // 2 = the backend's LeagueCreate.name min_length; 1 char sailed past the
+    // form and came back as a raw 422.
+    .min(2, "League name must be at least 2 characters.")
     .max(50, "League name must be 50 characters or fewer."),
   sport_ids: z
     .array(z.string().trim().min(1))
@@ -78,7 +80,8 @@ export const CreateTeamSchema = z.object({
   team_name: z
     .string()
     .trim()
-    .min(1, "Team name is required.")
+    // Matches TeamBuildRequest.team_name min_length on the backend.
+    .min(2, "Team name must be at least 2 characters.")
     .max(30, "Team name must be 30 characters or fewer."),
 });
 

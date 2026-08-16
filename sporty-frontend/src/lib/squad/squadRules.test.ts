@@ -89,6 +89,43 @@ describe("buildSquadValidation", () => {
     expect(byKey["position-DEF"].satisfied).toBe(false);
     expect(byKey["position-DEF"].detail).toBe("0/5");
   });
+
+  it("fails only when a club is OVER the cap, not at it", () => {
+    const atCap = buildSquadValidation({
+      players: footballers(3, "MID", "Arsenal"),
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: {},
+      maxPerClub: 3,
+    });
+    expect(
+      atCap.find((rule) => rule.key === "max-per-club")?.satisfied,
+    ).toBe(true);
+
+    const overCap = buildSquadValidation({
+      players: footballers(4, "MID", "Arsenal"),
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: {},
+      maxPerClub: 3,
+    });
+    const rule = overCap.find((r) => r.key === "max-per-club");
+    expect(rule?.satisfied).toBe(false);
+    expect(rule?.detail).toBe("4/3");
+  });
+
+  it("omits the club rule when the league has no cap", () => {
+    const rules = buildSquadValidation({
+      players: footballers(4),
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: {},
+    });
+    expect(rules.find((rule) => rule.key === "max-per-club")).toBeUndefined();
+  });
 });
 
 describe("clubWarnings", () => {

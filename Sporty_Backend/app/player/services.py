@@ -13,7 +13,14 @@ from sqlalchemy import false
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.league.models import FantasyTeam, LeagueSport, Sport, TeamPlayer, TransferWindow
+from app.league.models import (
+    FantasyTeam,
+    League,
+    LeagueSport,
+    Sport,
+    TeamPlayer,
+    TransferWindow,
+)
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 from app.player.schemas import PlayerFilter
 from app.services.scoring.projection import compute_projected_points
@@ -114,6 +121,12 @@ def _apply_league_player_pool(query, db: Session, league_id: uuid.UUID):
 def _exclude_owned_players(query, league_id: uuid.UUID):
     """Exclude players currently active on any team in the league.
 
+    DRAFT LEAGUES ONLY — see the caller. Budget leagues are FPL-style: every
+    manager may own the same player, and every write path already allows it
+    (build_initial_team, execute_transfer, and the auto-pick pool all skip
+    ownership checks). Applying this to them hid a rival's signings from the
+    team builder and the transfer market.
+
     Q2: The owned-player subquery
     ──────────────────────────────
     We need to exclude players that are **currently active** on ANY
@@ -202,18 +215,24 @@ def get_players(
 ) -> tuple[list[Player], int]:
     """Return (players, total_count) applying optional filters.
 
-    If filters.league_id is provided, players already owned by any
-    team in that league are automatically excluded. This means a
-    single GET /players?league_id=... endpoint serves both general
-    browsing (no league_id) and transfer/draft pool views (with
-    league_id) — no separate endpoint needed.
+    If filters.league_id is provided the pool is scoped to that league's
+    sports and competitions, and — in DRAFT leagues only — players already
+    rostered there are excluded. This means a single GET /players?league_id=...
+    endpoint serves both general browsing (no league_id) and transfer/draft
+    pool views (with league_id) — no separate endpoint needed.
     """
     query = db.query(Player).options(joinedload(Player.sport))
 
-    # ── League-scoped exclusion (owned players) ─────────────────────
+    # ── League-scoped pool (+ owned-player exclusion in draft leagues) ──
     if filters.league_id:
         query = _apply_league_player_pool(query, db, filters.league_id)
-        query = _exclude_owned_players(query, filters.league_id)
+        draft_mode = (
+            db.query(League.draft_mode)
+            .filter(League.id == filters.league_id)
+            .scalar()
+        )
+        if draft_mode:
+            query = _exclude_owned_players(query, filters.league_id)
 
     query = _apply_filters(query, filters)
     players, total = _paginate(query, filters)
@@ -261,7 +280,8 @@ def get_available_players_for_league(
     league_id: uuid.UUID,
     filters: PlayerFilter,
 ) -> tuple[list[Player], int]:
-    """Players NOT currently owned by any team in this league.
+    """Players this league can sign — its sports/competitions only, minus the
+    ones already rostered if (and only if) it's a draft league.
 
     This is the primary query for two user flows:
       • Draft pool  — "which players can I pick?"

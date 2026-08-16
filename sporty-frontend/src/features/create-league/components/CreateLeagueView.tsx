@@ -315,23 +315,12 @@ export function CreateLeagueView() {
       });
       setShowSuccessModal(true);
     } catch (err: unknown) {
-      const fallback = "Failed to create league";
-      if (
-        typeof err === "object" &&
-        err !== null &&
-        "response" in err &&
-        typeof (err as { response?: unknown }).response === "object" &&
-        (err as { response?: { data?: { detail?: unknown } } }).response?.data
-          ?.detail
-      ) {
-        const detail = (err as { response?: { data?: { detail?: unknown } } })
-          .response?.data?.detail;
-        setError(typeof detail === "string" ? detail : fallback);
-      } else if (err instanceof Error) {
-        setError(err.message || fallback);
-      } else {
-        setError(fallback);
-      }
+      // The Axios interceptor already unwraps FastAPI's `detail` into
+      // ApiError.message (utils/api-Error.ts), so the raw-response branch this
+      // used to have never ran — the errors it was meant to surface arrive here.
+      setError(
+        (err instanceof Error ? err.message : "") || "Failed to create league",
+      );
     }
   });
 

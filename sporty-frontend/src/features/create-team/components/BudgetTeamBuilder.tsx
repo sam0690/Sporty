@@ -69,6 +69,7 @@ export function BudgetTeamBuilder({
   handleCreateTeam,
   squadValidation,
   clubCounts,
+  isSquadValid,
   buildTeamMutation,
 }: BudgetTeamBuilderProps) {
   if (myTeam) {
@@ -256,7 +257,10 @@ export function BudgetTeamBuilder({
             <button
               type="button"
               onClick={handleNextStep}
-              disabled={selectedPlayers.length !== requiredPlayers}
+              // Every rule in the checklist, not just the count — the backend
+              // rejects the same squad, so letting it through only moved the
+              // error to a 422 two steps later.
+              disabled={!isSquadValid}
               className="rounded-[3px] bg-accent px-10 py-3 font-sans text-sm font-700 uppercase tracking-[1.5px] text-black transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:bg-surface-3 disabled:text-fg-3"
             >
               Review Team &amp; Name

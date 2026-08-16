@@ -44,6 +44,7 @@ from app.services.budget_utils import calculate_refund
 from app.services.scoring.window_locator import find_equivalent_season_for_sport
 from app.core.config import settings
 from app.squad.services import (
+    check_full_squad_constraints,
     check_squad_constraints,
     validate_lineup_for_league_type,
     validate_position_slots,
@@ -1869,6 +1870,22 @@ def build_initial_team(
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(exc),
+        )
+
+    # ── Position minimums + max-per-club ─────────────────────────────────────
+    # Same check every other roster-mutating path runs (draft picks, transfers,
+    # trades, waivers). Without it the budget-mode initial build was the one
+    # entry point that accepted a squad the league's own rules reject — the
+    # frontend showed the GKP/DEF/MID/FWD checklist while the API took 15
+    # forwards from one club. LineupSlot rows are admin-created and almost
+    # never exist, so validate_position_slots above returns immediately.
+    violation = check_full_squad_constraints(
+        players, league, sport_type, "mixed" if is_multisport_league else "single"
+    )
+    if violation:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=violation,
         )
     
     # Budget check

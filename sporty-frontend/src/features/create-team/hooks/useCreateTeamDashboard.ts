@@ -19,7 +19,6 @@ import {
   buildSquadValidation,
   clubWarnings,
   countBy,
-  MULTISPORT_MIN_BY_SPORT,
   normalizeLeagueSport,
   SQUAD_SIZES,
 } from "@/lib/squad/squadRules";
@@ -151,10 +150,18 @@ export function useCreateTeamDashboard() {
         includeBudgetRule: true,
         remainingBudget,
         positionMinimums: league?.position_minimums ?? {},
+        maxPerClub: league?.max_per_club,
       }),
-    [selectedPlayers, leagueSport, remainingBudget, league?.position_minimums],
+    [
+      selectedPlayers,
+      leagueSport,
+      remainingBudget,
+      league?.position_minimums,
+      league?.max_per_club,
+    ],
   );
-  const isSquadValid = squadValidation.every((rule) => rule.satisfied);
+  const unmetRule = squadValidation.find((rule) => !rule.satisfied) ?? null;
+  const isSquadValid = !unmetRule;
   const clubCounts = useMemo(
     () => clubWarnings(selectedPlayers, league?.max_per_club),
     [selectedPlayers, league?.max_per_club],
@@ -271,22 +278,11 @@ export function useCreateTeamDashboard() {
     }
   };
 
-  const validateSelectionOrExplain = (): string | null => {
-    if (selectedPlayers.length !== requiredPlayers) {
-      return `You need exactly ${requiredPlayers} players for a ${leagueSport} league.`;
-    }
-    if (isMultiSportLeague) {
-      const footballCount = selectedCountsBySport.football ?? 0;
-      const basketballCount = selectedCountsBySport.basketball ?? 0;
-      if (
-        footballCount < MULTISPORT_MIN_BY_SPORT.football ||
-        basketballCount < MULTISPORT_MIN_BY_SPORT.basketball
-      ) {
-        return `Multisport squads must include at least ${MULTISPORT_MIN_BY_SPORT.football} football and ${MULTISPORT_MIN_BY_SPORT.basketball} basketball players.`;
-      }
-    }
-    return null;
-  };
+  // The checklist IS the gate — one rule set for what's shown and what's
+  // enforced, so a displayed ✗ can never be submittable (the backend rejects
+  // the same squad in build_initial_team).
+  const validateSelectionOrExplain = (): string | null =>
+    unmetRule ? `${unmetRule.label} not met (${unmetRule.detail}).` : null;
 
   const handleNextStep = async () => {
     setError(null);

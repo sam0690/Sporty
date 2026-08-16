@@ -141,12 +141,14 @@ class PlayerFilter(BaseModel):
       The most important use case for GET /players is:
       "Show me available players I can transfer IN to my team."
 
-      That query must EXCLUDE players already owned by any team in
-      this league. Without league_id, the service layer can't perform
-      that exclusion efficiently — it would have to fetch ALL owned
-      players across all leagues and filter in Python.
+      That scopes the pool to the league's sports + competitions, and in
+      DRAFT leagues also EXCLUDES players already rostered there (draft
+      ownership is exclusive; budget leagues are FPL-style, where every
+      manager may own the same player). Without league_id, the service
+      layer can't perform that exclusion efficiently — it would have to
+      fetch ALL owned players across all leagues and filter in Python.
 
-      With league_id, the service does:
+      With league_id, a draft league's query does:
         subq = select(TeamPlayer.player_id).where(
             TeamPlayer.fantasy_team_id.in_(
                 select(FantasyTeam.id).where(FantasyTeam.league_id == league_id)
@@ -160,7 +162,8 @@ class PlayerFilter(BaseModel):
     """
     league_id: uuid.UUID | None = Field(
         default=None,
-        description="Exclude players already owned in this league",
+        description="Scope the pool to this league (draft leagues also hide "
+                    "players already rostered in it)",
     )
     sport_name: str | None = Field(
         default=None,

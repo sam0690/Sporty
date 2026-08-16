@@ -82,6 +82,8 @@ export type SquadValidationInput = {
   remainingBudget: number;
   /** From the league payload (backend sportConfigs) — never hardcoded. */
   positionMinimums: Record<string, number>;
+  /** From the league payload. Omitted = no cap rule. */
+  maxPerClub?: number | null;
 };
 
 export function buildSquadValidation({
@@ -90,10 +92,16 @@ export function buildSquadValidation({
   includeBudgetRule,
   remainingBudget,
   positionMinimums,
+  maxPerClub,
 }: SquadValidationInput): SquadRule[] {
   const requiredPlayers = SQUAD_SIZES[leagueSport];
   const sportCounts = countBy(players, "sport");
   const positionCounts = countBy(players, "position");
+  // clubWarnings flags clubs AT the cap (a heads-up); this rule fails only
+  // OVER it, matching the backend's `count > max_per_club`.
+  const worstClub = maxPerClub
+    ? Math.max(0, ...clubWarnings(players, maxPerClub).map((w) => w.count))
+    : 0;
 
   return [
     {
@@ -137,5 +145,15 @@ export function buildSquadValidation({
       detail: `${positionCounts[position] ?? 0}/${required}`,
       satisfied: (positionCounts[position] ?? 0) >= required,
     })),
+    ...(maxPerClub
+      ? [
+          {
+            key: "max-per-club",
+            label: "Max per club",
+            detail: `${worstClub}/${maxPerClub}`,
+            satisfied: worstClub <= maxPerClub,
+          },
+        ]
+      : []),
   ];
 }

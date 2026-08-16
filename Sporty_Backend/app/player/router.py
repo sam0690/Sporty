@@ -101,7 +101,8 @@ def get_players(
       - sport_name, position, real_team — narrow by metadata
       - min_cost / max_cost — budget-aware browsing
       - search — case-insensitive player name search
-      - league_id — exclude players already owned in this league
+      - league_id — scope to this league's sports/competitions; draft
+        leagues additionally hide players already rostered there
         (used for transfer pool and draft pool views)
       - page / page_size — pagination (default: page 1, 20 per page)
     """
