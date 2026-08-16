@@ -75,6 +75,7 @@ def get_gameweek_recap(
         load_slot_bounds,
         load_team_lineup_rows,
         resolve_team_gameweek,
+        window_fixtures_complete,
     )
 
     team = _require_fantasy_team(db, league_id, user_id)
@@ -145,6 +146,9 @@ def get_gameweek_recap(
     # live, filling-in-as-it-goes recap (like real FPL), not a locked
     # "not yet played" placeholder for the entire gameweek's duration.
     window_has_played = window.start_at <= datetime.now(timezone.utc)
+    # Same auto-sub gate scoring uses, or the recap shows a subbed_in player
+    # whose points the persisted total doesn't include.
+    apply_auto_subs = window_fixtures_complete(db, league_id=league_id, window=window)
 
     slot_bounds = load_slot_bounds(db, league_id)
     rows = load_team_lineup_rows(
@@ -152,7 +156,11 @@ def get_gameweek_recap(
     ).get(team.id, [])
     result = (
         resolve_team_gameweek(
-            team.id, rows, slot_bounds, window_has_played=window_has_played
+            team.id,
+            rows,
+            slot_bounds,
+            window_has_played=window_has_played,
+            apply_auto_subs=apply_auto_subs,
         )
         if rows
         else None

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
+from datetime import timedelta
 from decimal import Decimal
 
 from sqlalchemy import and_, func, or_, select
@@ -12,15 +13,18 @@ from app.league.models import (
     FantasyTeam,
     LeagueMembershipStatus,
     LeagueMembership,
+    LeagueSport,
     LineupSlot,
     Sport,
     TeamGameweekLineup,
     TeamWeeklyScore,
     TransferWindow,
 )
+from app.match.models import Match
 from app.player.models import Player, PlayerGameweekStat
 from app.services.scoring.auto_subs import LineupPlayer, resolve_effective_lineup
 from app.services.scoring.window_locator import find_equivalent_window_for_sport
+from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
 
 
 def apply_captain_vice_bonus(
@@ -94,6 +98,7 @@ def resolve_team_gameweek(
     slot_bounds: dict,
     *,
     window_has_played: bool = True,
+    apply_auto_subs: bool = True,
 ) -> TeamGameweekResult:
     """Pure resolution of a single team's gameweek: run auto-subs over the
     starters/bench, apply the captain/vice rule, and produce the per-player
@@ -102,7 +107,12 @@ def resolve_team_gameweek(
     ``window_has_played=False`` means the gameweek hasn't happened yet, so
     every ``PlayerGameweekStat`` is absent rather than genuinely zero — skip
     auto-subs/scoring entirely and report starters as "not_yet_played" instead
-    of the (indistinguishable-looking) "did_not_play"."""
+    of the (indistinguishable-looking) "did_not_play".
+
+    ``apply_auto_subs=False`` means the gameweek has started but isn't over:
+    points, captain/vice and statuses still resolve, but nobody comes off the
+    bench, because a starter on 0 minutes may simply not have kicked off yet
+    (see ``window_fixtures_complete``)."""
     if not window_has_played:
         players = [
             PlayerGameweekLine(
@@ -153,7 +163,9 @@ def resolve_team_gameweek(
         for r in bench_rows
     ]
 
-    sub = resolve_effective_lineup(starters, bench, slot_bounds)
+    # An empty bench makes substitution impossible; everything else resolves
+    # exactly as it would with one.
+    sub = resolve_effective_lineup(starters, bench if apply_auto_subs else [], slot_bounds)
 
     # Captain / vice-captain bonus (both are always starters).
     captain = next((r for r in starters_rows if r.is_captain), None)
@@ -224,6 +236,61 @@ def load_slot_bounds(db: Session, league_id: uuid.UUID) -> dict:
         (sport_id, position.strip().upper()): (int(min_c), int(max_c))
         for sport_id, position, min_c, max_c in rows
     }
+
+
+def window_fixtures_complete(
+    db: Session,
+    *,
+    league_id: uuid.UUID,
+    window: TransferWindow,
+) -> bool:
+    """True once every fixture this league's gameweek depends on has been
+    played out — the gate for auto-substitutions.
+
+    Auto-subs read "0 minutes" as "did not play", which is only true once the
+    player's fixture is over. Run mid-gameweek they replace starters whose
+    match simply hasn't kicked off yet, so every standing is wrong until the
+    week ends and scoring recomputes from scratch. FPL runs them at gameweek
+    end for the same reason.
+
+    ``postponed``/``cancelled`` count as played out — otherwise one shelved
+    fixture blocks the gameweek's auto-subs forever.
+    """
+    sport_ids = [
+        sport_id
+        for (sport_id,) in db.query(LeagueSport.sport_id).filter(
+            LeagueSport.league_id == league_id
+        )
+    ]
+    # A per-competition window (EPL/LALIGA/…) only waits on its own
+    # competition's fixtures; a combined (NULL) window waits on every fantasy
+    # one. Non-football sports carry names outside this registry and are never
+    # filtered out here — only sibling football competitions are.
+    awaited = (
+        {c.name for c in FOOTBALL_COMPETITIONS.values() if c.tag == window.competition}
+        if window.competition
+        else {c.name for c in FOOTBALL_COMPETITIONS.values() if c.fantasy}
+    )
+    ignored = [c.name for c in FOOTBALL_COMPETITIONS.values() if c.name not in awaited]
+
+    # ponytail: a multisport league checks its other sports against THIS
+    # window's date range rather than each sport's own equivalent window —
+    # fine while both schedules are aligned weekly spans; swap in
+    # find_equivalent_window_for_sport per sport if they ever diverge.
+    q = db.query(Match.id).filter(
+        Match.match_date >= window.start_at,
+        Match.match_date < window.end_at,
+        Match.status.in_(("scheduled", "live")),
+        # A fixture that kicked off hours ago and still isn't marked finished
+        # is a stalled sync, not a game in progress — don't let it hold the
+        # gameweek's auto-subs open forever.
+        Match.match_date >= func.now() - timedelta(hours=6),
+    )
+    if ignored:
+        q = q.filter(Match.competition.notin_(ignored))
+    if sport_ids:
+        q = q.filter(Match.sport_id.in_(sport_ids))
+    return q.first() is None
 
 
 def _eligible_team_ids(
@@ -359,16 +426,14 @@ def upsert_team_weekly_scores(
     bonus. Runs per-team in Python (the constraint-aware sub logic can't be a
     single SQL statement) and bulk-upserts team_weekly_scores.
     """
-    current_window_number = (
-        db.query(TransferWindow.number)
-        .filter(TransferWindow.id == transfer_window_id)
-        .scalar()
+    window = (
+        db.query(TransferWindow).filter(TransferWindow.id == transfer_window_id).first()
     )
-    if current_window_number is None:
+    if window is None:
         return 0
 
     team_ids = _eligible_team_ids(
-        db, league_id=league_id, current_window_number=current_window_number
+        db, league_id=league_id, current_window_number=window.number
     )
     if not team_ids:
         return 0
@@ -377,12 +442,15 @@ def upsert_team_weekly_scores(
     lineups_by_team = load_team_lineup_rows(
         db, league_id=league_id, team_ids=team_ids, transfer_window_id=transfer_window_id
     )
+    apply_auto_subs = window_fixtures_complete(db, league_id=league_id, window=window)
 
     values = []
     for team_id in team_ids:
         rows = lineups_by_team.get(team_id, [])
         if rows:
-            result = resolve_team_gameweek(team_id, rows, slot_bounds)
+            result = resolve_team_gameweek(
+                team_id, rows, slot_bounds, apply_auto_subs=apply_auto_subs
+            )
             total = result.total_points
         else:
             total = Decimal("0")

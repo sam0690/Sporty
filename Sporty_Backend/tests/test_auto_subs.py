@@ -146,6 +146,27 @@ def test_team_gameweek_vice_takes_over_when_captain_auto_subbed() -> None:
     assert by_id[cap].captain_bonus == Decimal("0")
 
 
+def test_team_gameweek_auto_subs_off_leaves_unplayed_starters_in() -> None:
+    """Mid-gameweek (fixtures still to come) nobody comes off the bench — the
+    0-minute starter hasn't kicked off yet, they haven't failed to play."""
+    team = uuid.uuid4()
+    s1, s2, b1 = uuid.uuid4(), uuid.uuid4(), uuid.uuid4()
+    rows = [
+        R(s1, "MID", 0, 0),                                   # fixture not played yet
+        R(s2, "MID", 90, 1),
+        R(b1, "MID", 90, -1, starter=False, bench_order=0),   # would drag the score down
+    ]
+
+    gated = resolve_team_gameweek(team, rows, {}, apply_auto_subs=False)
+    assert gated.total_points == Decimal("1")
+    by_id = {p.player_id: p for p in gated.players}
+    assert by_id[s1].status == "did_not_play" and by_id[s1].counted is True
+    assert by_id[b1].status == "benched" and by_id[b1].counted is False
+
+    # Once the gameweek is over the same rows sub him in, as before.
+    assert resolve_team_gameweek(team, rows, {}).total_points == Decimal("0")
+
+
 def test_team_gameweek_captain_played_doubles() -> None:
     team = uuid.uuid4()
     cap, s2 = uuid.uuid4(), uuid.uuid4()
