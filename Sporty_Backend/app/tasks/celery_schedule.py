@@ -68,6 +68,17 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=20),
         "args": (),
     },
+    # Re-parse the full-time sheet for matches that finished 3h+ ago. Booking
+    # happens once, at the finish transition, so a player the sheet couldn't
+    # resolve in that moment scores zero for a match they played, forever —
+    # and any later improvement to resolution never reaches them. Hourly for
+    # the same reason as the backfill above (Beat is not up around the clock);
+    # an idle tick costs nothing, and each match is re-booked exactly once.
+    "rebook-football-match-stats-hourly": {
+        "task": "sync.football.stats_rebook",
+        "schedule": crontab(minute=40),
+        "args": (),
+    },
     # ── SportScore (keyless, ~10k req/day) — display-only liveness ──
     # The hourly poll above stays exactly as it is: it remains the ONLY source
     # of full-time stats, fantasy points, and the flip to 'finished'. This tick

@@ -23,6 +23,7 @@ from app.database import SessionLocal
 from app.services.sync.cricket_live_sync import sync_cricket_live_matches
 from app.services.sync.football_live_sync import (
     backfill_football_team_stats,
+    rebook_football_match_stats,
     sync_football_lineups,
     sync_football_live_matches,
 )
@@ -63,6 +64,25 @@ def backfill_team_stats_task() -> dict[str, Any]:
         try:
             result = _run_async(backfill_football_team_stats(db))
             return {"ok": True, "task": "sync.football.team_stats_backfill", "result": result}
+        finally:
+            db.close()
+
+
+@shared_task(name="sync.football.stats_rebook")
+def rebook_match_stats_task() -> dict[str, Any]:
+    """Re-parse the FT sheet for recently finished matches. Catches players the
+    sheet couldn't resolve at finish (provider id drift) and the provider's own
+    post-match corrections — booking otherwise happens once and never again."""
+    lock_key = "lock:sync:football:stats-rebook"
+    with redis_lock(lock_key, ttl_seconds=300) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held",
+                    "task": "sync.football.stats_rebook"}
+
+        db = SessionLocal()
+        try:
+            result = _run_async(rebook_football_match_stats(db))
+            return {"ok": True, "task": "sync.football.stats_rebook", "result": result}
         finally:
             db.close()
 

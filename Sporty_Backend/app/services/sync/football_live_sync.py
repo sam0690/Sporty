@@ -291,6 +291,12 @@ _SHEET_RETRY_UNTIL = timedelta(hours=12)
 # current-season match centre shows.
 _BACKFILL_LOOKBACK = timedelta(days=14)
 
+# Re-book window. Short by design: this is about repairing the match that just
+# finished, not re-litigating the season. The settle delay keeps us from
+# spending a request on a sheet the provider is still correcting.
+_REBOOK_LOOKBACK = timedelta(days=3)
+_REBOOK_SETTLE_DELAY = timedelta(hours=3)
+
 
 def _parse_team_stats(
     payload: dict, fixture_data: dict, match: Match | None = None
@@ -355,6 +361,159 @@ async def _cache_team_stats(db, client, match: Match, fixture_data: dict) -> boo
             "Football team stats failed for fixture %s", match.external_api_id, exc_info=True
         )
     return False
+
+
+def _fixture_data_from_sheet(sheet: dict, match: Match) -> dict:
+    """The slice of a live fixture payload _parse_player_sheet actually needs —
+    team ids (to key conceded goals) and the final score — rebuilt for a match
+    that finished long ago and has no live payload left.
+
+    Sides are matched by team name, falling back to response order (the
+    provider lists home first), because RealTeam.external_api_id is a slug of
+    ours, not the provider's numeric id.
+    """
+    blocks = sheet.get("response") or []
+    ids: dict[str, dict] = {}
+    for index, block in enumerate(blocks[:2]):
+        team = block.get("team") or {}
+        if team.get("name") == match.home_team:
+            side = "home"
+        elif team.get("name") == match.away_team:
+            side = "away"
+        else:
+            side = "home" if index == 0 else "away"
+        ids.setdefault(side, {"id": team.get("id")})
+    return {
+        "teams": ids,
+        "goals": {"home": match.home_score or 0, "away": match.away_score or 0},
+    }
+
+
+async def rebook_football_match_stats(db: Session, limit: int = 3) -> str:
+    """Re-parse the full-time sheet for recently finished matches and re-book.
+
+    Booking happens ONCE, at the live->finished transition, and nothing ever
+    revisits it — so a player the sheet couldn't resolve that minute scores
+    zero for a match they played, permanently. That is not hypothetical:
+    Aitor Mañas (57') and Mikel Rodríguez (33', scored) both went unbooked in
+    fixture 1570333 because the provider reports them under different ids on
+    the sheet than in its own squad and event feeds, and the club-scoped name
+    fallback that rescues them landed three hours after that match was booked.
+
+    Re-booking also picks up the provider's own post-match corrections, which
+    land hours later (minutes and assists in particular).
+
+    Safe to repeat: persist_football_stats_from_sheet ASSIGNS rather than
+    accumulates, so a second booking converges on the same numbers. Runs once
+    per match, tracked by a match_feed_cache marker, and costs one request.
+    """
+    if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
+        return "ok: live polling disabled"
+
+    sport = db.query(Sport).filter(Sport.name == "football").first()
+    if sport is None:
+        return "ok: football sport not seeded"
+
+    now = datetime.now(timezone.utc)
+    rows = db.execute(
+        text(
+            """
+            SELECT m.id::text AS id
+            FROM matches m
+            LEFT JOIN match_feed_cache c
+                   ON c.match_id = m.id AND c.kind = 'stats_rebook'
+            WHERE m.sport_id = :sport_id
+              AND m.status = 'finished'
+              AND m.match_date BETWEEN :oldest AND :newest
+              AND m.external_api_id ~ '^[0-9]+$'
+              AND c.id IS NULL
+            ORDER BY m.match_date DESC
+            LIMIT :limit
+            """
+        ),
+        {
+            "sport_id": sport.id,
+            "oldest": now - _REBOOK_LOOKBACK,
+            # Give the provider time to settle the sheet before spending a
+            # request on it — re-booking a sheet that is still being corrected
+            # just means booking the wrong numbers twice.
+            "newest": now - _REBOOK_SETTLE_DELAY,
+            "limit": limit,
+        },
+    ).mappings().all()
+    if not rows:
+        return "ok: no finished fixtures awaiting a re-book; API not called"
+
+    budget = settings.FOOTBALL_API_DAILY_BUDGET
+    if budget > 0 and quota_used_today() >= budget - settings.FOOTBALL_LINEUP_QUOTA_RESERVE:
+        return "ok: re-book postponed, budget reserve reached"
+
+    from app.api.v1.feed import _persist_feed_cache
+
+    client = FootballAPIClient()
+    rebooked = 0
+    for row in rows:
+        match = db.query(Match).filter(Match.id == row["id"]).first()
+        if match is None:
+            continue
+
+        def _resolve_player(api_player_id) -> Player | None:
+            return (
+                db.query(Player)
+                .filter(
+                    Player.sport_id == sport.id,
+                    Player.external_api_id == str(api_player_id),
+                )
+                .first()
+            )
+
+        try:
+            sheet = await client.get_fixture_players(fixture_id=int(match.external_api_id))
+        except FootballQuotaExhausted as exc:
+            logger.info("Football re-book paused: %s", exc)
+            break
+        except Exception:
+            logger.exception(
+                "Football re-book: sheet request failed for fixture %s", match.external_api_id
+            )
+            continue
+
+        stats_by_player = _parse_player_sheet(
+            sheet,
+            _fixture_data_from_sheet(sheet, match),
+            _resolve_player,
+            db=db,
+            sport_id=sport.id,
+        )
+        if not stats_by_player:
+            logger.warning(
+                "Football re-book: sheet for %s resolved no players; leaving it unmarked "
+                "so a later run retries", match.external_api_id,
+            )
+            continue
+
+        live_key = live_key_for(match)
+        result = persist_football_stats_from_sheet(
+            db, match=match, live_key=live_key, stats_by_player=stats_by_player
+        )
+        db.commit()
+        _persist_feed_cache(
+            db, match.id, "stats_rebook",
+            {"players": result.get("players", 0), "at": now.isoformat()},
+        )
+        rebooked += 1
+
+        # Stats alone are not points: the gameweek totals are recomputed from
+        # these rows by the scoring task, so a re-book that doesn't re-score
+        # would leave the fixed numbers invisible to every league table.
+        try:
+            enqueue_scoring_for_finished_match(
+                db, match_date=match.match_date, sport_id=match.sport_id
+            )
+        except Exception:
+            logger.exception("Football re-book: scoring enqueue failed for %s", live_key)
+
+    return f"ok: re-booked {rebooked} of {len(rows)} finished fixture(s)"
 
 
 async def backfill_football_team_stats(db: Session, limit: int = 5) -> str:
