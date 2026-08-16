@@ -315,20 +315,18 @@ async def get_match_state(
     )
 
     # Per-player fantasy breakdown for the match centre (from the per-match
-    # scoring layer; populated at full-time). One row per player — a player's
-    # window rows share the same score/breakdown — keyed by player id.
+    # scoring layer; populated at full-time). One row per (player, match)
+    # since d1f4b7c9e35a, keyed by player id.
     breakdown_rows = (
         await db.execute(
             text(
                 """
-                SELECT DISTINCT ON (player_id)
-                       player_id::text AS player_id, position,
+                SELECT player_id::text AS player_id, position,
                        fantasy_points, bonus_points, breakdown,
                        stats,
                        stats->>'rating' AS rating
                 FROM player_match_scores
                 WHERE match_id = :mid
-                ORDER BY player_id, transfer_window_id
                 """
             ),
             {"mid": row["id"]},
