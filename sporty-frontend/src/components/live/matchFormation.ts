@@ -126,20 +126,128 @@ export function buildTeamFormation(
     .join("-");
   const label = reportedLabel?.trim() || derivedLabel;
 
-  // Rows from goal-end → centre-line.
+  // Rows from goal-end → centre-line. Preferred sources first; the bucket
+  // split is only reached when the feed tells us nothing (see rowsFromGrid /
+  // rowsFromFormation).
   const midRows = sliceInto(mid, splitMidfield(mid.length));
-  const rows: { role: string; players: LineupPlayer[] }[] = [
+  const bucketRows: PitchRow[] = [
     { role: "GK" as const, players: gk },
     { role: "DEF" as const, players: def },
     ...midRows.map((r) => ({ role: "MID" as const, players: r })),
     { role: "FWD" as const, players: fwd },
   ].filter((r) => r.players.length > 0);
 
-  // Vertical band for this side (goal-end → just short of halfway). The centre
-  // end stops well short of the line (0.545 / 0.455) so the two teams' forward
-  // lines keep a clear gap across halfway instead of colliding on it.
-  const goalY = side === "home" ? 0.95 : 0.05;
-  const centreY = side === "home" ? 0.545 : 0.455;
+  const rows =
+    rowsFromGrid(players) ?? rowsFromFormation(players, reportedLabel) ?? bucketRows;
+
+  return { label: label || "—", chips: placeRows(rows, side) };
+}
+
+/** One horizontal line of players, ordered left → right as the team sees it. */
+type PitchRow = { role: string; players: LineupPlayer[] };
+
+/** Provider role code (G/D/M/F, or our own GKP/DEF/MID/FWD) → chip badge. */
+function roleBadge(player: LineupPlayer, fallback: string): string {
+  const raw = (player.match_position ?? "").trim().toUpperCase();
+  if (!raw) return fallback;
+  const byCode: Record<string, string> = { G: "GK", D: "DEF", M: "MID", F: "FWD" };
+  return byCode[raw] ?? raw;
+}
+
+/**
+ * Exact layout from the provider's `grid` ("row:col" — row 1 is the keeper,
+ * row 2 the defensive line). This is the shape the teams actually lined up in,
+ * so it beats any inference from stored positions: one defender filed as a
+ * midfielder is enough to turn a back four into a back three.
+ *
+ * All-or-nothing — a partial grid would interleave real rows with guesses, so
+ * a single missing value falls through to the next tier.
+ */
+function rowsFromGrid(players: LineupPlayer[]): PitchRow[] | null {
+  if (players.length === 0) return null;
+  const byRow = new Map<number, { col: number; player: LineupPlayer }[]>();
+  for (const player of players) {
+    const [rowRaw, colRaw] = (player.grid ?? "").split(":");
+    const row = Number(rowRaw);
+    const col = Number(colRaw);
+    if (!Number.isFinite(row) || !Number.isFinite(col) || row <= 0) return null;
+    const bucket = byRow.get(row) ?? [];
+    bucket.push({ col, player });
+    byRow.set(row, bucket);
+  }
+  return [...byRow.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([row, entries]) => ({
+      // Column ascends left → right from the team's own perspective (verified
+      // against Sevilla's back four: Suazo, a left-back, is col 1; Iglesias, a
+      // right-back, is col 4).
+      players: entries.sort((a, b) => a.col - b.col).map((e) => e.player),
+      role: roleBadge(entries[0].player, row === 1 ? "GK" : "MID"),
+    }))
+    .map((row) => ({ ...row, role: rowRole(row.players, row.role) }));
+}
+
+/**
+ * No grid, but a formation label we can trust: slice the XI in the order it
+ * arrived, which the provider emits goal-line → attack. The digit sum must
+ * account for every outfield player, because sliceInto silently drops any tail
+ * the sizes don't cover — a mismatch means the label doesn't describe this XI,
+ * so we'd rather fall through than lose players off the pitch.
+ */
+function rowsFromFormation(
+  players: LineupPlayer[],
+  reportedLabel?: string | null,
+): PitchRow[] | null {
+  const label = reportedLabel?.trim();
+  if (!label || players.length === 0) return null;
+  const sizes = label.split("-").map(Number);
+  if (sizes.some((n) => !Number.isInteger(n) || n <= 0)) return null;
+  const outfield = players.slice(1);
+  if (sizes.reduce((a, b) => a + b, 0) !== outfield.length) return null;
+
+  const gk = players[0];
+  return [
+    { role: roleBadge(gk, "GK"), players: [gk] },
+    ...sliceInto(outfield, sizes).map((rowPlayers) => ({
+      players: rowPlayers,
+      role: rowRole(rowPlayers, "MID"),
+    })),
+  ];
+}
+
+/** Badge for a whole row — the majority code among its players. */
+function rowRole(players: LineupPlayer[], fallback: string): string {
+  const tally = new Map<string, number>();
+  for (const p of players) {
+    const role = roleBadge(p, "");
+    if (role) tally.set(role, (tally.get(role) ?? 0) + 1);
+  }
+  let best = fallback;
+  let bestCount = 0;
+  for (const [role, count] of tally) {
+    if (count > bestCount) {
+      best = role;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+/**
+ * Drop rows onto the pitch, goal-end → centre-line. The centre end stops well
+ * short of halfway (0.455 / 0.545) so the two teams' forward lines keep a
+ * clear gap instead of colliding on the line.
+ *
+ * Home defends the TOP goal (small y) and away the bottom, matching the
+ * home-first header. The x mirror is keyed off which goal a side defends
+ * rather than off home/away: the team defending the top attacks downward, so
+ * its own left is the viewer's right. Tying the two together keeps them
+ * consistent if the halves are ever swapped back.
+ */
+function placeRows(rows: PitchRow[], side: "home" | "away"): MatchChip[] {
+  const defendsTop = side === "home";
+  const goalY = defendsTop ? 0.05 : 0.95;
+  const centreY = defendsTop ? 0.455 : 0.545;
   const rowCount = rows.length;
 
   const chips: MatchChip[] = [];
@@ -154,16 +262,15 @@ export function buildTeamFormation(
       chips.push({
         id: p.player_id,
         name: p.name ?? "Unknown",
-        role: row.role,
+        role: roleBadge(p, row.role),
         photoUrl: p.photo_url,
-        isGk: row.role === "GK",
-        x: side === "home" ? baseX : Number((1 - baseX).toFixed(4)),
+        isGk: row.role === "GK" || roleBadge(p, "") === "GK",
+        x: defendsTop ? Number((1 - baseX).toFixed(4)) : baseX,
         y: Number(y.toFixed(4)),
       });
     });
   });
-
-  return { label: label || "—", chips };
+  return chips;
 }
 
 // ── Basketball ──────────────────────────────────────────────────────────────
@@ -201,7 +308,8 @@ export function buildTeamCourt(
   );
   const chips: MatchChip[] = sorted.map((p, i) => {
     const spot = COURT_SPOTS[i] ?? { x: 0.5, yy: 0.14 + (i - 4) * 0.12 };
-    const y = side === "home" ? 0.5 + spot.yy * 0.45 : 0.5 - spot.yy * 0.45;
+    // Home occupies the top half, same convention as the football pitch.
+    const y = side === "home" ? 0.5 - spot.yy * 0.45 : 0.5 + spot.yy * 0.45;
     const x = side === "home" ? spot.x : 1 - spot.x;
     return {
       id: p.player_id,

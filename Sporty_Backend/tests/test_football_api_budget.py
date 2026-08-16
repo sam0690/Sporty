@@ -348,3 +348,32 @@ def test_parse_lineups_always_emits_all_four_keys():
 
     for key in ("home", "away", "home_bench", "away_bench"):
         assert isinstance(doc[key], list), key
+
+
+def test_parse_lineups_carries_grid_and_played_position():
+    """The pitch lays out from the provider's grid; dropping it forced the
+    client to infer a shape from stored fantasy positions, which turned a back
+    four into a back three whenever one defender was filed as a midfielder."""
+    from app.services.sync.football_live_sync import _parse_lineups
+
+    known = {1: _FakePlayer("u-gk"), 2: _FakePlayer("u-lb"), 3: _FakePlayer("u-sub")}
+    payload = {"response": [
+        {
+            "team": {"id": 1, "name": "Sevilla"},
+            "formation": "4-2-3-1",
+            "startXI": [
+                {"player": {"id": 1, "name": "Keeper", "pos": "G", "grid": "1:1"}},
+                {"player": {"id": 2, "name": "Left Back", "pos": "D", "grid": "2:1"}},
+            ],
+            # Bench entries carry a position but no grid.
+            "substitutes": [{"player": {"id": 3, "name": "Sub", "pos": "M", "grid": None}}],
+        },
+        {"team": {"id": 2, "name": "Rayo Vallecano"}, "startXI": [], "substitutes": []},
+    ]}
+
+    doc = _parse_lineups(payload, "Sevilla", lambda pid: known.get(pid))
+
+    assert doc["grid"] == {"u-gk": "1:1", "u-lb": "2:1"}
+    assert doc["match_position"] == {"u-gk": "G", "u-lb": "D", "u-sub": "M"}
+    # Bench players have no slot on the pitch.
+    assert "u-sub" not in doc["grid"]

@@ -54,9 +54,19 @@ export type Shootout = {
 export type LineupPlayer = {
   player_id: string;
   name: string | null;
+  /** Our stored (fantasy) position — not necessarily what they played today. */
   position?: string | null;
   team?: string | null;
   photo_url?: string | null;
+  /**
+   * Provider slot as "row:col" — row 1 is the keeper, row 2 the defensive
+   * line; column ascends left → right from the team's own perspective. Drives
+   * the real pitch shape. Starters only, and absent for feeder pushes and
+   * competitions the provider doesn't cover.
+   */
+  grid?: string | null;
+  /** Position actually played this match (G/D/M/F). */
+  match_position?: string | null;
 };
 
 export type MatchLineups = {

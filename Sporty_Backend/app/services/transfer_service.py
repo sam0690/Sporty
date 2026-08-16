@@ -155,6 +155,14 @@ def _ensure_player_allowed_for_league_pool(
             detail="Player is outside this league's allowed player pool",
         )
 
+    # Sibling guard to league/transfers_service.py:207, which the budget-transfer
+    # flow never had — a player who left the supported leagues stayed buyable here.
+    if not player.is_available:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"{player.name} is not available",
+        )
+
     from app.league.competition_scope import ensure_player_in_league_scope
 
     ensure_player_in_league_scope(db, league_id, player)

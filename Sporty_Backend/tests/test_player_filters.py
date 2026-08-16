@@ -75,6 +75,43 @@ class _SessionStub:
         return _EmptyQueryStub()
 
 
+def _criteria_for(**filter_kwargs) -> list[str]:
+    """Run get_players with the given filters, return the applied criteria."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        previous_cwd = os.getcwd()
+        os.chdir(temp_dir)
+        try:
+            os.environ["DATABASE_URL"] = "sqlite+pysqlite:///:memory:"
+            os.environ["JWT_SECRET_KEY"] = "x" * 32
+            os.environ["GOOGLE_CLIENT_ID"] = "test-client"
+
+            from app.player.schemas import PlayerFilter
+            from app.player.services import get_players
+
+            session = _SessionStub()
+            get_players(session, PlayerFilter(**filter_kwargs))
+            return [str(criterion) for criterion in session.query_obj.filters]
+        finally:
+            os.chdir(previous_cwd)
+
+
+def test_unavailable_players_are_hidden_by_default():
+    """They used to list in the market and only fail with a 409 at buy time."""
+    criteria = _criteria_for(search="haaland")
+    assert any("is_available" in c for c in criteria)
+
+
+def test_include_unavailable_opts_the_admin_view_back_in():
+    criteria = _criteria_for(search="haaland", include_unavailable=True)
+    assert not any("is_available" in c for c in criteria)
+
+
+def test_explicit_is_available_false_still_wins():
+    """Asking for exactly the unavailable ones must not be overridden."""
+    criteria = _criteria_for(is_available=False)
+    assert any("is_available" in c for c in criteria)
+
+
 def test_player_filter_aliases_and_pagination_apply_together():
     with tempfile.TemporaryDirectory() as temp_dir:
         previous_cwd = os.getcwd()

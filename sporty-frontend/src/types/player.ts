@@ -129,4 +129,6 @@ export type TPlayerFilter = {
   search?: string;
   min_cost?: number;
   max_cost?: number;
+  /** Show players flagged is_available=false (departed/injured). Admin views only. */
+  include_unavailable?: boolean;
 };

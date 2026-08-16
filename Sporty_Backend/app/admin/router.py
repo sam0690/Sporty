@@ -421,6 +421,7 @@ def edit_player(
         cost=data.cost,
         is_available=data.is_available,
         photo_url=data.photo_url,
+        real_team_id=data.real_team_id,
         reason=data.reason,
     )
 

@@ -207,10 +207,13 @@ export function MatchLineupPitch() {
 
   return (
     <div className="card-surface p-4 sm:p-5">
+      {/* Home first, matching ScoreTicker / LineupsCard / LiveMatchClient —
+          this component used to render away first, so the same page showed the
+          two teams in opposite orders. Home is also the top half of the pitch. */}
       <div className="mb-4 flex items-center justify-between gap-3">
-        <TeamHeader teamName={awayName} label={awaySide.label} color={awayColor} align="left" />
+        <TeamHeader teamName={homeName} label={homeSide.label} color={homeColor} align="left" />
         <span className="section-label shrink-0 px-2">vs</span>
-        <TeamHeader teamName={homeName} label={homeSide.label} color={homeColor} align="right" />
+        <TeamHeader teamName={awayName} label={awaySide.label} color={awayColor} align="right" />
       </div>
 
       <Surface className="max-w-[440px]">
@@ -224,8 +227,8 @@ export function MatchLineupPitch() {
 
       {(home_bench.length > 0 || away_bench.length > 0) && (
         <div className="mt-5 grid grid-cols-2 gap-5 border-t border-white/8 pt-5">
-          <Bench teamName={awayName} players={away_bench} color={awayColor} align="left" />
-          <Bench teamName={homeName} players={home_bench} color={homeColor} align="right" />
+          <Bench teamName={homeName} players={home_bench} color={homeColor} align="left" />
+          <Bench teamName={awayName} players={away_bench} color={awayColor} align="right" />
         </div>
       )}
     </div>

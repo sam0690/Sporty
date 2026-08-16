@@ -1,6 +1,6 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { useApiQuery } from "../api/useApiQuery";
-import { PlayerService } from "@/services/PlayerService";
+import { PlayerService, type TTeamBrief } from "@/services/PlayerService";
 import type { TPlayerFilter, TPlayerListResponse } from "@/types";
 
 type LeagueSportEntry = { sport?: { name?: string | null } | null };
@@ -46,6 +46,15 @@ export const useTransferPoolPlayers = (
   };
 
   return usePlayers(requestFilters);
+};
+
+/** Real clubs, for the admin transfer picker. Rarely changes — cache it hard. */
+export const useRealTeams = (sportName?: string) => {
+  return useApiQuery<TTeamBrief[]>(
+    ["players", "teams", sportName ?? "all"],
+    () => PlayerService.getTeams(sportName),
+    { staleTime: 60 * 60 * 1000 },
+  );
 };
 
 export const usePlayer = (id: string) => {

@@ -147,6 +147,8 @@ export type TAdminPlayerEditRequest = {
   cost?: number;
   is_available?: boolean;
   photo_url?: string;
+  /** Real-world club change (a transfer), not a fantasy squad move. */
+  real_team_id?: string;
   reason?: string;
 };
 
