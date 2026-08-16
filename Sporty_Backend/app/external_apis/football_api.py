@@ -73,15 +73,21 @@ def _spend_quota(path: str = "?") -> None:
         redis = get_redis()
         key = f"quota:api-football:{datetime.now(timezone.utc):%Y%m%d}"
         used = redis.incr(key)
-        # Same-day spend breakdown — without it "budget already gone at noon"
-        # is unanswerable after the fact. HGETALL quota:api-football:<day>:paths
-        redis.hincrby(f"{key}:paths", path, 1)
         if used == 1:
             redis.expire(key, 172800)  # 2 days; date in the key does the real rollover
-            redis.expire(f"{key}:paths", 172800)
     except Exception:  # noqa: BLE001
         logger.warning("API-Football quota counter unavailable; failing open", exc_info=True)
         return
+
+    # Same-day spend breakdown — without it "budget already gone at noon" is
+    # unanswerable after the fact. HGETALL quota:api-football:<day>:paths.
+    # Deliberately outside the block above: a bookkeeping extra must never
+    # swallow the budget check that follows.
+    try:
+        redis.hincrby(f"{key}:paths", path, 1)
+        redis.expire(f"{key}:paths", 172800)
+    except Exception:  # noqa: BLE001
+        logger.debug("API-Football per-path counter unavailable", exc_info=True)
     if used > budget:
         raise FootballQuotaExhausted(
             f"API-Football daily budget spent ({budget}/{budget})"
