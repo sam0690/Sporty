@@ -7,14 +7,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import (
     get_async_redis_dep,
     get_current_active_user_async,
-    require_match_access,
+    require_match_access_ws,
 )
-from app.core.database import get_async_db
+from app.core.database import AsyncSessionLocal
 from app.league.models import (
     League,
     LeagueMembership,
@@ -32,7 +31,9 @@ def _draft_channel(league_id: uuid.UUID) -> str:
 @router.get("/match/{match_id}/leaderboard/stream")
 async def leaderboard_stream(
     match_id: str,
-    _match=Depends(require_match_access),
+    # The _ws variant, despite the name: same public check, but it owns and
+    # closes its session instead of holding one for the stream's whole life.
+    _match=Depends(require_match_access_ws),
     redis=Depends(get_async_redis_dep),
 ):
     live_key = _match.external_api_id or str(_match.id)
@@ -66,7 +67,6 @@ async def leaderboard_stream(
 async def league_draft_stream(
     league_id: str,
     user=Depends(get_current_active_user_async),
-    db: AsyncSession = Depends(get_async_db),
     redis=Depends(get_async_redis_dep),
 ):
     """Server-Sent Events stream of a league's draft lifecycle.
@@ -85,32 +85,40 @@ async def league_draft_stream(
             status_code=status.HTTP_404_NOT_FOUND, detail="League not found"
         )
 
-    # Only active members may subscribe — the draft room is member-scoped.
-    membership = (
-        await db.execute(
-            select(LeagueMembership).where(
-                LeagueMembership.league_id == league_uuid,
-                LeagueMembership.user_id == user.id,
-                LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+    # Own session, closed before the stream starts: a Depends(get_async_db)
+    # here would pin a pooled connection for as long as the EventSource stays
+    # open (same bug as the WebSocket deps — see app/api/deps.py).
+    async with AsyncSessionLocal() as db:
+        # Only active members may subscribe — the draft room is member-scoped.
+        membership = (
+            await db.execute(
+                select(LeagueMembership).where(
+                    LeagueMembership.league_id == league_uuid,
+                    LeagueMembership.user_id == user.id,
+                    LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+                )
             )
-        )
-    ).scalar_one_or_none()
-    if membership is None:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Not a league member"
-        )
+        ).scalar_one_or_none()
+        if membership is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Not a league member"
+            )
 
-    league = (
-        await db.execute(select(League).where(League.id == league_uuid))
-    ).scalar_one_or_none()
-    if league is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="League not found"
+        league = (
+            await db.execute(select(League).where(League.id == league_uuid))
+        ).scalar_one_or_none()
+        if league is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="League not found"
+            )
+        # Read what the snapshot needs while the session is still open — the
+        # generator below runs long after it closes.
+        current_status = league.status.value if league.status else None
+        current_deadline = (
+            league.draft_pick_deadline_at.isoformat()
+            if league.draft_pick_deadline_at
+            else None
         )
-    current_status = league.status.value if league.status else None
-    current_deadline = (
-        league.draft_pick_deadline_at.isoformat() if league.draft_pick_deadline_at else None
-    )
 
     channel = _draft_channel(league_uuid)
 

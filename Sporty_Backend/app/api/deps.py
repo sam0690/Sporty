@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.models import User
 from app.core.security import decode_access_token, decode_ws_ticket
 from app.core.config import settings
-from app.core.database import get_async_db
+from app.core.database import AsyncSessionLocal, get_async_db
 from app.core.redis import create_redis_pool, get_async_redis
 from app.league.models import League, LeagueMembership, LeagueMembershipStatus
 from app.match.models import Match
@@ -46,7 +46,14 @@ def _extract_bearer_token(value: str | None) -> str | None:
     return parts[1].strip()
 
 
-async def get_current_active_user_async(request: Request, db=Depends(get_async_db)) -> User:
+# A yield-dependency's session stays open until the ENDPOINT returns — which,
+# for a WebSocket, is when the socket closes, and for an SSE StreamingResponse
+# is when the stream ends. Auth is one SELECT, so taking Depends(get_async_db)
+# in these pinned one pooled asyncpg connection per open socket/stream for its
+# whole life; the connection then died idle (Neon closes them) and teardown's
+# rollback raised "the underlying connection is closed". Own session, closed
+# immediately, instead.
+async def get_current_active_user_async(request: Request) -> User:
     token = _extract_bearer_token(request.headers.get("Authorization"))
     token = token or request.cookies.get("access_token")
     if token is None:
@@ -56,9 +63,10 @@ async def get_current_active_user_async(request: Request, db=Depends(get_async_d
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
 
-    user = (
-        await db.execute(select(User).where(User.id == payload.sub))
-    ).scalar_one_or_none()
+    async with AsyncSessionLocal() as db:
+        user = (
+            await db.execute(select(User).where(User.id == payload.sub))
+        ).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     if not user.is_active:
@@ -66,7 +74,7 @@ async def get_current_active_user_async(request: Request, db=Depends(get_async_d
     return user
 
 
-async def get_current_active_user_ws(ws: WebSocket, db=Depends(get_async_db)) -> User:
+async def get_current_active_user_ws(ws: WebSocket) -> User:
     token = _extract_bearer_token(ws.headers.get("Authorization"))
     token = token or ws.cookies.get("access_token")
     token = token or ws.query_params.get("token")
@@ -81,9 +89,10 @@ async def get_current_active_user_ws(ws: WebSocket, db=Depends(get_async_db)) ->
     if payload is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
 
-    user = (
-        await db.execute(select(User).where(User.id == payload.sub))
-    ).scalar_one_or_none()
+    async with AsyncSessionLocal() as db:
+        user = (
+            await db.execute(select(User).where(User.id == payload.sub))
+        ).scalar_one_or_none()
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     if not user.is_active:
@@ -121,18 +130,16 @@ async def require_match_access(
     return await ensure_user_can_access_match(db, match_id=match_id)
 
 
-async def require_match_access_ws(
-    match_id: str,
-    db: AsyncSession = Depends(get_async_db),
-) -> Match:
-    # Public: no auth required on the match event stream either.
-    return await ensure_user_can_access_match(db, match_id=match_id)
+async def require_match_access_ws(match_id: str) -> Match:
+    # Public: no auth required on the match event stream either. Own session
+    # (not Depends(get_async_db)) — see get_current_active_user_async above.
+    async with AsyncSessionLocal() as db:
+        return await ensure_user_can_access_match(db, match_id=match_id)
 
 
 async def require_league_member_ws(
     league_id: uuid.UUID,
     ws: WebSocket,
-    db: AsyncSession = Depends(get_async_db),
     current_user: User = Depends(get_current_active_user_ws),
 ) -> League:
     # Async-session mirror of app/league/dependencies.py::require_league_member
@@ -140,21 +147,22 @@ async def require_league_member_ws(
     # auth, so this composes with get_current_active_user_ws rather than
     # being public.
     _ = ws
-    league = (
-        await db.execute(select(League).where(League.id == league_id))
-    ).scalar_one_or_none()
-    if league is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
+    async with AsyncSessionLocal() as db:
+        league = (
+            await db.execute(select(League).where(League.id == league_id))
+        ).scalar_one_or_none()
+        if league is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="League not found")
 
-    is_member = (
-        await db.execute(
-            select(LeagueMembership).where(
-                LeagueMembership.league_id == league_id,
-                LeagueMembership.user_id == current_user.id,
-                LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+        is_member = (
+            await db.execute(
+                select(LeagueMembership).where(
+                    LeagueMembership.league_id == league_id,
+                    LeagueMembership.user_id == current_user.id,
+                    LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+                )
             )
-        )
-    ).scalar_one_or_none()
+        ).scalar_one_or_none()
     if is_member is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
