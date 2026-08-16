@@ -57,6 +57,7 @@ from app.match.models import Match
 from app.models.db.live_event import LiveEvent
 from app.models.schemas.events import WSMessage
 from app.player.models import Player
+from app.prediction.services import resolve_predictions_for_match
 from app.services.feed_scoring import (
     LiveEventLike,
     apply_live_points,
@@ -640,6 +641,20 @@ async def _finish_match(db, client, match: Match, live_key: str, fixture_data: d
     except Exception:
         logger.exception(
             "Football live poll: finish %s stats booked but scoring enqueue failed", live_key
+        )
+
+    # Score user Predictor entries off the final score. Idempotent (only touches
+    # points_awarded IS NULL rows), so the reconcile path re-entering here is
+    # safe. Best-effort and post-commit for the same reason as the enqueue
+    # above: the booked result must never be at risk from a follow-up.
+    try:
+        if resolve_predictions_for_match(db, match):
+            db.commit()
+    except Exception:
+        db.rollback()
+        logger.exception(
+            "Football live poll: prediction resolution failed for %s (leaderboard may lag)",
+            live_key,
         )
     return True
 

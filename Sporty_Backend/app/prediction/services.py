@@ -1,8 +1,9 @@
 """Predictor game logic — scoring rubric, resolution, leaderboard, CRUD.
 
 Transaction ownership: the router-facing entry points here own their commit
-(create/update); resolve_predictions_for_match is called from feed.py which
-commits its own transaction, so this helper flushes and lets the caller commit.
+(create/update); resolve_predictions_for_match is called from the match-finish
+paths (football_live_sync._finish_match, and feed.py when the feeder is on),
+which own their transaction, so this helper flushes and lets the caller commit.
 """
 
 from __future__ import annotations
