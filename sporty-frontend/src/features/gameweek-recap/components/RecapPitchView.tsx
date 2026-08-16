@@ -27,7 +27,10 @@ function toPitchPlayer(p: TGameweekPlayerRecap): RecapPitchPlayer {
     name: p.player.name,
     position: p.player.position,
     sport: p.player.sport?.name,
-    points: Number(p.contributed_points) || 0,
+    // Counted players show what they added to the total (incl. captain bonus);
+    // everyone else shows what they scored on their own. contributed_points is
+    // 0 for the whole bench, which read as "the bench scored nothing".
+    points: Number(p.counted ? p.contributed_points : p.points) || 0,
     isCaptain: p.is_captain,
     isViceCaptain: p.is_vice_captain,
     photoUrl: p.player.photo_url,
@@ -125,6 +128,10 @@ export function RecapPitchView({
 }) {
   const starters = players.filter((p) => p.is_starter).map(toPitchPlayer);
   const bench = players.filter((p) => !p.is_starter).map(toPitchPlayer);
+  // Bench points that never reached the total (an auto-subbed-on player's did).
+  const benchUnused = bench
+    .filter((p) => !p.counted)
+    .reduce((sum, p) => sum + p.points, 0);
 
   const layout = buildTeamLayout(starters, { activeOnly: false });
 
@@ -146,8 +153,13 @@ export function RecapPitchView({
         <section className="overflow-hidden card-surface">
           <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
             <span className="section-label">Bench</span>
-            <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
-              {bench.length}
+            <span className="flex items-center gap-2">
+              <span className="font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
+                {fmtPoints(benchUnused)} pts unused
+              </span>
+              <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
+                {bench.length}
+              </span>
             </span>
           </header>
           <div className="flex flex-wrap items-start justify-center gap-x-6 gap-y-4 px-4 py-5">

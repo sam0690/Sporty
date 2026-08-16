@@ -77,10 +77,19 @@ function SubArrow({ dir }: { dir: "in" | "out" }) {
   );
 }
 
+// What to print next to a player. Counted players show what they actually
+// added to the total (incl. captain bonus); everyone else shows what they
+// scored in their own right — a bench player who returns 8 points earned them,
+// they just didn't count. Showing contributed_points for both rendered every
+// bench line as a flat 0.
+function shownPoints(p: TGameweekPlayerRecap): number {
+  return Number(p.counted ? p.contributed_points : p.points) || 0;
+}
+
 function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
   const accent = sportAccent(p.player.sport?.name);
   const status = STATUS_META[p.status];
-  const contributed = Number(p.contributed_points);
+  const shown = shownPoints(p);
 
   return (
     <li className="flex items-center gap-3 rounded-[3px] px-2.5 py-2.5 transition-colors hover:bg-white/3">
@@ -126,9 +135,10 @@ function PlayerRow({ p }: { p: TGameweekPlayerRecap }) {
         className={`shrink-0 font-display text-xl leading-none tracking-[-0.02em] tabular-nums ${
           p.counted ? "text-accent" : "text-fg-3"
         }`}
+        title={p.counted ? undefined : "Scored, but didn't count towards your total"}
       >
-        {contributed > 0 ? "+" : ""}
-        {fmt(p.contributed_points)}
+        {shown > 0 ? "+" : ""}
+        {fmt(shown)}
       </span>
     </li>
   );
@@ -138,18 +148,28 @@ function Section({
   title,
   players,
   count,
+  unusedPoints,
 }: {
   title: string;
   players: TGameweekPlayerRecap[];
   count: number;
+  // Points scored by players in this section that did NOT reach the total.
+  unusedPoints?: number;
 }) {
   if (players.length === 0) return null;
   return (
     <section className="overflow-hidden card-surface">
       <header className="flex items-center justify-between border-b border-white/8 px-4 py-3">
         <span className="section-label">{title}</span>
-        <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
-          {count}
+        <span className="flex items-center gap-2">
+          {unusedPoints != null && (
+            <span className="font-sans text-[11px] font-700 uppercase tracking-[1px] text-fg-3">
+              {fmt(unusedPoints)} pts unused
+            </span>
+          )}
+          <span className="rounded-[3px] bg-white/6 px-2 py-0.5 font-sans text-[11px] font-700 tabular-nums text-fg-2">
+            {count}
+          </span>
         </span>
       </header>
       <ul className="p-2">
@@ -185,6 +205,11 @@ export function GameweekRecap() {
 
   const starters = data?.players.filter((p) => p.is_starter) ?? [];
   const bench = data?.players.filter((p) => !p.is_starter) ?? [];
+  // Points your bench scored that never reached the total. Excludes anyone
+  // auto-subbed on — their points are already in it.
+  const benchUnused = bench
+    .filter((p) => !p.counted)
+    .reduce((sum, p) => sum + (Number(p.points) || 0), 0);
 
   return (
     <main className="mx-auto max-w-4xl space-y-6">
@@ -259,6 +284,9 @@ export function GameweekRecap() {
                   value={`+${fmt(data.captain_vice_bonus)}`}
                   accent
                 />
+                {bench.length > 0 && (
+                  <Stat label="Left On Bench" value={fmt(benchUnused)} />
+                )}
               </div>
             </div>
           </section>
@@ -295,7 +323,12 @@ export function GameweekRecap() {
           ) : (
             <>
               <Section title="Starting XI" players={starters} count={starters.length} />
-              <Section title="Bench" players={bench} count={bench.length} />
+              <Section
+                title="Bench"
+                players={bench}
+                count={bench.length}
+                unusedPoints={benchUnused}
+              />
             </>
           )}
 
