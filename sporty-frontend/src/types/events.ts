@@ -65,6 +65,11 @@ export type MatchLineups = {
   // Bench groups — absent on snapshots from before the feeder pushed them.
   home_bench?: LineupPlayer[];
   away_bench?: LineupPlayer[];
+  // The provider's own shape ("4-2-3-1"). Absent for feeder pushes and for
+  // competitions API-Football doesn't cover, so the pitch keeps deriving a
+  // label from positions as its fallback.
+  home_formation?: string | null;
+  away_formation?: string | null;
 };
 
 export type MatchSnapshot = {

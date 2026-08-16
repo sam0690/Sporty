@@ -346,5 +346,5 @@ def test_parse_lineups_always_emits_all_four_keys():
     payload = {"response": [_lineup_block("Sevilla", [(1, "Known")], [])]}
     doc = _parse_lineups(payload, "Sevilla", lambda pid: _FakePlayer("u-1"))
 
-    assert set(doc) == {"home", "away", "home_bench", "away_bench"}
-    assert all(isinstance(v, list) for v in doc.values())
+    for key in ("home", "away", "home_bench", "away_bench"):
+        assert isinstance(doc[key], list), key

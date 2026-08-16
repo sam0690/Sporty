@@ -197,11 +197,15 @@ async def get_match_state(
             lineup_data = None
     if lineup_data is None:
         lineup_data = await _get_persisted_match_json(db, "lineups", row["id"])
+    home_formation: str | None = None
+    away_formation: str | None = None
     if lineup_data:
         lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
         lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
         bench_home = [str(x) for x in (lineup_data.get("home_bench") or [])]
         bench_away = [str(x) for x in (lineup_data.get("away_bench") or [])]
+        home_formation = lineup_data.get("home_formation") or None
+        away_formation = lineup_data.get("away_formation") or None
 
     # Pre-parse each row's meta once — substitutions carry the outgoing
     # player's id here (see feed.py's ingest_match_result), which needs to
@@ -311,6 +315,11 @@ async def get_match_state(
             "away": [_lineup_entry(pid) for pid in lineup_away],
             "home_bench": [_lineup_entry(pid) for pid in bench_home],
             "away_bench": [_lineup_entry(pid) for pid in bench_away],
+            # Provider-supplied shape ("4-2-3-1"); None for feeder pushes and
+            # for competitions the provider doesn't cover, where the client
+            # falls back to deriving a label from positions.
+            "home_formation": home_formation,
+            "away_formation": away_formation,
         },
         "possession": extras.get("possession"),
         "shootout": extras.get("shootout"),
