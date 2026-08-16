@@ -19,7 +19,6 @@ import { GameweekBreakdown } from "@/features/dashboard/components/GameweekBreak
 import { CardSkeleton, TableSkeleton } from "@/components/ui/skeletons";
 
 import {
-  useActiveWindow,
   useEditableWindow,
   useLeaderboard,
   useLeague,
@@ -48,9 +47,8 @@ export function LeagueHome() {
     isLoading: teamLoading,
     isError: myTeamMissing,
   } = useMyTeam(leagueId);
-  const { data: activeWindow, isLoading: windowLoading } =
-    useActiveWindow(leagueId);
-  const { data: seasonState } = useSeasonState(leagueId);
+  const { data: seasonState, isLoading: windowLoading } =
+    useSeasonState(leagueId);
   // Transfers/lineups edit the next not-yet-locked gameweek; the quick-transfer
   // widget is open while that window's transfer deadline hasn't passed.
   const { data: editableWindow, isLoading: transferWindowLoading } =
@@ -61,7 +59,10 @@ export function LeagueHome() {
 
   // The overview is a snapshot of the running gameweek; browsing other
   // gameweeks lives on the leaderboard page, so there's no week selector here.
-  const currentWeek = activeWindow?.number ?? 1;
+  // From season-state, not active-window: the latter 409s whenever no gameweek
+  // is in progress, and between gameweeks this gives the last one played
+  // instead of falling back to GW 1.
+  const currentWeek = seasonState?.current_gw || 1;
 
   // The overview's standings table shows the running gameweek's board (per-week
   // points + rank), not the season total — that lives on the leaderboard/table

@@ -57,9 +57,12 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
     { enabled: Boolean(activeLeague?.id), placeholderData: keepPreviousData },
   );
 
+  // season-state, not active-window: the badge only needs the live gameweek
+  // number, and active-window 409s whenever none is in progress (pre-season,
+  // between gameweeks) — a normal state that was filling the logs with errors.
   const windowQuery = useApiQuery(
-    ["leagues", activeLeague?.id, "active-window"],
-    () => LeagueService.getActiveWindow(activeLeague!.id),
+    ["leagues", activeLeague?.id, "season-state"],
+    () => LeagueService.getSeasonState(activeLeague!.id),
     { enabled: Boolean(activeLeague?.id), placeholderData: keepPreviousData },
   );
 
@@ -86,7 +89,10 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
       {
         leagueId: activeLeague.id,
         leagueName: activeLeague.name,
-        gameweek: windowQuery.data?.number ?? null,
+        gameweek:
+          windowQuery.data?.phase === "LIVE"
+            ? windowQuery.data.current_gw
+            : null,
         players,
       },
     ];
@@ -102,10 +108,9 @@ export function useDashboardTeamPreview(selectedLeagueId?: string | null) {
         (lineupQuery.isLoading || windowQuery.isLoading)),
     // True while showing the previous league's data during a switch.
     isSwitching: lineupQuery.isPlaceholderData || windowQuery.isPlaceholderData,
-    // windowQuery (active-window) is deliberately NOT fatal: it 409s whenever no
-    // gameweek is live (pre-season, between gameweeks) — the normal state, not a
-    // failure. It only feeds the optional GW badge (handles null). Only a real
-    // leagues/lineup failure is a preview error.
+    // windowQuery (season-state) is deliberately NOT fatal: it only feeds the
+    // optional GW badge (handles null). Only a real leagues/lineup failure is
+    // a preview error.
     error: leaguesQuery.error || lineupQuery.error || null,
     // Refetch every query the preview depends on — wired to the card's retry.
     refetch: () =>
