@@ -115,12 +115,18 @@ class DefaultScoringRule(Base):
 # PlayerMatchScore  (per player, per match — the scoring source of truth)
 # ═══════════════════════════════════════════════════════════════════════════════
 #
-# The per-match granularity the gameweek-aggregate PlayerGameweekStat lacked.
-# `stats` is the metric snapshot for THIS match (JSONB so advanced metrics add
-# keys without a migration); `fantasy_points`/`breakdown` are the engine's
-# output over those stats. A player's PlayerGameweekStat.fantasy_points for a
-# window = SUM of their PlayerMatchScore rows in that window — which also fixes
-# the old bug where a second match in one window overwrote the first.
+# The single source of truth for football performance: one row per (player,
+# match), never per window. `stats` is the metric snapshot for THIS match (JSONB
+# so advanced metrics add keys without a migration); `fantasy_points`/`breakdown`
+# are the engine's output over those stats.
+#
+# Windows are RANGES over these rows, not storage keys: a player's
+# PlayerGameweekStat for a window = SUM of their match scores whose match falls
+# in that window's date range and competition scope (see
+# window_locator.matches_in_window). That is what lets the EPL, LaLiga and
+# combined schedules each hold their own correct gameweek total without any fact
+# being stored twice — and it fixes the old bug where a second match in one
+# window overwrote the first.
 #
 # Consolidates the requested PlayerMatchScore + FantasyPointsBreakdown: the
 # breakdown lives inline as JSONB rather than a separate table.
@@ -140,13 +146,6 @@ class PlayerMatchScore(Base):
         UUID(as_uuid=True), ForeignKey("matches.id", ondelete="CASCADE"),
         nullable=False, index=True,
     )
-    # Which gameweek window this match falls in — denormalized so the window
-    # total can aggregate its match scores in one query.
-    transfer_window_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("transfer_windows.id"),
-        nullable=False, index=True,
-    )
-
     # Snapshot of the player's position when scored (GKP/DEF/MID/FWD) — keeps a
     # historical score reproducible even if the player's listed position later
     # changes.
@@ -178,12 +177,7 @@ class PlayerMatchScore(Base):
     )
 
     __table_args__ = (
-        # Per (player, match, window): a match maps to BOTH its competition
-        # window and the combined window (see per-competition schedules), and
-        # the player has a PlayerGameweekStat under each — so the match's score
-        # aggregates into each window's total independently.
-        UniqueConstraint(
-            "player_id", "match_id", "transfer_window_id",
-            name="uq_player_match_score",
-        ),
+        # One row per (player, match) — a match is booked ONCE regardless of how
+        # many window schedules cover its date.
+        UniqueConstraint("player_id", "match_id", name="uq_player_match_score"),
     )

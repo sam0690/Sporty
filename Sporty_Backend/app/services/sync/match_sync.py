@@ -316,6 +316,7 @@ async def sync_football_matches(
                         db,
                         match_date=existing.match_date,
                         sport_id=football.id,
+                        competition=existing.competition,
                     )
             else:
                 # Create new

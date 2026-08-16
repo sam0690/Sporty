@@ -11,6 +11,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from app.core.redis_lock import redis_lock
+from app.league.models import TransferWindow
 from app.player.models import CricketStat, FootballStat, Player, PlayerGameweekStat
 from app.player.models_nba import NBAStat
 from app.scoring.models import DefaultScoringRule
@@ -165,6 +166,62 @@ def _football_stats_dict(minutes: int, fs: FootballStat) -> dict:
     }
 
 
+# FootballStat columns the window rollup fills from the summed match stats.
+# own_goals/bonus aren't in the API sheet and stay 0.
+FOOTBALL_ROLLUP_FIELDS = (
+    "goals",
+    "assists",
+    "clean_sheets",
+    "yellow_cards",
+    "red_cards",
+    "penalties_saved",
+    "penalties_missed",
+    "saves",
+    "goals_conceded",
+    "tackles",
+    "interceptions",
+    "blocks",
+    "clearances",
+    "key_passes",
+    "shots_on_target",
+    "dribbles_won",
+    "duels_won",
+)
+
+
+def _upsert_football_rollup(db: Session, *, player_id, transfer_window_id, agg) -> None:
+    """Write one player's gameweek rollup: PlayerGameweekStat + its FootballStat
+    child, from the summed match aggregate. Assignment, not +=, so re-running
+    the rollup converges."""
+    stat = (
+        db.query(PlayerGameweekStat)
+        .filter(
+            PlayerGameweekStat.player_id == player_id,
+            PlayerGameweekStat.transfer_window_id == transfer_window_id,
+        )
+        .first()
+    )
+    if stat is None:
+        stat = PlayerGameweekStat(
+            player_id=player_id, transfer_window_id=transfer_window_id
+        )
+        db.add(stat)
+        db.flush()
+    stat.minutes_played = agg.minutes
+    stat.fantasy_points = agg.total
+    stat.breakdown = agg.breakdown
+
+    child = db.query(FootballStat).filter(FootballStat.base_stat_id == stat.id).first()
+    if child is None:
+        child = FootballStat(base_stat_id=stat.id)
+        db.add(child)
+    for field in FOOTBALL_ROLLUP_FIELDS:
+        setattr(child, field, max(0, int(agg.stats.get(field, 0) or 0)))
+    if agg.stats.get("rating") is not None:
+        child.rating = agg.stats["rating"]
+    db.flush()
+
+
 def score_football_players_for_window(
     db: Session,
     *,
@@ -173,28 +230,64 @@ def score_football_players_for_window(
 ) -> int:
     """Position-aware, config-driven gameweek scoring for football.
 
+    The window's total is the SUM of the player's PlayerMatchScore rows for the
+    matches inside this window (its date range + its schedule's competition
+    scope) — facts are stored once per match, so the EPL, LaLiga and combined
+    schedules each roll up their own correct total off the same rows, and a
+    double gameweek adds up instead of overwriting.
+
     Interprets the DB rule set per player (appearance, position goals, clean
     sheets, saves, pen save/miss, own goals, conceded, cards, defensive
     contribution) and writes fantasy_points + an explainable breakdown. Falls
     back to a no-op if no rules are seeded (never silently zeroes existing
-    scores). Replaces the old goals/assists/cards-only bulk UPDATE.
+    scores).
     """
     rules = load_football_rules(db, sport_id)
     if not rules:
         logger.warning("No football scoring rules seeded for sport=%s — skipping", sport_id)
         return 0
 
-    # Per-match layer (Phase 2): re-score stored match rows with the current
-    # rules and get each player's window total = SUM of their matches. Authoritative
-    # when present; a row with only a window-aggregate FootballStat (and no match
-    # rows) falls back to computing from that.
-    from app.services.scoring.match_scoring import rescore_window_match_scores
-    match_agg = rescore_window_match_scores(db, transfer_window_id=transfer_window_id, rules=rules)
+    window = (
+        db.query(TransferWindow)
+        .filter(TransferWindow.id == transfer_window_id)
+        .first()
+    )
+    if window is None:
+        logger.warning("TransferWindow %s not found — skipping", transfer_window_id)
+        return 0
 
-    rows = (
+    from app.services.scoring.match_scoring import rescore_window_match_scores
+    match_agg = rescore_window_match_scores(db, window=window, rules=rules)
+
+    scored_players = set()
+    if match_agg:
+        player_sports = dict(
+            db.query(Player.id, Player.sport_id)
+            .filter(Player.id.in_(match_agg.keys()))
+            .all()
+        )
+
+        def _write_rollups():
+            for player_id, agg in match_agg.items():
+                if player_sports.get(player_id) != sport_id:
+                    continue
+                _upsert_football_rollup(
+                    db, player_id=player_id,
+                    transfer_window_id=transfer_window_id, agg=agg,
+                )
+                scored_players.add(player_id)
+
+        _run_window_write(
+            db, _write_rollups,
+            sport_id=sport_id, transfer_window_id=transfer_window_id,
+        )
+
+    # Legacy rows with a window-aggregate FootballStat and no match rows behind
+    # them (CSV dataset-import seasons) still score straight off that aggregate
+    # — never zero them just because no match booked into this window.
+    legacy_q = (
         db.query(
             PlayerGameweekStat.id,
-            PlayerGameweekStat.player_id,
             PlayerGameweekStat.minutes_played,
             FootballStat,
             Player.position,
@@ -205,26 +298,24 @@ def score_football_players_for_window(
             PlayerGameweekStat.transfer_window_id == transfer_window_id,
             Player.sport_id == sport_id,
         )
-        .all()
     )
-    if not rows:
-        return 0
+    if scored_players:
+        legacy_q = legacy_q.filter(PlayerGameweekStat.player_id.notin_(scored_players))
+    legacy = legacy_q.all()
 
-    updates = []
-    for pgs_id, player_id, minutes, fs, position in rows:
-        if player_id in match_agg:
-            total, breakdown = match_agg[player_id]
-        else:
+    if legacy:
+        updates = []
+        for pgs_id, minutes, fs, position in legacy:
             total, breakdown = compute_football_score(
                 position, _football_stats_dict(minutes, fs), rules
             )
-        updates.append({"id": pgs_id, "fantasy_points": total, "breakdown": breakdown})
+            updates.append({"id": pgs_id, "fantasy_points": total, "breakdown": breakdown})
+        _run_window_write(
+            db, lambda: db.bulk_update_mappings(PlayerGameweekStat, updates),
+            sport_id=sport_id, transfer_window_id=transfer_window_id,
+        )
 
-    _run_window_write(
-        db, lambda: db.bulk_update_mappings(PlayerGameweekStat, updates),
-        sport_id=sport_id, transfer_window_id=transfer_window_id,
-    )
-    return len(updates)
+    return len(scored_players) + len(legacy)
 
 
 def score_cricket_players_for_window(

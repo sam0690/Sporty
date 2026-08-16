@@ -509,7 +509,8 @@ async def rebook_football_match_stats(db: Session, limit: int = 3) -> str:
         # would leave the fixed numbers invisible to every league table.
         try:
             enqueue_scoring_for_finished_match(
-                db, match_date=match.match_date, sport_id=match.sport_id
+                db, match_date=match.match_date, sport_id=match.sport_id,
+                competition=match.competition,
             )
         except Exception:
             logger.exception("Football re-book: scoring enqueue failed for %s", live_key)
@@ -636,7 +637,8 @@ async def _finish_match(db, client, match: Match, live_key: str, fixture_data: d
     await _cache_team_stats(db, client, match, fixture_data)
     try:
         enqueue_scoring_for_finished_match(
-            db, match_date=match.match_date, sport_id=match.sport_id
+            db, match_date=match.match_date, sport_id=match.sport_id,
+            competition=match.competition,
         )
     except Exception:
         logger.exception(

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.redis import get_redis
 from app.services.scoring.window_locator import find_transfer_window_ids_for_datetime
+from app.services.sync.football_competitions import fantasy_tag_for_competition_name
 
 
 logger = logging.getLogger(__name__)
@@ -19,10 +20,14 @@ def enqueue_scoring_for_finished_match(
     match_date: datetime,
     sport_id: UUID | None = None,
     league_id: UUID | None = None,
+    competition: str | None = None,
     throttle_seconds: int = 300,
 ) -> int:
     # Algorithm: locate transfer windows containing match_date and enqueue
-    # score.transfer_window(window_id) for each.
+    # score.transfer_window(window_id) for each. `competition` is the finished
+    # match's display name ("Premier League"): passing it skips the sibling
+    # competitions' overlapping windows, whose own rollups this match can't
+    # change. Omitting it is safe, just wasted work.
     # celery_app is imported lazily: it pulls in the task modules (incl.
     # match_sync, which imports this module at top level), so a module-level
     # import here creates a circular import whenever `trigger` is the entry
@@ -30,7 +35,10 @@ def enqueue_scoring_for_finished_match(
     # `trigger` finish initializing first.
     from app.core.celery_app import celery_app
 
-    window_ids = find_transfer_window_ids_for_datetime(db, match_date=match_date, sport_id=sport_id)
+    window_ids = find_transfer_window_ids_for_datetime(
+        db, match_date=match_date, sport_id=sport_id,
+        competition_tag=fantasy_tag_for_competition_name(competition),
+    )
     if not window_ids:
         logger.warning(
             "No transfer window covers match_date=%s (sport_id=%s) — scoring not enqueued",

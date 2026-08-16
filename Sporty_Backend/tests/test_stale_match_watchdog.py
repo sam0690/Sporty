@@ -62,6 +62,7 @@ def _stale_match():
         home_score=4,
         away_score=0,
         match_date=datetime.now(timezone.utc) - timedelta(hours=6),
+        competition="Premier League",
         sport_id=uuid.uuid4(),
         updated_at=datetime.now(timezone.utc) - timedelta(hours=5),
     )

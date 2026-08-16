@@ -52,3 +52,16 @@ _NAME_TO_TAG: dict[str, str] = {
 def fantasy_tag_for_competition_name(name: str | None) -> str | None:
     """Fantasy competition tag for a Match.competition display name, or None."""
     return _NAME_TO_TAG.get(name or "")
+
+
+def competition_names_for_tag(tag: str | None) -> list[str]:
+    """Match.competition display names a window schedule covers — the inverse of
+    fantasy_tag_for_competition_name.
+
+    A tag ("EPL") gives just that competition; None (the combined schedule)
+    gives every fantasy competition, which is exactly the set of matches a
+    combined window's gameweek total sums over.
+    """
+    if tag is None:
+        return [c.name for c in fantasy_competitions().values()]
+    return [c.name for c in fantasy_competitions().values() if c.tag == tag]

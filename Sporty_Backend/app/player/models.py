@@ -320,6 +320,21 @@ class PlayerPriceHistory(Base):
 
 
 class PlayerGameweekStat(Base):
+    """A player's gameweek rollup — for football, DERIVED, never a fact.
+
+    Football facts live once per (player, match) in player_match_scores; this
+    row is the sum of them over one window's date range and competition scope,
+    written only by score_football_players_for_window and recomputable from
+    scratch at any time. A season carries several overlapping schedules (EPL /
+    LaLiga / Bundesliga / combined), so one match legitimately contributes to
+    more than one of these rows — they are different sums, not copies, and any
+    query that spans schedules MUST scope itself to one (see
+    _window_competition_clause) or it double-counts.
+
+    Basketball and cricket are single-competition, so their rows are still
+    written directly by the live/ingestion path.
+    """
+
     __tablename__ = "player_gameweek_stats"
 
     id: Mapped[uuid.UUID] = mapped_column(
@@ -389,9 +404,12 @@ class PlayerGameweekStat(Base):
             "minutes_played >= 0",
             name="ck_stat_minutes_non_negative",
         ),
-        # 120 = extra time maximum. No player plays more than 120 mins.
+        # This is a WINDOW rollup, so it sums every match the player played in
+        # the gameweek — a double (or triple) gameweek legitimately exceeds one
+        # match's 120-minute extra-time maximum. 300 keeps the guard against
+        # garbage data while leaving room for three full matches.
         CheckConstraint(
-            "minutes_played <= 120",
+            "minutes_played <= 300",
             name="ck_stat_minutes_max",
         ),
     )
@@ -465,10 +483,12 @@ class FootballStat(Base):
         CheckConstraint("assists >= 0", name="ck_fb_assists"),
         CheckConstraint("clean_sheets >= 0", name="ck_fb_clean_sheets"),
         CheckConstraint("yellow_cards >= 0", name="ck_fb_yellow_cards"),
-        # A player cannot receive more than 2 yellows in one match
-        CheckConstraint("yellow_cards <= 2", name="ck_fb_yellow_cards_max"),
+        # Per-match maxima are 2 yellows / 1 red, but this row is a WINDOW
+        # rollup — a double or triple gameweek sums several matches, so the
+        # ceilings are 3x that (see ck_stat_minutes_max, same reasoning).
+        CheckConstraint("yellow_cards <= 6", name="ck_fb_yellow_cards_max"),
         CheckConstraint("red_cards >= 0", name="ck_fb_red_cards"),
-        CheckConstraint("red_cards <= 1", name="ck_fb_red_cards_max"),
+        CheckConstraint("red_cards <= 3", name="ck_fb_red_cards_max"),
         CheckConstraint("own_goals >= 0", name="ck_fb_own_goals"),
         CheckConstraint("penalties_saved >= 0", name="ck_fb_penalties_saved"),
         CheckConstraint("penalties_missed >= 0", name="ck_fb_penalties_missed"),

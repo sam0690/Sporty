@@ -109,17 +109,20 @@ def test_two_matches_in_one_window_sum(monkeypatch):
         rules = load_football_rules(db, sport.id)
         m1, m2 = _match(db, sport), _match(db, sport)
         # match 1: 90', 1 goal -> 2 + 5 = 7 ; match 2: 90', 1 assist -> 2 + 3 = 5
-        upsert_player_match_score(db, player_id=player.id, match_id=m1.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=player.id, match_id=m1.id,
                                   position="MID", minutes=90, stats={"minutes": 90, "goals": 1}, rules=rules)
-        upsert_player_match_score(db, player_id=player.id, match_id=m2.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=player.id, match_id=m2.id,
                                   position="MID", minutes=90, stats={"minutes": 90, "assists": 1}, rules=rules)
         db.commit()
 
-        agg = rescore_window_match_scores(db, transfer_window_id=window.id, rules=rules)
-        total, breakdown = agg[player.id]
-        assert total == Decimal(12)  # 7 + 5 — both matches counted, not overwritten
+        agg = rescore_window_match_scores(db, window=window, rules=rules)
+        assert agg[player.id].total == Decimal(12)  # 7 + 5 — both counted, not overwritten
         # 3 entries/match (appearance + appearance_full + goal/assist) × 2 matches
-        assert len(breakdown) == 6
+        assert len(agg[player.id].breakdown) == 6
+        # minutes and metric counts sum too — the rollup's FootballStat child
+        assert agg[player.id].minutes == 180
+        assert agg[player.id].stats["goals"] == 1
+        assert agg[player.id].stats["assists"] == 1
 
 
 def test_batch_scorer_aggregates_match_scores_into_window(monkeypatch):
@@ -128,9 +131,9 @@ def test_batch_scorer_aggregates_match_scores_into_window(monkeypatch):
         sport, window, player = _setup(db)
         rules = load_football_rules(db, sport.id)
         m1, m2 = _match(db, sport), _match(db, sport)
-        upsert_player_match_score(db, player_id=player.id, match_id=m1.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=player.id, match_id=m1.id,
                                   position="MID", minutes=90, stats={"minutes": 90, "goals": 1}, rules=rules)
-        upsert_player_match_score(db, player_id=player.id, match_id=m2.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=player.id, match_id=m2.id,
                                   position="MID", minutes=90, stats={"minutes": 90, "assists": 1}, rules=rules)
         # a PGS + FootballStat must exist for the window (booked alongside)
         pgs = PlayerGameweekStat(player_id=player.id, transfer_window_id=window.id, minutes_played=90)
@@ -162,11 +165,11 @@ def test_bonus_points_awarded_3_2_1_by_bps(monkeypatch):
         db.flush()
         m = _match(db, sport)
         # p1 best (2 goals), p2 middle (1 goal), p3 least (just plays)
-        upsert_player_match_score(db, player_id=p1.id, match_id=m.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=p1.id, match_id=m.id,
                                   position="MID", minutes=90, stats={"minutes": 90, "goals": 2}, rules=rules)
-        upsert_player_match_score(db, player_id=p2.id, match_id=m.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=p2.id, match_id=m.id,
                                   position="MID", minutes=90, stats={"minutes": 90, "goals": 1}, rules=rules)
-        upsert_player_match_score(db, player_id=p3.id, match_id=m.id, transfer_window_id=window.id,
+        upsert_player_match_score(db, player_id=p3.id, match_id=m.id,
                                   position="MID", minutes=90, stats={"minutes": 90}, rules=rules)
         db.commit()
 
@@ -183,8 +186,8 @@ def test_bonus_points_awarded_3_2_1_by_bps(monkeypatch):
         assert bonus(p3.id) == Decimal(1)
 
         # bonus flows into the window total: p1 = appearance 2 + goal*2 10 + bonus 3 = 15
-        agg = rescore_window_match_scores(db, transfer_window_id=window.id, rules=rules)
-        assert agg[p1.id][0] == Decimal(15)
+        agg = rescore_window_match_scores(db, window=window, rules=rules)
+        assert agg[p1.id].total == Decimal(15)
 
 
 if __name__ == "__main__":

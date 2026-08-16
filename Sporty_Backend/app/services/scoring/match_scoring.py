@@ -1,24 +1,29 @@
-"""Per-match football scoring (Phase 2).
+"""Per-match football scoring — the source of truth for football performance.
 
-Each finished match books a PlayerMatchScore per player: the match's metric
-snapshot (JSONB) + the engine's fantasy_points/breakdown over it. A player's
-window total is the SUM of their match scores — which fixes the old bug where a
-second match in one gameweek window overwrote the first, and gives per-match
-explainability + rule-change recalc (re-score from stored stats, no re-fetch).
+Each finished match books ONE PlayerMatchScore per player: the match's metric
+snapshot (JSONB) + the engine's fantasy_points/breakdown over it. That gives
+per-match explainability and rule-change recalc (re-score from stored stats, no
+re-fetch), and it fixes the old bug where a second match in one gameweek window
+overwrote the first.
 
-The window-level PlayerGameweekStat.fantasy_points is written by
-player_scoring.score_football_players_for_window, which aggregates these.
+Windows are ranges over these rows, never storage keys — a match is booked once
+no matter how many schedules (EPL/LaLiga/Bundesliga/combined) cover its date.
+The window-level PlayerGameweekStat is a rollup written by
+player_scoring.score_football_players_for_window, which aggregates the matches
+window_locator.matches_in_window puts inside each window.
 """
 from __future__ import annotations
 
 import uuid
 from collections import defaultdict
 from decimal import Decimal
+from typing import NamedTuple
 
 from sqlalchemy.orm import Session
 
 from app.scoring.models import PlayerMatchScore
 from app.services.scoring.football_engine import Rule, compute_bps, compute_football_score
+from app.services.scoring.window_locator import matches_in_window
 
 
 def upsert_player_match_score(
@@ -26,7 +31,6 @@ def upsert_player_match_score(
     *,
     player_id: uuid.UUID,
     match_id: uuid.UUID,
-    transfer_window_id: uuid.UUID,
     position: str | None,
     minutes: int,
     stats: dict,
@@ -41,15 +45,11 @@ def upsert_player_match_score(
         .filter(
             PlayerMatchScore.player_id == player_id,
             PlayerMatchScore.match_id == match_id,
-            PlayerMatchScore.transfer_window_id == transfer_window_id,
         )
         .first()
     )
     if row is None:
-        row = PlayerMatchScore(
-            player_id=player_id, match_id=match_id,
-            transfer_window_id=transfer_window_id,
-        )
+        row = PlayerMatchScore(player_id=player_id, match_id=match_id)
         db.add(row)
     row.position = position
     row.minutes = int(stats.get("minutes", 0) or 0)
@@ -65,9 +65,9 @@ def award_match_bonus(db: Session, *, match_id: uuid.UUID) -> None:
     """Award the 3/2/1 bonus points to a match's top performers by BPS.
 
     Ranks by DISTINCT bps value (FPL tie handling): everyone at the top value
-    gets 3, everyone at the 2nd-highest gets 2, 3rd-highest gets 1. A player's
-    bps is identical across their per-window rows, so all their rows for this
-    match get the same bonus. Idempotent — recomputed in full each call.
+    gets 3, everyone at the 2nd-highest gets 2, 3rd-highest gets 1. One row per
+    player per match, so each player is ranked once. Idempotent — recomputed in
+    full each call.
     """
     rows = db.query(PlayerMatchScore).filter(PlayerMatchScore.match_id == match_id).all()
     if not rows:
@@ -80,25 +80,65 @@ def award_match_bonus(db: Session, *, match_id: uuid.UUID) -> None:
     db.flush()
 
 
+class WindowAggregate(NamedTuple):
+    """One player's gameweek rollup, summed from their matches in the window."""
+
+    total: Decimal
+    breakdown: list[dict]
+    minutes: int
+    stats: dict
+
+
+def _sum_match_stats(matches: list[PlayerMatchScore]) -> dict:
+    """Add up the metric snapshots of a player's matches in one window.
+
+    Counting metrics sum; `rating` is a 0-10 score, so it averages instead
+    (summing two 7.0s into 14.0 would be nonsense on the profile).
+    """
+    summed: dict = defaultdict(int)
+    ratings = []
+    for m in matches:
+        for key, value in (m.stats or {}).items():
+            if key == "rating":
+                if value is not None:
+                    ratings.append(Decimal(str(value)))
+            elif isinstance(value, (int, float)):
+                summed[key] += int(value)
+    out = dict(summed)
+    if ratings:
+        out["rating"] = sum(ratings) / len(ratings)
+    return out
+
+
 def rescore_window_match_scores(
     db: Session,
     *,
-    transfer_window_id: uuid.UUID,
+    window,
     rules: list[Rule],
-) -> dict[uuid.UUID, tuple[Decimal, list[dict]]]:
-    """Re-run the engine over every stored PlayerMatchScore in a window (picks
-    up rule changes without re-fetching stats), update each match row, and
-    return per-player aggregates {player_id: (window_total, merged_breakdown)}.
+) -> dict[uuid.UUID, WindowAggregate]:
+    """Re-run the engine over every match score inside `window` (picks up rule
+    changes without re-fetching stats), update each match row, and return the
+    per-player gameweek rollup.
 
-    window_total includes each match's bonus_points (set by the Phase 4 BPS
-    pass); merged_breakdown concatenates the matches' breakdowns.
+    The window's matches come from window_locator.matches_in_window — its date
+    range plus its schedule's competition scope — so a per-competition window
+    sums only its own competition's matches and the combined window sums them
+    all, off ONE stored row per (player, match).
+
+    total includes each match's bonus_points (set by the BPS pass); breakdown
+    concatenates the matches' breakdowns; minutes and stats sum the matches, so
+    a double gameweek adds up instead of overwriting.
     """
+    match_ids = matches_in_window(db, window)
+    if not match_ids:
+        return {}
+
     rows = (
         db.query(PlayerMatchScore)
-        .filter(PlayerMatchScore.transfer_window_id == transfer_window_id)
+        .filter(PlayerMatchScore.match_id.in_(match_ids))
         .all()
     )
-    agg: dict[uuid.UUID, tuple[Decimal, list[dict]]] = {}
+    agg: dict[uuid.UUID, WindowAggregate] = {}
     per_player: dict[uuid.UUID, list[PlayerMatchScore]] = defaultdict(list)
     for row in rows:
         total, breakdown = compute_football_score(row.position, row.stats or {}, rules)
@@ -115,5 +155,10 @@ def rescore_window_match_scores(
             if m.bonus_points:
                 merged.append({"action": "bonus", "count": 1,
                                "subtotal": float(m.bonus_points), "match_id": str(m.match_id)})
-        agg[player_id] = (total, merged)
+        agg[player_id] = WindowAggregate(
+            total=total,
+            breakdown=merged,
+            minutes=sum(m.minutes for m in matches),
+            stats=_sum_match_stats(matches),
+        )
     return agg

@@ -39,7 +39,10 @@ from app.league.sportConfigs import derive_sport_type, get_squad_size
 from app.player.models import Player, PlayerGameweekStat
 from app.core.redis import get_redis
 from app.services.budget_utils import calculate_refund
-from app.services.scoring.window_locator import find_equivalent_season_for_sport
+from app.services.scoring.window_locator import (
+    find_equivalent_season_for_sport,
+    league_competition_filter,
+)
 from app.core.config import settings
 from app.squad.services import (
     check_squad_constraints,
@@ -47,7 +50,7 @@ from app.squad.services import (
     validate_position_slots,
     validate_squad_size,
 )
-from app.league.service_helpers import _editable_transfer_window, _find_editable_transfer_window, _find_transfer_window, _require_fantasy_team, _require_league, _require_membership
+from app.league.service_helpers import _editable_transfer_window, _find_editable_transfer_window, _find_transfer_window, _require_fantasy_team, _require_league, _require_membership, _window_competition_clause
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +159,15 @@ def _attach_player_points(
         if not sport_player_ids:
             continue
 
+        # A football season carries several overlapping window schedules (one
+        # per competition + the combined NULL one) and a match books its stats
+        # into BOTH its competition's window and the combined window. Confine
+        # every read to the league's own schedule, or each haul is counted once
+        # per schedule the player appears in.
+        comp_clause = _window_competition_clause(
+            league_competition_filter(db, league_id=league_id, sport_id=sport_id)
+        )
+
         # Season total + gameweeks-scored per player, in one grouped query.
         season_rows = (
             db.query(
@@ -171,6 +183,7 @@ def _attach_player_points(
             )
             .filter(
                 TransferWindow.season_id == this_season_id,
+                comp_clause,
                 PlayerGameweekStat.player_id.in_(sport_player_ids),
             )
             .group_by(PlayerGameweekStat.player_id)
@@ -184,6 +197,7 @@ def _attach_player_points(
             db.query(TransferWindow)
             .filter(
                 TransferWindow.season_id == this_season_id,
+                comp_clause,
                 TransferWindow.start_at <= now,
                 TransferWindow.end_at >= now,
             )

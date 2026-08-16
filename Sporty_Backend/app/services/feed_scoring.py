@@ -12,10 +12,11 @@ scoring. This module closes both gaps without Kafka:
     scoring rules so live numbers agree with the final gameweek totals.
 
   - persist_match_stats: on the live→finished transition, aggregates the
-    match's stored live_events per player into PlayerGameweekStat +
-    FootballStat/NBAStat for every transfer window covering the match date.
-    The gameweek engine (triggered right after) then computes fantasy points,
-    team weekly scores, and rankings exactly as it does for imported stats.
+    match's stored live_events per player. Football books ONE PlayerMatchScore
+    per (player, match) — the fact — and the gameweek engine (triggered right
+    after) rolls those up into PlayerGameweekStat per window schedule.
+    Basketball, single-competition and so free of overlapping schedules, still
+    writes PlayerGameweekStat + NBAStat per covering window directly.
 """
 
 from __future__ import annotations
@@ -31,10 +32,9 @@ from sqlalchemy.orm import Session
 from app.match.models import Match
 from app.models.db.live_event import LiveEvent
 from app.models.schemas.events import WSMessage
-from app.player.models import FootballStat, Player, PlayerGameweekStat
+from app.player.models import Player, PlayerGameweekStat
 from app.player.models_nba import NBAStat
 from app.services.scoring.window_locator import find_transfer_window_ids_for_datetime
-from app.services.sync.football_competitions import fantasy_tag_for_competition_name
 
 logger = logging.getLogger(__name__)
 
@@ -164,33 +164,29 @@ def _get_or_create_base_stat(db: Session, player_id: uuid.UUID, window_id: uuid.
     return stat
 
 
-def _get_or_create_football_child(db: Session, base_stat: PlayerGameweekStat) -> FootballStat:
-    child = db.query(FootballStat).filter(FootballStat.base_stat_id == base_stat.id).first()
-    if child is None:
-        child = FootballStat(base_stat_id=base_stat.id)
-        db.add(child)
-        db.flush()
-    return child
-
-
-def _apply_football_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
-    # Assignment, not +=: `counts` is always the FULL recount of this match's
-    # live_events (see _aggregate_match_events), so this must be idempotent —
-    # persist_match_stats can be called more than once for the same match
-    # (see its docstring) and must converge to the same result each time.
-    child = _get_or_create_football_child(db, base_stat)
-    child.goals = counts.get("goal", 0)
-    child.assists = counts.get("assist", 0)
-    child.yellow_cards = counts.get("yellow_card", 0)
-    child.red_cards = counts.get("red_card", 0)
-    # Feeder penalty events (a scored penalty is a plain "goal" and lands
-    # above; saves/misses only exist as these dedicated event types).
-    child.penalties_saved = counts.get("penalty_saved", 0)
-    child.penalties_missed = counts.get("penalty_missed", 0)
+def _football_sheet_from_counts(counts: Counter, minutes: int) -> dict:
+    """The stat-sheet shape _book_player_match_scores books, built from counted
+    live_events — the fallback when the FT sheet can't be fetched. Partial by
+    nature (events carry no saves/conceded/clean sheets); a later sheet booking
+    assigns over it."""
+    return {
+        "minutes": minutes,
+        "goals": counts.get("goal", 0),
+        "assists": counts.get("assist", 0),
+        "yellow_cards": counts.get("yellow_card", 0),
+        "red_cards": counts.get("red_card", 0),
+        # Feeder penalty events (a scored penalty is a plain "goal" and lands
+        # above; saves/misses only exist as these dedicated event types).
+        "penalties_saved": counts.get("penalty_saved", 0),
+        "penalties_missed": counts.get("penalty_missed", 0),
+    }
 
 
 def _apply_basketball_counts(db: Session, base_stat: PlayerGameweekStat, counts: Counter) -> None:
-    # Assignment, not += — see _apply_football_counts.
+    # Assignment, not +=: `counts` is always the FULL recount of this match's
+    # live_events (see _aggregate_match_events), so this must be idempotent —
+    # persist_match_stats can be called more than once for the same match (see
+    # its docstring) and must converge to the same result each time.
     child = db.query(NBAStat).filter(NBAStat.base_stat_id == base_stat.id).first()
     if child is None:
         child = NBAStat(base_stat_id=base_stat.id)
@@ -206,7 +202,11 @@ def _apply_basketball_counts(db: Session, base_stat: PlayerGameweekStat, counts:
 
 
 def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str) -> dict:
-    """Fold a finished simulated match's events into the gameweek stat tables.
+    """Fold a finished simulated match's events into the stat tables.
+
+    Football books one PlayerMatchScore per (player, match) — windows roll those
+    up later. Basketball is single-competition, so it still writes
+    PlayerGameweekStat + NBAStat per covering window directly.
 
     Idempotent per match: counts are recomputed in full from this match's
     live_events every call and assigned (not accumulated), so it's safe to
@@ -218,18 +218,6 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
     per_player = _aggregate_match_events(db, live_key)
     if not per_player:
         logger.info("Feed scoring for match %s: no scorable events", live_key)
-        return {"players": 0, "windows": 0}
-
-    window_ids = find_transfer_window_ids_for_datetime(
-        db, match_date=match.match_date, sport_id=match.sport_id,
-        competition_tag=fantasy_tag_for_competition_name(match.competition),
-    )
-    if not window_ids:
-        logger.warning(
-            "Feed scoring for match %s: no transfer window covers %s; stats not booked",
-            live_key,
-            match.match_date,
-        )
         return {"players": 0, "windows": 0}
 
     # Only book stats for players that exist in this backend (defensive
@@ -247,14 +235,39 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
         )
 
     match_minutes = MATCH_MINUTES.get(sport, 90)
-    apply_counts = _apply_basketball_counts if sport == "basketball" else _apply_football_counts
+
+    if sport != "basketball":
+        stats_by_player = {
+            player_id: _football_sheet_from_counts(per_player[player_id], match_minutes)
+            for player_id in known_player_ids
+        }
+        _book_player_match_scores(
+            db, match=match, known_player_ids=known_player_ids,
+            stats_by_player=stats_by_player,
+        )
+        logger.info(
+            "Feed scoring for match %s: booked match scores for %s players",
+            live_key, len(known_player_ids),
+        )
+        return {"players": len(known_player_ids), "matches": 1}
+
+    window_ids = find_transfer_window_ids_for_datetime(
+        db, match_date=match.match_date, sport_id=match.sport_id,
+    )
+    if not window_ids:
+        logger.warning(
+            "Feed scoring for match %s: no transfer window covers %s; stats not booked",
+            live_key,
+            match.match_date,
+        )
+        return {"players": 0, "windows": 0}
 
     booked = 0
     for window_id in window_ids:
         for player_id in known_player_ids:
             base_stat = _get_or_create_base_stat(db, player_id, window_id)
             base_stat.minutes_played = match_minutes
-            apply_counts(db, base_stat, per_player[player_id])
+            _apply_basketball_counts(db, base_stat, per_player[player_id])
             booked += 1
 
     logger.info(
@@ -266,35 +279,11 @@ def persist_match_stats(db: Session, *, match: Match, live_key: str, sport: str)
     return {"players": len(known_player_ids), "windows": len(window_ids), "stat_rows": booked}
 
 
-# Full-sheet columns booked from API-Football's /fixtures/players at FT.
-# clean_sheets and minutes are derived/read by the parser in
-# football_live_sync; own_goals/bonus aren't in the API sheet and stay 0.
-FOOTBALL_SHEET_FIELDS = (
-    "goals",
-    "assists",
-    "clean_sheets",
-    "yellow_cards",
-    "red_cards",
-    "penalties_saved",
-    "penalties_missed",
-    "saves",
-    "goals_conceded",
-    # Advanced (Phase 3) — absent from the sheet dict default to 0 via .get.
-    "tackles",
-    "interceptions",
-    "blocks",
-    "clearances",
-    "key_passes",
-    "shots_on_target",
-    "dribbles_won",
-    "duels_won",
-)
-
-
-def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_by_player) -> None:
-    """Write a PlayerMatchScore per (player, covering window) for a finished
-    match, from the per-match stat sheet. Lazy imports break the
-    feed_scoring ↔ player_scoring cycle."""
+def _book_player_match_scores(db, *, match, known_player_ids, stats_by_player) -> None:
+    """Write one PlayerMatchScore per (player, match) from the per-match stat
+    sheet — the fact. Which gameweek(s) it counts toward is decided on read by
+    the window rollup, not here. Lazy imports break the feed_scoring ↔
+    player_scoring cycle."""
     from app.services.scoring.player_scoring import load_football_rules
     from app.services.scoring.match_scoring import award_match_bonus, upsert_player_match_score
 
@@ -304,36 +293,35 @@ def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_
     positions = dict(
         db.query(Player.id, Player.position).filter(Player.id.in_(known_player_ids)).all()
     )
-    for window_id in window_ids:
-        for player_id in known_player_ids:
-            sheet = stats_by_player[player_id]
-            stats = {
-                "minutes": int(sheet.get("minutes", 0) or 0),
-                "goals": int(sheet.get("goals", 0) or 0),
-                "assists": int(sheet.get("assists", 0) or 0),
-                "clean_sheets": min(1, int(sheet.get("clean_sheets", 0) or 0)),
-                "saves": int(sheet.get("saves", 0) or 0),
-                "penalties_saved": int(sheet.get("penalties_saved", 0) or 0),
-                "penalties_missed": int(sheet.get("penalties_missed", 0) or 0),
-                "own_goals": int(sheet.get("own_goals", 0) or 0),
-                "goals_conceded": int(sheet.get("goals_conceded", 0) or 0),
-                "yellow_cards": min(2, int(sheet.get("yellow_cards", 0) or 0)),
-                "red_cards": min(1, int(sheet.get("red_cards", 0) or 0)),
-                "tackles": int(sheet.get("tackles", 0) or 0),
-                "interceptions": int(sheet.get("interceptions", 0) or 0),
-                "blocks": int(sheet.get("blocks", 0) or 0),
-                "clearances": int(sheet.get("clearances", 0) or 0),
-                "key_passes": int(sheet.get("key_passes", 0) or 0),
-                "shots_on_target": int(sheet.get("shots_on_target", 0) or 0),
-                "dribbles_won": int(sheet.get("dribbles_won", 0) or 0),
-                "duels_won": int(sheet.get("duels_won", 0) or 0),
-                "rating": sheet.get("rating"),
-            }
-            upsert_player_match_score(
-                db, player_id=player_id, match_id=match.id,
-                transfer_window_id=window_id, position=positions.get(player_id),
-                minutes=stats["minutes"], stats=stats, rules=rules,
-            )
+    for player_id in known_player_ids:
+        sheet = stats_by_player[player_id]
+        stats = {
+            "minutes": int(sheet.get("minutes", 0) or 0),
+            "goals": int(sheet.get("goals", 0) or 0),
+            "assists": int(sheet.get("assists", 0) or 0),
+            "clean_sheets": min(1, int(sheet.get("clean_sheets", 0) or 0)),
+            "saves": int(sheet.get("saves", 0) or 0),
+            "penalties_saved": int(sheet.get("penalties_saved", 0) or 0),
+            "penalties_missed": int(sheet.get("penalties_missed", 0) or 0),
+            "own_goals": int(sheet.get("own_goals", 0) or 0),
+            "goals_conceded": int(sheet.get("goals_conceded", 0) or 0),
+            "yellow_cards": min(2, int(sheet.get("yellow_cards", 0) or 0)),
+            "red_cards": min(1, int(sheet.get("red_cards", 0) or 0)),
+            "tackles": int(sheet.get("tackles", 0) or 0),
+            "interceptions": int(sheet.get("interceptions", 0) or 0),
+            "blocks": int(sheet.get("blocks", 0) or 0),
+            "clearances": int(sheet.get("clearances", 0) or 0),
+            "key_passes": int(sheet.get("key_passes", 0) or 0),
+            "shots_on_target": int(sheet.get("shots_on_target", 0) or 0),
+            "dribbles_won": int(sheet.get("dribbles_won", 0) or 0),
+            "duels_won": int(sheet.get("duels_won", 0) or 0),
+            "rating": sheet.get("rating"),
+        }
+        upsert_player_match_score(
+            db, player_id=player_id, match_id=match.id,
+            position=positions.get(player_id),
+            minutes=stats["minutes"], stats=stats, rules=rules,
+        )
     # Rank this match's performers and award 3/2/1 bonus once all are booked.
     award_match_bonus(db, match_id=match.id)
 
@@ -341,62 +329,32 @@ def _book_player_match_scores(db, *, match, window_ids, known_player_ids, stats_
 def persist_football_stats_from_sheet(
     db: Session, *, match: Match, live_key: str, stats_by_player: dict[uuid.UUID, dict]
 ) -> dict:
-    """Book a finished real-API match's gameweek stats from the full
-    /fixtures/players sheet instead of counting live_events — this is what
-    fills saves/minutes/clean sheets, which never exist as poll events.
+    """Book a finished real-API match's stats from the full /fixtures/players
+    sheet instead of counting live_events — this is what fills saves/minutes/
+    clean sheets, which never exist as poll events.
 
-    Same contract as persist_match_stats: assignment (not +=) so re-booking
-    the same match converges, and the caller owns the transaction. Values are
-    clamped to the FootballStat check constraints (e.g. a data glitch
-    reporting 3 yellows must not abort the whole booking commit).
+    One PlayerMatchScore per (player, match); the gameweek rollup is recomputed
+    from these by score_football_players_for_window, per window schedule. Same
+    contract as persist_match_stats: assignment (not +=) so re-booking the same
+    match converges, and the caller owns the transaction.
     """
     if not stats_by_player:
-        return {"players": 0, "windows": 0}
-
-    window_ids = find_transfer_window_ids_for_datetime(
-        db, match_date=match.match_date, sport_id=match.sport_id,
-        competition_tag=fantasy_tag_for_competition_name(match.competition),
-    )
-    if not window_ids:
-        logger.warning(
-            "Sheet booking for match %s: no transfer window covers %s; stats not booked",
-            live_key,
-            match.match_date,
-        )
-        return {"players": 0, "windows": 0}
+        return {"players": 0, "matches": 0}
 
     known_player_ids = {
         player_id
         for (player_id,) in db.query(Player.id).filter(Player.id.in_(stats_by_player.keys())).all()
     }
 
-    caps = {"yellow_cards": 2, "red_cards": 1, "clean_sheets": 1}
-    booked = 0
-    for window_id in window_ids:
-        for player_id in known_player_ids:
-            sheet = stats_by_player[player_id]
-            base_stat = _get_or_create_base_stat(db, player_id, window_id)
-            base_stat.minutes_played = sheet.get("minutes", 0)
-            child = _get_or_create_football_child(db, base_stat)
-            for field in FOOTBALL_SHEET_FIELDS:
-                value = max(0, int(sheet.get(field, 0) or 0))
-                setattr(child, field, min(value, caps.get(field, value)))
-            booked += 1
-
-    # Per-match layer (Phase 2): record each player's PlayerMatchScore for this
-    # match under every covering window. The window total is aggregated later by
-    # the scoring task (score_football_players_for_window), which re-scores from
-    # these; here we persist the stats snapshot + an initial score.
-    _book_player_match_scores(db, match=match, window_ids=window_ids,
-                              known_player_ids=known_player_ids, stats_by_player=stats_by_player)
+    _book_player_match_scores(db, match=match, known_player_ids=known_player_ids,
+                              stats_by_player=stats_by_player)
 
     logger.info(
-        "Sheet booking for match %s: booked stats for %s players across %s window(s)",
+        "Sheet booking for match %s: booked match scores for %s players",
         live_key,
         len(known_player_ids),
-        len(window_ids),
     )
-    return {"players": len(known_player_ids), "windows": len(window_ids), "stat_rows": booked}
+    return {"players": len(known_player_ids), "matches": 1}
 
 
 # A live feeder match goes quiet when the feeder dies mid-simulation (its
@@ -474,7 +432,8 @@ def finalize_stale_live_matches(db: Session, redis) -> dict:
         # re-scores as fallback, and a lost WS message only affects open tabs.
         try:
             enqueue_scoring_for_finished_match(
-                db, match_date=match.match_date, sport_id=match.sport_id
+                db, match_date=match.match_date, sport_id=match.sport_id,
+                competition=match.competition,
             )
         except Exception:
             logger.exception("Stale match %s: scoring enqueue failed (cron will re-score)", live_key)

@@ -7,6 +7,8 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.league.models import League, LeagueSport, Season, TransferWindow
+from app.match.models import Match
+from app.services.sync.football_competitions import competition_names_for_tag
 
 
 def find_transfer_window_for_datetime(
@@ -45,6 +47,9 @@ def find_transfer_window_ids_for_datetime(
     or callers that don't scope), no competition filter is applied — every
     covering window matches, which for single-competition sports is just their
     own NULL windows.
+
+    Inverse of matches_in_window below — the date and competition rules in the
+    two must stay in step, or a match's stats and its gameweek rollup disagree.
     """
 
     # Algorithm: list all transfer window IDs satisfying start_at <= match_date < end_at.
@@ -61,6 +66,35 @@ def find_transfer_window_ids_for_datetime(
         )
 
     return [wid for (wid,) in q.all()]
+
+
+def matches_in_window(db: Session, window: TransferWindow) -> list[UUID]:
+    """Match ids whose stats roll up into `window` — the inverse of
+    find_transfer_window_ids_for_datetime.
+
+    Same two rules, read from the window's side: the match starts inside
+    [start_at, end_at), and its competition is one the window's schedule covers
+    (its own for a per-competition window, every fantasy competition for the
+    combined NULL one). Football-shaped, but harmless for other sports: their
+    seasons only carry NULL windows and their Match.competition names simply
+    aren't in the fantasy list, so callers there keep using the per-window
+    stat path instead.
+    """
+    names = competition_names_for_tag(window.competition)
+    if not names:
+        return []
+    q = (
+        db.query(Match.id)
+        .filter(
+            Match.match_date >= window.start_at,
+            Match.match_date < window.end_at,
+            Match.competition.in_(names),
+        )
+    )
+    sport_id = _season_sport_id(db, window.season_id)
+    if sport_id is not None:
+        q = q.filter(Match.sport_id == sport_id)
+    return [match_id for (match_id,) in q.all()]
 
 
 def _season_sport_id(db: Session, season_id: UUID) -> UUID | None:

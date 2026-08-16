@@ -13,7 +13,7 @@ from sqlalchemy import false
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.league.models import FantasyTeam, LeagueSport, Sport, TeamPlayer
+from app.league.models import FantasyTeam, LeagueSport, Sport, TeamPlayer, TransferWindow
 from app.player.models import Player, PlayerGameweekStat, PlayerPriceHistory
 from app.player.schemas import PlayerFilter
 from app.services.scoring.projection import compute_projected_points
@@ -404,6 +404,12 @@ def get_player_recent_stats(
     Mirrors get_player_price_history above: same 404-on-invalid-id guard,
     same newest-first + limit shape. Eager-loads the same relationships as
     get_player_stats so the detail view's stats section is one round-trip.
+
+    Restricted to the combined (competition IS NULL) window schedule: a match
+    books its stats into its own competition's window AND the combined one, so
+    an unfiltered read returns the same gameweek twice (see TransferWindow.
+    competition). This view has no league context, and the combined schedule is
+    the one series that covers every competition a player features in.
     """
     get_player(db, player_id)
 
@@ -416,7 +422,11 @@ def get_player_recent_stats(
             joinedload(PlayerGameweekStat.football_stat),
             joinedload(PlayerGameweekStat.cricket_stat),
         )
-        .filter(PlayerGameweekStat.player_id == player_id)
+        .join(TransferWindow, TransferWindow.id == PlayerGameweekStat.transfer_window_id)
+        .filter(
+            PlayerGameweekStat.player_id == player_id,
+            TransferWindow.competition.is_(None),
+        )
         .order_by(PlayerGameweekStat.created_at.desc())
         .limit(safe_limit)
         .all()
