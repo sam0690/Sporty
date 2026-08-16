@@ -73,6 +73,13 @@ function sliceInto<T>(items: T[], sizes: number[]): T[][] {
 export function buildTeamFormation(
   players: LineupPlayer[],
   side: "home" | "away",
+  /**
+   * The provider's own formation label, when the feed supplies one. Preferred
+   * over the derived label below, which can only read a flat three-line shape
+   * off position buckets — a 3-4-2-1 comes back as "3-7-1". Layout still comes
+   * from the buckets; this only changes the text.
+   */
+  reportedLabel?: string | null,
 ): TeamFormation {
   const gk: LineupPlayer[] = [];
   const known: Record<"DEF" | "MID" | "FWD", LineupPlayer[]> = {
@@ -112,10 +119,12 @@ export function buildTeamFormation(
   const mid = known.MID;
   const fwd = known.FWD;
 
-  // Honest three-part label from the outfield distribution.
-  const label = [def.length, mid.length, fwd.length]
+  // Honest three-part label from the outfield distribution, used whenever the
+  // feed doesn't tell us the real shape.
+  const derivedLabel = [def.length, mid.length, fwd.length]
     .filter((n, i) => i === 0 || i === 1 || n > 0)
     .join("-");
+  const label = reportedLabel?.trim() || derivedLabel;
 
   // Rows from goal-end → centre-line.
   const midRows = sliceInto(mid, splitMidfield(mid.length));

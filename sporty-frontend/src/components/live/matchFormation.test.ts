@@ -62,3 +62,22 @@ describe("buildTeamFormation", () => {
     for (const c of chips) expect(c.y).toBeLessThanOrEqual(0.5);
   });
 });
+
+describe("buildTeamFormation reported label", () => {
+  it("prefers the provider's shape over the derived three-line guess", () => {
+    // A real 3-4-2-1 (GK + 3 + 6 + 1) reads as "3-6-1" off position buckets
+    // alone, because the buckets can't tell a 4-2 midfield split from a flat 6.
+    expect(buildTeamFormation(xi(3, 6, 1), "home").label).toBe("3-6-1");
+
+    const { label, chips } = buildTeamFormation(xi(3, 6, 1), "home", "3-4-2-1");
+    expect(label).toBe("3-4-2-1");
+    // Layout still comes from the buckets — only the text changes.
+    expect(chips).toHaveLength(11);
+  });
+
+  it("falls back to the derived label when the feed omits one", () => {
+    for (const missing of [undefined, null, "", "   "]) {
+      expect(buildTeamFormation(xi(4, 4, 2), "home", missing).label).toBe("4-4-2");
+    }
+  });
+});

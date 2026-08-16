@@ -33,11 +33,12 @@ function teamChips(
   side: "home" | "away",
   sport: "football" | "basketball",
   color: string,
+  reportedFormation?: string | null,
 ): { label: string; chips: RenderChip[] } {
   const { label, chips } =
     sport === "basketball"
       ? buildTeamCourt(lineup, side)
-      : buildTeamFormation(lineup, side);
+      : buildTeamFormation(lineup, side, reportedFormation);
   return {
     label,
     chips: chips.map((c) => ({ ...c, color: c.isGk ? GK_RING : color })),
@@ -195,8 +196,12 @@ export function MatchLineupPitch() {
   const awayName = awayTeam ?? "Away";
   const homeColor = teamIdentity(homeName).color;
   const awayColor = teamIdentity(awayName).color;
-  const homeSide = teamChips(home, "home", lineupSport, homeColor);
-  const awaySide = teamChips(away, "away", lineupSport, awayColor);
+  const homeSide = teamChips(
+    home, "home", lineupSport, homeColor, startingLineups.home_formation,
+  );
+  const awaySide = teamChips(
+    away, "away", lineupSport, awayColor, startingLineups.away_formation,
+  );
   const Surface =
     lineupSport === "basketball" ? MatchCourtSurface : MatchPitchSurface;
 

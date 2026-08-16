@@ -735,11 +735,19 @@ def _parse_lineups(payload: dict, home_team_name: str, resolve_player) -> dict |
         )
         home_index = 0
 
-    out = {"home": [], "away": [], "home_bench": [], "away_bench": []}
+    out = {
+        "home": [], "away": [], "home_bench": [], "away_bench": [],
+        # The provider's own label ("4-2-3-1"). The pitch view otherwise has to
+        # infer one from position buckets, which mislabels shapes it can't
+        # split (a 3-7-1 read of a 3-4-2-1). Absent for some competitions, so
+        # the client keeps its derived label as the fallback.
+        "home_formation": None, "away_formation": None,
+    }
     unresolved: list[tuple] = []
     for position, team_block in enumerate(response):
         is_home = position == home_index
         team_name = (team_block.get("team") or {}).get("name") or ""
+        out[("home" if is_home else "away") + "_formation"] = team_block.get("formation") or None
         for key, side in (("startXI", ""), ("substitutes", "_bench")):
             bucket = out[("home" if is_home else "away") + side]
             for entry in team_block.get(key) or []:
