@@ -64,8 +64,9 @@ sys.path.insert(0, str(project_root))
 
 import app.main  # noqa: F401 — registers all model modules so relationships resolve
 
+from app.core.config import settings
 from app.database import SessionLocal
-from app.external_apis.football_api import FootballAPIClient
+from app.external_apis.football_api import FootballAPIClient, quota_used_today
 from app.league.models import Sport
 from app.player import read_cache as player_read_cache
 from app.player.models import Player, RealTeam
@@ -382,6 +383,11 @@ def main() -> int:
              "default — read ABSENCE_IS_WEAK_EVIDENCE before using it.",
     )
     parser.add_argument(
+        "--ignore-budget",
+        action="store_true",
+        help="Run even when the projected spend eats into the match-day reserve.",
+    )
+    parser.add_argument(
         "--interval",
         type=float,
         default=REQUEST_INTERVAL_SECONDS,
@@ -408,6 +414,22 @@ def main() -> int:
     finally:
         db.close()
     print(f"clubs: {len(clubs)}")
+
+    # This run and the match-day tasks share ONE 95/day budget, and everything
+    # match-day (pre-match lineups, FT team stats) silently yields once spend
+    # passes budget - FOOTBALL_LINEUP_QUOTA_RESERVE. Run it on 2026-08-16 and
+    # that day's fixtures get no lineups and no stat sheet — which is exactly
+    # what happened. Costs nothing on a re-run inside the 24h response cache,
+    # but the projection can't tell those apart, hence --ignore-budget.
+    projected = quota_used_today() + len(clubs) + 3
+    floor = settings.FOOTBALL_API_DAILY_BUDGET - settings.FOOTBALL_LINEUP_QUOTA_RESERVE
+    if settings.FOOTBALL_API_DAILY_BUDGET > 0 and projected > floor and not args.ignore_budget:
+        raise SystemExit(
+            f"Projected spend {projected} would cross the match-day reserve "
+            f"({floor} of {settings.FOOTBALL_API_DAILY_BUDGET}; "
+            f"{quota_used_today()} already spent today). Run after 00:00 UTC on a "
+            "non-matchday, or pass --ignore-budget if you know today has no fixtures."
+        )
 
     # Phase 2 — the feed. Minutes long, so no database session is held: Neon
     # closes idle connections and the reconcile below would die on a dead socket.

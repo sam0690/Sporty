@@ -56,7 +56,7 @@ def _cache_key(path: str, params: dict[str, Any]) -> str:
     return f"api-football:{path}?{qs}"
 
 
-def _spend_quota() -> None:
+def _spend_quota(path: str = "?") -> None:
     """INCR the shared daily counter; raise once the budget is spent.
 
     Counter key rolls with the UTC date to match the provider's 00:00 UTC
@@ -73,8 +73,12 @@ def _spend_quota() -> None:
         redis = get_redis()
         key = f"quota:api-football:{datetime.now(timezone.utc):%Y%m%d}"
         used = redis.incr(key)
+        # Same-day spend breakdown — without it "budget already gone at noon"
+        # is unanswerable after the fact. HGETALL quota:api-football:<day>:paths
+        redis.hincrby(f"{key}:paths", path, 1)
         if used == 1:
             redis.expire(key, 172800)  # 2 days; date in the key does the real rollover
+            redis.expire(f"{key}:paths", 172800)
     except Exception:  # noqa: BLE001
         logger.warning("API-Football quota counter unavailable; failing open", exc_info=True)
         return
@@ -139,7 +143,7 @@ class FootballAPIClient:
             if cached is not None:
                 return cached
 
-        _spend_quota()
+        _spend_quota(path)
         url = f"{self.BASE_URL}/{path}"
         async with httpx.AsyncClient() as client:
             response = await client.get(
