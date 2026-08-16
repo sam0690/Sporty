@@ -13,29 +13,23 @@ the SportyDataFeeder simulator instead (app/api/v1/feed.py). Cricket
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from celery import shared_task
 
 from app.core.redis_lock import redis_lock
+from app.tasks._async_bridge import run_async
 from app.database import SessionLocal
 from app.services.sync.cricket_live_sync import sync_cricket_live_matches
-from app.services.sync.football_live_sync import sync_football_live_matches
+from app.services.sync.football_live_sync import (
+    sync_football_lineups,
+    sync_football_live_matches,
+)
 from app.services.sync.nba_live_sync import sync_nba_live_matches
 
 
-def _run_async(coro: Any):
-    try:
-        return asyncio.run(coro)
-    except RuntimeError as exc:
-        if "asyncio.run() cannot be called from a running event loop" not in str(exc):
-            raise
-        loop = asyncio.new_event_loop()
-        try:
-            return loop.run_until_complete(coro)
-        finally:
-            loop.close()
+# Shared bridge: see app/tasks/_async_bridge.py for the loop/Redis caveat.
+_run_async = run_async
 
 
 @shared_task(name="live.football.poll")
@@ -49,6 +43,21 @@ def poll_live_football_task() -> dict[str, Any]:
         try:
             result = _run_async(sync_football_live_matches(db))
             return {"ok": True, "task": "live.football.poll", "result": result}
+        finally:
+            db.close()
+
+
+@shared_task(name="sync.football.lineups")
+def sync_football_lineups_task() -> dict[str, Any]:
+    lock_key = "lock:live:football:lineups"
+    with redis_lock(lock_key, ttl_seconds=55) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held", "task": "sync.football.lineups"}
+
+        db = SessionLocal()
+        try:
+            result = _run_async(sync_football_lineups(db))
+            return {"ok": True, "task": "sync.football.lineups", "result": result}
         finally:
             db.close()
 

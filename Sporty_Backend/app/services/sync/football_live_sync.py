@@ -14,10 +14,10 @@ or awaiting a missed final; each live poll is ONE request because live
 fixtures embed their events; FootballQuotaExhausted pauses everything for
 the rest of the UTC day.
 
-The Beat cadence is coarse (every 6h, user decision) so most matches start
-and finish between ticks; the reconcile pass fetches those finals via the
-Free-plan-allowed fixtures?date= query and books their FT stat sheets, so
-scores/fantasy points arrive hours late but never go missing.
+The Beat cadence is hourly, so a match can still start and finish between
+ticks; the reconcile pass fetches those finals via the Free-plan-allowed
+fixtures?date= query and books their FT stat sheets, so scores/fantasy points
+can arrive late but never go missing.
 
 Only matches with a numeric (real, API-Football-sourced) external_api_id are
 touched; feeder-simulated matches (external_api_id = "feeder:<uuid>") are
@@ -28,6 +28,10 @@ sync_football_predictions lives here too: once per matchday it fetches the
 API-Football pre-match prediction for each upcoming fixture and caches it
 under the same Redis keys + MatchFeedCache rows the feeder's /feed/prediction
 push used, so the frontend read path is unchanged.
+
+sync_football_lineups does the same for confirmed starting XIs + benches,
+filling the last gap left by the feeder cutover — the match-state pitch view
+had no producer at all after /api/v1/feed/match-lineups was unmounted.
 """
 
 from __future__ import annotations
@@ -42,7 +46,11 @@ from sqlalchemy.orm import Session
 from app.admin.feature_flags import get_effective_flag
 from app.core.config import settings
 from app.core.redis import LIVE_FAVOURITES_CACHE_KEY, cache_delete, get_async_redis
-from app.external_apis.football_api import FootballAPIClient, FootballQuotaExhausted
+from app.external_apis.football_api import (
+    FootballAPIClient,
+    FootballQuotaExhausted,
+    quota_used_today,
+)
 from app.league.models import Sport
 from app.match.models import Match
 from app.models.db.live_event import LiveEvent
@@ -55,17 +63,15 @@ from app.services.feed_scoring import (
     persist_match_stats,
 )
 from app.services.sync.football_competitions import fantasy_competitions
+from app.services.sync.name_matching import Candidate, NameIndex
+from app.services.sync.status_normalizer import normalize_match_status
 from app.services.scoring.trigger import enqueue_scoring_for_finished_match
 
 logger = logging.getLogger(__name__)
 
-_STATUS_MAP = {
-    "NS": "scheduled",
-    "1H": "live", "HT": "live", "2H": "live", "ET": "live", "P": "live",
-    "FT": "finished", "AET": "finished", "PEN": "finished",
-    "PST": "postponed", "CANC": "cancelled", "ABD": "cancelled",
-    "AWD": "finished", "WO": "finished",
-}
+# Status codes are normalized by the shared normalize_match_status() helper —
+# this module used to carry its own copy, which silently omitted BT/SUSP/INT and
+# so flipped a match in an extra-time break back to 'scheduled'.
 
 # (type, detail) as returned by API-Football's /fixtures/events, lower-cased.
 # Own goals and missed penalties intentionally map to None (skipped): an own
@@ -87,13 +93,40 @@ def _map_event_type(event_type: str, detail: str) -> str | None:
     return _EVENT_TYPE_MAP.get((event_type.strip().lower(), detail.strip().lower()))
 
 
-def _parse_player_sheet(payload: dict, fixture_data: dict, resolve_player) -> dict:
+def _club_name_index(db, sport_id, team_name: str) -> NameIndex:
+    """Name index over our players at one club, for id-drift fallback."""
+    rows = (
+        db.query(Player)
+        .filter(Player.sport_id == sport_id, Player.real_team == team_name)
+        .all()
+    )
+    return NameIndex.build(
+        [Candidate.from_full_name(p.name, club=team_name, payload=p) for p in rows]
+    )
+
+
+def _parse_player_sheet(
+    payload: dict, fixture_data: dict, resolve_player, db=None, sport_id=None
+) -> dict:
     """API-Football /fixtures/players response -> {sporty_player_uuid: sheet}
     in the shape persist_football_stats_from_sheet books.
 
     clean_sheets is derived (not in the API sheet): 1 if the player's team
     conceded 0 and they played >= 60 minutes (FPL convention). Conceded per
     team comes from the live fixture payload's teams + goals objects.
+
+    Players the sheet lists that we can't resolve are REPORTED, never silently
+    dropped — a silent skip here cost Mikel Rodríguez a goal in La Liga fixture
+    1570333 and nobody noticed, because 13 of that sheet's 44 entries vanished
+    without a trace.
+
+    When db/sport_id are supplied, an id miss falls back to name matching
+    SCOPED TO THAT CLUB. The provider sometimes reports one person under two
+    ids — Mikel Rodríguez is 332645 in /fixtures/events and /players/squads but
+    389022 on the stat sheet. Club scoping is what makes this safe: matching
+    against the whole pool resolved a La Liga "Adrián Rodríguez" onto
+    Bournemouth's "Á. Rodríguez", and a wrong attribution is worse than a
+    dropped row. NameIndex still returns None on any within-club ambiguity.
     """
     teams_obj = fixture_data.get("teams", {}) or {}
     goals = fixture_data.get("goals", {}) or {}
@@ -103,16 +136,32 @@ def _parse_player_sheet(payload: dict, fixture_data: dict, resolve_player) -> di
     }
 
     out: dict = {}
+    unresolved: list[tuple] = []
     for team_block in payload.get("response", []) or []:
-        team_id = str((team_block.get("team") or {}).get("id"))
+        team_obj = team_block.get("team") or {}
+        team_id = str(team_obj.get("id"))
+        team_name = team_obj.get("name") or ""
         team_conceded = conceded_by_team_id.get(team_id, 0)
+        name_index: NameIndex | None = None  # built lazily, only on an id miss
         for entry in team_block.get("players", []) or []:
-            api_id = (entry.get("player") or {}).get("id")
+            player_obj = entry.get("player") or {}
+            api_id = player_obj.get("id")
             if api_id is None:
                 continue
             player = resolve_player(api_id)
+            if player is None and db is not None and team_name:
+                if name_index is None:
+                    name_index = _club_name_index(db, sport_id, team_name)
+                player = name_index.match(player_obj.get("name") or "", club=team_name)
+                if player is not None:
+                    logger.info(
+                        "FT sheet: resolved %s (api id %s) by name at %s — provider id drift",
+                        player_obj.get("name"), api_id, team_name,
+                    )
             if player is None:
-                continue  # not a player we know about (not drafted/synced)
+                # Not in our pool at all (squad not seeded), or ambiguous.
+                unresolved.append((api_id, player_obj.get("name"), team_name))
+                continue
 
             stats = (entry.get("statistics") or [{}])[0] or {}
             games = stats.get("games") or {}
@@ -149,6 +198,18 @@ def _parse_player_sheet(payload: dict, fixture_data: dict, resolve_player) -> di
                 "dribbles_won": dribbles.get("success") or 0,
                 "rating": float(games["rating"]) if games.get("rating") else None,
             }
+
+    if unresolved:
+        # Loud on purpose: every entry here is a player whose goals, minutes and
+        # clean sheet are being thrown away, which is invisible in the final
+        # numbers. Usually means that club's squad needs (re)seeding from
+        # /players/squads — the endpoint the free plan does allow.
+        logger.warning(
+            "FT sheet: %s of %s entries unresolved, their stats are NOT booked: %s",
+            len(unresolved),
+            len(unresolved) + len(out),
+            ", ".join(f"{name} (id {api_id}, {team})" for api_id, name, team in unresolved),
+        )
     return out
 
 
@@ -169,8 +230,13 @@ def _fixtures_in_live_window(db: Session, sport_id) -> list[Match]:
     return [m for m in candidates if (m.external_api_id or "").isdigit()]
 
 
-# Anything that kicked off this long ago is over (90' + stoppage + HT + ET/pens).
-_SURELY_FINISHED_AFTER = timedelta(hours=3, minutes=30)
+# Anything that kicked off this long ago is almost certainly over (90' +
+# stoppage + HT ≈ 1h50m for league play). Safe to set tight: the reconcile pass
+# only writes 'finished' when the provider actually reports FT/AET/PEN — a
+# fixture still in extra time maps to 'live', stays a candidate, and is retried
+# on the next tick. Combined with the hourly poll this lands finals (and their
+# FT stat sheets) at kickoff+2h15..3h15 instead of +3h30..6h30.
+_SURELY_FINISHED_AFTER = timedelta(hours=2, minutes=15)
 
 
 def _missed_finish_candidates(db: Session, sport_id) -> list[Match]:
@@ -193,24 +259,68 @@ def _missed_finish_candidates(db: Session, sport_id) -> list[Match]:
     return [m for m in candidates if (m.external_api_id or "").isdigit()]
 
 
-async def _finish_match(db, client, match: Match, live_key: str, fixture_data: dict, resolve_player) -> None:
+# How long to keep retrying the FT stat sheet before settling for event-count
+# booking. Bounded by the reconcile pass's own 26h lookback — deferring forever
+# would mean the match is never booked at all.
+_SHEET_RETRY_UNTIL = timedelta(hours=12)
+
+
+async def _finish_match(db, client, match: Match, live_key: str, fixture_data: dict, resolve_player) -> bool:
     """live->finished transition: book the full FT stat sheet (saves/minutes/
-    clean sheets; 1 extra request), falling back to event-count booking if the
-    fetch fails or the daily budget is spent, then enqueue scoring."""
+    clean sheets; 1 extra request) and flip status to 'finished'.
+
+    Owns the status flip so a failed sheet fetch can't strand the match: the
+    event-count fallback credits a flat 90 minutes to everyone with an event
+    (wrong for subs and red cards) and, once 'finished' is written, the match
+    drops out of _missed_finish_candidates and can never be repaired. So on a
+    transient failure we write NOTHING and leave the row 'live' for the next
+    tick to retry. Past _SHEET_RETRY_UNTIL we accept the fallback rather than
+    never booking — the final score is still correct, it came from the caller.
+
+    Returns True if the match was finished and booked, False if deferred.
+    """
     stats_by_player: dict = {}
+    sheet_failed = False
     try:
         players_payload = await client.get_fixture_players(fixture_id=int(match.external_api_id))
-        stats_by_player = _parse_player_sheet(players_payload, fixture_data, resolve_player)
+        stats_by_player = _parse_player_sheet(
+            players_payload, fixture_data, resolve_player,
+            db=db, sport_id=match.sport_id,
+        )
     except FootballQuotaExhausted as exc:
-        logger.warning("Football FT sheet skipped for %s: %s", live_key, exc)
+        sheet_failed = True
+        logger.warning("Football FT sheet deferred for %s: %s", live_key, exc)
     except Exception:
+        sheet_failed = True
         logger.exception("Football FT sheet request failed for fixture %s", match.external_api_id)
+
+    if sheet_failed:
+        age = datetime.now(timezone.utc) - match.match_date
+        if age < _SHEET_RETRY_UNTIL:
+            # Leave status untouched (still 'live'/'scheduled') so the match
+            # stays a reconcile candidate. Deliberately no db.rollback() here —
+            # the live-poll caller shares this transaction with its event
+            # inserts, which must survive.
+            logger.info(
+                "Football finish deferred for %s: FT sheet unavailable, retrying next tick",
+                live_key,
+            )
+            return False
+        logger.error(
+            "Football finish for %s: FT sheet still unavailable %s after kickoff; "
+            "booking from event counts instead (minutes will be approximate) — "
+            "review this fixture manually",
+            live_key,
+            age,
+        )
+
     if stats_by_player:
         persist_football_stats_from_sheet(
             db, match=match, live_key=live_key, stats_by_player=stats_by_player
         )
     else:
         persist_match_stats(db, match=match, live_key=live_key, sport="football")
+    match.status = "finished"
     db.commit()
     try:
         enqueue_scoring_for_finished_match(
@@ -220,6 +330,7 @@ async def _finish_match(db, client, match: Match, live_key: str, fixture_data: d
         logger.exception(
             "Football live poll: finish %s stats booked but scoring enqueue failed", live_key
         )
+    return True
 
 
 async def _reconcile_missed_finishes(db, client, redis, candidates: list[Match], resolve_player) -> int:
@@ -249,14 +360,27 @@ async def _reconcile_missed_finishes(db, client, redis, candidates: list[Match],
                 continue
             fixture = fixture_data.get("fixture", {}) or {}
             goals = fixture_data.get("goals", {}) or {}
-            new_status = _STATUS_MAP.get((fixture.get("status") or {}).get("short", "NS"), "scheduled")
+            new_status = normalize_match_status((fixture.get("status") or {}).get("short"))
             finished_now = new_status == "finished" and match.status != "finished"
             match.home_score = goals.get("home")
             match.away_score = goals.get("away")
-            match.status = new_status
+            if not finished_now:
+                # When finishing, _finish_match owns the flip to 'finished' —
+                # it declines (leaving the row a reconcile candidate) if the FT
+                # stat sheet can't be fetched, so we must not pre-write it.
+                match.status = new_status
+            # Commit the score now either way, so a deferred finish still
+            # persists the provider's result and leaves nothing pending.
             db.commit()
 
             live_key = match.external_api_id or str(match.id)
+            if finished_now:
+                if not await _finish_match(
+                    db, client, match, live_key, fixture_data, resolve_player
+                ):
+                    continue
+                finished += 1
+
             channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
             await redis.publish(channel, WSMessage(
                 event="SCORE_UPDATE",
@@ -264,16 +388,12 @@ async def _reconcile_missed_finishes(db, client, redis, candidates: list[Match],
                     "kind": "LIVE_API_RECONCILE",
                     "match_id": live_key,
                     "sport": "football",
-                    "status": new_status,
+                    "status": match.status,
                     "home": match.home_score,
                     "away": match.away_score,
                     "minute": 90,
                 },
             ).model_dump_json())
-
-            if finished_now:
-                await _finish_match(db, client, match, live_key, fixture_data, resolve_player)
-                finished += 1
     return finished
 
 
@@ -335,7 +455,7 @@ async def sync_football_live_matches(db: Session) -> str:
             continue
 
         status_obj = fixture.get("status", {}) or {}
-        new_status = _STATUS_MAP.get(status_obj.get("short", "NS"), "scheduled")
+        new_status = normalize_match_status(status_obj.get("short"))
         finished_now = new_status == "finished" and match.status != "finished"
         minute = status_obj.get("elapsed") or 0
 
@@ -432,9 +552,16 @@ async def sync_football_live_matches(db: Session) -> str:
 
         match.home_score = goals.get("home")
         match.away_score = goals.get("away")
-        match.status = new_status
+        if not finished_now:
+            # When finishing, _finish_match owns the status flip (it declines
+            # if the FT sheet is unavailable) — see its docstring. The event
+            # inserts above commit either way.
+            match.status = new_status
         db.commit()
         updated += 1
+
+        if finished_now:
+            await _finish_match(db, client, match, live_key, fixture_data, _resolve_player)
 
         channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
         message = WSMessage(
@@ -443,7 +570,7 @@ async def sync_football_live_matches(db: Session) -> str:
                 "kind": "LIVE_API_POLL",
                 "match_id": live_key,
                 "sport": "football",
-                "status": new_status,
+                "status": match.status,
                 "home": match.home_score,
                 "away": match.away_score,
                 "minute": minute,
@@ -454,9 +581,6 @@ async def sync_football_live_matches(db: Session) -> str:
             await apply_live_points(
                 redis, live_key=live_key, sport="football", events=scorable_events, channel=channel
             )
-
-        if finished_now:
-            await _finish_match(db, client, match, live_key, fixture_data, _resolve_player)
 
     # Catch-up: finals + stats for matches that started and ended between
     # ticks (a multi-hour cadence skips whole games; live=all can't see them).
@@ -579,3 +703,164 @@ async def sync_football_predictions(db: Session) -> str:
         cached += 1
 
     return f"ok: predictions cached for {cached} of {len(matches)} fixture(s)"
+
+
+# ── Confirmed lineups (starting XI + bench) ──────────────────────────────────
+
+
+def _parse_lineups(payload: dict, home_team_name: str, resolve_player) -> dict | None:
+    """API-Football /fixtures/lineups response -> the MatchLineupsPayload shape
+    the match-state read path already serves (feed.py's MatchLineupsPayload).
+
+    Sides are decided by matching the block's team name against the Match row's
+    home_team — both come from API-Football via the daily fixture sync, so they
+    agree. Response order is only the fallback, because getting this backwards
+    silently swaps both teams' lineups on the pitch view.
+
+    Returns None when the provider has nothing yet (lineups appear ~1h before
+    kick-off), so the caller retries on a later tick rather than caching an
+    empty result.
+    """
+    response = payload.get("response") or []
+    if not response:
+        return None
+
+    names = [((b.get("team") or {}).get("name") or "") for b in response]
+    if home_team_name in names:
+        home_index = names.index(home_team_name)
+    else:
+        logger.warning(
+            "Lineups: home team %r not found in %s; falling back to response order",
+            home_team_name, names,
+        )
+        home_index = 0
+
+    out = {"home": [], "away": [], "home_bench": [], "away_bench": []}
+    unresolved: list[tuple] = []
+    for position, team_block in enumerate(response):
+        is_home = position == home_index
+        team_name = (team_block.get("team") or {}).get("name") or ""
+        for key, side in (("startXI", ""), ("substitutes", "_bench")):
+            bucket = out[("home" if is_home else "away") + side]
+            for entry in team_block.get(key) or []:
+                player_info = entry.get("player") or {}
+                api_id = player_info.get("id")
+                if api_id is None:
+                    continue
+                player = resolve_player(api_id)
+                if player is None:
+                    unresolved.append((api_id, player_info.get("name"), team_name))
+                    continue
+                bucket.append(str(player.id))
+
+    if unresolved:
+        # Same rule as the FT sheet: a player we drop is a player who silently
+        # vanishes from the lineup, so say so. Usually squad-depth names the
+        # roster seed is missing, which is why benches are patchier than XIs.
+        logger.warning(
+            "Lineups: %s entries unresolved and omitted: %s",
+            len(unresolved),
+            ", ".join(f"{name} (id {api_id}, {team})" for api_id, name, team in unresolved),
+        )
+    if not out["home"] and not out["away"]:
+        return None
+    return out
+
+
+def _lineup_window_candidates(db: Session, sport_id) -> list[Match]:
+    """Fixtures worth asking about: from an hour before kick-off (when the
+    provider publishes) through the match itself (late backfill)."""
+    now = datetime.now(timezone.utc)
+    candidates = (
+        db.query(Match)
+        .filter(
+            Match.sport_id == sport_id,
+            Match.status.in_(["scheduled", "live"]),
+            Match.match_date >= now - _LIVE_WINDOW_AFTER_KICKOFF,
+            Match.match_date <= now + timedelta(hours=1),
+        )
+        .all()
+    )
+    return [m for m in candidates if (m.external_api_id or "").isdigit()]
+
+
+async def sync_football_lineups(db: Session) -> str:
+    """Cache confirmed lineups into the same Redis key + MatchFeedCache row the
+    feeder's /feed/match-lineups push used, so the match-state read path
+    (app/api/routes/match.py) is unchanged.
+
+    One request per fixture, once ever: already-cached fixtures are skipped, so
+    a tight cadence costs nothing extra and only buys earlier availability.
+    Yields the tail of the daily budget (FOOTBALL_LINEUP_QUOTA_RESERVE) to the
+    finals/FT-sheet work, which matters more than a lineup graphic.
+    """
+    if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
+        return "ok: live polling disabled (LIVE_POLLING_ENABLED=false)"
+
+    sport = db.query(Sport).filter(Sport.name == "football").first()
+    if sport is None:
+        return "ok: football sport not seeded"
+
+    matches = _lineup_window_candidates(db, sport.id)
+    if not matches:
+        return "ok: no fixtures near kick-off; API not called"
+
+    from app.api.v1.feed import LINEUPS_TTL_SECONDS, _persist_feed_cache
+    from app.models.db.match_feed_cache import MatchFeedCache
+
+    budget = settings.FOOTBALL_API_DAILY_BUDGET
+    floor = budget - settings.FOOTBALL_LINEUP_QUOTA_RESERVE if budget > 0 else None
+
+    client = FootballAPIClient()
+    redis = await get_async_redis()
+
+    def _resolve_player(api_player_id) -> Player | None:
+        return (
+            db.query(Player)
+            .filter(Player.sport_id == sport.id, Player.external_api_id == str(api_player_id))
+            .first()
+        )
+
+    cached = 0
+    for match in matches:
+        key = f"lineups:match:{match.id}"
+        if await redis.exists(key):
+            continue
+        # Redis entries expire after 24h; the durable row is the real "already
+        # fetched" marker and stops a re-fetch after a TTL lapse or cache flush.
+        already = (
+            db.query(MatchFeedCache.id)
+            .filter(MatchFeedCache.match_id == match.id, MatchFeedCache.kind == "lineups")
+            .first()
+        )
+        if already is not None:
+            continue
+
+        if floor is not None and quota_used_today() >= floor:
+            return (
+                f"ok: lineup quota reserve reached ({floor}/{budget} spent), "
+                f"{cached} cached; remaining budget held for match finals"
+            )
+
+        try:
+            payload = await client.get_lineups(fixture_id=int(match.external_api_id))
+        except FootballQuotaExhausted as exc:
+            logger.warning("Football lineups paused: %s", exc)
+            return f"ok: daily API budget spent after {cached} lineup(s)"
+        except Exception:
+            logger.exception(
+                "Football lineups: request failed for fixture %s", match.external_api_id
+            )
+            continue
+
+        doc = _parse_lineups(payload, match.home_team or "", _resolve_player)
+        if doc is None:
+            # Not published yet — leave it uncached so a later tick retries.
+            continue
+
+        doc["sporty_match_id"] = str(match.id)
+        await redis.setex(key, LINEUPS_TTL_SECONDS, json.dumps(doc))
+        _persist_feed_cache(db, match.id, "lineups", doc)
+        cached += 1
+
+    return f"ok: lineups cached for {cached} of {len(matches)} fixture(s)"

@@ -34,7 +34,13 @@ logger = logging.getLogger(__name__)
 
 
 class FootballQuotaExhausted(RuntimeError):
-    """Daily API-Football request budget is spent; retry after 00:00 UTC."""
+    """No more API-Football requests available right now.
+
+    Two causes, same handling: the daily request budget is spent (retry after
+    00:00 UTC), or the provider returned 429 for the per-minute rate limit
+    (10/min on the free plan; retry on the next poll tick). Callers treat this
+    as "polling paused", not an error — the poll's own cadence is the retry.
+    """
 
 
 # Response-cache TTLs, opted into per endpoint (see _get). Only endpoints whose
@@ -76,6 +82,24 @@ def _spend_quota() -> None:
         raise FootballQuotaExhausted(
             f"API-Football daily budget spent ({budget}/{budget})"
         )
+
+
+def quota_used_today() -> int:
+    """Requests spent against today's budget, or 0 if the counter is unreadable.
+
+    Read-only companion to _spend_quota, for callers that want to yield the
+    remaining budget to more important work rather than race it to zero.
+    Fails open (0) for the same reason _spend_quota does: quota accounting
+    must never be the thing that stops live data.
+    """
+    from app.core.redis import get_redis
+
+    try:
+        used = get_redis().get(f"quota:api-football:{datetime.now(timezone.utc):%Y%m%d}")
+        return int(used) if used else 0
+    except Exception:  # noqa: BLE001
+        logger.warning("API-Football quota counter unreadable", exc_info=True)
+        return 0
 
 
 class FootballAPIClient:
@@ -121,6 +145,14 @@ class FootballAPIClient:
             response = await client.get(
                 url, headers=self.headers, params=params, timeout=30
             )
+            # The free plan caps at 10 req/min as well as 100/day. Surface a
+            # 429 as the same "paused" signal the daily budget uses, so callers
+            # skip cleanly and retry next tick instead of swallowing an
+            # HTTPStatusError in a generic handler and losing the tick's data.
+            if response.status_code == 429:
+                raise FootballQuotaExhausted(
+                    "API-Football rate limit hit (10 req/min); retry on the next tick"
+                )
             response.raise_for_status()
             payload = response.json()
 
@@ -218,6 +250,22 @@ class FootballAPIClient:
             {"response": [{"team": {...}, "players": [{"player": {...}, "statistics": [{...}]}]}]}
         """
         return await self._get("fixtures/players", {"fixture": fixture_id})
+
+    async def get_lineups(self, fixture_id: int) -> dict[str, Any]:
+        """
+        Fetch the confirmed starting XI + bench for one fixture. Published
+        roughly an hour before kick-off; empty before that.
+
+        Uncached on purpose: the caller's own Redis/MatchFeedCache guard is the
+        cache, and an early response can still change if a team is announced
+        late.
+
+        Returns:
+            {"response": [{"team": {...}, "formation": "4-2-3-1",
+                           "startXI": [{"player": {"id":..., "pos":..., "grid":...}}],
+                           "substitutes": [...]}, ...]}
+        """
+        return await self._get("fixtures/lineups", {"fixture": fixture_id})
 
     async def get_predictions(self, fixture_id: int) -> dict[str, Any]:
         """

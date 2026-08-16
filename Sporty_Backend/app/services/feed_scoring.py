@@ -392,17 +392,30 @@ def persist_football_stats_from_sheet(
 # simulation state is in-memory only, so a restart can't resume or finish it).
 # Simulations run ~90 in-game minutes even at slow speeds (plus ET/shootout),
 # so anything silent for 1.5 real hours is orphaned.
+#
+# This threshold is only ever compared against FEEDER matches (see the query in
+# finalize_stale_live_matches) — it is deliberately shorter than the real-API
+# poll interval, which would make it destructive if applied to real fixtures.
 STALE_LIVE_AFTER = timedelta(minutes=90)
 
 
 def finalize_stale_live_matches(db: Session, redis) -> dict:
-    """Finish matches stuck on status='live' whose feed went silent.
+    """Finish FEEDER-SIMULATED matches stuck on status='live' whose feed went silent.
 
     Runs the same live→finished path as the feed endpoint: mark finished at the
     last known score, fold live_events into the gameweek stat tables, enqueue
     scoring, and publish the final SCORE_UPDATE so open browsers stop showing
     the match as live. Owns its transaction (top-level job entry point);
     commits per match so one bad match can't roll back the others.
+
+    SCOPE — do not widen this to all live matches. Real-API fixtures are owned
+    by football_live_sync's reconcile pass, which fetches the true final score
+    and FT stat sheet. This watchdog only knows the last *polled* score, so
+    finishing a real fixture here freezes it mid-match — and because
+    _missed_finish_candidates only considers scheduled/live rows, writing
+    'finished' also permanently hides it from the reconcile pass that would
+    have repaired it. That is exactly what happened to La Liga fixture 1570333
+    on 2026-08-15: finished 0-0 at its halftime score, real result 3-0.
     """
     from app.core.config import settings
     from app.league.models import Sport
@@ -413,7 +426,15 @@ def finalize_stale_live_matches(db: Session, redis) -> dict:
     cutoff = datetime.now(timezone.utc) - STALE_LIVE_AFTER
     stale = (
         db.query(Match)
-        .filter(Match.status == "live", Match.updated_at < cutoff)
+        .filter(
+            Match.status == "live",
+            Match.updated_at < cutoff,
+            # Feeder simulations only — their state is in-memory and dies with
+            # the feeder, so they have no other recovery path. Real-API rows
+            # (numeric external_api_id) are the reconcile pass's job. Same
+            # source-scoping idiom as stats_sync.py:49/:137, inverted.
+            Match.external_api_id.like("feeder:%"),
+        )
         .all()
     )
     finalized = 0

@@ -6,13 +6,13 @@ coroutines via asyncio.
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timezone
 from typing import Any
 
 from celery import shared_task
 
 from app.core.redis_lock import redis_lock
+from app.tasks._async_bridge import run_async
 from app.database import SessionLocal
 from app.services.sync.football_live_sync import sync_football_predictions
 from app.services.sync.match_sync import sync_football_matches
@@ -27,19 +27,8 @@ def _current_football_season() -> int:
     return now.year if now.month >= 7 else now.year - 1
 
 
-def _run_async(coro: Any):
-    """Run an async coroutine from a sync context."""
-    try:
-        return asyncio.run(coro)
-    except RuntimeError as exc:
-        # Defensive fallback if called from an already-running loop
-        if "asyncio.run() cannot be called from a running event loop" not in str(exc):
-            raise
-        loop = asyncio.new_event_loop()
-        try:
-            return loop.run_until_complete(coro)
-        finally:
-            loop.close()
+# Shared bridge: see app/tasks/_async_bridge.py for the loop/Redis caveat.
+_run_async = run_async
 
 
 @shared_task(name="sync.football.players")

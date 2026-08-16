@@ -29,17 +29,43 @@ CELERY_BEAT_SCHEDULE = {
         "schedule": crontab(minute=30, hour=6),
         "args": (),
     },
-    # Coarse by design (user decision 2026-07-25: 3h, quota-conscious). Scores
-    # still land mostly after full time via the reconcile pass (books finals +
-    # FT stat sheets for matches that started and ended between ticks) — a 3h
-    # tick only occasionally lands mid-match for live in-play points. Idle
-    # ticks cost zero requests (DB window gate). For genuinely live UX, tighten
-    # to crontab(minute="*/5") — still fits the 95/day budget (~1 req/poll,
-    # gated to match windows; FT sheets + predictions dominate the daily total,
-    # not the poll interval).
-    "poll-live-football-every-3h": {
+    # Hourly (2026-08-16, was 3h). At 3h a 105-minute match got at most ONE
+    # in-play sample — La Liga fixture 1570333 got exactly one and it landed on
+    # the halftime whistle, so the entire second half was never polled.
+    #
+    # Measured worst day on the real season calendar (20 fixtures, 11:30-19:30):
+    #   polls          12   (1 req/tick; fixtures?live=all covers EVERY league
+    #                        in one request, so cost is per-tick, not per-match)
+    #   reconcile     ~10   (1 date query per distinct kickoff day, per tick)
+    #   FT sheets      20   (1 per finishing fixture)
+    #   predictions    20   (1 per fixture, cached — re-runs cost nothing)
+    #   fixture sync    3
+    #   ------------------
+    #   TOTAL         ~65 / 95 budget  (FOOTBALL_API_DAILY_BUDGET)
+    #
+    # Idle ticks cost zero requests (the DB window gate in
+    # _fixtures_in_live_window returns no candidates → no API call at all).
+    # Next step up if tighter liveness is wanted: crontab(minute="*/30") ≈ 78.
+    # Do NOT go to */15 (≈90) or */5 (≈179) — those blow the free tier.
+    "poll-live-football-every-1h": {
         "task": "live.football.poll",
-        "schedule": crontab(minute=30, hour="*/3"),
+        "schedule": crontab(minute=30),  # every hour at :30
+        "args": (),
+    },
+    # Confirmed lineups land ~1h before kick-off, which the hourly live poll
+    # would miss by up to an hour (its window opens at kickoff-5min). This is
+    # deliberately tighter, and it is FREE to run tight: each fixture is
+    # fetched exactly once (Redis + MatchFeedCache guard) and ticks with no
+    # fixture near kick-off make zero API calls. 30 min rather than 5 only to
+    # keep Upstash command usage modest, same reasoning as the entries below.
+    #
+    # Adds ~1 request per fixture (~20 on the worst day, ~65 -> ~85 of 95), so
+    # it yields the last FOOTBALL_LINEUP_QUOTA_RESERVE requests to the finals
+    # and FT stat sheets — those run post-match and must not be starved by a
+    # cosmetic pre-match fetch.
+    "sync-football-lineups-every-30m": {
+        "task": "sync.football.lineups",
+        "schedule": crontab(minute="*/30"),
         "args": (),
     },
 
