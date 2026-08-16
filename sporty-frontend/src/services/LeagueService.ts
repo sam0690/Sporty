@@ -358,6 +358,8 @@ export const LeagueService = {
       sport_type: string;
       position: string;
       cost: string | number;
+      real_team?: string | null;
+      real_team_id?: string | null;
     }>;
     totalCost: string | number;
     budgetRemaining: string | number;

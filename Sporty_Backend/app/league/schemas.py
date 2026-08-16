@@ -703,6 +703,11 @@ class AutoPickPlayerResponse(BaseModel):
     sport_type: str
     position: str
     cost: Decimal
+    # Club identity. The ILP already enforces max-per-club server-side, but
+    # without these the client can't show WHICH club or re-check the rule —
+    # it saw 15 clubless players as one club and reported "15/3".
+    real_team: str | None = None
+    real_team_id: str | None = None
 
 
 class AutoPickSquadResponse(BaseModel):

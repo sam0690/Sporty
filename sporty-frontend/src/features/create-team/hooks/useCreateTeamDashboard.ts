@@ -241,7 +241,7 @@ export function useCreateTeamDashboard() {
           display_name: player.name,
           sport: { name: player.sport_type },
           position: player.position,
-          real_team: "",
+          real_team: player.real_team ?? "",
           current_cost: player.cost,
         }),
       );

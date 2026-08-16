@@ -139,4 +139,22 @@ describe("clubWarnings", () => {
   it("is empty when no cap is configured", () => {
     expect(clubWarnings(footballers(5), undefined)).toEqual([]);
   });
+
+  it("never pools players with no club data into one fake club", () => {
+    // Auto-pick used to return clubless players; bucketing them together
+    // reported a bogus "15/3" and disabled the submit button.
+    const clubless = footballers(15, "MID", "");
+    expect(clubWarnings(clubless, 3)).toEqual([]);
+
+    const rule = buildSquadValidation({
+      players: clubless,
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: {},
+      maxPerClub: 3,
+    }).find((r) => r.key === "max-per-club");
+    expect(rule?.satisfied).toBe(true);
+    expect(rule?.detail).toBe("0/3");
+  });
 });

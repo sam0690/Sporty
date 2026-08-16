@@ -541,6 +541,8 @@ def auto_pick_team(
                 "sport_type": player.sport_type,
                 "position": player.position,
                 "cost": player.cost,
+                "real_team": player.real_team,
+                "real_team_id": player.real_team_id,
             }
             for player in selected
         ],
