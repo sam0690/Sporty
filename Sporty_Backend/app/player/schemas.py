@@ -182,6 +182,14 @@ class PlayerFilter(BaseModel):
         default=None,
         description="Filter by availability status",
     )
+    include_unavailable: bool = Field(
+        default=False,
+        description=(
+            "Include players flagged is_available=False (transferred out of the "
+            "supported leagues, injured, suspended). Off by default so they cannot "
+            "be browsed and then rejected at buy time; admin views turn it on."
+        ),
+    )
     minCost: Decimal | None = Field(
         default=None,
         ge=0,

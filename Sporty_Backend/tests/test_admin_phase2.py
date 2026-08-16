@@ -317,6 +317,84 @@ def test_edit_player_updates_fields_and_audits():
         assert entry.metadata_json["before"]["name"] == "Old Name"
 
 
+def test_edit_player_club_change_moves_all_denormalized_fields():
+    """A real-world transfer, applied from /admin/players."""
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+        old_club = _real_team(db, sport)
+        new_club = _real_team(db, sport)
+        new_club.logo_url = "https://cdn.example/new.png"
+        player = _player(db, sport, old_club, "Mover Man")
+        db.commit()
+
+        updated = admin_services.edit_player(db, admin, player.id, real_team_id=new_club.id)
+
+        # real_team (the name) is what every name-matching path reads, and the
+        # logo is denormalized onto the player row — all three move together.
+        assert updated.real_team_id == new_club.id
+        assert updated.real_team == new_club.name
+        assert updated.real_team_logo_url == "https://cdn.example/new.png"
+
+        from app.admin.models import AdminActionType, AdminAuditLog
+        entry = db.query(AdminAuditLog).filter(
+            AdminAuditLog.action == AdminActionType.PLAYER_DATA_EDIT
+        ).first()
+        assert entry.metadata_json["before"]["real_team"] == old_club.name
+
+
+def test_edit_player_club_change_rejects_name_collision():
+    """uq_players_identity is (sport, folded name, club) and a violation aborts
+    the whole transaction — it must surface as a 409, not a 500."""
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+        old_club = _real_team(db, sport)
+        new_club = _real_team(db, sport)
+        _player(db, sport, new_club, "Dani  Rodriguez")  # incumbent, odd spacing
+        player = _player(db, sport, old_club, "Dani Rodriguez")
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.edit_player(db, admin, player.id, real_team_id=new_club.id)
+        assert exc_info.value.status_code == 409
+        assert "already has a player named" in exc_info.value.detail
+
+
+def test_edit_player_rejects_club_from_another_sport():
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        player = _player(db, football, _real_team(db, football), "Wrong Sport")
+        nba_club = _real_team(db, basketball)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.edit_player(db, admin, player.id, real_team_id=nba_club.id)
+        assert exc_info.value.status_code == 409
+
+
+def test_edit_player_missing_club_404s():
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+        player = _player(db, sport, _real_team(db, sport), "Ghost Club")
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.edit_player(db, admin, player.id, real_team_id=uuid.uuid4())
+        assert exc_info.value.status_code == 404
+
+
 def test_trigger_repricing_with_no_data_audits():
     with session_scope() as db, patch(
         "app.core.redis_lock.get_redis", return_value=_FakeRedisClient()

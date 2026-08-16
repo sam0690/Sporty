@@ -162,6 +162,8 @@ class AdminPlayerEditRequest(BaseModel):
     cost: float | None = Field(default=None, gt=0)
     is_available: bool | None = None
     photo_url: str | None = Field(default=None, max_length=500)
+    # Real-world club change (a transfer), not a fantasy squad move.
+    real_team_id: uuid.UUID | None = None
     reason: str | None = Field(default=None, max_length=1000)
 
 

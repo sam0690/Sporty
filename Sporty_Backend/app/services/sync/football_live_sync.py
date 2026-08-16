@@ -742,6 +742,20 @@ def _parse_lineups(payload: dict, home_team_name: str, resolve_player) -> dict |
         # split (a 3-7-1 read of a 3-4-2-1). Absent for some competitions, so
         # the client keeps its derived label as the fallback.
         "home_formation": None, "away_formation": None,
+        # Per-player extras, keyed by OUR player uuid and flat across both
+        # teams (uuids are unique within a match, and the read path resolves
+        # all four lists through one helper).
+        #
+        # grid is the provider's "row:col" slot — row 1 is the keeper, row 2
+        # the defensive line, and so on. It is the actual shape the teams lined
+        # up in, which the client otherwise has to guess by bucketing players
+        # on their stored fantasy position; one defender filed as a midfielder
+        # is enough to turn a back four into a back three on the pitch.
+        # Starters only — bench entries carry no grid.
+        "grid": {},
+        # The position actually played this match (G/D/M/F), as opposed to the
+        # position we store on the player row.
+        "match_position": {},
     }
     unresolved: list[tuple] = []
     for position, team_block in enumerate(response):
@@ -759,7 +773,12 @@ def _parse_lineups(payload: dict, home_team_name: str, resolve_player) -> dict |
                 if player is None:
                     unresolved.append((api_id, player_info.get("name"), team_name))
                     continue
-                bucket.append(str(player.id))
+                player_key = str(player.id)
+                bucket.append(player_key)
+                if player_info.get("grid"):
+                    out["grid"][player_key] = str(player_info["grid"])
+                if player_info.get("pos"):
+                    out["match_position"][player_key] = str(player_info["pos"])
 
     if unresolved:
         # Same rule as the FT sheet: a player we drop is a player who silently

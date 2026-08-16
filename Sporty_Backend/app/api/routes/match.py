@@ -199,6 +199,10 @@ async def get_match_state(
         lineup_data = await _get_persisted_match_json(db, "lineups", row["id"])
     home_formation: str | None = None
     away_formation: str | None = None
+    # Provider extras keyed by player uuid; empty for feeder pushes and for
+    # lineups cached before these fields existed.
+    lineup_grid: dict = {}
+    lineup_match_position: dict = {}
     if lineup_data:
         lineup_home = [str(x) for x in (lineup_data.get("home") or [])]
         lineup_away = [str(x) for x in (lineup_data.get("away") or [])]
@@ -206,6 +210,8 @@ async def get_match_state(
         bench_away = [str(x) for x in (lineup_data.get("away_bench") or [])]
         home_formation = lineup_data.get("home_formation") or None
         away_formation = lineup_data.get("away_formation") or None
+        lineup_grid = lineup_data.get("grid") or {}
+        lineup_match_position = lineup_data.get("match_position") or {}
 
     # Pre-parse each row's meta once — substitutions carry the outgoing
     # player's id here (see feed.py's ingest_match_result), which needs to
@@ -225,9 +231,13 @@ async def get_match_state(
         return {
             "player_id": pid,
             "name": info["name"] if info else None,
+            # Our stored (fantasy) position; match_position below is the one
+            # they actually played, which is what the pitch should show.
             "position": info["position"] if info else None,
             "team": info["team"] if info else None,
             "photo_url": info["photo_url"] if info else None,
+            "grid": lineup_grid.get(pid),
+            "match_position": lineup_match_position.get(pid),
         }
 
     events = []

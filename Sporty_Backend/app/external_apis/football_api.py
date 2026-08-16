@@ -289,6 +289,22 @@ class FootballAPIClient:
             "teams", {"league": league_id, "season": season}, cache_ttl=_SEASON_TTL
         )
 
+    async def get_squads(self, team_id: int) -> dict[str, Any]:
+        """Fetch a club's CURRENT squad.
+
+        The one roster endpoint the free plan still answers for the live season
+        — `teams?season=2026` and `players?league&season=2026` are both refused
+        ("Free plans do not have access to this season"). Takes no season
+        parameter: it always returns the squad as it stands today, which is what
+        makes it usable for transfer reconciliation.
+
+        Returns:
+            {"response": [{"team": {...}, "players": [{"id":..., "name":...}]}]}
+        """
+        return await self._get(
+            "players/squads", {"team": team_id}, cache_ttl=_SEASON_TTL
+        )
+
     async def get_player_by_id(
         self, player_id: int, season: int = 2024
     ) -> dict[str, Any]:

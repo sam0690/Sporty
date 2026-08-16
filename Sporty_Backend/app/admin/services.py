@@ -1,3 +1,4 @@
+import re
 import threading
 import uuid
 from datetime import datetime, timezone
@@ -30,7 +31,7 @@ from app.league.models import (
     WaiverClaim,
 )
 from app.player import read_cache as player_read_cache
-from app.player.models import Player
+from app.player.models import Player, RealTeam
 from app.services import trade_service
 from app.services.pricing.repricing import recalculate_player_prices
 from app.services.scoring.engine import score_active_transfer_windows, score_transfer_window_for_league
@@ -710,6 +711,47 @@ def get_player_admin(db: Session, player_id: uuid.UUID) -> Player:
     return player
 
 
+def _fold_name(name: str | None) -> str:
+    """Mirror the uq_players_identity name expression.
+
+    The index folds with lower(regexp_replace(btrim(name),'\\s+',' ','g')).
+    Deliberately NOT name_matching.normalize(), which also strips accents — that
+    is more aggressive than the index and would reject edits the database would
+    happily accept.
+    """
+    return re.sub(r"\s+", " ", (name or "").strip()).lower()
+
+
+def _assert_identity_free(
+    db: Session, player: Player, club_id: uuid.UUID, club_name: str, name: str
+) -> None:
+    """Reject a name/club edit that would collide with uq_players_identity.
+
+    That index is (sport_id, folded name, real_team_id) and a violation aborts
+    the WHOLE transaction — a 500 rather than a usable message — so it has to be
+    caught before the flush.
+
+    The comparison folds in Python rather than in SQL: the index expression uses
+    regexp_replace/btrim, which are Postgres-only, and the test suite runs on
+    SQLite. One club is a few dozen rows, so the scan is free either way.
+    """
+    target = _fold_name(name)
+    rows = (
+        db.query(Player.id, Player.name)
+        .filter(
+            Player.sport_id == player.sport_id,
+            Player.real_team_id == club_id,
+            Player.id != player.id,
+        )
+        .all()
+    )
+    if any(_fold_name(existing) == target for _, existing in rows):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"{club_name} already has a player named '{name}'",
+        )
+
+
 def edit_player(
     db: Session,
     actor: User,
@@ -720,6 +762,7 @@ def edit_player(
     cost: float | None = None,
     is_available: bool | None = None,
     photo_url: str | None = None,
+    real_team_id: uuid.UUID | None = None,
     reason: str | None = None,
 ) -> Player:
     player = get_player_admin(db, player_id)
@@ -728,10 +771,9 @@ def edit_player(
         "position": player.position,
         "cost": float(player.cost),
         "is_available": player.is_available,
+        "real_team": player.real_team,
     }
 
-    if name is not None:
-        player.name = name
     if position is not None:
         player.position = position
     if cost is not None:
@@ -740,6 +782,40 @@ def edit_player(
         player.is_available = is_available
     if photo_url is not None:
         player.photo_url = photo_url
+
+    target: RealTeam | None = None
+    if real_team_id is not None and real_team_id != player.real_team_id:
+        target = db.query(RealTeam).filter(RealTeam.id == real_team_id).first()
+        if target is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Real team not found"
+            )
+        if target.sport_id != player.sport_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Real team belongs to a different sport",
+            )
+
+    # Either half of the identity can move, so check once against the final
+    # (name, club) pair rather than only on the club branch.
+    if name is not None or target is not None:
+        _assert_identity_free(
+            db,
+            player,
+            target.id if target else player.real_team_id,
+            target.name if target else player.real_team,
+            name if name is not None else player.name,
+        )
+
+    if name is not None:
+        player.name = name
+    if target is not None:
+        # real_team (denormalized name) is what every name-matching path in the
+        # codebase actually reads, and the logo is copied onto the player row —
+        # all three move together or the pool goes inconsistent.
+        player.real_team_id = target.id
+        player.real_team = target.name
+        player.real_team_logo_url = target.logo_url
 
     record_admin_action(
         db,

@@ -60,8 +60,13 @@ def _apply_filters(query, filters: PlayerFilter):
         # TODO: switch to player.real_team_fk.name after FK migration
         query = query.filter(Player.real_team == filters.real_team)
 
+    # An explicit is_available= wins; otherwise unavailable players are hidden
+    # unless the caller opts in. Departed/injured players used to list here and
+    # only fail with a 409 at buy time (league/transfers_service.py:207).
     if filters.is_available is not None:
         query = query.filter(Player.is_available == filters.is_available)
+    elif not filters.include_unavailable:
+        query = query.filter(Player.is_available.is_(True))
 
     # ── Cost range ──────────────────────────────────────────────────
     if filters.minCost is not None:

@@ -35,6 +35,15 @@ are only REPORTED — creating them would produce players with no API-Football
 `external_api_id`, which `football_live_sync._resolve_player` could never
 resolve, so they would silently score zero all season.
 
+SUPERSEDED FOR CLUBS AND AVAILABILITY (2026-08-16)
+--------------------------------------------------
+Run `scripts/sync_player_clubs.py` for those. This script sees only the EPL and
+matches by name, so a player who moved to La Liga or the Bundesliga is absent
+from FPL and gets deactivated here instead of transferred. The club-change and
+deactivation branches below are kept only so a re-run is not silently lossy —
+treat this script as the price tool it is, and reconcile clubs with the
+id-matched one.
+
 Existing squads are unaffected: budgets are computed from
 `TeamPlayer.cost_at_acquisition`, not live `Player.cost`.
 
