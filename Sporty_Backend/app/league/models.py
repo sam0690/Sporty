@@ -1447,6 +1447,22 @@ class TeamWeeklyScore(Base):
         SmallInteger, nullable=True
     )
 
+    # When scoring last wrote this row. Answers "did scoring actually run?"
+    # without re-running the pipeline to compare totals — a stale score and a
+    # correctly-recomputed identical score are otherwise indistinguishable,
+    # which cost real debugging time.
+    #
+    # NOTE: `onupdate` does NOT fire for this table's writer. Scores are
+    # written by an ON CONFLICT DO UPDATE upsert (see upsert_team_weekly_scores),
+    # and SQLAlchemy's onupdate only applies to ORM/Core UPDATE statements —
+    # so the upsert sets this column explicitly. Keep both in step.
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
+
     # Relationships
     fantasy_team: Mapped["FantasyTeam"] = relationship(foreign_keys=[fantasy_team_id])
     transfer_window: Mapped["TransferWindow"] = relationship(foreign_keys=[transfer_window_id])

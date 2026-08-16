@@ -408,6 +408,10 @@ def upsert_team_weekly_scores(
         set_={
             "points": insert_stmt.excluded.points,
             "rank_in_league": None,
+            # Explicit because ON CONFLICT DO UPDATE bypasses the column's
+            # onupdate — without this the timestamp would freeze at the row's
+            # first insert and answer nothing.
+            "updated_at": func.now(),
         },
     )
     result = db.execute(upsert_stmt)
