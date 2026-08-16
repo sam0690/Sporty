@@ -1,7 +1,7 @@
 "use client";
 
 import { useMatchStore } from "@/store/matchStore";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import { Panel } from "./Panel";
 import { ChartIcon } from "./icons";
 
@@ -54,8 +54,7 @@ export function TeamStatsCard() {
   );
   if (rows.length === 0) return null;
 
-  const home = teamIdentity(homeTeam ?? "Home");
-  const away = teamIdentity(awayTeam ?? "Away");
+  const { home, away } = matchIdentities(homeTeam ?? "Home", awayTeam ?? "Away");
 
   return (
     <Panel title="Match Stats" icon={<ChartIcon className="size-3.5" />}>

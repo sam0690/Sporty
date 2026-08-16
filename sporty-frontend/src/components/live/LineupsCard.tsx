@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 
 import { useMatchStore } from "@/store/matchStore";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities, teamIdentity } from "@/lib/teamIdentity";
 import type { LineupPlayer } from "@/types/events";
 import { Panel } from "./Panel";
 import { ListIcon } from "./icons";
@@ -49,14 +49,17 @@ function TeamColumn({
   players,
   bench,
   align,
+  color,
 }: {
   teamName: string;
   logoUrl?: string | null;
   players: LineupPlayer[];
   bench: LineupPlayer[];
   align: "left" | "right";
+  /** De-clashed against the opponent by the parent — see matchIdentities. */
+  color: string;
 }) {
-  const { color, initials } = teamIdentity(teamName);
+  const { initials } = teamIdentity(teamName);
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(logoUrl) && !failed;
   const isRight = align === "right";
@@ -135,6 +138,7 @@ export function LineupsCard() {
   const awayTeamLogoUrl = useMatchStore((s) => s.awayTeamLogoUrl);
 
   const { home, away } = startingLineups;
+  const identities = matchIdentities(homeTeam, awayTeam);
   if (home.length === 0 && away.length === 0) {
     return null;
   }
@@ -151,6 +155,7 @@ export function LineupsCard() {
           }}
         />
         <TeamColumn
+          color={identities.home.color}
           teamName={homeTeam ?? "Home"}
           logoUrl={homeTeamLogoUrl}
           players={home}
@@ -158,6 +163,7 @@ export function LineupsCard() {
           align="left"
         />
         <TeamColumn
+          color={identities.away.color}
           teamName={awayTeam ?? "Away"}
           logoUrl={awayTeamLogoUrl}
           players={away}

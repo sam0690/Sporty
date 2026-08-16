@@ -2,7 +2,7 @@
 
 import { PlayerAvatar } from "@/components/ui";
 import { MatchCourtSurface } from "./MatchCourtSurface";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import { useMatchStore } from "@/store/matchStore";
 import type { LineupPlayer } from "@/types/events";
 import { LineupsCard } from "./LineupsCard";
@@ -194,8 +194,9 @@ export function MatchLineupPitch() {
 
   const homeName = homeTeam ?? "Home";
   const awayName = awayTeam ?? "Away";
-  const homeColor = teamIdentity(homeName).color;
-  const awayColor = teamIdentity(awayName).color;
+  const identities = matchIdentities(homeName, awayName);
+  const homeColor = identities.home.color;
+  const awayColor = identities.away.color;
   const homeSide = teamChips(
     home, "home", lineupSport, homeColor, startingLineups.home_formation,
   );

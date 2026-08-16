@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import type { TMatch } from "@/types/match";
 import { useFavouriteLiveMatches } from "../hooks/useFavouriteLiveMatches";
 
@@ -18,8 +18,7 @@ function TickerItem({
   match: TMatch;
   tabbable: boolean;
 }) {
-  const home = teamIdentity(match.home_team);
-  const away = teamIdentity(match.away_team);
+  const { home, away } = matchIdentities(match.home_team, match.away_team);
 
   return (
     <Link

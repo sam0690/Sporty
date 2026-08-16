@@ -14,7 +14,7 @@ import {
   type FixtureTab,
 } from "@/components/live/FixtureTabs";
 import { useMatchSocket } from "@/hooks/useMatchSocket";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import {
   fetchMatchPrediction,
   fetchMatchRatings,
@@ -184,8 +184,7 @@ export default function LiveMatchClient({
   // so we decide on the real status, not the default "scheduled".
   useMatchSocket(matchId, !loading && phase !== "post");
 
-  const home = teamIdentity(homeTeam ?? "Home");
-  const away = teamIdentity(awayTeam ?? "Away");
+  const { home, away } = matchIdentities(homeTeam ?? "Home", awayTeam ?? "Away");
 
   return (
     <div className="relative">

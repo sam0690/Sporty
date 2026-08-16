@@ -12,7 +12,7 @@ import {
   useSubmitPrediction,
 } from "@/hooks/predictions/usePredictions";
 import { tierForPoints, RUBRIC_HINTS } from "@/features/predictions/scoring";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import { Button, TeamLogo } from "@/components/ui";
 
 function Stepper({
@@ -98,8 +98,9 @@ export function PredictCard({ matchId }: { matchId: string }) {
   const home = draftHome ?? existing?.predicted_home ?? 0;
   const away = draftAway ?? existing?.predicted_away ?? 0;
 
-  const homeColor = teamIdentity(homeTeam).color;
-  const awayColor = teamIdentity(awayTeam).color;
+  const identities = matchIdentities(homeTeam, awayTeam);
+  const homeColor = identities.home.color;
+  const awayColor = identities.away.color;
 
   if (sport && sport !== "football") {
     return (

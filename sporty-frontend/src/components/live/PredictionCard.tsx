@@ -1,7 +1,7 @@
 "use client";
 
 import { useMatchStore } from "@/store/matchStore";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import type { MatchPrediction } from "@/types/events";
 
 type PredictionCardProps = {
@@ -22,11 +22,15 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
   const home = homeTeam ?? "Home";
   const away = awayTeam ?? "Away";
 
+  // Both sides of one fixture — never the same colour, even when the two
+  // clubs share a brand colour.
+  const identities = matchIdentities(home, away);
+
   const segments = [
     {
       key: "home",
       label: home,
-      color: teamIdentity(home).color,
+      color: identities.home.color,
       value: prediction.home_win_prob,
       align: "text-left",
     },
@@ -40,7 +44,7 @@ export function PredictionCard({ prediction }: PredictionCardProps) {
     {
       key: "away",
       label: away,
-      color: teamIdentity(away).color,
+      color: identities.away.color,
       value: prediction.away_win_prob,
       align: "text-right",
     },

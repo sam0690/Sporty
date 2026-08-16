@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import { useMatchStore } from "@/store/matchStore";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import { REGULATION_MINUTES, wentToExtraTime } from "@/lib/matchPhase";
 import { Badge } from "@/components/ui";
 import { formatDateTime } from "@/utils/dateUtils";
@@ -158,8 +158,7 @@ export function ScoreTicker({
     extraTime: hadExtraTime,
     shootout: shootout != null,
   });
-  const home = teamIdentity(homeTeam ?? "Home");
-  const away = teamIdentity(awayTeam ?? "Away");
+  const { home, away } = matchIdentities(homeTeam ?? "Home", awayTeam ?? "Away");
   const showPossession = possession != null && phase !== "pre";
   const inExtraTime =
     phase === "live" && (minute ?? 0) > REGULATION_MINUTES;
@@ -442,8 +441,7 @@ export function MiniScoreBar({ visible }: { visible: boolean }) {
     extraTime: hadExtraTime,
     shootout: shootout != null,
   });
-  const home = teamIdentity(homeTeam ?? "Home");
-  const away = teamIdentity(awayTeam ?? "Away");
+  const { home, away } = matchIdentities(homeTeam ?? "Home", awayTeam ?? "Away");
 
   return (
     <div

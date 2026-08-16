@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 
 import { useMatchStore } from "@/store/matchStore";
-import { teamIdentity } from "@/lib/teamIdentity";
+import { matchIdentities } from "@/lib/teamIdentity";
 import { buildFeedItems, isShootoutEvent, type FeedItem } from "@/lib/matchPhase";
 import type { MatchEvent } from "@/types/events";
 import { Panel, PanelEmpty } from "./Panel";
@@ -87,11 +87,12 @@ function EventRow({
       : event.team && event.team === homeTeam
         ? "home"
         : "center";
+  const identities = matchIdentities(homeTeam, awayTeam);
   const teamColor =
     side === "away"
-      ? teamIdentity(awayTeam).color
+      ? identities.away.color
       : side === "home"
-        ? teamIdentity(homeTeam).color
+        ? identities.home.color
         : "#a0a0aa";
 
   const visual = eventVisual(event.type);
@@ -258,8 +259,9 @@ function TeamAxis({
   home: string | null;
   away: string | null;
 }) {
-  const homeColor = teamIdentity(home ?? "Home").color;
-  const awayColor = teamIdentity(away ?? "Away").color;
+  const identities = matchIdentities(home ?? "Home", away ?? "Away");
+  const homeColor = identities.home.color;
+  const awayColor = identities.away.color;
   return (
     <div className="mb-5 grid grid-cols-[1fr_3.5rem_1fr] items-center gap-3">
       <div className="flex items-center justify-end gap-2 truncate text-right">

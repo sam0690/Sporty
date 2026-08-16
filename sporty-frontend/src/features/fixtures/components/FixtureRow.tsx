@@ -9,19 +9,22 @@ import {
   statusMeta,
 } from "@/components/matches-browser/matchFormat";
 import { fixtureHref, type TFixture } from "@/types/fixture";
+import { matchIdentities } from "@/lib/teamIdentity";
 
 function TeamRow({
   name,
   logoUrl,
   score,
+  color,
 }: {
   name: string;
   logoUrl?: string | null;
   score: number | null;
+  color: string;
 }) {
   return (
     <div className="flex items-center gap-2.5">
-      <TeamBadge name={name} logoUrl={logoUrl} size="sm" />
+      <TeamBadge name={name} logoUrl={logoUrl} size="sm" color={color} />
       <span className="min-w-0 flex-1 truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
         {name}
       </span>
@@ -36,6 +39,9 @@ function TeamRow({
 
 export function FixtureRow({ fixture }: { fixture: TFixture }) {
   const { isLive, isFinished } = statusMeta(fixture.status);
+  // Two badges stacked in one row, so clubs sharing a brand colour would be
+  // indistinguishable without this.
+  const identities = matchIdentities(fixture.home_team, fixture.away_team);
   const hasScore = fixture.home_score != null && fixture.away_score != null;
 
   return (
@@ -74,11 +80,13 @@ export function FixtureRow({ fixture }: { fixture: TFixture }) {
           name={fixture.home_team}
           logoUrl={fixture.home_team_logo_url}
           score={hasScore ? fixture.home_score : null}
+          color={identities.home.color}
         />
         <TeamRow
           name={fixture.away_team}
           logoUrl={fixture.away_team_logo_url}
           score={hasScore ? fixture.away_score : null}
+          color={identities.away.color}
         />
       </div>
 

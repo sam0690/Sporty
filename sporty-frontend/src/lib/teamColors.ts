@@ -245,6 +245,104 @@ export function brandColor(name?: string | null): string | null {
   return out;
 }
 
+// ── Same-colour clashes ─────────────────────────────────────────────────
+// Two clubs in one fixture must never render the same colour: Liverpool vs
+// Manchester United is two near-identical reds, and a red dot on each side of
+// the event feed's spine tells you nothing. Football solves this with a change
+// strip, and so do we — the HOME side always keeps its true colour and the
+// away side shifts, which matches both the real convention and the reader's
+// expectation that the home club looks "right".
+
+/** Perceptual-ish RGB distance ("redmean") — good enough to answer "would a
+ *  reader confuse these two dots?" without dragging in a Lab colour library.
+ *  Range is roughly 0 (identical) to 765 (black vs white). */
+export function colorDistance(a: string, b: string): number {
+  const [r1, g1, b1] = parseHex(a);
+  const [r2, g2, b2] = parseHex(b);
+  const rMean = (r1 + r2) / 2;
+  const dr = r1 - r2;
+  const dg = g1 - g2;
+  const db = b1 - b2;
+  return Math.sqrt(
+    (2 + rMean / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rMean) / 256) * db * db,
+  );
+}
+
+/** Below this, two colours read as "the same one" at dot/bar/ring size.
+ *  Calibrated against the real clashes in BRAND — see the teamColors test. */
+export const MIN_TEAM_SEPARATION = 120;
+
+function rotateHue(hex: string, degrees: number): string {
+  const [r, g, b] = parseHex(hex).map((c) => c / 255);
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  const d = max - min;
+  if (d === 0) return hex; // greys have no hue to rotate
+  const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+  let h =
+    max === r
+      ? (g - b) / d + (g < b ? 6 : 0)
+      : max === g
+        ? (b - r) / d + 2
+        : (r - g) / d + 4;
+  h = (h / 6 + degrees / 360 + 1) % 1;
+
+  const hueToRgb = (p: number, q: number, t: number) => {
+    const tt = (t + 1) % 1;
+    if (tt < 1 / 6) return p + (q - p) * 6 * tt;
+    if (tt < 1 / 2) return q;
+    if (tt < 2 / 3) return p + (q - p) * (2 / 3 - tt) * 6;
+    return p;
+  };
+  const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+  const p = 2 * l - q;
+  return toHex([
+    hueToRgb(p, q, h + 1 / 3) * 255,
+    hueToRgb(p, q, h) * 255,
+    hueToRgb(p, q, h - 1 / 3) * 255,
+  ]);
+}
+
+function mixWhite(hex: string, amount: number): string {
+  return toHex(parseHex(hex).map((c) => c + (255 - c) * amount) as Rgb);
+}
+
+/**
+ * A colour for `away` that a reader won't confuse with `home`.
+ *
+ * Tries, in order: the club's own colour; a pale tint of it (still obviously
+ * the same family, the way a change strip usually is); then hue rotations,
+ * which are the last resort because they stop reading as the club's colour.
+ * Every candidate is re-tuned for the dark surface, and if nothing clears the
+ * bar we take the furthest one rather than giving up — the guarantee is
+ * "never identical", so it has to hold for every input.
+ */
+export function separateFromHome(awayHex: string, homeHex: string): string {
+  const candidates = [
+    awayHex,
+    liftForDark(mixWhite(awayHex, 0.45)),
+    liftForDark(rotateHue(awayHex, 35)),
+    liftForDark(rotateHue(awayHex, -35)),
+    liftForDark(rotateHue(awayHex, 80)),
+    // Greys can't be rotated, so give them somewhere else to go entirely.
+    liftForDark(mixWhite(awayHex, 0.7)),
+  ];
+  let best = awayHex;
+  let bestDistance = -1;
+  for (const candidate of candidates) {
+    const distance = colorDistance(candidate, homeHex);
+    if (distance >= MIN_TEAM_SEPARATION) {
+      return candidate;
+    }
+    if (distance > bestDistance) {
+      best = candidate;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
 /** Exposed for the contrast test — not for rendering. */
 export const BRAND_COLORS = BRAND;
 export const DARK_SURFACE = SURFACE;

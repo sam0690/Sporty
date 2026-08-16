@@ -6,6 +6,10 @@ type TeamBadgeProps = {
   name: string;
   logoUrl?: string | null;
   size?: "sm" | "md" | "lg";
+  /** Overrides the club's own colour. Pass this wherever both teams in a
+   *  fixture are on screen together, so two clubs sharing a brand colour don't
+   *  render identical badges — see matchIdentities. */
+  color?: string;
 };
 
 const SIZE_CLASS: Record<NonNullable<TeamBadgeProps["size"]>, string> = {
@@ -20,8 +24,10 @@ const IMAGE_PX: Record<NonNullable<TeamBadgeProps["size"]>, number> = {
   lg: 64,
 };
 
-export function TeamBadge({ name, logoUrl, size = "sm" }: TeamBadgeProps) {
-  const { color, initials } = teamIdentity(name);
+export function TeamBadge({ name, logoUrl, size = "sm", color }: TeamBadgeProps) {
+  const identity = teamIdentity(name);
+  const badgeColor = color ?? identity.color;
+  const { initials } = identity;
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(logoUrl) && !failed;
 
@@ -29,7 +35,7 @@ export function TeamBadge({ name, logoUrl, size = "sm" }: TeamBadgeProps) {
     <span
       title={name}
       className={`grid shrink-0 place-items-center overflow-hidden rounded-[3px] bg-surface-2 font-display leading-none tracking-[-0.02em] text-fg-1 ${SIZE_CLASS[size]}`}
-      style={{ border: `2px solid ${color}` }}
+      style={{ border: `2px solid ${badgeColor}` }}
       aria-hidden={!showImage}
     >
       {showImage ? (
