@@ -14,6 +14,8 @@ from celery import shared_task
 from app.core.redis_lock import redis_lock
 from app.tasks._async_bridge import run_async
 from app.database import SessionLocal
+from app.services.sync.basketball_stats_sync import sync_basketball_recent_windows
+from app.services.sync.basketball_sync import current_nba_season, sync_basketball_games
 from app.services.sync.football_live_sync import sync_football_predictions
 from app.services.sync.match_sync import sync_football_matches
 from app.services.sync.player_sync import sync_football_players
@@ -123,5 +125,50 @@ def sync_live_stats_task() -> dict[str, Any]:
         try:
             _run_async(sync_live_match_stats(db))
             return {"ok": True, "task": "sync.stats.live"}
+        finally:
+            db.close()
+
+
+@shared_task(name="sync.basketball.games")
+def sync_basketball_games_task(season: int | None = None) -> dict[str, Any]:
+    """NBA fixtures from BallDontLie. Fixtures ONLY — never the player catalog.
+
+    sync_basketball_players drops and rebuilds the whole basketball catalog
+    (cascading away nba_stats, price history and photos, and zeroing costs), so
+    it stays opt-in behind scripts/sync_basketball.py --players and is
+    deliberately not reachable from Beat.
+    """
+    season = season if season is not None else current_nba_season()
+    lock_key = f"lock:sync:basketball:games:season:{season}"
+    # Long TTL: get_all_games walks ~13 pages with a 12.5s inter-page sleep to
+    # stay under BallDontLie's 5 req/min free tier, so one run takes ~3 minutes.
+    with redis_lock(lock_key, ttl_seconds=60 * 20) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held", "task": "sync.basketball.games"}
+
+        db = SessionLocal()
+        try:
+            stats = _run_async(sync_basketball_games(db, season=season))
+            return {"ok": True, "task": "sync.basketball.games", "season": season, "result": stats}
+        finally:
+            db.close()
+
+
+@shared_task(name="sync.basketball.stats")
+def sync_basketball_stats_task(lookback: int = 1) -> dict[str, Any]:
+    """Recompute the current + just-closed window's NBA stats from box scores.
+
+    The live tick books points at the final buzzer; this heals a night the
+    worker missed and picks up provider stat corrections. Idempotent.
+    """
+    lock_key = "lock:sync:basketball:stats"
+    with redis_lock(lock_key, ttl_seconds=60 * 15) as acquired:
+        if not acquired:
+            return {"ok": True, "skipped": True, "reason": "lock_held", "task": "sync.basketball.stats"}
+
+        db = SessionLocal()
+        try:
+            result = _run_async(sync_basketball_recent_windows(db, lookback=lookback))
+            return {"ok": True, "task": "sync.basketball.stats", "result": result}
         finally:
             db.close()

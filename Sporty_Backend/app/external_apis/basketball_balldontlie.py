@@ -105,6 +105,52 @@ class BasketballBallDontLieClient:
             logger.error(f"Error fetching all players: {e}", exc_info=True)
             return all_players  # Return partial results if available
 
+    async def get_teams_meta(self) -> list[dict[str, Any]]:
+        """All teams with conference/division/city — free tier, one request.
+
+        Uses the REST endpoint rather than get_teams()' SDK call so the raw
+        `conference`/`division` fields survive; standings group on them. The
+        response includes historical and non-NBA franchises, so callers must
+        match against their own roster rather than trusting the count.
+        """
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as http:
+                response = await http.get(
+                    "https://api.balldontlie.io/v1/teams",
+                    headers={"Authorization": self.api_key},
+                )
+                response.raise_for_status()
+                return response.json().get("data", [])
+        except Exception:
+            logger.exception("BallDontLie teams request failed")
+            return []
+
+    async def get_games_by_date(self, dates: list[str]) -> list[dict[str, Any]]:
+        """Every game on the given YYYY-MM-DD dates, with live scores.
+
+        Deliberately uncached: this is the live-score read, and a cached score
+        is a wrong score. One request covers all dates and all games, so a live
+        tick costs exactly one request no matter how busy the slate is — well
+        inside the free tier's 5 req/min.
+
+        Returns [] on any failure: a live tick that can't reach the provider
+        should skip, not raise.
+        """
+        params: list[tuple[str, Any]] = [("dates[]", date) for date in dates]
+        params.append(("per_page", 100))
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as http:
+                response = await http.get(
+                    "https://api.balldontlie.io/v1/games",
+                    params=params,
+                    headers={"Authorization": self.api_key},
+                )
+                response.raise_for_status()
+                return response.json().get("data", [])
+        except Exception:
+            logger.exception("BallDontLie live games request failed for %s", dates)
+            return []
+
     async def get_all_games(self, season: int = 2024, use_cache: bool = True) -> list[dict[str, Any]]:
         """
         Fetch all NBA games for a season (cursor-paginated).

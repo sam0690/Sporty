@@ -124,11 +124,42 @@ CELERY_BEAT_SCHEDULE = {
     #     "schedule": crontab(minute="*/15"),
     #     "args": (),
     # },
-    # "poll-live-nba-every-4h": {
-    #     "task": "live.nba.poll",
-    #     "schedule": crontab(minute=0, hour="*/4"),
-    #     "args": (),
-    # },
+    # --- Basketball (NBA) ---------------------------------------------------
+    # Fixtures from BallDontLie. DAILY, not hourly: get_all_games walks ~13
+    # pages with a 12.5s inter-page sleep to stay under the free tier's 5
+    # req/min, so one run costs ~3 minutes of wall time. 05:00 keeps it clear
+    # of the 06:00 football block.
+    "sync-basketball-games-daily": {
+        "task": "sync.basketball.games",
+        "schedule": crontab(hour=5, minute=0),
+        "args": (),
+    },
+    # Live NBA scores off BallDontLie — display only; fantasy points come from
+    # the window rollup this triggers at the final buzzer (see nba_live_sync).
+    #
+    # ONE request per tick regardless of how many games are on: /games?dates[]
+    # returns the whole slate. At 30 ticks/hour that is well inside the free
+    # tier's 5 req/min, and the DB window gate in nba_live_sync means a tick
+    # with no fixture in play makes no request at all — so the entire
+    # off-season and every daytime tick cost nothing.
+    #
+    # Do NOT point this at stats.nba.com for per-player live stats: it
+    # soft-blocks an IP after modest use (connection accepted, response never
+    # sent), which would stall the live page for hours at a time.
+    "poll-live-nba-every-2min": {
+        "task": "live.nba.poll",
+        "schedule": crontab(minute="*/2"),
+        "args": (),
+    },
+    # Reconciliation sweep: recomputes the current + just-closed window's stats
+    # from the authoritative box scores. The live tick already books points at
+    # the final buzzer; this is what heals a night the worker missed. 11:00 UTC
+    # is after every US-evening game is final.
+    "sync-basketball-stats-daily": {
+        "task": "sync.basketball.stats",
+        "schedule": crontab(hour=11, minute=0),
+        "args": (),
+    },
     # "poll-live-cricket-every-1m": {
     #     "task": "live.cricket.poll",
     #     "schedule": crontab(minute="*/1"),

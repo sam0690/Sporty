@@ -26,9 +26,12 @@ const BASE_TABS: { key: Tab; label: string }[] = [
   { key: "stats", label: "Stats" },
 ];
 
-// Season start year -> "2026/27"
-function seasonLabel(year: number) {
-  return `${year}/${String((year + 1) % 100).padStart(2, "0")}`;
+// Season start year -> "2026/27". Both football and the NBA span two calendar
+// years, so the split-year label is right for either; only the separator
+// differs by convention.
+function seasonLabel(year: number, sport?: string) {
+  const end = String((year + 1) % 100).padStart(2, "0");
+  return sport === "basketball" ? `${year}-${end}` : `${year}/${end}`;
 }
 
 function TabPanel({ loading, error, empty, children }: {
@@ -64,11 +67,22 @@ export function CompetitionView({ tag }: { tag: string }) {
   const meta = competitionMeta(tag);
   const competitions = index?.competitions ?? [];
 
+  const self = competitions.find((c) => c.tag === tag);
+  const sport = self?.sport ?? "football";
+  // The NBA has no top-scorers data, so its page must not request `scorers`.
+  // Falls back to allowing it when the index hasn't loaded or is pre-`kinds`.
+  const hasScorers = self?.kinds ? self.kinds.includes("scorers") : true;
+
   const standings = useCompetitionStandings(tag, season);
-  const scorers = useCompetitionScorers(tag, season);
+  const scorers = useCompetitionScorers(hasScorers ? tag : "", season);
   const matches = useCompetitionMatches(tag, season);
 
-  const table = standings.data?.data.standings?.[0]?.table ?? [];
+  // The payload carries one entry per grouping: football sends a single TOTAL
+  // table, the NBA sends League + both conferences + all six divisions.
+  const groups = standings.data?.data.standings ?? [];
+  const [groupIndex, setGroupIndex] = useState(0);
+  const activeGroup = groups[groupIndex] ?? groups[0];
+  const table = activeGroup?.table ?? [];
   const scorerRows = scorers.data?.data.scorers ?? [];
   const matchRows = matches.data?.data.matches ?? [];
 
@@ -81,35 +95,44 @@ export function CompetitionView({ tag }: { tag: string }) {
     : (stSeason?.currentMatchday ?? 99) <= 1;
   const showingLastSeason =
     seasonNotStarted && table.length > 0 && (table[0]?.playedGames ?? 0) > 0;
+  // The NBA table is computed from our own fixtures, so before tip-off it is a
+  // real table of 30 teams at 0-0 rather than a stale one. Either way there is
+  // nothing to read yet, so both get the pre-season card.
+  const noGamesPlayed =
+    table.length > 0 && table.every((r) => (r.playedGames ?? 0) === 0);
+  const showPreSeason = seasonNotStarted && (showingLastSeason || noGamesPlayed);
 
   // The season actually served — a competition resolves its own current (CL's
-  // calendar lags the domestic leagues, so it differs from index.current_season).
+  // calendar lags the domestic leagues, and the NBA's year rolls over in
+  // October), so this is never index.current_season for every competition.
   const activeSeason =
-    season ?? standings.data?.season ?? matches.data?.season ?? index?.current_season;
+    season ??
+    standings.data?.season ??
+    matches.data?.season ??
+    self?.seasons?.[0] ??
+    index?.current_season;
 
   // Bracket tab only for competitions that have a knockout stage (CL does).
   const showBracket = hasKnockout(matchRows);
-  const tabs = useMemo(
-    () =>
-      showBracket
-        ? [
-            BASE_TABS[0],
-            { key: "bracket" as Tab, label: "Bracket" },
-            ...BASE_TABS.slice(1),
-          ]
-        : BASE_TABS,
-    [showBracket],
-  );
-  // Keep the active tab valid when switching to a competition without a bracket.
+  const tabs = useMemo(() => {
+    const base = hasScorers ? BASE_TABS : BASE_TABS.filter((t) => t.key !== "stats");
+    return showBracket
+      ? [base[0], { key: "bracket" as Tab, label: "Bracket" }, ...base.slice(1)]
+      : base;
+  }, [showBracket, hasScorers]);
+  // Keep the active tab valid when switching to a competition without a
+  // bracket, or from a football competition to one with no Stats tab.
   const activeTab = tabs.some((t) => t.key === tab) ? tab : "standings";
 
+  // Each competition carries its own range — the NBA's fixtures only go back
+  // as far as we've ingested them, which is not football-data.org's horizon.
   const seasonOptions = useMemo(
     () =>
-      (index?.seasons ?? []).map((y) => ({
+      (self?.seasons ?? index?.seasons ?? []).map((y) => ({
         value: String(y),
-        label: seasonLabel(y),
+        label: seasonLabel(y, sport),
       })),
-    [index?.seasons],
+    [self?.seasons, index?.seasons, sport],
   );
 
   return (
@@ -160,7 +183,7 @@ export function CompetitionView({ tag }: { tag: string }) {
         {meta?.label ?? tag}
         {activeSeason && (
           <span className="text-base font-500 text-fg-3">
-            {seasonLabel(activeSeason)}
+            {seasonLabel(activeSeason, sport)}
           </span>
         )}
       </h1>
@@ -203,20 +226,56 @@ export function CompetitionView({ tag }: { tag: string }) {
           error={standings.isError}
           empty={table.length === 0}
         >
-          {showingLastSeason ? (
+          {showPreSeason ? (
             <div className="card-surface px-6 py-16 text-center">
               <CompetitionLogo tag={tag} className="mx-auto size-12" />
               <p className="mt-4 text-sm font-700 text-fg-1">
-                {activeSeason ? seasonLabel(activeSeason) : "This season"} hasn&apos;t
-                kicked off yet
+                {activeSeason ? seasonLabel(activeSeason, sport) : "This season"}{" "}
+                hasn&apos;t tipped off yet
               </p>
               <p className="mt-1.5 text-xs text-fg-3">
-                The table will appear after the first matchday. Pick an earlier season
-                above to see final standings.
+                {stSeason?.startDate
+                  ? `The table fills in from ${new Date(stSeason.startDate).toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" })}.`
+                  : "The table will appear after the first games are played."}
               </p>
             </div>
           ) : (
-            <StandingsTable table={table} tag={tag} />
+            <div className="flex flex-col gap-4">
+              {/* Football sends one table; the NBA sends League + conferences
+                  + divisions, so offer the grouping as a filter. */}
+              {groups.length > 1 && (
+                <div
+                  role="tablist"
+                  aria-label="Standings grouping"
+                  className="flex flex-wrap gap-1.5"
+                >
+                  {groups.map((g, i) => {
+                    const active = i === groupIndex;
+                    return (
+                      <button
+                        key={`${g.type}-${g.group ?? i}`}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => setGroupIndex(i)}
+                        className={`rounded-full border px-3 py-1 text-xs font-700 transition-colors ${
+                          active
+                            ? "border-accent/40 bg-accent/8 text-accent"
+                            : "border-white/8 bg-surface-2 text-fg-3 hover:border-white/18 hover:text-fg-1"
+                        }`}
+                      >
+                        {g.group ?? g.type ?? `Group ${i + 1}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              <StandingsTable
+                table={table}
+                tag={tag}
+                title={groups.length > 1 ? (activeGroup?.group ?? undefined) : undefined}
+              />
+            </div>
           )}
         </TabPanel>
       )}

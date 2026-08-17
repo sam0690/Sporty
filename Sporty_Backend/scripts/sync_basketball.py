@@ -104,7 +104,9 @@ async def main():
         logger.info(f"  Games Synced: {game_stats['total']}")
         logger.info("=" * 60)
 
-        return 0
+        # Non-zero on any skipped game: a partial sync that reports success is
+        # how a dropped connection once looked like a clean run.
+        return 1 if game_stats["errors"] else 0
 
     except Exception as e:
         logger.error(f"✗ Sync failed: {e}", exc_info=True)

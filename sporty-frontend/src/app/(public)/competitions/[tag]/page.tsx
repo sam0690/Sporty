@@ -13,12 +13,13 @@ import type {
   TStandingsResponse,
 } from "@/types/competition";
 
-const VALID = new Set(["epl", "laliga", "bundesliga", "ucl"]);
+const VALID = new Set(["epl", "laliga", "bundesliga", "ucl", "nba"]);
 const NAMES: Record<string, string> = {
   epl: "Premier League",
   laliga: "La Liga",
   bundesliga: "Bundesliga",
   ucl: "Champions League",
+  nba: "NBA",
 };
 
 export async function generateMetadata({
@@ -27,10 +28,15 @@ export async function generateMetadata({
   params: Promise<{ tag: string }>;
 }): Promise<Metadata> {
   const { tag } = await params;
-  const name = NAMES[tag.toLowerCase()] ?? "Competition";
+  const normalized = tag.toLowerCase();
+  const name = NAMES[normalized] ?? "Competition";
+  // The NBA page has no top-scorers tab, so its metadata must not promise one.
+  const hasScorers = normalized !== "nba";
   return {
-    title: `${name} — Standings, Fixtures & Stats | Sporty`,
-    description: `${name} league table, fixtures, results and top scorers. Free to browse — no account needed.`,
+    title: `${name} — Standings, Fixtures${hasScorers ? " & Stats" : " & Results"} | Sporty`,
+    description: hasScorers
+      ? `${name} league table, fixtures, results and top scorers. Free to browse — no account needed.`
+      : `${name} standings by conference and division, plus fixtures and results. Free to browse — no account needed.`,
   };
 }
 

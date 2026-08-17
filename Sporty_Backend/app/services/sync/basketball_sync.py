@@ -10,12 +10,14 @@ import logging
 from datetime import datetime, date, timezone
 from typing import Any
 
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.redis import cache_get, cache_set, cache_pattern_delete
 from app.match.models import Match
 from app.league.models import Sport, Season
+from app.player.models import RealTeam
 from app.services.sync.player_sync import sync_basketball_players
 
 logger = logging.getLogger(__name__)
@@ -74,6 +76,52 @@ def match_fields(game: dict[str, Any], sport_id, season: int) -> dict[str, Any] 
     }
 
 
+async def sync_basketball_team_meta(db: Session) -> int:
+    """Fill conference/division/city on our NBA RealTeam rows. One free request.
+
+    The CSV importer that seeded these rows only had abbreviations, so all 30
+    were left NULL — and standings group by conference and division, so without
+    this every team lands in an "unknown" bucket. Matched on abbreviation
+    because that is what basketball RealTeam.name holds.
+    """
+    sport = db.query(Sport).filter(Sport.name == "basketball").first()
+    if sport is None:
+        return 0
+
+    from app.external_apis.basketball_balldontlie import BasketballBallDontLieClient
+
+    client = BasketballBallDontLieClient(api_key=settings.BALLDONTLIE_API_KEY)
+    payload = await client.get_teams_meta()
+    if not payload:
+        return 0
+
+    # Defunct franchises share abbreviations with current ones — "WAS" is both
+    # the Wizards and the 1940s Washington Capitols — and the dead ones carry a
+    # BLANK-BUT-PRESENT conference ("    "), which is truthy. Strip before
+    # testing, or the defunct row wins the dict and wipes a live team's
+    # conference.
+    by_abbrev = {
+        team["abbreviation"]: team
+        for team in payload
+        if team.get("abbreviation") and str(team.get("conference") or "").strip()
+    }
+
+    updated = 0
+    for real_team in db.query(RealTeam).filter(RealTeam.sport_id == sport.id).all():
+        source = by_abbrev.get(real_team.abbreviation or real_team.name)
+        if source is None:
+            logger.warning("No BallDontLie metadata for basketball team %r", real_team.name)
+            continue
+        real_team.conference = source["conference"].strip()
+        real_team.division = str(source.get("division") or "").strip() or None
+        real_team.city = str(source.get("city") or "").strip() or None
+        updated += 1
+
+    db.commit()
+    logger.info("✓ Basketball team metadata: %s of 30 teams updated", updated)
+    return updated
+
+
 async def sync_basketball_games(db: Session, season: int | None = None) -> dict:
     """
     Sync all NBA games for a season from BallDontLie API.
@@ -112,6 +160,14 @@ async def sync_basketball_games(db: Session, season: int | None = None) -> dict:
             logger.error("No active basketball season in the database — create one first")
             return stats
 
+        # Release the connection before the fetch. get_all_games paginates a
+        # full season with a 12.5s sleep between pages — several MINUTES during
+        # which a held connection sits idle and gets closed server-side (Neon
+        # does exactly this). pool_pre_ping only revalidates at checkout, so it
+        # cannot save a connection dropped mid-session; ending the transaction
+        # here means the upserts below check out a fresh, pinged one.
+        db.rollback()
+
         # Initialize API client lazily so importing this module does not require
         # the optional BallDontLie dependency unless game sync is used.
         from app.external_apis.basketball_balldontlie import BasketballBallDontLieClient
@@ -122,36 +178,45 @@ async def sync_basketball_games(db: Session, season: int | None = None) -> dict:
         games_data = await api_client.get_all_games(season=season, use_cache=True)
         logger.info(f"Fetched {len(games_data)} games from BallDontLie")
 
+        rows: list[dict] = []
         for game_data in games_data:
-            try:
-                fields = match_fields(game_data, sport.id, season)
-                if fields is None:
-                    logger.warning(f"Skipping game with incomplete data: {game_data}")
-                    stats["errors"] += 1
-                    continue
-
-                existing_match = (
-                    db.query(Match)
-                    .filter(Match.external_api_id == fields["external_api_id"])
-                    .first()
-                )
-
-                if existing_match:
-                    # Fixtures get rescheduled and scores land later, so refresh
-                    # everything rather than just bumping updated_at.
-                    for key, value in fields.items():
-                        setattr(existing_match, key, value)
-                    stats["updated"] += 1
-                else:
-                    db.add(Match(**fields))
-                    stats["new"] += 1
-
-                stats["total"] += 1
-
-            except Exception as e:
-                logger.error(f"Error processing game {game_data}: {e}")
+            fields = match_fields(game_data, sport.id, season)
+            if fields is None:
+                logger.warning(f"Skipping game with incomplete data: {game_data}")
                 stats["errors"] += 1
                 continue
+            rows.append(fields)
+
+        if rows:
+            # ONE round trip, not one per game. A full NBA season is ~1,230
+            # fixtures, and a per-game SELECT-then-insert against a remote
+            # Postgres costs ~10 minutes of pure latency — untenable for a
+            # daily job. external_api_id is unique, so Postgres can do the
+            # whole upsert itself.
+            external_ids = [row["external_api_id"] for row in rows]
+            already = {
+                external_id
+                for (external_id,) in db.query(Match.external_api_id)
+                .filter(Match.external_api_id.in_(external_ids))
+                .all()
+            }
+            stats["updated"] = len(already)
+            stats["new"] = len(rows) - len(already)
+            stats["total"] = len(rows)
+
+            statement = pg_insert(Match).values(rows)
+            db.execute(
+                statement.on_conflict_do_update(
+                    index_elements=["external_api_id"],
+                    # Fixtures get rescheduled and scores land later, so refresh
+                    # everything rather than just bumping updated_at.
+                    set_={
+                        key: statement.excluded[key]
+                        for key in rows[0]
+                        if key != "external_api_id"
+                    },
+                )
+            )
 
         # Commit all changes
         db.commit()

@@ -1,33 +1,35 @@
-"""Real-API live NBA polling — off by default (settings.LIVE_POLLING_ENABLED).
+"""Live NBA scores — display-only liveness, gated by settings.LIVE_POLLING_ENABLED.
 
-Mirrors the SportyDataFeeder push path the same way football_live_sync.py
-does (see that module's docstring for the shared design). One NBA-specific
-wrinkle: API-NBA's /players/statistics returns *cumulative* per-game box
-score numbers, not discrete events, so each poll diffs against the previous
-poll's numbers (cached in Redis) and re-expresses the delta as synthetic
-discrete events (goal-equivalent "point_2"/"point_3"/"free_throw", "assist",
-"rebound", "steal", "block") so the existing apply_live_points/
-persist_match_stats machinery — built for discrete events — can be reused
-unchanged. The exact shot-type split (2s vs 3s) is a greedy reconstruction
-from the points delta, not the real shot log; only the total matters for
-scoring, since the fantasy formula weights total points, not shot type.
+Same division of labour as football's SportScore layer
+(app/services/sync/sportscore_live_sync.py): this module keeps the scoreboard
+and match status fresh for the live match page, and does NOT own fantasy
+points. Points come from the authoritative per-window box-score rollup in
+basketball_stats_sync, which this module triggers on the live -> finished
+transition.
 
-Player identity gotcha: the basketball roster catalog (sync_basketball_players,
-via the official nba_api package/stats.nba.com) and this live feed (API-NBA
-via RapidAPI) are different providers with unrelated player-id namespaces, so
-Player.external_api_id (an nba_api id) cannot be matched against API-NBA's
-player id. Players are matched by folded name + team instead.
+Provider: BallDontLie /games?dates[] — the SAME provider our fixtures come from,
+so a game's id IS the fixture's external_api_id ("bdl:<id>") and no id bridge
+is needed. One request covers the whole slate, which on the free tier's 5
+req/min leaves plenty of headroom for a tight tick.
+
+Why not per-player live points like football has: BallDontLie's per-player box
+scores are a paid tier, and the free alternative (stats.nba.com) soft-blocks an
+IP after modest use — it accepts the connection and then never responds, which
+is indistinguishable from a hang. Driving a 2-minute poll off that would make
+the live page unreliable to save a $9.99/mo upgrade. So team scores tick live
+and player points land at the final buzzer. Upgrading to BallDontLie ALL-STAR
+would let this module also diff /stats into live per-player points.
+
+Cost control: _fixtures_in_live_window is a DB query, so a tick with no fixture
+in play returns before any network call — the entire off-season and every
+daytime tick are free.
 """
 
 from __future__ import annotations
 
-import json
 import logging
-import unicodedata
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
-import httpx
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.admin.feature_flags import get_effective_flag
@@ -35,196 +37,112 @@ from app.core.config import settings
 from app.core.redis import get_async_redis
 from app.league.models import Sport
 from app.match.models import Match
-from app.models.db.live_event import LiveEvent
 from app.models.schemas.events import WSMessage
-from app.player.models import Player
-from app.services.feed_scoring import LiveEventLike, apply_live_points, persist_match_stats
 from app.services.scoring.trigger import enqueue_scoring_for_finished_match
 
 logger = logging.getLogger(__name__)
 
-_RAW_STATS_TTL_SECONDS = 6 * 3600
-_STAT_FIELDS = ("points", "assists", "totReb", "steals", "blocks")
+# An NBA game runs ~2.5h; the window opens just before tip-off and stays open
+# long enough to catch a finish the previous tick missed.
+_WINDOW_BEFORE = timedelta(minutes=5)
+_WINDOW_AFTER = timedelta(hours=4)
 
 
-def _fold_name(value: str) -> str:
-    decomposed = unicodedata.normalize("NFKD", value or "")
-    stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
-    return " ".join(stripped.lower().split())
+def _fixtures_in_live_window(db: Session, sport_id) -> list[Match]:
+    """Basketball fixtures that could plausibly be in play right now.
 
-
-async def _get(client: httpx.AsyncClient, path: str, params: dict) -> dict:
-    response = await client.get(
-        f"https://{settings.RAPIDAPI_NBA_HOST}{path}",
-        headers={
-            "X-RapidAPI-Key": settings.RAPIDAPI_NBA_KEY,
-            "X-RapidAPI-Host": settings.RAPIDAPI_NBA_HOST,
-        },
-        params=params,
-        timeout=15.0,
+    The whole point of this gate is that an empty result costs zero API calls —
+    which is every tick outside a game night.
+    """
+    now = datetime.now(timezone.utc)
+    return (
+        db.query(Match)
+        .filter(
+            Match.sport_id == sport_id,
+            Match.status.in_(("scheduled", "live")),
+            Match.match_date >= now - _WINDOW_AFTER,
+            Match.match_date <= now + _WINDOW_BEFORE,
+        )
+        .all()
     )
-    response.raise_for_status()
-    return response.json()
 
 
-def _is_live(status_obj: dict) -> bool:
-    long_status = str(status_obj.get("long", "")).lower()
-    short_status = str(status_obj.get("short", "")).lower()
-    return "live" in long_status or "in play" in long_status or short_status in {
-        "q1", "q2", "q3", "q4", "ot", "ht",
-    }
+def game_state(game: dict) -> str:
+    """BallDontLie game payload -> our Match.status.
+
+    `status` is an ISO timestamp until a game starts and free text afterwards
+    ("1st Qtr", "Final"), so `status_state` is the field to trust; it is checked
+    first and the text is only a fallback for older payload shapes.
+    """
+    state = str(game.get("status_state") or "").lower()
+    if state in ("final", "post"):
+        return "finished"
+    if state in ("in", "live"):
+        return "live"
+    if state == "scheduled":
+        return "scheduled"
+
+    status_text = str(game.get("status") or "").lower()
+    if "final" in status_text:
+        return "finished"
+    return "live" if game.get("period") else "scheduled"
 
 
-def _is_finished(status_obj: dict) -> bool:
-    return "finished" in str(status_obj.get("long", "")).lower()
-
-
-def _decompose_points(delta: int) -> list[str]:
-    """Greedy reconstruction of a points delta into scoring events. Only the
-    total matters (see module docstring) — the 2/3/FT split is not the real
-    shot log."""
-    events: list[str] = []
-    remaining = max(delta, 0)
-    while remaining >= 3:
-        events.append("point_3")
-        remaining -= 3
-    while remaining >= 2:
-        events.append("point_2")
-        remaining -= 2
-    while remaining >= 1:
-        events.append("free_throw")
-        remaining -= 1
-    return events
-
-
-async def sync_nba_live_matches(db: Session, season: int = 2024) -> str:
+async def sync_nba_live_matches(db: Session) -> str:
     if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
         return "ok: live polling disabled (LIVE_POLLING_ENABLED=false); using simulator"
 
-    if not settings.RAPIDAPI_NBA_KEY:
-        return "ok: RAPIDAPI_NBA_KEY not configured"
+    if not settings.BALLDONTLIE_API_KEY:
+        return "ok: BALLDONTLIE_API_KEY not configured"
 
     sport = db.query(Sport).filter(Sport.name == "basketball").first()
     if sport is None:
         return "ok: basketball sport not seeded"
 
-    async with httpx.AsyncClient() as client:
-        try:
-            games_payload = await _get(client, "/games", {"league": "standard", "season": season, "live": "all"})
-        except Exception:
-            logger.exception("NBA live poll: live games request failed")
-            return "error: live games request failed"
+    candidates = {
+        match.external_api_id: match
+        for match in _fixtures_in_live_window(db, sport.id)
+        if match.external_api_id
+    }
+    if not candidates:
+        return "ok: no NBA fixtures in the live window"
 
-        live_games = games_payload.get("response", [])
-        if not isinstance(live_games, list) or not live_games:
-            return "ok: no live NBA games"
+    from app.external_apis.basketball_balldontlie import BasketballBallDontLieClient
 
-        redis = await get_async_redis()
-        updated = 0
+    client = BasketballBallDontLieClient(api_key=settings.BALLDONTLIE_API_KEY)
+    # A US evening game is already "tomorrow" in UTC, so ask for both days.
+    now = datetime.now(timezone.utc)
+    dates = [(now - timedelta(days=1)).date().isoformat(), now.date().isoformat()]
+    games = await client.get_games_by_date(dates)
+    if not games:
+        return "ok: no NBA games returned for the live window"
 
-        # Name -> Player, scoped to basketball, for folded-name matching.
-        by_name: dict[str, list[Player]] = {}
-        for player in db.query(Player).filter(Player.sport_id == sport.id).all():
-            by_name.setdefault(_fold_name(player.name), []).append(player)
+    redis = await get_async_redis()
+    updated = 0
 
-        for game in live_games:
-            game_id = str(game.get("id") or "")
-            status_obj = game.get("status", {}) if isinstance(game.get("status"), dict) else {}
-            if not game_id or not (_is_live(status_obj) or _is_finished(status_obj)):
-                continue
+    for game in games:
+        # Fixtures and live scores come from the same provider, so this is a
+        # direct key lookup — no team/date matching of any kind.
+        match = candidates.get(f"bdl:{game.get('id')}")
+        if match is None:
+            continue
 
-            match = (
-                db.query(Match)
-                .filter(Match.sport_id == sport.id, Match.external_api_id == game_id)
-                .first()
-            )
-            if match is None:
-                continue
+        new_status = game_state(game)
+        if new_status == "scheduled":
+            continue
 
-            finished_now = _is_finished(status_obj) and match.status != "finished"
-            new_status = "finished" if _is_finished(status_obj) else "live"
-            minute = status_obj.get("clock")
-            scores_obj = game.get("scores", {}) if isinstance(game.get("scores"), dict) else {}
+        finished_now = new_status == "finished" and match.status != "finished"
+        match.home_score = _coerce_int(game.get("home_team_score"))
+        match.away_score = _coerce_int(game.get("visitor_team_score"))
+        match.status = new_status
+        db.commit()
+        updated += 1
 
-            try:
-                stats_payload = await _get(client, "/players/statistics", {"game": game_id})
-            except Exception:
-                logger.exception("NBA live poll: box score request failed for game %s", game_id)
-                stats_payload = {}
-            stat_rows = stats_payload.get("response", [])
-            if not isinstance(stat_rows, list):
-                stat_rows = []
-
-            live_key = match.external_api_id or str(match.id)
-            now = datetime.now(timezone.utc)
-            rows: list[dict] = []
-            scorable_events: list[LiveEventLike] = []
-
-            for row in stat_rows:
-                player_obj = row.get("player", {}) if isinstance(row.get("player"), dict) else {}
-                team_obj = row.get("team", {}) if isinstance(row.get("team"), dict) else {}
-                full_name = f"{player_obj.get('firstname', '')} {player_obj.get('lastname', '')}".strip()
-                if not full_name:
-                    continue
-
-                candidates = by_name.get(_fold_name(full_name), [])
-                if not candidates:
-                    continue
-                sporty_player = candidates[0]
-                if len(candidates) > 1 and team_obj.get("name"):
-                    wanted = _fold_name(str(team_obj.get("name")))
-                    for candidate in candidates:
-                        have = _fold_name(candidate.real_team or "")
-                        if have and (have == wanted or wanted in have or have in wanted):
-                            sporty_player = candidate
-                            break
-
-                raw_cache_key = f"nba:live:raw:{game_id}:{sporty_player.id}"
-                previous_raw = await redis.get(raw_cache_key)
-                previous = json.loads(previous_raw) if previous_raw else {field: 0 for field in _STAT_FIELDS}
-
-                current = {field: _coerce_int(row.get(field)) for field in _STAT_FIELDS}
-                deltas = {field: max(current[field] - previous.get(field, 0), 0) for field in _STAT_FIELDS}
-                await redis.set(raw_cache_key, json.dumps(current), ex=_RAW_STATS_TTL_SECONDS)
-
-                event_types: list[str] = []
-                event_types += _decompose_points(deltas["points"])
-                event_types += ["assist"] * deltas["assists"]
-                event_types += ["rebound"] * deltas["totReb"]
-                event_types += ["steal"] * deltas["steals"]
-                event_types += ["block"] * deltas["blocks"]
-
-                for index, event_type in enumerate(event_types):
-                    event_id = f"{game_id}:{sporty_player.id}:{int(now.timestamp())}:{event_type}:{index}"
-                    rows.append({
-                        "match_id": live_key,
-                        "event_id": event_id,
-                        "sport": "basketball",
-                        "event_type": event_type,
-                        "player_id": str(sporty_player.id),
-                        "team_id": str(team_obj.get("id") or ""),
-                        "value": 0.0,
-                        "meta": {"minute": minute, "source": "api-nba"},
-                        "ts": now,
-                    })
-                    scorable_events.append(LiveEventLike(str(sporty_player.id), event_type))
-
-            if rows:
-                statement = (
-                    pg_insert(LiveEvent)
-                    .values(rows)
-                    .on_conflict_do_nothing(index_elements=["match_id", "event_id"])
-                )
-                db.execute(statement)
-
-            match.home_score = _coerce_int((scores_obj.get("home") or {}).get("points"))
-            match.away_score = _coerce_int((scores_obj.get("visitors") or {}).get("points"))
-            match.status = new_status
-            db.commit()
-            updated += 1
-
-            channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
-            message = WSMessage(
+        live_key = match.external_api_id or str(match.id)
+        channel = f"{settings.REDIS_PUBSUB_PREFIX}:{live_key}"
+        await redis.publish(
+            channel,
+            WSMessage(
                 event="SCORE_UPDATE",
                 data={
                     "kind": "LIVE_API_POLL",
@@ -233,28 +151,51 @@ async def sync_nba_live_matches(db: Session, season: int = 2024) -> str:
                     "status": new_status,
                     "home": match.home_score,
                     "away": match.away_score,
-                    "minute": minute,
+                    "minute": game.get("status") if new_status == "live" else None,
+                    "period": game.get("period"),
                 },
+            ).model_dump_json(),
+        )
+
+        if finished_now:
+            await _book_finished_match(db, match, live_key)
+
+    return f"ok: polled {len(games)} NBA game(s), updated {updated}"
+
+
+async def _book_finished_match(db: Session, match: Match, live_key: str) -> None:
+    """Turn a just-finished game into fantasy points.
+
+    Recomputes the WHOLE covering window, not this one match: PlayerGameweekStat
+    is one row per (player, window) and an NBA team plays 3-4 games inside a
+    weekly window, so booking one match's numbers onto it would erase the games
+    before it. The rollup sums every game in the window, so it converges however
+    often it runs.
+    """
+    from app.services.scoring.window_locator import find_transfer_window_for_datetime
+    from app.services.sync.basketball_stats_sync import sync_basketball_window_stats
+
+    try:
+        window = find_transfer_window_for_datetime(
+            db, match_date=match.match_date, sport_id=match.sport_id
+        )
+        if window is None:
+            logger.warning(
+                "NBA live poll: no transfer window covers %s; stats not booked", match.match_date
             )
-            await redis.publish(channel, message.model_dump_json())
-            if scorable_events:
-                await apply_live_points(
-                    redis, live_key=live_key, sport="basketball", events=scorable_events, channel=channel
-                )
+        else:
+            await sync_basketball_window_stats(db, window)
+    except Exception:
+        logger.exception("NBA live poll: window stat rollup failed for %s", live_key)
 
-            if finished_now:
-                persist_match_stats(db, match=match, live_key=live_key, sport="basketball")
-                db.commit()
-                try:
-                    enqueue_scoring_for_finished_match(
-                        db, match_date=match.match_date, sport_id=match.sport_id
-                    )
-                except Exception:
-                    logger.exception(
-                        "NBA live poll: finish %s stats booked but scoring enqueue failed", live_key
-                    )
-
-    return f"ok: polled {len(live_games)} live game(s), updated {updated}"
+    try:
+        enqueue_scoring_for_finished_match(
+            db, match_date=match.match_date, sport_id=match.sport_id
+        )
+    except Exception:
+        logger.exception(
+            "NBA live poll: finish %s recorded but scoring enqueue failed", live_key
+        )
 
 
 def _coerce_int(value, default: int = 0) -> int:

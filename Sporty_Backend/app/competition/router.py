@@ -1,7 +1,12 @@
-"""Public competition pages API (real competitions: EPL / La Liga / Bundesliga).
+"""Public competition pages API (real competitions: EPL / La Liga / Bundesliga
+/ UCL / NBA).
 
 Read-only, unauthenticated. Serves standings / scorers / matches per
-competition + season from the cached snapshot layer (app/competition/service).
+competition + season from the snapshot layer (app/competition/service). The
+football competitions are fetched from football-data.org and cached; the NBA is
+computed from our own match rows, so it carries no `scorers` kind — callers
+should read each competition's `kinds` from the index rather than assuming all
+three.
 """
 
 from __future__ import annotations
@@ -37,8 +42,13 @@ def _snapshot(kind: str):
         except ValueError as exc:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
         # Report the season actually served — for a current-view request the
-        # competition resolves its own (CL differs from the domestic leagues).
-        actual = season or service.resolved_season(payload) or service.current_season()
+        # competition resolves its own (CL differs from the domestic leagues,
+        # and the NBA's season year rolls over in October, not July).
+        actual = (
+            season
+            or service.resolved_season(payload)
+            or service.current_season(tag.upper())
+        )
         return {
             "competition": tag.upper(),
             "season": actual,

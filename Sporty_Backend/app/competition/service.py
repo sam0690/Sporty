@@ -22,6 +22,7 @@ from app.external_apis.football_data_org import (
     get_competition_scorers,
     get_competition_standings,
 )
+from app.competition import nba_competition
 from app.models.db.competition_snapshot import CompetitionSnapshot
 from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
 
@@ -40,6 +41,16 @@ _KIND_FETCHERS = {
     "matches": get_competition_matches,
 }
 
+# Competitions we COMPUTE instead of fetching. The NBA's standings come from
+# our own `matches` rows (see nba_standings), so there is no upstream call, no
+# snapshot row and no staleness — the HTTP layer's public_cache is the only
+# caching needed. Kept in this module so one endpoint serves every sport.
+NBA_TAG = nba_competition.COMPETITION
+_COMPUTED_TAGS = {NBA_TAG}
+# The NBA has no top-scorers analogue in our data, so the endpoint reports the
+# kinds it can actually serve and the frontend hides the tab.
+_COMPUTED_KINDS = {"standings", "matches"}
+
 
 def _aware(dt: datetime) -> datetime:
     """Treat a naive timestamp as UTC — Postgres returns tz-aware, SQLite
@@ -47,20 +58,51 @@ def _aware(dt: datetime) -> datetime:
     return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
 
-def current_season() -> int:
+def current_season(tag: str | None = None) -> int:
+    """Season start year. European football rolls over in July, the NBA in
+    October — so a call in, say, August means different seasons for each."""
+    if tag and tag.upper() in _COMPUTED_TAGS:
+        return nba_competition.current_nba_season()
     now = datetime.now(timezone.utc)
     return now.year if now.month >= 7 else now.year - 1
 
 
-def available_seasons() -> list[int]:
-    """Newest first, down to the free-tier horizon."""
+def available_seasons(tag: str | None = None) -> list[int]:
+    """Newest first, down to that competition's horizon."""
+    if tag and tag.upper() in _COMPUTED_TAGS:
+        # We can only build a table for seasons whose games we actually hold,
+        # and NBA fixtures were first ingested for 2026-27.
+        return [current_season(tag)]
     return list(range(current_season(), FDO_MIN_SEASON - 1, -1))
 
 
 def list_competitions() -> list[dict]:
-    return [
-        {"tag": c.tag, "name": c.name, "fdo_code": c.fdo_code}
+    """Every competition with a public page, football and basketball alike.
+
+    `kinds` tells the frontend which tabs a competition can serve — the NBA has
+    no top-scorers equivalent in our data, so its page hides that tab rather
+    than requesting an endpoint that would 400.
+    """
+    football = [
+        {
+            "tag": c.tag,
+            "name": c.name,
+            "sport": "football",
+            "fdo_code": c.fdo_code,
+            "kinds": sorted(_KIND_FETCHERS),
+            "seasons": available_seasons(),
+        }
         for c in FOOTBALL_COMPETITIONS.values()
+    ]
+    return football + [
+        {
+            "tag": NBA_TAG,
+            "name": "NBA",
+            "sport": "basketball",
+            "fdo_code": None,
+            "kinds": sorted(_COMPUTED_KINDS),
+            "seasons": available_seasons(NBA_TAG),
+        }
     ]
 
 
@@ -86,6 +128,8 @@ async def get_snapshot(db: Session, tag: str, kind: str, season: int | None = No
     immutable once cached.
     """
     tag = tag.upper()
+    if tag in _COMPUTED_TAGS:
+        return _computed_snapshot(db, tag, kind, season)
     if tag not in _TAG_TO_FDO:
         raise ValueError(f"Unknown competition '{tag}'")
     if kind not in _KIND_FETCHERS:
@@ -132,6 +176,26 @@ async def get_snapshot(db: Session, tag: str, kind: str, season: int | None = No
     payload = await _KIND_FETCHERS[kind](fdo_code, season)
     _upsert(db, tag, season, kind, payload)
     return payload
+
+
+def _computed_snapshot(db: Session, tag: str, kind: str, season: int | None) -> dict:
+    """Serve a competition we derive from our own tables rather than fetch.
+
+    Deliberately NOT written to competition_snapshots: the source rows are
+    already local, so a snapshot would only add a staleness window between a
+    game finishing and the table updating. The route's public_cache(300) is the
+    only caching this needs.
+    """
+    if kind not in _COMPUTED_KINDS:
+        raise ValueError(f"'{tag}' has no '{kind}' data")
+    if season is not None and season not in available_seasons(tag):
+        raise ValueError(f"Season {season} not available for {tag}")
+
+    builder = {
+        "standings": nba_competition.build_standings,
+        "matches": nba_competition.build_matches,
+    }[kind]
+    return builder(db, season)
 
 
 def _upsert(db: Session, tag: str, season: int, kind: str, payload: dict) -> None:

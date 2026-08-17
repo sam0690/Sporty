@@ -28,6 +28,9 @@ type DisplayMeta = { label: string; short: string };
 
 const DISPLAY_ONLY: Record<string, DisplayMeta> = {
   UCL: { label: "Champions League", short: "UCL" },
+  // Basketball, not football — but competition pages are cross-sport and
+  // CompetitionLogo falls back to the sport glyph when there is no crest.
+  NBA: { label: "NBA", short: "NBA" },
 };
 
 const BY_TAG: Record<string, DisplayMeta> = {

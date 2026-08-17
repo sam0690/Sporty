@@ -21,8 +21,11 @@ export function hasKnockout(matches: TCompetitionMatch[]): boolean {
   return matches.some((m) => m.stage && KNOCKOUT.has(m.stage));
 }
 
-type Side = { id: number; name: string; crest?: string | null; goals: number };
-type Tie = { sides: [Side, Side]; played: boolean; winnerId: number | null; date: string };
+// Ids are identity only here — never arithmetic — and competition team ids
+// are numeric for football but string for sports we compute ourselves, so
+// everything keys on the stringified id.
+type Side = { id: string; name: string; crest?: string | null; goals: number };
+type Tie = { sides: [Side, Side]; played: boolean; winnerId: string | null; date: string };
 
 // Fold a stage's legs into ties (two-legged except the final), aggregating
 // goals. Equal aggregate = no winner highlighted (pens/away goals absent).
@@ -30,12 +33,12 @@ function tiesForStage(matches: TCompetitionMatch[], stage: string): Tie[] {
   const legs = matches.filter((m) => m.stage === stage);
   const byPair = new Map<string, TCompetitionMatch[]>();
   for (const m of legs) {
-    const key = [m.homeTeam.id, m.awayTeam.id].sort((a, b) => a - b).join("-");
+    const key = [m.homeTeam.id, m.awayTeam.id].map(String).sort().join("-");
     (byPair.get(key) ?? byPair.set(key, []).get(key)!).push(m);
   }
   const ties: Tie[] = [];
   for (const group of byPair.values()) {
-    const agg = new Map<number, Side>();
+    const agg = new Map<string, Side>();
     let played = false;
     let earliest = group[0].utcDate;
     for (const leg of group) {
@@ -47,9 +50,10 @@ function tiesForStage(matches: TCompetitionMatch[], stage: string): Tie[] {
         [leg.homeTeam, h] as const,
         [leg.awayTeam, a] as const,
       ]) {
-        const prev = agg.get(team.id);
-        agg.set(team.id, {
-          id: team.id,
+        const teamId = String(team.id);
+        const prev = agg.get(teamId);
+        agg.set(teamId, {
+          id: teamId,
           name: team.name,
           crest: team.crest,
           goals: (prev?.goals ?? 0) + (g ?? 0),
@@ -58,7 +62,7 @@ function tiesForStage(matches: TCompetitionMatch[], stage: string): Tie[] {
     }
     const sides = [...agg.values()].slice(0, 2) as [Side, Side];
     if (sides.length < 2) continue;
-    let winnerId: number | null = null;
+    let winnerId: string | null = null;
     if (played && sides[0].goals !== sides[1].goals) {
       winnerId = (sides[0].goals > sides[1].goals ? sides[0] : sides[1]).id;
     }

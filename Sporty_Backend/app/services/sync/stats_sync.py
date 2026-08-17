@@ -101,14 +101,27 @@ async def sync_football_match_stats(db: Session, match: Match):
 
 async def sync_basketball_match_stats(db: Session, match: Match):
     """
-    Fetch player stats for a finished basketball game.
+    Book player stats for a finished basketball game.
 
-    Creates PlayerGameweekStat and BasketballStat records.
+    Delegates to the window rollup rather than doing per-match work:
+    PlayerGameweekStat is one row per (player, window) and an NBA team plays
+    3-4 games inside one weekly window, so the row is a SUM over the window.
+    Recomputing the whole window from the box scores is both cheaper (one
+    request) and the only way repeated calls converge instead of overwriting
+    each other. See app/services/sync/basketball_stats_sync.py.
     """
-    print(f"  🏀 Syncing stats: {match.home_team} vs {match.away_team}")
+    from app.services.scoring.window_locator import find_transfer_window_for_datetime
+    from app.services.sync.basketball_stats_sync import sync_basketball_window_stats
 
-    # TODO: Implement basketball stats sync
-    print("    ℹ️  Basketball stats sync not yet implemented.")
+    window = find_transfer_window_for_datetime(
+        db, match_date=match.match_date, sport_id=match.sport_id
+    )
+    if window is None:
+        print(f"    ⚠️  No transfer window covers {match.match_date} — stats not booked")
+        return
+
+    print(f"  🏀 Syncing stats: {match.home_team} vs {match.away_team}")
+    await sync_basketball_window_stats(db, window)
 
 
 async def sync_cricket_match_stats(db: Session, match: Match):
