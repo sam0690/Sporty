@@ -70,7 +70,10 @@ SPORTSCORE_TEAM_SLUGS: dict[str, str] = {
     "Atletico Madrid": "atletico-madrid",
     "Barcelona": "fc-barcelona",                      # FC Barcelona
     "Celta Vigo": "rc-celta",                         # RC Celta
-    "Deportivo La Coruna": "deportivo-la-coruna",
+    # NOT "deportivo-la-coruna" — that fuzzy-resolves to Deportivo La Coruna B,
+    # so every fixture slug built from it 404'd. Their canonical slug is the
+    # short one. Exactly the reserve-side trap this module's docstring warns of.
+    "Deportivo La Coruna": "rc-deportivo",            # RC Deportivo
     "Elche": "elche-cf",                              # Elche CF
     "Espanyol": "rcd-espanyol-de-barcelona",          # RCD Espanyol de Barcelona
     "Getafe": "getafe",
