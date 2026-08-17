@@ -54,6 +54,13 @@ def _normalize_email(email: str) -> str:
     return email.strip().lower()
 
 
+# Grace before an expired refresh token is deleted. A row that lapsed seconds
+# ago is still the one a client is about to present — deleting it on the exact
+# boundary turns "your session expired" into "that token never existed", and
+# loses the row that would explain a clock-skew or refresh-race report.
+EXPIRED_TOKEN_GRACE = timedelta(hours=1)
+
+
 def _build_tokens(db: Session, user: User) -> TokenResponse:
     """
     Create token pair and stage the refresh token — does NOT commit.
@@ -61,6 +68,18 @@ def _build_tokens(db: Session, user: User) -> TokenResponse:
     This keeps _build_tokens composable inside larger transactions.
     """
     access_token = create_access_token(user_id=user.id)
+
+    # Nothing ever deleted these, so every login/refresh left a row behind for
+    # good — 86% of the table was already expired at 19 users. Pruning the same
+    # user's dead rows here needs no scheduled job and no new wiring: this is
+    # the single chokepoint every token creation goes through, and it costs one
+    # indexed DELETE on the row set we are about to add to. A live session,
+    # revoked or not, is left alone.
+    db.query(RefreshToken).filter(
+        RefreshToken.user_id == user.id,
+        RefreshToken.expires_at < datetime.now(timezone.utc) - EXPIRED_TOKEN_GRACE,
+    ).delete(synchronize_session=False)
+
     db_token, raw_refresh = RefreshToken.create_for_user(user.id)
     db.add(db_token)
 

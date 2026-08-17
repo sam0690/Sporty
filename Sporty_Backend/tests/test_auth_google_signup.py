@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 from contextlib import contextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -99,3 +100,44 @@ def test_register_marks_new_local_user_active():
         user = db.query(User).one()
         assert user.auth_provider == AuthProvider.LOCAL
         assert user.is_active is True
+
+
+def test_build_tokens_prunes_only_this_users_expired_tokens():
+    with session_scope() as db:
+        for name in ("keeper", "bystander"):
+            auth_services.register(
+                db,
+                RegisterRequest(
+                    username=name,
+                    email=f"{name}@example.com",
+                    password="super-secret-password",
+                    auto_login=False,
+                ),
+            )
+        user, other = db.query(User).order_by(User.username).all()
+
+        now = datetime.now(timezone.utc)
+        expired, _ = RefreshToken.create_for_user(user.id)
+        expired.expires_at = now - timedelta(days=1)
+        # Inside the grace window: lapsed, but still the token a client may be
+        # about to present, so it must survive this prune.
+        just_expired, _ = RefreshToken.create_for_user(user.id)
+        just_expired.expires_at = now - (auth_services.EXPIRED_TOKEN_GRACE / 2)
+        live, _ = RefreshToken.create_for_user(user.id)
+        live.expires_at = now + timedelta(days=7)
+        # Another user's dead row must survive: the prune is per-user.
+        theirs, _ = RefreshToken.create_for_user(other.id)
+        theirs.expires_at = now - timedelta(days=1)
+        db.add_all([expired, just_expired, live, theirs])
+        db.flush()
+
+        auth_services._build_tokens(db, user)
+        db.flush()
+
+        remaining = {t.token_hash for t in db.query(RefreshToken).all()}
+        assert expired.token_hash not in remaining
+        assert just_expired.token_hash in remaining
+        assert live.token_hash in remaining
+        assert theirs.token_hash in remaining
+        # The freshly issued one, plus the live and just-expired ones we kept.
+        assert db.query(RefreshToken).filter(RefreshToken.user_id == user.id).count() == 3
