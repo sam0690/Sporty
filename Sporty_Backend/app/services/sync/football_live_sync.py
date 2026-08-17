@@ -725,6 +725,197 @@ async def _reconcile_missed_finishes(db, client, redis, candidates: list[Match],
     return finished
 
 
+# How far the provider may move an event's minute between reads before we treat
+# it as a genuinely different event. Observed at 1 minute on real fixtures.
+_MINUTE_DRIFT_TOLERANCE = 2
+
+
+def _drop_drifted_duplicates(db: Session, live_key: str, rows: list[dict]) -> list[dict]:
+    """Drop candidate rows that are an already-stored event re-reported.
+
+    event_id embeds the minute AND the provider's `detail` string, and
+    API-Football revises both between reads: fixture 1570337 moved two yellows
+    from 27'/68' to 26'/67', and relabelled its four 60' substitutions
+    "Substitution 1" <-> "Substitution 2". Every one of those lands under a NEW
+    event_id, so the unique constraint can't see them and ON CONFLICT DO NOTHING
+    lets a second copy through — every re-read of a fixture (the hourly poll's
+    normal mode of operation) can duplicate its own earlier rows.
+
+    Identity here is (event_type, player) within a minute window, which is what
+    survives the revisions.
+
+    ponytail: a same-player brace inside 2 minutes collapses to one row. Rare,
+    and scoring is unaffected (the FT stat sheet is authoritative; the event
+    aggregate is only its fallback). Key events on a stable occurrence index
+    instead if that ever bites.
+    """
+    stored = (
+        db.query(LiveEvent.event_type, LiveEvent.player_id, LiveEvent.meta)
+        .filter(
+            LiveEvent.match_id == live_key,
+            LiveEvent.meta["source"].astext == "api-football",
+        )
+        .all()
+    )
+    if not stored:
+        return rows
+
+    seen = [(r.event_type, r.player_id, (r.meta or {}).get("minute") or 0) for r in stored]
+
+    def is_duplicate(row: dict) -> bool:
+        minute = row["meta"].get("minute") or 0
+        return any(
+            event_type == row["event_type"]
+            and player_id == row["player_id"]
+            and abs(stored_minute - minute) <= _MINUTE_DRIFT_TOLERANCE
+            for event_type, player_id, stored_minute in seen
+        )
+
+    return [row for row in rows if not is_duplicate(row)]
+
+
+def upsert_fixture_events(
+    db: Session,
+    *,
+    live_key: str,
+    fixture_id,
+    raw_events,
+    resolve_player,
+) -> tuple[list[LiveEventLike], list[dict]]:
+    """Book one fixture's API-Football events into live_events, idempotently.
+
+    Returns (scorable_events, new_sub_messages) for the rows this call actually
+    INSERTED — both are driven off the insert's RETURNING because every poll
+    re-reads the whole event list: apply_live_points is incremental
+    (hincrbyfloat) and would double-count, and a re-published LINEUP_CHANGE
+    would re-swap players the pitch already swapped.
+
+    Extracted from the live poll so the backfill script can book the tail of a
+    match the hourly poll never saw (a finished fixture drops out of `live=all`,
+    so the poll's event set ends at the last in-play tick).
+    """
+    now = datetime.now(timezone.utc)
+    rows: list[dict] = []
+    scorable_by_event_id: dict[str, LiveEventLike] = {}
+    sub_message_by_event_id: dict[str, dict] = {}
+
+    for raw in raw_events or []:
+        event_minute = (raw.get("time") or {}).get("elapsed", 0)
+        api_type = str(raw.get("type", ""))
+        detail = str(raw.get("detail", ""))
+        team = raw.get("team", {}) or {}
+        mapped_type = _map_event_type(api_type, detail)
+
+        # Assists ride on the goal event as a sibling `assist` field.
+        # Only on open-play goals: penalties/own goals carry no assist.
+        assist_id = (raw.get("assist") or {}).get("id")
+        if mapped_type == "goal" and detail.strip().lower() == "normal goal" and assist_id:
+            assist_player = resolve_player(assist_id)
+            if assist_player is not None:
+                assist_event_id = f"{fixture_id}:{event_minute}:assist:{assist_id}"
+                rows.append({
+                    "match_id": live_key,
+                    "event_id": assist_event_id,
+                    "sport": "football",
+                    "event_type": "assist",
+                    "player_id": str(assist_player.id),
+                    "team_id": str(team.get("id") or ""),
+                    "value": 0.0,
+                    "meta": {"minute": event_minute, "detail": "Assist", "source": "api-football"},
+                    "ts": now,
+                })
+                scorable_by_event_id[assist_event_id] = LiveEventLike(
+                    str(assist_player.id), "assist"
+                )
+
+        player = raw.get("player", {}) or {}
+        api_player_id = player.get("id")
+
+        # Substitutions: stored under the same contract the feeder pushes
+        # (player_id = the player coming ON, meta.related_player_id = the
+        # one coming OFF), which is what the match centre renders as
+        # "X for Y". The provider's own name for the outgoing player is
+        # kept as a display fallback for when we can't resolve their id.
+        if api_type.strip().lower() == "subst":
+            in_api_id, out_api_id = _subst_ids(raw)
+            player_in = resolve_player(in_api_id) if in_api_id else None
+            if player_in is None:
+                continue  # not a player we know about (not drafted/synced)
+            player_out = resolve_player(out_api_id) if out_api_id else None
+            sub_event_id = f"{fixture_id}:{event_minute}:{api_type}:{out_api_id}:{detail}"
+            sub_message_by_event_id[sub_event_id] = {
+                "match_id": live_key,
+                # LineupCard keys and labels by this field, and everything
+                # else in the match centre identifies clubs by name, so the
+                # provider's numeric team id would render as a bare number.
+                "team_id": team.get("name") or "",
+                "player_in": str(player_in.id),
+                "player_out": str(player_out.id) if player_out else None,
+                "player_in_name": player_in.name,
+                "player_out_name": player_out.name if player_out else player.get("name"),
+                "minute": event_minute,
+            }
+            rows.append({
+                "match_id": live_key,
+                "event_id": sub_event_id,
+                "sport": "football",
+                "event_type": "substitution",
+                "player_id": str(player_in.id),
+                "team_id": str(team.get("id") or ""),
+                "value": 0.0,
+                "meta": {
+                    "minute": event_minute,
+                    "detail": detail,
+                    "source": "api-football",
+                    "related_player_id": str(player_out.id) if player_out else None,
+                    "related_player_name": player.get("name"),
+                },
+                "ts": now,
+            })
+            continue
+
+        if api_player_id is None:
+            continue
+
+        sporty_player = resolve_player(api_player_id)
+        if sporty_player is None:
+            continue  # not a player we know about (not drafted/synced)
+
+        event_id = f"{fixture_id}:{event_minute}:{api_type}:{api_player_id}:{detail}"
+        rows.append({
+            "match_id": live_key,
+            "event_id": event_id,
+            "sport": "football",
+            "event_type": mapped_type or api_type.lower(),
+            "player_id": str(sporty_player.id),
+            "team_id": str(team.get("id") or ""),
+            "value": 0.0,
+            "meta": {"minute": event_minute, "detail": detail, "source": "api-football"},
+            "ts": now,
+        })
+        if mapped_type:
+            scorable_by_event_id[event_id] = LiveEventLike(str(sporty_player.id), mapped_type)
+
+    if not rows:
+        return [], []
+
+    rows = _drop_drifted_duplicates(db, live_key, rows)
+    if not rows:
+        return [], []
+
+    statement = (
+        pg_insert(LiveEvent)
+        .values(rows)
+        .on_conflict_do_nothing(index_elements=["match_id", "event_id"])
+        .returning(LiveEvent.event_id)
+    )
+    inserted_ids = {row[0] for row in db.execute(statement)}
+    return (
+        [e for event_id, e in scorable_by_event_id.items() if event_id in inserted_ids],
+        [d for event_id, d in sub_message_by_event_id.items() if event_id in inserted_ids],
+    )
+
+
 async def sync_football_live_matches(db: Session) -> str:
     if not get_effective_flag(db, "live_polling_enabled", default=settings.LIVE_POLLING_ENABLED):
         return "ok: live polling disabled (LIVE_POLLING_ENABLED=false)"
@@ -803,133 +994,13 @@ async def sync_football_live_matches(db: Session) -> str:
                 raw_events = []
 
         live_key = live_key_for(match)
-        now = datetime.now(timezone.utc)
-        rows: list[dict] = []
-        # Fantasy deltas must only be applied for events not seen in earlier
-        # polls — every poll re-reads the full event list, and
-        # apply_live_points is incremental (hincrbyfloat). Keyed by event_id;
-        # the insert's RETURNING tells us which rows were actually new.
-        scorable_by_event_id: dict[str, LiveEventLike] = {}
-        # Same deal for the LINEUP_CHANGE messages substitutions publish: only
-        # the subs this poll actually inserted, or the pitch re-swaps players
-        # already swapped on every subsequent tick.
-        sub_message_by_event_id: dict[str, dict] = {}
-
-        for raw in raw_events:
-            event_minute = (raw.get("time") or {}).get("elapsed", 0)
-            api_type = str(raw.get("type", ""))
-            detail = str(raw.get("detail", ""))
-            team = raw.get("team", {}) or {}
-            mapped_type = _map_event_type(api_type, detail)
-
-            # Assists ride on the goal event as a sibling `assist` field.
-            # Only on open-play goals: penalties/own goals carry no assist.
-            assist_id = (raw.get("assist") or {}).get("id")
-            if mapped_type == "goal" and detail.strip().lower() == "normal goal" and assist_id:
-                assist_player = _resolve_player(assist_id)
-                if assist_player is not None:
-                    assist_event_id = f"{fixture_id}:{event_minute}:assist:{assist_id}"
-                    rows.append({
-                        "match_id": live_key,
-                        "event_id": assist_event_id,
-                        "sport": "football",
-                        "event_type": "assist",
-                        "player_id": str(assist_player.id),
-                        "team_id": str(team.get("id") or ""),
-                        "value": 0.0,
-                        "meta": {"minute": event_minute, "detail": "Assist", "source": "api-football"},
-                        "ts": now,
-                    })
-                    scorable_by_event_id[assist_event_id] = LiveEventLike(
-                        str(assist_player.id), "assist"
-                    )
-
-            player = raw.get("player", {}) or {}
-            api_player_id = player.get("id")
-
-            # Substitutions: stored under the same contract the feeder pushes
-            # (player_id = the player coming ON, meta.related_player_id = the
-            # one coming OFF), which is what the match centre renders as
-            # "X for Y". The provider's own name for the outgoing player is
-            # kept as a display fallback for when we can't resolve their id.
-            if api_type.strip().lower() == "subst":
-                in_api_id, out_api_id = _subst_ids(raw)
-                player_in = _resolve_player(in_api_id) if in_api_id else None
-                if player_in is None:
-                    continue  # not a player we know about (not drafted/synced)
-                player_out = _resolve_player(out_api_id) if out_api_id else None
-                sub_event_id = f"{fixture_id}:{event_minute}:{api_type}:{out_api_id}:{detail}"
-                sub_message_by_event_id[sub_event_id] = {
-                    "match_id": live_key,
-                    # LineupCard keys and labels by this field, and everything
-                    # else in the match centre identifies clubs by name, so the
-                    # provider's numeric team id would render as a bare number.
-                    "team_id": team.get("name") or "",
-                    "player_in": str(player_in.id),
-                    "player_out": str(player_out.id) if player_out else None,
-                    "player_in_name": player_in.name,
-                    "player_out_name": player_out.name if player_out else player.get("name"),
-                    "minute": event_minute,
-                }
-                rows.append({
-                    "match_id": live_key,
-                    "event_id": sub_event_id,
-                    "sport": "football",
-                    "event_type": "substitution",
-                    "player_id": str(player_in.id),
-                    "team_id": str(team.get("id") or ""),
-                    "value": 0.0,
-                    "meta": {
-                        "minute": event_minute,
-                        "detail": detail,
-                        "source": "api-football",
-                        "related_player_id": str(player_out.id) if player_out else None,
-                        "related_player_name": player.get("name"),
-                    },
-                    "ts": now,
-                })
-                continue
-
-            if api_player_id is None:
-                continue
-
-            sporty_player = _resolve_player(api_player_id)
-            if sporty_player is None:
-                continue  # not a player we know about (not drafted/synced)
-
-            event_id = f"{fixture_id}:{event_minute}:{api_type}:{api_player_id}:{detail}"
-            rows.append({
-                "match_id": live_key,
-                "event_id": event_id,
-                "sport": "football",
-                "event_type": mapped_type or api_type.lower(),
-                "player_id": str(sporty_player.id),
-                "team_id": str(team.get("id") or ""),
-                "value": 0.0,
-                "meta": {"minute": event_minute, "detail": detail, "source": "api-football"},
-                "ts": now,
-            })
-            if mapped_type:
-                scorable_by_event_id[event_id] = LiveEventLike(str(sporty_player.id), mapped_type)
-
-        scorable_events: list[LiveEventLike] = []
-        new_sub_messages: list[dict] = []
-        if rows:
-            statement = (
-                pg_insert(LiveEvent)
-                .values(rows)
-                .on_conflict_do_nothing(index_elements=["match_id", "event_id"])
-                .returning(LiveEvent.event_id)
-            )
-            inserted_ids = {row[0] for row in db.execute(statement)}
-            scorable_events = [
-                event for event_id, event in scorable_by_event_id.items()
-                if event_id in inserted_ids
-            ]
-            new_sub_messages = [
-                data for event_id, data in sub_message_by_event_id.items()
-                if event_id in inserted_ids
-            ]
+        scorable_events, new_sub_messages = upsert_fixture_events(
+            db,
+            live_key=live_key,
+            fixture_id=fixture_id,
+            raw_events=raw_events,
+            resolve_player=_resolve_player,
+        )
 
         match.home_score = goals.get("home")
         match.away_score = goals.get("away")

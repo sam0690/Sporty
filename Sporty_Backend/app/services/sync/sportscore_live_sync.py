@@ -77,6 +77,14 @@ _INCIDENT_TYPE_MAP: dict[str, str] = {
     "penalty saved": "penalty_saved",
 }
 
+# Everything SportScore is CAPABLE of emitting. app/api/routes/match.py merges the
+# two providers by type against this set: SportScore owns every type in here (it
+# ticks every 60s, so its timeline is complete), API-Football owns the rest —
+# today just assists, which SportScore has no incident type for. Derived from the
+# map above rather than written out, so adding an incident type moves the display
+# boundary with it.
+COVERED_EVENT_TYPES = frozenset(_INCIDENT_TYPE_MAP.values())
+
 # How far their reported kickoff may sit from ours before we refuse the payload.
 # This is the guard against their slug ambiguity: ONE slug serves both legs of a
 # season fixture pair, so without a time check we could ingest the reverse

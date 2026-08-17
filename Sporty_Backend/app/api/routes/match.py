@@ -13,8 +13,50 @@ from app.api.deps import (
 )
 from app.match.router import MATCH_TEAM_NAME_ALIASES
 from app.player.models import Player
+from app.services.sync.sportscore_live_sync import COVERED_EVENT_TYPES
 
 router = APIRouter(tags=["Realtime"])
+
+SPORTSCORE_SOURCE = "sportscore"
+
+
+def _select_display_events(event_rows, event_metas):
+    """Pick which of the two providers' rows to SHOW for one match.
+
+    Two providers can hold events for the same football match: API-Football
+    (authoritative, feeds scoring) and SportScore (display-only). Both sets are
+    kept in live_events — their ids are namespaced so they can't collide — and
+    the choice is made HERE, at display time.
+
+    They are merged by TYPE, not by source, because their vocabularies are
+    disjoint: SportScore emits goals/own goals/cards/subs/penalty events every
+    60s, so its timeline is the complete one; API-Football contributes only what
+    SportScore cannot express (assists). Partitioning on type is exact, so no
+    cross-provider dedupe is needed and a goal can never render twice.
+
+    This used to switch wholesale on status — SportScore while live, API-Football
+    once finished — which lost half the timeline at full time. API-Football only
+    writes events from the `live=all` poll, and a finished fixture drops out of
+    that response, so its set ends at the last in-play poll (an hour before the
+    whistle, at worst). Preferring it at FT threw away SportScore's complete
+    timeline in favour of a truncated one. The same switch also hid every assist
+    while a match was in flight.
+    """
+    sources = {meta.get("source") for meta in event_metas}
+    if SPORTSCORE_SOURCE not in sources or len(sources) == 1:
+        # Single-source match (basketball, feeder pushes, fixtures SportScore
+        # never reached) — nothing to choose between.
+        return event_rows, event_metas
+
+    kept = [
+        (event, meta)
+        for event, meta in zip(event_rows, event_metas)
+        if meta.get("source") == SPORTSCORE_SOURCE
+        or event["event_type"] not in COVERED_EVENT_TYPES
+    ]
+    if not kept:
+        return event_rows, event_metas
+    return [event for event, _ in kept], [meta for _, meta in kept]
 
 
 async def _resolve_team_logo_urls(
@@ -240,25 +282,7 @@ async def get_match_state(
     # join the name-resolution batch below alongside every other player id.
     event_metas = [e["meta"] if isinstance(e["meta"], dict) else {} for e in event_rows]
 
-    # Two providers can hold events for the same football match: API-Football
-    # (authoritative, hourly, feeds scoring) and SportScore (display-only, every
-    # 60s). Both sets are kept — their ids are namespaced so they can't collide —
-    # and the choice is made HERE, at display time: SportScore while the match is
-    # in flight, because it's an hour fresher; API-Football once the match is
-    # finished, because that's the set the final stats were booked from. Matches
-    # with only one source (basketball, feeder pushes, anything pre-SportScore)
-    # are untouched by this.
-    sources = {meta.get("source") for meta in event_metas}
-    if "sportscore" in sources and len(sources) > 1:
-        preferred = "api-football" if row["status"] == "finished" else "sportscore"
-        kept = [
-            (event, meta)
-            for event, meta in zip(event_rows, event_metas)
-            if meta.get("source") == preferred
-        ]
-        if kept:
-            event_rows = [event for event, _ in kept]
-            event_metas = [meta for _, meta in kept]
+    event_rows, event_metas = _select_display_events(event_rows, event_metas)
 
     # Resolve every player UUID seen (events + point hashes + lineups) to a name.
     player_ids = {e["player_id"] for e in event_rows if e["player_id"]}
