@@ -160,6 +160,12 @@ async def sync_basketball_games(db: Session, season: int | None = None) -> dict:
             logger.error("No active basketball season in the database — create one first")
             return stats
 
+        # Conference/division come with the fixtures rather than from a separate
+        # one-off: standings group on them, so a fresh environment that only ever
+        # runs this sync must not end up with 30 unclassified teams. One free
+        # request, and it commits itself before the rollback below.
+        await sync_basketball_team_meta(db)
+
         # Release the connection before the fetch. get_all_games paginates a
         # full season with a 12.5s sleep between pages — several MINUTES during
         # which a held connection sits idle and gets closed server-side (Neon
