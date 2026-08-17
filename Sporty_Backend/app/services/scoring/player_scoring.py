@@ -7,6 +7,7 @@ import uuid
 from decimal import Decimal
 
 from sqlalchemy import Numeric, cast, func, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
@@ -189,37 +190,67 @@ FOOTBALL_ROLLUP_FIELDS = (
 )
 
 
-def _upsert_football_rollup(db: Session, *, player_id, transfer_window_id, agg) -> None:
-    """Write one player's gameweek rollup: PlayerGameweekStat + its FootballStat
-    child, from the summed match aggregate. Assignment, not +=, so re-running
-    the rollup converges."""
-    stat = (
-        db.query(PlayerGameweekStat)
-        .filter(
-            PlayerGameweekStat.player_id == player_id,
-            PlayerGameweekStat.transfer_window_id == transfer_window_id,
-        )
-        .first()
-    )
-    if stat is None:
-        stat = PlayerGameweekStat(
-            player_id=player_id, transfer_window_id=transfer_window_id
-        )
-        db.add(stat)
-        db.flush()
-    stat.minutes_played = agg.minutes
-    stat.fantasy_points = agg.total
-    stat.breakdown = agg.breakdown
+def _upsert_football_rollups(db: Session, *, transfer_window_id, aggs: dict) -> None:
+    """Write the window's gameweek rollups: PlayerGameweekStat + its FootballStat
+    child, from the summed match aggregates. Assignment, not +=, so re-running
+    the rollup converges.
 
-    child = db.query(FootballStat).filter(FootballStat.base_stat_id == stat.id).first()
-    if child is None:
-        child = FootballStat(base_stat_id=stat.id)
-        db.add(child)
-    for field in FOOTBALL_ROLLUP_FIELDS:
-        setattr(child, field, max(0, int(agg.stats.get(field, 0) or 0)))
-    if agg.stats.get("rating") is not None:
-        child.rating = agg.stats["rating"]
-    db.flush()
+    Two statements for the whole window, not four per player: a full window is
+    ~400 players, and per-player round trips took the write (304s observed) far
+    past any lock TTL that was supposed to protect it.
+
+    ON CONFLICT, not read-then-insert: whenever a second scorer does get in —
+    the sweep and the match-finish trigger hold different task locks — the
+    unique constraints arbitrate instead of raising uq_player_gameweek_stat.
+    """
+    if not aggs:
+        return
+
+    base_rows = [
+        {
+            "id": uuid.uuid4(),
+            "player_id": player_id,
+            "transfer_window_id": transfer_window_id,
+            "minutes_played": agg.minutes,
+            "fantasy_points": agg.total,
+            "breakdown": agg.breakdown,
+        }
+        for player_id, agg in aggs.items()
+    ]
+    base_stmt = pg_insert(PlayerGameweekStat).values(base_rows)
+    stat_ids = db.execute(
+        base_stmt.on_conflict_do_update(
+            index_elements=["player_id", "transfer_window_id"],
+            set_={
+                col: base_stmt.excluded[col]
+                for col in ("minutes_played", "fantasy_points", "breakdown")
+            },
+        ).returning(PlayerGameweekStat.player_id, PlayerGameweekStat.id)
+    ).all()
+
+    child_rows = [
+        {
+            "id": uuid.uuid4(),
+            "base_stat_id": stat_id,
+            "rating": aggs[player_id].stats.get("rating"),
+            **{
+                field: max(0, int(aggs[player_id].stats.get(field, 0) or 0))
+                for field in FOOTBALL_ROLLUP_FIELDS
+            },
+        }
+        for player_id, stat_id in stat_ids
+    ]
+    child_stmt = pg_insert(FootballStat).values(child_rows)
+    db.execute(
+        child_stmt.on_conflict_do_update(
+            index_elements=["base_stat_id"],
+            set_={
+                **{field: child_stmt.excluded[field] for field in FOOTBALL_ROLLUP_FIELDS},
+                # a window whose matches carry no rating must not wipe the old one
+                "rating": func.coalesce(child_stmt.excluded.rating, FootballStat.rating),
+            },
+        )
+    )
 
 
 def score_football_players_for_window(
@@ -267,18 +298,18 @@ def score_football_players_for_window(
             .all()
         )
 
-        def _write_rollups():
-            for player_id, agg in match_agg.items():
-                if player_sports.get(player_id) != sport_id:
-                    continue
-                _upsert_football_rollup(
-                    db, player_id=player_id,
-                    transfer_window_id=transfer_window_id, agg=agg,
-                )
-                scored_players.add(player_id)
+        aggs = {
+            player_id: agg
+            for player_id, agg in match_agg.items()
+            if player_sports.get(player_id) == sport_id
+        }
+        scored_players = set(aggs)
 
         _run_window_write(
-            db, _write_rollups,
+            db,
+            lambda: _upsert_football_rollups(
+                db, transfer_window_id=transfer_window_id, aggs=aggs,
+            ),
             sport_id=sport_id, transfer_window_id=transfer_window_id,
         )
 
