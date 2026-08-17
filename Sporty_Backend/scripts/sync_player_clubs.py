@@ -31,6 +31,11 @@ disagree constantly about outfield roles).
   * in NO squad                              -> FLAGGED for review, not
     deactivated — see ABSENCE_IS_WEAK_EVIDENCE. `--deactivate-missing` opts in.
   * no numeric external_api_id               -> FLAGGED, never touched
+  * in a squad, no player row of ours at all -> CREATED with --create-missing
+    (at DEFAULT_COST, is_available=True). Absence from OUR table is strong
+    evidence, unlike absence from the feed, so this is safe in a way
+    --deactivate-missing is not. Skipped when the club-scoped name is already
+    taken: that is id drift, not a new player.
 
 Flagged players are actioned by hand in /admin/players, which can now set both
 club and availability (app/admin/services.py::edit_player).
@@ -57,6 +62,7 @@ import sys
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from decimal import Decimal
 from pathlib import Path
 
 project_root = Path(__file__).parent.parent
@@ -156,10 +162,25 @@ class ClubRef:
 
 @dataclass(frozen=True)
 class SquadEntry:
-    """Where the feed says a player currently plays."""
+    """Where the feed says a player currently plays.
+
+    name/position carry the feed's own values so --create-missing can build a
+    Player row from the squad response without a second request per player.
+    """
     club_name: str
     club_id: uuid.UUID
     competition: str
+    name: str = ""
+    position: str = ""
+    photo: str | None = None
+
+
+# Squad responses spell positions out; the pool stores the four-letter codes.
+SQUAD_POSITIONS = {
+    "Goalkeeper": "GKP", "Defender": "DEF", "Midfielder": "MID", "Attacker": "FWD",
+}
+# New players enter at the pool minimum, same as every other seeder here.
+DEFAULT_COST = Decimal("4.0")
 
 
 @dataclass
@@ -289,6 +310,29 @@ def reconcile(
     return decisions
 
 
+def select_missing(
+    squad_map: dict[str, SquadEntry],
+    known_ids: set[str | None],
+    taken_names: dict[tuple[str, uuid.UUID], uuid.UUID],
+) -> list[tuple[str, SquadEntry]]:
+    """Squad members we hold no player row for at all.
+
+    Two guards, both mirroring scripts/seed_players_from_match_sheets.py:
+      * an id we already store ANYWHERE — the player exists, possibly at another
+        club, and moving them is reconcile's job, not ours;
+      * a club-scoped name that is already taken — that is provider id drift,
+        and creating here would duplicate a pickable player and collide with
+        uq_players_identity.
+    """
+    return [
+        (external, entry)
+        for external, entry in sorted(squad_map.items(), key=lambda kv: kv[1].name)
+        if external not in known_ids
+        and entry.name
+        and (fold(entry.name), entry.club_id) not in taken_names
+    ]
+
+
 async def _paced(client: FootballAPIClient, coro_factory, first: bool = False):
     if not first:
         await asyncio.sleep(REQUEST_INTERVAL_SECONDS)
@@ -360,7 +404,12 @@ async def fetch_squads(
         for member in members:
             member_id = member.get("id")
             if member_id is not None:
-                squad_map[str(member_id)] = SquadEntry(club.name, club.id, club.competition)
+                squad_map[str(member_id)] = SquadEntry(
+                    club.name, club.id, club.competition,
+                    name=member.get("name") or "",
+                    position=SQUAD_POSITIONS.get(str(member.get("position")), "MID"),
+                    photo=member.get("photo"),
+                )
         print(f"  {club.competition:11} {club.name:28} {len(members):>3} players")
 
     return squad_map, squad_sizes
@@ -388,6 +437,21 @@ def main() -> int:
         help="Run even when the projected spend eats into the match-day reserve.",
     )
     parser.add_argument(
+        "--create-missing",
+        action="store_true",
+        help="Create pool entries for squad members we have no player row for. "
+             "Absence from OUR table is strong evidence (unlike absence from the "
+             "feed), so this is safe in a way --deactivate-missing is not.",
+    )
+    parser.add_argument(
+        "--competition",
+        action="append",
+        metavar="TAG",
+        help="Limit to these competition tags (e.g. --competition LALIGA). "
+             "Repeatable. Default: all. One competition costs ~21 requests "
+             "instead of ~61, which is what makes a match-day run possible.",
+    )
+    parser.add_argument(
         "--interval",
         type=float,
         default=REQUEST_INTERVAL_SECONDS,
@@ -399,6 +463,18 @@ def main() -> int:
     REQUEST_INTERVAL_SECONDS = args.interval
 
     tags = {c.tag for c in fantasy_competitions().values()}
+    if args.competition:
+        wanted = {t.strip().upper() for t in args.competition}
+        unknown = wanted - tags
+        if unknown:
+            raise SystemExit(
+                f"Unknown competition tag(s): {', '.join(sorted(unknown))}. "
+                f"Known: {', '.join(sorted(tags))}"
+            )
+        tags = wanted
+        # resolve_team_ids still costs its 3 league lookups: the club->id map is
+        # built from all three team lists regardless of which clubs we keep.
+        print(f"competition filter: {', '.join(sorted(tags))}")
 
     # Phase 1 — read the club list, then let the connection go. Everything
     # below the feed call must not depend on this session.
@@ -464,6 +540,13 @@ def main() -> int:
             ).filter(Player.sport_id == sport_id)
         }
 
+        # Computed BEFORE reconcile, which pops from `occupied` as it transfers.
+        known_ids = {
+            external for (external,) in db.query(Player.external_api_id)
+            .filter(Player.sport_id == sport_id, Player.external_api_id.isnot(None))
+        }
+        missing = select_missing(squad_map, known_ids, dict(occupied))
+
         decisions = reconcile(
             players, squad_map, squad_sizes, occupied,
             deactivate_missing=args.deactivate_missing,
@@ -482,6 +565,24 @@ def main() -> int:
                 outcome = decision.outcome()
                 arrow = f" -> {outcome}" if outcome else ""
                 print(f"  {decision.player_name}: {decision.old_club}{arrow}{suffix}")
+
+        label = "CREATE" if args.create_missing else "CREATE (not requested)"
+        print(f"\n=== {label} ({len(missing)}) ===")
+        for external, entry in missing:
+            print(f"  {entry.name} ({entry.club_name}, {entry.position}, id {external})")
+        if missing and not args.create_missing:
+            print("  pass --create-missing to add these to the pool")
+
+        if args.create_missing:
+            for external, entry in missing:
+                club = clubs_by_id[entry.club_id]
+                db.add(Player(
+                    sport_id=sport_id, external_api_id=external, name=entry.name,
+                    position=entry.position, real_team=club.name, real_team_id=club.id,
+                    real_team_logo_url=club.logo_url, photo_url=entry.photo,
+                    cost=DEFAULT_COST, is_available=True,
+                ))
+            db.flush()
 
         for decision in decisions:
             player = by_id[decision.player_id]
@@ -504,8 +605,16 @@ def main() -> int:
         out_path.write_text(json.dumps({
             "generated_at": stamp,
             "applied": bool(args.apply),
-            "counts": {action: len(rows) for action, rows in buckets.items()},
+            "counts": {
+                **{action: len(rows) for action, rows in buckets.items()},
+                "create": len(missing) if args.create_missing else 0,
+            },
             "changes": [d.as_log() for d in decisions],
+            "created": [
+                {"external_api_id": e, "name": s.name, "club": s.club_name,
+                 "position": s.position, "competition": s.competition}
+                for e, s in missing
+            ] if args.create_missing else [],
         }, indent=2, ensure_ascii=False))
         print(f"\nChange log: {out_path}")
 

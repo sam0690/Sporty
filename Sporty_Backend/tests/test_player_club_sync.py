@@ -9,7 +9,13 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from scripts.sync_player_clubs import Decision, SquadEntry, fold, reconcile
+from scripts.sync_player_clubs import (
+    Decision,
+    SquadEntry,
+    fold,
+    reconcile,
+    select_missing,
+)
 
 ARSENAL = uuid.uuid4()
 CHELSEA = uuid.uuid4()
@@ -144,3 +150,34 @@ def test_two_same_named_players_moving_to_one_club_only_lets_the_first_through()
         {},
     )
     assert [d.action for d in decisions] == ["transfer", "flag"]
+
+
+# ── select_missing (the --create-missing candidate set) ──────────────────────
+
+
+def squad(name, club_id, club_name="Arsenal", position="MID"):
+    return SquadEntry(club_name, club_id, "EPL", name=name, position=position)
+
+
+def test_select_missing_picks_only_ids_we_do_not_hold():
+    squad_map = {"1": squad("Bukayo Saka", ARSENAL), "2": squad("New Kid", ARSENAL)}
+    missing = select_missing(squad_map, known_ids={"1"}, taken_names={})
+    assert [external for external, _ in missing] == ["2"]
+
+
+def test_select_missing_skips_id_drift():
+    """Same player, different provider id — creating would duplicate them."""
+    squad_map = {"99": squad("Bukayo Saka", ARSENAL)}
+    taken = {(fold("Bukayo  SAKA"), ARSENAL): uuid.uuid4()}
+    assert select_missing(squad_map, known_ids=set(), taken_names=taken) == []
+
+
+def test_select_missing_allows_same_name_at_a_different_club():
+    squad_map = {"99": squad("Danny Ward", CHELSEA, club_name="Chelsea")}
+    taken = {(fold("Danny Ward"), ARSENAL): uuid.uuid4()}
+    missing = select_missing(squad_map, known_ids=set(), taken_names=taken)
+    assert [external for external, _ in missing] == ["99"]
+
+
+def test_select_missing_skips_nameless_entries():
+    assert select_missing({"5": squad("", ARSENAL)}, known_ids=set(), taken_names={}) == []
