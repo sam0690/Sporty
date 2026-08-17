@@ -120,11 +120,15 @@ function Stats({ ratings }: { ratings: MatchRatings | null }) {
     );
   }
 
+  // Match stats leads at full width: five groups of bars is far too tall to sit
+  // in a half column beside Ratings, and the bars need the width to be read.
   return (
-    <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+    <div className="space-y-6">
       <TeamStatsCard />
-      <RatingsCard ratings={ratings} />
-      <LiveLeaderboard />
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <RatingsCard ratings={ratings} />
+        <LiveLeaderboard />
+      </div>
     </div>
   );
 }
