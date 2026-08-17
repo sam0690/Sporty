@@ -196,14 +196,17 @@ describe("visibleGroups", () => {
       "Discipline",
     ]);
 
-    const shown = new Set(groups.flatMap((g) => g.rows.map((r) => r.key)));
+    const keys = groups.flatMap((g) => g.rows.map((r) => r.key));
     for (const key of Object.keys(teamStats.home)) {
       // Red Cards is null on both sides here, so it correctly drops out.
       if (key === "Red Cards") continue;
-      expect(shown.has(key), `${key} should be displayed`).toBe(true);
+      expect(keys, `${key} should be displayed`).toContain(key);
     }
-    // Defence exists only because we derived it.
+    // No key may appear twice — a repeated row reads as a rendering bug.
+    expect(new Set(keys).size).toBe(keys.length);
+    // Defence is provider saves plus what we derived.
     expect(groups.find((g) => g.title === "Defence")?.rows.map((r) => r.key)).toEqual([
+      "Goalkeeper Saves",
       "tackles",
     ]);
   });

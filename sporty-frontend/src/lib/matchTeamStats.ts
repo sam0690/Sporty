@@ -18,6 +18,9 @@ export type StatRow = {
 export type StatGroup = {
   title: string;
   rows: StatRow[];
+  /** Rendered larger and without a visible header — the two numbers that carry
+   *  the match. `title` still names the section for screen readers. */
+  headline?: boolean;
 };
 
 /** Team totals we sum ourselves from the per-player sheet. `team_stats` carries
@@ -34,19 +37,21 @@ export const DERIVED_KEYS = [
  *  API-Football's own `type` strings, verbatim from the stat sheet, except the
  *  DERIVED_KEYS in Defence.
  *
- *  Possession, shots and pass accuracy repeat in Top stats on purpose: it is
- *  the headline, and the group below is the detail view of the same number.
+ *  Every key appears EXACTLY ONCE. An earlier cut repeated total shots and pass
+ *  accuracy in a "Top stats" block the way FotMob does, but FotMob's summary is
+ *  a visually separate card; stacked in one panel the repeat just reads as a
+ *  rendering bug. The headline group carries the two numbers that genuinely
+ *  summarise a match instead.
+ *
  *  `goals_prevented` is deliberately absent — the provider reports an identical
  *  value for both sides, so it isn't a per-team figure. */
 export const STAT_GROUPS: readonly StatGroup[] = [
   {
     title: "Top stats",
+    headline: true,
     rows: [
       { key: "Ball Possession", label: "Possession" },
       { key: "expected_goals", label: "Expected goals" },
-      { key: "Total Shots", label: "Total shots" },
-      { key: "Passes %", label: "Pass accuracy" },
-      { key: "Goalkeeper Saves", label: "Saves" },
     ],
   },
   {
@@ -72,6 +77,7 @@ export const STAT_GROUPS: readonly StatGroup[] = [
   {
     title: "Defence",
     rows: [
+      { key: "Goalkeeper Saves", label: "Saves" },
       { key: "tackles", label: "Tackles" },
       { key: "interceptions", label: "Interceptions" },
       { key: "clearances", label: "Clearances" },
@@ -207,9 +213,10 @@ export function buildStatLookup(
 }
 
 /** Drop rows neither side reported, then drop groups left with no rows. */
-export function visibleGroups(
-  lookup: { home: Record<string, StatValue>; away: Record<string, StatValue> },
-): StatGroup[] {
+export function visibleGroups(lookup: {
+  home: Record<string, StatValue>;
+  away: Record<string, StatValue>;
+}): StatGroup[] {
   return STAT_GROUPS.map((group) => ({
     ...group,
     rows: group.rows.filter(
