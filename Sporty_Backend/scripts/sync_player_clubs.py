@@ -20,10 +20,11 @@ stands today. That is exactly what transfer reconciliation needs.
 
 WHAT IT WRITES
 --------------
-Club assignment and availability only — `real_team`, `real_team_id`,
-`real_team_logo_url`, `is_available`. Prices stay owned by
-app/services/pricing/repricing.py and positions are left alone (the providers
-disagree constantly about outfield roles).
+Club assignment and availability — `real_team`, `real_team_id`,
+`real_team_logo_url`, `is_available` — plus `jersey_number` and a `photo_url`
+for players that have none, both of which come free in the squad payload.
+Prices stay owned by app/services/pricing/repricing.py and positions are left
+alone (the providers disagree constantly about outfield roles).
 
   * in one of the 58 squads, different club  -> transfer (cross-league moves
     included: the squad map spans all three competitions at once)
@@ -77,6 +78,7 @@ from app.league.models import Sport
 from app.player import read_cache as player_read_cache
 from app.player.models import Player, RealTeam
 from app.services.sync.football_competitions import fantasy_competitions
+from app.services.sync.name_matching import Candidate, NameIndex
 
 # API-Football allows 10 requests/minute on the free plan and the client raises
 # FootballQuotaExhausted rather than backing off, so pace the calls ourselves.
@@ -166,6 +168,10 @@ class SquadEntry:
 
     name/position carry the feed's own values so --create-missing can build a
     Player row from the squad response without a second request per player.
+    `number` rides along for the same reason: it is the current shirt number,
+    free in a response we already pay for. The alternative source
+    (scripts/backfill_jersey_numbers.py) costs ~1265 football-data.org requests
+    over two hours and can return numbers from an old season.
     """
     club_name: str
     club_id: uuid.UUID
@@ -173,6 +179,7 @@ class SquadEntry:
     name: str = ""
     position: str = ""
     photo: str | None = None
+    number: int | None = None
 
 
 # Squad responses spell positions out; the pool stores the four-letter codes.
@@ -314,15 +321,35 @@ def select_missing(
     squad_map: dict[str, SquadEntry],
     known_ids: set[str | None],
     taken_names: dict[tuple[str, uuid.UUID], uuid.UUID],
+    name_index: dict[uuid.UUID, NameIndex] | None = None,
 ) -> list[tuple[str, SquadEntry]]:
     """Squad members we hold no player row for at all.
 
-    Two guards, both mirroring scripts/seed_players_from_match_sheets.py:
+    Three guards, the first two mirroring
+    scripts/seed_players_from_match_sheets.py:
       * an id we already store ANYWHERE — the player exists, possibly at another
         club, and moving them is reconcile's job, not ours;
       * a club-scoped name that is already taken — that is provider id drift,
         and creating here would duplicate a pickable player and collide with
-        uq_players_identity.
+        uq_players_identity;
+      * a FUZZY name match WITHIN THE SAME CLUB. `fold` mirrors
+        uq_players_identity exactly, which means it does not see "F. Schär" and
+        "Fabian Schär" as the same person — and on 2026-08-18 that let one run
+        create 11 duplicates of players already in the pool under a slug id,
+        every one of them pickable. The database index cannot catch these, so
+        the same matcher scripts/merge_duplicate_players.py uses to find them
+        afterwards is used here to prevent them.
+
+    `name_index` is one index PER CLUB rather than one for the pool, because
+    NameIndex uses club only as a tie-breaker and would otherwise happily match
+    "D. Ward" joining Chelsea to a "Danny Ward" at Arsenal — blocking a real
+    signing. Scoping to the club keeps the guard on the case it exists for.
+
+    Within a club the guard can still refuse a genuinely new player who shares
+    a surname and initial with a team-mate. That is the cheaper mistake by a
+    wide margin: the player is simply not created and shows up in the CREATE
+    list of the next run, whereas a duplicate is immediately selectable in
+    every league.
     """
     return [
         (external, entry)
@@ -330,7 +357,17 @@ def select_missing(
         if external not in known_ids
         and entry.name
         and (fold(entry.name), entry.club_id) not in taken_names
+        and _no_fuzzy_twin(entry, name_index)
     ]
+
+
+def _no_fuzzy_twin(
+    entry: SquadEntry, name_index: dict[uuid.UUID, NameIndex] | None
+) -> bool:
+    if name_index is None:
+        return True
+    index = name_index.get(entry.club_id)
+    return index is None or index.match(entry.name, club=entry.club_name) is None
 
 
 async def _paced(client: FootballAPIClient, coro_factory, first: bool = False):
@@ -409,6 +446,7 @@ async def fetch_squads(
                     name=member.get("name") or "",
                     position=SQUAD_POSITIONS.get(str(member.get("position")), "MID"),
                     photo=member.get("photo"),
+                    number=member.get("number"),
                 )
         print(f"  {club.competition:11} {club.name:28} {len(members):>3} players")
 
@@ -545,7 +583,19 @@ def main() -> int:
             external for (external,) in db.query(Player.external_api_id)
             .filter(Player.sport_id == sport_id, Player.external_api_id.isnot(None))
         }
-        missing = select_missing(squad_map, known_ids, dict(occupied))
+        # Fuzzy duplicate guard — built from our own pool, matched against the
+        # feed's spelling of the same person.
+        by_club: dict[uuid.UUID, list[Player]] = {}
+        for player in players:
+            by_club.setdefault(player.real_team_id, []).append(player)
+        name_index = {
+            club_id: NameIndex.build(
+                Candidate.from_full_name(p.name, club=p.real_team, payload=p.id)
+                for p in members
+            )
+            for club_id, members in by_club.items()
+        }
+        missing = select_missing(squad_map, known_ids, dict(occupied), name_index)
 
         decisions = reconcile(
             players, squad_map, squad_sizes, occupied,
@@ -580,6 +630,7 @@ def main() -> int:
                     sport_id=sport_id, external_api_id=external, name=entry.name,
                     position=entry.position, real_team=club.name, real_team_id=club.id,
                     real_team_logo_url=club.logo_url, photo_url=entry.photo,
+                    jersey_number=entry.number,
                     cost=DEFAULT_COST, is_available=True,
                 ))
             db.flush()
@@ -599,6 +650,22 @@ def main() -> int:
                 player.is_available = False
             elif decision.action == "reactivate":
                 player.is_available = True
+
+        # Shirt numbers, from the squad payload we already fetched. Numbers do
+        # change between seasons, so the feed always wins here — unlike photos,
+        # which are only filled when missing so a hand-curated one survives.
+        numbered = photographed = 0
+        for player in players:
+            entry = squad_map.get(player.external_api_id or "")
+            if entry is None:
+                continue
+            if entry.number is not None and player.jersey_number != entry.number:
+                player.jersey_number = entry.number
+                numbered += 1
+            if entry.photo and not player.photo_url:
+                player.photo_url = entry.photo
+                photographed += 1
+        print(f"\n=== BIO ===\n  jersey_number: {numbered}   photo_url: {photographed}")
 
         stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         out_path = Path(args.out or f"player_club_changes_{stamp}.json")

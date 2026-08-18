@@ -50,12 +50,19 @@ sys.path.insert(0, str(project_root))
 
 import app.main  # noqa: F401 — registers all model modules so relationships resolve
 
+from decimal import Decimal
+
 from sqlalchemy import text
 
 from app.database import SessionLocal
 from app.league.models import Sport
 from app.player.models import Player, RealTeam
 from app.services.sync.name_matching import Candidate, NameIndex, normalize
+
+# The pool minimum every seeder enters a new player at, so it also means
+# "never actually priced". A survivor sitting on it is not a curated price
+# worth defending — see _price_to_adopt.
+POOL_FLOOR = Decimal("4.0")
 
 # Child tables with a UNIQUE constraint that includes the player column:
 # rows that would collide with the survivor are deleted, then the rest are
@@ -107,6 +114,13 @@ EXPLICIT_PAIRS = [
         "Matt O'Riley",
     ),
     ("football:jamie_gittens:chelsea:mid", "286894", "Jamie Bynoe-Gittens"),
+    # Transliteration, not spelling: "Yarmoliuk" and "Yarmolyuk" normalize to
+    # DIFFERENT surnames, so they never land in the same NameIndex bucket and
+    # no amount of loosening the given-name comparison reaches them. Found
+    # 2026-08-18 by comparing surnames within a club with difflib; it was the
+    # only such pair in the pool. Corroboration: same club, both MID, both
+    # active. Brentford spell him "Yarmoliuk".
+    ("football:yehor_yarmoliuk:brentford:mid", "263538", "Yehor Yarmoliuk"),
     ("football:jake_o_brien:everton:def", "270139", "Jake O'Brien"),
     ("football:nico_o_reilly:manchester_city:def", "307123", "Nico O'Reilly"),
     ("football:luke_o_nien:sunderland:def", "19911", "Luke O'Nien"),
@@ -117,6 +131,25 @@ EXPLICIT_PAIRS = [
         "Idrissa Gana Gueye",
     ),
 ]
+
+
+def _price_to_adopt(dup: Player, keep: Player) -> Decimal | None:
+    """The dup's cost, when the survivor has none worth keeping.
+
+    Survivors here are rows the squad feed created at POOL_FLOOR; the dup is
+    usually the older, priced row (Nketiah 10.77, Palhinha 17.00). Merging
+    without this flattens those to 4.00 permanently — repricing is a
+    form-based nudge that SKIPS players with no gameweek stats, so nothing
+    would ever put them back.
+
+    Returns None when the survivor is already priced, so a curated value is
+    never overwritten by a stale one.
+    """
+    if keep.cost is None or keep.cost > POOL_FLOOR:
+        return None
+    if dup.cost is None or dup.cost <= POOL_FLOOR:
+        return None
+    return dup.cost
 
 
 def _is_keeper(position: str | None) -> bool:
@@ -179,6 +212,9 @@ def main() -> int:
             )
             if canonical != keep.name:
                 print(f"       rename survivor -> {canonical!r}")
+            adopted = _price_to_adopt(dup, keep)
+            if adopted is not None:
+                print(f"       adopt cost -> {adopted}")
 
         by_external = {p.external_api_id: p for p, _ in rows}
         for dup_ext, keep_ext, canonical in EXPLICIT_PAIRS:
@@ -190,6 +226,9 @@ def main() -> int:
             print(f"  KEEP {keep.name:<26} {keep.real_team:<20} (explicit) cost={keep.cost}")
             if canonical != keep.name:
                 print(f"       rename survivor -> {canonical!r}")
+            adopted = _price_to_adopt(dup, keep)
+            if adopted is not None:
+                print(f"       adopt cost -> {adopted}")
 
         if not pairs:
             print("\nNo duplicates found.")
@@ -220,6 +259,18 @@ def main() -> int:
             return 0
 
         mapping = [{"dup": d.id, "keep": k.id} for d, k, _ in pairs]
+
+        # Before the delete, while the dup row is still around to read. A
+        # survivor with two dups (both Nketiah rows) takes the LAST adoption in
+        # pair order; they are the same person, so any of their prices beats
+        # the floor.
+        for dup, keep, _canonical in pairs:
+            adopted = _price_to_adopt(dup, keep)
+            if adopted is not None:
+                db.execute(
+                    text("UPDATE players SET cost = :cost WHERE id = :id"),
+                    {"cost": adopted, "id": keep.id},
+                )
 
         for table, column, extra in COLLISION_GUARDED:
             match_extra = " AND ".join(

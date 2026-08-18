@@ -9,6 +9,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from app.services.sync.name_matching import Candidate, NameIndex
 from scripts.sync_player_clubs import (
     Decision,
     SquadEntry,
@@ -181,3 +182,55 @@ def test_select_missing_allows_same_name_at_a_different_club():
 
 def test_select_missing_skips_nameless_entries():
     assert select_missing({"5": squad("", ARSENAL)}, known_ids=set(), taken_names={}) == []
+
+
+# ── the fuzzy duplicate guard ────────────────────────────────────────────────
+#
+# Added after a --create-missing run on 2026-08-18 created 11 duplicates of
+# players already in the pool under a slug id: `fold` mirrors
+# uq_players_identity exactly, so it cannot see "F. Schär" and "Fabian Schär"
+# as one person.
+
+
+def name_index(*players):
+    """Per-club NameIndexes over our own pool, the way sync_player_clubs builds
+    them. `players` are (name, club_name, club_id) triples."""
+    by_club = {}
+    for name, club_name, club_id in players:
+        by_club.setdefault(club_id, []).append((name, club_name))
+    return {
+        club_id: NameIndex.build(
+            Candidate.from_full_name(n, club=c, payload=uuid.uuid4()) for n, c in members
+        )
+        for club_id, members in by_club.items()
+    }
+
+
+def test_select_missing_skips_the_abbreviated_form_of_a_player_we_hold():
+    squad_map = {"2806": squad("F. Schär", ARSENAL)}
+    index = name_index(("Fabian Schär", "Arsenal", ARSENAL))
+    assert select_missing(squad_map, set(), {}, index) == []
+
+
+def test_select_missing_skips_an_accent_only_difference():
+    squad_map = {"153066": squad("Fábio Carvalho", ARSENAL)}
+    index = name_index(("Fabio Carvalho", "Arsenal", ARSENAL))
+    assert select_missing(squad_map, set(), {}, index) == []
+
+
+def test_select_missing_still_creates_a_genuinely_new_player():
+    squad_map = {"777": squad("Ethan Nwaneri", ARSENAL)}
+    index = name_index(("Fabian Schär", "Arsenal", ARSENAL))
+    assert [e for e, _ in select_missing(squad_map, set(), {}, index)] == ["777"]
+
+
+def test_fuzzy_guard_does_not_block_a_same_name_player_at_another_club():
+    """The guard is club-scoped, so a real signing is not mistaken for a dupe."""
+    squad_map = {"99": squad("D. Ward", CHELSEA, club_name="Chelsea")}
+    index = name_index(("Danny Ward", "Arsenal", ARSENAL))
+    assert [e for e, _ in select_missing(squad_map, set(), {}, index)] == ["99"]
+
+
+def test_select_missing_without_an_index_keeps_the_old_behaviour():
+    squad_map = {"2806": squad("F. Schär", ARSENAL)}
+    assert [e for e, _ in select_missing(squad_map, set(), {})] == ["2806"]
