@@ -129,6 +129,16 @@ class Player(Base):
     name: Mapped[str] = mapped_column(String(150), nullable=False)
     photo_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    # FPL element `code` (NOT `id`) — the key in Fantasy Premier League's
+    # official studio-headshot URL:
+    #   resources.premierleague.com/premierleague/photos/players/250x250/p{code}.png
+    # Populated once by scripts/refresh_player_photos.py --match-fpl, which
+    # name-matches against bootstrap-static; every later run is a pure id
+    # lookup, so a transfer or a re-spelled name can't silently re-point a
+    # photo at the wrong person. NULL for non-EPL players (FPL lists no one
+    # outside the Premier League) and for EPL players FPL doesn't carry.
+    fpl_code: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+
     # Denormalised copy of real_team_ref.logo_url — same tradeoff as the
     # `real_team` string above: avoids joinedload(Player.real_team_ref) at
     # every one of the ~10 existing query sites that already eager-load

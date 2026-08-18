@@ -79,12 +79,17 @@ def upload_avatar(user_id: uuid.UUID, file: UploadFile, contents: bytes) -> str:
 def upload_player_photo(player_id: uuid.UUID, contents: bytes, content_type: str, extension: str) -> str:
     """Upload a player photo to R2 and return its public URL.
 
-    Photos are effectively static once set, so cache them aggressively
-    instead of cache-busting on every read.
+    The key is derived from the player id, so re-uploading REPLACES the object
+    rather than adding a second one. That makes the long Cache-Control a trap:
+    a replaced photo would keep serving from browser and edge caches for a
+    year. The URL therefore carries a version param, exactly as upload_avatar
+    does — the bytes stay immutable, the pointer moves. Callers must persist
+    the returned URL (not reconstruct the key) for the new photo to be seen.
     """
     key = f"player-photos/{player_id}.{extension}"
     try:
-        return _put_object(key, contents, content_type, cache_control="public, max-age=31536000, immutable")
+        url = _put_object(key, contents, content_type, cache_control="public, max-age=31536000, immutable")
+        return f"{url}?v={int(time.time())}"
     except HTTPException:
         raise
     except Exception:
