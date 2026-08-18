@@ -72,6 +72,7 @@ from app.services.media.photo_quality import (
     HEADER_BYTES,
     MISSING,
     OK,
+    UNREACHABLE,
     classify,
     is_acceptable,
 )
@@ -139,7 +140,7 @@ SPORTSDB_CLUB_QUERY_OVERRIDES = {
 # TheSportsDB's free tier is unmetered but fragile under bursts; the audit
 # fetches only 2KB per image from R2 and can go wide, the provider calls stay
 # sequential.
-AUDIT_CONCURRENCY = 24
+AUDIT_CONCURRENCY = 8
 SPORTSDB_DELAY_SECONDS = 1.1
 MAX_RETRY_DELAY_SECONDS = 8.0
 
@@ -148,21 +149,34 @@ MAX_RETRY_DELAY_SECONDS = 8.0
 # Audit
 # --------------------------------------------------------------------------
 
-async def _probe(client: httpx.AsyncClient, url: str | None) -> tuple[bytes | None, int]:
-    """Fetch just enough of an image to grade it: header bytes + total size."""
-    if not url:
-        return None, 0
-    try:
-        response = await client.get(url, headers={"Range": f"bytes=0-{HEADER_BYTES - 1}"}, timeout=30)
-        if response.status_code >= 400:
-            return None, 0
-        # 206 reports the full size in Content-Range; a server that ignored the
-        # Range header sent everything, so len() is the true size.
-        content_range = response.headers.get("content-range", "")
-        total = int(content_range.rsplit("/", 1)[-1]) if "/" in content_range else len(response.content)
-        return response.content, total
-    except (httpx.HTTPError, ValueError):
-        return None, 0
+async def _probe(client: httpx.AsyncClient, url: str) -> tuple[bytes, int] | None:
+    """Fetch just enough of an image to grade it, or None if unreadable.
+
+    Retries once: probing runs wide, and immediately after a bulk upload the
+    CDN will refuse a burst. A blip here used to be indistinguishable from
+    "this player has no photo", which silently turned 117 good photos into a
+    reported data loss.
+    """
+    for attempt in range(2):
+        try:
+            response = await client.get(
+                url, headers={"Range": f"bytes=0-{HEADER_BYTES - 1}"}, timeout=30
+            )
+            if response.status_code < 400:
+                # 206 reports the full size in Content-Range; a server that
+                # ignored the Range header sent everything, so len() is true.
+                content_range = response.headers.get("content-range", "")
+                total = (
+                    int(content_range.rsplit("/", 1)[-1])
+                    if "/" in content_range
+                    else len(response.content)
+                )
+                return response.content, total
+        except (httpx.HTTPError, ValueError):
+            pass
+        if attempt == 0:
+            await asyncio.sleep(2)
+    return None
 
 
 async def audit(rows: list[tuple]) -> dict:
@@ -171,9 +185,12 @@ async def audit(rows: list[tuple]) -> dict:
     grades: dict = {}
 
     async def one(player_id, url):
+        if not url:
+            grades[player_id] = MISSING
+            return
         async with semaphore:
-            header, total = await _probe(client, url)
-        grades[player_id] = classify(header, total)
+            probed = await _probe(client, url)
+        grades[player_id] = UNREACHABLE if probed is None else classify(*probed)
 
     async with httpx.AsyncClient(follow_redirects=True, headers={"User-Agent": USER_AGENT}) as client:
         await asyncio.gather(*(one(r[0], r[2]) for r in rows))
@@ -355,7 +372,11 @@ def resolve_clubs(client: httpx.Client, clubs: list[RealTeam]) -> dict[str, str]
         print(f"Clubs pinned unresolvable: {', '.join(skipped)} (players skipped)")
     if not pending:
         CLUB_CACHE_PATH.write_text(json.dumps(cached, indent=2, sort_keys=True))
-        print(f"Clubs resolved     : {len(cached)} / {len(clubs)} (all cached)")
+        # Count only the clubs this run actually needs — the cache spans every
+        # competition, so len(cached) against a single-competition run reads
+        # as nonsense ("57 / 20").
+        have = sum(1 for c in clubs if c.name in cached)
+        print(f"Clubs resolved     : {have} / {len(clubs)} (all cached)")
         return cached
 
     listed: dict[str, str] = {}

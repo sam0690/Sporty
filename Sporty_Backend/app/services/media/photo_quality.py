@@ -32,6 +32,10 @@ PLACEHOLDER = "placeholder"
 ACTION = "action"
 MISSING = "missing"
 UNREADABLE = "unreadable"
+# Distinct from MISSING: the player HAS a photo_url, we just could not read it
+# this run. Conflating the two makes a transient network blip look like data
+# loss — 117 perfectly good photos were reported missing that way.
+UNREACHABLE = "unreachable"
 
 MIN_OK_EDGE = 400
 MIN_OK_BYTES = 60_000
