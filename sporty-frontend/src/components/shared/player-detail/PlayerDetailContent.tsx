@@ -45,6 +45,9 @@ export function PlayerDetailContent({ playerId }: PlayerDetailContentProps) {
       <div className="grid grid-cols-2 gap-4 border-t border-white/6 px-6 py-4">
         <NationalityField player={player} />
         <BioField label="Age" value={playerAge(player)} />
+        <BioField label="Height" value={player.height} />
+        <BioField label="Weight" value={player.weight} />
+        <BioField label="Squad Number" value={player.jersey_number} />
       </div>
 
       {recentStats && recentStats.length >= 2 && (

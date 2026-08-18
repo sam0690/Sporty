@@ -9,7 +9,7 @@ export interface CountryFlagProps {
   nationality?: string | null;
   /** Public R2 URL from the API's computed `flag_url`. */
   flagUrl?: string | null;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   className?: string;
 }
 
@@ -17,6 +17,7 @@ const SIZE_MAP = {
   // 3:2 is flagcdn's aspect ratio; matching it avoids letterboxing.
   sm: { box: "h-3 w-[18px]", w: 18, h: 12 },
   md: { box: "h-4 w-6", w: 24, h: 16 },
+  lg: { box: "h-6 w-9", w: 36, h: 24 },
 } as const;
 
 /**

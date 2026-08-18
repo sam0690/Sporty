@@ -38,7 +38,11 @@ export function NationalityField({ player }: { player: TPlayer }) {
     <div>
       <div className="micro-label text-fg-3">Nationality</div>
       <div className="mt-1 flex items-center gap-2 text-sm text-fg-1">
-        <CountryFlag nationality={player.nationality} flagUrl={player.flag_url} />
+        <CountryFlag
+          nationality={player.nationality}
+          flagUrl={player.flag_url}
+          size="md"
+        />
         <span className="truncate">{player.nationality}</span>
       </div>
     </div>

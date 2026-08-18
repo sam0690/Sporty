@@ -54,7 +54,7 @@ export function PlayerHero({ player, size = "compact" }: PlayerHeroProps) {
             <CountryFlag
               nationality={player.nationality}
               flagUrl={player.flag_url}
-              size={isLarge ? "md" : "sm"}
+              size={isLarge ? "lg" : "md"}
             />
           </div>
           <div className={`mt-3 flex gap-6 ${isLarge ? "justify-center sm:justify-start" : ""}`}>
