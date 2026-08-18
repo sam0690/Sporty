@@ -45,7 +45,7 @@ export function PlayerHero({ player, size = "compact" }: PlayerHeroProps) {
             <TeamLogo
               teamName={player.real_team}
               logoUrl={player.real_team_logo_url}
-              size={isLarge ? "md" : "sm"}
+              size={isLarge ? "lg" : "md"}
             />
             <span className="text-sm text-fg-2">{player.real_team}</span>
             <Badge sport={player.sport?.name} size="sm">

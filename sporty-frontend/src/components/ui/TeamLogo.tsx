@@ -14,7 +14,7 @@ export interface TeamLogoProps {
 const SIZE_MAP = {
   sm: { box: "h-5 w-5", text: "text-[8px]", px: 20 },
   md: { box: "h-7 w-7", text: "text-[10px]", px: 28 },
-  lg: { box: "h-14 w-14 sm:h-16 sm:w-16", text: "text-xl sm:text-2xl", px: 64 },
+  lg: { box: "h-9 w-9", text: "text-xs", px: 36 },
 } as const;
 
 function getAbbreviation(name: string): string {
