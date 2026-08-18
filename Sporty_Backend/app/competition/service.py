@@ -25,6 +25,7 @@ from app.external_apis.football_data_org import (
 from app.competition import nba_competition
 from app.models.db.competition_snapshot import CompetitionSnapshot
 from app.services.sync.football_competitions import FOOTBALL_COMPETITIONS
+from app.services.sync.nationalities import flag_url
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +120,33 @@ def resolved_season(payload: dict) -> int | None:
 
 
 async def get_snapshot(db: Session, tag: str, kind: str, season: int | None = None) -> dict:
+    """Cached payload for (tag, season, kind), with flags added to scorers."""
+    payload = await _fetch_snapshot(db, tag, kind, season)
+    return _with_flags(payload) if kind == "scorers" else payload
+
+
+def _with_flags(payload: dict) -> dict:
+    """Add each scorer's `player.flag_url` to a top-scorers payload.
+
+    Enriched on read, not on write: the stored snapshot stays a faithful copy
+    of what football-data.org sent, so changing R2_PUBLIC_URL_BASE doesn't
+    strand every cached row. Copies rather than mutates — `payload` may be the
+    live JSONB attribute of a CompetitionSnapshot row.
+    """
+    scorers = payload.get("scorers")
+    if not isinstance(scorers, list):
+        return payload
+    return payload | {
+        "scorers": [
+            entry | {"player": entry["player"] | {"flag_url": flag_url(entry["player"].get("nationality"))}}
+            if isinstance(entry.get("player"), dict)
+            else entry
+            for entry in scorers
+        ]
+    }
+
+
+async def _fetch_snapshot(db: Session, tag: str, kind: str, season: int | None = None) -> dict:
     """Cached payload for (tag, season, kind). Owns its transaction.
 
     season=None → the competition's own CURRENT season: fetched with no season

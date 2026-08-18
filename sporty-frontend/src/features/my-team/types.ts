@@ -15,6 +15,8 @@ export type MyTeamPlayerView = {
   realTeam: string;
   photoUrl?: string | null;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   cost: string;
   totalPoints: number;
   avgPoints: number;

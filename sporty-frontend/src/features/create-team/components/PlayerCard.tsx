@@ -1,7 +1,7 @@
 "use client";
 
 import { Check, Plus } from "lucide-react";
-import { Badge, PlayerAvatar, TeamLogo } from "@/components/ui";
+import { Badge, CountryFlag, PlayerAvatar, TeamLogo } from "@/components/ui";
 
 type SportType = "football" | "basketball" | "cricket" | "multisport";
 
@@ -14,6 +14,8 @@ type MarketPlayer = {
   realTeam?: string;
   photoUrl?: string | null;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   price: number;
   projected: number;
 };
@@ -67,6 +69,7 @@ export function PlayerCard({
             {showSportIcon ? (
               <span aria-label={player.sport}>{player.icon}</span>
             ) : null}
+            <CountryFlag nationality={player.nationality} flagUrl={player.flagUrl} />
           </div>
           <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <Badge sport={player.sport} size="sm">

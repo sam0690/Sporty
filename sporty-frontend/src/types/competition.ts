@@ -61,7 +61,12 @@ export function isBasketballRow(row: TStandingRow): boolean {
 }
 
 export type TScorer = {
-  player: { id: number; name: string; nationality?: string | null };
+  player: {
+    id: number;
+    name: string;
+    nationality?: string | null;
+    flag_url?: string | null;
+  };
   team: { id: number; name: string; crest?: string | null };
   playedMatches?: number | null;
   goals: number | null;

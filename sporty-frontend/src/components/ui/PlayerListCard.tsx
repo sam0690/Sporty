@@ -1,6 +1,7 @@
 "use client";
 
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import { TeamLogo } from "@/components/ui/TeamLogo";
 
 type PlayerListCardPlayer = {
@@ -10,6 +11,8 @@ type PlayerListCardPlayer = {
   position: string;
   realTeam?: string;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   /** Shown in the meta row when set (useful in multisport pools). */
   sport?: string;
 };
@@ -47,6 +50,7 @@ export function PlayerListCard({
             {player.name}
           </p>
           <p className="mt-0.5 flex items-center gap-1.5 text-xs text-fg-3">
+            <CountryFlag nationality={player.nationality} flagUrl={player.flagUrl} />
             <span>{player.position}</span>
             {player.realTeam ? (
               <>

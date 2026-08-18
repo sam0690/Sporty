@@ -19,6 +19,8 @@ type LeaguePlayer = {
   realTeam: string;
   photoUrl?: string | null;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   cost: string;
   totalPoints: number;
   avgPoints: number;
@@ -122,6 +124,8 @@ export function LeagueGroup({ players, sports }: LeagueGroupProps) {
                   realTeam={player.realTeam}
                   photoUrl={player.photoUrl}
                   realTeamLogoUrl={player.realTeamLogoUrl}
+                  nationality={player.nationality}
+                  flagUrl={player.flagUrl}
                   cost={player.cost}
                   totalPoints={player.totalPoints}
                   avgPoints={player.avgPoints}

@@ -223,6 +223,8 @@ export function TransfersView(props: Props) {
                   photoUrl={player.photoUrl}
                   realTeam={player.realTeam}
                   realTeamLogoUrl={player.realTeamLogoUrl}
+                  nationality={player.nationality}
+                  flagUrl={player.flagUrl}
                   onAdd={handleAddPlayer}
                   animationDelay={index * 60}
                   disabled={!isTransfersOpen}

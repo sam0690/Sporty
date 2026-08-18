@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { CountryFlag, PlayerAvatar, TeamLogo } from "@/components/ui";
 import type { Sport } from "./FilterBar";
 
 type PlayerCardProps = {
@@ -15,6 +15,8 @@ type PlayerCardProps = {
   photoUrl?: string | null;
   realTeam?: string;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   onAdd: (id: string) => void;
   animationDelay?: number;
   disabled?: boolean;
@@ -37,6 +39,8 @@ export function PlayerCard({
   photoUrl,
   realTeam,
   realTeamLogoUrl,
+  nationality,
+  flagUrl,
   onAdd,
   animationDelay = 0,
   disabled = false,
@@ -63,6 +67,7 @@ export function PlayerCard({
           {name}
         </p>
         <p className="mt-0.5 flex min-w-0 items-center gap-1.5 truncate text-xs text-fg-3">
+          <CountryFlag nationality={nationality} flagUrl={flagUrl} />
           {realTeam ? (
             <>
               <TeamLogo teamName={realTeam} logoUrl={realTeamLogoUrl} size="sm" className="shrink-0" />

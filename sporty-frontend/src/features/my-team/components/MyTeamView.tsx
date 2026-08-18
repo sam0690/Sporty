@@ -136,6 +136,8 @@ export function MyTeamView({
                     realTeam={player.realTeam}
                     photoUrl={player.photoUrl}
                     realTeamLogoUrl={player.realTeamLogoUrl}
+                    nationality={player.nationality}
+                    flagUrl={player.flagUrl}
                     cost={player.cost}
                     totalPoints={player.totalPoints}
                     avgPoints={player.avgPoints}

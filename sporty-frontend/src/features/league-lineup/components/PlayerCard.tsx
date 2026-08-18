@@ -1,7 +1,7 @@
 "use client";
 
 import type { LineupPlayerCardModel } from "../hooks/useLeagueLineupData";
-import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { CountryFlag, PlayerAvatar, TeamLogo } from "@/components/ui";
 
 type PlayerCardProps = {
   player: LineupPlayerCardModel;
@@ -59,7 +59,8 @@ export function PlayerCard({
               </span>
             ) : null}
           </div>
-          <p className="mt-0.5 flex items-center truncate text-xs text-fg-3">
+          <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-fg-3">
+            <CountryFlag nationality={player.nationality} flagUrl={player.flagUrl} />
             {player.realTeam ? (
               <span className="flex items-center gap-1.5">
                 <TeamLogo teamName={player.realTeam} logoUrl={player.realTeamLogoUrl} size="sm" />

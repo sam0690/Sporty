@@ -20,6 +20,8 @@ export function toMarketPlayer(p: {
   real_team: string;
   photo_url?: string | null;
   real_team_logo_url?: string | null;
+  nationality?: string | null;
+  flag_url?: string | null;
   current_cost: string | number;
 }): MarketPlayer {
   return {
@@ -31,6 +33,8 @@ export function toMarketPlayer(p: {
     realTeam: p.real_team,
     photoUrl: p.photo_url,
     realTeamLogoUrl: p.real_team_logo_url,
+    nationality: p.nationality,
+    flagUrl: p.flag_url,
     price: Number(p.current_cost),
     projected: 0,
   };

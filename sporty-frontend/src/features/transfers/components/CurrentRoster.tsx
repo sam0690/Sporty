@@ -1,7 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
-import { PlayerAvatar } from "@/components/ui";
+import { CountryFlag, PlayerAvatar } from "@/components/ui";
 import type { Sport } from "./FilterBar";
 
 type OwnedPlayer = {
@@ -15,6 +15,8 @@ type OwnedPlayer = {
   realTeam?: string;
   photoUrl?: string | null;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
 };
 
 type CurrentRosterProps = {
@@ -80,7 +82,8 @@ export function CurrentRoster({
                   <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
                     {player.name}
                   </p>
-                  <p className="mt-0.5 truncate text-xs text-fg-3">
+                  <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-fg-3">
+                    <CountryFlag nationality={player.nationality} flagUrl={player.flagUrl} />
                     {player.position}
                     <span className="mx-1 text-white/20">·</span>£{player.price.toFixed(1)}M
                   </p>

@@ -15,6 +15,8 @@ export type LineupPlayerCardModel = {
   realTeam: string;
   photoUrl?: string | null;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   cost: string;
   team?: string;
   sport: SportKind;
@@ -71,6 +73,8 @@ export function useLeagueLineupData(leagueId: string) {
         realTeam: player.real_team,
         photoUrl: player.photo_url,
         realTeamLogoUrl: player.real_team_logo_url,
+        nationality: player.nationality,
+        flagUrl: player.flag_url,
         cost: player.cost,
         team: player.real_team,
         sport: normalizeSport(player.sport.name),

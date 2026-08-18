@@ -21,7 +21,9 @@ type BackendPlayer = {
   created_at: string;
   projected_points?: number | null;
   nationality?: string | null;
+  flag_url?: string | null;
   date_of_birth?: string | null;
+  age?: number | null;
   height?: string | null;
   weight?: string | null;
   jersey_number?: number | null;
@@ -87,7 +89,9 @@ const mapBackendPlayer = (player: BackendPlayer): TPlayer => ({
   is_active: player.is_available,
   created_at: player.created_at,
   nationality: player.nationality ?? null,
+  flag_url: player.flag_url ?? null,
   date_of_birth: player.date_of_birth ?? null,
+  age: player.age ?? null,
   height: player.height ?? null,
   weight: player.weight ?? null,
   jersey_number: player.jersey_number ?? null,

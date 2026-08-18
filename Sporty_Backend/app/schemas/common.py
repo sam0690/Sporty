@@ -22,7 +22,9 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
+
+from app.services.sync.nationalities import flag_url
 
 
 class SportBrief(BaseModel):
@@ -66,8 +68,20 @@ class PlayerBrief(BaseModel):
     real_team_logo_url: str | None = None
     cost: Decimal
     sport: SportBrief
+    nationality: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def flag_url(self) -> str | None:
+        """Same derived flag as PlayerResponse — see app/player/schemas.py.
+
+        Squad, transfer and waiver views embed this brief rather than the full
+        player, so without it every list surface would have to look the flag
+        up again from the nationality string.
+        """
+        return flag_url(self.nationality)
 
 
 class TeamBrief(BaseModel):

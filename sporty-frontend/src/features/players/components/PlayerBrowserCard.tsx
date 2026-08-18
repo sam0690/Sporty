@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Badge, PlayerAvatar } from "@/components/ui";
+import { Badge, CountryFlag, PlayerAvatar } from "@/components/ui";
 import { profileSlug } from "@/utils/profileSlug";
 import type { TPlayer } from "@/types";
 
@@ -19,8 +19,14 @@ export function PlayerBrowserCard({ player }: { player: TPlayer }) {
           <p className="truncate font-sans text-sm font-700 text-fg-1">
             {name}
           </p>
-          <p className="truncate text-xs text-fg-3">
-            {player.position} · {player.real_team}
+          <p className="flex items-center gap-1.5 truncate text-xs text-fg-3">
+            <CountryFlag
+              nationality={player.nationality}
+              flagUrl={player.flag_url}
+            />
+            <span className="truncate">
+              {player.position} · {player.real_team}
+            </span>
           </p>
         </div>
       </div>

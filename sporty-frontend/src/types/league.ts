@@ -314,6 +314,8 @@ export type TTeamPlayer = {
     real_team: string;
     photo_url?: string | null;
     real_team_logo_url?: string | null;
+    nationality?: string | null;
+    flag_url?: string | null;
     cost: string;
     sport: {
       name: string;

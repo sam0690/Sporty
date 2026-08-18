@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge, PlayerAvatar, StatTile, TeamLogo } from "@/components/ui";
+import { Badge, CountryFlag, PlayerAvatar, StatTile, TeamLogo } from "@/components/ui";
 import type { TPlayer } from "@/types";
 
 type PlayerHeroProps = {
@@ -51,6 +51,11 @@ export function PlayerHero({ player, size = "compact" }: PlayerHeroProps) {
             <Badge sport={player.sport?.name} size="sm">
               {player.position}
             </Badge>
+            <CountryFlag
+              nationality={player.nationality}
+              flagUrl={player.flag_url}
+              size={isLarge ? "md" : "sm"}
+            />
           </div>
           <div className={`mt-3 flex gap-6 ${isLarge ? "justify-center sm:justify-start" : ""}`}>
             <StatTile

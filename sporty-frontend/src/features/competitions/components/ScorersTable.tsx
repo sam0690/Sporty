@@ -1,6 +1,7 @@
 "use client";
 
 import { CompetitionLogo } from "@/components/ui/CompetitionLogo";
+import { CountryFlag } from "@/components/ui/CountryFlag";
 import type { TScorer } from "@/types/competition";
 
 export function ScorersTable({ scorers, tag }: { scorers: TScorer[]; tag?: string }) {
@@ -44,7 +45,13 @@ export function ScorersTable({ scorers, tag }: { scorers: TScorer[]; tag?: strin
               </td>
               <td className="px-2 py-2.5">
                 <div className="min-w-0">
-                  <p className="truncate font-500 text-fg-1">{s.player.name}</p>
+                  <p className="flex items-center gap-1.5 truncate font-500 text-fg-1">
+                    <CountryFlag
+                      nationality={s.player.nationality}
+                      flagUrl={s.player.flag_url}
+                    />
+                    <span className="truncate">{s.player.name}</span>
+                  </p>
                   <p className="truncate text-xs text-fg-3">{s.team.name}</p>
                 </div>
               </td>

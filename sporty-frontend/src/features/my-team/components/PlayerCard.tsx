@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { PlayerAvatar, TeamLogo } from "@/components/ui";
+import { CountryFlag, PlayerAvatar, TeamLogo } from "@/components/ui";
 import { profileSlug } from "@/utils/profileSlug";
 import { ScoreEventList } from "@/components/shared/scoring";
 import type { TScoreEvent } from "@/types/player";
@@ -23,6 +23,8 @@ type PlayerCardProps = {
   realTeam?: string;
   photoUrl?: string | null;
   realTeamLogoUrl?: string | null;
+  nationality?: string | null;
+  flagUrl?: string | null;
   cost?: string;
   totalPoints: number;
   avgPoints: number;
@@ -64,6 +66,8 @@ export function PlayerCard({
   realTeam,
   photoUrl,
   realTeamLogoUrl,
+  nationality,
+  flagUrl,
   cost,
   totalPoints,
   avgPoints,
@@ -98,6 +102,7 @@ export function PlayerCard({
             <span className="shrink-0 font-sans text-xs font-700 uppercase tracking-[0.5px] text-fg-3">
               {position}
             </span>
+            <CountryFlag nationality={nationality} flagUrl={flagUrl} />
           </div>
           <p className="mt-1 flex items-center gap-1.5 truncate text-xs text-fg-3">
             <span className="inline-flex items-center gap-1.5" style={{ color: meta.color }}>

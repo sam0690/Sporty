@@ -140,6 +140,8 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
       realTeam: p.player.real_team,
       photoUrl: p.player.photo_url,
       realTeamLogoUrl: p.player.real_team_logo_url,
+      nationality: p.player.nationality,
+      flagUrl: p.player.flag_url,
     }));
   }, [myTeam]);
 
@@ -160,6 +162,8 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
         realTeam: p.real_team,
         photoUrl: p.photo_url,
         realTeamLogoUrl: p.real_team_logo_url,
+        nationality: p.nationality,
+        flagUrl: p.flag_url,
       }));
   }, [playersData, ownedPlayers, stagedInPlayers]);
 
