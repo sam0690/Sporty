@@ -13,6 +13,8 @@ Usage:
 """
 
 import asyncio
+import contextlib
+import io
 import logging
 from typing import Any, Optional
 
@@ -35,6 +37,22 @@ logger = logging.getLogger(__name__)
 PAGE_DELAY_SECONDS = 12.5
 
 
+def _page(response: Any) -> tuple[list[dict[str, Any]], Any]:
+    """Rows + next cursor from an SDK response.
+
+    The SDK returns pydantic models; older versions returned plain dicts. The
+    dict branch is not hypothetical — the previous implementation ONLY had it,
+    so every call silently returned an empty list.
+    """
+    if isinstance(response, dict):
+        return response.get("data", []), (response.get("meta") or {}).get("next_cursor")
+    rows = [
+        row.model_dump() if hasattr(row, "model_dump") else row
+        for row in (getattr(response, "data", None) or [])
+    ]
+    return rows, getattr(getattr(response, "meta", None), "next_cursor", None)
+
+
 class BasketballBallDontLieClient:
     """Client for BallDontLie (NBA API). Uses official Python SDK with Redis caching."""
 
@@ -52,47 +70,47 @@ class BasketballBallDontLieClient:
         self.client = BalldontlieAPI(api_key=api_key)
         self.cache_ttl = 3600  # 1 hour for players/teams, configurable per method
 
-    async def get_all_players(self, use_cache: bool = True) -> list[dict[str, Any]]:
+    async def get_all_players(
+        self, use_cache: bool = True, per_page: int = 100
+    ) -> list[dict[str, Any]]:
         """
-        Fetch all NBA players (handles pagination automatically).
+        Fetch all NBA players (handles cursor pagination automatically).
+
+        The free tier has no `players/active` endpoint, so this walks the whole
+        all-time pool: ~48 pages at per_page=100, paced for the 5 req/min cap,
+        so about ten minutes. Each entry carries height, weight, jersey_number
+        and country — but no birthdate, which is why nothing here fills
+        date_of_birth.
 
         Returns:
             List of all player dictionaries
         """
         cache_key = "basketball:players:all"
-        
+
         if use_cache:
             cached = cache_get(cache_key)
             if cached:
                 logger.info(f"Cache hit: {cache_key}")
                 return cached.get("data", []) if isinstance(cached, dict) else cached
 
-        all_players = []
+        all_players: list[dict[str, Any]] = []
 
         try:
-            # Use the balldontlie SDK's list() method which handles pagination
-            response = self.client.nba.players.list()
-            
-            # The balldontlie SDK returns dict-like responses
             cursor = None
-            while response is not None:
-                # Extract data from response
-                if isinstance(response, dict):
-                    data = response.get("data", [])
-                    meta = response.get("meta", {})
-                    cursor = meta.get("next_cursor")
-                else:
-                    data = []
-                    cursor = None
-                
+            while True:
+                # The SDK `print(response)`s every paginated page
+                # (balldontlie/base.py:159), which is ~350KB of noise per
+                # sweep. Swallow it rather than patching the dependency.
+                with contextlib.redirect_stdout(io.StringIO()):
+                    response = self.client.nba.players.list(
+                        cursor=cursor, per_page=per_page
+                    )
+                data, cursor = _page(response)
                 all_players.extend(data)
                 logger.debug(f"Fetched {len(data)} players, next_cursor: {cursor}")
-                
-                # Check if there are more pages
-                if cursor:
-                    response = self.client.nba.players.list(cursor=cursor)
-                else:
+                if not cursor:
                     break
+                await asyncio.sleep(PAGE_DELAY_SECONDS)
 
             if use_cache and all_players:
                 cache_set(cache_key, {"data": all_players}, self.cache_ttl)

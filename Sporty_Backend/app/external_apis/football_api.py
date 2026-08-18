@@ -190,6 +190,28 @@ class FootballAPIClient:
             cache_ttl=_SEASON_TTL,
         )
 
+    async def get_team_players(
+        self, team_id: int, season: int = 2024, page: int = 1
+    ) -> dict[str, Any]:
+        """
+        Fetch a team's players for a season, with their profile block
+        (birth date, height, weight, nationality) — which `players/squads`
+        does not carry.
+
+        The free plan caps `page` at 3, so this reaches at most 60 of a
+        squad's players; it also refuses season >= 2025 outright. Physical
+        attributes are facts about a person rather than a season, so 2024 is
+        a valid source for a current player.
+
+        Returns:
+            {"response": [{"player": {...}, "statistics": [...]}], ...}
+        """
+        return await self._get(
+            "players",
+            {"team": team_id, "season": season, "page": page},
+            cache_ttl=_SEASON_TTL,
+        )
+
     async def get_fixtures(
         self, league_id: int = 39, season: int = 2024
     ) -> dict[str, Any]:
