@@ -35,6 +35,17 @@ SPORT_REGISTRY: dict[str, dict[str, Any]] = {
             "single": {"GKP": 2, "DEF": 5, "MID": 5, "FWD": 3},
             "mixed": {"GKP": 1, "DEF": 2, "MID": 3, "FWD": 2},
         },
+        # Legal shapes for the STARTING XI (not the 15-man squad above) —
+        # 4-4-2, 3-5-2, 5-2-3 etc. all fall inside these. Mirrors the
+        # frontend's FOOTBALL_FORMATION_BOUNDS in
+        # src/lib/formation/formationEngine.ts, except the frontend buckets
+        # keepers to "GK" while the DB and this registry use "GKP".
+        "formation_bounds": {
+            "GKP": (1, 1),
+            "DEF": (3, 5),
+            "MID": (2, 5),
+            "FWD": (1, 3),
+        },
     },
     "basketball": {
         "squad_size": 13,
@@ -45,12 +56,38 @@ SPORT_REGISTRY: dict[str, dict[str, Any]] = {
     "mixed": {
         "squad_size": 15,
         "quotas": {"football": 8, "basketball": 7},
+        # Only 5 of the 9 mixed starters are footballers, so the 11-a-side
+        # bounds don't fit (their minimums alone sum to 7) and any richer
+        # outfield rule is ambiguous at that size. Exactly one keeper is the
+        # one unambiguous rule — mirroring the frontend's multisport branch
+        # in useLineupState.ts. Positions absent here stay unconstrained, and
+        # basketball is never bounds-checked (no reliable position data).
+        "formation_bounds": {"GKP": (1, 1)},
     },
 }
 
 # Per-sport quotas for mixed leagues — a VIEW of the registry, not a second
 # definition (squad/services iterates this when validating mixed squads).
 MIXED_SPORT_QUOTAS: dict[str, int] = SPORT_REGISTRY["mixed"]["quotas"]
+
+# A mixed league's position minimums ARE football's "mixed" entries — a VIEW
+# of that entry, not a second definition (same pattern as MIXED_SPORT_QUOTAS).
+#
+# Without this the numbers were unreachable: they are filed under "football",
+# but every enforcement path derives sport_type from the league and so asked
+# get_position_minimums("mixed", "mixed") — which returned {}. Only
+# build_auto_pick_sport_config found them, because it iterates per sport NAME.
+# A mixed squad of 8 forwards + 7 basketball players passed with no keeper.
+#
+# Counting needs no per-sport filtering: football and basketball position
+# codes are disjoint (GKP/DEF/MID/FWD vs PG/SG/SF/PF/C/UNK), so tallying
+# football codes over the whole mixed roster IS the football subset. And the
+# minimums sum to 8 — exactly the football quota — so the 8/7 split already
+# makes them exact counts in practice.
+SPORT_REGISTRY["mixed"]["position_minimums"] = {
+    "single": {},
+    "mixed": SPORT_REGISTRY["football"]["position_minimums"]["mixed"],
+}
 
 SUPPORTED_SPORT_TYPES = {name for name in SPORT_REGISTRY if name != "mixed"}
 
@@ -68,6 +105,14 @@ def get_position_minimums(sport_type: str, mode: str) -> dict[str, int]:
     constraint" behavior elsewhere in the squad-validation code.
     """
     return SPORT_REGISTRY.get(sport_type, {}).get("position_minimums", {}).get(mode, {})
+
+
+def get_formation_bounds(sport_type: str) -> dict[str, tuple[int, int]]:
+    """Legal (min, max) starters per position for `sport_type`'s starting
+    lineup. Empty dict = no formation constraint (basketball, cricket),
+    matching the "unknown → no constraint" convention in squad validation.
+    """
+    return SPORT_REGISTRY.get(sport_type, {}).get("formation_bounds", {})
 
 
 def get_max_per_club(sport_type: str) -> int:

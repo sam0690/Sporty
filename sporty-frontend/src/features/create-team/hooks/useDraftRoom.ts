@@ -89,8 +89,16 @@ export function useDraftRoom() {
         includeBudgetRule: false,
         remainingBudget: Number(myTeam?.current_budget ?? budget),
         positionMinimums: league?.position_minimums ?? {},
+        maxPerClub: league?.max_per_club,
       }),
-    [draftedPlayers, leagueSport, myTeam?.current_budget, budget, league?.position_minimums],
+    [
+      draftedPlayers,
+      leagueSport,
+      myTeam?.current_budget,
+      budget,
+      league?.position_minimums,
+      league?.max_per_club,
+    ],
   );
   const clubCounts = useMemo(
     () => clubWarnings(draftedPlayers, league?.max_per_club),

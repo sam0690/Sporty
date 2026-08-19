@@ -29,7 +29,10 @@ describe("matchIdentities", () => {
         ).toBeGreaterThanOrEqual(MIN_TEAM_SEPARATION);
       }
     }
-  });
+    // Explicit budget: this is O(clubs squared) with a colour-distance
+    // computation per pair — ~3s alone, which loses a coin flip against the
+    // 5s default whenever the rest of the suite is competing for cores.
+  }, 20_000);
 
   it("leaves the home club's real colour alone", () => {
     // The visitors change strip, not the hosts — anything else looks wrong to

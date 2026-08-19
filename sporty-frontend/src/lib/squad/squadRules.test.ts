@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildSquadValidation,
   clubWarnings,
+  explainUnmetRule,
   MULTISPORT_MIN_BY_SPORT,
   SQUAD_SIZES,
   type SquadPlayer,
@@ -156,5 +157,121 @@ describe("clubWarnings", () => {
     }).find((r) => r.key === "max-per-club");
     expect(rule?.satisfied).toBe(true);
     expect(rule?.detail).toBe("0/3");
+  });
+});
+
+describe("explainUnmetRule", () => {
+  it("returns null when every rule is satisfied", () => {
+    const rules = buildSquadValidation({
+      players: [
+        ...footballers(2, "GKP"),
+        ...footballers(5, "DEF"),
+        ...footballers(5, "MID"),
+        ...footballers(3, "FWD"),
+      ],
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: { GKP: 2, DEF: 5, MID: 5, FWD: 3 },
+    });
+    expect(explainUnmetRule(rules)).toBeNull();
+  });
+
+  it("names the first unsatisfied rule so the gate can explain itself", () => {
+    // Transfers rendered this as a red checklist row but left Confirm
+    // enabled; the message is what the disabled button now shows.
+    const rules = buildSquadValidation({
+      players: [
+        ...footballers(1, "GKP"),
+        ...footballers(5, "DEF"),
+        ...footballers(6, "MID"),
+        ...footballers(3, "FWD"),
+      ],
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: { GKP: 2, DEF: 5, MID: 5, FWD: 3 },
+    });
+    expect(explainUnmetRule(rules)).toBe("GKP count not met (1/2).");
+  });
+});
+
+describe("strict composition (mirrors the backend)", () => {
+  const FOOTBALL_MINIMUMS = { GKP: 2, DEF: 5, MID: 5, FWD: 3 };
+
+  function footballSquad(gkp: number, def: number, mid: number, fwd: number) {
+    return buildSquadValidation({
+      players: [
+        ...footballers(gkp, "GKP"),
+        ...footballers(def, "DEF"),
+        ...footballers(mid, "MID"),
+        ...footballers(fwd, "FWD"),
+      ],
+      leagueSport: "football",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: FOOTBALL_MINIMUMS,
+    });
+  }
+
+  it("accepts exactly 2/5/5/3", () => {
+    expect(explainUnmetRule(footballSquad(2, 5, 5, 3))).toBeNull();
+  });
+
+  it("rejects a 6th defender even though the squad is still 15", () => {
+    // The mismatch this exists for: >= passed this, the checklist showed
+    // all-green, and the API then rejected it with a 409.
+    const rule = footballSquad(2, 6, 4, 3).find((r) => r.key === "position-DEF");
+    expect(rule?.satisfied).toBe(false);
+    expect(rule?.detail).toBe("6/5");
+  });
+
+  it("rejects a 3rd keeper", () => {
+    expect(
+      footballSquad(3, 5, 4, 3).find((r) => r.key === "position-GKP")?.satisfied,
+    ).toBe(false);
+  });
+
+  it("keeps at-least semantics for multisport, where minimums sum to 8 not 15", () => {
+    // 8 football + 7 basketball: the mixed minimums (1/2/3/2) cover only the
+    // football half, so an extra MID is legal there.
+    const rules = buildSquadValidation({
+      players: [
+        ...footballers(1, "GKP"),
+        ...footballers(2, "DEF"),
+        ...footballers(4, "MID"),
+        ...footballers(1, "FWD"),
+        ...Array.from({ length: 7 }, () => ({
+          sport: "basketball",
+          position: "PG",
+          realTeam: "Bulls",
+        })),
+      ],
+      leagueSport: "multisport",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: { GKP: 1, DEF: 2, MID: 3, FWD: 2 },
+    });
+    expect(rules.find((r) => r.key === "position-MID")?.satisfied).toBe(true);
+    expect(rules.find((r) => r.key === "position-FWD")?.satisfied).toBe(false);
+  });
+
+  it("requires exactly 8 football / 7 basketball in multisport", () => {
+    const rules = buildSquadValidation({
+      players: [
+        ...footballers(9, "MID"),
+        ...Array.from({ length: 6 }, () => ({
+          sport: "basketball",
+          position: "PG",
+          realTeam: "Bulls",
+        })),
+      ],
+      leagueSport: "multisport",
+      includeBudgetRule: false,
+      remainingBudget: 0,
+      positionMinimums: {},
+    });
+    expect(rules.find((r) => r.key === "football")?.satisfied).toBe(false);
+    expect(rules.find((r) => r.key === "basketball")?.satisfied).toBe(false);
   });
 });

@@ -19,6 +19,7 @@ import {
   buildSquadValidation,
   clubWarnings,
   countBy,
+  explainUnmetRule,
   normalizeLeagueSport,
   SQUAD_SIZES,
 } from "@/lib/squad/squadRules";
@@ -282,7 +283,7 @@ export function useCreateTeamDashboard() {
   // enforced, so a displayed ✗ can never be submittable (the backend rejects
   // the same squad in build_initial_team).
   const validateSelectionOrExplain = (): string | null =>
-    unmetRule ? `${unmetRule.label} not met (${unmetRule.detail}).` : null;
+    explainUnmetRule(squadValidation);
 
   const handleNextStep = async () => {
     setError(null);

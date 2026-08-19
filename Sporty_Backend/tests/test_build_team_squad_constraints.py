@@ -60,3 +60,40 @@ def test_incomplete_squad_skips_position_minimums() -> None:
         )
         is None
     )
+
+
+def test_extra_defender_rejected() -> None:
+    # 6 DEF / 4 MID still sums to 15 and satisfies every minimum except MID,
+    # so minimums-only validation let this through as long as the displaced
+    # position stayed above its own floor.
+    shape = ["GKP"] * 2 + ["DEF"] * 6 + ["MID"] * 4 + ["FWD"] * 3
+    squad = [player(pos, f"Club{i // 3}") for i, pos in enumerate(shape)]
+    violation = check_full_squad_constraints(squad, LEAGUE, "football", "single")
+    assert violation is not None
+    assert "exactly 5 DEF" in violation and "you have 6" in violation
+
+
+def test_extra_keeper_rejected() -> None:
+    shape = ["GKP"] * 3 + ["DEF"] * 5 + ["MID"] * 4 + ["FWD"] * 3
+    squad = [player(pos, f"Club{i // 3}") for i, pos in enumerate(shape)]
+    violation = check_full_squad_constraints(squad, LEAGUE, "football", "single")
+    assert violation is not None and "exactly 2 GKP" in violation
+
+
+def test_one_keeper_short_rejected() -> None:
+    shape = ["GKP"] * 1 + ["DEF"] * 5 + ["MID"] * 6 + ["FWD"] * 3
+    squad = [player(pos, f"Club{i // 3}") for i, pos in enumerate(shape)]
+    violation = check_full_squad_constraints(squad, LEAGUE, "football", "single")
+    assert violation is not None and "GKP" in violation
+
+
+def test_position_codes_are_normalised() -> None:
+    """Position is a free-text column: "gkp", " GKP " and the legacy "GK"
+    written by scripts/link_epl_players.py must all count as GKP."""
+    shape = ["gkp", " GKP "] + ["DEF"] * 5 + ["MID"] * 5 + ["FWD"] * 3
+    squad = [player(pos, f"Club{i // 3}") for i, pos in enumerate(shape)]
+    assert check_full_squad_constraints(squad, LEAGUE, "football", "single") is None
+
+    legacy = legal_football_squad()
+    legacy[0] = player("GK", legacy[0].real_team)
+    assert check_full_squad_constraints(legacy, LEAGUE, "football", "single") is None

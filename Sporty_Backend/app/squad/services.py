@@ -23,6 +23,7 @@ from app.core.errors import DomainError
 from app.league.sportConfigs import (
     MIXED_SPORT_QUOTAS,
     derive_sport_type,
+    get_formation_bounds,
     get_max_per_club,
     get_position_minimums,
 )
@@ -66,13 +67,25 @@ def _player_sport_id(obj: Any) -> Any:
     return None
 
 
+# Player.position is a free-text String(20) with no DB constraint, so the
+# data carries case and spelling drift: scripts/link_epl_players.py writes
+# "GK" where the registry (and every other writer) uses "GKP". Normalising in
+# the ONE place both validators read a position from means neither
+# _assert_position_composition nor validate_position_slots can miscount.
+_POSITION_ALIASES: dict[str, str] = {"GK": "GKP"}
+
+
 def _player_position(obj: Any) -> str | None:
     """Extract position from Player or TeamPlayer (with loaded .player)."""
+    raw: Any = None
     if hasattr(obj, "position") and obj.position is not None:
-        return obj.position          # Player
-    if hasattr(obj, "player") and obj.player is not None:
-        return getattr(obj.player, "position", None)
-    return None
+        raw = obj.position           # Player
+    elif hasattr(obj, "player") and obj.player is not None:
+        raw = getattr(obj.player, "position", None)
+    if raw is None:
+        return None
+    normalised = str(raw).strip().upper()
+    return _POSITION_ALIASES.get(normalised, normalised)
 
 
 def _player_name(obj: Any) -> str:
@@ -215,6 +228,44 @@ def validate_position_slots(
             )
 
 
+def _assert_formation_bounds(
+    lineup: list[Any],
+    sport_type: str,
+    sport_label: str,
+) -> None:
+    """Reject a starting lineup whose shape isn't a legal formation.
+
+    This is the server-side counterpart to the frontend's
+    validateFootballFormation. It deliberately does NOT depend on LineupSlot
+    rows: those are admin-created only, so every normally-created league has
+    none and the LineupSlot-driven validate_position_slots silently passes
+    anything — which let a direct API call save 11 forwards and no keeper.
+    LineupSlot still layers on top as a per-league override where rows exist.
+    """
+    bounds = get_formation_bounds(sport_type)
+    if not bounds:
+        return  # basketball / cricket / unknown — no formation constraint
+
+    counts: dict[str, int] = {}
+    for player in lineup:
+        pos = _player_position(player)
+        if pos:
+            counts[pos] = counts.get(pos, 0) + 1
+
+    for pos, (minimum, maximum) in bounds.items():
+        actual = counts.get(pos, 0)
+        if actual < minimum or actual > maximum:
+            expected = (
+                f"exactly {minimum}"
+                if minimum == maximum
+                else f"between {minimum} and {maximum}"
+            )
+            raise DomainError(
+                f"{sport_label} starting lineup needs {expected} {pos} "
+                f"player(s), got {actual}."
+            )
+
+
 def validate_lineup_for_league_type(
     lineup: list[Any],
     league: Any,
@@ -272,6 +323,8 @@ def validate_lineup_for_league_type(
             f"{sport_label} lineup must have exactly {rules['bench']} "
             f"bench player(s), got {bench_count}."
         )
+
+    _assert_formation_bounds(lineup, sport_type, sport_label)
 
     if sport_type != "mixed":
         return
@@ -357,20 +410,29 @@ def _assert_max_per_club(team_players: list[Any], sport_type: str) -> None:
             )
 
 
-def _assert_position_minimums_if_complete(
+def _assert_position_composition(
     team_players: list[Any],
     league: Any,
     sport_type: str,
     mode: str,
 ) -> None:
-    """Position minimums only become a real constraint once the squad would
-    be complete — you can't have hit a minimum with slots/picks still to
-    come, mirroring how validate_squad_size only checks size at completion."""
+    """Position rules only become a real constraint once the squad would be
+    complete — you can't have hit a minimum with slots/picks still to come,
+    mirroring how validate_squad_size only checks size at completion.
+
+    When the minimums account for every slot in the squad they ARE the
+    composition (football single: 2+5+5+3 == 15), so they're enforced as
+    EXACT counts — otherwise a 6th DEF hides in a slot no minimum claims and
+    only the squad-size check notices, which it can't when the extra DEF
+    displaced a MID. Sports with flex slots (sum < squad_size) keep the
+    at-least semantics automatically.
+    """
     if len(team_players) < league.squad_size:
         return
     minimums = get_position_minimums(sport_type, mode)
     if not minimums:
         return
+    exact = sum(minimums.values()) == league.squad_size
 
     counts: dict[str, int] = {}
     for tp in team_players:
@@ -380,7 +442,11 @@ def _assert_position_minimums_if_complete(
 
     for pos, required in minimums.items():
         actual = counts.get(pos, 0)
-        if actual < required:
+        if exact and actual != required:
+            raise DomainError(
+                f"Squad requires exactly {required} {pos} player(s) — you have {actual}."
+            )
+        if not exact and actual < required:
             raise DomainError(
                 f"Squad needs at least {required} {pos} player(s), has {actual}."
             )
@@ -406,7 +472,7 @@ def check_full_squad_constraints(
     """
     try:
         _assert_max_per_club(team_players, sport_type)
-        _assert_position_minimums_if_complete(team_players, league, sport_type, mode)
+        _assert_position_composition(team_players, league, sport_type, mode)
     except ValueError as exc:
         return str(exc)
     return None

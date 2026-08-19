@@ -60,6 +60,8 @@ export function TransfersView(props: Props) {
     isMultiSportLeague,
     positionValidation,
     clubCounts,
+    isSquadValid,
+    unmetRule,
     selectedSport,
     selectedPosition,
     searchQuery,
@@ -347,7 +349,8 @@ export function TransfersView(props: Props) {
                     stagedInPlayers.length === 0) ||
                   (!isMultiSportLeague &&
                     stagedOutPlayers.length !== stagedInPlayers.length) ||
-                  !isTransfersOpen
+                  !isTransfersOpen ||
+                  !isSquadValid
                 }
                 className="w-full rounded-[3px] bg-accent px-4 py-2.5 font-sans text-xs font-700 uppercase tracking-[2px] text-surface-0 transition-colors hover:bg-accent-bright disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -355,6 +358,9 @@ export function TransfersView(props: Props) {
                   ? "Confirming…"
                   : "Confirm Staged Transfers"}
               </button>
+              {unmetRule ? (
+                <p className="mt-2 text-xs text-danger">{unmetRule}</p>
+              ) : null}
               {isMultiSportLeague ? (
                 <p className="mt-2 text-xs text-fg-3">
                   Multisport: you can stage players in directly when budget and

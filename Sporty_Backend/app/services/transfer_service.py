@@ -22,7 +22,7 @@ from app.league.models import (
     Transfer,
     TransferWindow,
 )
-from app.league.sportConfigs import derive_sport_type, get_squad_size
+from app.league.sportConfigs import MIXED_SPORT_QUOTAS, derive_sport_type, get_squad_size
 from app.player.models import Player
 from app.services.budget_utils import calculate_refund
 from app.services.transfer_session_service import clear_session, get_session, save_session
@@ -31,10 +31,11 @@ from app.squad.services import check_full_squad_constraints
 logger = logging.getLogger(__name__)
 
 SUPPORTED_TRANSFER_POOL_SPORTS = {"football", "basketball"}
-MULTISPORT_MAX_PLAYERS_BY_SPORT: dict[str, int] = {
-    "football": 8,
-    "basketball": 7,
-}
+# The mixed 8/7 split, read from the registry rather than restated here —
+# this module kept a second copy that commit 74ca20a missed when it unified
+# the others. The quota is exact (8 + 7 == 15), so the same numbers are both
+# the floor validate_squad_size enforces and the ceiling staging checks.
+MULTISPORT_MAX_PLAYERS_BY_SPORT: dict[str, int] = MIXED_SPORT_QUOTAS
 
 
 def _safe_get(redis: Redis, key: str) -> str | None:

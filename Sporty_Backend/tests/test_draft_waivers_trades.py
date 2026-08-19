@@ -7,7 +7,7 @@ import sys
 import tempfile
 import uuid
 from contextlib import contextmanager
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 
@@ -47,6 +47,7 @@ from app.league.models import (  # noqa: E402
 )
 from app.league.schemas import LeagueCreate  # noqa: E402
 from app.player.models import Player, RealTeam  # noqa: E402
+from app.core.errors import DomainError  # noqa: E402
 from app.services import trade_service, waiver_service  # noqa: E402
 
 ENGINE = create_engine(os.environ["DATABASE_URL"])
@@ -261,3 +262,102 @@ def test_trade_veto_blocks_and_uneven_rejected() -> None:
         trade_service.veto_trade(db, league.id, uuid.UUID(offer["id"]), owner)  # owner = commissioner
         vetoed = db.query(TradeOffer).filter(TradeOffer.id == uuid.UUID(offer["id"])).one()
         assert vetoed.status == "vetoed"
+
+
+def _full_squad(db, league, team, sport, real_teams, window, prefix):
+    """A complete 15-player squad at exactly the football minimums
+    (2 GKP / 5 DEF / 5 MID / 3 FWD), spread so no club exceeds the cap.
+    Position rules only bite once a squad is complete, so trades can only be
+    composition-tested against full squads. Returns (defs, mids)."""
+    def rt_for(i):
+        return real_teams[i % len(real_teams)]
+
+    gks = [_player(db, sport, rt_for(i), f"{prefix}GK{i}", "GKP") for i in range(2)]
+    defs = [_player(db, sport, rt_for(i + 2), f"{prefix}DEF{i}", "DEF") for i in range(5)]
+    mids = [_player(db, sport, rt_for(i + 7), f"{prefix}MID{i}", "MID") for i in range(5)]
+    fwds = [_player(db, sport, rt_for(i + 12), f"{prefix}FWD{i}", "FWD") for i in range(3)]
+    for p in [*gks, *defs, *mids, *fwds]:
+        _own(db, league, team, p, window)
+    return defs, mids
+
+
+def test_trade_revalidated_at_execution_after_roster_drift() -> None:
+    """A trade legal at propose time can become illegal before it executes.
+
+    Accepted trades sit through a 24h veto window, during which either roster
+    can change (transfers, waivers, another trade, an admin position fix).
+    Only propose was validated, so the drifted swap wrote an illegal squad.
+    """
+    with session_scope() as db:
+        league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
+        real_teams = [_real_team(db, sport) for _ in range(5)]
+        _, owner_mids = _full_squad(db, league, owner_team, sport, real_teams, window, "O")
+        _, joiner_mids = _full_squad(db, league, joiner_team, sport, real_teams, window, "J")
+        give, get = owner_mids[0], joiner_mids[0]
+
+        # MID-for-MID: both squads keep 2/5/5/3, so this passes at propose.
+        offer = trade_service.propose_trade(
+            db, league.id, joiner_team.id, [give.id], [get.id], owner)
+        trade_service.accept_trade(db, league.id, uuid.UUID(offer["id"]), joiner)
+        trade_obj = db.query(TradeOffer).filter(TradeOffer.id == uuid.UUID(offer["id"])).one()
+
+        # Drift during the veto window: the incoming player is reclassified,
+        # so owner would end on 6 DEF / 4 MID.
+        get.position = "DEF"
+        db.flush()
+
+        with pytest.raises(DomainError, match="DEF"):
+            trade_service.execute_trade(db, trade_obj)
+
+        # Ownership untouched — the illegal swap never landed.
+        still_owner = (db.query(TeamPlayer)
+                       .filter(TeamPlayer.player_id == give.id,
+                               TeamPlayer.released_window_id.is_(None)).one())
+        assert still_owner.fantasy_team_id == owner_team.id
+
+
+def test_trade_executes_when_rosters_stay_legal() -> None:
+    with session_scope() as db:
+        league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
+        real_teams = [_real_team(db, sport) for _ in range(5)]
+        _, owner_mids = _full_squad(db, league, owner_team, sport, real_teams, window, "O")
+        _, joiner_mids = _full_squad(db, league, joiner_team, sport, real_teams, window, "J")
+        give, get = owner_mids[0], joiner_mids[0]
+
+        offer = trade_service.propose_trade(
+            db, league.id, joiner_team.id, [give.id], [get.id], owner)
+        trade_service.accept_trade(db, league.id, uuid.UUID(offer["id"]), joiner)
+        trade_obj = db.query(TradeOffer).filter(TradeOffer.id == uuid.UUID(offer["id"])).one()
+        trade_service.execute_trade(db, trade_obj)
+        db.flush()
+
+        moved = (db.query(TeamPlayer)
+                 .filter(TeamPlayer.player_id == get.id,
+                         TeamPlayer.released_window_id.is_(None)).one())
+        assert moved.fantasy_team_id == owner_team.id
+        assert trade_obj.status == "executed"
+
+
+def test_finalize_marks_illegal_trade_rejected_without_aborting_sweep() -> None:
+    """One drifted trade must not take the whole hourly sweep down with it."""
+    with session_scope() as db:
+        league, sport, window, owner, joiner, owner_team, joiner_team = _two_team_league(db)
+        real_teams = [_real_team(db, sport) for _ in range(5)]
+        _, owner_mids = _full_squad(db, league, owner_team, sport, real_teams, window, "O")
+        _, joiner_mids = _full_squad(db, league, joiner_team, sport, real_teams, window, "J")
+        give, get = owner_mids[0], joiner_mids[0]
+
+        offer = trade_service.propose_trade(
+            db, league.id, joiner_team.id, [give.id], [get.id], owner)
+        trade_service.accept_trade(db, league.id, uuid.UUID(offer["id"]), joiner)
+        trade_obj = db.query(TradeOffer).filter(TradeOffer.id == uuid.UUID(offer["id"])).one()
+        # Veto window has lapsed, and the roster drifted while it ran.
+        trade_obj.veto_deadline = datetime.now(timezone.utc) - timedelta(hours=1)
+        get.position = "DEF"
+        db.flush()
+
+        result = trade_service.finalize_due_trades(db)
+
+        assert result == {"executed": 0, "rejected": 1}
+        db.refresh(trade_obj)
+        assert trade_obj.status == "rejected"

@@ -16,6 +16,12 @@ import {
 import { useSmartEditableWindowSync } from "@/hooks/leagues/useSmartActiveWindowSync";
 import { useTransferPoolPlayers } from "@/hooks/players/usePlayers";
 import { usePlayerFilters } from "@/hooks/players/usePlayerFilters";
+import {
+  buildSquadValidation,
+  clubWarnings,
+  explainUnmetRule,
+  normalizeLeagueSport,
+} from "@/lib/squad/squadRules";
 import { toastifier } from "@/lib/toastifier";
 import { isApiError } from "@/utils/api-Error";
 import type { OwnedPlayer } from "../components/CurrentRoster";
@@ -191,32 +197,41 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
   const positionMinimums = league?.position_minimums ?? EMPTY_POSITION_MINIMUMS;
   const maxPerClub = league?.max_per_club;
 
-  const positionValidation = useMemo(() => {
-    const counts = projectedRoster.reduce<Record<string, number>>((acc, player) => {
-      acc[player.position] = (acc[player.position] ?? 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(positionMinimums).map(([position, required]) => ({
-      key: `position-${position}`,
-      label: `${position} minimum`,
-      detail: `${counts[position] ?? 0}/${required}`,
-      satisfied: (counts[position] ?? 0) >= required,
-    }));
-  }, [projectedRoster, positionMinimums]);
+  // Same rule builder the team builder and draft room use, against the
+  // post-transfer roster. Previously this file re-implemented the position
+  // and club tallies inline, which drifted: its club tally pooled every
+  // clubless player under one "Unknown club" key, the exact bug
+  // clubWarnings() was written to fix.
+  const leagueSport = useMemo(
+    () => normalizeLeagueSport(league?.sports),
+    [league?.sports],
+  );
 
-  const clubCounts = useMemo(() => {
-    if (!maxPerClub) {
-      return [];
-    }
-    const counts = projectedRoster.reduce<Record<string, number>>((acc, player) => {
-      const club = player.realTeam || "Unknown club";
-      acc[club] = (acc[club] ?? 0) + 1;
-      return acc;
-    }, {});
-    return Object.entries(counts)
-      .filter(([, count]) => count >= maxPerClub)
-      .map(([club, count]) => ({ club, count, max: maxPerClub }));
-  }, [projectedRoster, maxPerClub]);
+  const squadValidation = useMemo(
+    () =>
+      buildSquadValidation({
+        players: projectedRoster,
+        leagueSport,
+        includeBudgetRule: false,
+        remainingBudget: 0,
+        positionMinimums,
+        maxPerClub,
+      }),
+    [projectedRoster, leagueSport, positionMinimums, maxPerClub],
+  );
+
+  const positionValidation = useMemo(
+    () => squadValidation.filter((rule) => rule.key.startsWith("position-")),
+    [squadValidation],
+  );
+
+  const unmetRule = explainUnmetRule(squadValidation);
+  const isSquadValid = !unmetRule;
+
+  const clubCounts = useMemo(
+    () => clubWarnings(projectedRoster, maxPerClub),
+    [projectedRoster, maxPerClub],
+  );
 
   const availableSportsForFilter = useMemo(
     () =>
@@ -463,6 +478,8 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     isMultiSportLeague,
     positionValidation,
     clubCounts,
+    isSquadValid,
+    unmetRule,
     selectedSport,
     selectedPosition,
     searchQuery,

@@ -6,6 +6,7 @@ See docs/DRAFT_ROSTER_MANAGEMENT.md. Services never commit.
 """
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
@@ -15,6 +16,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.models import User
+from app.core.errors import DomainError
 from app.league.models import (
     FantasyTeam,
     League,
@@ -27,6 +29,8 @@ from app.league.sportConfigs import derive_sport_type
 from app.player.models import Player, PlayerGameweekStat
 from app.services import draft_roster_service as dr
 from app.squad.services import check_full_squad_constraints
+
+logger = logging.getLogger(__name__)
 
 # Commissioner veto window after a trade is accepted, before it finalises.
 VETO_HOURS = 24
@@ -250,13 +254,48 @@ def propose_trade(
             detail="Traded players must match by sport on both sides",
         )
 
-    # Max-per-club / position-minimum constraints on BOTH sides' final rosters.
+    violation = _trade_squad_violation(
+        db, league, from_team, to_team, offered_player_ids, requested_player_ids
+    )
+    if violation:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=violation)
+
+    offer = TradeOffer(
+        league_id=league_id,
+        from_team_id=from_team.id,
+        to_team_id=to_team.id,
+        offered_player_ids=[str(p) for p in offered_player_ids],
+        requested_player_ids=[str(p) for p in requested_player_ids],
+        status="proposed",
+    )
+    db.add(offer)
+    db.flush()
+    return {"id": str(offer.id), "status": "proposed"}
+
+
+def _trade_squad_violation(
+    db: Session,
+    league,
+    from_team,
+    to_team,
+    offered_player_ids: list[uuid.UUID],
+    requested_player_ids: list[uuid.UUID],
+) -> str | None:
+    """Max-per-club / position constraints on BOTH sides' post-trade rosters.
+
+    Called at propose time AND again in execute_trade: a trade sits through a
+    veto window, during which either roster can change via transfers, waivers
+    or another trade — so a swap that was legal when proposed can land an
+    illegal squad when it finally executes.
+
+    Returns the first violation message, or None if both rosters stay legal.
+    """
     sport_names = [
         name
         for (name,) in (
             db.query(Sport.name)
             .join(LeagueSport, LeagueSport.sport_id == Sport.id)
-            .filter(LeagueSport.league_id == league_id)
+            .filter(LeagueSport.league_id == league.id)
             .all()
         )
     ]
@@ -279,19 +318,8 @@ def propose_trade(
         final_players = db.query(Player).filter(Player.id.in_(final_player_ids)).all()
         violation = check_full_squad_constraints(final_players, league, sport_type, mode)
         if violation:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=violation)
-
-    offer = TradeOffer(
-        league_id=league_id,
-        from_team_id=from_team.id,
-        to_team_id=to_team.id,
-        offered_player_ids=[str(p) for p in offered_player_ids],
-        requested_player_ids=[str(p) for p in requested_player_ids],
-        status="proposed",
-    )
-    db.add(offer)
-    db.flush()
-    return {"id": str(offer.id), "status": "proposed"}
+            return violation
+    return None
 
 
 def _get_offer(db: Session, league_id: uuid.UUID, trade_id: uuid.UUID):
@@ -423,6 +451,12 @@ def execute_trade(db: Session, offer) -> None:
     offered = [uuid.UUID(p) for p in offer.offered_player_ids]
     requested = [uuid.UUID(p) for p in offer.requested_player_ids]
 
+    # Re-check: rosters can have changed during the veto window (see
+    # _trade_squad_violation). Refusing here beats writing an illegal squad.
+    violation = _trade_squad_violation(db, league, from_team, to_team, offered, requested)
+    if violation:
+        raise DomainError(violation)
+
     # Release everything first so re-acquisition to the other team can't trip the
     # draft-ownership unique index within the transaction.
     for pid in offered:
@@ -445,7 +479,21 @@ def finalize_due_trades(db: Session) -> dict:
         .all()
     )
     executed = 0
+    rejected = 0
     for offer in due:
-        execute_trade(db, offer)
+        # One illegal trade must not abort the whole sweep — mark it and move
+        # on, matching how waiver_service.process_waivers_for_window handles a
+        # claim that no longer validates.
+        try:
+            with db.begin_nested():
+                execute_trade(db, offer)
+        except DomainError as exc:
+            offer.status = "rejected"
+            db.flush()
+            rejected += 1
+            logger.warning(
+                "Trade %s rejected at finalization: %s", offer.id, exc
+            )
+            continue
         executed += 1
-    return {"executed": executed}
+    return {"executed": executed, "rejected": rejected}

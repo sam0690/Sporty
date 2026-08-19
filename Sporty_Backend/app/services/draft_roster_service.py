@@ -24,7 +24,6 @@ from app.league.models import (
     TeamPlayer,
     TransferWindow,
 )
-from app.league.sportConfigs import derive_sport_type
 from app.player.models import Player
 from app.squad.services import check_squad_constraints
 
@@ -163,8 +162,19 @@ def _position_violation(
     """Return a reason string if the swap breaks max-per-club or position
     minimums, else None. A drafted roster is always full at this point (see
     check_add_drop), so the position-minimum check always applies here, not
-    just the max-per-club one."""
-    sport_type = derive_sport_type([add_player.sport.name])
+    just the max-per-club one.
+
+    Sport/mode come from the LEAGUE, not the incoming player: deriving them
+    from add_player.sport made every claim look single-sport, so in a mixed
+    league a football add was measured against the full single-sport 2/5/5/3
+    over a roster that only holds 8 football players — rejecting every one.
+    """
+    # Lazy import: app.league.service_helpers pulls in league models that
+    # import this module's siblings — same cycle-break as
+    # _next_editable_window_id above.
+    from app.league.service_helpers import _league_sport_mode
+
+    sport_type, mode = _league_sport_mode(db, league.id)
     current_roster = (
         db.query(TeamPlayer)
         .options(joinedload(TeamPlayer.player))
@@ -175,7 +185,7 @@ def _position_violation(
         .all()
     )
     return check_squad_constraints(
-        current_roster, league, sport_type, "single", add_player, drop_player
+        current_roster, league, sport_type, mode, add_player, drop_player
     )
 
 
