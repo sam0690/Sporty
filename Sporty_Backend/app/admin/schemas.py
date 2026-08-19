@@ -167,6 +167,30 @@ class AdminPlayerEditRequest(BaseModel):
     reason: str | None = Field(default=None, max_length=1000)
 
 
+class AdminPlayerCreateRequest(BaseModel):
+    """Manually add someone to the player pool.
+
+    Exists because the provider's squad feed is not complete: API-Football's
+    /players/squads omits players who are in fact at the club, so a fixture's
+    full-time sheet can name people we have no row for — and they then score
+    zero for a match they played. This is the hand-repair path for that.
+
+    external_api_id is the important optional field: setting it to the
+    provider's player id is what lets the FT-sheet booking resolve them by id
+    on the next re-book, instead of relying on the name fallback.
+    """
+
+    sport_id: uuid.UUID
+    real_team_id: uuid.UUID
+    name: str = Field(min_length=1, max_length=150)
+    position: str = Field(min_length=1, max_length=20)
+    cost: float = Field(gt=0)
+    is_available: bool = True
+    photo_url: str | None = Field(default=None, max_length=500)
+    external_api_id: str | None = Field(default=None, max_length=100)
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 class RepriceRequest(BaseModel):
     lookback_windows: int = Field(default=3, ge=1, le=10)
     reason: str | None = Field(default=None, max_length=1000)

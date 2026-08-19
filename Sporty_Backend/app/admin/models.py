@@ -55,6 +55,7 @@ class AdminActionType(str, enum.Enum):
     SCORING_WINDOW_UNLOCK = "scoring_window_unlock"
     PLAYER_PRICE_OVERRIDE = "player_price_override"
     PLAYER_DATA_EDIT = "player_data_edit"
+    PLAYER_CREATE = "player_create"
     TRANSFER_REVERSE = "transfer_reverse"
     WAIVER_OVERRIDE = "waiver_override"
     TRADE_VETO_OVERRIDE = "trade_veto_override"

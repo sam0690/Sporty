@@ -722,10 +722,32 @@ def _fold_name(name: str | None) -> str:
     return re.sub(r"\s+", " ", (name or "").strip()).lower()
 
 
+# Position codes per sport — the one definition in this module; the scoring
+# rules' _VALID_POSITIONS is a view of the football entry, not a second copy.
+# An unlisted sport means no constraint (the same "unknown -> no constraint"
+# convention squad validation uses), consistent with Player.position being a
+# String by deliberate design so a new sport needs no migration. Mirrors the
+# frontend's POSITION_MAP in src/lib/playerPositions.ts.
+_POSITIONS_BY_SPORT: dict[str, set[str]] = {
+    "football": {"GKP", "DEF", "MID", "FWD"},
+    "basketball": {"PG", "SG", "SF", "PF", "C"},
+    "cricket": {"BAT", "BOWL", "AR", "WK"},
+}
+
+
 def _assert_identity_free(
-    db: Session, player: Player, club_id: uuid.UUID, club_name: str, name: str
+    db: Session,
+    sport_id: uuid.UUID,
+    club_id: uuid.UUID,
+    club_name: str,
+    name: str,
+    *,
+    exclude_player_id: uuid.UUID | None = None,
 ) -> None:
-    """Reject a name/club edit that would collide with uq_players_identity.
+    """Reject a name/club write that would collide with uq_players_identity.
+
+    Takes ids rather than a Player so creation can use the same guard as an
+    edit — a create has no row to exclude, an edit excludes itself.
 
     That index is (sport_id, folded name, real_team_id) and a violation aborts
     the WHOLE transaction — a 500 rather than a usable message — so it has to be
@@ -736,20 +758,117 @@ def _assert_identity_free(
     SQLite. One club is a few dozen rows, so the scan is free either way.
     """
     target = _fold_name(name)
-    rows = (
-        db.query(Player.id, Player.name)
-        .filter(
-            Player.sport_id == player.sport_id,
-            Player.real_team_id == club_id,
-            Player.id != player.id,
-        )
-        .all()
+    query = db.query(Player.id, Player.name).filter(
+        Player.sport_id == sport_id,
+        Player.real_team_id == club_id,
     )
+    if exclude_player_id is not None:
+        query = query.filter(Player.id != exclude_player_id)
+    rows = query.all()
     if any(_fold_name(existing) == target for _, existing in rows):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"{club_name} already has a player named '{name}'",
         )
+
+
+def create_player(
+    db: Session,
+    actor: User,
+    *,
+    sport_id: uuid.UUID,
+    real_team_id: uuid.UUID,
+    name: str,
+    position: str,
+    cost: float,
+    is_available: bool = True,
+    photo_url: str | None = None,
+    external_api_id: str | None = None,
+    reason: str | None = None,
+) -> Player:
+    """Add a player to the pool by hand.
+
+    The repair path for provider gaps: API-Football's squad feed omits players
+    who are genuinely at the club, so a fixture's full-time sheet can name
+    someone we have no row for, and they score zero for a match they played.
+    Setting external_api_id to the provider's player id is what makes the next
+    re-book resolve them by id rather than by name.
+    """
+    sport = db.query(Sport).filter(Sport.id == sport_id).first()
+    if sport is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sport not found")
+
+    team = db.query(RealTeam).filter(RealTeam.id == real_team_id).first()
+    if team is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Real team not found")
+    if team.sport_id != sport_id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Real team belongs to a different sport",
+        )
+
+    position = position.strip().upper()
+    valid = _POSITIONS_BY_SPORT.get(sport.name, set())
+    if valid and position not in valid:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid position '{position}' for {sport.name}; expected one of {sorted(valid)}",
+        )
+
+    name = name.strip()
+    _assert_identity_free(db, sport_id, team.id, team.name, name)
+
+    if external_api_id is not None:
+        external_api_id = external_api_id.strip() or None
+    if external_api_id is not None:
+        clash = (
+            db.query(Player.name)
+            .filter(Player.external_api_id == external_api_id)
+            .first()
+        )
+        if clash is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"External API id {external_api_id} is already used by '{clash[0]}'",
+            )
+
+    player = Player(
+        sport_id=sport_id,
+        name=name,
+        position=position,
+        cost=Decimal(str(cost)),
+        is_available=is_available,
+        photo_url=photo_url,
+        external_api_id=external_api_id,
+        # All three club fields move together — real_team (the denormalized
+        # name) is what every name-matching path actually reads, and the logo
+        # is copied onto the player row. Same rule as edit_player.
+        real_team_id=team.id,
+        real_team=team.name,
+        real_team_logo_url=team.logo_url,
+    )
+    db.add(player)
+    db.flush()
+
+    record_admin_action(
+        db,
+        actor=actor,
+        action=AdminActionType.PLAYER_CREATE,
+        target_type="player",
+        target_id=player.id,
+        reason=reason,
+        metadata={
+            "name": name,
+            "position": position,
+            "real_team": team.name,
+            "cost": float(cost),
+            "external_api_id": external_api_id,
+        },
+    )
+    db.commit()
+    db.refresh(player)
+    player_read_cache.bust_all()
+    return player
 
 
 def edit_player(
@@ -801,10 +920,11 @@ def edit_player(
     if name is not None or target is not None:
         _assert_identity_free(
             db,
-            player,
+            player.sport_id,
             target.id if target else player.real_team_id,
             target.name if target else player.real_team,
             name if name is not None else player.name,
+            exclude_player_id=player.id,
         )
 
     if name is not None:
@@ -1492,7 +1612,7 @@ def list_transfers_for_league(
 # ── Scoring rules (admin-editable, config-driven scoring) ──────────────────────
 
 _VALID_MODES = {"per_unit", "per_n", "threshold", "flat"}
-_VALID_POSITIONS = {"GKP", "DEF", "MID", "FWD"}
+_VALID_POSITIONS = _POSITIONS_BY_SPORT["football"]
 
 
 def list_scoring_rules(db: Session, sport_id: uuid.UUID | None):

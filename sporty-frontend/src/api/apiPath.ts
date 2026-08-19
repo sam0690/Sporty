@@ -241,6 +241,7 @@ export const API_PATHS = {
     RECALCULATE_ACTIVE_WINDOWS: "/admin/scoring/recalculate-active",
     WINDOW_LOCK: (windowId: string) => `/admin/transfer-windows/${windowId}/lock`,
 
+    PLAYER_CREATE: "/admin/players",
     PLAYER_DETAIL: (id: string) => `/admin/players/${id}`,
     PLAYER_REPRICE: "/admin/players/reprice",
 

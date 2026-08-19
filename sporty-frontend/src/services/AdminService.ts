@@ -141,6 +141,21 @@ export type TAdminPlayerDetail = {
   photo_url: string | null;
 };
 
+export type TAdminPlayerCreateRequest = {
+  sport_id: string;
+  real_team_id: string;
+  name: string;
+  position: string;
+  cost: number;
+  is_available?: boolean;
+  photo_url?: string;
+  /** The provider's player id. Setting it is what lets a match's full-time
+   *  sheet resolve this player by id instead of falling back to name
+   *  matching — the whole reason a manual pool entry usually exists. */
+  external_api_id?: string;
+  reason?: string;
+};
+
 export type TAdminPlayerEditRequest = {
   name?: string;
   position?: string;
@@ -410,6 +425,11 @@ export const AdminService = {
 
   async getPlayer(id: string): Promise<TAdminPlayerDetail> {
     const res = await authApi.get(API_PATHS.ADMIN.PLAYER_DETAIL(id));
+    return res.data;
+  },
+
+  async createPlayer(data: TAdminPlayerCreateRequest): Promise<TAdminPlayerDetail> {
+    const res = await authApi.post(API_PATHS.ADMIN.PLAYER_CREATE, data);
     return res.data;
   },
 

@@ -296,6 +296,107 @@ def test_get_player_admin_404_for_missing():
         assert exc_info.value.status_code == 404
 
 
+# ── create_player: the manual repair path for provider squad-feed gaps ──────
+# API-Football's /players/squads omits players who are genuinely at the club,
+# so a fixture's full-time sheet names people we have no row for and they score
+# zero for a match they played. These pin the guards on the hand-add path.
+
+
+def test_create_player_adds_to_pool_and_audits():
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+        club = _real_team(db, sport)
+        club.logo_url = "https://cdn.example/club.png"
+        _player(db, sport, club, "Incumbent")  # gives the sport a position vocabulary
+        db.commit()
+
+        created = admin_services.create_player(
+            db, admin,
+            sport_id=sport.id, real_team_id=club.id,
+            name="  Jorge Dominguez  ", position="def", cost=4.5,
+            external_api_id="656189",
+        )
+
+        assert created.name == "Jorge Dominguez"       # trimmed
+        assert created.position == "DEF"               # normalized
+        assert created.cost == Decimal("4.5")
+        assert created.external_api_id == "656189"
+        # All three club fields move together, same rule as edit_player.
+        assert created.real_team_id == club.id
+        assert created.real_team == club.name
+        assert created.real_team_logo_url == "https://cdn.example/club.png"
+
+        from app.admin.models import AdminActionType, AdminAuditLog
+        entry = db.query(AdminAuditLog).filter(
+            AdminAuditLog.action == AdminActionType.PLAYER_CREATE
+        ).first()
+        assert entry is not None
+        assert entry.metadata_json["external_api_id"] == "656189"
+
+
+def test_create_player_rejects_duplicate_identity_and_external_id():
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+        club = _real_team(db, sport)
+        incumbent = _player(db, sport, club, "Dani  Rodriguez")
+        incumbent.external_api_id = "999001"
+        db.commit()
+
+        # uq_players_identity folds whitespace/case — must 409, not 500.
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.create_player(
+                db, admin, sport_id=sport.id, real_team_id=club.id,
+                name="dani rodriguez", position="MID", cost=5.0,
+            )
+        assert exc_info.value.status_code == 409
+        assert "already has a player named" in exc_info.value.detail
+        db.rollback()
+
+        # external_api_id is globally unique; a clash is the id-drift case and
+        # must name the incumbent rather than blowing up on the flush.
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.create_player(
+                db, admin, sport_id=sport.id, real_team_id=club.id,
+                name="Someone Else", position="MID", cost=5.0,
+                external_api_id="999001",
+            )
+        assert exc_info.value.status_code == 409
+        assert "already used by" in exc_info.value.detail
+
+
+def test_create_player_rejects_bad_position_and_cross_sport_club():
+    with session_scope() as db:
+        admin = _make_user(db, role=UserRole.SUPER_ADMIN)
+        football = Sport(name="football", display_name="Football")
+        basketball = Sport(name="basketball", display_name="Basketball")
+        db.add_all([football, basketball])
+        db.flush()
+        club = _real_team(db, football)
+        _player(db, football, club, "Anchor", position="MID")
+        nba_club = _real_team(db, basketball)
+        db.commit()
+
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.create_player(
+                db, admin, sport_id=football.id, real_team_id=club.id,
+                name="Bad Position", position="QB", cost=5.0,
+            )
+        assert exc_info.value.status_code == 422
+
+        with pytest.raises(HTTPException) as exc_info:
+            admin_services.create_player(
+                db, admin, sport_id=football.id, real_team_id=nba_club.id,
+                name="Wrong Sport", position="MID", cost=5.0,
+            )
+        assert exc_info.value.status_code == 409
+
+
 def test_edit_player_updates_fields_and_audits():
     with session_scope() as db:
         admin = _make_user(db, role=UserRole.SUPER_ADMIN)

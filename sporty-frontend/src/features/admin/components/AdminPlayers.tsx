@@ -8,6 +8,7 @@ import { TableSkeleton } from "@/components/ui/skeletons/TableSkeleton";
 import { Table, type TableColumn } from "@/components/ui";
 import { AdminErrorState } from "./AdminErrorState";
 import { Pagination } from "./Pagination";
+import { AddPlayerModal } from "./AddPlayerModal";
 import { usePlayers, useRealTeams } from "@/hooks/players/usePlayers";
 import { useEditPlayer, useTriggerRepricing } from "@/hooks/admin/useAdminPlayers";
 import type { TPlayer } from "@/types";
@@ -25,6 +26,7 @@ export function AdminPlayers() {
   const [editTeamId, setEditTeamId] = useState("");
   const [editAvailable, setEditAvailable] = useState(true);
   const [lookbackWindows, setLookbackWindows] = useState(3);
+  const [addOpen, setAddOpen] = useState(false);
 
   // include_unavailable: this is the screen where departed players get fixed,
   // so it must show the ones every gameplay view now hides.
@@ -150,7 +152,16 @@ export function AdminPlayers() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Players</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="font-display text-4xl tracking-[-0.02em] text-fg-1">Players</h1>
+        {canEditPlayers && (
+          <Button variant="primary" size="sm" onClick={() => setAddOpen(true)}>
+            Add Player
+          </Button>
+        )}
+      </div>
+
+      <AddPlayerModal isOpen={addOpen} onClose={() => setAddOpen(false)} />
 
       <section className="card-surface p-5 space-y-3">
         <p className="section-label">Repricing</p>

@@ -14,6 +14,7 @@ from app.admin.schemas import (  # noqa: F401 (extended below)
     AdminAuditLogListResponse,
     AdminLeagueListItem,
     AdminLeagueListResponse,
+    AdminPlayerCreateRequest,
     AdminPlayerDetail,
     AdminPlayerEditRequest,
     AdminTicketDetail,
@@ -391,6 +392,32 @@ def set_window_lock(
 
 
 # ── Players / pricing ───────────────────────────────────────────────────────────
+
+@router.post(
+    "/players",
+    response_model=AdminPlayerDetail,
+    status_code=201,
+    summary="Add a player to the pool (super admin)",
+)
+def create_player(
+    data: AdminPlayerCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin_role(UserRole.SUPER_ADMIN)),
+):
+    return services.create_player(
+        db,
+        current_user,
+        sport_id=data.sport_id,
+        real_team_id=data.real_team_id,
+        name=data.name,
+        position=data.position,
+        cost=data.cost,
+        is_available=data.is_available,
+        photo_url=data.photo_url,
+        external_api_id=data.external_api_id,
+        reason=data.reason,
+    )
+
 
 @router.get("/players/{player_id}", response_model=AdminPlayerDetail, summary="Get a player (admin)")
 def get_player(

@@ -3,6 +3,7 @@ import { useApiQuery } from "@/hooks/api/useApiQuery";
 import { useApiMutation } from "@/hooks/api/useApiMutation";
 import {
   AdminService,
+  type TAdminPlayerCreateRequest,
   type TAdminPlayerDetail,
   type TAdminPlayerEditRequest,
   type TRepriceResponse,
@@ -13,6 +14,20 @@ export function useAdminPlayer(id: string) {
     ["admin", "players", id],
     () => AdminService.getPlayer(id),
     { enabled: !!id },
+  );
+}
+
+export function useCreatePlayer() {
+  const queryClient = useQueryClient();
+  return useApiMutation<TAdminPlayerDetail, TAdminPlayerCreateRequest>(
+    (data) => AdminService.createPlayer(data),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["players"] });
+        queryClient.invalidateQueries({ queryKey: ["admin", "audit-log"] });
+      },
+      successMessage: "Player added to the pool",
+    },
   );
 }
 
