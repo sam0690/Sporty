@@ -220,6 +220,46 @@ def _run_stale_match_watchdog_job() -> None:
       db.close()
 
 
+# A wedged Celery worker is invisible from inside Celery: beat keeps
+# publishing, the queue grows, and nothing complains. On 2026-08-18 the worker
+# stopped consuming for 29 hours and the first anyone knew was a live La Liga
+# fixture that never got a score. This runs in the API process — the one thing
+# that stays up independently of the worker — and watches the only symptom
+# that matters: queue depth.
+#
+# ponytail: queue length, not a heartbeat table. One Redis command, and it
+# catches a dead worker, a wedged worker, and a worker that simply can't keep
+# up. Threshold is well above a normal burst (~15 tasks between the 60s ticks).
+# Reads "celery" (the default queue) through get_redis(), which works because
+# CELERY_BROKER_URL points at the same Upstash instance/db as REDIS_URL. Point
+# the broker somewhere else and this needs its own client.
+_CELERY_BACKLOG_ALERT = 300
+
+
+def _run_celery_backlog_watchdog_job() -> None:
+  try:
+    depth = get_redis().llen("celery")
+  except Exception:
+    logger.exception("Celery backlog watchdog: could not read queue depth")
+    return
+
+  if depth < _CELERY_BACKLOG_ALERT:
+    logger.debug("Celery backlog watchdog: queue depth %s", depth)
+    return
+
+  logger.error(
+    "Celery backlog %s exceeds %s — the worker is likely not consuming",
+    depth, _CELERY_BACKLOG_ALERT,
+  )
+  if settings.SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.capture_message(
+      f"Celery queue backlog {depth} (threshold {_CELERY_BACKLOG_ALERT}) — worker not consuming",
+      level="error",
+    )
+
+
 def _run_gameweek_ranking_job() -> None:
   from datetime import datetime, timezone
   from app.core.redis_lock import redis_lock
@@ -320,6 +360,13 @@ async def lifespan(app: FastAPI):
       trigger="cron",
       minute=25,
       id="stale_match_watchdog_hourly",
+      replace_existing=True,
+    )
+    scheduler.add_job(
+      _run_celery_backlog_watchdog_job,
+      trigger="cron",
+      minute=35,
+      id="celery_backlog_watchdog_hourly",
       replace_existing=True,
     )
     scheduler.start()

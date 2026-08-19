@@ -254,7 +254,11 @@ async def sync_sportscore_live(db: Session) -> str:
     if sport is None:
         return "ok: football sport not seeded"
 
-    candidates = _fixtures_in_live_window(db, sport.id)
+    # numeric_id_only=False: we address SportScore by name slug, never by an
+    # API-Football fixture id, so a fixture still on its `fdo:` placeholder is
+    # perfectly pollable here — and this is the only provider cheap enough to
+    # cover it.
+    candidates = _fixtures_in_live_window(db, sport.id, numeric_id_only=False)
     if not candidates:
         return "ok: no fixtures in live window; provider not called"
 

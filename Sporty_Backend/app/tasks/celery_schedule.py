@@ -3,6 +3,14 @@
 from celery.schedules import crontab
 
 
+# `"options": {"expires": N}` on every sub-hourly entry, N just under that
+# entry's own interval. A poll message that is already stale when a worker
+# finally picks it up is worthless — and without an expiry they accumulate:
+# a wedged worker on 2026-08-18 let beat pile up 3,525 messages, which on
+# restart would have replayed a day of polls and burned the API-Football
+# budget on nothing. Expired messages are dropped on receipt, so an outage
+# now self-heals instead of needing a manual `celery purge`.
+
 CELERY_BEAT_SCHEDULE = {
     # ── Football via API-Football (free tier: 100 req/day, budget 95 —
     # see FOOTBALL_API_DAILY_BUDGET). All three tasks no-op while
@@ -51,6 +59,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "live.football.poll",
         "schedule": crontab(minute=30),  # every hour at :30
         "args": (),
+        "options": {"expires": 3300},
     },
     # Team stats (possession/shots/xG) skipped at full time because the day's
     # budget was inside the reserve. Capped at 5 fixtures and a 14-day lookback,
@@ -93,6 +102,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "live.sportscore.poll",
         "schedule": 60.0,
         "args": (),
+        "options": {"expires": 55},
     },
     # Confirmed lineups land ~1h before kick-off, which the hourly live poll
     # would miss by up to an hour (its window opens at kickoff-5min). This is
@@ -150,6 +160,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "live.nba.poll",
         "schedule": crontab(minute="*/2"),
         "args": (),
+        "options": {"expires": 110},
     },
     # Reconciliation sweep: recomputes the current + just-closed window's stats
     # from the authoritative box scores. The live tick already books points at
@@ -171,6 +182,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "score.active_transfer_windows",
         "schedule": 600.0,
         "args": (),
+        "options": {"expires": 570},
     },
     # Auto-lock transfer windows when deadlines pass (every 5 min — cheap
     # work, but each run costs a Redis lock acquire/release against Upstash's
@@ -179,12 +191,14 @@ CELERY_BEAT_SCHEDULE = {
         "task": "transfer.auto_lock_expired",
         "schedule": crontab(minute="*/5"),
         "args": (),
+        "options": {"expires": 280},
     },
     # Auto-lock lineup windows when deadlines pass (every 5 min, same reason)
     "auto-lock-lineup-windows-every-5-min": {
         "task": "lineup.auto_lock_expired",
         "schedule": crontab(minute="*/5"),
         "args": (),
+        "options": {"expires": 280},
     },
     # Reprice player market values from recent transfer-window performance.
     "recalculate-player-prices-daily": {

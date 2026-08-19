@@ -82,6 +82,32 @@ celery_app.conf.update(
     # around this per-call with ignore_result=True; this makes it the default
     # everywhere instead of relying on every call site remembering to set it.
     task_ignore_result=True,
+    # The broker is Upstash redis over TLS, consumed from a machine whose
+    # network can blink or suspend. With no socket timeout the consumer's
+    # blocking read on a half-open socket never returns and never raises: the
+    # worker goes silent (won't even answer `inspect ping`) while beat keeps
+    # publishing. That is exactly what happened 2026-08-18 — 29 hours of live
+    # polls piled up 3,525 deep and a real La Liga fixture never got fetched.
+    #
+    # socket_timeout must exceed BRPOP's own wait (kombu polls with a short
+    # one) but stay well under the hourly football poll, so a dead socket is
+    # noticed and reconnected within one beat interval of any task.
+    broker_transport_options={
+        "socket_timeout": 30,
+        "socket_connect_timeout": 10,
+        "socket_keepalive": True,
+        "health_check_interval": 30,
+        # Redelivery deadline for an un-acked message. Must be >= the longest
+        # task or a slow run gets handed to a second worker mid-flight; the
+        # squad-seeding/backfill style syncs are the long pole at ~10 min.
+        "visibility_timeout": 1800,
+    },
+    # Second wedge path: a provider call that hangs forever parks a pool child
+    # instead of the consumer (stats.nba.com soft-blocks exactly like this).
+    # Soft limit gives the task a SoftTimeLimitExceeded to clean up; the hard
+    # limit kills the child. 10 min is above every real task's runtime.
+    task_soft_time_limit=540,
+    task_time_limit=600,
 )
 
 # Explicitly import task modules so they're registered on app import.

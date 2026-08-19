@@ -178,3 +178,50 @@ def test_terminal_codes_normalize_to_finished():
 def test_unknown_and_empty_codes_fall_back_to_scheduled():
     for code in ("NS", "ZZZ", "", None):
         assert normalize_match_status(code) == "scheduled", code
+
+
+# ── Live-window candidate scoping ───────────────────────────────────────────
+# sportscore_live_sync reuses _fixtures_in_live_window but addresses matches by
+# name slug, not by an API-Football id. It used to inherit the numeric-id
+# filter, which hid every fixture still on its football-data.org `fdo:`
+# placeholder from the one provider that costs nothing to poll.
+
+
+def _make_kicked_off_match(db, sport: Sport, *, external_id: str) -> Match:
+    """A scheduled fixture that kicked off 30 minutes ago — inside the window."""
+    match = Match(
+        sport_id=sport.id,
+        external_api_id=external_id,
+        home_team="Atletico Madrid",
+        away_team="Malaga",
+        match_date=datetime.now(timezone.utc) - timedelta(minutes=30),
+        status="scheduled",
+        competition="La Liga",
+        season="2026",
+    )
+    db.add(match)
+    db.flush()
+    return match
+
+
+def test_live_window_scoping_by_provider_id():
+    from app.services.sync.football_live_sync import _fixtures_in_live_window
+
+    with session_scope() as db:
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+
+        _make_kicked_off_match(db, sport, external_id="1570334")
+        _make_kicked_off_match(db, sport, external_id="fdo:564638")
+        db.commit()
+
+        # API-Football callers key on the fixture id, so they must not see the
+        # placeholder — matching it would spend a request on a lookup that
+        # cannot resolve.
+        api_football = _fixtures_in_live_window(db, sport.id)
+        assert [m.external_api_id for m in api_football] == ["1570334"]
+
+        # SportScore needs both.
+        sportscore = _fixtures_in_live_window(db, sport.id, numeric_id_only=False)
+        assert sorted(m.external_api_id for m in sportscore) == ["1570334", "fdo:564638"]

@@ -236,9 +236,19 @@ def _parse_player_sheet(
     return out
 
 
-def _fixtures_in_live_window(db: Session, sport_id) -> list[Match]:
+def _fixtures_in_live_window(
+    db: Session, sport_id, *, numeric_id_only: bool = True
+) -> list[Match]:
     """Real-API fixtures that could be live right now — the free-tier gate:
-    no candidates means the poll returns without spending a single request."""
+    no candidates means the poll returns without spending a single request.
+
+    numeric_id_only=False drops the API-Football-id requirement, for callers
+    that address a fixture some other way. Only sportscore_live_sync does:
+    it looks matches up by name slug, so requiring a numeric id there just
+    hid every fixture still on its football-data.org `fdo:` placeholder —
+    1,054 of 1,060 at the time of writing — from the one provider that costs
+    nothing to poll.
+    """
     now = datetime.now(timezone.utc)
     candidates = (
         db.query(Match)
@@ -250,6 +260,8 @@ def _fixtures_in_live_window(db: Session, sport_id) -> list[Match]:
         )
         .all()
     )
+    if not numeric_id_only:
+        return candidates
     return [m for m in candidates if (m.external_api_id or "").isdigit()]
 
 
