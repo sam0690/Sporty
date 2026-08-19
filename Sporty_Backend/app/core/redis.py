@@ -69,6 +69,15 @@ def get_redis() -> Redis:
                 settings.REDIS_URL,
                 decode_responses=True,  # Automatically decode bytes to str
                 socket_connect_timeout=5,
+                # redis-py defaults socket_timeout to None — block forever. With
+                # a remote Redis (Upstash) that accepts the TCP connection but
+                # stops answering, every request would hang indefinitely instead
+                # of failing. That is worse than an error: the request never
+                # returns, the worker stays occupied, and the symptom is "the
+                # site is slow" rather than anything that points at Redis.
+                # 3s is far above a healthy round trip and far below a user's
+                # patience — a breach means Redis is not usable anyway.
+                socket_timeout=3,
                 socket_keepalive=True,
                 health_check_interval=30,
             )

@@ -111,15 +111,21 @@ def check_rate_limit(client_ip: str, path: str) -> tuple[bool, dict]:
         # Create a unique key per IP + endpoint
         rate_key = f"rl:{path_prefix}:{client_ip}"
 
-        # SET NX + EX creates the counter and its TTL in one command, then INCR
-        # bumps it. The previous INCR-then-EXPIRE pair was two round-trips: a
-        # crash or connection drop between them left a counter with NO TTL, and
-        # that key then blocked its IP+path forever. Order matters — SET must
-        # come first, because a post-INCR EXPIRE has the same window.
-        redis.set(rate_key, 0, ex=window_seconds, nx=True)
-        current = redis.incr(rate_key)
+        # One pipeline, one round trip. Redis is remote (Upstash), so latency
+        # here is network latency — three sequential commands meant three RTTs
+        # on EVERY request, which at ~50ms each is ~150ms of pure overhead
+        # before any handler runs. Pipelined it's one.
+        #
+        # SET NX EX creates the counter and its TTL together, then INCR bumps
+        # it. The older INCR-then-EXPIRE pair could die between the two commands
+        # and leave a counter with no TTL, permanently blocking that IP+path.
+        # Order matters: SET must come first.
+        pipe = redis.pipeline()
+        pipe.set(rate_key, 0, ex=window_seconds, nx=True)
+        pipe.incr(rate_key)
+        pipe.ttl(rate_key)
+        _, current, ttl = pipe.execute()
 
-        ttl = redis.ttl(rate_key)
         remaining = max(0, max_requests - current)
 
         limit_info = {

@@ -21,6 +21,22 @@ from app.auth import services as auth_services
 from app.middleware import csrf, rate_limiter
 
 
+class _DeadPipeline:
+    """redis-py builds the pipeline fine and raises on execute()."""
+
+    def set(self, *a, **kw):
+        return self
+
+    def incr(self, *a, **kw):
+        return self
+
+    def ttl(self, *a, **kw):
+        return self
+
+    def execute(self):
+        raise ConnectionError("redis is down")
+
+
 class _DeadRedis:
     """Every command raises, the way redis-py behaves when it can't connect."""
 
@@ -28,6 +44,9 @@ class _DeadRedis:
         raise ConnectionError("redis is down")
 
     incr = expire = ttl = set = setex = exists = _boom
+
+    def pipeline(self):
+        return _DeadPipeline()
 
 
 # ── rate limiter ──────────────────────────────────────────────────────────────
@@ -55,33 +74,51 @@ def test_probe_paths_stay_open_when_redis_is_down(monkeypatch, path):
     )
 
 
-def test_counter_ttl_is_set_atomically_with_the_counter(monkeypatch):
-    """SET NX EX creates key and TTL together; INCR then bumps it.
+def test_rate_limit_costs_exactly_one_round_trip(monkeypatch):
+    """All three commands go in ONE pipeline.
 
-    The old INCR-then-EXPIRE pair could die between the two commands and leave
-    a counter with no TTL, permanently blocking that IP+path.
+    Redis is remote (Upstash), so each extra command is a network round trip on
+    every single request. Three sequential calls at ~50ms each is ~150ms of
+    latency before any handler runs.
+
+    Also pins TTL atomicity: SET NX EX creates the key and its expiry together
+    and must precede INCR. The older INCR-then-EXPIRE pair could die between
+    the two commands and leave a TTL-less counter blocking that IP+path forever.
     """
-    calls: list[str] = []
+    round_trips: list[list[str]] = []
 
-    class _RecordingRedis:
+    class _RecordingPipeline:
+        def __init__(self):
+            self.commands: list[str] = []
+
         def set(self, key, value, ex=None, nx=None):
-            calls.append("set")
             assert ex is not None and nx is True, "TTL must be set at creation"
-            return True
+            self.commands.append("set")
+            return self
 
         def incr(self, key):
-            calls.append("incr")
-            return 1
+            self.commands.append("incr")
+            return self
 
         def ttl(self, key):
-            return 60
+            self.commands.append("ttl")
+            return self
+
+        def execute(self):
+            round_trips.append(self.commands)
+            return [True, 1, 60]
+
+    class _RecordingRedis:
+        def pipeline(self):
+            return _RecordingPipeline()
 
     monkeypatch.setattr(rate_limiter, "get_redis", lambda: _RecordingRedis())
 
     allowed, _ = rate_limiter.check_rate_limit("9.9.9.9", "/api/v1/auth/login")
 
     assert allowed is True
-    assert calls == ["set", "incr"], "SET NX EX must precede INCR"
+    assert len(round_trips) == 1, f"expected 1 round trip, made {len(round_trips)}"
+    assert round_trips[0] == ["set", "incr", "ttl"], "SET NX EX must precede INCR"
 
 
 # ── CSRF ──────────────────────────────────────────────────────────────────────

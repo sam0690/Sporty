@@ -10,12 +10,40 @@ from app.core.config import settings
 from app.middleware import rate_limiter
 
 
+class _FakePipeline:
+    """The three commands are pipelined into one round trip — Redis is remote
+    (Upstash), so each extra RTT is real latency on every request. Queue on
+    call, apply on execute(), same as redis-py."""
+
+    def __init__(self, redis: "_FakeRedis"):
+        self._redis = redis
+        self._queued: list = []
+
+    def set(self, key, value, ex=None, nx=False):
+        self._queued.append(lambda: self._redis.set(key, value, ex=ex, nx=nx))
+        return self
+
+    def incr(self, key):
+        self._queued.append(lambda: self._redis.incr(key))
+        return self
+
+    def ttl(self, key):
+        self._queued.append(lambda: self._redis.ttl(key))
+        return self
+
+    def execute(self) -> list:
+        return [op() for op in self._queued]
+
+
 class _FakeRedis:
     def __init__(self):
         self.counts: dict[str, int] = {}
 
+    def pipeline(self) -> _FakePipeline:
+        return _FakePipeline(self)
+
     def set(self, key: str, value: int, ex: int | None = None, nx: bool = False) -> bool:
-        # SET NX EX now creates the counter and its TTL in one command (the old
+        # SET NX EX creates the counter and its TTL in one command (the old
         # INCR-then-EXPIRE pair could leave a TTL-less key that blocked its
         # IP+path forever). NX means "only if absent", so an existing counter
         # is left alone.
