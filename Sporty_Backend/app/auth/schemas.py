@@ -1,10 +1,30 @@
 import uuid
 from datetime import datetime
-from typing import Optional, Union
+from typing import Annotated, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 from app.schemas.common import PlayerBrief, TeamBrief
+
+
+def _bcrypt_safe(v: str) -> str:
+    """Reject passwords past bcrypt's 72-byte input limit.
+
+    bcrypt truncates silently, so without this any two passwords sharing their
+    first 72 bytes hash identically and both unlock the account. Measured in
+    BYTES, not characters — 72 emoji is ~288 bytes and would still truncate,
+    which a plain max_length=72 would wave through.
+    """
+    if len(v.encode("utf-8")) > 72:
+        raise ValueError("Password must be at most 72 bytes")
+    return v
+
+
+# Set on password *writes* only. LoginRequest.password stays unvalidated on
+# purpose: anyone who registered a >72-byte password before this existed
+# authenticates today via truncation, and validating at login would reject the
+# password they actually use and lock them out of their own account.
+Password = Annotated[str, Field(min_length=8), AfterValidator(_bcrypt_safe)]
 
 
 # ── Requests ──────────────────────────────────────────────────────────────────
@@ -12,7 +32,7 @@ from app.schemas.common import PlayerBrief, TeamBrief
 class RegisterRequest(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr
-    password: str = Field(min_length=8)
+    password: Password
     auto_login: bool = Field(default=False, description="If true, returns access/refresh tokens. If false, returns user object only.")
 
 
@@ -43,12 +63,12 @@ class ForgotPasswordResponse(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    new_password: str = Field(min_length=8)
+    new_password: Password
 
 
 class ChangePasswordRequest(BaseModel):
     current_password: str = Field(min_length=1)
-    new_password: str = Field(min_length=8)
+    new_password: Password
 
 
 # ── Responses ─────────────────────────────────────────────────────────────────

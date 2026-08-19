@@ -2,7 +2,12 @@
 
 from __future__ import annotations
 
+import secrets
+
+from fastapi import Header, HTTPException
 from prometheus_client import Counter, Gauge, Histogram
+
+from app.core.config import settings
 
 ingestion_polls_total = Counter(
     "sporty_ingestion_polls_total",
@@ -76,3 +81,31 @@ cache_ops_total = Counter(
     # about which one is actually working.
     ["cache", "result"],  # result: hit | miss
 )
+
+
+# ── /metrics endpoint auth ────────────────────────────────────────────────────
+# Lives here rather than in main.py so it can be imported (and tested) without
+# pulling in every model and router.
+
+def require_metrics_token(
+    x_metrics_token: str | None = Header(default=None, alias="X-Metrics-Token"),
+) -> None:
+    """Gate /metrics behind a shared secret — same shape as X-Feeder-Secret.
+
+    /metrics was public. It publishes per-route request counts and latency
+    histograms, which is both a map of which endpoints exist and a live read on
+    how much real traffic this serves.
+
+    compare_digest, not ==, so a wrong token costs the same time as a right one
+    and can't be recovered a byte at a time.
+    """
+    expected = settings.METRICS_TOKEN
+    if not expected:
+        if settings.ENVIRONMENT == "production":
+            # 503, not a validate_production() boot failure: an unset token
+            # should close the endpoint, not refuse to start the API.
+            raise HTTPException(status_code=503, detail="Metrics endpoint is not configured")
+        return  # development — nothing to configure, leave it open
+
+    if not x_metrics_token or not secrets.compare_digest(x_metrics_token, expected):
+        raise HTTPException(status_code=401, detail="Invalid metrics token")

@@ -86,6 +86,15 @@ class Settings(BaseSettings):
     # FEEDER_SECRET in the feeder's .env. Empty disables the feed endpoints (503).
     FEEDER_SECRET: str = ""
 
+    # ── Prometheus /metrics ─────────────────────────────────────
+    # Shared secret for scraping /metrics, sent as X-Metrics-Token. The endpoint
+    # publishes per-route request volumes and latency histograms — a map of which
+    # endpoints exist, which are hot, and how much real traffic this runs at.
+    # Empty is allowed in development (endpoint stays open, nothing to configure);
+    # in production an empty token makes /metrics return 503 rather than serve
+    # unauthenticated. Set this and add the header to the Prometheus scrape config.
+    METRICS_TOKEN: str = ""
+
     # ── Realtime Event Pipeline ────────────────────────────────
     KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
     KAFKA_CLIENT_ID: str = "sporty-backend"

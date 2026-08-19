@@ -95,7 +95,9 @@ async def _store_csrf_token(token: str, ttl: int = 3600) -> bool:
         redis.setex(key, ttl, "1")
         return True
     except Exception:
-        # Fail open — don't block requests if Redis is down
+        # False means "Redis is unreachable", not "token rejected". Callers
+        # decide what to do with that: minting a token on a GET tolerates it,
+        # validating one on a write does not. See dispatch().
         logger.exception("Failed to store CSRF token in Redis")
         return False
 
@@ -113,9 +115,35 @@ async def _validate_csrf_token(token: str) -> bool | None:
         key = f"csrf:{_hash_csrf_token(token)}"
         return redis.exists(key) == 1
     except Exception:
-        # Fail open — don't block requests if Redis is down
+        # None is the third state: not "invalid", but "we cannot tell".
+        # dispatch() answers 503 for it — see the fail-closed note there.
         logger.exception("Failed to validate CSRF token in Redis")
         return None
+
+
+def _redis_unavailable(request: Request) -> JSONResponse:
+    """Fail CLOSED: refuse a state-changing request we cannot CSRF-check.
+
+    Both call sites here used to `return await call_next(request)` — i.e. a Redis
+    outage silently turned CSRF protection off for every POST/PUT/PATCH/DELETE
+    on the API, logging a warning and processing the write anyway. That is the
+    one moment you least want the check skipped, and it happened automatically.
+
+    503 rather than 403: the request may well have been perfectly valid, and the
+    client should retry rather than go fetch a new token it doesn't need. No
+    X-CSRF-Token header on this response — we couldn't store one, so handing the
+    client a token that will fail validation just costs it another round trip.
+    """
+    logger.error(
+        "Refusing %s %s: CSRF store unavailable (failing closed)",
+        request.method,
+        request.url.path,
+    )
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Service temporarily unavailable. Please retry shortly."},
+        headers={"Retry-After": "5"},
+    )
 
 
 class CSRFMiddleware(BaseHTTPMiddleware):
@@ -175,12 +203,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         if not csrf_header:
             redis_available = await _store_csrf_token(generate_csrf_token())
             if not redis_available:
-                logger.warning(
-                    "Skipping CSRF enforcement for %s %s because Redis is unavailable",
-                    request.method,
-                    request.url.path,
-                )
-                return await call_next(request)
+                return _redis_unavailable(request)
 
             # No CSRF token — return 403 with a new token for retry
             logger.warning(
@@ -203,12 +226,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
         # Validate the token
         token_is_valid = await _validate_csrf_token(csrf_header)
         if token_is_valid is None:
-            logger.warning(
-                "Skipping CSRF validation for %s %s because Redis is unavailable",
-                request.method,
-                request.url.path,
-            )
-            return await call_next(request)
+            return _redis_unavailable(request)
 
         if not token_is_valid:
             logger.warning(

@@ -250,8 +250,13 @@ def _is_login_rate_limited(identifier: str) -> bool:
 
         return current > settings.RATE_LIMIT_LOGIN_ACCOUNT_MAX_ATTEMPTS
     except Exception:
-        # Fail open if Redis is unavailable; do not lock out legitimate users.
-        return False
+        # Fail CLOSED. This previously returned False ("not limited") so an
+        # outage wouldn't lock out legitimate users — but it also handed an
+        # attacker unlimited password guesses against any account for the
+        # duration, which is precisely when nobody is watching. Legitimate
+        # users get a 429 and retry; a credential-stuffing run gets nothing.
+        logger.exception("Login throttle unavailable, denying login (fail closed)")
+        return True
 
 
 # ── Public service functions ──────────────────────────────────────────────────

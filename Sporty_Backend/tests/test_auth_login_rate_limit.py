@@ -53,10 +53,18 @@ def test_login_rate_limit_is_case_and_whitespace_insensitive(monkeypatch):
     assert auth_services._is_login_rate_limited(" someone@example.com ") is True
 
 
-def test_login_rate_limit_fails_open_when_redis_unavailable(monkeypatch):
+def test_login_rate_limit_fails_closed_when_redis_unavailable(monkeypatch):
+    """Policy inverted: this used to assert False ("allow the login").
+
+    Failing open avoided locking out legitimate users during an outage, but it
+    also handed an attacker unlimited password guesses against any account for
+    the duration — precisely when nobody is watching the graphs. Real users get
+    a 429 and retry; a credential-stuffing run gets nothing.
+    """
+
     def _raise():
         raise ConnectionError("redis down")
 
     monkeypatch.setattr(auth_services, "get_redis", _raise)
 
-    assert auth_services._is_login_rate_limited("someone@example.com") is False
+    assert auth_services._is_login_rate_limited("someone@example.com") is True

@@ -47,6 +47,15 @@ RATE_LIMIT_RULES = [
 ]
 
 
+# Paths that must answer even when Redis is unreachable. check_rate_limit fails
+# CLOSED, so without this carve-out a Redis outage would 503 the liveness probe,
+# Render would mark every instance unhealthy, and a cache outage would escalate
+# into a restart loop. These two are infrastructure endpoints — they are not
+# worth rate limiting and they are exactly what you need working during an
+# incident. /health is already CSRF-exempt via CSRF_EXEMPT_PATHS.
+FAIL_OPEN_PATHS = {"/health", "/metrics"}
+
+
 def get_client_ip(request: Request) -> str:
     """
     Extract the real client IP without trusting client-supplied headers.
@@ -82,6 +91,9 @@ def check_rate_limit(client_ip: str, path: str) -> tuple[bool, dict]:
     if not settings.RATE_LIMIT_ENABLED:
         return True, {}
 
+    if path in FAIL_OPEN_PATHS:
+        return True, {}
+
     # Find matching rate limit rule
     matching_rule = None
     for path_prefix, max_requests, window_seconds in RATE_LIMIT_RULES:
@@ -99,12 +111,13 @@ def check_rate_limit(client_ip: str, path: str) -> tuple[bool, dict]:
         # Create a unique key per IP + endpoint
         rate_key = f"rl:{path_prefix}:{client_ip}"
 
-        # Use Redis INCR with TTL for sliding window
+        # SET NX + EX creates the counter and its TTL in one command, then INCR
+        # bumps it. The previous INCR-then-EXPIRE pair was two round-trips: a
+        # crash or connection drop between them left a counter with NO TTL, and
+        # that key then blocked its IP+path forever. Order matters — SET must
+        # come first, because a post-INCR EXPIRE has the same window.
+        redis.set(rate_key, 0, ex=window_seconds, nx=True)
         current = redis.incr(rate_key)
-
-        # Set expiry on first request
-        if current == 1:
-            redis.expire(rate_key, window_seconds)
 
         ttl = redis.ttl(rate_key)
         remaining = max(0, max_requests - current)
@@ -121,9 +134,18 @@ def check_rate_limit(client_ip: str, path: str) -> tuple[bool, dict]:
         return True, limit_info
 
     except Exception:
-        # Fail open - don't block legitimate traffic if Redis is down
-        logger.exception("Rate limiter failed, allowing request")
-        return True, {}
+        # Fail CLOSED. This used to return (True, {}) — "allow" — which meant a
+        # Redis outage silently disabled every rate limit at once, including the
+        # login/register/forgot-password ones, with nothing but a log line to
+        # say so. An attacker who can knock Redis over (or who just gets lucky
+        # during an outage) gets unlimited brute-force attempts.
+        #
+        # The marker tells the middleware this is OUR failure, not the client
+        # sending too much, so it can answer 503 rather than 429. FAIL_OPEN_PATHS
+        # above keeps /health answering, so a Redis blip degrades the API instead
+        # of failing the liveness probe and getting our instances recycled.
+        logger.exception("Rate limiter failed, denying request (fail closed)")
+        return False, {"X-RateLimit-Backend-Down": "1"}
 
 
 class RateLimitMiddleware:
@@ -156,6 +178,19 @@ class RateLimitMiddleware:
 
         # Check rate limit
         allowed, limit_info = check_rate_limit(client_ip, path)
+
+        if not allowed and limit_info.get("X-RateLimit-Backend-Down"):
+            # We couldn't reach Redis, so we can't tell whether this request is
+            # within its limit. 503 (not 429) because the fault is ours — a 429
+            # would tell an honest client to back off for a problem it didn't
+            # cause, and would poison client-side retry logic.
+            response = JSONResponse(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                content={"detail": "Service temporarily unavailable. Please retry shortly."},
+                headers={"Retry-After": "5"},
+            )
+            await response(scope, receive, send)
+            return
 
         if not allowed:
             # Rate limit exceeded - return 429

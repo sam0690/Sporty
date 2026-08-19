@@ -14,12 +14,19 @@ class _FakeRedis:
     def __init__(self):
         self.counts: dict[str, int] = {}
 
+    def set(self, key: str, value: int, ex: int | None = None, nx: bool = False) -> bool:
+        # SET NX EX now creates the counter and its TTL in one command (the old
+        # INCR-then-EXPIRE pair could leave a TTL-less key that blocked its
+        # IP+path forever). NX means "only if absent", so an existing counter
+        # is left alone.
+        if nx and key in self.counts:
+            return False
+        self.counts[key] = value
+        return True
+
     def incr(self, key: str) -> int:
         self.counts[key] = self.counts.get(key, 0) + 1
         return self.counts[key]
-
-    def expire(self, key: str, ttl: int) -> None:
-        pass
 
     def ttl(self, key: str) -> int:
         return 60

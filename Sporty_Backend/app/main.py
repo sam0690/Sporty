@@ -25,7 +25,7 @@ import logging
 import os
 
 from apscheduler.schedulers.background import BackgroundScheduler
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 
@@ -381,12 +381,18 @@ if settings.SENTRY_DSN:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 
+# Interactive docs are a complete map of the API — every route, every schema,
+# every parameter — served to anyone who asks, and they sit on the CSRF exempt
+# list. Fine in dev, free reconnaissance in production.
+_is_prod = settings.ENVIRONMENT == "production"
+
 app = FastAPI(
     title="Sporty",
     description="Multi-sport fantasy league platform API",
     version="1.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None if _is_prod else "/docs",
+    redoc_url=None if _is_prod else "/redoc",
+    openapi_url=None if _is_prod else "/openapi.json",
     lifespan=lifespan,
 )
 
@@ -479,11 +485,20 @@ app.openapi = _custom_openapi
 # ── Prometheus metrics ────────────────────────────────────────────
 # Fine latency buckets around the 200ms/300ms P95 targets — the library default
 # is only (0.1, 0.5, 1.0), too coarse to place a sub-200ms P95 with any accuracy.
+from app.core.metrics import require_metrics_token
+
 Instrumentator().add(
     metrics.default(
         latency_lowr_buckets=(0.025, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.5, 0.75, 1.0, 2.0),
     )
-).instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
+).instrument(app).expose(
+    app,
+    include_in_schema=False,
+    endpoint="/metrics",
+    # expose() forwards **kwargs to app.get(), so the dependency attaches
+    # without reimplementing the exposition endpoint.
+    dependencies=[Depends(require_metrics_token)],
+)
 
 
 # Per-request SQL query count → Prometheus. Complements the HTTP latency
