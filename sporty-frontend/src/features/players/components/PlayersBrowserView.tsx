@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { Search, SearchX } from "lucide-react";
 
-import { EmptyState, PageContainer, PageHeader, Select } from "@/components/ui";
+import {
+  ClubFilter,
+  EmptyState,
+  PageContainer,
+  PageHeader,
+  Select,
+} from "@/components/ui";
 import { Input } from "@/components/ui/Input";
 import { PlayerCardSkeleton } from "@/components/ui/skeletons";
 import { useSports } from "@/hooks/leagues/useLeagues";
@@ -28,6 +34,8 @@ export function PlayersBrowserView() {
     setSelectedPosition,
     selectedSport,
     setSelectedSport,
+    selectedClub,
+    setSelectedClub,
     minCostInput,
     setMinCostInput,
     maxCostInput,
@@ -103,6 +111,12 @@ export function PlayersBrowserView() {
               value: position,
               label: POSITION_LABELS[position] ?? position,
             }))}
+          />
+
+          <ClubFilter
+            value={selectedClub}
+            onChange={handleFilterChange(setSelectedClub)}
+            sportName={selectedSport === "All" ? undefined : selectedSport}
           />
         </div>
 

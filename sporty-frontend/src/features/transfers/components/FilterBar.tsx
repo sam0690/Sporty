@@ -1,5 +1,6 @@
 "use client";
 
+import { ClubFilter } from "@/components/ui";
 import {
   POSITION_LABELS,
   POSITION_MAP,
@@ -10,12 +11,14 @@ import {
 type FilterBarProps = {
   selectedSport: Sport;
   selectedPosition: string;
+  selectedClub: string;
   minCost: string;
   maxCost: string;
   availableSports?: Exclude<Sport, "All">[];
   positionOptionsBySport?: Partial<Record<Sport, string[]>>;
   onSportChange: (sport: Sport) => void;
   onPositionChange: (position: string) => void;
+  onClubChange: (value: string) => void;
   onMinCostChange: (value: string) => void;
   onMaxCostChange: (value: string) => void;
 };
@@ -29,12 +32,14 @@ const defaultSports: Exclude<Sport, "All">[] = [
 export function FilterBar({
   selectedSport,
   selectedPosition,
+  selectedClub,
   minCost,
   maxCost,
   availableSports,
   positionOptionsBySport,
   onSportChange,
   onPositionChange,
+  onClubChange,
   onMinCostChange,
   onMaxCostChange,
 }: FilterBarProps) {
@@ -103,7 +108,17 @@ export function FilterBar({
         </div>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="space-y-1.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
+          <span>Club</span>
+          <ClubFilter
+            value={selectedClub}
+            onChange={onClubChange}
+            sportName={selectedSport === "All" ? undefined : selectedSport}
+            className="w-full !px-3 !py-2"
+          />
+        </label>
+
         <label className="space-y-1.5 font-sans text-[10px] font-700 uppercase tracking-[1.5px] text-fg-2">
           <span>Min cost</span>
           <input

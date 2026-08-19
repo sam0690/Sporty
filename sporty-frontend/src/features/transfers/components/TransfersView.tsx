@@ -64,6 +64,7 @@ export function TransfersView(props: Props) {
     unmetRule,
     selectedSport,
     selectedPosition,
+    selectedClub,
     searchQuery,
     minCostInput,
     maxCostInput,
@@ -77,6 +78,7 @@ export function TransfersView(props: Props) {
     handleSearchChange,
     handleSportChange,
     handlePositionChange,
+    handleClubChange,
     handleMinCostChange,
     handleMaxCostChange,
     handleAddPlayer,
@@ -149,12 +151,14 @@ export function TransfersView(props: Props) {
           <FilterBar
             selectedSport={selectedSport as Sport}
             selectedPosition={selectedPosition}
+            selectedClub={selectedClub}
             minCost={minCostInput}
             maxCost={maxCostInput}
             availableSports={availableSportsForFilter}
             positionOptionsBySport={positionOptionsBySport}
             onSportChange={handleSportChange}
             onPositionChange={handlePositionChange}
+            onClubChange={handleClubChange}
             onMinCostChange={handleMinCostChange}
             onMaxCostChange={handleMaxCostChange}
           />

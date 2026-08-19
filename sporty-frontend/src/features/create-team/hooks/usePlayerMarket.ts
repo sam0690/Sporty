@@ -42,7 +42,7 @@ export function toMarketPlayer(p: {
 
 /**
  * Player-market browsing state shared by the draft room and the budget team
- * builder: search/position/sport/cost filters, server-side pagination, and
+ * builder: search/position/sport/club/cost filters, server-side pagination, and
  * the MarketPlayer mapping. `fixedSportName` pins the market to one sport for
  * single-sport budget leagues; draft and multisport leagues browse all.
  */
@@ -55,6 +55,8 @@ export function usePlayerMarket(leagueId: string, fixedSportName?: string) {
     setSelectedPosition,
     selectedSport,
     setSelectedSport,
+    selectedClub,
+    setSelectedClub,
     minCostInput,
     setMinCostInput,
     maxCostInput,
@@ -109,6 +111,13 @@ export function usePlayerMarket(leagueId: string, fixedSportName?: string) {
     },
     [setSelectedSport],
   );
+  const handleClubChange = useCallback(
+    (club: string) => {
+      setSelectedClub(club);
+      setPlayersPage(1);
+    },
+    [setSelectedClub],
+  );
   const handleMinCostChange = useCallback(
     (value: string) => {
       setMinCostInput(value);
@@ -147,11 +156,13 @@ export function usePlayerMarket(leagueId: string, fixedSportName?: string) {
     searchQuery,
     selectedPosition,
     selectedSport,
+    selectedClub,
     minCostInput,
     maxCostInput,
     handleSearchQueryChange,
     handlePositionChange,
     handleSportChange,
+    handleClubChange,
     handleMinCostChange,
     handleMaxCostChange,
     handlePreviousPlayersPage,

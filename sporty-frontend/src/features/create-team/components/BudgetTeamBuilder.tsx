@@ -41,11 +41,13 @@ export function BudgetTeamBuilder({
   searchQuery,
   selectedPosition,
   selectedSport,
+  selectedClub,
   minCostInput,
   maxCostInput,
   handleSearchQueryChange,
   handlePositionChange,
   handleSportChange,
+  handleClubChange,
   handleMinCostChange,
   handleMaxCostChange,
   error,
@@ -224,11 +226,13 @@ export function BudgetTeamBuilder({
                 searchQuery={searchQuery}
                 selectedPosition={selectedPosition}
                 selectedSport={selectedSport}
+                selectedClub={selectedClub}
                 minCost={minCostInput}
                 maxCost={maxCostInput}
                 onSearchQueryChange={handleSearchQueryChange}
                 onPositionChange={handlePositionChange}
                 onSportChange={handleSportChange}
+                onClubChange={handleClubChange}
                 onMinCostChange={handleMinCostChange}
                 onMaxCostChange={handleMaxCostChange}
                 currentPage={playersCurrentPage}

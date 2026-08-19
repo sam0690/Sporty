@@ -43,6 +43,10 @@ export type TTeamBrief = {
   id: string;
   name: string;
   logo_url: string | null;
+  /** Competition tag ("EPL"|"LALIGA"|"BUNDESLIGA"); null for NBA and
+   *  clubs outside a tracked competition. Optional so the narrower
+   *  favourite-team shape still satisfies this. Groups the club filter. */
+  competition?: string | null;
   sport: {
     name: string;
     display_name: string;

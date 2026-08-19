@@ -31,11 +31,13 @@ export function DraftRoom({ league }: { league: { id: string; name: string; stat
     searchQuery,
     selectedPosition,
     selectedSport,
+    selectedClub,
     minCostInput,
     maxCostInput,
     handleSearchQueryChange,
     handlePositionChange,
     handleSportChange,
+    handleClubChange,
     handleMinCostChange,
     handleMaxCostChange,
     playersCurrentPage,
@@ -175,11 +177,13 @@ export function DraftRoom({ league }: { league: { id: string; name: string; stat
                   searchQuery={searchQuery}
                   selectedPosition={selectedPosition}
                   selectedSport={selectedSport}
+                  selectedClub={selectedClub}
                   minCost={minCostInput}
                   maxCost={maxCostInput}
                   onSearchQueryChange={handleSearchQueryChange}
                   onPositionChange={handlePositionChange}
                   onSportChange={handleSportChange}
+                  onClubChange={handleClubChange}
                   onMinCostChange={handleMinCostChange}
                   onMaxCostChange={handleMaxCostChange}
                   showPrices={false}

@@ -1,6 +1,6 @@
 "use client";
 
-type SelectOption = { value: string; label: string };
+type SelectOption = { value: string; label: string; group?: string };
 
 type SelectProps = {
   label?: string;
@@ -13,6 +13,22 @@ type SelectProps = {
   "aria-label"?: string;
 };
 
+/** Options bucketed by `group`, in first-seen order. Ungrouped options keep
+ *  their position by sitting in a leading "" bucket rendered without a label. */
+function byGroup(options: SelectOption[]): [string, SelectOption[]][] {
+  const buckets = new Map<string, SelectOption[]>();
+  for (const option of options) {
+    const key = option.group ?? "";
+    const bucket = buckets.get(key);
+    if (bucket) {
+      bucket.push(option);
+    } else {
+      buckets.set(key, [option]);
+    }
+  }
+  return [...buckets];
+}
+
 export function Select({
   label,
   value,
@@ -23,6 +39,12 @@ export function Select({
   className = "",
   "aria-label": ariaLabel,
 }: SelectProps) {
+  const option = (o: SelectOption) => (
+    <option key={o.value} value={o.value}>
+      {o.label}
+    </option>
+  );
+
   const select = (
     <select
       value={value}
@@ -33,11 +55,17 @@ export function Select({
       className={`rounded-[3px] border border-white/12 bg-surface-1 px-4 py-3 text-sm text-fg-1 outline-none transition-colors focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/60 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
     >
       {placeholder && <option value="">{placeholder}</option>}
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
+      {options.some((o) => o.group)
+        ? byGroup(options).map(([group, grouped]) =>
+            group ? (
+              <optgroup key={group} label={group}>
+                {grouped.map(option)}
+              </optgroup>
+            ) : (
+              grouped.map(option)
+            ),
+          )
+        : options.map(option)}
     </select>
   );
 

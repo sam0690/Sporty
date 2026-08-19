@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { ChevronLeft, ChevronRight, Loader2, Search, SearchX } from "lucide-react";
-import { EmptyState, Select } from "@/components/ui";
+import { ClubFilter, EmptyState, Select } from "@/components/ui";
 import { PlayerCard, type MarketPlayer } from "./PlayerCard";
 
 type PlayerMarketProps = {
@@ -15,11 +15,13 @@ type PlayerMarketProps = {
   searchQuery: string;
   selectedPosition: string;
   selectedSport: string;
+  selectedClub: string;
   minCost: string;
   maxCost: string;
   onSearchQueryChange: (value: string) => void;
   onPositionChange: (value: string) => void;
   onSportChange: (value: string) => void;
+  onClubChange: (value: string) => void;
   onMinCostChange: (value: string) => void;
   onMaxCostChange: (value: string) => void;
   /** Draft leagues have no budget: hides prices/cost filters and affordability gating. */
@@ -45,11 +47,13 @@ export function PlayerMarket({
   searchQuery,
   selectedPosition,
   selectedSport,
+  selectedClub,
   minCost,
   maxCost,
   onSearchQueryChange,
   onPositionChange,
   onSportChange,
+  onClubChange,
   onMinCostChange,
   onMaxCostChange,
   showPrices = true,
@@ -79,6 +83,16 @@ export function PlayerMarket({
     [players],
   );
 
+  // Multisport leagues browse every sport until a sport chip narrows it; a
+  // single-sport league is always pinned. Clubs only exist within one sport,
+  // so an unscoped list would offer 30 NBA teams to a football manager.
+  const clubSportName =
+    sport === "multisport"
+      ? selectedSport === "All"
+        ? undefined
+        : selectedSport
+      : sport;
+
   return (
     <section className="space-y-4 card-surface p-4">
       <p className="section-label">Player Market</p>
@@ -93,7 +107,9 @@ export function PlayerMarket({
         />
       </label>
 
-      <div className="grid gap-3 md:grid-cols-3">
+      <div
+        className={`grid gap-3 ${showPrices ? "md:grid-cols-4" : "md:grid-cols-2"}`}
+      >
         <label className="space-y-1.5">
           <span className="section-label">Position</span>
           <Select
@@ -104,6 +120,16 @@ export function PlayerMarket({
               value: position,
               label: position,
             }))}
+          />
+        </label>
+
+        <label className="space-y-1.5">
+          <span className="section-label">Club</span>
+          <ClubFilter
+            value={selectedClub}
+            onChange={onClubChange}
+            sportName={clubSportName}
+            className="w-full"
           />
         </label>
 

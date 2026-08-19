@@ -1,7 +1,9 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { X } from "lucide-react";
-import { CountryFlag, PlayerAvatar } from "@/components/ui";
+import { ClubFilter, CountryFlag, PlayerAvatar } from "@/components/ui";
+import { ALL_CLUBS } from "@/lib/clubOptions";
 import type { Sport } from "./FilterBar";
 
 type OwnedPlayer = {
@@ -42,6 +44,22 @@ export function CurrentRoster({
   selectedOutId,
   disabled = false,
 }: CurrentRosterProps) {
+  // Filtering the squad by club is client-side: it is at most ~15 rows already
+  // in memory, and the pool endpoint knows nothing about who you own.
+  const [club, setClub] = useState(ALL_CLUBS);
+
+  const rosterClubs = useMemo(
+    () => [...new Set(players.map((p) => p.realTeam).filter((n): n is string => !!n))],
+    [players],
+  );
+
+  const visible = useMemo(
+    () => (club === ALL_CLUBS ? players : players.filter((p) => p.realTeam === club)),
+    [players, club],
+  );
+
+  // The counter tracks the real squad, not the filtered view — a filter must
+  // not make it look like you are short of players.
   const progressPercent = Math.min((players.length / maxPlayers) * 100, 100);
 
   return (
@@ -54,13 +72,26 @@ export function CurrentRoster({
         </span>
       </div>
 
+      {rosterClubs.length > 1 ? (
+        <div className="border-b border-white/8 px-4 py-3">
+          <ClubFilter
+            value={club}
+            onChange={setClub}
+            restrictTo={rosterClubs}
+            className="w-full !px-3 !py-2"
+          />
+        </div>
+      ) : null}
+
       <div className="max-h-96 space-y-2 overflow-y-auto p-4">
-        {players.length === 0 ? (
+        {visible.length === 0 ? (
           <p className="py-6 text-center text-sm text-fg-3">
-            No players in your squad.
+            {players.length === 0
+              ? "No players in your squad."
+              : "No squad players at this club."}
           </p>
         ) : (
-          players.map((player) => {
+          visible.map((player) => {
             const isSelected = selectedOutId === player.id;
             const accent =
               player.sport === "All"

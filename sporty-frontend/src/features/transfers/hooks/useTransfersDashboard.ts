@@ -64,6 +64,8 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     setSelectedSport,
     selectedPosition,
     setSelectedPosition,
+    selectedClub,
+    setSelectedClub,
     minCostInput,
     setMinCostInput,
     maxCostInput,
@@ -283,6 +285,11 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     setPlayersPage(1);
   }, [setSearchQuery]);
 
+  const handleClubChange = useCallback((club: string) => {
+    setSelectedClub(club);
+    setPlayersPage(1);
+  }, [setSelectedClub]);
+
   const handleMinCostChange = useCallback((value: string) => {
     setMinCostInput(value);
     setPlayersPage(1);
@@ -482,6 +489,7 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     unmetRule,
     selectedSport,
     selectedPosition,
+    selectedClub,
     searchQuery,
     minCostInput,
     maxCostInput,
@@ -495,6 +503,7 @@ export function useTransfersDashboard(leagueIdOverride?: string) {
     handleSearchChange,
     handleSportChange,
     handlePositionChange,
+    handleClubChange,
     handleMinCostChange,
     handleMaxCostChange,
     handleAddPlayer,

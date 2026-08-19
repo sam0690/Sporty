@@ -89,6 +89,10 @@ class TeamBrief(BaseModel):
     id: uuid.UUID
     name: str
     logo_url: str | None = None
+    # Competition tag ("EPL"|"LALIGA"|"BUNDESLIGA"), NULL for NBA teams and
+    # clubs outside a tracked competition. Lets the club filter group clubs
+    # by league without a second request.
+    competition: str | None = None
     sport: SportBrief
 
     model_config = ConfigDict(from_attributes=True)
