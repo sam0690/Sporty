@@ -371,8 +371,9 @@ def get_league_leaderboard(
         # Net out any budget-overage points penalties for this window — the
         # raw TeamWeeklyScore.points stays untouched (the scoring engine
         # freely overwrites it), the penalty is applied here at read time.
-        # rank_in_league is precomputed by ranking.py, which nets the same
-        # penalties out before ranking, so the two stay consistent.
+        # rank_in_league is not read here — see the rank_map comment below —
+        # but ranking.py nets the same penalties out before ranking, so the
+        # stored column and the rank in this response agree.
         window_penalty = (
             select(func.coalesce(func.sum(PointsPenalty.points_charged), 0))
             .where(
@@ -398,7 +399,6 @@ def get_league_leaderboard(
                 User.username.label("owner_name"),
                 (TeamWeeklyScore.points - window_penalty).label("points"),
                 window_penalty_display.label("points_deducted"),
-                TeamWeeklyScore.rank_in_league.label("rank"),
                 eligibility_window.number.label("eligible_from_gameweek"),
             )
             .select_from(TeamWeeklyScore)
@@ -430,7 +430,10 @@ def get_league_leaderboard(
                     eligibility_window.number <= requested_window.number,
                 )
             )
-            .order_by(TeamWeeklyScore.rank_in_league.asc(), TeamWeeklyScore.points.desc())
+            # Netted points, not rank_in_league: that column is NULL between a
+            # scoring run and the 02:00 ranking job, and NULLs sort last, which
+            # would shuffle the board depending on when it was read.
+            .order_by((TeamWeeklyScore.points - window_penalty).desc())
         )
     else:
         # 2. Total season standing (sum of points)
@@ -520,8 +523,25 @@ def get_league_leaderboard(
             })
 
     entries = []
-    for i, row in enumerate(results):
-        rank = getattr(row, "rank", None) if window_id else (i + 1)
+    # Rank is computed here for BOTH boards, from the same netted points the
+    # response shows, with the same shared-rank algorithm that produces the
+    # stored rank_in_league (ranking.py — ties share a rank, next rank skips).
+    # Two reasons not to read rank_in_league for display: every scoring upsert
+    # resets it to NULL until the 02:00 ranking job runs, and the season board's
+    # old positional fallback (i + 1) had no tiebreaker at all — so a board
+    # where everyone sat on 0 came out in insertion order and the first manager
+    # to join looked like the league leader.
+    from app.services.scoring.ranking import compute_rank_map
+
+    points_by_team = [(row.team_id, Decimal(str(row.points or 0))) for row in results]
+    rank_map = compute_rank_map(points_by_team)
+    # A rank is a relative position; with nothing scored there is no position to
+    # state. upsert_team_weekly_scores writes a 0-point row for every eligible
+    # team as soon as the window opens, so an all-zero board means "not played
+    # yet", not "an N-way tie for first". Any non-zero total switches ranking
+    # back on for everyone — negatives included, ranked below the zeros.
+    board_has_scored = any(points != 0 for _, points in points_by_team)
+    for row in results:
         entries.append({
             "team_id": row.team_id,
             "team_name": row.team_name,
@@ -529,7 +549,7 @@ def get_league_leaderboard(
             "points": row.points,
             "points_deducted": row.points_deducted,
             "penalties": penalties_by_team.get(row.team_id, []),
-            "rank": rank,
+            "rank": rank_map[row.team_id] if board_has_scored else None,
             "eligible_from_gameweek": row.eligible_from_gameweek,
         })
 

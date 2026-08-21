@@ -2,7 +2,8 @@
 
 type YourScoreCardProps = {
   yourScore: number;
-  weeklyRank: number;
+  /** null while the gameweek has produced no points — there is no rank yet. */
+  weeklyRank: number | null;
   pointsBehind: number;
   preSeason?: boolean;
 };
@@ -38,7 +39,7 @@ export function YourScoreCard({
       <div className="mt-3 flex items-center justify-center gap-3">
         <div>
           <p className="font-display text-2xl tracking-[-0.02em] text-fg-1">
-            #{weeklyRank}
+            {weeklyRank === null ? "—" : `#${weeklyRank}`}
           </p>
           <p className="section-label">This Week</p>
         </div>

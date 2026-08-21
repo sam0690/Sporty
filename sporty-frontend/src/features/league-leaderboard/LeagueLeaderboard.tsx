@@ -84,21 +84,18 @@ export function LeagueLeaderboard() {
 
   const standings = useMemo<StandingRow[]>(() => {
     if (!leaderboard) return [];
-    // Backend rank can be null until the ranking job runs (e.g. an in-progress
-    // gameweek); fall back to points-sorted position so the table is sensible.
-    // Managers who aren't scoring yet keep a null rank instead — inventing one
-    // would rank a squad that doesn't exist.
+    // Rank comes from the backend or not at all — it sends null while nobody in
+    // the league has scored, and fabricating a position from list order here
+    // would put that number back and name a leader that doesn't exist.
     const currentGw = seasonState?.current_gw ?? activeWindow?.number ?? null;
     return sortLeaderboardEntries(leaderboard.entries, currentGw).map(
-      (entry, index) => {
+      (entry) => {
         const idle = notScoringReason(entry, currentGw);
         const power = entry.team_id
           ? powerRankingsByTeam.get(entry.team_id)
           : undefined;
         return {
-          // Scoring rows occupy indices 0..n-1 (the sort guarantees it), so the
-          // index doubles as the fallback rank.
-          rank: idle ? null : (entry.rank ?? index + 1),
+          rank: idle ? null : entry.rank,
           teamId: entry.team_id,
           teamName: entry.team_name,
           manager: entry.owner_name,

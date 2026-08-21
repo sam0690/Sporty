@@ -79,19 +79,17 @@ export function LeagueHome() {
     false,
     currentWeek,
   );
-  // Backend rank can be null until the ranking job runs; fall back to
-  // position in points-sorted order so the list always shows a standing.
-  // Non-scoring managers (no squad, or a midseason joiner whose first window
-  // hasn't opened) sort last and keep a null rank — they must not land at
-  // position 0 and read as league leader while everyone is still on zero.
+  // Rank comes from the backend or not at all — it sends null while nobody in
+  // the league has scored, so there is no position to state. Non-scoring
+  // managers (no squad, or a midseason joiner whose first window hasn't opened)
+  // sort last and keep a null rank either way: they must not land at position 0
+  // and read as league leader while everyone is still on zero.
   const standings = useMemo<StandingRow[]>(() => {
     const entries = weekBoard?.entries ?? [];
-    return sortLeaderboardEntries(entries, currentWeek).map((entry, index) => {
+    return sortLeaderboardEntries(entries, currentWeek).map((entry) => {
       const idle = notScoringReason(entry, currentWeek);
       return {
-        // Scoring rows occupy indices 0..n-1 (the sort guarantees it), so the
-        // index doubles as the fallback rank without a running counter.
-        rank: idle ? null : (entry.rank ?? index + 1),
+        rank: idle ? null : entry.rank,
         teamId: entry.team_id,
         teamName: entry.team_name,
         manager: entry.owner_name,
@@ -129,7 +127,7 @@ export function LeagueHome() {
       opponentName: opponent?.teamName ?? "",
       yourScore: Math.round(myRow?.points ?? 0),
       opponentScore: Math.round(opponent?.points ?? 0),
-      weeklyRank: myRow?.rank ?? 0,
+      weeklyRank: myRow?.rank ?? null,
       pointsBehind: leader
         ? Math.max(0, Math.round(leader.points - (myRow?.points ?? 0)))
         : 0,

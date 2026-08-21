@@ -457,8 +457,10 @@ def _attach_my_team_summaries(
         my_total = net_by_team.get(team.id, Decimal("0"))
         my_deducted = penalty_by_team.get(team.id, Decimal("0"))
         # Only rank once scoring has started; before that every team ties at 0
-        # and a position number would be meaningless.
-        scoring_started = any(total > 0 for _, total in ranked)
+        # and a position number would be meaningless. `!= 0`, not `> 0`, so this
+        # agrees with get_league_leaderboard: one negative total is still a
+        # scored board, and that team ranks below the teams on zero.
+        scoring_started = any(total != 0 for _, total in ranked)
         rank = (
             next((i + 1 for i, (tid, _) in enumerate(ranked) if tid == team.id), None)
             if scoring_started

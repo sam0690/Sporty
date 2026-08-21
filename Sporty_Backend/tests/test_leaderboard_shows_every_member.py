@@ -270,3 +270,58 @@ def test_per_window_leaderboard_also_lists_teamless_members() -> None:
 
         assert set(entries) == {"owner", "teamless"}
         assert entries["teamless"]["team_id"] is None
+
+
+def test_nobody_is_ranked_until_somebody_has_scored() -> None:
+    """An all-zero board has no ranks — and ties share one once it does.
+
+    upsert_team_weekly_scores writes a 0-point row for every eligible team the
+    moment a window opens, so "everyone on 0" is the normal pre-kickoff state.
+    Numbering those rows 1..N invents a standings order (it used to come out in
+    insertion order, so the first manager to join looked like the leader).
+    """
+    with session_scope() as db:
+        league, owner, (gw1, _gw2) = _league_with_two_windows(db)
+        teams = {"owner": _team(db, league, owner)}
+        for name in ("blanked", "tied_a", "tied_b"):
+            user = _user(db, name)
+            _member(db, league, user)
+            teams[name] = _team(db, league, user)
+
+        # Placeholder rows exactly as the scoring engine writes them at window
+        # open: a row per team, 0 points, rank_in_league NULL.
+        for team in teams.values():
+            db.add(
+                TeamWeeklyScore(
+                    fantasy_team_id=team.id,
+                    transfer_window_id=gw1.id,
+                    points=Decimal("0"),
+                    rank_in_league=None,
+                )
+            )
+        db.flush()
+
+        for board in (
+            _entries_by_owner(db, league),
+            _entries_by_owner(db, league, window_id=gw1.id),
+        ):
+            assert len(board) == 4
+            assert [entry["rank"] for entry in board.values()] == [None] * 4
+
+        # One real score switches ranking back on for the whole board. The two
+        # teams left on 0 tie, so they share a rank and the next rank skips —
+        # the same semantics as the stored rank_in_league (ranking.py).
+        db.query(TeamWeeklyScore).filter(
+            TeamWeeklyScore.fantasy_team_id == teams["owner"].id
+        ).update({"points": Decimal("30")})
+        db.query(TeamWeeklyScore).filter(
+            TeamWeeklyScore.fantasy_team_id == teams["blanked"].id
+        ).update({"points": Decimal("-2")})
+        db.flush()
+
+        entries = _entries_by_owner(db, league, window_id=gw1.id)
+        assert entries["owner"]["rank"] == 1
+        assert entries["tied_a"]["rank"] == 2
+        assert entries["tied_b"]["rank"] == 2
+        # A negative total is scored, not unranked — it ranks below the zeros.
+        assert entries["blanked"]["rank"] == 4
