@@ -1014,7 +1014,24 @@ def join_league(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="No upcoming transfer window is available for late joiners",
             )
-        eligible_from_window_id = next_window.id
+        # Only a genuinely late joiner gets an eligibility window. A league flips
+        # to ACTIVE on its start date, which can be days before its first window
+        # opens — someone joining in that gap has missed no scoring at all, and
+        # stamping them as a midseason joiner hides them from the season
+        # leaderboard until the window starts (standings_service filters on
+        # eligibility_window.start_at <= now). Leaving it NULL keeps them
+        # scoring from window 1 alongside everyone who joined during SETUP.
+        season_has_started = db.query(
+            db.query(TransferWindow)
+            .filter(
+                TransferWindow.season_id == league.season_id,
+                _window_competition_clause(_league_window_competition(db, league)),
+                TransferWindow.start_at <= now,
+            )
+            .exists()
+        ).scalar()
+        if season_has_started:
+            eligible_from_window_id = next_window.id
 
     if existing:
         membership = existing
@@ -1754,8 +1771,8 @@ def build_initial_team(
     
     Guards:
       1. League must be budget-mode (draft_mode=False).
-      2. League must be in SETUP status, OR ACTIVE with the user a midseason
-         joiner (membership.eligible_from_window_id set by join_league()).
+      2. League must be in SETUP or ACTIVE status (a member who never finished
+         their squad before kickoff can still build one).
       3. User must be a member.
       4. User must not already have a team.
       5. All players must exist, be available, and belong to league sports.
@@ -1776,14 +1793,16 @@ def build_initial_team(
     # Verify membership
     membership = _require_membership(db, league_id, current_user.id)
 
-    is_midseason_joiner = (
-        league.status == LeagueStatus.ACTIVE
-        and membership.eligible_from_window_id is not None
-    )
-    if league.status != LeagueStatus.SETUP and not is_midseason_joiner:
+    # A budget league flips SETUP->ACTIVE on its start date whether or not every
+    # member finished their squad. Gating the build on eligible_from_window_id —
+    # which only join_league()'s midseason path ever sets — permanently locked out
+    # anyone who joined during SETUP and hadn't built yet. Any member without a
+    # team may build while the league is still running; a NULL eligibility window
+    # keeps them scoring from window 1, as if they had built before kickoff.
+    if league.status not in (LeagueStatus.SETUP, LeagueStatus.ACTIVE):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Teams can only be built during SETUP status",
+            detail="Teams can only be built while the league is in setup or active",
         )
 
     # Check if team already exists
@@ -1899,7 +1918,7 @@ def build_initial_team(
     # SETUP-phase build, or the joiner's eligible-from window for a
     # midseason joiner (so acquisition history reflects when they actually
     # entered, not the season start).
-    if is_midseason_joiner:
+    if membership.eligible_from_window_id is not None:
         first_window = (
             db.query(TransferWindow)
             .filter(TransferWindow.id == membership.eligible_from_window_id)

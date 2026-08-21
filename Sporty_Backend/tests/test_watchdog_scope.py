@@ -225,3 +225,60 @@ def test_live_window_scoping_by_provider_id():
         # SportScore needs both.
         sportscore = _fixtures_in_live_window(db, sport.id, numeric_id_only=False)
         assert sorted(m.external_api_id for m in sportscore) == ["1570334", "fdo:564638"]
+
+
+# ── Lineup repair pass ──────────────────────────────────────────────────────
+# Fixture 1570334's whole pre-match lineup window (kickoff-1h .. kickoff+3h)
+# fell inside a worker outage, and the pre-match query only admits
+# scheduled/live — so it could never be retried and had no lineup forever.
+# Stats and team stats both already had a repair pass; this is the third.
+
+
+def _make_finished_match(db, sport: Sport, *, external_id: str, hours_ago: float) -> Match:
+    match = Match(
+        sport_id=sport.id,
+        external_api_id=external_id,
+        home_team="Atletico Madrid",
+        away_team="Malaga",
+        match_date=datetime.now(timezone.utc) - timedelta(hours=hours_ago),
+        status="finished",
+        home_score=2,
+        away_score=0,
+        competition="La Liga",
+        season="2026",
+    )
+    db.add(match)
+    db.flush()
+    return match
+
+
+def test_lineup_repair_picks_up_finished_fixtures_with_no_lineup():
+    from app.models.db.match_feed_cache import MatchFeedCache
+    from app.services.sync.football_live_sync import (
+        _lineup_repair_candidates,
+        _lineup_window_candidates,
+    )
+
+    with session_scope() as db:
+        sport = Sport(name="football", display_name="Football")
+        db.add(sport)
+        db.flush()
+
+        # The incident: finished, past the pre-match window, no lineup row.
+        stranded = _make_finished_match(db, sport, external_id="1570334", hours_ago=4)
+        # Already has its lineup — must not spend a second request on it.
+        cached = _make_finished_match(db, sport, external_id="1570337", hours_ago=5)
+        db.add(MatchFeedCache(match_id=cached.id, kind="lineups", payload={"home": {}}))
+        # Last season. The lookback cap is what keeps the ~380 old finished
+        # fixtures out; without it this pass walks straight into them.
+        _make_finished_match(db, sport, external_id="1208021", hours_ago=24 * 90)
+        # A placeholder id the provider can't be asked about.
+        _make_finished_match(db, sport, external_id="fdo:564638", hours_ago=4)
+        db.commit()
+
+        repair = _lineup_repair_candidates(db, sport.id)
+        assert [m.external_api_id for m in repair] == ["1570334"]
+
+        # The stranded fixture is exactly what the pre-match window misses —
+        # that gap is the whole reason this pass exists.
+        assert stranded.id not in {m.id for m in _lineup_window_candidates(db, sport.id)}

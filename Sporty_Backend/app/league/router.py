@@ -826,7 +826,7 @@ def build_team(
     
     Guards enforced by the service:
       - League must be budget-mode (draft_mode=False).
-      - League must be in SETUP status.
+      - League must be in SETUP or ACTIVE status.
       - User must not already have a team.
       - All players must exist, be available, and belong to league sports.
       - Total cost must not exceed budget_per_team.

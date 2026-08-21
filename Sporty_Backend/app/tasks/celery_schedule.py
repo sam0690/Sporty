@@ -119,6 +119,7 @@ CELERY_BEAT_SCHEDULE = {
         "task": "sync.football.lineups",
         "schedule": crontab(minute="*/30"),
         "args": (),
+        "options": {"expires": 1700},
     },
 
     # Daily sync (players change less often) — run manually after transfer

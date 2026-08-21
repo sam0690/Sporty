@@ -1280,6 +1280,55 @@ def _lineup_window_candidates(db: Session, sport_id) -> list[Match]:
     return [m for m in candidates if (m.external_api_id or "").isdigit()]
 
 
+# How far back to repair a missing lineup, and how many per tick. Bounded for
+# the same reason the team-stats backfill is: ~380 finished 2024/25 fixtures
+# carry numeric ids and no lineup row, and an unbounded lookback would walk
+# straight into them. Three days matches _REBOOK_LOOKBACK.
+_LINEUP_REPAIR_LOOKBACK = timedelta(days=3)
+_LINEUP_REPAIR_LIMIT = 3
+
+
+def _lineup_repair_candidates(db: Session, sport_id) -> list[Match]:
+    """Recently-finished fixtures that never got a lineup.
+
+    The pre-match window above only admits status scheduled/live within
+    kickoff±, so a fixture whose whole window was missed — a worker outage, a
+    tick that landed inside the quota reserve — can never be retried and has
+    no lineup forever. Every other post-match cache already has a repair pass
+    (stats_rebook, team_stats_backfill); this is the missing third.
+
+    The provider still serves /fixtures/lineups for finished fixtures, so the
+    repair is the same single request the pre-match path would have made.
+    """
+    from app.models.db.match_feed_cache import MatchFeedCache
+
+    now = datetime.now(timezone.utc)
+    has_lineup = (
+        db.query(MatchFeedCache.id)
+        .filter(MatchFeedCache.match_id == Match.id, MatchFeedCache.kind == "lineups")
+        .exists()
+    )
+    candidates = (
+        db.query(Match)
+        .filter(
+            Match.sport_id == sport_id,
+            Match.status == "finished",
+            Match.match_date >= now - _LINEUP_REPAIR_LOOKBACK,
+            # Hand over from the pre-match window rather than overlapping it.
+            Match.match_date <= now - _LIVE_WINDOW_AFTER_KICKOFF,
+            ~has_lineup,
+        )
+        .order_by(Match.match_date.desc())
+        .all()
+    )
+    # Digit filter in Python, like every sibling candidate function here: the
+    # regex form is Postgres-only and the 3-day lookback is the real cap, so
+    # the set is a handful of rows either way. Sliced after filtering so a
+    # `fdo:` placeholder can't eat a slot.
+    numeric = [m for m in candidates if (m.external_api_id or "").isdigit()]
+    return numeric[:_LINEUP_REPAIR_LIMIT]
+
+
 async def sync_football_lineups(db: Session) -> str:
     """Cache confirmed lineups into the same Redis key + MatchFeedCache row the
     feeder's /feed/match-lineups push used, so the match-state read path
@@ -1297,9 +1346,9 @@ async def sync_football_lineups(db: Session) -> str:
     if sport is None:
         return "ok: football sport not seeded"
 
-    matches = _lineup_window_candidates(db, sport.id)
+    matches = _lineup_window_candidates(db, sport.id) + _lineup_repair_candidates(db, sport.id)
     if not matches:
-        return "ok: no fixtures near kick-off; API not called"
+        return "ok: no fixtures near kick-off or awaiting repair; API not called"
 
     from app.api.v1.feed import LINEUPS_TTL_SECONDS, _persist_feed_cache
     from app.models.db.match_feed_cache import MatchFeedCache
