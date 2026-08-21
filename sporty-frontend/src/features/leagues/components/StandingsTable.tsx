@@ -200,6 +200,10 @@ function VirtualStandings({
   userName?: string;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
+  // TanStack Virtual's useVirtualizer() returns non-memoizable functions, so
+  // React Compiler skips memoizing this component. Contained: VirtualStandings
+  // is a leaf, the rest of the table still compiles.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: standings.length,
     getScrollElement: () => parentRef.current,

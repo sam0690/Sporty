@@ -16,7 +16,7 @@ function isLive(f: TFixture): boolean {
  *  live match, then alphabetical. Within a group: live first, then kickoff. */
 export function groupFixturesByCompetition(
   fixtures: TFixture[],
-  followed: Set<string>,
+  followed: ReadonlySet<string>,
 ): FixtureGroup[] {
   const map = new Map<string, FixtureGroup>();
   for (const f of fixtures) {
@@ -58,7 +58,7 @@ export type LeagueEntry = {
  *  any followed competition (even with no games today). Followed pinned top. */
 export function leaguesFromFixtures(
   fixtures: TFixture[],
-  followed: Set<string>,
+  followed: ReadonlySet<string>,
 ): LeagueEntry[] {
   const map = new Map<string, LeagueEntry>();
   for (const f of fixtures) {

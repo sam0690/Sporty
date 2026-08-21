@@ -106,7 +106,6 @@ export function LiveMatchTicker() {
     observer.observe(viewport);
     return () => observer.disconnect();
     // membershipKey re-measures when the set of live matches changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [repeats, membershipKey, matches.length]);
 
   if (matches.length === 0) {
