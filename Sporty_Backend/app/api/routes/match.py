@@ -392,6 +392,12 @@ async def get_match_state(
 
     return {
         "match_id": row["id"],
+        # The id every live publisher stamps on its WSMessage payloads
+        # (external_api_id or our UUID — see live_key_for). The client needs it
+        # to accept a push: match_id above is always the UUID, so comparing a
+        # push's match_id against it alone silently dropped every message for
+        # any row with an external_api_id, i.e. nearly all of them.
+        "live_key": live_key,
         "sport": row["sport"],
         "home_team": row["home_team"],
         "away_team": row["away_team"],

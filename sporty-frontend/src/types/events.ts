@@ -93,6 +93,13 @@ export type MatchLineups = {
 
 export type MatchSnapshot = {
   match_id: string;
+  /**
+   * The id live publishers stamp on WSMessage payloads (the backend's
+   * `live_key`: external_api_id, falling back to our UUID). Distinct from
+   * match_id, which is always the UUID — the store must accept either, or every
+   * push for a row with an external_api_id gets dropped.
+   */
+  live_key?: string | null;
   /** Sport slug ("football" | "basketball" | …); drives which lineup view. */
   sport?: string | null;
   home_team: string | null;

@@ -10,7 +10,9 @@ FUZZY-matches, and a plain slug silently resolves to a reserve or youth side —
 "alaves" returns Alavés B, "bayern-munchen" returns Bayern Munchen II,
 "espanyol" returns Espanyol U19. Every entry below was verified 2026-08-16 by
 checking that the payload's own canonical slug matched the request AND that the
-club's fixture list contained the expected league.
+club's fixture list contained the expected league. The two added 2026-08-22
+(West Ham, Wolves) matched on canonical slug; their fixture lists were
+Championship, which is correct — both were relegated for 2026/27.
 
 The match slug is "{club-a}-vs-{club-b}" and is ORDER-INSENSITIVE — both
 orderings resolve to the same fixture — so build_match_slug doesn't need to
@@ -44,26 +46,37 @@ SPORTSCORE_TEAM_SLUGS: dict[str, str] = {
     "VfB Stuttgart": "vfb-stuttgart",
     "Werder Bremen": "sv-werder-bremen",              # SV Werder Bremen
     # ── Premier League ──
+    # Keys are the SHORT form, because that is what Match.home_team holds:
+    # _FDO_NAME_ALIASES in match_sync.py rewrites football-data.org's long names
+    # ("Brighton & Hove Albion" -> "Brighton") BEFORE the row is stored. This
+    # block was originally keyed on the long names, so eight clubs silently got
+    # no live coverage at all — build_match_slug returned None and the fixture
+    # was dropped. test_every_stored_club_name_is_slug_mapped guards it now.
     "Arsenal": "arsenal",
     "Aston Villa": "aston-villa",
     "Bournemouth": "bournemouth-afc",                 # Bournemouth AFC
     "Brentford": "brentford",
-    "Brighton & Hove Albion": "brighton-hove-albion",
+    "Brighton": "brighton-hove-albion",               # Brighton & Hove Albion
     "Chelsea": "chelsea",
-    "Coventry City": "coventry-city",
+    "Coventry": "coventry-city",                      # Coventry City
     "Crystal Palace": "crystal-palace",
     "Everton": "everton",
     "Fulham": "fulham",
     "Hull City": "hull-city",
-    "Ipswich Town": "ipswich-town",
-    "Leeds United": "leeds-united",
+    "Ipswich": "ipswich-town",                        # Ipswich Town
+    "Leeds": "leeds-united",                          # Leeds United
     "Liverpool": "liverpool",
     "Manchester City": "manchester-city",
     "Manchester United": "manchester-united",
-    "Newcastle United": "newcastle-united",
+    "Newcastle": "newcastle-united",                  # Newcastle United
     "Nottingham Forest": "nottingham-forest",
     "Sunderland": "sunderland",
-    "Tottenham Hotspur": "tottenham-hotspur",
+    "Tottenham": "tottenham-hotspur",                 # Tottenham Hotspur
+    # Championship for 2026/27, and we ingest no Championship fixtures — so
+    # these two are normally never looked up. Kept for cup ties against a PL
+    # club; don't delete them as "unused".
+    "West Ham": "west-ham-united",                    # West Ham United
+    "Wolves": "wolverhampton-wanderers",              # Wolverhampton Wanderers
     # ── La Liga ──
     "Alaves": "deportivo-alaves",                     # Deportivo Alavés
     "Athletic Club": "athletic-club",

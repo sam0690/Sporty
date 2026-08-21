@@ -54,6 +54,9 @@ _FDO_NAME_ALIASES = {
     "Newcastle United": "Newcastle",
     "Tottenham Hotspur": "Tottenham",
     "Coventry City": "Coventry",
+    # Relegated to the Championship for 2026/27. We ingest no Championship
+    # fixtures, so these two are normally dead — kept because a cup tie pairs a
+    # PL club with them and the name still has to normalize the same way.
     "West Ham United": "West Ham",
     "Wolverhampton Wanderers": "Wolves",
     # La Liga

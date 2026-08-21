@@ -20,6 +20,8 @@ export type SocketStatus = "connecting" | "live" | "reconnecting";
 
 type MatchStoreState = {
   matchId: string | null;
+  /** The id live pushes carry (backend `live_key`); see isForCurrentMatch. */
+  liveKey: string | null;
   sport: string | null;
   homeTeam: string | null;
   awayTeam: string | null;
@@ -82,12 +84,19 @@ function mergeEvents(existing: MatchEvent[], update: ScoreUpdate): MatchEvent[] 
 // a stray message during a matchId transition, or two feeder matches that
 // briefly alias the same backend match id, should still never get merged into
 // state for a different match than the one currently hydrated).
+//
+// Two id forms are in play and BOTH must be accepted: the snapshot's match_id is
+// always the matches.id UUID, while every publisher stamps `live_key`
+// (external_api_id, falling back to that UUID). Comparing against matchId alone
+// silently discarded every push for a row with an external_api_id — nearly all
+// of them — leaving the 15s re-hydrate poll as the only live path.
 function isForCurrentMatch(state: MatchStoreState, matchId: string): boolean {
-  return state.matchId === matchId;
+  return state.matchId === matchId || state.liveKey === matchId;
 }
 
 export const useMatchStore = create<MatchStoreState>((set) => ({
   matchId: null,
+  liveKey: null,
   sport: null,
   homeTeam: null,
   awayTeam: null,
@@ -113,6 +122,7 @@ export const useMatchStore = create<MatchStoreState>((set) => ({
   hydrate: (snapshot) =>
     set({
       matchId: snapshot.match_id,
+      liveKey: snapshot.live_key ?? null,
       sport: snapshot.sport ?? null,
       homeTeam: snapshot.home_team,
       awayTeam: snapshot.away_team,

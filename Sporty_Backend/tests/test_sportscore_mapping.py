@@ -12,7 +12,7 @@ from app.services.sync.sportscore_live_sync import (
     payload_matches_fixture,
     their_status,
 )
-from app.services.sync.sportscore_teams import build_match_slug
+from app.services.sync.sportscore_teams import SPORTSCORE_TEAM_SLUGS, build_match_slug
 
 NOW = datetime(2026, 8, 16, 12, 0, tzinfo=timezone.utc)
 
@@ -131,3 +131,40 @@ def test_match_slug_is_built_from_their_club_naming():
     # Our "Alaves" is their "deportivo-alaves" — the whole reason the map exists.
     assert build_match_slug("Alaves", "Getafe") == "deportivo-alaves-vs-getafe"
     assert build_match_slug("Alaves", "Not A Club") is None
+
+
+def test_every_stored_club_name_is_slug_mapped():
+    """SPORTSCORE_TEAM_SLUGS must be keyed on the name we STORE in
+    Match.home_team — the POST-_FDO_NAME_ALIASES short form — not
+    football-data.org's long name.
+
+    Regression guard: the Premier League block was keyed on the long names
+    ("Brighton & Hove Albion") while match_sync stores the short ones
+    ("Brighton"), so build_match_slug returned None and eight clubs' fixtures
+    were dropped at sportscore_live_sync.py's `if slug:` gate. They got zero
+    60-second coverage and fell back to the hourly API-Football poll, which
+    looked like "only one of two live matches is updating".
+
+    Only La Liga/Bundesliga were correct, and the existing slug test used a La
+    Liga pair, so nothing failed.
+    """
+    from app.services.sync.match_sync import _FDO_NAME_ALIASES
+
+    unmapped = sorted(
+        stored for stored in _FDO_NAME_ALIASES.values()
+        if stored not in SPORTSCORE_TEAM_SLUGS
+    )
+    assert not unmapped, (
+        "these clubs are stored under a name with no SportScore slug, so their "
+        f"fixtures get no live coverage: {unmapped}"
+    )
+
+
+def test_slug_map_is_not_keyed_on_pre_alias_names():
+    """The inverse check: a long-form key is dead weight that reads as coverage."""
+    from app.services.sync.match_sync import _FDO_NAME_ALIASES
+
+    stale = sorted(k for k in SPORTSCORE_TEAM_SLUGS if k in _FDO_NAME_ALIASES)
+    assert not stale, (
+        f"slug map keyed on pre-alias names that never reach it: {stale}"
+    )
