@@ -3,10 +3,15 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { EmptyState, ErrorState, Tabs } from "@/components/ui";
+import { useMe } from "@/hooks/auth/useMe";
 import {
   StandingsTable,
   type StandingRow,
 } from "@/features/leagues/components/StandingsTable";
+import {
+  notScoringReason,
+  sortLeaderboardEntries,
+} from "@/features/leagues/leaderboardRows";
 import { UserRankCard } from "./components/UserRankCard";
 import {
   WeekSelector,
@@ -34,6 +39,7 @@ export function LeagueLeaderboard() {
     isError: isLeagueError,
   } = useLeague(leagueId);
   const { data: myTeam, isLoading: isTeamLoading } = useMyTeam(leagueId);
+  const { username } = useMe();
   const { data: activeWindow, isLoading: isWindowLoading } =
     useActiveWindow(leagueId);
   const { data: seasonState } = useSeasonState(leagueId);
@@ -80,12 +86,19 @@ export function LeagueLeaderboard() {
     if (!leaderboard) return [];
     // Backend rank can be null until the ranking job runs (e.g. an in-progress
     // gameweek); fall back to points-sorted position so the table is sensible.
-    return [...leaderboard.entries]
-      .sort((a, b) => Number(b.points) - Number(a.points))
-      .map((entry, index) => {
-        const power = powerRankingsByTeam.get(entry.team_id);
+    // Managers who aren't scoring yet keep a null rank instead — inventing one
+    // would rank a squad that doesn't exist.
+    const currentGw = seasonState?.current_gw ?? activeWindow?.number ?? null;
+    return sortLeaderboardEntries(leaderboard.entries, currentGw).map(
+      (entry, index) => {
+        const idle = notScoringReason(entry, currentGw);
+        const power = entry.team_id
+          ? powerRankingsByTeam.get(entry.team_id)
+          : undefined;
         return {
-          rank: entry.rank ?? index + 1,
+          // Scoring rows occupy indices 0..n-1 (the sort guarantees it), so the
+          // index doubles as the fallback rank.
+          rank: idle ? null : (entry.rank ?? index + 1),
           teamId: entry.team_id,
           teamName: entry.team_name,
           manager: entry.owner_name,
@@ -93,30 +106,66 @@ export function LeagueLeaderboard() {
           rankDelta: power?.rank_delta,
           streak: power?.streak,
           isManagerOfTheWeek: power?.manager_of_the_week,
-          record: recordByTeam.get(entry.team_id),
+          record: entry.team_id ? recordByTeam.get(entry.team_id) : undefined,
           pointsDeducted: Number(entry.points_deducted),
           penalties: entry.penalties?.map((p) => ({
             points_charged: Number(p.points_charged),
             reason: p.reason,
             created_at: p.created_at,
           })),
+          notScoringReason: idle ?? undefined,
+          eligibleFromGameweek: entry.eligible_from_gameweek,
         };
-      });
-  }, [leaderboard, powerRankingsByTeam, recordByTeam]);
+      },
+    );
+  }, [
+    leaderboard,
+    powerRankingsByTeam,
+    recordByTeam,
+    seasonState?.current_gw,
+    activeWindow?.number,
+  ]);
 
+  // Your own row — matched by team id, or by username when you have no squad.
+  // That second case is the whole point: without it the manager who most needs
+  // the explanation is the one who can't find themselves on the table.
   const userTeam = useMemo(() => {
-    if (!myTeam || !standings.length) return null;
-    const teamInStandings = standings.find((s) => s.teamId === myTeam.id);
-    if (!teamInStandings) return null;
-    const topPoints = standings[0].points;
+    const myRow = standings.find((row) =>
+      row.teamId
+        ? row.teamId === myTeam?.id
+        : !!username && row.manager === username,
+    );
+    if (!myRow) return null;
+    // Leader = top *scoring* row; standings[0] can be a non-scoring manager
+    // when nobody in the league has started scoring yet.
+    const topPoints = standings.find((row) => !row.notScoringReason)?.points ?? 0;
     return {
-      rank: teamInStandings.rank,
-      teamName: teamInStandings.teamName,
-      totalPoints: teamInStandings.points,
-      pointsDeducted: teamInStandings.pointsDeducted ?? 0,
-      pointsBehind: Math.round(topPoints - teamInStandings.points),
+      rank: myRow.rank,
+      teamName: myRow.teamName ?? "No squad yet",
+      totalPoints: myRow.points,
+      pointsDeducted: myRow.pointsDeducted ?? 0,
+      pointsBehind: Math.round(topPoints - myRow.points),
+      notScoringNote:
+        myRow.notScoringReason === "no_squad"
+          ? "You've joined this league but haven't built a squad, so there's nothing to score. Build one and it scores from the next gameweek onwards."
+          : myRow.notScoringReason === "pending_window"
+            ? `You joined after the season started, so your squad scores from gameweek ${myRow.eligibleFromGameweek}. Earlier gameweeks count as zero.`
+            : undefined,
     };
-  }, [myTeam, standings]);
+  }, [myTeam?.id, username, standings]);
+
+  // Every ACTIVE member now gets a row, so the table can legitimately contain
+  // managers with no squad and midseason joiners who haven't started scoring.
+  // Say so once in plain language rather than leaving it to the row badges.
+  const idleCounts = useMemo(() => {
+    let noSquad = 0;
+    let pending = 0;
+    for (const row of standings) {
+      if (row.notScoringReason === "no_squad") noSquad += 1;
+      if (row.notScoringReason === "pending_window") pending += 1;
+    }
+    return { noSquad, pending };
+  }, [standings]);
 
   const isLoading =
     isLeagueLoading || isTeamLoading || isLeaderboardLoading || isWindowLoading;
@@ -176,6 +225,7 @@ export function LeagueLeaderboard() {
           totalPoints={userTeam.totalPoints}
           pointsBehind={userTeam.pointsBehind}
           pointsDeducted={userTeam.pointsDeducted}
+          notScoringNote={userTeam.notScoringNote}
         />
       )}
 
@@ -190,13 +240,44 @@ export function LeagueLeaderboard() {
           }
         />
       ) : (
-        <StandingsTable
-          standings={standings}
-          userTeamId={myTeam?.id || ""}
-          pointsLabel={
-            selectedWeek === "overall" ? "Points" : `GW${selectedWeek} Points`
-          }
-        />
+        <>
+          <StandingsTable
+            standings={standings}
+            userTeamId={myTeam?.id || ""}
+            userName={username}
+            pointsLabel={
+              selectedWeek === "overall" ? "Points" : `GW${selectedWeek} Points`
+            }
+          />
+          {(idleCounts.noSquad > 0 || idleCounts.pending > 0) && (
+            <p className="px-1 text-xs leading-relaxed text-fg-3">
+              Every league member is listed, including managers who aren&apos;t
+              scoring yet.{" "}
+              {idleCounts.noSquad > 0 && (
+                <>
+                  <span className="font-700 text-fg-2">
+                    {idleCounts.noSquad} {idleCounts.noSquad === 1 ? "manager has" : "managers have"}{" "}
+                    no squad
+                  </span>{" "}
+                  — they joined but haven&apos;t picked a team, so there is
+                  nothing to score. They can still build one, and it scores from
+                  the next gameweek onwards.{" "}
+                </>
+              )}
+              {idleCounts.pending > 0 && (
+                <>
+                  <span className="font-700 text-fg-2">
+                    {idleCounts.pending}{" "}
+                    {idleCounts.pending === 1 ? "manager joined" : "managers joined"}{" "}
+                    after the season started
+                  </span>{" "}
+                  — their squads start scoring from the gameweek shown on their
+                  row, so earlier gameweeks count as zero for them.
+                </>
+              )}
+            </p>
+          )}
+        </>
       )}
     </section>
   );

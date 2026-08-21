@@ -36,19 +36,32 @@ export function LeagueMembers() {
   const [targetMember, setTargetMember] = useState<Member | null>(null);
   const kickMember = useKickMember(leagueId);
 
+  // The members endpoint carries no team info, so resolve each member's squad
+  // from the league detail this page already fetches. `draft_position` is not a
+  // proxy for owning one: only start_draft sets it (and that creates every
+  // member's team in the same breath), so in a budget league it is always null
+  // and every member — squad or not — used to read "Team pending".
+  // teams_detail lists ACTIVE teams only, so a departed member's archived team
+  // correctly reads as no squad.
+  const teamNameByUserId = useMemo(() => {
+    const map = new Map<string, string>();
+    (league?.teams_detail ?? []).forEach((team) =>
+      map.set(team.team_owner.id, team.team_name),
+    );
+    return map;
+  }, [league?.teams_detail]);
+
   const members: Member[] = useMemo(
     () =>
       (memberships ?? []).map((membership) => ({
         id: membership.id,
         name: membership.user.username,
         status: membership.status,
-        teamName: membership.draft_position
-          ? `Draft Position #${membership.draft_position}`
-          : "Team pending",
+        teamName: teamNameByUserId.get(membership.user.id) ?? "No squad yet",
         joinDate: new Date(membership.joined_at).toLocaleDateString(),
         avatarUrl: membership.user.avatar_url,
       })),
-    [memberships],
+    [memberships, teamNameByUserId],
   );
 
   const activeCount = useMemo(

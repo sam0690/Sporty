@@ -5,6 +5,11 @@ import { ChevronDown, ChevronUp, MinusCircle } from "lucide-react";
 import { Tooltip } from "@mantine/core";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { LivePointsIndicator } from "@/components/shared/scoring";
+import {
+  NOT_SCORING_LABEL,
+  notScoringTooltip,
+  type NotScoringReason,
+} from "@/features/leagues/leaderboardRows";
 
 type PointsPenalty = {
   points_charged: number;
@@ -17,9 +22,9 @@ const PENALTY_REASON_LABELS: Record<string, string> = {
 };
 
 type StandingRow = {
-  rank: number;
-  teamId: string;
-  teamName: string;
+  rank: number | null;
+  teamId: string | null;
+  teamName: string | null;
   manager: string;
   points: number;
   rankDelta?: number | null;
@@ -30,6 +35,10 @@ type StandingRow = {
   /** Points paid via the budget-overage penalty this scope (window or season). */
   pointsDeducted?: number;
   penalties?: PointsPenalty[];
+  /** Set when this manager isn't scoring yet — see leaderboardRows.ts. */
+  notScoringReason?: NotScoringReason;
+  /** First gameweek they score from, shown when notScoringReason is set. */
+  eligibleFromGameweek?: number | null;
 };
 
 function PenaltyBreakdown({ penalties, total }: { penalties: PointsPenalty[]; total: number }) {
@@ -54,12 +63,21 @@ function PenaltyBreakdown({ penalties, total }: { penalties: PointsPenalty[]; to
 type StandingsTableProps = {
   standings: StandingRow[];
   userTeamId: string;
+  /** Signed-in username — the only way to highlight your own row when you have
+   * no squad yet, since there's no team id to match on. */
+  userName?: string;
   isLoading?: boolean;
   // Header label — "Standings" by default, or "Points"/"Gameweek Points" when
   // the caller wants the column context called out (e.g. per-gameweek view).
   pointsLabel?: string;
   emptyMessage?: string;
 };
+
+function isOwnRow(team: StandingRow, userTeamId: string, userName?: string) {
+  return team.teamId === null
+    ? !!userName && team.manager === userName
+    : team.teamId === userTeamId;
+}
 
 const MEDAL_STYLE: Record<number, string> = {
   1: "bg-warning/15 text-warning border-warning/40",
@@ -85,12 +103,13 @@ function RankDeltaBadge({ delta }: { delta: number | null | undefined }) {
 }
 
 function StandingRowItem({ team, isUser }: { team: StandingRow; isUser: boolean }) {
-  const medalClass = MEDAL_STYLE[team.rank];
+  const medalClass = team.rank ? MEDAL_STYLE[team.rank] : undefined;
+  const idle = team.notScoringReason;
   return (
     <div
       className={`flex items-center gap-4 border-b border-white/6 px-5 py-3.5 transition-colors hover:bg-surface-3 ${
         isUser ? "border-l-2 border-l-accent bg-accent/5" : "border-l-2 border-l-transparent"
-      }`}
+      } ${idle ? "opacity-60" : ""}`}
     >
       <div className="flex shrink-0 flex-col items-center gap-0.5">
         <span
@@ -98,14 +117,14 @@ function StandingRowItem({ team, isUser }: { team: StandingRow; isUser: boolean 
             medalClass ?? "border-white/8 bg-surface-3 text-fg-2"
           }`}
         >
-          {team.rank}
+          {team.rank ?? "—"}
         </span>
         <RankDeltaBadge delta={team.rankDelta} />
       </div>
 
       <div className="min-w-0 flex-1">
         <p className="truncate font-sans text-sm font-700 uppercase tracking-[0.5px] text-fg-1">
-          {team.teamName}
+          {team.teamName ?? <span className="text-fg-3">No squad</span>}
           {isUser && <span className="ml-2 section-label text-accent-dim">You</span>}
           {team.isManagerOfTheWeek && (
             <span className="ml-2 text-xs" title="Manager of the Week — highest points last gameweek">
@@ -123,7 +142,23 @@ function StandingRowItem({ team, isUser }: { team: StandingRow; isUser: boolean 
             </span>
           ) : null}
         </p>
-        <p className="mt-0.5 truncate text-xs text-fg-3">{team.manager}</p>
+        <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-fg-3">
+          {team.manager}
+          {idle && (
+            <Tooltip
+              label={notScoringTooltip(idle, team.eligibleFromGameweek)}
+              multiline
+              w={260}
+              withArrow
+            >
+              <span className="cursor-help rounded-[2px] border border-white/12 bg-surface-3 px-1.5 py-0.5 text-[10px] font-700 uppercase tracking-[0.4px] text-fg-2">
+                {idle === "pending_window" && team.eligibleFromGameweek
+                  ? `Scores from GW ${team.eligibleFromGameweek}`
+                  : NOT_SCORING_LABEL[idle]}
+              </span>
+            </Tooltip>
+          )}
+        </p>
       </div>
 
       <span className="flex shrink-0 items-center gap-1.5">
@@ -139,7 +174,11 @@ function StandingRowItem({ team, isUser }: { team: StandingRow; isUser: boolean 
             />
           </Tooltip>
         ) : null}
-        <LivePointsIndicator points={team.points} size="lg" className="!text-accent" />
+        {idle === "no_squad" ? (
+          <span className="font-display text-lg text-fg-3">—</span>
+        ) : (
+          <LivePointsIndicator points={team.points} size="lg" className="!text-accent" />
+        )}
       </span>
     </div>
   );
@@ -151,7 +190,15 @@ function StandingRowItem({ team, isUser }: { team: StandingRow; isUser: boolean 
 // measurement simple).
 const VIRTUALIZE_THRESHOLD = 30;
 
-function VirtualStandings({ standings, userTeamId }: { standings: StandingRow[]; userTeamId: string }) {
+function VirtualStandings({
+  standings,
+  userTeamId,
+  userName,
+}: {
+  standings: StandingRow[];
+  userTeamId: string;
+  userName?: string;
+}) {
   const parentRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: standings.length,
@@ -167,12 +214,12 @@ function VirtualStandings({ standings, userTeamId }: { standings: StandingRow[];
           const team = standings[vi.index];
           return (
             <div
-              key={team.teamId}
+              key={team.teamId ?? team.manager}
               data-index={vi.index}
               ref={virtualizer.measureElement}
               style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vi.start}px)` }}
             >
-              <StandingRowItem team={team} isUser={team.teamId === userTeamId} />
+              <StandingRowItem team={team} isUser={isOwnRow(team, userTeamId, userName)} />
             </div>
           );
         })}
@@ -184,6 +231,7 @@ function VirtualStandings({ standings, userTeamId }: { standings: StandingRow[];
 export function StandingsTable({
   standings,
   userTeamId,
+  userName,
   isLoading,
   pointsLabel = "Standings",
   emptyMessage = "No standings yet — they appear once teams are scored for a gameweek.",
@@ -205,14 +253,19 @@ export function StandingsTable({
       ) : standings.length === 0 ? (
         <div className="p-6 text-sm text-fg-3">{emptyMessage}</div>
       ) : standings.length > VIRTUALIZE_THRESHOLD ? (
-        <VirtualStandings standings={standings} userTeamId={userTeamId} />
+        <VirtualStandings
+          standings={standings}
+          userTeamId={userTeamId}
+          userName={userName}
+        />
       ) : (
         <div>
           {standings.map((team) => (
             <StandingRowItem
-              key={team.teamId}
+              // Teamless rows have no teamId; owner name is unique per league.
+              key={team.teamId ?? team.manager}
               team={team}
-              isUser={team.teamId === userTeamId}
+              isUser={isOwnRow(team, userTeamId, userName)}
             />
           ))}
         </div>

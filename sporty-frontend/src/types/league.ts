@@ -218,13 +218,16 @@ export type TPointsPenalty = {
 };
 
 export type TLeaderboardEntry = {
-  team_id: string;
-  team_name: string;
+  /** null when the manager joined but never built a squad. */
+  team_id: string | null;
+  team_name: string | null;
   owner_name: string;
   points: number;
   points_deducted: number;
   penalties: TPointsPenalty[];
   rank: number | null;
+  /** First gameweek this manager scores from; null means "since gameweek 1". */
+  eligible_from_gameweek: number | null;
 };
 
 export type TLeaderboardResponse = {

@@ -13,6 +13,10 @@ import {
   StandingsTable,
   type StandingRow,
 } from "@/features/leagues/components/StandingsTable";
+import {
+  notScoringReason,
+  sortLeaderboardEntries,
+} from "@/features/leagues/leaderboardRows";
 import { YourScoreCard } from "./components/YourScoreCard";
 import { TransferFields } from "./components/TransferFields";
 import { GameweekBreakdown } from "@/features/dashboard/components/GameweekBreakdown";
@@ -77,12 +81,17 @@ export function LeagueHome() {
   );
   // Backend rank can be null until the ranking job runs; fall back to
   // position in points-sorted order so the list always shows a standing.
+  // Non-scoring managers (no squad, or a midseason joiner whose first window
+  // hasn't opened) sort last and keep a null rank — they must not land at
+  // position 0 and read as league leader while everyone is still on zero.
   const standings = useMemo<StandingRow[]>(() => {
     const entries = weekBoard?.entries ?? [];
-    return [...entries]
-      .sort((a, b) => Number(b.points) - Number(a.points))
-      .map((entry, index) => ({
-        rank: entry.rank ?? index + 1,
+    return sortLeaderboardEntries(entries, currentWeek).map((entry, index) => {
+      const idle = notScoringReason(entry, currentWeek);
+      return {
+        // Scoring rows occupy indices 0..n-1 (the sort guarantees it), so the
+        // index doubles as the fallback rank without a running counter.
+        rank: idle ? null : (entry.rank ?? index + 1),
         teamId: entry.team_id,
         teamName: entry.team_name,
         manager: entry.owner_name,
@@ -93,41 +102,39 @@ export function LeagueHome() {
           reason: p.reason,
           created_at: p.created_at,
         })),
-      }));
-  }, [weekBoard]);
+        notScoringReason: idle ?? undefined,
+        eligibleFromGameweek: entry.eligible_from_gameweek,
+      };
+    });
+  }, [weekBoard, currentWeek]);
   const {
     data: leagueStats,
     isLoading: leagueStatsLoading,
     error: leagueStatsError,
   } = useDashboardLeagueStats(leagueId);
 
+  // Derived from `standings`, not the raw entries: that list is already sorted
+  // with non-scoring managers last, so the leader can't be someone who has no
+  // squad. `scoring[0]` (not `entries[0]`) for the same reason — in a league
+  // where nobody is scoring yet there is no leader to name.
   const weekStanding = useMemo(() => {
-    const entries = [...(weekBoard?.entries ?? [])].sort(
-      (a, b) => Number(b.points) - Number(a.points),
-    );
-    const myEntry = entries.find((e) => e.team_id === myTeam?.id) ?? null;
-    const leader = entries[0] ?? null;
-    const youAreLeader =
-      !!myEntry && !!leader && myEntry.team_id === leader.team_id;
-    const opponent = youAreLeader ? (entries[1] ?? null) : leader;
-    const yourScore = Math.round(Number(myEntry?.points ?? 0));
-    const opponentScore = Math.round(Number(opponent?.points ?? 0));
-    const weeklyRank =
-      myEntry?.rank ??
-      (myEntry ? entries.indexOf(myEntry) + 1 : 0);
-    const pointsBehind = leader
-      ? Math.max(0, Math.round(Number(leader.points) - Number(myEntry?.points ?? 0)))
-      : 0;
+    const scoring = standings.filter((row) => !row.notScoringReason);
+    const myRow = standings.find((row) => row.teamId === myTeam?.id) ?? null;
+    const leader = scoring[0] ?? null;
+    const youAreLeader = !!myRow && !!leader && myRow.teamId === leader.teamId;
+    const opponent = youAreLeader ? (scoring[1] ?? null) : leader;
     return {
       youAreLeader,
       hasOpponent: !!opponent,
-      opponentName: opponent?.team_name ?? "",
-      yourScore,
-      opponentScore,
-      weeklyRank,
-      pointsBehind,
+      opponentName: opponent?.teamName ?? "",
+      yourScore: Math.round(myRow?.points ?? 0),
+      opponentScore: Math.round(opponent?.points ?? 0),
+      weeklyRank: myRow?.rank ?? 0,
+      pointsBehind: leader
+        ? Math.max(0, Math.round(leader.points - (myRow?.points ?? 0)))
+        : 0,
     };
-  }, [weekBoard, myTeam?.id]);
+  }, [standings, myTeam?.id]);
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);

@@ -254,6 +254,57 @@ def get_gameweek_recap(
 
 
 
+def _teamless_entries(db: Session, league_id: uuid.UUID) -> list[dict]:
+    """Leaderboard rows for members who joined but never built a squad.
+
+    The leaderboard queries drive from FantasyTeam, so a member with no team row
+    is structurally absent — which is why a 20-member league could return 8
+    rows with nothing explaining the other 12. These rows carry a NULL team_id
+    so the client can label them instead of showing a phantom 0-point team.
+
+    ponytail: a second small query, rather than restructuring the aggregate
+    query to drive from LeagueMembership. Keyed on ZERO FantasyTeam rows, not
+    "no ACTIVE team" — the main query deliberately has no status filter (an
+    archived team stays visible for historical=True), so matching on ACTIVE
+    here would list a member whose only team is archived twice.
+
+    ACTIVE membership only, regardless of the caller's `historical` flag: a
+    member who left without ever building a squad is noise, not history.
+    """
+    rows = (
+        db.query(User.username)
+        .select_from(LeagueMembership)
+        .join(User, LeagueMembership.user_id == User.id)
+        .outerjoin(
+            FantasyTeam,
+            and_(
+                FantasyTeam.league_id == LeagueMembership.league_id,
+                FantasyTeam.user_id == LeagueMembership.user_id,
+            ),
+        )
+        .filter(
+            LeagueMembership.league_id == league_id,
+            LeagueMembership.status == LeagueMembershipStatus.ACTIVE,
+            FantasyTeam.id.is_(None),
+        )
+        .order_by(LeagueMembership.joined_at)
+        .all()
+    )
+    return [
+        {
+            "team_id": None,
+            "team_name": None,
+            "owner_name": username,
+            "points": Decimal("0"),
+            "points_deducted": Decimal("0"),
+            "penalties": [],
+            "rank": None,
+            "eligible_from_gameweek": None,
+        }
+        for (username,) in rows
+    ]
+
+
 def get_league_leaderboard(
     db: Session,
     league_id: uuid.UUID,
@@ -348,6 +399,7 @@ def get_league_leaderboard(
                 (TeamWeeklyScore.points - window_penalty).label("points"),
                 window_penalty_display.label("points_deducted"),
                 TeamWeeklyScore.rank_in_league.label("rank"),
+                eligibility_window.number.label("eligible_from_gameweek"),
             )
             .select_from(TeamWeeklyScore)
             .join(FantasyTeam, TeamWeeklyScore.fantasy_team_id == FantasyTeam.id)
@@ -382,7 +434,6 @@ def get_league_leaderboard(
         )
     else:
         # 2. Total season standing (sum of points)
-        now = datetime.now(timezone.utc)
         score_window = aliased(TransferWindow)
         raw_total_points = func.coalesce(func.sum(TeamWeeklyScore.points), 0)
         # Season-wide penalty total (all windows), netted out at read time —
@@ -408,6 +459,7 @@ def get_league_leaderboard(
                 User.username.label("owner_name"),
                 net_total_points.label("points"),
                 season_penalty_display.label("points_deducted"),
+                eligibility_window.number.label("eligible_from_gameweek"),
             )
             .join(User, FantasyTeam.user_id == User.id)
             .join(
@@ -431,12 +483,11 @@ def get_league_leaderboard(
                     [LeagueMembershipStatus.ACTIVE, LeagueMembershipStatus.LEFT]
                 )
             )
-            .filter(
-                or_(
-                    LeagueMembership.eligible_from_window_id.is_(None),
-                    eligibility_window.start_at <= now,
-                )
-            )
+            # No wall-clock visibility gate here on purpose. The filter below
+            # already stops a joiner accumulating points from before their
+            # eligible window, so a pending joiner sums to 0 rather than
+            # vanishing from the table — a vanished row is what made
+            # member_count and the leaderboard row count disagree.
             .filter(
                 or_(
                     TeamWeeklyScore.id.is_(None),
@@ -444,7 +495,7 @@ def get_league_leaderboard(
                     score_window.number >= eligibility_window.number,
                 )
             )
-            .group_by(FantasyTeam.id, User.username)
+            .group_by(FantasyTeam.id, User.username, eligibility_window.number)
             .order_by(net_total_points.desc())
         )
     
@@ -479,7 +530,10 @@ def get_league_leaderboard(
             "points_deducted": row.points_deducted,
             "penalties": penalties_by_team.get(row.team_id, []),
             "rank": rank,
+            "eligible_from_gameweek": row.eligible_from_gameweek,
         })
+
+    entries.extend(_teamless_entries(db, league_id))
 
     result = {
         "league_id": league_id,

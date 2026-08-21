@@ -824,14 +824,23 @@ class PointsPenaltyEntry(BaseModel):
 
 
 class LeaderboardEntryResponse(BaseModel):
-    """A single team's standing in a league's leaderboard."""
-    team_id: uuid.UUID
-    team_name: str
+    """A single manager's standing in a league's leaderboard.
+
+    Two kinds of row are not scoring yet, and the client distinguishes them so
+    it can say why rather than showing an unexplained 0:
+      - team_id/team_name NULL — joined but never built a squad.
+      - eligible_from_gameweek > the current gameweek — a midseason joiner
+        whose first scoring window has not opened yet.
+    """
+    team_id: uuid.UUID | None
+    team_name: str | None
     owner_name: str
     points: Decimal
     points_deducted: Decimal = Decimal("0")
     penalties: list[PointsPenaltyEntry] = []
     rank: int | None
+    # First gameweek this manager scores from; NULL means "since window 1".
+    eligible_from_gameweek: int | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
